@@ -4,18 +4,20 @@ import { School, Dashboard, Description, CalendarToday, EmojiEvents, Business, P
 import { FaLinkedin, FaGithub, FaTachometerAlt, FaFileAlt, FaCalendarAlt, FaRegStar, FaBriefcase, FaGraduationCap, FaUser, FaSignOutAlt, FaHome, FaInfo, FaStar, FaEnvelope } from 'react-icons/fa';
 import PlacementPortalIcon from './assets/PlacementPortalicon.png';
 import logo from './assets/logo.png';
+import CompanySideBarIcon from './assets/CompanySideBarIcon.svg';
 
 const drawerWidth = 280;
 
 const menuItems = [
-  { text: 'Dashboard', icon: <FaTachometerAlt size={24} />, active: false },
-  { text: 'Resume', icon: <FaFileAlt size={24} />, active: true },
-  { text: 'Attendance', icon: <FaCalendarAlt size={24} />, active: false },
-  { text: 'Achievements', icon: <FaRegStar size={24} />, active: false },
-  { text: 'Company', icon: <FaBriefcase size={24} />, active: false },
+  { icon: require('./assets/DashboardSideBarIcon.png'), text: 'Dashboard', view: 'dashboard' },
+  { icon: require('./assets/ResumeSideBarIcon.png'), text: 'Resume', view: 'resume' },
+  { icon: require('./assets/AttendanceSideBarIcon.png'), text: 'Attendance', view: 'attendance' },
+  { icon: require('./assets/AchievementsSideBarIcon.png'), text: 'Achievements', view: 'achievements' },
+  { icon: CompanySideBarIcon, text: 'Company', view: 'company' },
+  { icon: require('./assets/ProfileSideBarIcon.png'), text: 'Profile', view: 'profile' },
 ];
 
-function Sidebar({ onLogout, onViewChange }) {
+function Sidebar({ onLogout, onViewChange, currentView }) {
   return (
     <aside style={{
       width: 270,
@@ -45,7 +47,6 @@ function Sidebar({ onLogout, onViewChange }) {
           </div>
         </div>
       </div>
-
       {/* Static Menu Section */}
       <div style={{ 
         flex: 1, 
@@ -56,14 +57,9 @@ function Sidebar({ onLogout, onViewChange }) {
             <li 
               key={item.text} 
               onClick={() => {
-                console.log("Sidebar item clicked:", item.text);
-                if (item.text === 'Dashboard') {
-                  console.log("Navigating to dashboard");
-                  onViewChange("dashboard");
-                } else if (item.text === 'Resume') {
-                  console.log("Navigating to resume");
-                  onViewChange("resume");
-                }
+                if (item.view === 'dashboard') onViewChange('dashboard');
+                else if (item.view === 'resume') onViewChange('resume');
+                else if (item.view === 'attendance') onViewChange('attendance');
               }}
               style={{
                 display: "flex", alignItems: "center", gap: 22,
@@ -71,14 +67,14 @@ function Sidebar({ onLogout, onViewChange }) {
                 borderRadius: 16,
                 marginBottom: 8,
                 cursor: "pointer",
-                color: item.active ? "#2563eb" : "#222",
-                fontWeight: item.active ? 800 : 500,
-                background: item.active ? "#eaf2ff" : "transparent",
+                color: item.view === currentView ? "#2563eb" : "#222",
+                fontWeight: item.view === currentView ? 800 : 500,
+                background: item.view === currentView ? "#eaf2ff" : "transparent",
                 position: "relative",
                 fontSize: 20,
               }}
             >
-              {item.active && (
+              {item.view === currentView && (
                 <div style={{
                   position: "absolute",
                   left: 0, top: 10, bottom: 10, width: 10,
@@ -86,13 +82,12 @@ function Sidebar({ onLogout, onViewChange }) {
                   background: "#2563eb"
                 }} />
               )}
-              <span style={{ color: item.active ? "#2563eb" : "#222", fontSize: 28 }}>{item.icon}</span>
+              <img src={item.icon} alt={item.text} style={{ width: 20, height: 20 }} />
               <span>{item.text}</span>
             </li>
           ))}
         </ul>
       </div>
-
       {/* Bottom Section - Fixed */}
       <div style={{ 
         paddingBottom: 38, 
@@ -696,12 +691,12 @@ function MainContent() {
   );
 }
 
-function PlacementPortal({ onLogout, onViewChange }) {
+function PlacementPortal({ onLogout, onViewChange, currentView }) {
   return (
     <div style={{ background: "#f8faff", minHeight: "100vh", fontFamily: 'Inter, Arial, sans-serif' }}>
       <Navbar />
       <div style={{ display: "flex" }}>
-        <Sidebar onLogout={onLogout} onViewChange={onViewChange} />
+        <Sidebar onLogout={onLogout} onViewChange={onViewChange} currentView={currentView} />
         <MainContent />
       </div>
     </div>

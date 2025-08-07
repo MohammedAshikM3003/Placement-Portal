@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PlacementPortalLogin from "./mainlogin.js";
 import PlacementPortalDashboard from "./dashboard.js";
 import PlacementPortal from "./resume.js";
+import Attendance from "./Attendance.js";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,12 +34,15 @@ function App() {
     <div className="App">
       {isLoggedIn ? (
         currentView === "resume" ? (
-          <PlacementPortal onLogout={handleLogout} onViewChange={handleViewChange} />
+          <PlacementPortal onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />
+        ) : currentView === "attendance" ? (
+          <Attendance onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />
         ) : (
           <PlacementPortalDashboard
             onLogout={handleLogout}
             userEmail={userEmail}
             onViewChange={handleViewChange}
+            currentView={currentView}
           />
         )
       ) : (

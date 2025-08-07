@@ -17,7 +17,16 @@ import AttendanceSideBarIcon from './assets/AttendanceSideBarIcon.png';
 import ResumeSideBarIcon from './assets/ResumeSideBarIcon.png';
 import DashboardSideBarIcon from './assets/DashboardSideBarIcon.png';
 
-function Attendance() {
+function Attendance({ onLogout, onViewChange, currentView }) {
+  const sidebarItems = [
+    { icon: require('./assets/DashboardSideBarIcon.png'), text: 'Dashboard', view: 'dashboard' },
+    { icon: require('./assets/ResumeSideBarIcon.png'), text: 'Resume', view: 'resume' },
+    { icon: require('./assets/AttendanceSideBarIcon.png'), text: 'Attendance', view: 'attendance' },
+    { icon: require('./assets/AchievementsSideBarIcon.png'), text: 'Achievements', view: 'achievements' },
+    { icon: CompanySideBarIcon, text: 'Company', view: 'company' },
+    { icon: require('./assets/ProfileSideBarIcon.png'), text: 'Profile', view: 'profile' },
+  ];
+
   return (
     <>
       <style>{`
@@ -565,28 +574,28 @@ function Attendance() {
             <button className="menu-toggle">•••</button>
             <nav className="nav">
               <div className="nav-section">
-                <span className="nav-item">
-                  <img src={DashboardSideBarIcon} alt="Dashboard" /> Dashboard
-                </span>
-                <span className="nav-item">
-                  <img src={ResumeSideBarIcon} alt="Resume" /> Resume
-                </span>
-                <span className="nav-item selected">
-                  <img src={AttendanceSideBarIcon} alt="Attendance" /> Attendance
-                </span>
-                <span className="nav-item">
-                  <img src={AchievementsSideBarIcon} alt="Achievements" /> Achievements
-                </span>
-                <span className="nav-item">
-                  <img src={CompanySideBarIcon} alt="Company" /> Company
-                </span>
+                {sidebarItems.slice(0, 5).map((item) => (
+                  <span
+                    key={item.text}
+                    className={`nav-item${item.view === currentView ? ' selected' : ''}`}
+                    onClick={() => {
+                      if (item.view === 'dashboard') onViewChange('dashboard');
+                      else if (item.view === 'resume') onViewChange('resume');
+                      else if (item.view === 'attendance') onViewChange('attendance');
+                    }}
+                  >
+                    <img src={item.icon} alt={item.text} /> {item.text}
+                  </span>
+                ))}
               </div>
               <div className="nav-divider"></div>
-              <span className="nav-item">
-                <img src={ProfileSideBarIcon} alt="Profile" /> Profile
+              <span className={`nav-item${currentView === 'profile' ? ' selected' : ''}`}
+                onClick={() => onViewChange('profile')}
+              >
+                <img src={require('./assets/ProfileSideBarIcon.png')} alt="Profile" /> Profile
               </span>
             </nav>
-            <button className="logout-btn">
+            <button className="logout-btn" onClick={onLogout}>
               Logout
             </button>
           </div>
