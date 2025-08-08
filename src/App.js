@@ -3,6 +3,7 @@ import PlacementPortalLogin from "./mainlogin.js";
 import PlacementPortalDashboard from "./dashboard.js";
 import PlacementPortal from "./resume.js";
 import Attendance from "./Attendance.js";
+import Achievements from "./Achievements.js";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,12 +15,14 @@ function App() {
     if (email && password) {
       setUserEmail(email);
       setIsLoggedIn(true);
+      console.log("Login successful, switching to dashboard");
     } else {
       alert("Please enter both email and password");
     }
   };
 
   const handleLogout = () => {
+    console.log("Logout clicked, returning to login");
     setIsLoggedIn(false);
     setUserEmail("");
     setCurrentView("dashboard");
@@ -30,24 +33,31 @@ function App() {
     setCurrentView(view);
   };
 
-  return (
-    <div className="App">
-      {isLoggedIn ? (
-        currentView === "resume" ? (
-          <PlacementPortal onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />
-        ) : currentView === "attendance" ? (
-          <Attendance onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />
-        ) : (
+  const renderCurrentView = () => {
+    console.log("Rendering view:", currentView);
+    switch (currentView) {
+      case "resume":
+        return <PlacementPortal onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "attendance":
+        return <Attendance onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "achievements":
+        return <Achievements onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "dashboard":
+      default:
+        return (
           <PlacementPortalDashboard
             onLogout={handleLogout}
             userEmail={userEmail}
             onViewChange={handleViewChange}
             currentView={currentView}
           />
-        )
-      ) : (
-        <PlacementPortalLogin onLogin={handleLogin} />
-      )}
+        );
+    }
+  };
+
+  return (
+    <div className="App">
+      {isLoggedIn ? renderCurrentView() : <PlacementPortalLogin onLogin={handleLogin} />}
     </div>
   );
 }

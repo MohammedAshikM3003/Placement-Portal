@@ -1,68 +1,89 @@
-# Placement-Portal
+# Placement Portal
 
-placement_portal_repo
+A React-based placement portal application with multiple views and navigation.
 
----
+## Features
 
-## Getting Started with Create React App
+- **Login System**: Secure login with email and password
+- **Dashboard**: Main dashboard with overview cards
+- **Resume Management**: Upload, preview, and manage resumes
+- **Attendance Tracking**: View attendance statistics and details
+- **Achievements**: Upload and manage certificates/achievements
+- **Navigation**: Seamless navigation between all views
+- **Logout**: Secure logout functionality
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Fixed Issues
 
-### Available Scripts
+### Navigation Issues
+1. **App.js**: Added proper routing for all views including achievements
+2. **Dashboard.js**: Fixed sidebar navigation to use consistent view names
+3. **Resume.js**: Updated navigation to handle all sidebar items properly
+4. **Attendance.js**: Fixed navigation to use consistent view names
+5. **Achievements.js**: Fixed navigation and corrected import path
 
-In the project directory, you can run:
+### Asset Issues
+1. **Missing Assets**: Created placeholder files for missing assets:
+   - `logo.png`
+   - `PlacementPortalicon.png`
+   - `uploadcerti.png`
+   - `editlogo.png`
+   - `uploadicon.png`
 
-#### `npm start`
+### Import Issues
+1. **PopupAchievements.js**: Fixed typo in import path from `popupArchievement .js` to `PopupAchievements.js`
 
-Runs the app in the development mode.  
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## How to Run
 
-The page will reload when you make changes.  
-You may also see any lint errors in the console.
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-#### `npm test`
+2. **Start Development Server**:
+   ```bash
+   npm start
+   ```
 
-Launches the test runner in the interactive watch mode.  
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. **Access Application**:
+   Open [http://localhost:3000](http://localhost:3000) in your browser
 
-#### `npm run build`
+## Navigation Flow
 
-Builds the app for production to the `build` folder.  
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Login**: Enter any email and password to login
+2. **Dashboard**: Default view after login
+3. **Sidebar Navigation**: Click on any sidebar item to navigate:
+   - Dashboard
+   - Resume
+   - Attendance
+   - Achievements
+   - Company
+   - Profile
+4. **Logout**: Click logout button to return to login screen
 
-The build is minified and the filenames include the hashes.  
-Your app is ready to be deployed!
+## File Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+src/
+├── App.js                 # Main application component with routing
+├── mainlogin.js          # Login page
+├── dashboard.js          # Dashboard view
+├── resume.js            # Resume management view
+├── Attendance.js        # Attendance tracking view
+├── Achievements.js      # Achievements management view
+├── PopupAchievements.js # Achievement upload popup
+└── assets/              # Image assets
+```
 
-#### `npm run eject`
+## Dependencies
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- React 19.1.0
+- Material-UI 7.2.0
+- React Icons 5.5.0
+- React Scripts 5.0.1
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Notes
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc.) right into your project so you have full control over them.
-
-All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature.
-
-However, we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
----
-
-### Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).  
-To learn React, check out the [React documentation](https://reactjs.org/).
-
----
-
-### Additional Topics
-
-- [Code Splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-- [Analyzing the Bundle Size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-- [Making a Progressive Web App](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-- [Advanced Configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-- [Deployment](https://facebook.github.io/create-react-app/docs/deployment)
-- [Troubleshooting `npm run build`](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- All placeholder assets should be replaced with actual images in production
+- The application uses console logging for debugging navigation
+- All views are now properly connected and navigable
+- Logout functionality works across all views

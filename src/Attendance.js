@@ -1,21 +1,9 @@
 import React from "react";
 
-// Import image assets (you can add these to your assets folder)
+// Import image assets
 import Adminicon from './assets/Adminicon.png';
 import ksrCollegeImage from './assets/ksrCollegeImage.jpg';
-import MyAccountIcon from './assets/MyAccountIcon.png';
-import NotificationIcon from './assets/NotificationIcon.png';
-import PlacemtStatusIcon from './assets/PlacemtStatusIcon.png';
-import SuggestionIcon from './assets/SuggestionIcon.png';
-import teenyicons_certificate_outline from './assets/teenyicons_certificate-outline.png';
-import UpcomingDriveIcon from './assets/UpcomingDriveIcon.png';
-import UploadResumeIcon from './assets/UploadResumeIcon.png';
-import ProfileSideBarIcon from './assets/ProfileSideBarIcon.png';
 import CompanySideBarIcon from './assets/CompanySideBarIcon.svg';
-import AchievementsSideBarIcon from './assets/AchievementsSideBarIcon.png';
-import AttendanceSideBarIcon from './assets/AttendanceSideBarIcon.png';
-import ResumeSideBarIcon from './assets/ResumeSideBarIcon.png';
-import DashboardSideBarIcon from './assets/DashboardSideBarIcon.png';
 
 function Attendance({ onLogout, onViewChange, currentView }) {
   const sidebarItems = [
@@ -226,7 +214,7 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           align-items: center;
           font-size: 1.04rem;
           padding: 18px 25px;
-          color: #282c36;
+          color: #000000;
           text-decoration: none;
           cursor: pointer;
           transition: all 0.18s;
@@ -237,29 +225,34 @@ function Attendance({ onLogout, onViewChange, currentView }) {
         
         .sidebar .nav-item.selected {
           background: #F8F8F8;
-          border-left: 4px solid #2085f6;
+          border-left: 4px solid #197AFF;
           color: #197AFF;
           font-weight: 600;
         }
         
         .sidebar .nav-item.selected img {
-          filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+          filter: brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%);
         }
         
         .sidebar .nav-item:hover:not(.selected) {
           background: #f0f6ff;
-          border-left: 4px solid #2085f6;
-          color: #2085f6;
+          border-left: 4px solid #197AFF;
+          color: #197AFF;
         }
         
         .sidebar .nav-item img {
           width: 20px;
           height: 20px;
           transition: transform 0.2s;
+          filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
         }
         
         .sidebar .nav-item:hover img {
           transform: scale(1.1);
+        }
+        
+        .sidebar .nav-item:hover:not(.selected) img {
+          filter: brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%);
         }
         
         .sidebar .nav-divider {
@@ -525,30 +518,30 @@ function Attendance({ onLogout, onViewChange, currentView }) {
             <span className="portal-name">Placement Portal</span>
           </div>
           <div className="menu">
-            <a href="#">
+            <span style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '5px' }}>
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
               </svg>
               Home
-            </a>
-            <a href="#">
+            </span>
+            <span style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '5px' }}>
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
               </svg>
               About
-            </a>
-            <a href="#">
+            </span>
+            <span style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '5px' }}>
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
               </svg>
               Features
-            </a>
-            <a href="#">
+            </span>
+            <span style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '5px' }}>
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
               </svg>
               Contact
-            </a>
+            </span>
           </div>
         </div>
 
@@ -579,9 +572,8 @@ function Attendance({ onLogout, onViewChange, currentView }) {
                     key={item.text}
                     className={`nav-item${item.view === currentView ? ' selected' : ''}`}
                     onClick={() => {
-                      if (item.view === 'dashboard') onViewChange('dashboard');
-                      else if (item.view === 'resume') onViewChange('resume');
-                      else if (item.view === 'attendance') onViewChange('attendance');
+                      console.log("Sidebar item clicked:", item.text, "view:", item.view);
+                      onViewChange(item.view);
                     }}
                   >
                     <img src={item.icon} alt={item.text} /> {item.text}

@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import logoImage from "./assets/logo.png";
 import loginImage from "./assets/student1.png";
+import Adminicon from "./assets/Adminicon.png";
 
 const PlacementPortalLogin = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -37,21 +38,21 @@ const PlacementPortalLogin = ({ onLogin }) => {
       }}
     >
       {/* Navbar */}
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          background: "#5932EA",
-          color: "#fff",
-          padding: "16px 32px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-        }}
-      >
+             <nav
+         style={{
+           display: "flex",
+           alignItems: "center",
+           background: "#5932EA",
+           color: "#fff",
+           padding: "15px 32px 15px 26px",
+           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+           position: "fixed",
+           top: 0,
+           left: 0,
+           right: 0,
+           zIndex: 1000,
+         }}
+       >
         {/* Logo */}
         <div
           style={{
@@ -60,27 +61,28 @@ const PlacementPortalLogin = ({ onLogin }) => {
             gap: 10,
           }}
         >
-          <img
-            src={logoImage}
-            alt="Logo"
-            style={{
-              height: 42,
-              width: 42,
-              objectFit: "contain",
-              marginRight: 8,
-              filter: "brightness(0) invert(1)",
-            }}
-          />
-          <span
-            style={{
-              fontWeight: "bold",
-              fontSize: 22,
-              color: "#fff",
-              lineHeight: 1,
-            }}
-          >
-            Placement Portal
-          </span>
+                     <img
+             src={Adminicon}
+             alt="Logo"
+             style={{
+               height: 35,
+               width: 35,
+               objectFit: "contain",
+               marginRight: 18,
+               filter: "brightness(0) invert(1)",
+             }}
+           />
+                     <span
+             style={{
+               fontWeight: "bold",
+               fontSize: "1.48rem",
+               color: "#fff",
+               lineHeight: 1,
+               letterSpacing: "0.5px",
+             }}
+           >
+             Placement Portal
+           </span>
         </div>
 
         {/* Navbar Items */}
@@ -118,8 +120,9 @@ const PlacementPortalLogin = ({ onLogin }) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "100px 80px 60px 80px",
+          padding: "60px 80px 60px 80px",
           flexWrap: "wrap",
+          marginTop: "0px",
         }}
       >
         {/* Left Image */}
@@ -130,8 +133,9 @@ const PlacementPortalLogin = ({ onLogin }) => {
             justifyContent: "center",
             alignItems: "center",
             height: "calc(100vh - 70px)",
-            transform: "translateY(-80px)",
+            transform: "translateY(0px)",
             position: "relative",
+            marginTop: "20px",
           }}
         >
           <img
@@ -163,13 +167,13 @@ const PlacementPortalLogin = ({ onLogin }) => {
         <div
           className="login-box glow-on-hover"
           style={{
-            transform: "translateX(-20px) translateY(-40px)",
+            transform: "translateX(-20px)",
           }}
         >
           <div className="form-wrapper">
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
               <img
-                src={logoImage}
+                src={Adminicon}
                 alt="Form Logo"
                 style={{
                   height: 90,
@@ -177,6 +181,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
                   objectFit: "contain",
                   display: "block",
                   margin: "0 auto",
+                  filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)",
                 }}
               />
             </div>
@@ -252,7 +257,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
 
         .glow-on-hover:hover {
           box-shadow: 0 0 35px rgba(89, 50, 234, 0.9), 0 0 15px rgba(89, 50, 234, 0.4);
-          transform: scale(1.02);
+          transform: scale(1.02) translateY(-5px);
         }
 
         .form-wrapper {
