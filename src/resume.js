@@ -577,6 +577,10 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           padding: 0;
           font-family: 'Poppins', Arial, sans-serif;
           overflow: hidden;
+          overflow-x: hidden;
+          width: 100%;
+          height: 100%;
+          position: relative;
         }
         
         .container {
@@ -584,6 +588,9 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           background: #f8f8fb;
           min-height: 100vh;
           overflow: hidden;
+          width: 100%;
+          position: relative;
+          overflow-x: hidden;
         }
         
         /* Navbar styles */
@@ -600,6 +607,8 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           left: 0;
           right: 0;
           z-index: 1000;
+          width: 100vw;
+          box-sizing: border-box;
         }
         
         .navbar .left {
@@ -656,6 +665,8 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           display: flex;
           min-height: calc(100vh - 65px);
           margin-top: 65px;
+          width: 100%;
+          position: relative;
         }
         
         /* Sidebar */
@@ -671,6 +682,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           top: 65px;
           overflow-y: hidden;
           z-index: 999;
+          box-sizing: border-box;
         }
         
         .sidebar .user-info {
@@ -832,6 +844,26 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
         .sidebar .logout-btn:hover {
           background: #d55a6a;
         }
+
+        /* Prevent layout shifts when dev tools open/close */
+        * {
+          box-sizing: border-box;
+        }
+
+        /* Ensure consistent viewport calculations */
+        html {
+          overflow-x: hidden;
+          width: 100%;
+          height: 100%;
+        }
+
+        /* Ensure content area maintains proper width */
+        .resume-content {
+          margin-left: 230px;
+          width: calc(100vw - 230px);
+          overflow: hidden;
+          box-sizing: border-box;
+        }
       `}</style>
       
       <div className="container">
@@ -919,7 +951,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           </div>
           
           {/* RESUME CONTENT */}
-          <div style={{ marginLeft: '230px', width: 'calc(100vw - 230px)', overflow: 'hidden' }}>
+          <div className="resume-content">
             <MainContent onViewChange={onViewChange} />
           </div>
         </div>
@@ -929,6 +961,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
 }
 
 export default PlacementPortal;
+
 
 
 

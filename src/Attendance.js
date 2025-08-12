@@ -2,8 +2,10 @@ import React from "react";
 
 // Import image assets
 import Adminicon from './assets/Adminicon.png';
-import ksrCollegeImage from './assets/ksrCollegeImage.jpg';
 import CompanySideBarIcon from './assets/CompanySideBarIcon.svg';
+import StudentIcon from './assets/StudentIcon.png';
+import totalpercentagestudenticon from './assets/totalpercentagestudenticon.png'
+import totalpercentageicon from './assets/totalpercentageicon.png'
 
 function Attendance({ onLogout, onViewChange, currentView }) {
   const sidebarItems = [
@@ -23,12 +25,21 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           margin: 0;
           padding: 0;
           font-family: 'Poppins', Arial, sans-serif;
+          overflow-x: hidden;
+          overflow-y: hidden;
+          width: 100%;
+          height: 100%;
+          position: relative;
         }
         
         .container {
           font-family: 'Poppins', Arial, sans-serif;
           background: #f8f8fb;
           min-height: 100vh;
+          width: 100%;
+          position: relative;
+          overflow-x: hidden;
+          overflow-y: hidden;
         }
         
         /* Navbar styles */
@@ -45,6 +56,8 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           left: 0;
           right: 0;
           z-index: 1000;
+          width: 100vw;
+          box-sizing: border-box;
         }
         
         .navbar .left {
@@ -101,6 +114,9 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           display: flex;
           min-height: calc(100vh - 65px);
           margin-top: 65px;
+          width: 100%;
+          position: relative;
+          overflow: hidden;
         }
         
         /* Sidebar */
@@ -116,6 +132,7 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           top: 65px;
           overflow-y: auto;
           z-index: 999;
+          box-sizing: border-box;
         }
         
         .sidebar .user-info {
@@ -288,54 +305,17 @@ function Attendance({ onLogout, onViewChange, currentView }) {
         /* Dashboard area */
         .dashboard-area {
           flex: 1;
-          padding: 15px 15px 0 15px;
+          padding: 15px 15px 15px 15px;
           background: #fff;
           margin-left: 230px;
           overflow: hidden;
           position: relative;
+          width: calc(100vw - 230px);
+          box-sizing: border-box;
+          height: calc(100vh - 65px);
         }
         
-        .college-head {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          gap: 18px;
-          margin-bottom: 5px;
-          width: 100%;
-        }
-        
-        .college-logo {
-          width: 54px;
-          height: 54px;
-          border-radius: 50%;
-          background: #fff;
-          border: 1.5px solid #eee;
-          object-fit: cover;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .college-name {
-          font-size: 1.41em;
-          font-weight: bold;
-          color: #191c24;
-          letter-spacing: 0.7px;
-          display: flex;
-          flex: 1;
-          justify-content: flex-start;
-          align-items: center;
-          width: 100%;
-          white-space: nowrap;
-        }
-        
-        .college-name .autonomous {
-          color: #f06d68;
-        }
-        
-        .college-code {
-          font-weight: bold;
-          letter-spacing: 1px;
-          color: #191c24;
-        }
+
         
         .dash-greet {
           font-size: 1.22rem;
@@ -349,7 +329,9 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           gap: 20px;
-          margin: 20px 0;
+          margin: 0px;
+          box-sizing: border-box;
+          top margin :-10px;
         }
         
         .attendance-card {
@@ -358,7 +340,26 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           padding: 25px;
           border: 1px solid #f0f0f0;
-          text-align: center;
+          box-sizing: border-box;
+          min-height: 200px;
+          display: flex;
+          flex-direction: column;
+          top margin :-10px;
+          height: 280px;
+          margin-right:-140px;
+          margin-left:-110px;
+        }
+        
+        .percentage-card {
+          width: 235px;
+          height: 260px;
+        }
+        
+        .overall-status-card {
+          width: 235px;
+          height: 280px;
+          margin-left:150px;
+          margin-right:-px;
         }
         
         .attendance-card h3 {
@@ -366,6 +367,11 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           color: #191c24;
           font-size: 1.1em;
           font-weight: 600;
+          text-align: left;
+        }
+        
+        .percentage-card h3 {
+          text-align: center;
         }
         
         .percentage-card {
@@ -373,6 +379,10 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           flex-direction: column;
           align-items: center;
           gap: 15px;
+          text-align: center;
+          margin-left:30px;
+          width: 260px;
+          height: 280px;
         }
         
         .percentage-value {
@@ -380,6 +390,7 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           font-weight: bold;
           color: #2085f6;
           margin: 0;
+          text-align: center;
         }
         
         .attendance-chart {
@@ -387,12 +398,15 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           align-items: center;
           justify-content: space-between;
           gap: 20px;
+          margin-top: 0px;
+          flex: 1;
         }
         
         .pie-chart {
           width: 120px;
           height: 120px;
           position: relative;
+          margin: 0;
         }
         
         .pie-chart svg {
@@ -403,23 +417,27 @@ function Attendance({ onLogout, onViewChange, currentView }) {
         .attendance-stats {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 15px;
           text-align: left;
+          margin-left: 20px;
+          justify-content: center;
+          flex: 1;
         }
         
         .stat-item {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
           font-weight: 500;
+          font-size: 14px;
         }
         
         .stat-present {
-          color: #29bd6e;
+          color: #20B2AA;
         }
         
         .stat-absent {
-          color: #ee6c6c;
+          color: #FF7F50;
         }
         
         .status-list {
@@ -427,6 +445,8 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           list-style: none;
           padding: 0;
           margin: 0;
+          color: #2085f6;
+          flex: 1;
         }
         
         .status-list li {
@@ -440,22 +460,33 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           height: 40px;
           margin-bottom: 15px;
           color: #ffd700;
+          align-self: center;
         }
         
         /* Attendance Table */
         .attendance-table {
-          margin-top: 30px;
+          margin-top: 20px;
+          margin-bottom: 20px;
           background: #fff;
           border-radius: 12px;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           overflow: hidden;
           border: 1px solid #f0f0f0;
+          box-sizing: border-box;
+          height: 350px;
+        }
+
+        /* Scroll only the table rows; keep the rest of the page fixed */
+        .attendance-table .table-scroll {
+          max-height: calc(100vh - 500px);
+          overflow-y: auto;
+          overflow-x: hidden;
         }
         
         .table-header {
           background: #f8f9fa;
           padding: 20px;
-          border-bottom: 1px solid #e9ecef;
+          border-bottom: none;
         }
         
         .table-header h2 {
@@ -474,14 +505,41 @@ function Attendance({ onLogout, onViewChange, currentView }) {
           background: #f8f9fa;
           padding: 15px 20px;
           text-align: left;
-          font-weight: 600;
+          font-weight: 400 !important; /* force regular */
           color: #191c24;
           border-bottom: 1px solid #e9ecef;
+          font-size: 14px;
+        }
+        
+        /* Force table headers to be regular weight */
+        .attendance-table .table th {
+          font-weight: 400 !important;
+        }
+        
+        /* More specific selector for table headers */
+        .attendance-table table thead th {
+          font-weight: 400 !important;
+          font-size: 14px;
+          color: #191c24;
         }
         
         .table td {
           padding: 15px 20px;
           border-bottom: 1px solid #e9ecef;
+          color: #555;
+          font-size: 14px;
+          font-weight: 500 !important; /* force medium */
+        }
+        
+        /* Force table data to be medium weight */
+        .attendance-table .table td {
+          font-weight: 500 !important;
+        }
+        
+        /* More specific selector for table data */
+        .attendance-table table tbody td {
+          font-weight: 500 !important;
+          font-size: 14px;
           color: #555;
         }
         
@@ -490,13 +548,86 @@ function Attendance({ onLogout, onViewChange, currentView }) {
         }
         
         .status-present {
-          color: #29bd6e;
-          font-weight: 500;
+          color: #328332 !important; /* green */
+          font-weight: 500 !important;
         }
         
         .status-absent {
-          color: #ee6c6c;
-          font-weight: 500;
+          color: #AD2C2C !important; /* red */
+          font-weight: 500 !important;
+        }
+        
+        /* Sticky table header styles */
+        .sticky-table-header {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: #f8f9fa;
+        }
+        
+        .scrollable-table-body {
+          max-height: calc(91vh - 450px);
+          overflow-y: auto;
+          overflow-x: hidden;
+          margin-right: 15px;
+          padding-right: 5px;
+          margin-bottom: 10px;
+        }
+        
+        .scrollable-table-body::-webkit-scrollbar {
+          width: 16px;
+        }
+        
+        .scrollable-table-body::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 8px;
+          margin: 2px;
+        }
+        
+        .scrollable-table-body::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 8px;
+          border: 2px solid #f1f1f1;
+          min-height: 40px;
+        }
+        
+        .scrollable-table-body::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+        
+        /* Ensure proper table alignment */
+        .attendance-table table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+        }
+        
+        .attendance-table table th,
+        .attendance-table table td {
+          padding: 15px 20px;
+          text-align: left;
+          vertical-align: middle;
+        }
+        
+        /* Equal column width distribution */
+        .attendance-table table th:nth-child(1),
+        .attendance-table table td:nth-child(1) {
+          width: 25%;
+        }
+        
+        .attendance-table table th:nth-child(2),
+        .attendance-table table td:nth-child(2) {
+          width: 25%;
+        }
+        
+        .attendance-table table th:nth-child(3),
+        .attendance-table table td:nth-child(3) {
+          width: 25%;
+        }
+        
+        .attendance-table table th:nth-child(4),
+        .attendance-table table td:nth-child(4) {
+          width: 25%;
         }
         
         /* Responsive */
@@ -505,6 +636,19 @@ function Attendance({ onLogout, onViewChange, currentView }) {
             grid-template-columns: 1fr;
             gap: 15px;
           }
+        }
+
+        /* Prevent layout shifts when dev tools open/close */
+        * {
+          box-sizing: border-box;
+        }
+
+        /* Ensure consistent viewport calculations */
+        html {
+          overflow-x: hidden;
+          overflow-y: hidden; /* ensure no page scrollbar */
+          width: 100%;
+          height: 100%;
         }
       `}</style>
       
@@ -592,80 +736,95 @@ function Attendance({ onLogout, onViewChange, currentView }) {
             </button>
           </div>
           
-          {/* ATTENDANCE CONTENT */}
-          <div className="dashboard-area">
-            <div className="college-head">
-              <img
-                src={ksrCollegeImage}
-                alt="College Logo"
-                className="college-logo"
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, width: '100%' }}>
-                <span className="college-name">K S R COLLEGE OF ENGINEERING <span className="autonomous">(Autonomous)</span> <span className="college-code">- 637215</span></span>
-              </div>
-            </div>
-            <div className="dash-greet">Welcome Back, Student</div>
+                      {/* ATTENDANCE CONTENT */}
+            <div className="dashboard-area">
             
             {/* Attendance Cards */}
             <div className="attendance-cards">
               {/* Total Percentage Card */}
               <div className="attendance-card percentage-card">
                 <h3>Total Percentage</h3>
-                <svg className="graduation-cap" viewBox="0 0 24 24" fill="currentColor" style={{ width: '40px', height: '40px', color: '#2085f6' }}>
-                  <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                </svg>
+                <img 
+                  src={totalpercentagestudenticon} 
+                  alt="Student Icon" 
+                  style={{ 
+                    width: '100px', 
+                    height: '100px',
+                    
+                  }} 
+                />
+                <img 
+                  src={totalpercentageicon} 
+                  alt="Student Icon" 
+                  style={{ 
+                    width: '30px', 
+                    height: '30px',
+                    marginTop:'-60px',
+                    marginLeft: '90px'
+                    
+                  }} 
+                />
                 <div className="percentage-value">55%</div>
               </div>
+              
 
               {/* Attendance Card */}
               <div className="attendance-card">
                 <h3>Attendance</h3>
                 <div className="attendance-chart">
                   <div className="pie-chart">
-                    <svg width="120" height="120">
-                      {/* Present Green Pie (59%) */}
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                      {/* Present Teal Green Pie (59%) */}
                       <circle
                         r="45"
                         cx="60"
                         cy="60"
                         fill="transparent"
-                        stroke="#29bd6e"
+                        stroke="#20B2AA"
                         strokeWidth="12"
                         strokeDasharray={`${(2 * Math.PI * 45 * 0.59)}, ${(2 * Math.PI * 45 * 0.41)}`}
                         strokeDashoffset="0"
+                        transform="rotate(-90 60 60)"
                       />
-                      {/* Absent Red Pie on top (41%) */}
+                      {/* Absent Coral Red Pie on top (41%) */}
                       <circle
                         r="45"
                         cx="60"
                         cy="60"
                         fill="transparent"
-                        stroke="#ee6c6c"
+                        stroke="#FF7F50"
                         strokeWidth="12"
                         strokeDasharray={`${(2 * Math.PI * 45 * 0.41)}, ${(2 * Math.PI * 45 * 0.59)}`}
                         strokeDashoffset={`-${2 * Math.PI * 45 * 0.59}`}
+                        transform="rotate(-90 60 60)"
                       />
                     </svg>
                   </div>
                   <div className="attendance-stats">
                     <div className="stat-item stat-present">
-                      <div style={{ width: '12px', height: '12px', backgroundColor: '#29bd6e', borderRadius: '50%' }}></div>
-                      Present 59
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#20B2AA', borderRadius: '50%' }}></div>
+                      <div>
+                        <div style={{ color: '#20B2AA', fontWeight: 'bold', fontSize: '18px' }}>59</div>
+                        <div style={{ fontSize: '14px', color: '#333' }}>Present</div>
+                      </div>
                     </div>
                     <div className="stat-item stat-absent">
-                      <div style={{ width: '12px', height: '12px', backgroundColor: '#ee6c6c', borderRadius: '50%' }}></div>
-                      Absent 41
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#FF7F50', borderRadius: '50%' }}></div>
+                      <div>
+                        <div style={{ color: '#FF7F50', fontWeight: 'bold', fontSize: '18px' }}>41</div>
+                        <div style={{ fontSize: '14px', color: '#333' }}>Absent</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Overall Status Card */}
-              <div className="attendance-card">
-                <h3>Overall Status</h3>
-                <svg className="star-icon" viewBox="0 0 24 24" fill="currentColor">
+              <div className="attendance-card overall-status-card">
+                <svg className="star-icon" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#ffd700', width: '40px', height: '40px', marginBottom: '15px' }}>
                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                 </svg>
+                <h3 style={{ textAlign: 'center' }}>Overall Status</h3>
                 <ul className="status-list">
                   <li>1. Good (Above 90%)</li>
                   <li>2. Average (80-90%)</li>
@@ -680,35 +839,111 @@ function Attendance({ onLogout, onViewChange, currentView }) {
                 <h2>ATTENDANCE DETAILS</h2>
               </div>
               <table className="table">
-                <thead>
+                <thead className="sticky-table-header">
                   <tr>
-                    <th>S.No</th>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Status</th>
+                    <th style={{ fontWeight: 400, fontSize: '14px', color: '#949494' }}>S.No</th>
+                    <th style={{ fontWeight: 400, fontSize: '14px', color: '#949494' }}>Date</th>
+                    <th style={{ fontWeight: 400, fontSize: '14px', color: '#949494' }}>Type</th>
+                    <th style={{ fontWeight: 400, fontSize: '14px', color: '#949494' }}>Status</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>31/07/2025</td>
-                    <td>Training</td>
-                    <td className="status-present">Present</td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>1/08/2025</td>
-                    <td>Company Drive</td>
-                    <td className="status-present">Present</td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>1/08/2025</td>
-                    <td>-</td>
-                    <td className="status-absent">Absent</td>
-                  </tr>
-                </tbody>
               </table>
+              <div className="scrollable-table-body">
+                <table className="table">
+                  <tbody>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>1</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>31/07/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Training</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>2</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>1/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Company Drive</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>3</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>2/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Workshop</td>
+                      <td className="status-absent" style={{ fontWeight: 500, fontSize: '14px' }}>Absent</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>4</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>3/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Interview Prep</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>5</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>4/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Mock Interview</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>6</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>5/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Career Counseling</td>
+                      <td className="status-absent" style={{ fontWeight: 500, fontSize: '14px' }}>Absent</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>7</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>6/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Placement Drive</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>8</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>7/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Resume Review</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>9</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>8/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Group Discussion</td>
+                      <td className="status-absent" style={{ fontWeight: 500, fontSize: '14px' }}>Absent</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>10</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>9/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Final Interview</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>11</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>10/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Technical Round</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>12</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>11/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>HR Interview</td>
+                      <td className="status-absent" style={{ fontWeight: 500, fontSize: '14px' }}>Absent</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>13</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>12/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Aptitude Test</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>14</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>13/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Coding Test</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>15</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>14/08/2025</td>
+                      <td style={{ fontWeight: 500, fontSize: '14px', color: '#000000' }}>Final Selection</td>
+                      <td className="status-present" style={{ fontWeight: 500, fontSize: '14px' }}>Present</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -718,5 +953,6 @@ function Attendance({ onLogout, onViewChange, currentView }) {
 }
 
 export default Attendance;
+
 
 

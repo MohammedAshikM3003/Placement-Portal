@@ -11,6 +11,7 @@ import {
 import logoImage from "./assets/logo.png";
 import loginImage from "./assets/student1.png";
 import Adminicon from "./assets/Adminicon.png";
+import mainloginicon from "./assets/mainloginicon.png"
 
 const PlacementPortalLogin = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -173,7 +174,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           <div className="form-wrapper">
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
               <img
-                src={Adminicon}
+                src={mainloginicon}
                 alt="Form Logo"
                 style={{
                   height: 90,
@@ -181,7 +182,6 @@ const PlacementPortalLogin = ({ onLogin }) => {
                   objectFit: "contain",
                   display: "block",
                   margin: "0 auto",
-                  filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)",
                 }}
               />
             </div>
@@ -240,6 +240,20 @@ const PlacementPortalLogin = ({ onLogin }) => {
           }
         }
 
+        /* Fix for alignment issues when dev tools are opened/closed */
+        html, body {
+          overflow-x: hidden;
+          width: 100%;
+          height: 100%;
+          position: relative;
+        }
+
+        /* Ensure consistent viewport calculations */
+        .main-layout {
+          min-height: calc(100vh - 70px);
+          box-sizing: border-box;
+        }
+
         .login-box {
           width: 420px;
           height: auto;
@@ -253,6 +267,9 @@ const PlacementPortalLogin = ({ onLogin }) => {
           justify-content: space-evenly;
           align-items: center;
           transition: 0.3s ease;
+          box-sizing: border-box;
+          position: relative;
+          z-index: 1;
         }
 
         .glow-on-hover:hover {
@@ -268,6 +285,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           align-items: center;
           gap: 20px;
           padding: 10px 0;
+          box-sizing: border-box;
         }
 
         .field {
@@ -277,6 +295,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           width: 90%;
           align-items: flex-start;
           margin-bottom: 16px;
+          box-sizing: border-box;
         }
 
         .field label {
@@ -295,6 +314,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           background: #fafbff;
           transition: all 0.3s ease;
           width: 100%;
+          box-sizing: border-box;
         }
 
         .input-wrapper:focus-within {
@@ -309,6 +329,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           font-size: 15px;
           width: 100%;
           color: #333;
+          box-sizing: border-box;
         }
 
         .input-wrapper input::placeholder {
@@ -327,6 +348,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 6px 20px rgba(89, 50, 234, 0.4);
+          box-sizing: border-box;
         }
 
         .login-button:hover {
@@ -338,9 +360,27 @@ const PlacementPortalLogin = ({ onLogin }) => {
         .login-button:active {
           transform: translateY(0);
         }
+
+        /* Prevent layout shifts when dev tools open/close */
+        * {
+          box-sizing: border-box;
+        }
+
+        /* Ensure navbar stays fixed properly */
+        nav {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 1000 !important;
+          width: 100vw !important;
+          box-sizing: border-box !important;
+        }
       `}</style>
     </div>
   );
 };
 
 export default PlacementPortalLogin;
+
+
