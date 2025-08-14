@@ -1,0 +1,16 @@
+/* Hide scroll from main page */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  /* Hide scrollbar in application list */
+  .appList {
+    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .appList::-webkit-scrollbar {
+    display: none;             /* Chrome/Safari */
+  }

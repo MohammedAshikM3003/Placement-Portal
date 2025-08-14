@@ -69,6 +69,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           margin: 0;
           padding: 0;
           font-family: 'Poppins', Arial, sans-serif;
+          overflow: hidden; /* UPDATED: Prevents main browser scrollbar */
         }
         
         .container {
@@ -77,7 +78,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           min-height: 100vh;
         }
         
-        /* Navbar styles */
+        /* Navbar styles from Achievements.js */
         .navbar {
           display: flex;
           align-items: center;
@@ -91,6 +92,8 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           left: 0;
           right: 0;
           z-index: 1000;
+          height: 65px; /* Define an explicit height */
+          box-sizing: border-box; /* Include padding in height */
         }
         
         .navbar .left {
@@ -108,8 +111,8 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
         }
         
         .portal-logo img {
-          height: 35px;
-          width: 35px;
+          height: 30px;
+          width: 40px;
           filter: brightness(0) invert(1);
         }
         
@@ -145,21 +148,20 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
         
         .main {
           display: flex;
-          min-height: calc(100vh - 65px);
-          margin-top: 65px;
+          margin-top: 65px; /* Must match navbar height */
         }
         
-        /* Sidebar */
+        /* Sidebar styles from Achievements.js */
         .sidebar {
           background: #fff;
           width: 230px;
-          height: calc(100vh - 65px);
+          height: calc(100vh - 65px); /* Must match navbar height */
           box-shadow: 2px 0 12px #e1e6ef3a;
           display: flex;
           flex-direction: column;
           position: fixed;
           left: 0;
-          top: 65px;
+          top: 65px; /* Must match navbar height */
           overflow-y: auto;
           z-index: 999;
         }
@@ -174,11 +176,12 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           align-items: center;
           position: relative;
           flex-shrink: 0;
+          margin-top: 15px;
         }
         
         .sidebar .user-details img {
-          width: 24px;
-          height: 24px;
+          width: 50px;
+          height: 40px;
           margin-right: 15px;
           flex-shrink: 0;
         }
@@ -225,7 +228,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           justify-content: center;
           border-radius: 4px;
           transition: background 0.2s;
-          margin-top: 20px; 
+          margin-top: 40px; 
         }
         
         .sidebar .menu-toggle:hover {
@@ -236,8 +239,8 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           flex: 1;
           display: flex;
           flex-direction: column;
-          padding: 25px 0;
-          justify-content: space-between;
+          padding: 0px 0;
+          justify-content: flex-start;
           gap: 0;
           min-height: 0;
         }
@@ -252,7 +255,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
         .sidebar .nav-item {
           display: flex;
           align-items: center;
-          font-size: 1.04rem;
+          font-size: 1.27rem;
           padding: 18px 25px;
           color: #000000;
           text-decoration: none;
@@ -261,6 +264,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           gap: 15px;
           border-left: 4px solid transparent;
           margin: 3px 0;
+          margin-top : 10px;
         }
         
         .sidebar .nav-item.selected {
@@ -297,20 +301,22 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
         
         .sidebar .nav-divider {
           height: 1px;
+          width: 228px;
           background: #e0e0e0;
-          margin: 8px 25px;
+          margin: 8px 2px;
           border-top: 1px dotted #ccc;
           flex-shrink: 0;
+          margin-top: 12px;
         }
         
         .sidebar .logout-btn {
-          background: #E96D7B;
+          background: #D23B42;
           color: #fff;
           margin: 25px 25px 25px 25px;
-          padding: 15px 0;
+          padding: 10px 0;
           border: none;
-          border-radius: 25px;
-          font-size: 1.07rem;
+          border-radius: 60px;
+          font-size: 1.3rem;
           font-weight: 500;
           letter-spacing: 0.2px;
           cursor: pointer;
@@ -319,20 +325,26 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          width: 50%;
+          margin-left: 50px;
+          margin-bottom: 10px;
         }
         
         .sidebar .logout-btn:hover {
           background: #d55a6a;
         }
-        
-        /* Dashboard area */
+
+        /* Original dashboard styles below */
         .dashboard-area {
           flex: 1;
+          height: calc(100vh - 65px); /* UPDATED: Subtracts navbar height */
           padding: 15px 15px 0 15px;
           background: #fff;
-          margin-left: 230px;
-          overflow: hidden;
+          margin-left: 230px; /* Space for the fixed sidebar */
+          overflow-y: auto; /* A scrollbar will appear HERE if content is too tall */
+          overflow-x: hidden;
           position: relative;
+          box-sizing: border-box; 
         }
         
         .college-head {
@@ -363,7 +375,6 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           width: 200%;
           white-space: nowrap;
           font-family:'times new roman';
-          
         }
         
         .college-name .autonomous {
@@ -385,7 +396,6 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           margin: 30px 0 10px 0;
           color:rgb(0, 0, 0);
           margin-left: 25px;
-          
         }
         .student{
           font-size:1.5rem;
@@ -397,7 +407,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           grid-template-columns: 270px 270px 270px 270px;
           grid-template-rows: auto auto auto;
           gap: 5px;
-          padding: 36px 30px 32px 30px;
+          padding: 36px 30px 2px 35px;
           background:rgb(255, 255, 255);
           min-height: calc(100vh - 200px);
           border: 2px solid #ffffff; 
@@ -406,7 +416,6 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           margin-bottom: 20px;
         }
 
-        /* Original Card Styles (Untouched) */
         .card-notif, .card-resume, .card-drive, .card-certificates, .card-app-status, 
         .card-placmt-status, .card-suggest, .card-my-account {
           background: #fff;
@@ -505,7 +514,6 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           box-shadow: 0 4px 12px rgb(209, 213, 216);
         }
 
-        /* --- REPLACEMENT STYLES FOR ATTENDANCE CARD --- */
         .card-attendance {
             grid-column: 3 / span 2;
             grid-row: 3 / span 1;
@@ -665,7 +673,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
               <nav className="nav">
                   <div className="nav-section">
                       {sidebarItems.slice(0, 5).map((item) => (
-                          <span key={item.text} className={`nav-item${item.view === currentView ? ' selected' : ''}`} onClick={() => { console.log("Sidebar item clicked:", item.text, "view:", item.view); onViewChange(item.view); }}>
+                          <span key={item.text} className={`nav-item${item.view === currentView ? ' selected' : ''}`} onClick={() => onViewChange(item.view)}>
                               <img src={item.icon} alt={item.text} /> {item.text}
                           </span>
                       ))}
@@ -718,7 +726,7 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
               </div>
 
               <div className="card-certificates">
-                <img src={require('./assets/teenyicons_certificate-outline.png')} alt="Certificates" style={{ width: 100,height: 100,marginBottom: 12,marginTop: 20,marginLeft: 30}} />
+                <img src={require('./assets/uploadcertificateicon.png')} alt="Certificates" style={{ width: 100,height: 100,marginBottom: 12,marginTop: 20,marginLeft: 30}} />
                 <img src={require('./assets/certificateuploadicon.png')} alt="Certificates" style={{ width: 30,height: 30,marginBottom: 12,marginTop: -55,marginLeft: 45}} />
                 <div style={{ fontWeight: 700, fontSize: 30, marginTop: -80, marginBottom: 10,marginLeft: 200}}>
                   Upload Certificates
@@ -757,7 +765,6 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
                 <div style={{ fontSize: '15px', marginTop:'-5px', marginLeft: '90px', color: "#555" }}>Settings</div>
               </div>
 
-              {/* REPLACED ATTENDANCE CARD */}
               <div className="card-attendance">
                   <h2 className="new-attendance-title">Attendance</h2>
                   <ModernAttendanceChart present={attendance.present} absent={attendance.absent} />

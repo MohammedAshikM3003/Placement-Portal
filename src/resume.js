@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Typography, IconButton, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, TextField, Paper, Chip } from '@mui/material';
+import { Typography, IconButton, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, TextField, Paper, Chip } from '@mui/material';
 import { School, Dashboard, Description, CalendarToday, EmojiEvents, Business, Person, Logout, Upload, Preview, Download, Menu, MoreVert, KeyboardArrowDown, Info, Star, Mail } from '@mui/icons-material';
 import { FaLinkedin, FaGithub, FaTachometerAlt, FaFileAlt, FaCalendarAlt, FaRegStar, FaBriefcase, FaGraduationCap, FaUser, FaSignOutAlt, FaHome, FaInfo, FaStar, FaEnvelope } from 'react-icons/fa';
 import PlacementPortalIcon from './assets/PlacementPortalicon.png';
@@ -593,7 +593,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           overflow-x: hidden;
         }
         
-        /* Navbar styles */
+        /* Navbar styles from Achievements.js */
         .navbar {
           display: flex;
           align-items: center;
@@ -607,8 +607,6 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           left: 0;
           right: 0;
           z-index: 1000;
-          width: 100vw;
-          box-sizing: border-box;
         }
         
         .navbar .left {
@@ -626,8 +624,8 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
         }
         
         .portal-logo img {
-          height: 35px;
-          width: 35px;
+          height: 30px;
+          width: 40px;
           filter: brightness(0) invert(1);
         }
         
@@ -665,11 +663,9 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           display: flex;
           min-height: calc(100vh - 65px);
           margin-top: 65px;
-          width: 100%;
-          position: relative;
         }
         
-        /* Sidebar */
+        /* Sidebar styles from Achievements.js */
         .sidebar {
           background: #fff;
           width: 230px;
@@ -680,9 +676,8 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           position: fixed;
           left: 0;
           top: 65px;
-          overflow-y: hidden;
+          overflow-y: auto;
           z-index: 999;
-          box-sizing: border-box;
         }
         
         .sidebar .user-info {
@@ -695,11 +690,12 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           align-items: center;
           position: relative;
           flex-shrink: 0;
+          margin-top: 15px;
         }
         
         .sidebar .user-details img {
-          width: 24px;
-          height: 24px;
+          width: 50px;
+          height: 40px;
           margin-right: 15px;
           flex-shrink: 0;
         }
@@ -746,6 +742,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           justify-content: center;
           border-radius: 4px;
           transition: background 0.2s;
+          margin-top: 40px; 
         }
         
         .sidebar .menu-toggle:hover {
@@ -756,8 +753,8 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           flex: 1;
           display: flex;
           flex-direction: column;
-          padding: 25px 0;
-          justify-content: space-between;
+          padding: 0px 0;
+          justify-content: flex-start;
           gap: 0;
           min-height: 0;
         }
@@ -772,7 +769,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
         .sidebar .nav-item {
           display: flex;
           align-items: center;
-          font-size: 1.04rem;
+          font-size: 1.27rem;
           padding: 18px 25px;
           color: #000000;
           text-decoration: none;
@@ -781,6 +778,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           gap: 15px;
           border-left: 4px solid transparent;
           margin: 3px 0;
+          margin-top : 10px;
         }
         
         .sidebar .nav-item.selected {
@@ -817,20 +815,22 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
         
         .sidebar .nav-divider {
           height: 1px;
+          width: 228px;
           background: #e0e0e0;
-          margin: 8px 25px;
+          margin: 8px 2px;
           border-top: 1px dotted #ccc;
           flex-shrink: 0;
+          margin-top: 12px;
         }
         
         .sidebar .logout-btn {
-          background: #E96D7B;
+          background: #D23B42;
           color: #fff;
           margin: 25px 25px 25px 25px;
-          padding: 15px 0;
+          padding: 10px 0;
           border: none;
-          border-radius: 25px;
-          font-size: 1.07rem;
+          border-radius: 60px;
+          font-size: 1.3rem;
           font-weight: 500;
           letter-spacing: 0.2px;
           cursor: pointer;
@@ -839,31 +839,29 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          width: 50%;
+          margin-left: 50px;
+          margin-bottom: 10px;
         }
         
         .sidebar .logout-btn:hover {
           background: #d55a6a;
         }
 
-        /* Prevent layout shifts when dev tools open/close */
-        * {
-          box-sizing: border-box;
-        }
-
-        /* Ensure consistent viewport calculations */
-        html {
-          overflow-x: hidden;
-          width: 100%;
-          height: 100%;
-        }
-
-        /* Ensure content area maintains proper width */
-        .resume-content {
+        /* Original dashboard styles below */
+        .dashboard-area {
+          flex: 1;
+          height: calc(100vh - 0px);
+          padding: 15px 15px 0 15px;
+          background: #fff;
           margin-left: 230px;
-          width: calc(100vw - 230px);
-          overflow: hidden;
-          box-sizing: border-box;
+          overflow-y: hidden;
+          overflow-x: hidden;
+          position: relative;
+          margin-top: -10px;
         }
+
+
       `}</style>
       
       <div className="container">
@@ -951,7 +949,7 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
           </div>
           
           {/* RESUME CONTENT */}
-          <div className="resume-content">
+          <div className="dashboard-area">
             <MainContent onViewChange={onViewChange} />
           </div>
         </div>
@@ -961,7 +959,6 @@ function PlacementPortal({ onLogout, onViewChange, currentView }) {
 }
 
 export default PlacementPortal;
-
 
 
 

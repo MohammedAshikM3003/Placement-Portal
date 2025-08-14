@@ -8,12 +8,11 @@ import {
   FaUserAlt,
   FaLock,
 } from "react-icons/fa";
-import logoImage from "./assets/logo.png";
 import loginImage from "./assets/student1.png";
 import Adminicon from "./assets/Adminicon.png";
 import mainloginicon from "./assets/mainloginicon.png"
 
-const PlacementPortalLogin = ({ onLogin }) => {
+const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => { // Accept the navigation prop
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -191,9 +190,9 @@ const PlacementPortalLogin = ({ onLogin }) => {
                 <label style={{ marginBottom: "8px", display: "block" }}>Email</label>
                 <div className="input-wrapper">
                   <FaUserAlt style={{ marginRight: 12, color: "#90a4ae", fontSize: "16px" }} />
-                  <input 
-                    type="email" 
-                    placeholder="Enter your email address" 
+                  <input
+                    type="email"
+                    placeholder="Enter your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -206,9 +205,9 @@ const PlacementPortalLogin = ({ onLogin }) => {
                 <label style={{ marginBottom: "8px", display: "block" }}>Password</label>
                 <div className="input-wrapper">
                   <FaLock style={{ marginRight: 12, color: "#90a4ae", fontSize: "16px" }} />
-                  <input 
-                    type="password" 
-                    placeholder="Enter your password" 
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -217,10 +216,33 @@ const PlacementPortalLogin = ({ onLogin }) => {
                 </div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "center", marginTop: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginTop: "50px", width:"362px" }}>
                 <button type="submit" className="login-button">Login</button>
               </div>
             </form>
+             {/* === SIGN UP LINK MODIFIED HERE === */}
+             <p
+              style={{
+                marginTop: "30px",
+                fontSize: "15px",
+                color: "#606060",
+                textAlign: "center",
+              }}
+            >
+              Don't have an account?{" "}
+              <a
+                href="#!" // Prevent page reload
+                onClick={onNavigateToSignUp} // Call the navigation function
+                style={{
+                  color: "#5932EA",
+                  fontWeight: "bold",
+                  textDecoration: "none",
+                  cursor: "pointer", // Add pointer cursor
+                }}
+              >
+                Sign up
+              </a>
+            </p>
           </div>
         </div>
       </div>
@@ -292,7 +314,7 @@ const PlacementPortalLogin = ({ onLogin }) => {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          width: 90%;
+          width: 100%;
           align-items: flex-start;
           margin-bottom: 16px;
           box-sizing: border-box;
@@ -382,5 +404,3 @@ const PlacementPortalLogin = ({ onLogin }) => {
 };
 
 export default PlacementPortalLogin;
-
-
