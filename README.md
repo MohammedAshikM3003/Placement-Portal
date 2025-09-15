@@ -89,4 +89,9 @@ src/
 - Logout functionality works across all views
 
 ##Figma
+
 https://www.figma.com/design/UyHXeAFXWMxpfhbwXe3QvU/Placement-portal-grid?node-id=0-1&t=xCF2roKj5kssZkTO-1
+
+##Refrence site
+
+https://ce.ksrei.org/2026/
