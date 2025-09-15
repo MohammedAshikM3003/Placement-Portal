@@ -87,3 +87,6 @@ src/
 - The application uses console logging for debugging navigation
 - All views are now properly connected and navigable
 - Logout functionality works across all views
+
+##Figma
+https://www.figma.com/design/UyHXeAFXWMxpfhbwXe3QvU/Placement-portal-grid?node-id=0-1&t=xCF2roKj5kssZkTO-1
