@@ -1,11 +1,10 @@
 import React from 'react';
-import { Typography, IconButton, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, TextField, Paper, Chip } from '@mui/material';
-import { School, Dashboard, Description, CalendarToday, EmojiEvents, Business, Person, Logout, Upload, Preview, Download, Menu, MoreVert, KeyboardArrowDown, Info, Star, Mail } from '@mui/icons-material';
-import { FaLinkedin, FaGithub, FaTachometerAlt, FaFileAlt, FaCalendarAlt, FaRegStar, FaBriefcase, FaGraduationCap, FaUser, FaSignOutAlt, FaHome, FaInfo, FaStar, FaEnvelope } from 'react-icons/fa';
-import PlacementPortalIcon from './assets/PlacementPortalicon.png';
-import logo from './assets/logo.png';
+import { Typography, Button, Box, Paper } from '@mui/material';
+import { Upload, Preview, Download } from '@mui/icons-material';
+
+
 import Adminicon from './assets/Adminicon.png';
-import ksrCollegeImage from './assets/ksrCollegeImage.jpg';
+
 import CompanySideBarIcon from './assets/CompanySideBarIcon.svg';
 
 const sidebarItems = [
@@ -407,7 +406,7 @@ function MainContent({ onViewChange }) {
                     </Typography>
                   ) : (
                     <Typography fontSize={19} sx={{ lineHeight: 1.4 }}>
-                      *Select a file and click Upload
+                      *Click Upload and Select a file
                     </Typography>
                   )}
                   {uploadDate && (

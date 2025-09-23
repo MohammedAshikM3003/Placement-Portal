@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react"; // 1. IMPORT useState
+import MainRegistration from "./MainRegistration.js";
 import {
   FaGraduationCap,
   FaHome,
@@ -12,6 +13,21 @@ import mainloginicon from "./assets/mainloginicon.png";
 
 // Renamed component and accept navigation prop
 const MainSignUp = ({ onNavigateToLogin }) => {
+  // 2. ADD STATE TO MANAGE VIEW
+  const [showUgRegistration, setShowUgRegistration] = useState(false);
+
+  // Function to handle the UG button click
+  const handleUgClick = () => {
+    setShowUgRegistration(true); // This will trigger the re-render
+  };
+
+  // 3. ADD CONDITIONAL RENDERING
+  // If showUgRegistration is true, render the MainRegistration component
+  if (showUgRegistration) {
+    return <MainRegistration />;
+  }
+
+  // Otherwise, render the default sign-up page
   return (
     <div
       style={{
@@ -123,11 +139,13 @@ const MainSignUp = ({ onNavigateToLogin }) => {
                 width: 90,
                 objectFit: "contain",
                 display: "block",
-                marginTop:"-100px"
+                marginTop: "-100px",
               }}
             />
           </div>
+          {/* 4. ATTACH THE onClick HANDLER TO THE UG BUTTON */}
           <button
+            onClick={handleUgClick}
             className="login-button"
             style={{
               color: "#197AFF",
@@ -140,13 +158,20 @@ const MainSignUp = ({ onNavigateToLogin }) => {
             className="login-button"
             style={{
               color: "#2568C5",
-              marginBottom: "12px",
+              marginBottom: "40px",
             }}
           >
             <FaGraduationCap /> POST GRADUATE (PG)
           </button>
           {/* === LOGIN LINK MODIFIED HERE === */}
-          <div style={{ marginTop: "24px", fontSize: "16px", color: "#333", textAlign: "center" }}>
+          <div
+            style={{
+              marginTop: "0px",
+              fontSize: "16px",
+              color: "#333",
+              textAlign: "center",
+            }}
+          >
             Already have an account?{" "}
             <a
               href="#!" // Prevent page reload
@@ -161,7 +186,51 @@ const MainSignUp = ({ onNavigateToLogin }) => {
               Login
             </a>
           </div>
+
+          {/* === NEW BUTTONS ADDED HERE === */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "15px",
+              marginTop: "20px",
+              width: "100%",
+            }}
+          >
+            <button
+              style={{
+                backgroundColor: "#28a745",
+                color: "#fff",
+                border: "none",
+                borderRadius: "16px",
+                padding: "14px 0",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              Admin
+            </button>
+            <button
+              style={{
+                backgroundColor: "#dc3545",
+                color: "#fff",
+                border: "none",
+                borderRadius: "16px",
+                padding: "14px 0",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              Co-Ordinator
+            </button>
+          </div>
+          {/* === END OF NEW BUTTONS === */}
         </div>
+
         {/* Image Illustration (Right) */}
         <div
           style={{
@@ -194,7 +263,8 @@ const MainSignUp = ({ onNavigateToLogin }) => {
               left: 0,
               right: 0,
               height: "40%",
-              background: "linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3))",
+              background:
+                "linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3))",
               pointerEvents: "none",
             }}
           />
@@ -217,13 +287,14 @@ const MainSignUp = ({ onNavigateToLogin }) => {
           flex-direction: column;
           justify-content: center;
           align-items: center;
+          transition: 0.3s ease;
           position: relative;
           z-index: 1;
-          transition: box-shadow 0.35s ease-in-out;
+          
         }
 
         .login-box:hover {
-          box-shadow: 0 0 70px 8px rgba(89, 50, 234, 0.7);
+          box-shadow: 0 0 35px rgba(89, 50, 234, 0.9), 0 0 15px rgba(89, 50, 234, 0.4);
         }
         
         .login-button {

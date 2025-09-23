@@ -1,22 +1,22 @@
 import React, { useRef, useState } from "react";
 
-export default function CertificateUpload({ onClose, onUpload }) {
+export default function EditCertificate({ onClose, onUpdate, initialData }) {
   const fileInputRef = useRef();
-  const [fileName, setFileName] = useState("");
-  const [fileContent, setFileContent] = useState("");
-  const [lastUploaded, setLastUploaded] = useState("");
+  const [fileName, setFileName] = useState(initialData?.fileName || "");
+  const [fileContent, setFileContent] = useState(initialData?.fileContent || "");
+  const [lastUploaded, setLastUploaded] = useState(initialData?.uploadDate || "");
   const [error, setError] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [setIsSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
-    reg: "",
-    name: "",
-    year: "",
-    semester: "",
-    section: "",
-    date: "",
-    comp: "",
-    prize: "",
+    reg: initialData?.reg || "",
+    name: initialData?.name || "",
+    year: initialData?.year || "",
+    semester: initialData?.semester || "",
+    section: initialData?.section || "",
+    date: initialData?.date || "",
+    comp: initialData?.comp || "",
+    prize: initialData?.prize || "",
   });
 
   const handleInputChange = (e) => {
@@ -69,8 +69,8 @@ export default function CertificateUpload({ onClose, onUpload }) {
     setLastUploaded(new Date().toLocaleDateString());
     setIsSubmitted(true);
 
-    const newAchievement = {
-      id: Date.now(),
+    const updatedAchievement = {
+      id: initialData?.id || Date.now(),
       reg: formData.reg,
       name: formData.name,
       year: formData.year,
@@ -79,37 +79,19 @@ export default function CertificateUpload({ onClose, onUpload }) {
       date: formData.date,
       comp: formData.comp,
       prize: formData.prize,
-      approved: false,
+      approved: initialData?.approved || false,
       fileName: fileName,
       fileContent: fileContent,
       uploadDate: new Date().toLocaleDateString(),
     };
 
-    if (onUpload) onUpload(newAchievement);
+    if (onUpdate) onUpdate(updatedAchievement);
     if (onClose) setTimeout(() => { onClose(); }, 100);
-  };
-
-  const inputStyle = {
-    flex: 1,
-    fontSize: 15.4,
-    fontFamily: "Poppins, sans-serif",
-    borderRadius: 10,
-    border: "1.5px solid #bddaed",
-    background: "#f8faff",
-    color: "#3A4957",
-    padding: "12px 16px 12px 13px",
-    outline: "none",
-    fontWeight: 500,
-    letterSpacing: ".03em",
-    width: "100%",
-    minWidth: "0",
-    boxSizing: "border-box",
   };
 
   return (
     <>
       <style>{`
-        /* FIX: The .input-hover class now contains only the shared styles for all inputs and selects. */
         .input-hover {
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
           border: 1.5px solid #bddaed;
@@ -126,29 +108,15 @@ export default function CertificateUpload({ onClose, onUpload }) {
           box-sizing: border-box;
           min-width: 0;
         }
-
-        /* FIX: This new, more specific selector applies the dropdown arrow style ONLY to select elements. */
-        select.input-hover {
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
-          background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23555%22/%3E%3C/svg%3E');
-          background-repeat: no-repeat;
-          background-position: right 10px top 50%;
-          background-size: 16px;
-        }
-
         .input-hover:hover {
           border-color: #2276fc;
           box-shadow: 0 0 6px rgba(34, 118, 252, 0.5);
         }
-
         .input-hover:focus {
           outline: none;
           border-color: #1a56db;
           box-shadow: 0 0 8px rgba(34, 118, 252, 0.8);
         }
-
         .upload-button {
           border-radius: 10px;
           border: 1px solid #bddaed;
@@ -167,7 +135,6 @@ export default function CertificateUpload({ onClose, onUpload }) {
           box-shadow: 0 1.5px 6px rgba(0, 0, 0, 0.04);
           transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
-
         .upload-button:hover,
         .upload-button:focus,
         .upload-button:active {
@@ -176,7 +143,6 @@ export default function CertificateUpload({ onClose, onUpload }) {
           box-shadow: 0 0 10px rgba(34, 118, 252, 0.6);
           outline: none;
         }
-
         .submit-button {
           width: calc(100% - 166px);
           background: #2276fc;
@@ -192,12 +158,10 @@ export default function CertificateUpload({ onClose, onUpload }) {
           box-shadow: 0 2.5px 12px 0 rgba(34,121,252,0.13);
           transition: background-color 0.25s ease, box-shadow 0.25s ease;
         }
-
         .submit-button:hover {
           background-color: #1a56db;
           box-shadow: 0 3px 15px 0 rgba(34,89,252,0.3);
         }
-
         .submit-button:focus,
         .submit-button:active {
           background-color: #1541b0;
@@ -269,7 +233,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 letterSpacing: 0.3,
               }}
             >
-              Upload Certificate
+              Edit Certificate
             </h2>
             <div
               style={{
@@ -301,7 +265,6 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 required
               />
             </div>
-            {/* Year and Semester dropdowns */}
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <select
                 className="input-hover"
@@ -310,7 +273,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 onChange={handleInputChange}
                 required
               >
-                <option value="" disabled>Year</option>
+                <option value="">Select Year</option>
                 <option value="I">I</option>
                 <option value="II">II</option>
                 <option value="III">III</option>
@@ -323,12 +286,15 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 onChange={handleInputChange}
                 required
               >
-                <option value="" disabled>Semester</option>
-                {[...Array(8)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
+                <option value="">Select Semester</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
               </select>
             </div>
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
@@ -471,7 +437,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 {error && <div style={{ color: "#ff6464", marginTop: 4 }}>{error}</div>}
               </div>
             </div>
-            {/* Submit Button */}
+            {/* Update Button */}
             <div
               style={{
                 display: "flex",
@@ -481,7 +447,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
               }}
             >
               <button type="submit" className="submit-button">
-                Submit
+                Update
               </button>
             </div>
           </form>

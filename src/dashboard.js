@@ -584,10 +584,10 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange, currentVi
           z-index: 2;
         }
         .absent-label {
-            top: 0; left: 50%;
+            top: 0; left: 70%;
             transform: translate(-50%, -50%);
             color: #FF6B6B;
-            margin-left: 40px;
+            margin-left: 20px;
         }
         .present-label {
             bottom: 0; left: 50%;
