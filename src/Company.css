@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap');
 
 /* Scoped container styles */
@@ -325,3 +326,21 @@
         right: 15px;
     }
 }
+=======
+/* Hide scroll from main page */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  /* Hide scrollbar in application list */
+  .appList {
+    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .appList::-webkit-scrollbar {
+    display: none;             /* Chrome/Safari */
+  }
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c

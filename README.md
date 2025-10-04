@@ -95,3 +95,9 @@ https://www.figma.com/design/UyHXeAFXWMxpfhbwXe3QvU/Placement-portal-grid?node-i
 ##Refrence site
 
 https://ce.ksrei.org/2026/
+<<<<<<< HEAD
+=======
+
+##Mobile Version
+https://3nt11rs0-3000.inc1.devtunnels.ms/
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c

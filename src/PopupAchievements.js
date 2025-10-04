@@ -1,7 +1,10 @@
 import React, { useRef, useState } from "react";
+<<<<<<< HEAD
 // NEW: Import the date picker component and its CSS
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
 
 export default function CertificateUpload({ onClose, onUpload }) {
   const fileInputRef = useRef();
@@ -17,8 +20,12 @@ export default function CertificateUpload({ onClose, onUpload }) {
     year: "",
     semester: "",
     section: "",
+<<<<<<< HEAD
     // MODIFIED: Initialize date as null for the date picker
     date: null,
+=======
+    date: "",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
     comp: "",
     prize: "",
   });
@@ -31,6 +38,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
     }));
   };
 
+<<<<<<< HEAD
   // NEW: Create a separate handler for the DatePicker component
   const handleDateChange = (date) => {
     setFormData((prev) => ({
@@ -39,6 +47,8 @@ export default function CertificateUpload({ onClose, onUpload }) {
     }));
   };
 
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -64,14 +74,21 @@ export default function CertificateUpload({ onClose, onUpload }) {
       setError("Please upload your certificate (PDF, Max 1 MB).");
       return;
     }
+<<<<<<< HEAD
     // Check all fields, including the date
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
     if (
       !formData.reg ||
       !formData.name ||
       !formData.year ||
       !formData.semester ||
       !formData.section ||
+<<<<<<< HEAD
       !formData.date || // Now checks if formData.date is null
+=======
+      !formData.date ||
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
       !formData.comp ||
       !formData.prize
     ) {
@@ -82,6 +99,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
     setLastUploaded(new Date().toLocaleDateString());
     setIsSubmitted(true);
 
+<<<<<<< HEAD
     // MODIFIED: Format the date object into a "dd-MM-yyyy" string before submitting
     const formattedDate = formData.date
       ? `${String(formData.date.getDate()).padStart(2, "0")}-${String(
@@ -89,6 +107,8 @@ export default function CertificateUpload({ onClose, onUpload }) {
         ).padStart(2, "0")}-${formData.date.getFullYear()}`
       : "";
 
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
     const newAchievement = {
       id: Date.now(),
       reg: formData.reg,
@@ -96,7 +116,11 @@ export default function CertificateUpload({ onClose, onUpload }) {
       year: formData.year,
       semester: formData.semester,
       section: formData.section,
+<<<<<<< HEAD
       date: formattedDate, // Use the formatted date string
+=======
+      date: formData.date,
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
       comp: formData.comp,
       prize: formData.prize,
       approved: false,
@@ -106,17 +130,42 @@ export default function CertificateUpload({ onClose, onUpload }) {
     };
 
     if (onUpload) onUpload(newAchievement);
+<<<<<<< HEAD
     if (onClose)
       setTimeout(() => {
         onClose();
       }, 100);
+=======
+    if (onClose) setTimeout(() => { onClose(); }, 100);
+  };
+
+  const inputStyle = {
+    flex: 1,
+    fontSize: 15.4,
+    fontFamily: "Poppins, sans-serif",
+    borderRadius: 10,
+    border: "1.5px solid #bddaed",
+    background: "#f8faff",
+    color: "#3A4957",
+    padding: "12px 16px 12px 13px",
+    outline: "none",
+    fontWeight: 500,
+    letterSpacing: ".03em",
+    width: "100%",
+    minWidth: "0",
+    boxSizing: "border-box",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
   };
 
   return (
     <>
       <style>{`
+<<<<<<< HEAD
         /* --- No changes needed in this style block --- */
         /* --- Your existing CSS for .input-hover works perfectly --- */
+=======
+        /* FIX: The .input-hover class now contains only the shared styles for all inputs and selects. */
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
         .input-hover {
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
           border: 1.5px solid #bddaed;
@@ -134,6 +183,10 @@ export default function CertificateUpload({ onClose, onUpload }) {
           min-width: 0;
         }
 
+<<<<<<< HEAD
+=======
+        /* FIX: This new, more specific selector applies the dropdown arrow style ONLY to select elements. */
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
         select.input-hover {
           -webkit-appearance: none;
           -moz-appearance: none;
@@ -155,11 +208,14 @@ export default function CertificateUpload({ onClose, onUpload }) {
           box-shadow: 0 0 8px rgba(34, 118, 252, 0.8);
         }
 
+<<<<<<< HEAD
         /* NEW: Added styles for react-datepicker to ensure it fills flex container */
         .react-datepicker-wrapper {
           width: 100%; 
         }
 
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
         .upload-button {
           border-radius: 10px;
           border: 1px solid #bddaed;
@@ -189,7 +245,11 @@ export default function CertificateUpload({ onClose, onUpload }) {
         }
 
         .submit-button {
+<<<<<<< HEAD
           width: 100%;
+=======
+          width: calc(100% - 166px);
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
           background: #2276fc;
           color: #fff;
           font-weight: 600;
@@ -248,7 +308,26 @@ export default function CertificateUpload({ onClose, onUpload }) {
               type="button"
               onClick={onClose}
               style={{
+<<<<<<< HEAD
                 position: "absolute", top: "14px", right: "18px", background: "transparent", border: "none", fontSize: "25px", color: "#999999", cursor: "pointer", fontWeight: "600", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", zIndex: 2,
+=======
+                position: "absolute",
+                top: "14px",
+                right: "18px",
+                background: "transparent",
+                border: "none",
+                fontSize: "25px",
+                color: "#999999",
+                cursor: "pointer",
+                fontWeight: "600",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                zIndex: 2,
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               }}
               title="Close"
             >
@@ -256,29 +335,74 @@ export default function CertificateUpload({ onClose, onUpload }) {
             </button>
             <h2
               style={{
+<<<<<<< HEAD
                 color: "#2276fc", textAlign: "center", marginBottom: 14, fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 23, letterSpacing: 0.3,
+=======
+                color: "#2276fc",
+                textAlign: "center",
+                marginBottom: 14,
+                fontFamily: "Poppins, sans-serif",
+                fontWeight: 700,
+                fontSize: 23,
+                letterSpacing: 0.3,
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               }}
             >
               Upload Certificate
             </h2>
             <div
               style={{
+<<<<<<< HEAD
                 width: "100%", height: "2px", background: "#ececec", margin: "0 0 22px 0", borderRadius: "1px",
+=======
+                width: "100%",
+                height: "2px",
+                background: "#ececec",
+                margin: "0 0 22px 0",
+                borderRadius: "1px",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               }}
             />
             {/* 2-column rows */}
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <input
+<<<<<<< HEAD
                 className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} onChange={handleInputChange} required
               />
               <input
                 className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} required
+=======
+                className="input-hover"
+                type="text"
+                name="reg"
+                placeholder="Register Number"
+                value={formData.reg}
+                onChange={handleInputChange}
+                required
+              />
+              <input
+                className="input-hover"
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               />
             </div>
             {/* Year and Semester dropdowns */}
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <select
+<<<<<<< HEAD
                 className="input-hover" name="year" value={formData.year} onChange={handleInputChange} required
+=======
+                className="input-hover"
+                name="year"
+                value={formData.year}
+                onChange={handleInputChange}
+                required
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               >
                 <option value="" disabled>Year</option>
                 <option value="I">I</option>
@@ -287,7 +411,15 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 <option value="IV">IV</option>
               </select>
               <select
+<<<<<<< HEAD
                 className="input-hover" name="semester" value={formData.semester} onChange={handleInputChange} required
+=======
+                className="input-hover"
+                name="semester"
+                value={formData.semester}
+                onChange={handleInputChange}
+                required
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               >
                 <option value="" disabled>Semester</option>
                 {[...Array(8)].map((_, i) => (
@@ -299,6 +431,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
             </div>
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <input
+<<<<<<< HEAD
                 className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} onChange={handleInputChange} required
               />
               {/* MODIFIED: Replaced input with DatePicker component */}
@@ -310,25 +443,78 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 className="input-hover" // Apply the same class for consistent styling
                 required
                 autoComplete="off"
+=======
+                className="input-hover"
+                type="text"
+                name="section"
+                placeholder="Section"
+                value={formData.section}
+                onChange={handleInputChange}
+                required
+              />
+              <input
+                className="input-hover"
+                type="date"
+                name="date"
+                placeholder="Participation Date"
+                value={formData.date}
+                onChange={handleInputChange}
+                required
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               />
             </div>
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <input
+<<<<<<< HEAD
                 className="input-hover" type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={handleInputChange} required
               />
               <input
                 className="input-hover" type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={handleInputChange} required
+=======
+                className="input-hover"
+                type="text"
+                name="comp"
+                placeholder="Competition"
+                value={formData.comp}
+                onChange={handleInputChange}
+                required
+              />
+              <input
+                className="input-hover"
+                type="text"
+                name="prize"
+                placeholder="Prize"
+                value={formData.prize}
+                onChange={handleInputChange}
+                required
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               />
             </div>
             {/* Upload row */}
             <div
               style={{
+<<<<<<< HEAD
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "16px 0",
+=======
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "16px 0",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               }}
             >
               <div
                 style={{
+<<<<<<< HEAD
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
+=======
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  width: "100%",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
                 }}
               >
                 <button
@@ -352,7 +538,23 @@ export default function CertificateUpload({ onClose, onUpload }) {
                       setLastUploaded("");
                     }}
                     style={{
+<<<<<<< HEAD
                       fontFamily: "Poppins, sans-serif", fontSize: 21, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", padding: "4px", color: "#666666", cursor: "pointer", width: "25px", height: "25px", border: "none",
+=======
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: 21,
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "transparent",
+                      padding: "4px",
+                      color: "#666666",
+                      cursor: "pointer",
+                      width: "25px",
+                      height: "25px",
+                      border: "none",
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
                     }}
                     title="Clear"
                   >
@@ -370,10 +572,20 @@ export default function CertificateUpload({ onClose, onUpload }) {
               {/* Helper Text Section */}
               <div
                 style={{
+<<<<<<< HEAD
                   fontSize: 14.2, color: "#444", marginTop: 10, letterSpacing: 0.01, textAlign: "center",
                 }}
               >
                 {/* ... (no changes in this section) ... */}
+=======
+                  fontSize: 14.2,
+                  color: "#444",
+                  marginTop: 10,
+                  letterSpacing: 0.01,
+                  textAlign: "center",
+                }}
+              >
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
                 <div style={{ marginBottom: 4 }}>
                   <span style={{ color: "#2276fc", fontWeight: 600 }}>*</span>
                   Upload Max 1MB PDF file
@@ -400,7 +612,14 @@ export default function CertificateUpload({ onClose, onUpload }) {
             {/* Submit Button */}
             <div
               style={{
+<<<<<<< HEAD
                 display: "flex", gap: 12, justifyContent: "center", marginTop: 5,
+=======
+                display: "flex",
+                gap: 12,
+                justifyContent: "center",
+                marginTop: 5,
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
               }}
             >
               <button type="submit" className="submit-button">

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 // Import all components
@@ -18,12 +19,32 @@ function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const navigate = useNavigate();
+=======
+import PlacementPortalLogin from "./mainlogin.js";
+import MainSignUp from "./MainSingUp.js";
+import PlacementPortalDashboard from "./dashboard.js";
+import PlacementPortal from "./resume.js";
+import Attendance from "./Attendance.js";
+import Achievements from "./Achievements.js";
+import Company from "./company.js";
+import StuProfile from "./StuProfile.js";  // Import your profile component
+import MainRegistration from "./MainRegistration.js"; // Import your registration component
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [currentView, setCurrentView] = useState("dashboard");
+  const [authView, setAuthView] = useState("login");
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
 
   const handleLogin = (email, password) => {
     if (email && password) {
       setUserEmail(email);
       setIsLoggedIn(true);
+<<<<<<< HEAD
       navigate("/dashboard");
+=======
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
     } else {
       alert("Please enter both email and password");
     }
@@ -32,6 +53,7 @@ function AppContent() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserEmail("");
+<<<<<<< HEAD
     navigate("/"); // Redirect to landing page on logout
   };
   
@@ -92,8 +114,61 @@ function App() {
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
+=======
+    setCurrentView("dashboard");
+    setAuthView("login");
+  };
+
+  const handleViewChange = (view) => {
+    setCurrentView(view);
+  };
+
+  const showSignUp = () => setAuthView("signup");
+  const showLogin = () => setAuthView("login");
+
+  const renderAuth = () => {
+    return authView === "login" ? (
+      <PlacementPortalLogin onLogin={handleLogin} onNavigateToSignUp={showSignUp} />
+    ) : (
+      <MainSignUp onNavigateToLogin={showLogin} />
+    );
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case "resume":
+        return <PlacementPortal onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "attendance":
+        return <Attendance onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "achievements":
+        return <Achievements onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "company":
+        return <Company onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "profile":
+        return <StuProfile onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "MainRegistration":
+        return <MainRegistration onLogout={handleLogout} onViewChange={handleViewChange} currentView={currentView} />;
+      case "dashboard":
+      default:
+        return <PlacementPortalDashboard
+          onLogout={handleLogout}
+          userEmail={userEmail}
+          onViewChange={handleViewChange}
+          currentView={currentView}
+        />;
+    }
+  };
+
+  return (
+    <div className="App">
+      {isLoggedIn ? renderCurrentView() : renderAuth()}
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
     </div>
   );
 }
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> 12b3e09954f0f2186fd5ba5bd0e87542e66c0a9c
