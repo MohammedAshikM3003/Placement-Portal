@@ -5,12 +5,12 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage.js";
 import PlacementPortalLogin from "./mainlogin.js";
 import MainSignUp from "./MainSingUp.js";
-import PlacementPortalDashboard from "./dashboard.js";
-import Resume from "./resume.js";
-import Attendance from "./Attendance.js";
-import Achievements from "./Achievements.js";
-import Company from "./company.js";
-import StuProfile from "./StuProfile.js";
+import PlacementPortalDashboard from "../src/Student Pages/dashboard.js";
+import Resume from "../src/Student Pages/resume.js";
+import Attendance from "../src/Student Pages/Attendance.js";
+import Achievements from "./Student Pages/achievements.js";
+import Company from "../src/Student Pages/company.js";
+import StuProfile from "../src/Student Pages/StuProfile.js";
 import MainRegistration from "./MainRegistration.js";
 
 // This component now contains the main application logic

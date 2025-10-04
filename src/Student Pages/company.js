@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
-import Navbar from './components/Navbar/Navbar';
-import Sidebar from './components/Sidebar/Sidebar';
-import Adminicon from './assets/Adminicon.png';
-import TickIcon from './assets/TickIcon.png';
-import DownloadIcon from './assets/DownloadIcon.png';
+import Navbar from '../components/Navbar/Navbar';
+import Sidebar from '../components/Sidebar/Sidebar';
+import Adminicon from '../assets/Adminicon.png';
+import TickIcon from '../assets/TickIcon.png';
+import DownloadIcon from '../assets/DownloadIcon.png';
 import PopUpPlaced from "./PopUpPlaced";
 import PopUpPending from "./PopUpPending";
 import PopUpRejected from "./PopUpRejected";

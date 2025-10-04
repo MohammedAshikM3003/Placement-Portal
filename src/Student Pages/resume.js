@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Typography, Button, Box, Paper } from '@mui/material';
 import { Upload, Preview, Download } from '@mui/icons-material';
-import Navbar from './components/Navbar/Navbar';
-import Sidebar from './components/Sidebar/Sidebar';
+import Navbar from '../components/Navbar/Navbar';
+import Sidebar from '../components/Sidebar/Sidebar';
 import './Resume.css';
-import Adminicon from './assets/Adminicon.png';
+import Adminicon from '../assets/Adminicon.png';
 
 // The inner components (ResumeChecklist, ResumeScore, MainContent) remain unchanged.
 // ... (ResumeChecklist and ResumeScore components go here, no changes needed)

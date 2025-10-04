@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Navbar from './components/Navbar/Navbar';
-import Sidebar from './components/Sidebar/Sidebar';
+import Navbar from '../components/Navbar/Navbar.js';
+import Sidebar from '../components/Sidebar/Sidebar.js';
 import CertificateUpload from "./PopupAchievements.js";
 import EditCertificate from "./popupEditAchievements.js";
 import './Achievements.css';
-import UploadCertificatecardicon from './assets/UploadCertificatecardicon.svg';
-import editcertificatecardicon from './assets/editcertificatecardicon.svg';
+import UploadCertificatecardicon from '../assets/UploadCertificatecardicon.svg';
+import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 
 const EyeIcon = ({ color = "#4563fd" }) => ( <svg width="22" height="22" viewBox="0 0 24 24" fill="none"> <ellipse cx="12" cy="12" rx="9" ry="6" stroke={color} strokeWidth="2"/> <circle cx="12" cy="12" r="2" stroke={color} strokeWidth="2"/> </svg> );
 

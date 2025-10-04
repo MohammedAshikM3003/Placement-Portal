@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Navbar from "./components/Navbar/Navbar";
-import Sidebar from "./components/Sidebar/Sidebar";
+import Navbar from "../components/Navbar/Navbar";
+import Sidebar from "../components/Sidebar/Sidebar";
 import "./Attendance.css";
-import totalpercentagestudenticon from './assets/totalpercentagestudenticon.png';
-import totalpercentageicon from './assets/totalpercentageicon.png';
+import totalpercentagestudenticon from '../assets/totalpercentagestudenticon.png';
+import totalpercentageicon from '../assets/totalpercentageicon.png';
 
 function Attendance({ onLogout, onViewChange }) { // Removed currentView from props
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

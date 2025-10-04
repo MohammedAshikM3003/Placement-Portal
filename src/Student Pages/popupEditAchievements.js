@@ -284,7 +284,7 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "16px 0" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
                   <button type="button" className="upload-button" onClick={handleUploadClick}>
-                    <img src={require("./assets/popupUploadicon.png")} alt="Upload" style={{ width: "22px", height: "22px" }} />
+                    <img src={require("../assets/popupUploadicon.png")} alt="Upload" style={{ width: "22px", height: "22px" }} />
                     <span>{fileName || "Upload"}</span>
                   </button>
                   {fileName && (

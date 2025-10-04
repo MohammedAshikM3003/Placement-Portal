@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-import Navbar from './components/Navbar/Navbar';
-import Sidebar from './components/Sidebar/Sidebar';
+import Navbar from '../components/Navbar/Navbar';
+import Sidebar from '../components/Sidebar/Sidebar';
 import './StuProfile.css';
-import Adminicons from './assets/BlueAdminicon.png';
+import Adminicons from '../assets/BlueAdminicon.png';
 
 // All helper components (MdUpload, IoMdClose, GraduationCapIcon, etc.) remain unchanged.
 // ... (Your helper components go here)

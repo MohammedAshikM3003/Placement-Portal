@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import Navbar from "./components/Navbar/Navbar";
-import Sidebar from "./components/Sidebar/Sidebar";
+import Navbar from "../components/Navbar/Navbar";
+import Sidebar from "../components/Sidebar/Sidebar";
 import './dashboard.css';
 
 // Import assets needed for THIS page
-import ksrCollegeImage from "./assets/ksrCollegeImage.jpg";
-import ApplicationStatusIcon from "./assets/applicationstatusicon.png";
+import ksrCollegeImage from "../assets/ksrCollegeImage.jpg";
+import ApplicationStatusIcon from "../assets/applicationstatusicon.png";
 
 // ATTENDANCE CHART COMPONENT (can stay in this file as it's only used here)
 const ModernAttendanceChart = ({ present, absent }) => {
@@ -60,21 +60,21 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange }) {
                     <div className="grid-area">
                         {/* Row 1 */}
                         <div className="card card-vertical">
-                            <img src={require('./assets/NotificationIcon.png')} alt="Notification" className="card-icon notification-icon" />
+                            <img src={require('../assets/NotificationIcon.png')} alt="Notification" className="card-icon notification-icon" />
                             <div className="card-content-wrapper"><div className="Notification-card-title">Notification / Announcement</div><p className="card-text">New Company Reminder: profile not completed</p></div>
                         </div>
                         <div className="card card-vertical" onClick={() => handleCardClick('resume')}>
-                            <img src={require('./assets/UploadResumeIcon.png')} alt="Resume" className="card-icon" />
+                            <img src={require('../assets/UploadResumeIcon.png')} alt="Resume" className="card-icon" />
                             <div className="card-content-wrapper"><div className="Upload-card-title">Upload Resume</div><p className="card-text">Showcase your skills with your resume</p></div>
                         </div>
                         <div className="card card-horizontal card-upcoming-drive" onClick={() => handleCardClick('company')}>
-                            <img src={require('./assets/UpcomingDriveIcon.png')} alt="Upcoming Drive" className="card-icon" />
+                            <img src={require('../assets/UpcomingDriveIcon.png')} alt="Upcoming Drive" className="card-icon" />
                             <div className="card-content-wrapper"><div className="Upcoming-card-title">Upcoming Drive</div><p className="card-text"><strong>Company Name:</strong> Infosys<br /><strong>Date:</strong> 20/08/2025<br /><strong>Role:</strong> Testing<br /><strong>Eligibility:</strong></p></div>
                         </div>
 
                         {/* Row 2 */}
                         <div className="card card-horizontal card-upload-certificates" onClick={() => handleCardClick('achievements')}>
-                            <div className="icon-container-certificates"><img src={require('./assets/uploadcertificateicon.png')} alt="Certificates" className="main-icon" /><img src={require('./assets/certificateuploadicon.png')} alt="Upload" className="overlay-icon" /></div>
+                            <div className="icon-container-certificates"><img src={require('../assets/uploadcertificateicon.png')} alt="Certificates" className="main-icon" /><img src={require('../assets/certificateuploadicon.png')} alt="Upload" className="overlay-icon" /></div>
                             <div className="card-content-wrapper"><div className="Certificates-card-title">Upload Certificates</div><p className="card-text">Let your accomplishments shine with pride.</p></div>
                         </div>
                         <div className="card card-vertical card-application-status">
@@ -82,17 +82,17 @@ function PlacementPortalDashboard({ onLogout, userEmail, onViewChange }) {
                             <div className="card-content-wrapper"><div className="Application-card-title">Application Status</div><p className="card-text">List of Jobs Applied<br />Status: Applied</p></div>
                         </div>
                         <div className="card card-vertical card-placement-status">
-                            <img src={require('./assets/PlacemtStatusIcon.png')} alt="Placement Status" className="card-icon" />
+                            <img src={require('../assets/PlacemtStatusIcon.png')} alt="Placement Status" className="card-icon" />
                             <div className="card-content-wrapper"><div className="Placement-card-title">Placement Status</div><p className="card-text">Working Good</p></div>
                         </div>
 
                         {/* Row 3 */}
                         <div className="card card-vertical card-my-account" onClick={() => handleCardClick('profile')}>
-                            <img src={require('./assets/MyAccountIcon.png')} alt="My Account" className="card-icon" />
+                            <img src={require('../assets/MyAccountIcon.png')} alt="My Account" className="card-icon" />
                             <div className="card-content-wrapper"><div className="Account-card-title">My Account</div><p className="card-text">Settings</p></div>
                         </div>
                         <div className="card card-vertical card-suggestions">
-                            <img src={require('./assets/SuggestionIcon.png')} alt="Suggestion" className="card-icon" />
+                            <img src={require('../assets/SuggestionIcon.png')} alt="Suggestion" className="card-icon" />
                             <div className="card-content-wrapper"><div className="Suggestion-card-title">Suggestions</div><p className="card-text">Based on your CGPA eligible for TCS</p></div>
                         </div>
                         <div className="card card-attendance" onClick={() => handleCardClick('attendance')}>

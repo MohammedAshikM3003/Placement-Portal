@@ -422,7 +422,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
                       onClick={handleUploadClick}
                     >
                       <img
-                        src={require("./assets/popupUploadicon.png")}
+                        src={require("../assets/popupUploadicon.png")}
                         alt="Upload"
                         style={{ width: "22px", height: "22px" }}
                       />
