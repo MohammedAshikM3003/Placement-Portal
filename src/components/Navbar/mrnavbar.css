@@ -1,0 +1,66 @@
+.mr-navbar {
+    display: flex;
+    align-items: center;
+    background: #2085f6;
+    color: #fff;
+    padding: 15px 32px 15px 26px;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+.mr-left {
+    display: flex;
+    align-items: center;
+}
+.mr-portal-logo {
+    height: 35px;
+    width: 35px;
+    margin-right: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mr-portal-logo img {
+    height: 30px;
+    width: 40px;
+    filter: brightness(0) invert(1);
+}
+.mr-portal-name {
+    font-size: 1.48rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+/* Hamburger button styles */
+.mr-hamburger-btn {
+    display: none; /* Hidden by default on desktop */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    position: relative;
+    z-index: 1001;
+}
+
+.mr-hamburger-line {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: #fff;
+    margin: 5px 0;
+    transition: all 0.3s ease-in-out;
+}
+
+@media (max-width: 900px) {
+    .mr-navbar .mr-menu {
+        display: none; /* Hide desktop menu on mobile */
+    }
+
+    .mr-hamburger-btn {
+        display: block; /* Show hamburger button on mobile */
+    }
+}
