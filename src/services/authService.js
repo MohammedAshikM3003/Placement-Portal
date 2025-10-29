@@ -153,7 +153,7 @@ class AuthService {
       }
 
       // Make a simple API call to verify token
-      const response = await this.apiCall('/health', {
+      await this.apiCall('/health', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
