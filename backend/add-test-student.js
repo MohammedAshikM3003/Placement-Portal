@@ -37,8 +37,8 @@ async function addTestStudent() {
 
     // Add the student that matches the frontend login form
     const testStudent = {
-      regNo: '731523T3074',
-      dob: '30032008',
+      regNo: '73152313074',
+      dob: '30032006',
       firstName: 'Test',
       lastName: 'Student',
       email: 'test.student@ksrce.ac.in',
