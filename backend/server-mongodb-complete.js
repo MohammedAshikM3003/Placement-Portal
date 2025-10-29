@@ -102,7 +102,17 @@ const Certificate = mongoose.model('Certificate', certificateSchema);
 const Achievement = mongoose.model('Achievement', achievementSchema);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://placement--portal.vercel.app',
+    'https://placement-portal.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -325,6 +335,40 @@ app.post('/api/students/login', async (req, res) => {
   } catch (error) {
     console.error('Student login error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Add test student endpoint (for debugging)
+app.post('/api/add-test-student', async (req, res) => {
+  try {
+    const testStudent = {
+      regNo: '73152313074',
+      dob: '30032006',
+      firstName: 'Test',
+      lastName: 'Student',
+      email: 'test.student@ksrce.ac.in',
+      phone: '9876543210',
+      department: 'CSE',
+      branch: 'Computer Science Engineering',
+      year: '2024',
+      cgpa: 8.5,
+      isBlocked: false
+    };
+
+    // Check if student already exists
+    const existingStudent = await Student.findOne({ regNo: testStudent.regNo });
+    if (existingStudent) {
+      return res.json({ message: 'Test student already exists', student: existingStudent });
+    }
+
+    // Create new student
+    const student = new Student(testStudent);
+    await student.save();
+    
+    res.json({ message: 'Test student created successfully', student });
+  } catch (error) {
+    console.error('Error creating test student:', error);
+    res.status(500).json({ message: 'Error creating test student', error: error.message });
   }
 });
 
