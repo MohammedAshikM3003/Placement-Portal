@@ -38,8 +38,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       }
 
           // Use MongoDB authentication
-          const mongoDBService = (await import('./services/mongoDBService.js')).default;
-          const loginResult = await mongoDBService.loginStudent(registerNumber, password);
+          const loginResult = await authService.loginStudent(registerNumber, password);
           
           console.log('Login result:', loginResult); // Debug log
           

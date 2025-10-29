@@ -64,6 +64,7 @@ const resumeAnalysisSchema = new mongoose.Schema({
     // Add all other fields...
 }, { strict: false });
 
+// Use your actual collection name here - common names: 'students', 'studentnews', 'student_data'
 const Student = mongoose.model('Student', studentSchema, 'students');
 const User = mongoose.model('User', userSchema, 'users');
 const ResumeAnalysis = mongoose.model('ResumeAnalysis', resumeAnalysisSchema, 'resumeanalyses');
@@ -81,7 +82,7 @@ const resumeSchema = new mongoose.Schema({
 
 const Resume = mongoose.model('Resume', resumeSchema, 'resume');
 
-// In-memory storage fallback
+// In-memory storage fallback (only used when MongoDB Atlas is not available)
 let students = [];
 let users = [];
 let resumeAnalyses = [];
@@ -89,7 +90,17 @@ let resumes = [];
 let certificates = [];
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000',
+        'https://3nt1rq0-3000.inc1.devtunnels.ms',
+        /https:\/\/.*\.devtunnels\.ms$/  // Allow all VS Code tunnel URLs
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -791,18 +802,23 @@ function getBasicAnalysisResult() {
 const startServer = async () => {
     // Await the database connection before starting the listener
     const isMongoConnected = await connectDB();
-
-    app.listen(PORT, () => {
-        console.log(`Placement Portal Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
-        console.log(`Status: Ready for development`);
-
-        if (!isMongoConnected) {
-            // This is now an accurate message
-            console.log(`Note: MongoDB Atlas connection failed. Check the detailed error log above.`);
-        }
-    });
+    console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
+    return isMongoConnected;
 };
 
-startServer();
+// For Vercel serverless deployment
+if (process.env.NODE_ENV !== 'production') {
+    // Only start server in development
+    app.listen(PORT, async () => {
+        await startServer();
+        console.log(`Placement Portal Server running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`Status: Ready for development`);
+    });
+} else {
+    // Initialize database connection for serverless
+    startServer();
+}
+
+// Export for Vercel
+module.exports = app;

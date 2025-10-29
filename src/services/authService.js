@@ -1,14 +1,31 @@
 // MongoDB-based Authentication Service
 class AuthService {
   constructor() {
-    // Use environment variable or fallback to localhost
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    // Use environment variable or fallback based on environment
+    let defaultBackendUrl;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Production: Use Vercel backend URL
+      defaultBackendUrl = 'https://placement-portal-backend-eight.vercel.app/api';
+    } else if (window.location.hostname.includes('devtunnels.ms')) {
+      // Development: VS Code tunnel
+      defaultBackendUrl = 'https://3nt1rq0-5000.inc1.devtunnels.ms/api';
+    } else {
+      // Development: Local
+      defaultBackendUrl = 'http://localhost:5000/api';
+    }
+    
+    this.baseURL = process.env.REACT_APP_API_URL || defaultBackendUrl;
+    console.log('🔧 Backend URL:', this.baseURL);
   }
 
   // Helper method for API calls
   async apiCall(endpoint, options = {}) {
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const fullUrl = `${this.baseURL}${endpoint}`;
+      console.log('🔍 API Call:', fullUrl, options);
+      
+      const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers
