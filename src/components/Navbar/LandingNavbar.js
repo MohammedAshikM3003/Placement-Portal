@@ -59,17 +59,36 @@ const Navbar = () => {
             opacity: 0.8;
         }
 
+        /* Hide mobile home link by default (desktop) */
+        .mobile-home-link {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .header-nav {
                 display: none;
             }
             .header-logo {
                 left: 0;
-                width: 100%;
-                justify-content: center;
+                width: auto;
+                justify-content: flex-start;
             }
             .main-header {
-                justify-content: center;
+                justify-content: space-between;
+            }
+            .mobile-home-link {
+                display: block;
+                color: white;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 1rem;
+                padding: 8px 16px;
+                border-radius: 8px;
+                background-color: rgba(255, 255, 255, 0.1);
+                transition: background-color 0.3s;
+            }
+            .mobile-home-link:hover {
+                background-color: rgba(255, 255, 255, 0.2);
             }
         }
       `}</style>
@@ -84,9 +103,11 @@ const Navbar = () => {
           {/* Use HashLink with the 'smooth' prop */}
           <HashLink smooth to="/#home">Home</HashLink>
           <HashLink smooth to="/#about">About</HashLink>
-          <HashLink smooth to="/#features">Features</HashLink>
+          <HashLink smooth to="/#drive">Drives</HashLink>
           <HashLink smooth to="/#contact">Contact</HashLink>
         </nav>
+        {/* Mobile Home Link - Only visible on mobile */}
+        <HashLink smooth to="/#home" className="mobile-home-link">Home</HashLink>
       </header>
     </>
   );

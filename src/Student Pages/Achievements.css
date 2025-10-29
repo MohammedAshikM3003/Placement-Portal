@@ -1,8 +1,43 @@
 /* =================================== */
-/* ===== BASE & DESKTOP STYLES ===== */
+/* ===== ACHIEVEMENTS PAGE STYLES ===== */
 /* =================================== */
 
-/* Main area for the achievements component */
+/* =================================== */
+/* ===== BASE LAYOUT & CONTAINERS ===== */
+/* =================================== */
+
+/* Global container - prevents layout shift */
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.main {
+    display: flex;
+    margin-top: 55px;
+    height: calc(100vh - 55px);
+    overflow: hidden;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+/* Desktop layout */
 .achievements-area {
     flex: 1;
     padding: 20px;
@@ -10,13 +45,16 @@
     margin-left: 230px;
     transition: margin-left 0.3s ease-in-out;
     box-sizing: border-box;
-    /* Desktop layout: fixed height with flexbox */
     height: calc(100vh - 65px);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-/* Container for the top action cards */
+/* =================================== */
+/* ===== ACTION CARDS SECTION ===== */
+/* =================================== */
+
 .achievements-cards-container {
     display: flex;
     gap: 2.5rem;
@@ -25,7 +63,6 @@
     flex-shrink: 0;
 }
 
-/* Base styles for Upload and Edit cards */
 .achievements-action-card {
     width: 200px;
     flex-shrink: 0;
@@ -38,15 +75,16 @@
     justify-content: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     cursor: pointer;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     padding: 20px 10px;
     text-align: center;
     position: relative;
+    transition: all 0.3s ease;
 }
 
 .achievements-action-card:hover {
     border-color: #2085f6;
-    box-shadow: 0 4px 12px rgba(32, 133, 246, 0.2);
+    box-shadow: 0 6px 16px rgba(32, 133, 246, 0.2);
+    transform: translateY(-2px);
 }
 
 .action-card-img-main {
@@ -55,7 +93,24 @@
     margin-bottom: 10px;
 }
 
-/* Styles for the filter card in the middle */
+.action-card-title {
+    font-weight: 600;
+    font-size: 18px;
+    margin-top: 10px;
+    color: #333;
+}
+
+.action-card-desc {
+    font-size: 15.2px;
+    color: #929292;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* =================================== */
+/* ===== FILTER CARD SECTION ===== */
+/* =================================== */
+
 .achievements-filter-card {
     flex-grow: 1;
     background-color: rgb(210,210,210);
@@ -96,7 +151,6 @@
     padding-top: 12px;
 }
 
-/* Input field styles */
 .achievements-input-container {
     position: relative;
 }
@@ -109,17 +163,76 @@
     box-sizing: border-box;
     width: 100%;
     cursor: pointer;
-    transition: border-color 0.2s ease;
     outline: none;
     background-color: #fff;
 }
 
-.achievements-filter-input:hover,
 .achievements-filter-input:focus {
     border-color: #2276fc;
 }
 
-/* Table styles */
+.achievements-floating-label {
+    position: absolute;
+    pointer-events: none;
+    left: 14px;
+    top: 45%;
+    transform: translateY(-50%);
+    color: #8b8b8b;
+    font-size: 16px;
+    padding: 0 4px;
+    transition: all 0.2s ease;
+}
+
+.achievements-filter-input.achievements-has-value + .achievements-floating-label,
+.achievements-filter-input:focus + .achievements-floating-label {
+    top: -20px;
+    transform: translateY(0) scale(0.85);
+    color: #2276fc;
+    font-weight: 400;
+    left: -10px;
+    background: rgb(210,210,210);
+}
+
+.achievements-apply-sort-btn,
+.achievements-clear-filter-btn {
+    width: 170px;
+    height: 38px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.achievements-apply-sort-btn {
+    background: #ffffff;
+    color: #2276fc;
+    border: 2px solid #2276fc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.achievements-apply-sort-btn:hover {
+    background: #2276fc;
+    color: #ffffff;
+}
+
+.achievements-clear-filter-btn {
+    background: #d2d2d2;
+    color: #8b8b8b;
+    border: 2px solid #8b8b8b;
+}
+
+.achievements-clear-filter-btn:hover {
+    background: #ffffff;
+    color: #2276fc;
+    border: 2px solid #2276fc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* =================================== */
+/* ===== TABLE SECTION ===== */
+/* =================================== */
+
 .achievements-table-container {
     background: #fff;
     border-radius: 16px;
@@ -127,39 +240,100 @@
     padding: 24px 28px;
     display: flex;
     flex-direction: column;
-    /* Desktop layout: grows to fill space */
     flex: 1;
     min-height: 0;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
 }
 
 .table-header h2 {
     font-weight: 800;
     font-size: 22px;
-    margin: 0 0 12px 0;
+    margin: 0;
+    color: #333;
+    white-space: nowrap;
+}
+
+.refresh-btn,
+.delete-selected-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.refresh-btn {
+    background: #00C495;
+    color: #fff;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.refresh-btn:hover {
+    background: #00a67d;
+}
+
+.delete-selected-btn {
+    background: #d2d2d2;
+    color: #8b8b8b;
+}
+
+.delete-selected-btn:hover {
+    background: #ff4444;
+    color: #fff;
 }
 
 .table-scroll-wrapper {
     flex: 1;
-    overflow: auto; /* Handles both vertical and horizontal scroll */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Blue scrollbar for table - matches Resume Checklist */
+.table-scroll-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #2085f6; /* Blue like Resume Checklist */
+    border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #1976d2; /* Darker blue on hover */
 }
 
 .achievements-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    min-width: 1200px; /* This forces horizontal scroll on small screens */
+    table-layout: fixed;
 }
 
-.achievements-table th, .achievements-table td {
-    padding: 16px;
+.achievements-table th,
+.achievements-table td {
+    padding: 12px 8px;
     text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
-}
-
-.achievements-table thead {
-    display: table-header-group;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .achievements-table th {
@@ -170,109 +344,683 @@
     position: sticky;
     top: 0;
     z-index: 1;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .achievements-table tbody tr:hover {
-    background-color: #f5f8ff;
+    background: #f8f9fa;
 }
 
-/* Status pill styles, action buttons, popups etc. */
-.achievements-status-pill { font-size: 14px; font-weight: 600; border-radius: 10px; padding: 4px 16px; display: inline-block; text-align: center; }
-.achievements-status-approved { background: #DEFDED; color: #13CC8B; }
-.achievements-status-rejected { background: #FFE6E6; color: #FF4444; }
-.achievements-status-pending { background: #F6F7F9; color: #8b8b8b; }
-.row-checkbox { width: 18px; height: 18px; cursor: pointer; }
-.table-action-btn { background: transparent; border: none; cursor: pointer; padding: 0; }
-.restriction-popup-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; }
-.restriction-popup-content { background: #fff; border-radius: 20px; padding: 30px 40px; width: 90%; max-width: 450px; border: 2px solid #ff4444; box-shadow: 0 4px 20px rgba(255, 68, 68, 0.2); text-align: center; }
-.restriction-popup-content h2 { color: #ff4444; margin-bottom: 28px; }
-.restriction-message { font-size: 16px; line-height: 1.6; white-space: pre-line; margin-bottom: 30px; }
-.restriction-ok-btn { background: #ff4444; color: #fff; border: none; border-radius: 15px; padding: 12px 30px; cursor: pointer; font-size: 16px; }
-.action-card-img-overlay-upload { width: 22px; height: 22px; position: absolute; top: 52px; left: 108px; }
-.action-card-img-overlay-edit { width: 22px; height: 22px; position: absolute; top: 55px; left: 108px; }
-.action-card-title { font-weight: 600; font-size: 18px; margin-top: 10px; }
-.action-card-desc { font-size: 15.2px; color: #929292; margin-top: 6px; line-height: 1.4; }
-.achievements-apply-sort-btn, .achievements-clear-filter-btn { width: 170px; height: 38px; border-radius: 10px; font-weight: 600; font-size: 18px; cursor: pointer; transition: all 0.3s ease; }
-.achievements-apply-sort-btn { background: #ffffff; color: #2276fc; border: 2px solid #2276fc; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-.achievements-apply-sort-btn:hover { background-color: #f5f8ff; }
-.achievements-clear-filter-btn { background: #d2d2d2; color: #8b8b8b; border: 2px solid #8b8b8b; }
-.achievements-clear-filter-btn:hover { background-color: #ffffff; color: #2276fc; border-color: #2276fc; }
-.achievements-floating-label { position: absolute; pointer-events: none; left: 14px; top: 45%; transform: translateY(-50%); transition: all 0.2s ease-out; color: #8b8b8b; font-size: 16px; padding: 0 4px; }
-.achievements-filter-input.achievements-has-value + .achievements-floating-label,
-.achievements-filter-input:focus + .achievements-floating-label { top: -20px; transform: translateY(0) scale(0.85); color: #2276fc; font-weight: 400; left: -10px; }
+/* Column widths */
+.achievements-table th:nth-child(1),
+.achievements-table td:nth-child(1) { width: 60px; } /* Select */
+.achievements-table th:nth-child(2),
+.achievements-table td:nth-child(2) { width: 60px; } /* S.No */
+.achievements-table th:nth-child(3),
+.achievements-table td:nth-child(3) { width: 80px; } /* Year */
+.achievements-table th:nth-child(4),
+.achievements-table td:nth-child(4) { width: 80px; } /* Semester */
+.achievements-table th:nth-child(5),
+.achievements-table td:nth-child(5) { width: 80px; } /* Section */
+.achievements-table th:nth-child(6),
+.achievements-table td:nth-child(6) { width: 200px; } /* Competition */
+.achievements-table th:nth-child(7),
+.achievements-table td:nth-child(7) { width: 120px; } /* Date */
+.achievements-table th:nth-child(8),
+.achievements-table td:nth-child(8) { width: 120px; } /* Prize */
+.achievements-table th:nth-child(9),
+.achievements-table td:nth-child(9) { width: 100px; text-align: center; } /* Status */
+.achievements-table th:nth-child(10),
+.achievements-table td:nth-child(10) { width: 80px; text-align: center; } /* View */
+.achievements-table th:nth-child(11),
+.achievements-table td:nth-child(11) { width: 100px; text-align: center; } /* Download */
 
+.row-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #2276fc;
+}
+
+.table-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
 
 /* =================================== */
-/* ===== RESPONSIVE STYLES START ===== */
+/* ===== STATUS PILLS ===== */
 /* =================================== */
 
-/* For Tablets and smaller desktops */
+.achievements-status-pill {
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 4px 16px;
+    display: inline-block;
+    text-align: center;
+}
+
+.achievements-status-approved {
+    background: #DEFDED;
+    color: #13CC8B;
+}
+
+.achievements-status-rejected {
+    background: #FFE6E6;
+    color: #FF4444;
+}
+
+.achievements-status-pending {
+    background: #F6F7F9;
+    color: #8b8b8b;
+}
+
+/* =================================== */
+/* ===== POPUP STYLES (UNIFIED) ===== */
+/* =================================== */
+
+/* Modern Achievement Popup Container */
+.Achievement-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Achievement-popup-header {
+    background-color: #197AFF;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.Achievement-popup-body {
+    padding: 2rem;
+}
+
+.Achievement-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+/* Popup Buttons */
+.Achievement-popup-close-btn,
+.Achievement-popup-cancel-btn,
+.Achievement-popup-delete-btn {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Achievement-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Achievement-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Achievement-popup-cancel-btn {
+    background: #d2d2d2;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Achievement-popup-cancel-btn:hover {
+    background: #bbb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Achievement-popup-delete-btn {
+    background: #D23B42;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Achievement-popup-delete-btn:hover {
+    background: #b52e35;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Achievement-popup-delete-btn:disabled,
+.Achievement-popup-cancel-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Success Icon Animations */
+.Achievement-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #22C55E;
+    animation: Achievement-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Achievement-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22C55E;
+    fill: none;
+    animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Achievement-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Warning Icon Animations */
+.Achievement-warning-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #FFA500;
+    animation: Achievement-warning-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Achievement-warning-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #FFA500;
+    fill: none;
+    animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Achievement-warning-icon--exclamation {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Error Icon Animations */
+.Achievement-error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #FF4444;
+    animation: Achievement-error-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Achievement-error-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #FF4444;
+    fill: none;
+    animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Achievement-error-icon--cross {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Delete Bin Icon Animations (Red) */
+.Achievement-delete-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #D23B42;
+    animation: Achievement-delete-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Achievement-delete-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #D23B42;
+    fill: none;
+    animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Achievement-delete-icon--bin {
+    stroke: #fff;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: Achievement-stroke 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Keyframe Animations */
+@keyframes Achievement-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes Achievement-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+
+@keyframes Achievement-fill {
+    100% { box-shadow: inset 0 0 0 40px #22C55E; }
+}
+
+@keyframes Achievement-warning-fill {
+    100% { box-shadow: inset 0 0 0 40px #FFA500; }
+}
+
+@keyframes Achievement-error-fill {
+    100% { box-shadow: inset 0 0 0 40px #FF4444; }
+}
+
+@keyframes Achievement-delete-fill {
+    100% { box-shadow: inset 0 0 0 40px #D23B42; }
+}
+
+/* Restriction Popup */
+.restriction-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+
+.restriction-popup-content {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 40px;
+    width: 90%;
+    max-width: 450px;
+    border: 2px solid #ff4444;
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.2);
+    text-align: center;
+}
+
+.restriction-popup-content h2 {
+    color: #ff4444;
+    margin-bottom: 28px;
+}
+
+.restriction-message {
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-line;
+    margin-bottom: 30px;
+    color: #555;
+}
+
+.restriction-ok-btn {
+    background: #ff4444;
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    padding: 12px 30px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.restriction-ok-btn:hover {
+    background: #dd2222;
+}
+
+/* Loading Spinner */
+.achievements-loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2085f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: achievements-spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes achievements-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =================================== */
+/* ===== CUSTOM SCROLLBAR ===== */
+/* =================================== */
+
+.achievements-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+.achievements-area::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.achievements-area::-webkit-scrollbar-thumb {
+    background-color: #2085f6;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.achievements-area::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA;
+}
+
+/* =================================== */
+/* ===== RESPONSIVE MOBILE ===== */
+/* =================================== */
+
 @media (max-width: 1200px) {
     .achievements-cards-container {
         flex-direction: column;
         gap: 1.5rem;
     }
-    .achievements-action-card, .achievements-filter-card {
+    
+    .achievements-action-card,
+    .achievements-filter-card {
         width: 100%;
     }
+    
     .achievements-table {
-       min-width: 900px; /* Adjust min-width for tablets */
+        min-width: 900px;
     }
 }
 
-/* For smaller tablets and large phones */
 @media (max-width: 992px) {
-    /* Switch to a standard single-page scroll model */
-    .achievements-area {
-        margin-left: 0;
-        padding: 15px;
-        display: block;
+    /* Fix container and main for mobile */
+    .container {
+        overflow: auto;
+        min-height: 100vh;
+    }
+
+    .main {
+        overflow: visible;
         height: auto;
-        min-height: calc(100vh - 55px);
-        overflow-y: auto;
     }
 
-    .achievements-area.sidebar-open {
-        margin-left: 230px;
+    /* CRITICAL: Enable mobile scrollbar */
+    .achievements-area {
+        margin-left: 0 !important;
+        padding: 70px 15px calc(env(safe-area-inset-bottom, 20px) + 110px) 15px;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        min-height: 100vh;
     }
-    
+
+    /* Mobile scrollbar styling */
+    .achievements-area::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .achievements-area::-webkit-scrollbar-thumb {
+        background-color: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    /* Ensure cards container doesn't take too much space */
+    .achievements-cards-container {
+        margin-bottom: 20px;
+    }
+
+    /* CRITICAL: Make table taller to show 6 rows */
     .achievements-table-container {
-        flex: none;
-        min-height: 400px;
+        margin-bottom: 20px;
+        min-height: 480px; /* Increased to show 6 rows */
+        flex: 1; /* Take available space */
     }
 
+    /* CRITICAL: Enable horizontal scroll for table */
     .table-scroll-wrapper {
-        /* On mobile, we only want horizontal scroll for the table */
-        overflow-y: visible;
-        overflow-x: auto;
+        overflow-x: auto !important; /* Enable horizontal scroll */
+        overflow-y: auto !important; /* Keep vertical scroll */
+        max-height: 420px; /* Height to show ~6 rows */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     }
-    
+
+    /* Mobile scrollbar styling */
+    .table-scroll-wrapper::-webkit-scrollbar {
+        height: 8px; /* Horizontal scrollbar height */
+        width: 8px; /* Vertical scrollbar width */
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-track {
+        background: #f0f0f0;
+    }
+
+    /* Vertical scrollbar - Blue like Resume Checklist */
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:vertical {
+        background: #2085f6; /* Blue for vertical */
+        border-radius: 4px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:vertical:hover {
+        background: #1976d2; /* Darker blue on hover */
+    }
+
+    /* Horizontal scrollbar - Light gray (no change) */
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:horizontal {
+        background: #c0c0c0; /* Keep light gray */
+        border-radius: 4px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
+        background: #a0a0a0;
+    }
+
     .filter-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Make table wider to show all columns - enables horizontal scroll */
+    .achievements-table {
+        font-size: 18px; /* Increased by 3px for better readability */
+        min-width: 1100px; /* Wider for larger font */
+        width: auto; /* Allow table to be wider than container */
+    }
+
+    .achievements-table th,
+    .achievements-table td {
+        padding: 16px 12px; /* Increased padding for larger font */
+        font-size: 18px; /* Increased by 3px (15px -> 18px) */
+        font-weight: 500; /* Increased weight for better visibility */
+        line-height: 1.6; /* Better line spacing */
+    }
+
+    .achievements-table th {
+        font-weight: 700; /* Bold headers */
+    }
+
+    /* Make table header sticky on mobile */
+    .table-header {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 10;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .table-header h2 {
+        font-size: 22px; /* Increased from 20px for better visibility */
+        font-weight: 800;
+    }
+
+    /* Adjust button sizes for mobile */
+    .refresh-btn,
+    .delete-selected-btn {
+        padding: 12px 18px; /* Increased padding */
+        font-size: 14px; /* Increased from 13px */
+        white-space: nowrap;
+    }
+
+    /* Better spacing for mobile table - larger for 14px font */
+    .achievements-table th:nth-child(1),
+    .achievements-table td:nth-child(1) { width: 60px; } /* Select */
+    .achievements-table th:nth-child(2),
+    .achievements-table td:nth-child(2) { width: 60px; } /* S.No */
+    .achievements-table th:nth-child(3),
+    .achievements-table td:nth-child(3) { width: 70px; } /* Year */
+    .achievements-table th:nth-child(4),
+    .achievements-table td:nth-child(4) { width: 90px; } /* Semester */
+    .achievements-table th:nth-child(5),
+    .achievements-table td:nth-child(5) { width: 80px; } /* Section */
+    .achievements-table th:nth-child(6),
+    .achievements-table td:nth-child(6) { width: 200px; } /* Competition Name */
+    .achievements-table th:nth-child(7),
+    .achievements-table td:nth-child(7) { width: 110px; } /* Date */
+    .achievements-table th:nth-child(8),
+    .achievements-table td:nth-child(8) { width: 80px; } /* Prize */
+    .achievements-table th:nth-child(9),
+    .achievements-table td:nth-child(9) { width: 100px; } /* Status */
+    .achievements-table th:nth-child(10),
+    .achievements-table td:nth-child(10) { width: 70px; } /* View */
+    .achievements-table th:nth-child(11),
+    .achievements-table td:nth-child(11) { width: 100px; } /* Download */
+    
+    /* Increase checkbox size for mobile */
+    .row-checkbox {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        accent-color: #2276fc;
+    }
+    
+    /* Status pills - larger for mobile */
+    .achievements-status-pill {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 6px 16px;
+    }
+    
+    /* Action card fonts for mobile */
+    .action-card-title {
+        font-size: 20px;
+    }
+    
+    .action-card-desc {
+        font-size: 16px;
+    }
+    
+    /* Filter section fonts */
+    .filter-card-button {
+        font-size: 18px;
+        padding: 10px 35px;
+    }
+    
+    .achievements-filter-input {
+        font-size: 17px;
+        padding: 10px 15px;
+    }
+    
+    .achievements-apply-sort-btn,
+    .achievements-clear-filter-btn {
+        font-size: 17px;
+        height: 42px;
+    }
 }
 
-/* For small phones */
 @media (max-width: 576px) {
     .achievements-area {
         padding: 10px;
+        padding-top: 25px;
+        padding-bottom: 100px;
     }
+
     .achievements-cards-container {
         gap: 1rem;
     }
-    .achievements-action-card, .achievements-filter-card {
+
+    .achievements-action-card,
+    .achievements-filter-card {
         padding: 20px 15px;
     }
+
     .achievements-table-container {
         padding: 15px 10px;
+        margin-bottom: 20px;
     }
+    
+    /* Mobile: Make header single line with icon only */
     .table-header h2 {
-        font-size: 18px;
+        font-size: 16px;
+        font-weight: 700;
     }
+    
+    .refresh-btn {
+        padding: 8px 12px;
+        font-size: 0;
+        min-width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .refresh-btn svg,
+    .refresh-btn i {
+        font-size: 18px;
+        margin: 0;
+    }
+    
+    .delete-selected-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
     .filter-actions {
         flex-direction: column;
     }
-    .achievements-apply-sort-btn, .achievements-clear-filter-btn {
+
+    .achievements-apply-sort-btn,
+    .achievements-clear-filter-btn {
         width: 100%;
     }
 }

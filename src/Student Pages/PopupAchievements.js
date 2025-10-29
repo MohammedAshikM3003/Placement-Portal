@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import fileStorageService from "../services/fileStorageService.js";
 
 // ++ NEW: Success Popup Component with Animation ++
 const SuccessPopup = ({ onClose }) => (
@@ -26,6 +27,30 @@ const SuccessPopup = ({ onClose }) => (
   </div>
 );
 
+// ++ NEW: Error Popup Component with Animation ++
+const ErrorPopup = ({ onClose, errorMessage }) => (
+  <div className="Achievement-popup-container">
+    <div className="Achievement-popup-header">Upload Failed!</div>
+    <div className="Achievement-popup-body">
+      <svg className="Achievement-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className="Achievement-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
+        <path className="Achievement-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
+      </svg>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+        Upload Failed ✗
+      </h2>
+      <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+        {errorMessage || "Certificate upload failed"}
+      </p>
+    </div>
+    <div className="Achievement-popup-footer">
+      <button onClick={onClose} className="Achievement-popup-close-btn">
+        Close
+      </button>
+    </div>
+  </div>
+);
+
 
 export default function CertificateUpload({ onClose, onUpload }) {
   const fileInputRef = useRef();
@@ -34,6 +59,9 @@ export default function CertificateUpload({ onClose, onUpload }) {
   const [lastUploaded, setLastUploaded] = useState("");
   const [error, setError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const [formData, setFormData] = useState({
     reg: "",
@@ -46,12 +74,52 @@ export default function CertificateUpload({ onClose, onUpload }) {
     prize: "",
   });
 
+  // Auto-populate form with student data
+  React.useEffect(() => {
+    try {
+      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (studentData) {
+        setFormData(prev => ({
+          ...prev,
+          reg: studentData.regNo || "",
+          name: `${studentData.firstName || ""} ${studentData.lastName || ""}`.trim(),
+          year: studentData.currentYear || "I", // Use current year from student data
+          semester: studentData.currentSemester || "1", // Use current semester from student data
+          section: "A" // Default section
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading student data for certificate upload:', error);
+    }
+  }, []);
+
+  // Function to get available semesters based on selected year
+  const getAvailableSemesters = (year) => {
+    const semesterMap = {
+      'I': ['1', '2'],
+      'II': ['3', '4'],
+      'III': ['5', '6'],
+      'IV': ['7', '8']
+    };
+    return semesterMap[year] || [];
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
+      
+      // If year changes, reset semester to first available option
+      if (name === 'year') {
+        const availableSemesters = getAvailableSemesters(value);
+        newData.semester = availableSemesters[0] || '';
+      }
+      
+      return newData;
+    });
   };
 
   const handleDateChange = (date) => {
@@ -61,29 +129,58 @@ export default function CertificateUpload({ onClose, onUpload }) {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type !== "application/pdf" || file.size > 1024 * 1024) {
-      setError("File must be a PDF and less than 1MB");
+    
+    // Check file size (500KB = 500 * 1024 bytes)
+    const maxSize = 500 * 1024; // 500KB in bytes
+    const fileSizeKB = (file.size / 1024).toFixed(1);
+    
+    if (file.type !== "application/pdf") {
+      setError("File must be a PDF");
       setFileName("");
       setFileContent("");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => setFileContent(event.target.result);
-    reader.readAsDataURL(file);
-    setError("");
-    setFileName(file.name);
-    setLastUploaded(new Date().toLocaleDateString());
+    
+    if (file.size > maxSize) {
+      setError(`File size limit exceeded!\n\nMaximum allowed: 500KB\nYour file size: ${fileSizeKB}KB\n\nPlease compress your PDF or choose a smaller file.`);
+      setFileName("");
+      setFileContent("");
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    try {
+      // Upload file using free storage service (base64)
+      const fileData = await fileStorageService.uploadFile(file, `certificates/${Date.now()}`);
+
+      setFileContent(fileData.url);
+      setError("");
+      setFileName(file.name);
+      setLastUploaded(new Date().toLocaleDateString());
+    } catch (error) {
+      console.error('File upload error:', error);
+      setError(error.message || "Failed to upload file. Please try again.");
+      setFileName("");
+      setFileContent("");
+    }
   };
 
   const handleUploadClick = () => fileInputRef.current.click();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
     if (!fileName) {
-      setError("Please upload your certificate (PDF, Max 1 MB).");
+      setError("Please upload your certificate (PDF, Max 500KB).");
       return;
     }
     if (
@@ -100,6 +197,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
       return;
     }
     setError("");
+    setIsLoading(true); // Start loading
     
     const formattedDate = formData.date
       ? `${formData.date.getFullYear()}-${String(
@@ -117,17 +215,27 @@ export default function CertificateUpload({ onClose, onUpload }) {
       date: formattedDate,
       comp: formData.comp,
       prize: formData.prize,
-      approved: false,
+      status: "pending",
       fileName: fileName,
-      fileContent: fileContent,
+      fileData: fileContent, // This is now the base64 data
       uploadDate: new Date().toLocaleDateString(),
     };
 
-    if (onUpload) onUpload(newAchievement);
-    
-    setTimeout(() => {
+    try {
+      // Call the upload function and wait for it to complete
+      if (onUpload) {
+        await onUpload(newAchievement);
+        // Show success popup immediately - no delays
         setIsSubmitted(true);
-    }, 800);
+      }
+    } catch (error) {
+      // Show error popup if upload failed
+      console.error('Upload failed:', error);
+      setErrorMessage(error.message || "Certificate upload failed. Please try again.");
+      setIsError(true);
+    } finally {
+      setIsLoading(false); // End loading
+    }
   };
 
   return (
@@ -293,6 +401,36 @@ export default function CertificateUpload({ onClose, onUpload }) {
             stroke-dashoffset: 48;
             animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
         }
+        
+        /* Error icon animations */
+        .Achievement-error-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 2;
+            stroke: #fff;
+            stroke-miterlimit: 10;
+            margin: 0 auto;
+            box-shadow: inset 0 0 0 #FF4444;
+            animation: Achievement-error-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
+        }
+        .Achievement-error-icon--circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2;
+            stroke-miterlimit: 10;
+            stroke: #FF4444;
+            fill: none;
+            animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .Achievement-error-icon--cross {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        
         @keyframes Achievement-stroke {
             100% { stroke-dashoffset: 0; }
         }
@@ -302,6 +440,9 @@ export default function CertificateUpload({ onClose, onUpload }) {
         }
         @keyframes Achievement-fill {
             100% { box-shadow: inset 0 0 0 40px #22C55E; }
+        }
+        @keyframes Achievement-error-fill {
+            100% { box-shadow: inset 0 0 0 40px #FF4444; }
         }
       `}</style>
       <div
@@ -318,7 +459,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
           zIndex: 1000,
         }}
       >
-        {!isSubmitted ? (
+        {!isSubmitted && !isError ? (
             <div
               style={{
                 background: "#fff",
@@ -335,11 +476,12 @@ export default function CertificateUpload({ onClose, onUpload }) {
               <form onSubmit={handleSubmit}>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={isLoading ? null : onClose}
+                  disabled={isLoading}
                   style={{
-                    position: "absolute", top: "14px", right: "18px", background: "transparent", border: "none", fontSize: "25px", color: "#999999", cursor: "pointer", fontWeight: "600", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", zIndex: 2,
+                    position: "absolute", top: "14px", right: "18px", background: "transparent", border: "none", fontSize: "25px", color: isLoading ? "#cccccc" : "#999999", cursor: isLoading ? "not-allowed" : "pointer", fontWeight: "600", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", zIndex: 2, opacity: isLoading ? 0.5 : 1,
                   }}
-                  title="Close"
+                  title={isLoading ? "Upload in progress..." : "Close"}
                 >
                   ×
                 </button>
@@ -357,10 +499,10 @@ export default function CertificateUpload({ onClose, onUpload }) {
                 />
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input
-                    className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} onChange={handleInputChange} required
+                    className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                   <input
-                    className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} required
+                    className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
@@ -377,16 +519,16 @@ export default function CertificateUpload({ onClose, onUpload }) {
                     className="input-hover" name="semester" value={formData.semester} onChange={handleInputChange} required
                   >
                     <option value="" disabled>Semester</option>
-                    {[...Array(8)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
+                    {getAvailableSemesters(formData.year).map(sem => (
+                      <option key={sem} value={sem}>
+                        {sem}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input
-                    className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} onChange={handleInputChange} required
+                    className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                   <DatePicker
                     selected={formData.date}
@@ -459,7 +601,7 @@ export default function CertificateUpload({ onClose, onUpload }) {
                   >
                     <div style={{ marginBottom: 4 }}>
                       <span style={{ color: "#2276fc", fontWeight: 600 }}>*</span>
-                      Upload Max 1MB PDF file
+                      Upload Max 500KB PDF file
                     </div>
                     <div style={{ marginBottom: 4 }}>
                       <span
@@ -485,14 +627,24 @@ export default function CertificateUpload({ onClose, onUpload }) {
                     display: "flex", gap: 12, justifyContent: "center", marginTop: 5,
                   }}
                 >
-                  <button type="submit" className="submit-button">
-                    Submit
+                  <button 
+                    type="submit" 
+                    className="submit-button"
+                    disabled={isLoading}
+                    style={{
+                      opacity: isLoading ? 0.7 : 1,
+                      cursor: isLoading ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isLoading ? 'Uploading...' : 'Submit'}
                   </button>
                 </div>
               </form>
             </div>
-        ) : (
+        ) : isSubmitted ? (
           <SuccessPopup onClose={onClose} />
+        ) : (
+          <ErrorPopup onClose={onClose} errorMessage={errorMessage} />
         )}
       </div>
     </>

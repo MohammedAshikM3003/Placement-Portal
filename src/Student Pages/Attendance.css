@@ -1,65 +1,96 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap');
 
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', Arial, sans-serif;
-  background: #f8f8fb;
-  overflow-x: hidden;
-  height: 100%;
+/* Attendance page container styles */
+.student-attendance-page.container {
+    font-family: 'Poppins', Arial, sans-serif !important;
+    background: #f8f8fb !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
 }
 
-.attendance-area {
-  flex: 1;
-  height: 695px;
-  padding: 20px 20px 10px 20px; /* Slightly less padding bottom */
-  background: #fff;
-  margin-left: 230px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  transition: margin-left 0.3s ease-in-out;
-  position: relative;
-  top: 0px;
+.student-attendance-page .main {
+    display: flex !important;
+    margin-top: 55px !important;
+    height: calc(100vh - 55px) !important;
 }
 
-.attendance-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-bottom: 30px;
-  margin-top: 30px;
+/* Attendance-specific scrollbar styles */
+.student-attendance-page .attendance-area::-webkit-scrollbar {
+    width: 10px;
 }
 
-.attendance-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 25px;
-  border: 2px solid #cccccc;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
+.student-attendance-page .attendance-area::-webkit-scrollbar-track {
+    background: #f0f2f5; 
 }
 
-.attendance-card:hover {
-  border-color: #2085f6;
-  box-shadow: 0 4px 12px rgba(32, 133, 246, 0.2);
+.student-attendance-page .attendance-area::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme for student pages */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
 }
 
-.percentage-card {
-  align-items: center;
-  text-align: center;
+.student-attendance-page .attendance-area::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA; /* A slightly darker shade for hover effect */
 }
 
-.percentage-value {
+.student-attendance-page .attendance-area {
+  flex: 1 !important;
+  height: 695px !important;
+  padding: 20px 20px 10px 20px !important; /* Slightly less padding bottom */
+  background: #fff !important;
+  margin-left: 230px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  transition: margin-left 0.3s ease-in-out !important;
+  position: relative !important;
+  top: 0px !important;
+}
+
+.student-attendance-page .attendance-cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 18px !important;
+  margin-bottom: 30px !important;
+  margin-top: 30px !important;
+}
+
+.student-attendance-page .attendance-card {
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07) !important;
+  padding: 25px !important;
+  border: 2px solid #cccccc !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.3s ease !important;
+}
+
+.student-attendance-page .attendance-card:hover {
+  border-color: #2085f6 !important;
+  box-shadow: 0 4px 12px rgba(32, 133, 246, 0.2) !important;
+}
+
+.student-attendance-page .percentage-card {
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.student-attendance-page .attendance-card h3 {
+  margin: 0 0 15px 0 !important;
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+}
+
+.student-attendance-page .percentage-value {
   font-size: 3em;
   font-weight: bold;
   margin-top: 22px;
   margin-left: 0%;
 }
 
-.attendance-chart-container {
+.student-attendance-page .attendance-chart-container {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -67,14 +98,15 @@ html, body {
   flex-wrap: wrap;
 }
 
-.pie-chart-graphic {
+.student-attendance-page .pie-chart-graphic {
   position: relative;
   width: 140px;
   height: 140px;
   border-radius: 50%;
 }
 
-.pie-label-absent, .pie-label-present {
+.student-attendance-page .pie-label-absent, 
+.student-attendance-page .pie-label-present {
   position: absolute;
   color: #fff;
   text-align: center;
@@ -84,7 +116,7 @@ html, body {
   transform: translate(-50%, -50%);
 }
 
-.attendance-legend {
+.student-attendance-page .attendance-legend {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -92,28 +124,28 @@ html, body {
   margin-left: 12px;
 }
 
-.legend-item {
+.student-attendance-page .legend-item {
   display: flex;
   flex-direction: column;
 }
 
-.legend-text {
+.student-attendance-page .legend-text {
   color: #333;
 }
 
-.legend-value-present {
+.student-attendance-page .legend-value-present {
   color: #2dbda8;
   font-weight: 700;
   font-size: 1.5em;
 }
 
-.legend-value-absent {
+.student-attendance-page .legend-value-absent {
   color: #f86c6b;
   font-weight: 700;
   font-size: 1.5em;
 }
 
-.stars-display {
+.student-attendance-page .stars-display {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -122,16 +154,16 @@ html, body {
   flex-direction: row-reverse;
 }
 
-.stars-display svg {
+.student-attendance-page .stars-display svg {
   fill: #e0e0e0;
   transition: fill 0.3s ease-in-out;
 }
 
-.overall-status-card:hover .stars-display .active-star {
+.student-attendance-page .overall-status-card:hover .stars-display .active-star {
   fill: var(--star-color);
 }
 
-.attendance-table {
+.student-attendance-page .attendance-table {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
@@ -143,33 +175,34 @@ html, body {
   margin-top: 16px;
 }
 
-.table-header {
+.student-attendance-page .table-header {
   padding: 16px;
   border-bottom: 1px solid #e9ecef;
 }
 
-.table-header h2 {
+.student-attendance-page .table-header h2 {
   margin: 0;
   font-size: 1.3em;
 }
 
-.table-container {
+.student-attendance-page .table-container {
   overflow-y: auto;
   flex: 1;
 }
 
-.table {
+.student-attendance-page .table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.table th, .table td {
+.student-attendance-page .table th, 
+.student-attendance-page .table td {
   padding: 12px 16px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
 }
 
-.table th {
+.student-attendance-page .table th {
   background: #f8f9fa;
   font-weight: 600;
   color: #333;
@@ -179,37 +212,37 @@ html, body {
   font-size: 16px;
 }
 
-.table td {
+.student-attendance-page .table td {
   font-size: 17px;
 }
 
-.table tbody tr {
+.student-attendance-page .table tbody tr {
   transition: background-color 0.2s ease;
 }
 
-.table tbody tr:hover {
+.student-attendance-page .table tbody tr:hover {
   background-color: #f0f6ff;
   cursor: pointer;
 }
 
-.scrollable-table-body::-webkit-scrollbar {
+.student-attendance-page .scrollable-table-body::-webkit-scrollbar {
   width: 8px;
 }
 
-.scrollable-table-body::-webkit-scrollbar-track {
+.student-attendance-page .scrollable-table-body::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
-.scrollable-table-body::-webkit-scrollbar-thumb {
+.student-attendance-page .scrollable-table-body::-webkit-scrollbar-thumb {
   background: #2085f6;
   border-radius: 4px;
 }
 
-.scrollable-table-body::-webkit-scrollbar-thumb:hover {
+.student-attendance-page .scrollable-table-body::-webkit-scrollbar-thumb:hover {
   background: #a0c8f0;
 }
 
-.status-pill {
+.student-attendance-page .status-pill {
   padding: 5px 14px;
   border-radius: 16px;
   font-size: 14px;
@@ -217,90 +250,130 @@ html, body {
   font-weight: 600;
 }
 
-.status-present {
+.student-attendance-page .status-present {
   color: #28a745;
   background-color: #e9f7ef;
 }
 
-.status-absent {
+.student-attendance-page .status-absent {
   color: #dc3545;
   background-color: #fceeee;
 }
 
-/* Responsive Styles */
-
+/* Mobile scrollbar styling - make it look like desktop */
 @media (max-width: 992px) {
-  .attendance-area {
-    margin-left: 0;
-    padding: 12px;
-    height: auto;
+  .student-attendance-page .attendance-area::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+      width: 8px;
   }
 
-  .attendance-cards {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+  .student-attendance-page .attendance-area::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+      background: #f0f2f5;
   }
 
-  .attendance-card {
-    padding: 20px;
+  .student-attendance-page .attendance-area::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+      background-color: #2085f6;
+      border-radius: 20px;
+      border: 2px solid #f0f2f5;
   }
 
-  .attendance-chart-container {
+  .student-attendance-page .attendance-area::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+      background-color: #4338CA;
+  }
+}
+@media (max-width: 992px) {
+  .student-attendance-page.container {
+    overflow-x: hidden !important;
+  }
+
+  .student-attendance-page .main {
+    overflow: hidden !important;
+    min-height: calc(100vh - 55px) !important;
+  }
+
+  .student-attendance-page .attendance-area {
+    margin-left: 0 !important;
+    padding: 10px 12px 50px 12px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: calc(100vh - 65px) !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .student-attendance-page .attendance-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .student-attendance-page .attendance-card {
+    padding: 20px !important;
+  }
+
+  .student-attendance-page .attendance-chart-container {
     flex-direction: column;
     align-items: center;
   }
 
-  .attendance-legend {
+  .student-attendance-page .attendance-legend {
     margin-left: 0;
     margin-top: 12px;
     flex-direction: row;
     gap: 24px;
   }
 
-  .legend-item {
+  .student-attendance-page .legend-item {
     flex-direction: row;
     gap: 8px;
   }
 
-  .table-container {
+  .student-attendance-page .table-container {
     max-height: 290px;
   }
 }
 
 @media (max-width: 576px) {
-  .attendance-cards {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .student-attendance-page .attendance-cards {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 
-  .attendance-card {
-    padding: 18px;
+  .student-attendance-page .attendance-card {
+    padding: 18px !important;
   }
 
-  .percentage-value {
+  .student-attendance-page .percentage-value {
     font-size: 2.5em;
   }
 
-  .attendance-chart-graphic {
+  .student-attendance-page .attendance-chart-graphic {
     width: 120px;
     height: 120px;
   }
 
-  .pie-label-absent, .pie-label-present {
+  .student-attendance-page .pie-label-absent, 
+  .student-attendance-page .pie-label-present {
     font-size: 12px;
   }
 
-  .attendance-legend {
+  .student-attendance-page .attendance-legend {
     gap: 12px;
     font-size: 1em;
   }
 
-  .table-container {
+  .student-attendance-page .table-container {
     max-height: 250px;
   }
 
-  .table th, .table td {
+  .student-attendance-page .table th, 
+  .student-attendance-page .table td {
     font-size: 13px;
     padding: 8px;
+  }
+
+  .student-attendance-page .attendance-area {
+    padding-bottom: 120px;
   }
 }

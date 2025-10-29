@@ -1,0 +1,623 @@
+.co-ram-filter-box {
+  background: #D3D1D1;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 25px auto 0 15px; 
+  padding: 16px 26px 8px 26px;
+  box-shadow: 0 0 12px #e1e6ef32;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 70px;
+}
+
+.co-ram-tab-container {
+  display: flex;
+  gap: 62px;
+  margin-bottom: 8px;
+  text-align:center;
+}
+
+.co-ram-tab-inactive{
+  background: #D3D1D1;
+  color: #222;
+  border-radius: 8px;
+  padding: 5px 96px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 6px 8px -4px #333; 
+  transition: background 0.2s, color 0.2s;
+  width:350.69px;
+  height:62.6px;
+}
+
+.co-ram-tab-active {
+  background: #d23b42;
+  color: #fff;
+  border-radius: 8px;
+  padding: 5px 100px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 4px 6px -6px #333; 
+  height:62.6px;
+  width:350.69px;
+}
+
+.co-ram-tab-inactive:hover {
+  background: #d23b42; 
+  color: #fff; 
+}
+
+.co-ram-filter-inputs {
+  display: flex;
+  gap: 44px;
+  margin-left: 0px;
+}
+
+.co-ram-filter-select, .co-ram-filter-date-input {
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 262px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ram-filter-select-1{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ram-filter-select-2{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+
+.co-ram-filter-select-1:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ram-filter-select-1:hover{
+  border-color: #d23b42; 
+}
+
+.co-ram-filter-select-2:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ram-filter-select-2:hover{
+  border-color: #d23b42; 
+}
+
+.co-ram-filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.co-ram-filter-select:hover, .co-ram-filter-date-input:hover {
+  border-color: #d23b42; 
+}
+
+/* --- FIX APPLIED HERE --- */
+.co-ram-filter-select:focus, .co-ram-filter-date-input:focus {
+  /* Explicitly setting the border ensures the 2px thickness is maintained, 
+     preventing size shift on focus. */
+  border: 2px solid #d23b42; 
+  width: 262px !important; 
+  box-sizing: border-box !important;
+  outline: none;
+}
+
+
+
+/* ------------------------ */
+
+.co-ram-round-buttons-container {
+  max-width: 1180px;
+  margin: 30px auto auto 10px;
+  display: flex;
+  gap: 14px;
+  overflow-x: auto; 
+  white-space: nowrap; 
+  padding-bottom: 10px;
+  scrollbar-width: thin; 
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar {
+  height: 8px; 
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  background: #d23b42;
+  border-radius: 4px;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-ram-table-body-scroll::-webkit-scrollbar,
+.co-ram-round-buttons-container::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.co-ram-table-body-scroll::-webkit-scrollbar-track,
+.co-ram-round-buttons-container::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb,
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover,
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+.co-ram-round-button {
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px; 
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0; 
+}
+
+.co-ram-round-button-active {
+  background: #d23b42;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+.co-ram-round-button-inactive {
+  background: #f6f8fb;
+  color: #444;
+  font-weight: 600;
+  border: 1px solid #d4d6db;
+}
+
+.co-ram-round-button-inactive:hover {
+  background: #d23b42;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.co-ram-table-section {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 30px auto 30px 15px;
+  padding: 26px 32px 0px 12px;
+  box-shadow: 0 0 14px #e3e6ee2a;
+  border: 2px solid #808080;
+  overflow-x: auto; 
+  overflow-y: hidden;
+  height:350px;
+}
+
+.co-ram-table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  left: 0px;
+}
+
+.co-ram-table-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #191c2f;
+  margin-bottom:33px;
+}
+
+.co-ram-table-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom:20px;
+  
+}
+
+.co-ram-view-status-btn-all, .co-ram-view-status-btn-filtered, .co-ram-print-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.co-ram-view-status-btn-all {
+  background: #4ea24e;
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ram-view-status-btn-filtered {
+  background: #397639; 
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ram-view-status-btn-all:hover{
+  background:#397639;
+}
+.co-ram-print-btn {
+  background: #d23b42;
+  color: #ffffffff;
+  padding: 9px 45px;
+  border-radius: 11px;
+  z-index: 1001; 
+}
+.co-ram-print-btn:hover{
+  background:#a72e33;
+}
+
+.co-ram-print-button-container {
+  position: relative;
+}
+
+.co-ram-export-menu {
+  position: absolute; 
+  top: 33px;
+  right: 0;
+  margin-top: 5px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000; 
+  min-width: 180px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.co-ram-export-menu button {
+  display: block;
+  width: 180px;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.1s;
+}
+
+.co-ram-export-menu button:hover {
+  background: #f0f0f0;
+}
+
+.co-ram-data-table {
+  min-width: 1290px;
+  width: 100%;
+  border-collapse: separame;
+  margin-top: -8px;
+  font-size: 1.02rem;
+  table-layout: fixed; 
+  
+}
+
+.co-ram-data-table thead {
+  display: block;
+  width: 1290px; 
+}
+
+.co-ram-data-table th {
+  background: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  color:rgb(175, 175, 175);
+  /* Changed padding to be consistent and lower to give more space for content width */
+  padding: 5px 37px; 
+  border-radius: 3px;
+  text-align: center;
+  border-bottom: 2px solid #f2f0f2;
+  
+}
+
+.co-ram-table-body-scroll {
+    width: 1368px; 
+  max-height: 194px; 
+  overflow-y: scroll;
+  overflow-x: hidden; 
+  width: 1910px;
+}
+.co-ram-data-table tbody {
+  display: block;
+  /* Must match thead width */
+  width: 1290px;
+}
+
+
+.co-ram-data-table tr {
+  display: flex; 
+  width: 1907px;
+}
+
+.co-ram-data-table th, .co-ram-data-table td {
+  min-width: 0;
+  text-align: center;
+}
+
+.co-ram-data-table td {
+  padding: 9px 5px;
+  color: #30334e;
+  min-width:148px;
+  font-weight: 500;
+  border-bottom: 1.5px solid #f2f0f2;
+}
+
+.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 50px; }
+.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 140px; }
+.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 115px; }
+.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 85px; }
+.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 90px; }
+.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 60px; }
+.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 100px; }
+.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 120px; }
+.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 75px; }
+.co-ram-data-table th:nth-child(10), .co-ram-data-table td:nth-child(10) { width: 70px; }
+.co-ram-data-table th:nth-child(11), .co-ram-data-table td:nth-child(11) { width: 100px; }
+.co-ram-data-table th:nth-child(12), .co-ram-data-table td:nth-child(12) { width: 95px; }
+.co-ram-data-table th:nth-child(13), .co-ram-data-table td:nth-child(13) { width: 95px; }
+
+.co-ram-status-cell-passed {
+  padding: 6px 22px;
+  background: #c2f6ea;
+  color: #16c098;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block; 
+}
+
+.co-ram-status-cell-rejected {
+  padding: 6px 18px;
+  background:rgb(250, 213, 215);
+  color: #d23b42;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* ... (Existing styles up to the media query) ... */
+
+/* ======================================================= */
+/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
+/* ======================================================= */
+@media (max-width: 1024px) {
+  /* Main Content Shift for screens where the sidebar might hide */
+  .co-main-content {
+      margin-left: 0 !important; /* Override the fixed desktop margin */
+      width: 100%;
+      margin-top:60px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  
+  /* --- Main Filter Box --- */
+  .co-main-content {
+      margin-left: 0 !important; /* Override the fixed desktop margin */
+      width: 100%;
+      margin-top:60px;
+      overflow-y: auto;
+      box-sizing: border-box;
+      height:100vh;
+  }
+  .co-ram-filter-box {
+      margin: 15px 10px 10px 10px; /* Center and give margin */
+      padding: 15px;
+      max-width: 100%;
+      margin-top: 80px; /* Reduced top margin */
+  }
+
+  /* --- Tabs: Horizontal Scrollable --- */
+  .co-ram-tab-container {
+      gap: 10px; 
+      overflow-x: auto; /* Enable horizontal scroll */
+      white-space: nowrap; /* Prevent wrapping */
+      justify-content: flex-start; /* Start tabs from the left */
+      margin-bottom: 10px;
+      padding-bottom: 5px; /* Space for scrollbar */
+  }
+  
+  /* Ensure tabs shrink slightly but maintain content width for scroll */
+  .co-ram-tab-inactive, 
+  .co-ram-tab-active {
+      width: 200px; /* Fixed smaller width for easier horizontal scroll */
+      height: auto;
+      padding: 10px 15px;
+      font-size: 1rem;
+      flex-shrink: 0; /* Important: prevents tabs from collapsing */
+      letter-spacing: normal;
+      box-shadow: 0 4px 6px -4px #333; /* Consistent smaller shadow */
+  }
+
+  /* --- Filter Inputs: Vertical Stack --- */
+  .co-ram-filter-inputs {
+      flex-direction: column; /* Stack inputs vertically */
+      gap: 15px; /* Reduced gap */
+      margin-left: 0;
+  }
+
+  /* Ensure all filter selects and date inputs take full width when stacked */
+  .co-ram-filter-select, 
+  .co-ram-filter-date-input,
+  .co-ram-filter-select-1,
+  .co-ram-filter-select-2 {
+      width: 100% !important; /* Full width for stacking */
+      max-width: 100%;
+      height: 45px; /* Slightly reduced height */
+      font-size: 0.95rem;
+      padding: 8px 15px;
+      text-align: left; /* Text align left for better mobile experience */
+  }
+  
+  /* --- Round Buttons: Horizontal Scrollable --- */
+  .co-ram-round-buttons-container {
+      margin: 20px 10px 20px 10px; /* Clean mobile margin */
+      padding-bottom: 10px;
+  }
+
+  /* --- Table Section --- */
+  .co-ram-table-section {
+      margin: 20px 10px 100px 10px; /* Extra space at bottom for fixed buttons */
+      padding: 15px 0 0 5px; /* Reduced padding */
+      max-width: 100%;
+      border-radius: 8px;
+      height: auto; 
+  }
+
+  /* --- Table Header/Actions: Stacking and Full Width Buttons --- */
+  .co-ram-table-header-row {
+      flex-direction: column; /* Stack Title and Actions */
+      align-items: flex-start; 
+      margin-bottom: 10px;
+  }
+  
+  .co-ram-table-title {
+      margin-bottom: 15px; 
+      font-size: 1.1rem;
+  }
+  
+  .co-ram-table-actions {
+      width: 100%; /* Full width for the actions container */
+      gap: 10px;
+      flex-direction: column; /* Stack the buttons */
+      margin-bottom: 15px;
+  }
+
+  .co-ram-view-status-btn-all, 
+  .co-ram-view-status-btn-filtered, 
+  .co-ram-print-button-container {
+      width: 100%; /* Full width for each button/container */
+  }
+  
+  
+  .co-ram-view-status-btn-all
+   {
+      width: 100%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+  }
+
+  .co-ram-view-status-btn-all {
+      width: 45%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+      position: relative;
+        left: -100px;
+    
+  }
+
+  .co-ram-view-status-btn-filtered {
+    width: 45%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+      position: relative;
+        left: -100px;
+}
+.co-ram-print-button-container {
+  width: 100%; 
+  margin-left: 530px;
+    margin-top: -50px;
+  /* Full width for each button/container */
+}
+  /* Print Menu Positioning (adjust right position) */
+  .co-ram-export-menu {
+      right: 0;
+      left: auto;
+      min-width: 100%; /* Match parent button width */
+  }
+
+  /* Table body scroll adjusted to take up less height on small screens */
+  .co-ram-table-body-scroll {
+      max-height: 40vh; 
+      overflow-y: scroll;
+      overflow-x: hidden;
+      width: 1900px; 
+  }
+  
+  /* The table itself must maintain its wide minimum width to enable horizontal scroll */
+  .co-ram-data-table {
+    font-size: 0.9rem;
+  }
+
+  /* Existing table cell width logic in the CSS remains crucial for horizontal scrolling. */
+  
+  /* Red scrollbar on mobile */
+  .co-ram-table-body-scroll::-webkit-scrollbar,
+  .co-ram-round-buttons-container::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 10px;
+  }
+  .co-ram-table-body-scroll::-webkit-scrollbar-track,
+  .co-ram-round-buttons-container::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb,
+  .co-ram-round-buttons-container::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover,
+  .co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+}

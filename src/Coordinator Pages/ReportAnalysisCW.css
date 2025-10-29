@@ -1,0 +1,640 @@
+.co-ras-filter-box {
+  background: #D3D1D1;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 25px auto 0 15px; 
+  padding: 16px 26px 8px 26px;
+  box-shadow: 0 0 12px #e1e6ef32;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 70px;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-ras-table-body-scroll::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+.co-ras-tab-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 8px;
+  text-align:center;
+}
+
+.co-ras-tab-inactive, .co-ras-tab-active {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  
+  /* FIX: Removed flex-basis: 25%; to allow explicit width to take precedence. */
+  
+  white-space: normal;
+  height:62.8px;
+  width:335.23px;
+  flex-shrink: 0; /* NEW: Prevents buttons from shrinking below the set width */
+  border-radius: 8px;
+  padding: 5px 35px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  transition: background 0.2s, color 0.2s;
+}
+
+.co-ras-tab-inactive{
+  background: #D3D1D1;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+  /* FIX: Removed redundant width:350.69px; as it is already set above */
+}
+
+.co-ras-tab-active {
+  background: #d23b42;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.15rem;
+  letter-spacing: normal;
+  box-shadow: 0 4px 6px -6px #333; 
+  height:62.8px;
+  width:335.23px;
+}
+
+.co-ras-tab-inactive:hover {
+  background: #d23b42; 
+  color: #fff; 
+}
+
+.co-ras-filter-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* MODIFIED SECTION: Unified width and height for filter inputs */
+.co-ras-filter-select, .co-ras-filter-date-input {
+  /* Ensuring equal distribution and responsiveness */
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 269px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ras-filter-select-1{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ras-filter-select-2{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+
+.co-ras-filter-select-1:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ras-filter-select-1:hover{
+  border-color: #d23b42; 
+}
+
+.co-ras-filter-select-2:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ras-filter-select-2:hover{
+  border-color: #d23b42; 
+}
+
+.co-ras-filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.co-ras-filter-select:hover, .co-ras-filter-date-input:hover {
+  border-color: #d23b42; 
+}
+
+.co-ras-filter-select:focus, .co-ras-filter-date-input:focus {
+  border-color: #d23b42; 
+  outline: none;
+}
+
+/* --- REPLACED TABLE STYLES FROM ReportAnalysismain.css BELOW --- */
+
+.co-ras-table-section {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 30px auto 30px 15px;
+  padding: 26px 32px 0px 12px;
+  box-shadow: 0 0 14px #e3e6ee2a;
+  border: 2px solid #808080;
+  overflow-x: auto; 
+  overflow-y: hidden;
+  height:435px;
+  
+}
+
+.co-ras-table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  left: 0px;
+}
+
+.co-ras-table-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #191c2f;
+  margin-bottom:33px;
+}
+
+.co-ras-table-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom:20px;
+
+}
+
+.co-ras-view-status-btn-all, .co-ras-view-status-btn-filtered, .co-ras-print-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.co-ras-view-status-btn-all {
+  background: #4ea24e;
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ras-view-status-btn-filtered {
+  background: #397639; 
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ras-view-status-btn-all:hover{
+  background:#397639;
+}
+.co-ras-print-btn {
+  background: #d23b42;
+  color: #ffffffff;
+  padding: 9px 45px;
+  border-radius: 11px;
+  z-index: 1001; 
+}
+.co-ras-print-btn:hover{
+  background:#a72e33;
+}
+
+.co-ras-print-button-container {
+  position: relative;
+}
+
+.co-ras-export-menu {
+  position: absolute; 
+  top: 33px;
+  right: 0;
+  margin-top: 5px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000; 
+  min-width: 180px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.co-ras-export-menu button {
+  display: block;
+  width: 180px;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.1s;
+}
+
+.co-ras-export-menu button:hover {
+  background: #f0f0f0;
+}
+
+.co-ras-data-table {
+  min-width: 1290px;
+  border-collapse: separate;
+  margin-top: -8px;
+  font-size: 1.02rem;
+  table-layout: fixed; 
+  
+}
+
+.co-ras-data-table th {
+  background: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  color:rgb(175, 175, 175);
+  /* Changed padding to be consistent and lower to give more space for content width */
+  padding: 5px 37px; 
+  border-radius: 3px;
+  text-align: center;
+  border-bottom: 2px solid #f2f0f2;
+  
+}
+
+.co-ras-table-body-scroll {
+    width: 1368px; 
+  max-height: 194px; 
+  overflow-y: scroll;
+  overflow-x: hidden; 
+  width: 1910px;
+}
+.co-ras-data-table tbody {
+  display: block;
+  /* Must match thead width */
+  width: 1290px;
+ 
+}
+
+.co-ras-data-table tr {
+  display: flex; 
+  width: 1907px;
+}
+
+.co-ras-data-table th, .co-ras-data-table td {
+  min-width: 0;
+  text-align: center;
+}
+
+.co-ras-data-table td {
+  padding: 9px 5px;
+  color: #30334e;
+  min-width:148px;
+  font-weight: 500;
+  border-bottom: 1.5px solid #f2f0f2;
+}
+
+.co-ras-data-table th:nth-child(1), .co-ras-data-table td:nth-child(1) { width: 360px; }
+.co-ras-data-table th:nth-child(2), .co-ras-data-table td:nth-child(2) { width: 140px; }
+.co-ras-data-table th:nth-child(3), .co-ras-data-table td:nth-child(3) { width: 115px; }
+.co-ras-data-table th:nth-child(4), .co-ras-data-table td:nth-child(4) { width: 85px; }
+.co-ras-data-table th:nth-child(5), .co-ras-data-table td:nth-child(5) { width: 90px; }
+.co-ras-data-table th:nth-child(6), .co-ras-data-table td:nth-child(6) { width: 60px; }
+.co-ras-data-table th:nth-child(7), .co-ras-data-table td:nth-child(7) { width: 100px; }
+.co-ras-data-table th:nth-child(8), .co-ras-data-table td:nth-child(8) { width: 120px; }
+.co-ras-data-table th:nth-child(9), .co-ras-data-table td:nth-child(9) { width: 75px; }
+.co-ras-data-table th:nth-child(10), .co-ras-data-table td:nth-child(10) { width: 70px; }
+.co-ras-data-table th:nth-child(11), .co-ras-data-table td:nth-child(11) { width: 100px; }
+.co-ras-data-table th:nth-child(12), .co-ras-data-table td:nth-child(12) { width: 95px; }
+.co-ras-data-table th:nth-child(13), .co-ras-data-table td:nth-child(13) { width: 95px; }
+
+.co-ras-status-cell-passed {
+  padding: 6px 22px;
+  background: #c2f6ea;
+  color: #16c098;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block; 
+}
+
+.co-ras-status-cell-rejected {
+  padding: 6px 18px;
+  background:rgb(250, 213, 215);
+  color: #d23b42;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+@media (max-width: 1024px) {
+  .co-main-content {
+      /* Override desktop fixed margin when screen is smaller */
+      margin-left: 0 !important; 
+      width: 100%;
+      padding: 10px; /* Add padding when margin is gone */
+  }
+}
+
+
+/* ======================================================= */
+/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
+/* ======================================================= */
+@media (max-width: 768px) {
+  
+  /* --- Filter Box Margin --- */
+  .co-main-content{
+height:95vh;
+
+
+  }
+  .co-ras-filter-box {
+      margin: 15px 10px 10px 10px; /* Center and give margin */
+      padding: 15px;
+      max-width: 100%;
+      margin-top: 85px; 
+  }
+
+  /* --- Tabs: Horizontal Scrollable --- */
+  .co-ras-tab-container {
+      gap: 10px; 
+      overflow-x: auto; /* Enable horizontal scroll */
+      white-space: nowrap; /* Prevent wrapping */
+      justify-content: flex-start; /* Start tabs from the left */
+      margin-bottom: 10px;
+      padding-bottom: 5px; /* Space for scrollbar */
+  }
+  
+  /* Ensure tabs shrink slightly but maintain content width for scroll */
+  .co-ras-tab-inactive, 
+  .co-ras-tab-active {
+    width: 200px;
+        height: auto;
+        padding: 10px 0px;
+        font-size: 1rem;
+        flex-shrink: 0;
+        letter-spacing: normal;
+        box-shadow: 0 4px 6px -4px #333;
+      white-space: normal; /* Allow text to wrap within the smaller width */
+      line-height: 1.2;
+  }
+
+
+  /* --- Filter Inputs: Vertical Stack (Full Width) --- */
+  .co-ras-filter-inputs {
+      flex-direction: column; /* Stack inputs vertically */
+      gap: 15px; /* Reduced gap */
+      margin-left: 0;
+  }
+
+  /* Filters (company, batch, date pickers): Full width when stacked */
+  .co-ras-filter-select, 
+  .co-ras-filter-date-input,
+  .co-ras-filter-select-1, /* Company dropdown */
+  .co-ras-filter-select-2 { /* Batch dropdown */
+      width: 100% !important; /* Full width for stacking */
+      max-width: 100%;
+      height: 45px; 
+      font-size: 0.95rem;
+      padding: 8px 15px;
+      text-align: left; /* Align text left for better mobile experience */
+  }
+  
+  /* --- Table Section and Action Buttons (Full Width) --- */
+  .co-ras-table-section {
+      margin: 20px 10px 100px 10px; /* Extra space at bottom for fixed buttons */
+      padding: 15px 0 0 5px; /* Reduced padding */
+      max-width: 100%;
+      border-radius: 8px;
+      height: 315px; 
+    
+      
+  }
+
+  /* Table Header/Actions: Stacking and Full Width Buttons */
+  .co-ras-table-header-row {
+      flex-direction: column; /* Stack Title and Actions */
+      align-items: flex-start; 
+      margin-bottom: 10px;
+  }
+  
+  .co-ras-table-title {
+      margin-bottom: 15px; 
+      font-size: 1.1rem;
+  }
+  
+  .co-ras-table-actions {
+      width: 100%; /* Full width for the actions container */
+      gap: 10px;
+      flex-direction: column; /* Stack the buttons */
+      margin-bottom: 15px;
+      
+  }
+
+  .co-ras-view-status-btn-all, 
+  .co-ras-view-status-btn-filtered, 
+  .co-ras-print-button-container {
+      width: 100%; /* Full width for each button/container */
+  }
+  
+
+  .co-ras-print-button-container {
+    width: 30%;
+    position: relative;
+    z-index: 1000;
+    left: 120px;
+    top: -54px;
+    
+ /* Full width for each button/container */
+}
+
+  .co-ras-print-btn,
+  .co-ras-view-status-btn-all, 
+  .co-ras-view-status-btn-filtered {
+      width: 100%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+  }
+  .co-ras-view-status-btn-filtered {
+    width: 43%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+      position: relative;
+      left: -90px;
+  }
+  
+  .co-ras-view-status-btn-all {
+      width: 43%;
+      padding: 12px 0; /* More vertical padding */
+      height: auto;
+      font-size: 1.05rem;
+      position: relative;
+      left: -90px;
+  }
+
+  /* Print Menu Positioning */
+  .co-ras-export-menu {
+      right: 0;
+      position: absolute;
+      left: auto;
+      min-width: 180px; /* Match parent button width */
+      top: 45px; 
+  }
+
+  /* Table body scroll adjusted to take up less height on small screens */
+  .co-ras-table-body-scroll {
+      max-height: 40vh; /* Use viewport height to limit scroll area */
+      overflow-y: scroll;
+      overflow-x: hidden;
+      width: 100%; 
+  }
+  
+  /* Ensure the table itself keeps its fixed width for horizontal scrolling */
+  .co-ras-data-table {
+      min-width: 1290px; /* Preserve wide width for horizontal scroll */
+      font-size: 0.9rem;
+      position: relative;
+      top: -70px;
+  }
+
+  /* Fix for the thead and tbody widths when the container handles overflow */
+  .co-ras-data-table thead, .co-ras-data-table tbody {
+      width: auto !important; 
+  }
+
+  /* Mobile specific column width adjustments (can be refined if card view is preferred) */
+  .co-ras-data-table th:nth-child(1), .co-ras-data-table td:nth-child(1) { width: 160px; } /* S.No column is wider to fit index text better */
+  .co-ras-data-table th:nth-child(2), .co-ras-data-table td:nth-child(2) { width: 140px; } 
+  .co-ras-data-table th:nth-child(3), .co-ras-data-table td:nth-child(3) { width: 115px; } 
+  .co-ras-data-table th:nth-child(4), .co-ras-data-table td:nth-child(4) { width: 110px; } 
+  .co-ras-data-table th:nth-child(5), .co-ras-data-table td:nth-child(5) { width: 90px; } 
+  .co-ras-data-table th:nth-child(6), .co-ras-data-table td:nth-child(6) { width: 60px; } 
+  .co-ras-data-table th:nth-child(7), .co-ras-data-table td:nth-child(7) { width: 120px; } 
+  .co-ras-data-table th:nth-child(8), .co-ras-data-table td:nth-child(8) { width: 120px; } 
+  .co-ras-data-table th:nth-child(9), .co-ras-data-table td:nth-child(9) { width: 85px; } 
+  .co-ras-data-table th:nth-child(10), .co-ras-data-table td:nth-child(10) { width: 80px; } 
+  .co-ras-data-table th:nth-child(11), .co-ras-data-table td:nth-child(11) { width: 100px; } 
+  .co-ras-data-table th:nth-child(12), .co-ras-data-table td:nth-child(12) { width: 100px; } 
+  .co-ras-data-table th:nth-child(13), .co-ras-data-table td:nth-child(13) { width: 100px; } 
+
+}
+
+@media (max-width: 576px) {
+.co-ras-table-section {
+    width: calc(100% - 20px); 
+    margin: 15px 10px 30px 10px;
+    padding: 15px 5px 0px 0px; 
+    border-radius: 8px;
+    overflow-x: auto; 
+    overflow-y: hidden;
+}
+
+.co-ras-data-table {
+    min-width: 1290px; 
+    width: 100%;
+    position: static;
+    margin-top: -75px;
+
+}
+
+.co-ras-data-table thead {
+  display: block; 
+  width: 1290px; 
+}
+
+.co-ras-table-body-scroll {
+    max-height: 350px; 
+    overflow-y: scroll;
+    overflow-x: hidden; 
+    width: 1905px;
+}
+
+
+
+
+
+.co-ras-data-table th:nth-child(1), .co-ras-data-table td:nth-child(1) { width: 50px; }
+.co-ras-data-table th:nth-child(2), .co-ras-data-table td:nth-child(2) { width: 140px; }
+.co-ras-data-table th:nth-child(3), .co-ras-data-table td:nth-child(3) { width: 115px; }
+.co-ras-data-table th:nth-child(4), .co-ras-data-table td:nth-child(4) { width: 85px; }
+.co-ras-data-table th:nth-child(5), .co-ras-data-table td:nth-child(5) { width: 90px; }
+.co-ras-data-table th:nth-child(6), .co-ras-data-table td:nth-child(6) { width: 60px; }
+.co-ras-data-table th:nth-child(7), .co-ras-data-table td:nth-child(7) { width: 100px; }
+.co-ras-data-table th:nth-child(8), .co-ras-data-table td:nth-child(8) { width: 120px; }
+.co-ras-data-table th:nth-child(9), .co-ras-data-table td:nth-child(9) { width: 75px; }
+.co-ras-data-table th:nth-child(10), .co-ras-data-table td:nth-child(10) { width: 70px; }
+.co-ras-data-table th:nth-child(11), .co-ras-data-table td:nth-child(11) { width: 100px; }
+.co-ras-data-table th:nth-child(12), .co-ras-data-table td:nth-child(12) { width: 95px; }
+.co-ras-data-table th:nth-child(13), .co-ras-data-table td:nth-child(13) { width: 95px; }
+
+.co-ras-data-table th, .co-ras-data-table td {
+    padding: 5px 11px;
+    font-size: 0.85rem;
+}
+
+/* Red scrollbar on mobile */
+.co-ras-table-body-scroll::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-ras-table-body-scroll::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+}

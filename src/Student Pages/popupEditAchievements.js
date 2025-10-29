@@ -1,6 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import fileStorageService from "../services/fileStorageService.js";
+import uploadIcon from "../assets/popupUploadicon.png";
 
 // Helper function to parse date strings
 const parseInitialDate = (dateString) => {
@@ -39,14 +41,64 @@ const SuccessPopup = ({ onClose }) => (
   </div>
 );
 
+// ++ NEW: Error Popup Component ++
+const ErrorPopup = ({ onClose, errorMessage }) => (
+  <div className="Edit-popup-container">
+    <div className="Edit-popup-header">Update Failed!</div>
+    <div className="Edit-popup-body">
+      <svg className="Edit-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className="Edit-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
+        <path className="Edit-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
+      </svg>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+        Update Failed ✗
+      </h2>
+      <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+        {errorMessage || "Certificate update failed"}
+      </p>
+    </div>
+    <div className="Edit-popup-footer">
+      <button onClick={onClose} className="Edit-popup-close-btn">
+        Close
+      </button>
+    </div>
+  </div>
+);
+
 
 export default function EditCertificate({ onClose, onUpdate, initialData }) {
   const fileInputRef = useRef();
   const [fileName, setFileName] = useState(initialData?.fileName || "");
-  const [fileContent, setFileContent] = useState(initialData?.fileContent || "");
+  const [fileContent, setFileContent] = useState(initialData?.fileData || initialData?.fileContent || "");
   const [lastUploaded, setLastUploaded] = useState(initialData?.uploadDate || "");
   const [error, setError] = useState("");
   const [isUpdated, setIsUpdated] = useState(false); // MODIFIED: State for popup
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
+
+  // Calculate file info for display
+  const finalFileName = fileName || initialData?.fileName;
+  const finalUploadDate = lastUploaded || initialData?.uploadDate || new Date().toLocaleDateString();
+
+  // Clear error on component mount if there's an existing file
+  useEffect(() => {
+    const hasExistingFile = initialData?.fileData || initialData?.fileContent || initialData?.fileName;
+    if (hasExistingFile) {
+      setError(""); // Clear any error if we have an existing file
+      console.log('Cleared error on mount - existing file found:', hasExistingFile);
+    }
+  }, [initialData]);
+
+  // Debug file state changes
+  useEffect(() => {
+    console.log('📁 File state changed:', {
+      fileName: fileName,
+      fileContent: fileContent ? 'Present' : 'Missing',
+      lastUploaded: lastUploaded,
+      timestamp: new Date().toISOString()
+    });
+  }, [fileName, fileContent, lastUploaded]);
 
   const [formData, setFormData] = useState({
     reg: initialData?.reg || "",
@@ -59,12 +111,33 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
     prize: initialData?.prize || "",
   });
 
+  // Function to get available semesters based on selected year
+  const getAvailableSemesters = (year) => {
+    const semesterMap = {
+      'I': ['1', '2'],
+      'II': ['3', '4'],
+      'III': ['5', '6'],
+      'IV': ['7', '8']
+    };
+    return semesterMap[year] || [];
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev) => {
+      const newData = {
       ...prev,
       [name]: value,
-    }));
+      };
+      
+      // If year changes, reset semester to first available option
+      if (name === 'year') {
+        const availableSemesters = getAvailableSemesters(value);
+        newData.semester = availableSemesters[0] || '';
+      }
+      
+      return newData;
+    });
   };
 
   const handleDateChange = (date) => {
@@ -74,31 +147,88 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type !== "application/pdf" || file.size > 1024 * 1024) {
-      setError("File must be a PDF and less than 1MB");
+    
+    // Check file size (500KB = 500 * 1024 bytes)
+    const maxSize = 500 * 1024; // 500KB in bytes
+    const fileSizeKB = (file.size / 1024).toFixed(1);
+    
+    if (file.type !== "application/pdf") {
+      setError("File must be a PDF");
       setFileName(initialData?.fileName || "");
       setFileContent(initialData?.fileContent || "");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => setFileContent(event.target.result);
-    reader.readAsDataURL(file);
-    setError("");
-    setFileName(file.name);
-    setLastUploaded(new Date().toLocaleDateString());
+    
+    if (file.size > maxSize) {
+      setError(`File size limit exceeded!\n\nMaximum allowed: 500KB\nYour file size: ${fileSizeKB}KB\n\nPlease compress your PDF or choose a smaller file.`);
+      setFileName(initialData?.fileName || "");
+      setFileContent(initialData?.fileContent || "");
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    try {
+      // Ultra-fast upload with immediate UI updates
+      setFileName(file.name);
+      setError("");
+      
+      // Parallel processing for maximum speed
+      const [fileData] = await Promise.all([
+        fileStorageService.uploadFile(file, `certificates/${Date.now()}`),
+        // Immediate UI feedback
+        new Promise(resolve => setTimeout(resolve, 0))
+      ]);
+      
+      // Instant state updates
+      setFileContent(fileData.url);
+      setLastUploaded(new Date().toLocaleDateString());
+    } catch (error) {
+      setError(error.message || "Upload failed");
+      setFileName(initialData?.fileName || "");
+      setFileContent(initialData?.fileContent || "");
+    }
   };
 
   const handleUploadClick = () => fileInputRef.current.click();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fileName) {
-      setError("Please upload your certificate (PDF, Max 1 MB).");
+    
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
+    // File upload is OPTIONAL during edit - check for existing file in multiple ways
+    const hasExistingFile = initialData?.fileData || initialData?.fileContent || initialData?.fileName;
+    const hasNewFile = fileName && fileContent;
+    const hasAnyFile = hasExistingFile || hasNewFile;
+    
+    console.log('File validation check:', {
+      hasExistingFile: !!hasExistingFile,
+      hasNewFile: !!hasNewFile,
+      hasAnyFile: !!hasAnyFile,
+      fileName: fileName,
+      fileContent: !!fileContent,
+      willReplaceFile: !!hasNewFile,
+      initialDataFileData: !!initialData?.fileData,
+      initialDataFileContent: !!initialData?.fileContent,
+      initialDataFileName: !!initialData?.fileName
+    });
+    
+    // Only require file if there was no existing file and no new file uploaded
+    if (!hasAnyFile) {
+      setError("Please upload your certificate (PDF, Max 500KB).");
       return;
+    } else {
+      // Clear any existing error if we have a file
+      setError("");
     }
+    
     if (
       !formData.reg || !formData.name || !formData.year || !formData.semester ||
       !formData.section || !formData.date || !formData.comp || !formData.prize
@@ -107,12 +237,19 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
       return;
     }
     setError("");
-
+    setIsLoading(true); // Start loading
+    
+    // Optimized: Streamlined processing for faster updates
     const formattedDate = formData.date
       ? `${formData.date.getFullYear()}-${String(
           formData.date.getMonth() + 1
         ).padStart(2, "0")}-${String(formData.date.getDate()).padStart(2, "0")}`
       : "";
+
+    // Fast file replacement logic
+    const finalFileData = fileName ? fileContent : (initialData?.fileData || initialData?.fileContent);
+    const finalFileName = fileName || initialData?.fileName;
+    const finalUploadDate = fileName ? lastUploaded : (initialData?.uploadDate || new Date().toLocaleDateString());
 
     const updatedAchievement = {
       id: initialData?.id || Date.now(),
@@ -126,13 +263,28 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
       prize: formData.prize,
       status: initialData?.status || "pending",
       approved: initialData?.approved || false,
-      fileName: fileName,
-      fileContent: fileContent,
-      uploadDate: lastUploaded || new Date().toLocaleDateString(),
+      fileName: finalFileName,
+      fileData: finalFileData, // Preserve existing file data if no new file uploaded
+      uploadDate: finalUploadDate,
     };
 
-    onUpdate(updatedAchievement);
-    setIsUpdated(true); // MODIFIED: Show popup instead of closing
+    // Optimized: Minimal logging for faster processing
+
+    try {
+      // Optimized: Direct update call without excessive logging
+      if (onUpdate) {
+        await onUpdate(updatedAchievement);
+        setIsUpdated(true);
+      } else {
+        throw new Error('Update function not available');
+      }
+    } catch (error) {
+      console.error('Update failed:', error.message);
+      setErrorMessage(error.message || "Certificate update failed. Please try again.");
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -212,9 +364,28 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
             transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
             animation: Edit-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
         }
+        
+        /* Error icon animations */
+        .Edit-error-icon {
+            width: 80px; height: 80px; border-radius: 50%; display: block;
+            stroke-width: 2; stroke: #fff; stroke-miterlimit: 10; margin: 0 auto;
+            box-shadow: inset 0 0 0 #FF4444;
+            animation: Edit-error-fill 0.4s ease-in-out 0.4s forwards, Edit-scale 0.3s ease-in-out 0.9s both;
+        }
+        .Edit-error-icon--circle {
+            stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2;
+            stroke-miterlimit: 10; stroke: #FF4444; fill: none;
+            animation: Edit-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .Edit-error-icon--cross {
+            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
+            animation: Edit-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        
         @keyframes Edit-stroke { 100% { stroke-dashoffset: 0; } }
         @keyframes Edit-scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
         @keyframes Edit-fill { 100% { box-shadow: inset 0 0 0 40px #4bb71b; } }
+        @keyframes Edit-error-fill { 100% { box-shadow: inset 0 0 0 40px #FF4444; } }
       `}</style>
 
       <div
@@ -226,6 +397,8 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
       >
         {isUpdated ? (
           <SuccessPopup onClose={onClose} />
+        ) : isError ? (
+          <ErrorPopup onClose={onClose} errorMessage={errorMessage} />
         ) : (
           <div
             style={{
@@ -236,12 +409,20 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
           >
             <form onSubmit={handleSubmit}>
               <button
-                type="button" onClick={onClose} style={{
+                type="button" 
+                onClick={isLoading ? undefined : onClose} 
+                disabled={isLoading}
+                style={{
                   position: "absolute", top: "14px", right: "18px", background: "transparent",
-                  border: "none", fontSize: "25px", color: "#999999", cursor: "pointer",
+                  border: "none", fontSize: "25px", 
+                  color: isLoading ? "#cccccc" : "#999999", 
+                  cursor: isLoading ? "not-allowed" : "pointer",
                   fontWeight: "600", width: "32px", height: "32px", display: "flex",
                   alignItems: "center", justifyContent: "center", borderRadius: "50%", zIndex: 2,
-                }} title="Close"
+                  opacity: isLoading ? 0.5 : 1,
+                  transition: "all 0.2s ease"
+                }} 
+                title={isLoading ? "Please wait, updating..." : "Close"}
               >
                 ×
               </button>
@@ -257,38 +438,91 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
               
               {/* Form fields */}
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} onChange={handleInputChange} required />
-                <input className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} required />
+                <input className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
+                <input className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <select className="input-hover" name="year" value={formData.year} onChange={handleInputChange} required>
+                <select className="input-hover" name="year" value={formData.year} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
                   <option value="" disabled>Select Year</option>
                   <option value="I">I</option> <option value="II">II</option>
                   <option value="III">III</option> <option value="IV">IV</option>
                 </select>
-                <select className="input-hover" name="semester" value={formData.semester} onChange={handleInputChange} required>
+                <select className="input-hover" name="semester" value={formData.semester} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
                   <option value="" disabled>Select Semester</option>
-                  {[...Array(8)].map((_, i) => (<option key={i + 1} value={i + 1}>{i + 1}</option>))}
+                  {getAvailableSemesters(formData.year).map(sem => (
+                    <option key={sem} value={sem}>
+                      {sem}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} onChange={handleInputChange} required />
-                <DatePicker selected={formData.date} onChange={handleDateChange} dateFormat="dd-MM-yyyy" placeholderText="Date" className="input-hover" required autoComplete="off" />
+                <input className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
+                <DatePicker 
+                  selected={formData.date} 
+                  onChange={isLoading ? undefined : handleDateChange} 
+                  dateFormat="dd-MM-yyyy" 
+                  placeholderText="Date" 
+                  className="input-hover" 
+                  required 
+                  autoComplete="off" 
+                  disabled={isLoading}
+                />
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={handleInputChange} required />
-                <input className="input-hover" type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={handleInputChange} required />
+                <input className="input-hover" type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
+                <input className="input-hover" type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
               </div>
 
               {/* Upload row */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "16px 0" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
-                  <button type="button" className="upload-button" onClick={handleUploadClick}>
-                    <img src={require("../assets/popupUploadicon.png")} alt="Upload" style={{ width: "22px", height: "22px" }} />
+                  <button 
+                    type="button" 
+                    className="upload-button" 
+                    onClick={isLoading ? undefined : handleUploadClick}
+                    disabled={isLoading}
+                    style={{
+                      opacity: isLoading ? 0.6 : 1,
+                      cursor: isLoading ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    <img src={uploadIcon} alt="Upload" style={{ width: "22px", height: "22px" }} />
                     <span>{fileName || "Upload"}</span>
                   </button>
                   {fileName && (
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setFileName(""); setLastUploaded(""); }} style={{ fontFamily: "Poppins, sans-serif", fontSize: 21, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", padding: "4px", color: "#666666", cursor: "pointer", width: "25px", height: "25px", border: "none" }} title="Clear">
+                    <button 
+                      type="button" 
+                      onClick={isLoading ? undefined : (e) => { 
+                        e.stopPropagation(); 
+                        console.log('🗑️ Clearing file selection');
+                        setFileName(""); 
+                        setFileContent(""); 
+                        setLastUploaded(""); 
+                        // Clear the file input
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }} 
+                      disabled={isLoading}
+                      style={{ 
+                        fontFamily: "Poppins, sans-serif", 
+                        fontSize: 21, 
+                        fontWeight: 600, 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        background: "transparent", 
+                        padding: "4px", 
+                        color: isLoading ? "#cccccc" : "#666666", 
+                        cursor: isLoading ? "not-allowed" : "pointer", 
+                        width: "25px", 
+                        height: "25px", 
+                        border: "none",
+                        opacity: isLoading ? 0.5 : 1
+                      }} 
+                      title={isLoading ? "Please wait, updating..." : "Clear"}
+                    >
                       ×
                     </button>
                   )}
@@ -296,20 +530,33 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
                 </div>
                 <div style={{ fontSize: 14.2, color: "#444", marginTop: 10, letterSpacing: 0.01, textAlign: "center" }}>
                   <div style={{ marginBottom: 4 }}>
-                    <span style={{ color: "#2276fc", fontWeight: 600 }}>*</span> Upload Max 1MB PDF file
+                    <span style={{ color: "#2276fc", fontWeight: 600 }}>*</span> Upload Max 500KB PDF file
                   </div>
                   <div style={{ marginBottom: 4 }}>
-                    <span style={{ color: "#ff6464", fontWeight: 800, marginRight: 3 }}>*</span> if not uploaded ---&gt; <span style={{ color: "#2276fc" }}>Upload your Certificate</span>
+                    <span style={{ color: "#0d9477", fontWeight: 800, marginRight: 3 }}>✓</span> File upload is <span style={{ color: "#0d9477", fontWeight: 600 }}>OPTIONAL</span> during edit
+                  </div>
+                  <div style={{ marginBottom: 4 }}>
+                    <span style={{ color: "#2276fc", fontWeight: 800, marginRight: 3 }}>*</span> Current file: <span style={{ color: "#0d9477" }}>{finalFileName || "None"}</span>
                   </div>
                   <div style={{ marginBottom: 8 }}>
-                    <span style={{ color: "#2276fc", fontWeight: 800, marginRight: 3 }}>*</span> if Certificate uploaded ---&gt; last uploaded on (<span style={{ color: "#0d9477" }}>{lastUploaded || "No date"}</span>)
+                    <span style={{ color: "#2276fc", fontWeight: 800, marginRight: 3 }}>*</span> Last uploaded: <span style={{ color: "#0d9477" }}>{finalUploadDate || "No date"}</span>
                   </div>
                   {error && <div style={{ color: "#ff6464", marginTop: 4 }}>{error}</div>}
                 </div>
               </div>
               
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 5 }}>
-                <button type="submit" className="submit-button">Update</button>
+                <button 
+                  type="submit" 
+                  className="submit-button"
+                  disabled={isLoading}
+                  style={{
+                    opacity: isLoading ? 0.7 : 1,
+                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isLoading ? 'Updating...' : 'Update'}
+                </button>
               </div>
             </form>
           </div>

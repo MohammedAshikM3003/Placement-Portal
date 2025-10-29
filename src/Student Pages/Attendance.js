@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Sidebar from "../components/Sidebar/Sidebar";
 import "./Attendance.css";
@@ -7,8 +7,38 @@ import totalpercentageicon from '../assets/totalpercentageicon.png';
 
 function Attendance({ onLogout, onViewChange }) { // Removed currentView from props
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [studentData, setStudentData] = useState(() => {
+        // Initialize immediately with localStorage data
+        try {
+            return JSON.parse(localStorage.getItem('studentData') || 'null');
+        } catch (error) {
+            return null;
+        }
+    });
     const attendancePercentage = 100;
     const absentPercentage = 100 - attendancePercentage;
+
+    // Load student data for sidebar
+    useEffect(() => {
+        const handleProfileUpdate = () => {
+            try {
+                const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+                if (updatedStudentData) {
+                    setStudentData(updatedStudentData);
+                }
+            } catch (error) {
+                console.error('Error updating student data for sidebar:', error);
+            }
+        };
+        
+        window.addEventListener('storage', handleProfileUpdate);
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+        
+        return () => {
+            window.removeEventListener('storage', handleProfileUpdate);
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
+        };
+    }, []);
 
     const getStatusDetails = (percentage) => {
         if (percentage > 90) return { stars: 5, color: 'gold', label: 'Excellent' };
@@ -44,7 +74,7 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
     };
 
     return (
-        <div className="container">
+        <div className="container student-attendance-page">
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <div className="main">
                 <Sidebar 
@@ -52,8 +82,9 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
                     onLogout={onLogout} 
                     onViewChange={handleViewChange} 
                     currentView={'attendance'} // Hardcode 'attendance' for highlighting
+                    studentData={studentData}
                 />
-                <div className={`attendance-area dashboard-area`}>
+                <div className="attendance-area dashboard-area">
                     <div className="attendance-cards">
                         <div className="attendance-card percentage-card">
                             <h3>Total Percentage</h3>

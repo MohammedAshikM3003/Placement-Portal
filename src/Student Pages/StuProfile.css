@@ -1,11 +1,60 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+/* Global container - prevents layout shift on refresh */
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.main {
+    display: flex;
+    margin-top: 55px;
+    height: calc(100vh - 55px);
+    overflow: hidden;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+/* Desktop Scrollbar Styles - Matching Theme */
+.profile-area::-webkit-scrollbar,
+.StuProfile-dashboard-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+.profile-area::-webkit-scrollbar-track,
+.StuProfile-dashboard-area::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+
+.profile-area::-webkit-scrollbar-thumb,
+.StuProfile-dashboard-area::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme for student pages */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.profile-area::-webkit-scrollbar-thumb:hover,
+.StuProfile-dashboard-area::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA; /* A slightly darker shade for hover effect */
+}
+
 body {
     background: #f8f8fb;
     margin: 0;
     padding: 0;
     font-family: 'Poppins', Arial, sans-serif;
     overflow-x: hidden;
+    overflow-y: auto; /* Allow scrolling - custom scrollbar will be applied to .profile-area */
 }
 
 .StuProfile-container {
@@ -16,8 +65,8 @@ body {
 
 .StuProfile-main {
     display: flex;
-    margin-top: 65px;
-    height: calc(100vh - 65px);
+    margin-top: 55px;
+    height: calc(100vh - 55px);
     overflow: hidden;
 }
 
@@ -53,7 +102,20 @@ body {
     overflow-y: auto; 
     overflow-x: hidden;
     position: relative;
-    height: 100%;
+    height: calc(100vh - 65px);
+    box-sizing: border-box;
+}
+
+/* Profile area - This is the main scrolling container */
+.profile-area {
+    flex: 1;
+    background: #f8f8fb;
+    padding: 25px;
+    margin-left: 230px;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
     box-sizing: border-box;
 }
 
@@ -467,17 +529,19 @@ body {
     background-color: #fff;
     border-radius: 12px;
     width: 400px;
+    max-width: 90vw;
     text-align: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+    font-family: 'Poppins', sans-serif;
 }
 
 .StuProfile-popup-header {
-    background-color: #2085f6;
+    background-color: #197AFF;
     color: white;
     padding: 1rem;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.75rem;
+    font-weight: 700;
 }
 
 .StuProfile-popup-body {
@@ -501,19 +565,21 @@ body {
 }
 
 .StuProfile-popup-close-btn {
-    background-color: #d9534f;
+    background-color: #D23B42;
     color: white;
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 8px;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
 }
 
 .StuProfile-popup-close-btn:hover {
-    background-color: #c9302c;
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
 /* Success icon animations */
@@ -526,8 +592,8 @@ body {
     stroke: #fff;
     stroke-miterlimit: 10;
     margin: 0 auto;
-    box-shadow: inset 0 0 0 #4bb71b;
-    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+    box-shadow: inset 0 0 0 #22C55E;
+    animation: StuProfile-fill 0.4s ease-in-out 0.4s forwards, StuProfile-scale 0.3s ease-in-out 0.9s both;
 }
 
 .StuProfile-success-icon--circle {
@@ -535,25 +601,56 @@ body {
     stroke-dashoffset: 166;
     stroke-width: 2;
     stroke-miterlimit: 10;
-    stroke: #4bb71b;
+    stroke: #22C55E;
     fill: none;
-    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    animation: StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 
 .StuProfile-success-icon--check {
     transform-origin: 50% 50%;
     stroke-dasharray: 48;
     stroke-dashoffset: 48;
-    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    animation: StuProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
 
-@keyframes stroke {
+/* Error Icon for File Size */
+.StuProfile-image-error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #FF4444;
+    animation: StuProfile-error-fill 0.4s ease-in-out 0.4s forwards, StuProfile-scale 0.3s ease-in-out 0.9s both;
+}
+
+.StuProfile-image-error-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #FF4444;
+    fill: none;
+    animation: StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.StuProfile-image-error-icon--cross {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: StuProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes StuProfile-stroke {
     100% {
         stroke-dashoffset: 0;
     }
 }
 
-@keyframes scale {
+@keyframes StuProfile-scale {
     0%, 100% {
         transform: none;
     }
@@ -562,23 +659,79 @@ body {
     }
 }
 
-@keyframes fill {
+@keyframes StuProfile-fill {
     100% {
-        box-shadow: inset 0 0 0 40px #4bb71b;
+        box-shadow: inset 0 0 0 40px #22C55E;
     }
 }
 
-/* Mobile responsive styles */
-@media (max-width: 900px) {
-    .StuProfile-dashboard-area {
-        margin-left: 0;
-        padding: 15px 20px;
-        height: auto;
+@keyframes StuProfile-error-fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #FF4444;
     }
+}
+
+
+/* === CORRECTED & CONSOLIDATED MOBILE STYLES === */
+@media (max-width: 900px) {
+    /* Fix container and main for mobile */
+    .container {
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .main {
+        overflow-x: hidden;
+        min-height: calc(100vh - 60px);
+    }
+
+    /* Make both possible content areas scrollable */
+    .StuProfile-dashboard-area,
+    .profile-area,
+    .dashboard-area {
+        margin-left: 0 !important;
+        padding: 15px 20px calc(env(safe-area-inset-bottom, 20px) + 100px) 20px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        min-height: 100vh;
+    }
+
+    /* Mobile scrollbar styling */
+    .StuProfile-dashboard-area::-webkit-scrollbar,
+    .profile-area::-webkit-scrollbar,
+    .StuProfile-sidebar::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .StuProfile-dashboard-area::-webkit-scrollbar-track,
+    .profile-area::-webkit-scrollbar-track,
+    .StuProfile-sidebar::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .StuProfile-dashboard-area::-webkit-scrollbar-thumb,
+    .profile-area::-webkit-scrollbar-thumb,
+    .StuProfile-sidebar::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+        background-color: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .StuProfile-dashboard-area::-webkit-scrollbar-thumb:hover,
+    .profile-area::-webkit-scrollbar-thumb:hover,
+    .StuProfile-sidebar::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+        background-color: #4338CA;
+    }
+
     .StuProfile-main {
         flex-direction: column;
-        height: auto;
-        margin-top: 60px;
+        margin-top: 50px;
+        min-height: calc(100vh - 50px);
     }
     .StuProfile-overlay {
         display: block;
@@ -612,16 +765,9 @@ body {
         display: block;
     }
     
-    /* Adding spacing to each input field on mobile */
-    .StuProfile-profile-section-container input:not(:last-child),
-    .StuProfile-profile-section-container select:not(:last-child) {
-        margin-bottom: 1.5rem; /* Adjust this value to control spacing */
-    }
-
-    /* To handle the last input field, you might need a different approach if it's the last element in its parent container */
     .StuProfile-profile-section-container input,
     .StuProfile-profile-section-container select {
-        margin-bottom: 1rem; /* A general margin for all form elements on mobile */
+        margin-bottom: 1.5rem;
     }
     
     .StuProfile-profile-photo-wrapper {
@@ -635,9 +781,12 @@ body {
     .StuProfile-action-buttons {
         flex-direction: column;
         gap: 1rem;
+        margin-bottom: env(safe-area-inset-bottom, 20px);
     }
     .StuProfile-action-buttons button {
         width: 100%;
+        padding: 1rem !important;
+        font-size: 1.1rem !important;
     }
 
     .StuProfile-card {
@@ -664,4 +813,49 @@ body {
         padding: 0.6rem 1rem;
         font-size: 0.95rem;
     }
+
+    .StuProfile-dashboard-area,
+    .profile-area,
+    .dashboard-area {
+        padding-bottom: 120px !important;
+    }
+}
+
+/* Loading Spinner for Save Button */
+.StuProfile-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: StuProfile-spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@keyframes StuProfile-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.StuProfile-save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: #1976d2;
+}
+
+.StuProfile-discard-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Inner icon styling for image error */
+.StuProfile-image-error-icon--inner-icon {
+    transform-origin: 50% 50%;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+    animation: StuProfile-stroke 0.5s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }

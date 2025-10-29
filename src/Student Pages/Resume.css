@@ -1,10 +1,36 @@
+/* NEW: Custom Scrollbar Styles for Student Pages */
+.resume-area::-webkit-scrollbar,
+.main::-webkit-scrollbar,
+.container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.resume-area::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track,
+.container::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+
+.resume-area::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb,
+.container::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme for student pages */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.resume-area::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover,
+.container::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA; /* A slightly darker shade for hover effect */
+}
+
 /* General Body and Font styles */
 body {
   background: #f8f8fb;
   margin: 0;
   padding: 0;
   font-family: 'Poppins', Arial, sans-serif;
-  /*overflow: hidden; /* Prevents scrollbars on the body */
 }
 
 /* Main container for the entire application */
@@ -19,8 +45,8 @@ body {
 .main {
   display: flex;
   /* Adjust top margin based on your Navbar's height */
-  margin-top: 65px; 
-  height: calc(100vh - 65px); /* Crucial for controlling scroll area */
+  margin-top: 55px; 
+  height: calc(100vh - 55px); /* Crucial for controlling scroll area */
 }
 
 .overlay {
@@ -41,19 +67,74 @@ body {
   height: 100%; /* Take full height of .main parent */
   background: #fff;
   position: relative;
+  width: calc(100% - 230px); /* Ensure proper width calculation */
   
-  /* Allow vertical scrolling only when needed */
-  overflow-y: auto;
+  /* Minimal padding to fit content */
+  padding: 15px 15px 15px 15px;
+  
+  /* NO scrolling - force content to fit */
+  overflow: hidden;
   
   /* Hide horizontal scrollbar */
   overflow-x: hidden;
 }
 
-/* Media query to adjust layout for mobile/tablet */
+/* Mobile scrollbar styling - make it look like desktop */
+@media (max-width: 900px) {
+  .dashboard-area::-webkit-scrollbar,
+  .main::-webkit-scrollbar,
+  .container::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+      width: 8px;
+  }
+
+  .dashboard-area::-webkit-scrollbar-track,
+  .main::-webkit-scrollbar-track,
+  .container::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+      background: #f0f2f5;
+  }
+
+  .dashboard-area::-webkit-scrollbar-thumb,
+  .main::-webkit-scrollbar-thumb,
+  .container::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+      background-color: #2085f6;
+      border-radius: 20px;
+      border: 2px solid #f0f2f5;
+  }
+
+  .dashboard-area::-webkit-scrollbar-thumb:hover,
+  .main::-webkit-scrollbar-thumb:hover,
+  .container::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+      background-color: #4338CA;
+  }
+}
 /* 900px is the default 'md' breakpoint in MUI */
 @media (max-width: 900px) {
+  .main {
+    overflow: hidden;
+    min-height: calc(100vh - 55px);
+  }
+
   .dashboard-area {
     margin-left: 0; /* Remove the margin when sidebar is hidden */
+    overflow-y: auto !important; /* Allow vertical scrolling on mobile */
+    overflow-x: hidden !important;
+    padding: 10px 15px 120px 15px !important;
+    height: calc(100vh - 55px);
+    max-height: calc(100vh - 55px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* RESUME PAGE SPECIFIC: Extra bottom padding for Resume Score card */
+  .container .main .dashboard-area.resume-page {
+    padding-bottom: 150px !important; /* Increased from 100px to 150px */
+  }
+
+  .container {
+    overflow: hidden;
   }
 
   /* You would also add styles here to hide your Sidebar component */

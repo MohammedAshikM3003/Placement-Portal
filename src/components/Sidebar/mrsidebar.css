@@ -82,23 +82,25 @@
 
 /* Completed State Styles (Overrides all other states) */
 .mr-sidebar-menu-row.completed {
-  color: #4bb71b !important;
-  background: transparent !important;
-  border-left: none !important;
+  color: #28a745 !important;
+  background: #f8fff8 !important;
+  border-left: 4px solid #28a745 !important;
   box-shadow: none !important;
+  font-weight: 600 !important;
 }
 
 /* FIX: New combined rules for completed items to ensure no blue color appears */
 .mr-sidebar-menu-row.completed.active,
 .mr-sidebar-menu-row.completed:hover,
 .mr-sidebar-menu-row.completed.active:hover {
-  background: transparent !important;
-  border-left: none !important;
-  color: #4bb71b !important;
+  background: #f8fff8 !important;
+  border-left: 4px solid #28a745 !important;
+  color: #28a745 !important;
+  font-weight: 600 !important;
 }
 
 .mr-sidebar-menu-row.completed .mr-sidebar-menu-label-cell {
-  color: #4bb71b;
+  color: #28a745;
 }
 
 /* Hover State Styles from Sidebar.css */
@@ -147,7 +149,7 @@
 .mr-sidebar-menu-row.completed:hover .mr-sidebar-menu-icon,
 .mr-sidebar-menu-row.completed.active:hover .mr-sidebar-menu-icon {
     /* Green icon style for completed rows */
-    filter: invert(53%) sepia(35%) saturate(1450%) hue-rotate(69deg) brightness(96%) contrast(87%) !important;
+    filter: invert(40%) sepia(100%) saturate(1000%) hue-rotate(90deg) brightness(100%) contrast(100%) !important;
     transform: none !important;
 }
 

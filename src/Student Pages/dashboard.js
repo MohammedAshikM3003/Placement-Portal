@@ -1,110 +1,157 @@
-import React, { useState } from "react";
-import Navbar from "../components/Navbar/Navbar";
-import Sidebar from "../components/Sidebar/Sidebar";
-import './dashboard.css';
-
-// Import assets needed for THIS page
+import React from "react";
+import Navbar from '../components/Navbar/Navbar';
+import Sidebar from '../components/Sidebar/Sidebar';
 import ksrCollegeImage from "../assets/ksrCollegeImage.jpg";
-import ApplicationStatusIcon from "../assets/applicationstatusicon.png";
+import Profile from "../assets/totalpercentagestudenticon.png";
+import totalpercentagestudenticon from "../assets/UpcomingDriveIcon.svg";
+import Resume from "../assets/UploadResumeIcon.svg";
+import certificateuploadicon from "../assets/UploadCertificatecardicon.svg";
+import "./dashboard.css";
 
-// ATTENDANCE CHART COMPONENT (can stay in this file as it's only used here)
-const ModernAttendanceChart = ({ present, absent }) => {
+// Attendance Chart Component
+const AttendanceChart = ({ present, absent }) => {
     const total = present + absent;
     const presentPerc = total > 0 ? Math.round((present / total) * 100) : 0;
     const chartStyle = {
         background: `conic-gradient(from 180deg, #00C495 0% ${presentPerc}%, #FF6B6B ${presentPerc}% 100%)`,
     };
+
     return (
-        <div className="card-content">
-            <div className="chart-wrapper"><div className="donut-chart" style={chartStyle}><div className="chart-center-text"><div className="chart-center-value">{presentPerc}%</div><div className="chart-center-label">Present</div></div></div></div>
-            <div className="details-wrapper"><div className="detail-item">Present<div className="detail-value present-value">{present}</div></div><div className="detail-item">Absent<div className="detail-value absent-value">{absent}</div></div></div>
+        <div className="stu-db-attendance-card-content">
+            <div className="stu-db-attendance-chart-wrapper">
+                <div className="stu-db-attendance-donut-chart" style={chartStyle}>
+                    <div className="stu-db-attendance-chart-center-text">
+                        <div className="stu-db-attendance-chart-center-value">{presentPerc}%</div>
+                        <div className="stu-db-attendance-chart-center-label">Present</div>
+                    </div>
+                </div>
+            </div>
+            <div className="stu-db-attendance-details-wrapper">
+                <div className="stu-db-attendance-detail-item">
+                    Present
+                    <div className="stu-db-attendance-detail-value stu-db-attendance-present-value">{present}</div>
+                </div>
+                <div className="stu-db-attendance-detail-item">
+                    Absent
+                    <div className="stu-db-attendance-detail-value stu-db-attendance-absent-value">{absent}</div>
+                </div>
+            </div>
         </div>
     );
 };
 
-// MAIN DASHBOARD COMPONENT
-// It now receives `onViewChange` from App.js which triggers the router
-function PlacementPortalDashboard({ onLogout, userEmail, onViewChange }) {
-    const attendance = { present: 49, absent: 51 };
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+export default function StudentDashboard({ onLogout, onViewChange }) {
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [studentData, setStudentData] = React.useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('studentData') || 'null');
+    } catch (error) {
+      return null;
+    }
+  });
 
-    // This handler will be passed to the cards to trigger navigation
-    const handleCardClick = (view) => {
-        onViewChange(view);
+  // Load student data for sidebar
+  React.useEffect(() => {
+    const handleProfileUpdate = () => {
+      try {
+        const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (updatedStudentData) {
+          setStudentData(updatedStudentData);
+        }
+      } catch (error) {
+        console.error('Error updating student data for sidebar:', error);
+      }
     };
+    
+    window.addEventListener('storage', handleProfileUpdate);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleProfileUpdate);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
-    return (
-        <div className="container">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <div className="main">
-                {/* The Sidebar now gets the onViewChange from App.js */}
-                {/* We hardcode 'dashboard' as currentView so it's always highlighted on this page */}
-                <Sidebar
-                    isOpen={isSidebarOpen}
-                    onLogout={onLogout}
-                    onViewChange={onViewChange}
-                    currentView={'dashboard'} 
-                />
+  const handleViewChange = (view) => {
+    if (onViewChange) {
+      onViewChange(view);
+    }
+    setIsSidebarOpen(false);
+  };
 
-                {/* The content area now ONLY shows the dashboard content */}
-                <div className="dashboard-area">
-                    <div className="college-head">
-                        <img src={ksrCollegeImage} alt="College Logo" className="college-logo" />
-                        <div className="college-text-wrapper">
-                            <span className="college-name">
-                                K S R COLLEGE OF ENGINEERING <span className="autonomous">(Autonomous)</span> - <span className="college-code">637215</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="grid-area">
-                        {/* Row 1 */}
-                        <div className="card card-vertical">
-                            <img src={require('../assets/NotificationIcon.png')} alt="Notification" className="card-icon notification-icon" />
-                            <div className="card-content-wrapper"><div className="Notification-card-title">Notification / Announcement</div><p className="card-text">New Company Reminder: profile not completed</p></div>
-                        </div>
-                        <div className="card card-vertical" onClick={() => handleCardClick('resume')}>
-                            <img src={require('../assets/UploadResumeIcon.png')} alt="Resume" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Upload-card-title">Upload Resume</div><p className="card-text">Showcase your skills with your resume</p></div>
-                        </div>
-                        <div className="card card-horizontal card-upcoming-drive" onClick={() => handleCardClick('company')}>
-                            <img src={require('../assets/UpcomingDriveIcon.png')} alt="Upcoming Drive" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Upcoming-card-title">Upcoming Drive</div><p className="card-text"><strong>Company Name:</strong> Infosys<br /><strong>Date:</strong> 20/08/2025<br /><strong>Role:</strong> Testing<br /><strong>Eligibility:</strong></p></div>
-                        </div>
-
-                        {/* Row 2 */}
-                        <div className="card card-horizontal card-upload-certificates" onClick={() => handleCardClick('achievements')}>
-                            <div className="icon-container-certificates"><img src={require('../assets/uploadcertificateicon.png')} alt="Certificates" className="main-icon" /><img src={require('../assets/certificateuploadicon.png')} alt="Upload" className="overlay-icon" /></div>
-                            <div className="card-content-wrapper"><div className="Certificates-card-title">Upload Certificates</div><p className="card-text">Let your accomplishments shine with pride.</p></div>
-                        </div>
-                        <div className="card card-vertical card-application-status">
-                            <img src={ApplicationStatusIcon} alt="Application Status" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Application-card-title">Application Status</div><p className="card-text">List of Jobs Applied<br />Status: Applied</p></div>
-                        </div>
-                        <div className="card card-vertical card-placement-status">
-                            <img src={require('../assets/PlacemtStatusIcon.png')} alt="Placement Status" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Placement-card-title">Placement Status</div><p className="card-text">Working Good</p></div>
-                        </div>
-
-                        {/* Row 3 */}
-                        <div className="card card-vertical card-my-account" onClick={() => handleCardClick('profile')}>
-                            <img src={require('../assets/MyAccountIcon.png')} alt="My Account" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Account-card-title">My Account</div><p className="card-text">Settings</p></div>
-                        </div>
-                        <div className="card card-vertical card-suggestions">
-                            <img src={require('../assets/SuggestionIcon.png')} alt="Suggestion" className="card-icon" />
-                            <div className="card-content-wrapper"><div className="Suggestion-card-title">Suggestions</div><p className="card-text">Based on your CGPA eligible for TCS</p></div>
-                        </div>
-                        <div className="card card-attendance" onClick={() => handleCardClick('attendance')}>
-                            <h2 className="new-attendance-title">Attendance</h2>
-                            <ModernAttendanceChart present={attendance.present} absent={attendance.absent} />
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="stu-db-container">
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div className="stu-db-main">
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onLogout={onLogout} 
+          onViewChange={handleViewChange} 
+          currentView={'dashboard'}
+          studentData={studentData}
+        />
+        <div className="stu-db-dashboard-area">
+          {/* College header */}
+          <div className="stu-db-college-header">
+            <img src={ksrCollegeImage} alt="KSR College Logo" className="stu-db-college-logo" />
+            <div className="stu-db-college-name">
+              K S R COLLEGE OF ENGINEERING (<span>Autonomous</span>) - 637215
             </div>
-            {isSidebarOpen && <div className="overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+          </div>
+          
+          {/* Main Dashboard Grid */}
+          <div className="stu-db-dashboard-grid">
+            
+            {/* Row 1 - 3 Cards */}
+            {/* Card 1: My Profile */}
+            <div className="stu-db-card" onClick={() => handleViewChange('profile')}>
+              <div className="stu-db-card-icon">
+                <img src={Profile} alt="My Profile" />
+              </div>
+              <h3 className="stu-db-card-title">My Profile</h3>
+              <p className="stu-db-card-sub">View and update your<br />personal information</p>
+            </div>
+
+            {/* Card 2: Resume */}
+            <div className="stu-db-card" onClick={() => handleViewChange('resume')}>
+              <div className="stu-db-card-icon">
+                <img src={Resume} alt="Resume" />
+              </div>
+              <h3 className="stu-db-card-title">Resume</h3>
+              <p className="stu-db-card-sub">Upload and analyze<br />your resume</p>
+            </div>
+
+            {/* Card 3: Achievements */}
+            <div className="stu-db-card" onClick={() => handleViewChange('achievements')}>
+              <div className="stu-db-card-icon">
+                <img src={certificateuploadicon} alt="Achievements" />
+              </div>
+              <h3 className="stu-db-card-title">Achievements</h3>
+              <p className="stu-db-card-sub">Manage your certificates<br />and accomplishments</p>
+            </div>
+
+            {/* Row 2 - 2 Cards spanning different widths */}
+            {/* Card 4: Attendance (spans 2 columns) */}
+            <div className="stu-db-card stu-db-attendance-card">
+              <h2 className="stu-db-new-attendance-title">Attendance</h2>
+              <AttendanceChart present={85} absent={15} />
+            </div>
+
+            {/* Card 5: Company Placement */}
+            <div className="stu-db-card" onClick={() => handleViewChange('company')}>
+              <div className="stu-db-card-icon">
+                <img src={totalpercentagestudenticon} alt="Company Placement" />
+              </div>
+              <h3 className="stu-db-card-title">Company Placement</h3>
+              <p className="stu-db-card-sub">Track your placement<br />applications and status</p>
+            </div>
+
+          </div>
         </div>
-    );
+      </div>
+      {isSidebarOpen && <div className="stu-db-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+    </div>
+  );
 }
 
-export default PlacementPortalDashboard;
+

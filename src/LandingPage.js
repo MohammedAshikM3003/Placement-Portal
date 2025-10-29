@@ -16,12 +16,7 @@ import Zoho from './assets/LandingZoho.svg';
 import WiproLogo from './assets/LandingWipro.svg';
 import TCS from './assets/LandingTcs.svg';
 
-// --- Assets from Section 4 ---
-import AcademicIcon from './assets/Adminicon.png';
-import InnovativeIcon from './assets/LandingInnovativeicon.png';
-import ProfessionalIcon from './assets/LandingProfessinalIcon.png';
-
-// --- Assets from Section 5 ---
+// --- Assets from Footer Section ---
 import Ksrlogo from './assets/LandingksrLogo.png';
 import Nbalogo from './assets/LandingNba.svg';
 import Naccalogo from './assets/LandingNaccA++.svg';
@@ -29,9 +24,6 @@ import Instagram from './assets/LandingInstagram.png';
 import LinkedIn from './assets/LandingLinkedIn.png';
 import Twitter from './assets/LandingTwitter.svg';
 import Youtube from './assets/LandingYoutube.png';
-import ChatbotIcon from './assets/LandingChatbot.svg';
-import Magnifier from './assets/LandingMagnifier.svg';
-
 
 // --- 1st Section Component ---
 const HeroSection = () => {
@@ -160,7 +152,7 @@ const PlacementSection = () => {
         <img src={WiproLogo} alt="Wipro Logo" />
        </div>
       </section>
-      <section className="upcoming-drives-section">
+      <section className="upcoming-drives-section" id="drive">
        <h2 className="upcoming-drives-title">UPCOMING DRIVES</h2>
        <div className="marquee-container">
         <div className="drive-cards-container">
@@ -187,76 +179,9 @@ const PlacementSection = () => {
     );
 };
 
-const FeaturesSection = () => {
-    const featuresData = [
-        {
-            title: "Academic Excellence",
-            description: "Our comprehensive curriculum and expert faculty provide a foundation for lifelong learning and success in any field.",
-            Icon: AcademicIcon,
-            bgColor: "#3b82f6",
-        },
-        {
-            title: "Innovative Solutions",
-            description: "We foster an environment of creativity and critical thinking, encouraging students to develop groundbreaking ideas that solve real-world problems.",
-            Icon: InnovativeIcon,
-            bgColor: "#dc2626",
-        },
-        {
-            title: "Professional Pathways",
-            description: "From internships to full-time roles, our career services team is dedicated to helping you build a successful and fulfilling career path.",
-            Icon: ProfessionalIcon,
-            bgColor: "#16a34a",
-        },
-    ];
-
-    const getAlignmentClass = (index) => {
-     if (index === 1) return 'align-center';
-     if (index === 2) return 'align-end';
-     return 'align-start';
-    };
-
-    return (
-        <div className="page-container" id="features">
-            <div className="content-container">
-                <svg className="pipeline-svg" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid meet">
-                    <path d="M 350 140 H 990 V 470 H" stroke="#CDCDCD" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M 715 470 H 990 H 10" stroke="#CDCDCD" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M 10 470 V 790 H 645" stroke="#CDCDCD" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M 350 140 H 990 V 470 H" stroke="#3b82f6" strokeWidth="10" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M 715 470 H 990 H 10" stroke="#dc2626" strokeWidth="10" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M 10 470 V 790 H 645" stroke="#16a34a" strokeWidth="10" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {featuresData.map((feature, index) => (
-                    <div key={index} className={`feature-card ${getAlignmentClass(index)}`} style={{ backgroundColor: feature.bgColor }} >
-                        <div className="card-icon-container">
-                            <img src={feature.Icon} alt={`${feature.title} icon`} className="card-icon" />
-                        </div>
-                        <div>
-                            <h2 className="card-title">{feature.title}</h2>
-                            <p className="card-description">{feature.description}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
 const KSRSection = () => {
     return (
         <div className="page-wrapper">
-            <div className="hero-section">
-                <div className="hero-image-container">
-                    <img src={Magnifier} alt="Magnifying Glass" className="magnifier-img" />
-                    <img src={ChatbotIcon} alt="Chatbot Icon" className="chatbot-icon" />
-                </div>
-                <div className="hero-text">
-                    <p>
-                     ENGINEERING ISN'T JUST ABOUT SOLVING EQUATIONS; IT'S ABOUT SOLVING REAL-WORLD PROBLEMS.
-                     EVERY CHALLENGE YOU FACE HERE IS PREPARING YOU TO DESIGN, CREATE, AND INNOVATE FOR A BETTER TOMORROW.
-                    </p>
-                </div>
-            </div>
             <footer className="main-footer" id="contact">
                 <div className="footer-content">
                     <div className="footer-left-section">
@@ -312,7 +237,6 @@ const LandingPageContent = () => {
                 <HeroSection />
                 <PlacementPage />
                 <PlacementSection />
-                <FeaturesSection />
                 <KSRSection />
             </main>
 
@@ -320,6 +244,7 @@ const LandingPageContent = () => {
                 /* --- General Styles --- */
                 html, body {
                     margin: 0;
+                    padding: 0;
                     font-family: 'Poppins', sans-serif;
                     background-color: #f0f2f5;
                     overflow: hidden;
@@ -339,23 +264,65 @@ const LandingPageContent = () => {
                     scroll-behavior: smooth;
                 }
 
-                /* NEW: Custom Scrollbar Styles */
-                .main-content::-webkit-scrollbar {
+                /* NEW: Custom Scrollbar Styles for Landing Page - COMPREHENSIVE */
+                /* Target all possible scrollbar containers */
+                html::-webkit-scrollbar,
+                body::-webkit-scrollbar,
+                .main-content::-webkit-scrollbar,
+                .landing-page-container::-webkit-scrollbar {
                     width: 10px;
                 }
 
-                .main-content::-webkit-scrollbar-track {
+                html::-webkit-scrollbar-track,
+                body::-webkit-scrollbar-track,
+                .main-content::-webkit-scrollbar-track,
+                .landing-page-container::-webkit-scrollbar-track {
                     background: #f0f2f5; 
                 }
                 
-                .main-content::-webkit-scrollbar-thumb {
-                    background-color: #4F46E5; /* This is the color you requested */
+                html::-webkit-scrollbar-thumb,
+                body::-webkit-scrollbar-thumb,
+                .main-content::-webkit-scrollbar-thumb,
+                .landing-page-container::-webkit-scrollbar-thumb {
+                    background-color: #4F46E5; /* Purple theme for landing page */
                     border-radius: 20px;
                     border: 3px solid #f0f2f5;
                 }
 
-                .main-content::-webkit-scrollbar-thumb:hover {
+                html::-webkit-scrollbar-thumb:hover,
+                body::-webkit-scrollbar-thumb:hover,
+                .main-content::-webkit-scrollbar-thumb:hover,
+                .landing-page-container::-webkit-scrollbar-thumb:hover {
                     background-color: #4338CA; /* A slightly darker shade for hover effect */
+                }
+
+                /* CRITICAL: Remove all scrollbar buttons (up/down arrows) */
+                html::-webkit-scrollbar-button,
+                body::-webkit-scrollbar-button,
+                .main-content::-webkit-scrollbar-button,
+                .landing-page-container::-webkit-scrollbar-button {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    background: transparent !important;
+                    border: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                }
+
+                /* Target specific button types */
+                html::-webkit-scrollbar-button:start:decrement,
+                html::-webkit-scrollbar-button:end:increment,
+                body::-webkit-scrollbar-button:start:decrement,
+                body::-webkit-scrollbar-button:end:increment,
+                .main-content::-webkit-scrollbar-button:start:decrement,
+                .main-content::-webkit-scrollbar-button:end:increment,
+                .landing-page-container::-webkit-scrollbar-button:start:decrement,
+                .landing-page-container::-webkit-scrollbar-button:end:increment {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
                 }
 
 
@@ -433,27 +400,9 @@ const LandingPageContent = () => {
                 .drive-card h3 { font-size: 1.4rem; font-weight: 600; color: #333; margin-bottom: 10px; }
                 .drive-card p { font-size: 0.9rem; color: #666; margin: 5px 0; line-height: 1.4; }
 
-                /* --- Features Section --- */
-                .page-container { position: relative; background-color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 2rem; box-sizing: border-box; }
-                .content-container { position: relative; display: flex; flex-direction: column; gap: 2.5rem; max-width: 55rem; width: 100%; }
-                .pipeline-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-                .feature-card { position: relative; z-index: 10; display: flex; align-items: center; gap: 2rem; padding: 2rem; border-radius: 1rem; color: white; background-color: white; border: 5px solid #d3d3d3; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); box-sizing: border-box; }
-                .align-start { align-self: flex-start; margin-left: -230px; width: 62%; height: 200px; margin-top: 40px; }
-                .align-center { align-self: center; width: 62%; height: 200px; margin-left: 0px; margin-top: 40px; }
-                .align-end { align-self: flex-end; width: 62%; height: 200px; margin-right: -230px; margin-top: 40px; }
-                .card-icon-container { flex-shrink: 0; }
-                .card-icon { width: 4rem; height: 4rem; }
-                .card-title { font-size: 1.5rem; line-height: 2rem; font-weight: 700; margin-bottom: 0.25rem; margin-top: 0; }
-                .card-description { color: rgba(255, 255, 255, 0.9); line-height: 1.625; margin: 0; }
-
                 /* --- KSR/Footer Section --- */
                 @import url('https://fonts.googleapis.com/css2?family=Jaini&display=swap');
                 .page-wrapper { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 100%; overflow-x: hidden; background-color: white; }
-                .hero-section { background-color: #8F9BBA; padding: 50px 80px; display: flex; align-items: center; justify-content: center; gap: 60px; margin: 40px auto 100px; position: relative; height: auto; width: 95%; max-width: 1510px; border-radius: 40px; border: 4px solid #d3d3d3; box-sizing: border-box; }
-                .hero-image-container { position: relative; width: 300px; height: 300px; flex-shrink: 0; }
-                .magnifier-img { width: 65%; height: auto; position: absolute; top: 50%; left: 52%; transform: translate(-50%, -50%); z-index: 1; }
-                .chatbot-icon { width: 130%; height: auto; position: absolute; top: 50%; left: 36.7%; transform: translate(-50%, -50%); z-index: 2; }
-                .hero-text { color: white; font-family: 'Times New Roman', cursive; font-size: 35px; font-weight: 500; line-height: 1.3; max-width: 900px; text-align: left; }
                 .main-footer { background-color: #192a56; color: white; padding: 55px 20px; }
                 .footer-content { display: flex; justify-content: space-between; align-items: flex-start; max-width: 1600px; margin: 0 auto; gap: 40px; flex-wrap: wrap; }
                 .footer-left-section { display: flex; flex-direction: column; flex: 2.5; min-width: 280px; }
@@ -480,9 +429,6 @@ const LandingPageContent = () => {
                     .college-info-bar img.ksr-logo { max-width: 600px; margin-left: 0; }
                     .college-info-bar img.accreditation-logo, .college-info-bar img.accreditation-nba-logo { position: static; height: 100px; width: 100px; }
                     /* REMOVED the rule that made student cards smaller */
-                    .align-start { margin-left: -50px; width: 70%; }
-                    .align-end { margin-right: -50px; width: 70%; }
-                    .align-center { width: 70%; }
                     .footer-content { flex-direction: column; align-items: center; text-align: center; }
                     .footer-left-section, #col-accreditation, #col-contact { align-items: center; }
                     #col-contact h3 { text-align: center; }
@@ -502,17 +448,12 @@ const LandingPageContent = () => {
                         margin-left: 0;    /* UPDATED: Remove negative margin */
                     }
                     .industries-section, .upcoming-drives-section { padding-left: 20px; padding-right: 20px; }
-                    .hero-section { flex-direction: column; text-align: center; padding: 40px; gap: 20px; }
-                    .hero-text { margin-top: 20px; font-size: 28px; }
-                    .hero-image-container { width: 250px; height: 250px; }
-                    .pipeline-svg { display: none; }
-                    .feature-card { flex-direction: column; text-align: center; }
-                    .align-start, .align-center, .align-end { align-self: center; margin: 0; width: 100%; max-width: 450px; height: auto; }
                     .social-links { grid-template-columns: 1fr; }
                 }
 
                 /* SMALL TABLETS & LARGE PHONES (max-width: 768px) */
                 @media (max-width: 768px) {
+                    .main-content { padding-bottom: 30px; }
                     .college-info-bar { flex-direction: column; gap: 20px; padding: 20px; }
                     .college-info-bar img.ksr-logo { max-width: 300px; margin: 0; }
                     .hero-headline { font-size: 2.2rem; }
@@ -524,15 +465,15 @@ const LandingPageContent = () => {
                     .students-grid { padding: 0 20px 20px 20px; }
                     .upcoming-drives-title { font-size: 1.8rem; }
                     .company-logos img { max-height: 50px; }
-                    .hero-section { padding: 30px 20px; }
-                    .hero-text { font-size: 24px; }
                     .main-footer { padding: 40px 20px; }
                     .address-text p { font-size: 1rem; }
                     #col-contact h3 { font-size: 2rem; }
+                    .copyright-section { margin-bottom: 30px; }
                 }
 
                 /* MOBILE PHONES (max-width: 576px) */
                 @media (max-width: 576px) {
+                    .main-content { padding-bottom: 30px; }
                     .hero-headline { font-size: 1.8rem; margin-top: 0; }
                     .hero-subheadline { font-size: 1rem; }
                     .welcome-card { padding: 25px; }
@@ -548,11 +489,12 @@ const LandingPageContent = () => {
                     #col-contact h3 { font-size: 1.5rem; }
                     .social-links { gap: 20px; }
                     .social-links span { font-size: 0.75rem; }
+                    .copyright-section { margin-bottom: 30px; }
                 }
 
             `}</style>
         </div>
     );
-}
+};
 
 export default LandingPageContent;

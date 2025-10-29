@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
-import Adminicon from '../assets/Adminicon.png';
 import TickIcon from '../assets/TickIcon.png';
 import DownloadIcon from '../assets/DownloadIcon.png';
 import PopUpPlaced from "./PopUpPlaced";
@@ -27,11 +26,42 @@ const statusStyles = {
   Placed: { background: "#D0F2EA", color: "#16C098", border: "1.5px solid #D0F2EA" }
 };
 
-export default function Company({ onLogout, onViewChange, currentView }) {
+// --- CHANGE 1: Removed `currentView` from the list of props ---
+export default function Company({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [studentData, setStudentData] = useState(() => {
+    // Initialize immediately with localStorage data
+    try {
+      return JSON.parse(localStorage.getItem('studentData') || 'null');
+    } catch (error) {
+      return null;
+    }
+  });
   const [activeSubView, setActiveSubView] = useState('list');
   const [selectedApp, setSelectedApp] = useState(null);
   const statusOrder = { Rejected: 1, Pending: 2, Placed: 3 };
+
+  // Load student data for sidebar
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      try {
+        const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (updatedStudentData) {
+          setStudentData(updatedStudentData);
+        }
+      } catch (error) {
+        console.error('Error updating student data for sidebar:', error);
+      }
+    };
+    
+    window.addEventListener('storage', handleProfileUpdate);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleProfileUpdate);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   const sortedHistory = useMemo(() =>
     [...applicationHistory].sort((a, b) =>
@@ -95,7 +125,6 @@ export default function Company({ onLogout, onViewChange, currentView }) {
                                   <div className="company-page-app-position">{app.position}</div>
                               </div>
                               <div style={statusStyles[app.status]} className="company-page-app-status">{app.status}</div>
-                              {/* **CHANGE:** The arrow span has been re-added */}
                               <span className="company-page-app-arrow">&#8250;</span>
                           </div>
                       ))}
@@ -107,20 +136,22 @@ export default function Company({ onLogout, onViewChange, currentView }) {
   };
 
   return (
-    <div className="company-page-container">
+    <div className="company-page-container container">
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="company-page-main">
+      <div className="company-page-main main">
         <Sidebar 
           isOpen={isSidebarOpen} 
           onLogout={onLogout} 
           onViewChange={handleViewChange} 
-          currentView={currentView}
+          // --- CHANGE 2: Hardcoded 'company' to ensure the sidebar link is highlighted ---
+          currentView={'company'}
+          studentData={studentData}
         />
-        <div className="company-page-dashboard-area">
+        <div className="company-page-dashboard-area dashboard-area">
           {renderContent()}
         </div>
       </div>
-      {isSidebarOpen && <div className="company-page-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+      {isSidebarOpen && <div className="company-page-overlay overlay" onClick={() => setIsSidebarOpen(false)}></div>}
     </div>
   );
 }

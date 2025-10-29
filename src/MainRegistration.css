@@ -1,5 +1,139 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+/* NEW: Custom Scrollbar Styles for Main Registration */
+.mr-container::-webkit-scrollbar,
+.mr-main::-webkit-scrollbar,
+.mr-dashboard-area::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.mr-container::-webkit-scrollbar-track,
+.mr-main::-webkit-scrollbar-track,
+.mr-dashboard-area::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+
+.mr-container::-webkit-scrollbar-thumb,
+.mr-main::-webkit-scrollbar-thumb,
+.mr-dashboard-area::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme for main registration */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.mr-container::-webkit-scrollbar-thumb:hover,
+.mr-main::-webkit-scrollbar-thumb:hover,
+.mr-dashboard-area::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA; /* A slightly darker shade for hover effect */
+}
+
+/* Hide browser default password visibility icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container,
+input[type="password"]::-webkit-strong-password-auto-fill-button { 
+    display: none !important; 
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Fix eye icon positioning in password fields */
+.password-toggle-btn {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    color: #90a4ae !important;
+    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    z-index: 10 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+
+/* Error icon container for registration number popup */
+.mr-error-icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.mr-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mr-error-icon--circle {
+    width: 80px;
+    height: 80px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    color: white;
+    box-shadow: 0 0 20px rgba(220, 53, 69, 0.6), 0 0 40px rgba(220, 53, 69, 0.4), 0 0 60px rgba(220, 53, 69, 0.2);
+    animation: mr-error-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes mr-error-glow {
+    from {
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.6), 0 0 40px rgba(220, 53, 69, 0.4), 0 0 60px rgba(220, 53, 69, 0.2);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(220, 53, 69, 0.8), 0 0 50px rgba(220, 53, 69, 0.6), 0 0 70px rgba(220, 53, 69, 0.4);
+    }
+}
+
+/* Animated error icon for registration number popup */
+.mr-error-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    display: block;
+}
+
+.mr-error-icon--circle {
+    stroke: #dc3545;
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 157;
+    stroke-dashoffset: 157;
+    animation: mr-error-circle-draw 0.6s ease-in-out forwards;
+}
+
+.mr-error-icon--cross {
+    stroke: #dc3545;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 28;
+    stroke-dashoffset: 28;
+    animation: mr-error-cross-draw 0.4s ease-in-out 0.6s forwards;
+}
+
+@keyframes mr-error-circle-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes mr-error-cross-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
 body {
     background: #f8f8fb;
     margin: 0;
@@ -16,8 +150,8 @@ body {
 
 .mr-main {
     display: flex;
-    margin-top: 65px;
-    height: calc(100vh - 65px);
+    margin-top: 55px;
+    height: calc(100vh - 55px);
     overflow: hidden;
 }
 
@@ -52,7 +186,7 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    height: 100%;
+    height: calc(100vh - 65px); /* This is the fix */
     box-sizing: border-box;
 }
 
@@ -393,6 +527,17 @@ body {
     background-color: #1a6ac4;
 }
 
+.mr-save-btn-disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.mr-save-btn-disabled:hover {
+    background-color: #ccc !important;
+}
+
 .mr-discard-btn:hover {
     background-color: #d8e6f8;
 }
@@ -481,7 +626,7 @@ body {
 }
 
 .mr-popup-body {
-    padding: 2rem;
+    padding: 2.5rem;
 }
 
 .mr-popup-body h2 {
@@ -491,8 +636,9 @@ body {
 }
 
 .mr-popup-body p {
-    margin: 0.25rem 0;
+    margin: 0.75rem 0;
     color: #666;
+    line-height: 1.4;
 }
 
 .mr-popup-footer {
@@ -575,15 +721,75 @@ body {
 }
 
 @media (max-width: 900px) {
+    /* Fix container and main for mobile */
+    .mr-container {
+        overflow: auto;
+        min-height: 100vh;
+    }
+
+    .mr-main {
+        overflow: visible;
+        height: auto;
+        margin-top: 50px;
+    }
+
+    /* Make dashboard area scrollable with proper height */
     .mr-dashboard-area {
         margin-left: 0;
-        padding: 15px 20px;
-        height: auto;
+        padding: 15px 20px calc(env(safe-area-inset-bottom, 20px) + 100px) 20px;
+        overflow-y: auto !important; /* CRITICAL: Enable vertical scrolling */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        min-height: 100vh;
     }
-    .mr-main {
-        flex-direction: column;
-        height: auto;
-        margin-top: 60px;
+
+    /* Mobile scrollbar styling */
+    .mr-dashboard-area::-webkit-scrollbar,
+    .mr-sidebar::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-track,
+    .mr-sidebar::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-thumb,
+    .mr-sidebar::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+        background-color: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-thumb:hover,
+    .mr-sidebar::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+        background-color: #4338CA;
+    }
+    
+    /* Fix eye icon positioning on mobile */
+    .password-toggle-btn {
+        position: absolute !important;
+        right: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        color: #90a4ae !important;
+        font-size: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
     }
     .mr-overlay {
         display: block;
@@ -617,16 +823,17 @@ body {
         display: block;
     }
     
-    /* Adding spacing to each input field on mobile */
-    .mr-profile-section-container input:not(:last-child),
-    .mr-profile-section-container select:not(:last-child) {
-        margin-bottom: 1.5rem; /* Adjust this value to control spacing */
-    }
-
-    /* To handle the last input field, you might need a different approach if it's the last element in its parent container */
+    /* Proper spacing for form elements on mobile */
     .mr-profile-section-container input,
     .mr-profile-section-container select {
-        margin-bottom: 1rem; /* A general margin for all form elements on mobile */
+        margin-bottom: 1rem; /* Reduced from 1.5rem to prevent excessive spacing */
+    }
+    
+    /* Special spacing for action buttons container */
+    .mr-action-buttons {
+        margin-top: 1.5rem;
+        margin-bottom: 2rem; /* Add bottom margin to ensure buttons are visible */
+        padding-bottom: 1rem; /* Extra padding for mobile */
     }
     
     .mr-profile-photo-wrapper {
@@ -640,9 +847,19 @@ body {
     .mr-action-buttons {
         flex-direction: column;
         gap: 1rem;
+        position: relative;
+        background: #f8f8fb;
+        padding: 1rem 0;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        z-index: 1;
     }
     .mr-action-buttons button {
         width: 100%;
+        padding: 1.2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: env(safe-area-inset-bottom, 10px);
     }
 
     .mr-card {
@@ -673,4 +890,139 @@ body {
     .mr-navbar .mr-toggle-btn {
         display: block;
     }
+}
+
+/* Loading Spinner for Register Button */
+.mr-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: mr-spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@keyframes mr-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.mr-save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: #1976d2;
+}
+
+.mr-discard-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Registration Number Checking Spinner */
+.mr-regno-checking-spinner {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #1976d2;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: mr-spin 1s linear infinite;
+}
+
+/* Error Icon for Existing Registration Number Popup */
+.mr-error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #d32f2f;
+    animation: mr-fill-error 0.4s ease-in-out 0.4s forwards, mr-scale 0.3s ease-in-out 0.9s both;
+}
+
+.mr-error-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #d32f2f;
+    fill: none;
+    animation: mr-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.mr-error-icon--cross {
+    transform-origin: 50% 50%;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: mr-stroke 0.5s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes mr-fill-error {
+    100% { box-shadow: inset 0 0 0 40px #d32f2f; }
+}
+
+@keyframes mr-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes mr-scale {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Blue themed popup close button */
+.mr-popup-close-btn-blue {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+.mr-popup-close-btn-blue:hover {
+    background-color: #1565c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+}
+
+.mr-popup-close-btn-blue:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+/* File Size Error Popup Styles */
+.mr-image-error-icon-container {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #d32f2f;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(211, 47, 47, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.mr-image-error-icon {
+    width: 48px;
+    height: 48px;
+    display: block;
 }

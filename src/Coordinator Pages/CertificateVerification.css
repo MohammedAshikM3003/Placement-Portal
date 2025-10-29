@@ -1,0 +1,726 @@
+/*
+ * This file contains the styles extracted from the 'styles' object
+ * in CertificateVerification.js, converted to standard CSS classes.
+ */
+
+/* ==== CONTAINER & LAYOUT ==== */
+.co-cv-container {
+  font-family: "Inter", sans-serif;
+  background: #F9FAFB;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-cv-table-wrapper::-webkit-scrollbar,
+.co-cv-table-box::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+}
+.co-cv-table-wrapper::-webkit-scrollbar-track,
+.co-cv-table-box::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-cv-table-wrapper::-webkit-scrollbar-thumb,
+.co-cv-table-box::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-cv-table-wrapper::-webkit-scrollbar-thumb:hover,
+.co-cv-table-box::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+.co-cv-topbar {
+  background: #B71C1C;
+  color: #fff;
+  padding: 18px 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.co-cv-logo {
+  display: flex;
+  align-items: center;
+  margin-left: 2rem;
+  font-weight: bold;
+  font-size: 2rem;
+  gap: 1rem;
+}
+
+.co-cv-nav-links {
+  display: flex;
+  gap: 2rem;
+  margin-right: 2rem;
+  font-size: 1rem;
+}
+
+.co-cv-nav-a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.co-cv-portal {
+  display: flex;
+  flex: 1;
+  margin-top: -10px;
+  max-height: 0;
+}
+
+.co-cv-main {
+  flex: 1;
+  padding: 35px;
+  width: 00px;
+  padding-top: 100px;
+  padding-left: 290px;
+}
+
+.co-cv-flex-row {
+  display: flex;
+  gap: 90px;
+  margin-bottom: 22px;
+}
+
+/* --- Cards and Management --- */
+.co-cv-cards {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+}
+
+.co-cv-manage-students {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  border: 3px solid #606060;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+  height: 235px;
+  color: #000000;
+  font-size: 2.9rem;
+  font-family: Arial;
+  font-weight: bold;
+  justify-content: center;
+  margin-left: -50px;
+  margin-top: -10px;
+}
+
+.co-cv-input-wrapper5 {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.co-cv-ms-icon {
+  
+  left: 200px;
+  margin-top: -50px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+}
+
+.co-cv-card-pending-one {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  border: 3px solid #606060;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position:relative;
+  left: -50px;
+  margin-top: -10px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  width: 200px;
+  height: 235px;
+  color: #000000;
+  font-size: 1.7rem;
+  font-weight: bold;
+  justify-content: center;
+}
+
+/* --- Filter Bar and Inputs --- */
+.co-cv-filter-bar {
+  background: #D3D2D2;
+  padding: 50px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  margin-left: -20px;
+  margin-top: -10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+  justify-content: start;
+  height: 235px;
+  width: 740px;
+  position: relative;
+    left: 13px;
+
+}
+
+.co-cv-input1 {
+  padding: 17px 20px 12px 40px;
+  border-radius: 12px;
+  border: 1.5px solid #fff;
+  outline: none;
+  font-size: 1rem;
+  width: 300px;
+  background: #fff;
+  margin-right: 6px;
+  margin-left: -420px;
+  margin-top: -20px;
+}
+
+.co-cv-input2 {
+  padding: 17px 20px 12px 40px;
+  border-radius: 12px;
+  border: 1.5px solid #fff;
+  outline: none;
+  font-size: 1rem;
+  width: 300px;
+  background: #fff;
+  margin-left: 330px;
+  margin-right: 6px;
+  margin-top: -120px;
+}
+
+.co-cv-input3 {
+  padding: 17px 20px 12px 40px;
+  border-radius: 12px;
+  border: 1.5px solid #fff;
+  outline: none;
+  font-size: 1rem;
+  width: 300px;
+  background: #fff;
+  margin-right: 60px;
+  margin-left: 1px;
+  margin-top: -20px;
+}
+
+.co-cv-input4 {
+  padding: 17px 20px 12px 40px;
+  border-radius: 12px;
+  border: 1.5px solid #fff;
+  outline: none;
+  font-size: 1rem;
+  width: 300px;
+  background: #fff;
+  margin-right: 10px;
+  margin-left: 330px;
+  margin-top: -50px;
+}
+
+.co-cv-input-wrapper1 {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.co-cv-icon1 {
+  position: absolute;
+  left: -410px;
+  top: -7px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.co-cv-input-wrapper2 {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.co-cv-icon2 {
+  position: absolute;
+  left: 340px;
+  top: -70px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.co-cv-input-wrapper3 {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.co-cv-icon3 {
+  position: absolute;
+  left: 10px;
+  top: -4px;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+}
+
+.co-cv-input-wrapper4 {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.co-cv-icon4 {
+  position: absolute;
+  left: 340px;
+  top: -30px;
+  width: 18px;
+  height: 15px;
+  pointer-events: none;
+}
+
+.co-cv-certificate {
+  background: #E80000;
+  color: #fff;
+  border-radius: 18px;
+  font-weight: bold;
+  padding: 9px 25px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: -40px;
+  margin-bottom: 100px;
+  margin-left: 200px;
+  transition: background 0.15s;
+}
+
+.co-cv-dropicon1 {
+  margin-left: -40px;
+  margin-top: -20px;
+  width: 12px;
+}
+
+.co-cv-dropicon2 {
+  margin-left: -40px;
+  margin-top: -120px;
+  width: 12px;
+}
+
+.co-cv-dropicon3 {
+  margin-left: -90px;
+  margin-top: -20px;
+  width: 12px;
+}
+
+.co-cv-dropicon4 {
+  margin-left: -40px;
+  margin-top: -50px;
+  width: 12px;
+}
+
+.co-cv-apply-btn {
+  background: #fff;
+  color: #E80000;
+  border: 2px solid #E80000;
+  font-weight: bold;
+  padding: 10px 17px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: -6rem;
+  margin-left: 190px;
+  margin-top: 6px;
+  transition: box-shadow 0.3s ease, background 0.15s; /* Add box-shadow transition here */
+}
+
+.co-cv-clear-bttn {
+  background: #D3D2D2;
+  color: #787878;
+  border: 3px solid #606060;
+  font-weight: bold;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 340px;
+  margin-top: -275px;
+  margin-bottom: -230px;
+  transition: all 0.3s ease, background 0.15s; /* Add all transition here */
+}
+
+/* --- Table Styles --- */
+.co-cv-table-box {
+  background: #fff;
+  padding: 10px;
+  border-radius: 15px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-left:-1350px;
+  border:2px solid #808080;
+    top: 250px;
+ position: relative;
+  overflow: hidden;
+}
+
+.co-cv-table-wrapper {
+  height: 310px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 1210px;
+}
+
+.co-cv-table {
+  width: 1200px;
+  border-collapse: collapse;
+  min-height: 160px;
+}
+
+.co-cv-th {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #808080;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #E9E5E6;
+  position: sticky;
+  top: 0;
+  border-radius: 1px;
+  background: #fff;
+  z-index: 2;
+}
+
+.co-cv-td {
+  text-align: center;
+  color:#000000;
+  padding: 6px 0;
+  font-size: 0.95rem;
+  border-bottom: 1.5px solid #E9E5E6;
+  height: 34px;
+  left: 0;
+  top: 0;
+}
+
+.co-cv-status-pending {
+  background: #dcdada;
+  color: #555;
+  border-radius: 16px;
+  padding: 5px 18px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-right: 8px;
+  border: none;
+}
+
+.co-cv-status-accepted {
+  background: #E1F6EC;
+  color: #07AE4E;
+  border-radius: 16px;
+  padding: 5px 18px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-right: 8px;
+  border: none;
+}
+
+.co-cv-status-rejected {
+  background: #FFE6E1;
+  color: #C12424;
+  border-radius: 16px;
+  padding: 5px 18px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-right: 8px;
+  border: none;
+}
+
+.co-cv-action-btn-accept {
+  padding: 5px 14px;
+  border-radius: 16px;
+  background: #CAEAD8;
+  color: #1A8742;
+  font-weight: bold;
+  border: none;
+  margin-top: -25px;
+  margin-bottom: 10px;
+  margin-right: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.co-cv-action-btn-reject1 {
+  padding: 5px 14px;
+  border-radius: 16px;
+  background: #FFD2D2;
+  color: #E12A2A;
+  font-weight: bold;
+  border: none;
+  top: 10px;
+  margin-right: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.co-cv-eye-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #B71C1C;
+  font-size: 1.4rem;
+  margin-left: 8px;
+}
+
+/* --- Helper Classes for Inline Styles to CSS Conversion --- */
+.text-align-center { text-align: center; }
+.font-weight-600 { font-weight: 600; }
+.font-size-1-9rem { font-size: 1.9rem; }
+.margin-bottom-15 { margin-bottom: 15px; }
+.font-size-0-96rem { font-size: 0.96rem; }
+.color-888 { color: #888; }
+.margin-bottom-negative-60 { margin-bottom: -60px; }
+.color-red { color: red; }
+.margin-top-negative-30 { margin-top: -30px; }
+.font-weight-bold { font-weight: bold; }
+.font-size-1-3rem { font-size: 1.3rem; }
+.color-222 { color: #222; }
+.margin-bottom-8 { margin-bottom: 8px; }
+
+@media (max-width: 768px) {
+
+  /* Allow full vertical scroll on mobile */
+  html, body {
+    overflow-y: auto;
+    height: auto;
+  }
+
+  .co-cv-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 0px;
+    height: auto;
+    min-height: 98vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .co-cv-main {
+    padding: 20px;
+    padding-top: 90px;
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .co-cv-flex-row {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+
+  /* --- Cards --- */
+  .co-cv-manage-students
+  {
+width: 450px;
+    height: 258px;
+    margin: 15px auto 0 29px;
+    left: 0;
+   margin-top: -25px;
+    font-size: 1.4rem;
+    padding-top:0px;
+  }
+  .co-cv-card-pending-one {
+    width: 450px;
+    height: 258px;
+    margin: 15px auto;
+    top: -18px;
+    font-size: 1.4rem;
+    padding-top:0px;
+    left:14px;
+  }
+
+  .co-cv-ms-icon {
+    position: static;
+    margin: 10px 0;
+    width: 45px;
+    height: 45px;
+    margin-top:-50px;
+  }
+
+  /* --- Filter Bar --- */
+  .co-cv-filter-bar {
+    flex-direction: column;
+    width: 441px;
+    height: auto;
+    margin: 0 auto 20px 29px;
+    padding: 20px;
+    align-items: stretch;
+    left: 0;
+    gap:24px;
+  }
+
+   .co-cv-input-wrapper1,
+  .co-cv-input-wrapper2,
+  .co-cv-input-wrapper3,
+  .co-cv-input-wrapper4 {
+    position: relative;
+  }
+
+  .co-cv-input1,
+  .co-cv-input2,
+  .co-cv-input3,
+  .co-cv-input4 {
+    width: 100%;
+    margin: 0;
+    padding: 14px 14px 14px 38px;
+    font-size: 1rem;
+  }
+   
+
+  .co-cv-icon1,
+  .co-cv-icon2,
+  .co-cv-icon3,
+  .co-cv-icon4 {
+    position: absolute;
+    left: 12px ;
+    top: 50% ;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+
+  /* Ensure floating labels stay aligned within input boxes */
+   /* Keep label inside input box */
+  .co-cv-input-wrapper1 label,
+  .co-cv-input-wrapper2 label,
+  .co-cv-input-wrapper3 select + label,
+  .co-cv-input-wrapper4 label {
+    left: 20px; /* Move label slightly closer to the left edge on mobile */
+    font-size: 0.9rem; /* Slightly smaller font for mobile */
+  }
+
+  /* Active/focused label float */
+ .co-cv-input-wrapper1 input:focus + label,
+  .co-cv-input-wrapper2 input:focus + label,
+  .co-cv-input-wrapper3 select:focus + label,
+  .co-cv-input-wrapper4 input:focus + label,
+  .co-cv-input-wrapper1 input:not(:placeholder-shown) + label,
+  .co-cv-input-wrapper2 input:not(:placeholder-shown) + label,
+  .co-cv-input-wrapper3 select:not([value=""]) + label,
+  .co-cv-input-wrapper4 input:not(:placeholder-shown) + label {
+    left: 15px; /* Adjust floating position to match new initial position */
+    top: -8px;
+    font-size: 0.75rem;
+  }
+
+  .co-cv-input-wrapper1 input:not(:placeholder-shown) + label{
+    margin-top: 20px;
+    margin-left: 415px;
+  }
+
+  .co-cv-input-wrapper2 input:not(:placeholder-shown) + label{
+    margin-left: -330px;
+    margin-top: 85px;
+  }
+  
+  .co-cv-input-wrapper3 select:not([value=""]) + label{
+    margin-top: 20px;
+  }
+
+  .co-cv-dropicon3 {
+    margin-left: -30px;
+    margin-top: 0px;
+    width: 12px;
+  }
+
+  .co-cv-input-wrapper4 input:not(:placeholder-shown) + label{
+    margin-left: -330px;
+    margin-top: 50px;
+  }
+
+  .co-cv-certificate {
+    width: 60%;
+    
+    margin: 0 0 10px 80px;
+    font-size: 1rem;
+  }
+
+  .co-cv-apply-btn {
+    width: 40%;
+    margin: 8px 20px;
+  }
+
+  .co-cv-clear-bttn {
+    width: 40%;
+    margin-top: -72px ;
+    margin-bottom: 8px;
+    margin-left: 215px;
+  }
+  /* --- Table --- */
+  .co-cv-table-box 
+  {
+    width: 100%;
+    margin: 20px auto;
+    overflow: hidden;
+    margin-top:-289px;
+    margin-left:15px;
+  }
+
+  .co-cv-table-wrapper 
+  {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 450px;
+  }
+
+  .co-cv-table {
+    width: 900px; /* allows horizontal scroll */
+    min-width: 800px;
+  }
+
+  .co-cv-th,
+  .co-cv-td {
+    font-size: 0.85rem;
+    padding: 8px;
+    white-space: nowrap;
+  }
+
+  /* Red scrollbar on mobile */
+  .co-cv-table-wrapper::-webkit-scrollbar,
+  .co-cv-table-box::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 10px;
+  }
+  .co-cv-table-wrapper::-webkit-scrollbar-track,
+  .co-cv-table-box::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-cv-table-wrapper::-webkit-scrollbar-thumb,
+  .co-cv-table-box::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-cv-table-wrapper::-webkit-scrollbar-thumb:hover,
+  .co-cv-table-box::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+}

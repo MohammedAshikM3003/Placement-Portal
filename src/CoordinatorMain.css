@@ -1,0 +1,122 @@
+/* Coordinator Main Layout Styles */
+.coordinator-main-wrapper {
+  font-family: 'Poppins', sans-serif;
+  background: #fff;
+  padding-top: 64px; /* Space for fixed navbar */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.coordinator-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  margin-top: -64px; /* Overlap with navbar space */
+}
+
+.coordinator-content-area {
+  flex: 1;
+  background: #fff;
+  margin-left: 270px; /* Space for sidebar */
+  overflow-y: auto;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* Mobile overlay for sidebar */
+.coordinator-overlay {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  display: none;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 992px) {
+  .coordinator-content-area {
+    margin-left: 0;
+  }
+  
+  .coordinator-overlay {
+    display: block;
+  }
+}
+
+/* Custom scrollbar for coordinator pages - Red Theme */
+.coordinator-content-area::-webkit-scrollbar,
+.coordinator-main-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.coordinator-content-area::-webkit-scrollbar-track,
+.coordinator-main-wrapper::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 20px;
+}
+
+.coordinator-content-area::-webkit-scrollbar-thumb,
+.coordinator-main-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d23b42; /* Red theme for coordinator */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.coordinator-content-area::-webkit-scrollbar-thumb:hover,
+.coordinator-main-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34; /* Darker red on hover */
+}
+
+/* Desktop scrollbar styling for body - Red Theme */
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* Mobile scrollbar styling - Red Theme */
+@media (max-width: 900px) {
+  .coordinator-content-area::-webkit-scrollbar,
+  .coordinator-main-wrapper::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .coordinator-content-area::-webkit-scrollbar-track,
+  .coordinator-main-wrapper::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 20px;
+  }
+
+  .coordinator-content-area::-webkit-scrollbar-thumb,
+  .coordinator-main-wrapper::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42; /* Red theme for coordinator */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .coordinator-content-area::-webkit-scrollbar-thumb:hover,
+  .coordinator-main-wrapper::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34; /* Darker red on hover */
+  }
+}
