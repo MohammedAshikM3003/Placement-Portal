@@ -114,18 +114,6 @@ class MongoDBService {
     }
   }
 
-  async getStudentByRegNoAndDob(regNo, dob) {
-    try {
-      const response = await this.apiCall(`/students/reg/${regNo}/dob/${dob}`, {
-        method: 'GET'
-      });
-      return response;
-    } catch (error) {
-      console.error('Get student by regNo and dob error:', error);
-      throw error;
-    }
-  }
-
   async checkStudentExists(regNo) {
     try {
       const response = await this.apiCall(`/students/check/${regNo}`, {
@@ -134,19 +122,6 @@ class MongoDBService {
       return response.exists;
     } catch (error) {
       console.error('Check student exists error:', error);
-      throw error;
-    }
-  }
-
-  async updateStudent(studentId, updateData) {
-    try {
-      const response = await this.apiCall(`/students/${studentId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData)
-      });
-      return response;
-    } catch (error) {
-      console.error('Update student error:', error);
       throw error;
     }
   }
@@ -224,12 +199,6 @@ class MongoDBService {
     return await this.apiCall(`/certificates/student/${studentId}`);
   }
 
-  async updateCertificate(certificateId, updateData) {
-    return await this.apiCall(`/certificates/${certificateId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData)
-    });
-  }
 
   async deleteCertificate(certificateId) {
     return await this.apiCall(`/certificates/${certificateId}`, {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import RegistrationDebug from "./components/RegistrationDebug.js";
-import authService from "./services/authService.js";
 import AnimatedLoader from "./components/AnimatedLoader.js";
 
 // Import lightweight components directly
@@ -18,8 +17,6 @@ const Attendance = lazy(() => import("./Student Pages/Attendance.js"));
 const Achievements = lazy(() => import("./Student Pages/achievements.js"));
 const Company = lazy(() => import("./Student Pages/company.js"));
 const StuProfile = lazy(() => import("./Student Pages/StuProfile.js"));
-
-// Coordinator components are now loaded through CoordinatorMain.js
 
 // This component now contains the main application logic
 function AppContent() {
@@ -53,7 +50,7 @@ function AppContent() {
         setIsLoading(false);
       }, []);
 
-  const handleLogin = (regNo, password) => {
+  const handleLogin = (regNo) => {
     // This function is called after successful authentication
     console.log('Login successful for:', regNo);
   };
