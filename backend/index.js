@@ -1,9 +1,4 @@
-// Simple test endpoint for Vercel
-module.exports = (req, res) => {
-  res.json({
-    message: 'Backend is working!',
-    timestamp: new Date().toISOString(),
-    url: req.url,
-    method: req.method
-  });
-};
+// Main entry point for Vercel deployment
+const app = require('./server-mongodb.js');
+
+module.exports = app;
