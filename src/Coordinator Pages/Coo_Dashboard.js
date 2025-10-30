@@ -45,8 +45,6 @@ const ModernAttendanceChart = ({ present, absent }) => {
 };
 
 function CoordinatorDashboard({ onLogout, onViewChange }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const handleCardClick = (view) => {
     if (onViewChange) {
       onViewChange(view);
@@ -54,16 +52,7 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
   };
 
   return (
-    <div className="coordinator-dashboard-page">
-      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="co-db-main">
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onLogout={onLogout}
-          currentView="dashboard"
-          onViewChange={onViewChange}
-        />
-        <div className="co-db-dashboard-area">
+    <div className="co-db-dashboard-area">
       {/* College header */}
       <div className="co-db-college-header">
         <img src={ksrCollegeImage} alt="KSR College Logo" className="co-db-college-logo" />
@@ -134,8 +123,6 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
         </div>
 
       </div>
-      </div>
-    </div>
     </div>
   );
 }
