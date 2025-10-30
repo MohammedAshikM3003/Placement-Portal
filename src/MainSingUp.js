@@ -6,7 +6,6 @@ import {
   FaGraduationCap,
 } from "react-icons/fa";
 import loginImage from "./assets/student1.png";
-import Adminicon from "./assets/Adminicon.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
 
