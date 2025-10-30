@@ -6,8 +6,8 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-// Load environment variables from .env-atlas file
-require('dotenv').config({ path: path.join(__dirname, '.env-atlas') });
+// Load environment variables
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -94,6 +94,8 @@ app.use(cors({
     origin: [
         'http://localhost:3000', 
         'http://127.0.0.1:3000',
+        'https://placement--portal.vercel.app',
+        'https://placement-portal.vercel.app',
         'https://3nt1rq0-3000.inc1.devtunnels.ms',
         /https:\/\/.*\.devtunnels\.ms$/  // Allow all VS Code tunnel URLs
     ],
@@ -267,6 +269,54 @@ app.post('/api/students/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Add test student endpoint (for debugging)
+app.post('/api/add-test-student', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    
+    try {
+        const testStudent = {
+            regNo: '73152313074',
+            dob: '30032006',
+            firstName: 'Test',
+            lastName: 'Student',
+            email: 'test.student@ksrce.ac.in',
+            phone: '9876543210',
+            department: 'CSE',
+            branch: 'Computer Science Engineering',
+            year: '2024',
+            cgpa: 8.5,
+            isBlocked: false
+        };
+
+        if (isMongoConnected) {
+            // Check if student already exists in MongoDB
+            const existingStudent = await Student.findOne({ regNo: testStudent.regNo });
+            if (existingStudent) {
+                return res.json({ message: 'Test student already exists in MongoDB', student: existingStudent });
+            }
+
+            // Create new student in MongoDB
+            const student = new Student(testStudent);
+            await student.save();
+            res.json({ message: 'Test student created successfully in MongoDB', student });
+        } else {
+            // Check if student already exists in memory
+            const existingStudent = students.find(s => s.regNo === testStudent.regNo);
+            if (existingStudent) {
+                return res.json({ message: 'Test student already exists in memory', student: existingStudent });
+            }
+
+            // Add to in-memory storage
+            testStudent.id = Date.now().toString();
+            students.push(testStudent);
+            res.json({ message: 'Test student created successfully in memory', student: testStudent });
+        }
+    } catch (error) {
+        console.error('Error creating test student:', error);
+        res.status(500).json({ message: 'Error creating test student', error: error.message });
     }
 });
 
