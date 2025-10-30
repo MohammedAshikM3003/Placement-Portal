@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MainRegistration from "./MainRegistration.js";
 import MainRegistrationPopUp from "./MainRegistrationPopUp.js";
-import CoordinatorAccess from "./CoordinatorAccess.js";
 import {
   FaGraduationCap,
 } from "react-icons/fa";
@@ -11,9 +11,9 @@ import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
 
 const MainSignUp = ({ onNavigateToLogin, onNavigateToCoordinator }) => {
+  const navigate = useNavigate();
   const [showUgRegistration, setShowUgRegistration] = useState(false);
   const [showRegistrationPopup, setShowRegistrationPopup] = useState(false);
-  const [showCoordinatorAccess, setShowCoordinatorAccess] = useState(false);
 
   const handleUgClick = () => {
     setShowRegistrationPopup(true);
@@ -29,15 +29,11 @@ const MainSignUp = ({ onNavigateToLogin, onNavigateToCoordinator }) => {
   };
 
   const handleCoordinatorClick = () => {
-    setShowCoordinatorAccess(true);
+    navigate('/coo-dashboard');
   };
 
   if (showUgRegistration) {
     return <MainRegistration />;
-  }
-
-  if (showCoordinatorAccess) {
-    return <CoordinatorAccess />;
   }
 
   return (

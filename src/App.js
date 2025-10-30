@@ -9,6 +9,7 @@ import PlacementPortalLogin from "./mainlogin.js";
 import MainSignUp from "./MainSingUp.js";
 import MainRegistration from "./MainRegistration.js";
 import CoordinatorAccess from "./CoordinatorAccess.js";
+import CoordinatorDashboard from "./Coordinator Pages/Coo_Dashboard.js";
 
 // Lazy load Student components
 const PlacementPortalDashboard = lazy(() => import("./Student Pages/dashboard.js"));
@@ -219,7 +220,7 @@ function AppContent() {
       )}
 
       {/* Coordinator Routes - Available without authentication for now */}
-      <Route path="/coo-dashboard" element={<CoordinatorAccess />} />
+      <Route path="/coo-dashboard" element={<CoordinatorDashboard />} />
     </Routes>
   );
 }
