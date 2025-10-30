@@ -34,7 +34,8 @@
 }
 
 /* --- DASHBOARD CONTENT AREA --- */
-.coordinator-dashboard-page .co-db-dashboard-area {
+.coordinator-dashboard-page .co-db-dashboard-area,
+.co-db-dashboard-content {
   flex: 1;
   padding: 15px 15px 15px 30px;
   background: #fff;
@@ -50,7 +51,8 @@
 }
 
 /* --- HEADER --- */
-.coordinator-dashboard-page .co-db-college-header {
+.coordinator-dashboard-page .co-db-college-header,
+.co-db-college-header {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -59,24 +61,28 @@
   justify-content: center; /* Center the header */
   width: 100%;
 }
-.coordinator-dashboard-page .co-db-college-logo {
+.coordinator-dashboard-page .co-db-college-logo,
+.co-db-college-logo {
   width: 130px;
   height: 115px;
   object-fit: cover;
   border-radius: 16px;
 }
-.coordinator-dashboard-page .co-db-college-name {
+.coordinator-dashboard-page .co-db-college-name,
+.co-db-college-name {
   font-family: 'Times New Roman', Times, serif;
   font-size: 2.3em;
   font-weight: bold;
   color: #191c24;
 }
-.coordinator-dashboard-page .co-db-college-name span {
+.coordinator-dashboard-page .co-db-college-name span,
+.co-db-college-name span {
   color: #e84343;
 }
 
 /* --- GRID & CARD STYLES (DESKTOP) --- */
-.coordinator-dashboard-page .co-db-dashboard-grid {
+.coordinator-dashboard-page .co-db-dashboard-grid,
+.co-db-dashboard-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: 250px 220px; /* Fixed heights: 250px for top row, 220px for bottom row */
@@ -86,7 +92,8 @@
   width: 100%;
 }
 
-.coordinator-dashboard-page .co-db-card {
+.coordinator-dashboard-page .co-db-card,
+.co-db-card {
   background: #fff;
   border-radius: 12px;
   border: 3px solid #e0e0e0;
@@ -97,28 +104,33 @@
   padding: 15px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
-.coordinator-dashboard-page .co-db-card:hover {
+.coordinator-dashboard-page .co-db-card:hover,
+.co-db-card:hover {
   border-color: #d23b42;
   box-shadow: 0 4px 12px rgba(210, 59, 66, 0.15);
   transform: translateY(-5px);
 }
 
-.coordinator-dashboard-page .co-db-card-icon {
+.coordinator-dashboard-page .co-db-card-icon,
+.co-db-card-icon {
   margin-bottom: 10px;
   text-align: center;
 }
-.coordinator-dashboard-page .co-db-card-icon img {
+.coordinator-dashboard-page .co-db-card-icon img,
+.co-db-card-icon img {
   height: 55px;
   width: auto;
 }
-.coordinator-dashboard-page .co-db-card-title {
+.coordinator-dashboard-page .co-db-card-title,
+.co-db-card-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: #000;
   margin: 0 0 8px 0;
   text-align: center;
 }
-.coordinator-dashboard-page .co-db-card-sub {
+.coordinator-dashboard-page .co-db-card-sub,
+.co-db-card-sub {
   font-size: 1rem;
   color: #666;
   text-align: center;

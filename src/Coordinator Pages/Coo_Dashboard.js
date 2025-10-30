@@ -50,15 +50,7 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
   };
 
   return (
-    <div className="co-db-dashboard-content" style={{ 
-      padding: '15px 15px 15px 30px',
-      background: '#fff',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'flex-start',
-      alignItems: 'center',
-      minHeight: '100%'
-    }}>
+    <div className="co-db-dashboard-content">
       {/* College header */}
       <div className="co-db-college-header">
         <img src={ksrCollegeImage} alt="KSR College Logo" className="co-db-college-logo" />
