@@ -7,8 +7,17 @@ import './Achievements.css';
 import UploadCertificatecardicon from '../assets/UploadCertificatecardicon.svg';
 import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 // import authService from '../services/authService.js';
-// import mongoDBService from '../services/mongoDBService.js';
+import mongoDBService from '../services/mongoDBService.js';
 import fileStorageService from '../services/fileStorageService.js';
+
+// NEW: Import download/preview alerts
+import { 
+  DownloadFailedAlert, 
+  DownloadSuccessAlert, 
+  DownloadProgressAlert, 
+  PreviewFailedAlert, 
+  PreviewProgressAlert 
+} from '../components/alerts';
 
 // Delete Confirmation Popup Component - Matches PopupAchievements style
 const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
@@ -148,6 +157,12 @@ function AchievementsContent() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [yearSemesterFilter, setYearSemesterFilter] = useState("");
+
+  // NEW: Download/Preview popup states
+  const [downloadPopupState, setDownloadPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
+  const [previewPopupState, setPreviewPopupState] = useState('none'); // 'none', 'progress', 'failed'
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [previewProgress, setPreviewProgress] = useState(0);
   const [appliedFilters, setAppliedFilters] = useState({
     searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "",
   });
@@ -878,6 +893,7 @@ function AchievementsContent() {
       throw new Error('Failed to update achievement. Please try again.');
     }
   };
+  
   const handleCloseRestrictionPopup = () => setShowRestrictionPopup(false);
   const handleDeleteClick = () => {
     if (selectedRows.length === 0) {
@@ -891,7 +907,111 @@ function AchievementsContent() {
     setDeletePopupState('none');
     setDeletedCertificates([]);
   };
-  
+
+  // NEW: Download/Preview popup functions
+  const handleDownloadPDF = async (certificateData) => {
+    // Prevent multiple downloads
+    if (downloadPopupState !== 'none') {
+      console.log('Download already in progress, ignoring click');
+      return;
+    }
+
+    let progressInterval; // Declare outside try block for proper cleanup
+    
+    try {
+      setDownloadPopupState('progress');
+      setDownloadProgress(0);
+
+      // Check if we have file data first
+      if (!certificateData?.fileData) {
+        // Try to fetch file data from backend using the same method as preview
+        try {
+          const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+          if (!studentData) {
+            throw new Error('Please log in again to download files.');
+          }
+
+          let studentId = studentData.id || studentData._id || studentData.studentId;
+          if (!studentId) {
+            studentId = `student_${studentData.regNo}`;
+          }
+
+          // Use the same method as preview to get all certificates
+          const certificates = await mongoDBService.getCertificatesByStudentId(studentId);
+          const foundCertificate = certificates.find(cert => cert.achievementId === certificateData.id);
+          
+          if (foundCertificate?.fileData) {
+            certificateData.fileData = foundCertificate.fileData;
+          } else {
+            throw new Error('No file data available');
+          }
+        } catch (fetchError) {
+          console.error('Failed to fetch file data:', fetchError);
+          setDownloadPopupState('failed');
+          return;
+        }
+      }
+
+      // Dynamic download progress simulation
+      progressInterval = setInterval(() => {
+        setDownloadProgress(prev => {
+          if (prev >= 85) {
+            // Stop at 85% until file is actually processed (matching preview)
+            return prev;
+          }
+          return prev + Math.random() * 12; // Slightly smaller increments for smoother feel
+        });
+      }, 150); // Faster updates for smoother animation (matching preview)
+
+      // Let the progress animation run for a bit, then process the file
+      setTimeout(() => {
+        try {
+          // Ensure the file data has the correct format for download
+          let formattedFileData = certificateData.fileData;
+          if (!certificateData.fileData.startsWith('data:')) {
+            // If it's raw base64, add the PDF data URL prefix
+            formattedFileData = `data:application/pdf;base64,${certificateData.fileData}`;
+          }
+
+          // Complete progress to 100%
+          clearInterval(progressInterval);
+          setDownloadProgress(100);
+
+          // INSTANT DOWNLOAD: Use requestAnimationFrame for immediate execution
+          requestAnimationFrame(() => {
+            fileStorageService.downloadFile(formattedFileData, certificateData.fileName || 'certificate.pdf');
+            setDownloadPopupState('success');
+          });
+
+        } catch (downloadError) {
+          clearInterval(progressInterval);
+          console.error('Download processing failed:', downloadError);
+          setDownloadPopupState('failed');
+        }
+      }, 1500); // Let progress run for 1.5 seconds to show smooth animation
+
+    } catch (error) {
+      // Make sure to clear any running intervals on error
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+      console.error('Download failed:', error);
+      setDownloadPopupState('failed');
+    }
+  };
+
+  // handlePreviewPDF removed - using handleViewFile directly to prevent duplicates
+
+  const closeDownloadPopup = () => {
+    setDownloadPopupState('none');
+    setDownloadProgress(0);
+  };
+
+  const closePreviewPopup = () => {
+    setPreviewPopupState('none');
+    setPreviewProgress(0);
+  };
+
   const handleConfirmDelete = async () => {
     try {
       console.log('=== DELETE START ===');
@@ -1159,6 +1279,12 @@ function AchievementsContent() {
     }
   };
   const handleViewFile = async (fileName, fileData, achievementId) => { 
+    // Prevent multiple previews
+    if (previewPopupState !== 'none') {
+      console.log('Preview already in progress, ignoring click');
+      return;
+    }
+
     console.log('⚡ Viewing file:', { fileName, fileData: fileData ? 'Present' : 'Missing', achievementId }); 
     
     // OPTIMIZED: Check local cache first for instant preview
@@ -1169,11 +1295,19 @@ function AchievementsContent() {
       // INSTANT PREVIEW: Use cached data immediately
       console.log('⚡ INSTANT PREVIEW: Using cached file data');
       try {
-        fileStorageService.previewFile(cachedFileData);
+        // Ensure the file data has the correct data URL format
+        let formattedFileData = cachedFileData;
+        if (!cachedFileData.startsWith('data:')) {
+          // If it's raw base64, add the PDF data URL prefix
+          formattedFileData = `data:application/pdf;base64,${cachedFileData}`;
+        }
+        
+        // Use fileStorageService for consistent preview handling
+        fileStorageService.previewFile(formattedFileData);
         return; // Exit early for instant preview
       } catch (previewError) {
         console.error('❌ Preview error:', previewError);
-        alert('Failed to preview file. Please try downloading it instead.');
+        setPreviewPopupState('failed');
         return;
       }
     }
@@ -1181,28 +1315,25 @@ function AchievementsContent() {
     // BACKGROUND FETCH: Get file data in background while showing loading
     console.log('⚡ BACKGROUND FETCH: Loading file data...');
     
-    // Show immediate feedback to user
-    const loadingToast = document.createElement('div');
-    loadingToast.style.cssText = `
-      position: fixed; top: 20px; right: 20px; z-index: 10000;
-      background: #197AFF; color: white; padding: 12px 20px;
-      border-radius: 8px; font-size: 14px; font-weight: 600;
-      box-shadow: 0 4px 12px rgba(25, 122, 255, 0.3);
-      animation: slideIn 0.3s ease;
-    `;
-    loadingToast.textContent = '📄 Loading file preview...';
-    document.body.appendChild(loadingToast);
+    // Show preview progress popup with dynamic loading
+    setPreviewPopupState('progress');
+    setPreviewProgress(0);
     
-    // Add slide-in animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    `;
-    document.head.appendChild(style);
+    // Dynamic progress simulation while fetching from MongoDB
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => {
+        if (prev >= 85) {
+          // Stop at 85% until actual data arrives (reduced from 90% to prevent stuck feeling)
+          return prev;
+        }
+        return prev + Math.random() * 12; // Slightly smaller increments for smoother feel
+      });
+    }, 150); // Faster updates for smoother animation
     
     try {
       const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
       if (!studentData) {
+        clearInterval(progressInterval);
         throw new Error('Please log in again to view files.');
       }
 
@@ -1212,42 +1343,55 @@ function AchievementsContent() {
         studentId = `student_${studentData.regNo}`;
       }
       
-      // OPTIMIZED: Faster timeout for better UX
+      // OPTIMIZED: Reasonable timeout for MongoDB fetch
       const certificates = await Promise.race([
         mongoDBService.getCertificatesByStudentId(studentId),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Certificate fetch timeout')), 3000) // Reduced to 3s
+          setTimeout(() => {
+            clearInterval(progressInterval);
+            reject(new Error('Certificate fetch timeout'));
+          }, 10000) // Increased to 10s
         )
       ]);
+      
+      // Clear the progress interval when data arrives
+      clearInterval(progressInterval);
       
       const certificateData = certificates.find(cert => cert.achievementId === achievementId);
       
       if (certificateData && certificateData.fileData) {
         console.log('⚡ BACKGROUND FETCH: File data loaded successfully');
+        console.log('📄 File data length:', certificateData.fileData.length);
+        console.log('📄 File data starts with:', certificateData.fileData.substring(0, 50));
         
-        // Remove loading toast
-        setTimeout(() => {
-          if (loadingToast.parentNode) {
-            loadingToast.parentNode.removeChild(loadingToast);
-          }
-          if (style.parentNode) {
-            style.parentNode.removeChild(style);
-          }
-        }, 100);
+        // Loading toast removed - using popup system
+        
+        // Complete progress to 100% and preview instantly
+        setPreviewProgress(100);
         
         try {
-          // INSTANT PREVIEW: Preview immediately
-          fileStorageService.previewFile(certificateData.fileData);
+          // Ensure the file data has the correct data URL format
+          let formattedFileData = certificateData.fileData;
+          if (!certificateData.fileData.startsWith('data:')) {
+            // If it's raw base64, add the PDF data URL prefix
+            formattedFileData = `data:application/pdf;base64,${certificateData.fileData}`;
+          }
           
-          // BACKGROUND UPDATE: Update cache for future instant previews
+          // INSTANT PREVIEW: Use requestAnimationFrame for immediate execution
+          requestAnimationFrame(() => {
+            fileStorageService.previewFile(formattedFileData);
+            setPreviewPopupState('none');
+          });
+          
+          // BACKGROUND UPDATE: Update cache for future instant previews (store formatted data)
           setAchievements(prev => prev.map(achievement => 
             achievement.id === achievementId 
-              ? { ...achievement, fileData: certificateData.fileData }
+              ? { ...achievement, fileData: formattedFileData }
               : achievement
           ));
         } catch (previewError) {
           console.error('❌ Preview error:', previewError);
-          alert('Failed to preview file. Please try downloading it instead.');
+          setPreviewPopupState('failed');
         }
       } else {
         throw new Error('No file data found for this certificate. The file may not have been uploaded properly.');
@@ -1255,24 +1399,12 @@ function AchievementsContent() {
     } catch (error) {
       console.error('❌ Error fetching file data:', error);
       
-      // Remove loading toast
-      setTimeout(() => {
-        if (loadingToast.parentNode) {
-          loadingToast.parentNode.removeChild(loadingToast);
-        }
-        if (style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      }, 100);
+      // Clear progress interval on error
+      clearInterval(progressInterval);
       
-      // Better error messages based on error type
-      if (error.message.includes('timeout')) {
-        alert('File preview is taking too long. Please try downloading the file instead.');
-      } else if (error.message.includes('Certificate not found')) {
-        alert('Certificate file not found in database. Please re-upload the file.');
-      } else {
-        alert(`Unable to preview file: ${error.message}. Please try downloading it instead.`);
-      }
+      // Use popup system instead of alerts
+      console.error('Preview failed:', error.message);
+      setPreviewPopupState('failed');
     }
   };
   const getFilteredAndSortedAchievements = () => {
@@ -1285,6 +1417,9 @@ function AchievementsContent() {
     if (sortBy) { return [...filtered].sort((a, b) => { if (sortBy === "date") return new Date(b.date) - new Date(a.date); if (sortBy === "prize") return a.prize.localeCompare(b.prize); return 0; }); }
     return filtered;
   };
+
+  // Get filtered achievements for display
+  const filteredAchievements = getFilteredAndSortedAchievements();
 
   return (
     <>
@@ -1578,22 +1713,35 @@ function AchievementsContent() {
             ) : (
               <table className="achievements-table">
                 <thead>
-                    <tr><th>Select</th><th>S.No</th><th>Year</th><th>Semester</th><th>Section</th><th>Competition Name</th><th>Date</th><th>Prize</th><th>Status</th><th>View</th><th>Download</th></tr>
+                  <tr>
+                    <th>Select</th>
+                    <th>S.No</th>
+                    <th>Year</th>
+                    <th>Semester</th>
+                    <th>Section</th>
+                    <th>Competition Name</th>
+                    <th>Date</th>
+                    <th>Prize</th>
+                    <th>Status</th>
+                    <th>View</th>
+                    <th>Download</th>
+                  </tr>
                 </thead>
                 <tbody>
-                    {getFilteredAndSortedAchievements().map((achievement, index) => (
-                      <TableRow 
-                        key={achievement.id} 
-                        {...achievement} 
-                        no={index + 1} 
-                        selected={selectedRows.includes(achievement.id)} 
-                        onSelect={handleRowSelect} 
-                        onViewFile={(fileName, fileData) => handleViewFile(fileName, fileData, achievement.id)}
-                        fileData={achievement.fileData || achievement.fileContent}
-                        fileName={achievement.fileName}
-                        achievements={achievements}
-                      />
-                    ))}
+                  {filteredAchievements.map((achievement, index) => (
+                    <TableRow 
+                      key={achievement.id} 
+                      {...achievement} 
+                      no={index + 1} 
+                      selected={selectedRows.includes(achievement.id)} 
+                      onSelect={handleRowSelect} 
+                      onViewFile={() => handleViewFile(achievement.fileName, achievement.fileData || achievement.fileContent, achievement.id)}
+                      onDownloadFile={() => handleDownloadPDF(achievement)}
+                      fileData={achievement.fileData || achievement.fileContent}
+                      fileName={achievement.fileName}
+                      achievements={achievements}
+                    />
+                  ))}
                 </tbody>
               </table>
             )}
@@ -1642,23 +1790,37 @@ function AchievementsContent() {
           />
         </div>
       )}
+
+      {/* NEW: Download/Preview Popup Components */}
+      <DownloadProgressAlert 
+        isOpen={downloadPopupState === 'progress'} 
+        progress={downloadProgress} 
+      />
+      
+      <DownloadSuccessAlert 
+        isOpen={downloadPopupState === 'success'} 
+        onClose={closeDownloadPopup} 
+      />
+      
+      <DownloadFailedAlert 
+        isOpen={downloadPopupState === 'failed'} 
+        onClose={closeDownloadPopup} 
+      />
+      
+      <PreviewProgressAlert 
+        isOpen={previewPopupState === 'progress'} 
+        progress={previewProgress} 
+      />
+      
+      <PreviewFailedAlert 
+        isOpen={previewPopupState === 'failed'} 
+        onClose={closePreviewPopup} 
+      />
     </>
   );
 }
 
-function TableRow({ id, no, year, semester, section, comp, date, prize, status, selected, onSelect, fileName, fileData, onViewFile, achievements }) {
-  const handleDownload = () => { 
-    // Check if we have fileData in the current achievement
-    const currentAchievement = achievements?.find(a => a.id === id);
-    const fileToDownload = currentAchievement?.fileData || fileData;
-    
-    if (fileToDownload) { 
-      // Use fileStorageService to download the base64 file
-      fileStorageService.downloadFile(fileToDownload, fileName || 'certificate.pdf');
-    } else { 
-      alert('No file available'); 
-    } 
-  };
+function TableRow({ id, no, year, semester, section, comp, date, prize, status, selected, onSelect, fileName, fileData, onViewFile, onDownloadFile, achievements }) {
   const statusClass = `achievements-status-pill achievements-status-${status}`;
   
   // MODIFIED: This function correctly formats 'YYYY-MM-DD' to 'dd-MM-yyyy' for display.
@@ -1676,8 +1838,8 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
       <td data-label="Date">{displayDate}</td>
       <td data-label="Prize">{prize}</td>
       <td data-label="Status"><span className={statusClass}>{status?.charAt(0).toUpperCase() + status?.slice(1) || 'N/A'}</span></td>
-      <td data-label="View"><button onClick={() => onViewFile(fileName, fileData)} className="table-action-btn"> <EyeIcon /> </button></td>
-      <td data-label="Download"><button onClick={handleDownload} className="table-action-btn"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#2276fc" strokeWidth="2"/><polyline points="7,10 12,15 17,10" stroke="#2276fc" strokeWidth="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="#2276fc" strokeWidth="2"/></svg> </button></td>
+      <td data-label="View"><button onClick={onViewFile} className="table-action-btn"> <EyeIcon /> </button></td>
+      <td data-label="Download"><button onClick={onDownloadFile} className="table-action-btn"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#2276fc" strokeWidth="2"/><polyline points="7,10 12,15 17,10" stroke="#2276fc" strokeWidth="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="#2276fc" strokeWidth="2"/></svg> </button></td>
     </tr>
   );
 }

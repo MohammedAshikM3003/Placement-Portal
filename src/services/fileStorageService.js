@@ -108,7 +108,7 @@ class FileStorageService {
       }
     } catch (error) {
       console.error('Error previewing file:', error);
-      alert('Unable to preview file. Please try downloading it instead.');
+      throw error; // Let the calling function handle the error
     }
   }
 
@@ -125,17 +125,30 @@ class FileStorageService {
 
   // OPTIMIZED: Ultra-fast PDF preview
   openPDFPreview(base64String) {
-    // OPTIMIZED: Minimal HTML for faster rendering
-    const newWindow = window.open('', '_blank', 'width=800,height=600');
-    newWindow.document.write(`
-      <html>
-        <head><title>PDF Preview</title></head>
-        <body style="margin:0;padding:0;">
-          <iframe src="${base64String}" style="width:100%;height:100vh;border:none;"></iframe>
-        </body>
-      </html>
-    `);
-    newWindow.document.close();
+    try {
+      // OPTIMIZED: Minimal HTML for faster rendering
+      const newWindow = window.open('', '_blank', 'width=800,height=600');
+      
+      if (!newWindow) {
+        // Popup blocked - try direct window.open with data URL
+        window.open(base64String, '_blank');
+        return;
+      }
+      
+      newWindow.document.write(`
+        <html>
+          <head><title>PDF Preview</title></head>
+          <body style="margin:0;padding:0;">
+            <iframe src="${base64String}" style="width:100%;height:100vh;border:none;"></iframe>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    } catch (error) {
+      // Fallback: try direct window.open
+      console.log('Fallback: Opening PDF directly');
+      window.open(base64String, '_blank');
+    }
   }
 
   // OPTIMIZED: Ultra-fast DOC preview
