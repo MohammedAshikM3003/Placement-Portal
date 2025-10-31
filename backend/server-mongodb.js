@@ -83,11 +83,31 @@ const resumeSchema = new mongoose.Schema({
 const Resume = mongoose.model('Resume', resumeSchema, 'resume');
 
 // In-memory storage fallback (only used when MongoDB Atlas is not available)
-let students = [];
+let students = [
+    {
+        _id: 'student_73152313074',
+        regNo: '73152313074',
+        dob: '30032006',
+        firstName: 'Mohammed',
+        lastName: 'Ashik M',
+        primaryEmail: 'mohammedashikm3003@gmail.com',
+        branch: 'Computer Science',
+        degree: 'B.Tech',
+        loginPassword: '30032006'
+    }
+];
 let users = [];
 let resumeAnalyses = [];
 let resumes = [];
-let certificates = [];
+let certificates = [
+    {
+        _id: 'cert_1',
+        studentId: 'student_73152313074',
+        achievementId: '1',
+        fileName: 'certificate1.pdf',
+        fileData: 'data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsO4DQoxIDAgb2JqCjw8Ci9UeXBlIC9DYXRhbG9nCi9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKL01lZGlhQm94IFswIDAgNTk1IDg0Ml0KPj4KZW5kb2JqCgozIDAgb2JqCjw8Ci9UeXBlIC9QYWdlCi9QYXJlbnQgMiAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNCAwIFIKPj4KPj4KL0NvbnRlbnRzIDUgMCBSCj4+CmVuZG9iagoKNCAwIG9iago8PAovVHlwZSAvRm9udAovU3VidHlwZSAvVHlwZTEKL0Jhc2VGb250IC9IZWx2ZXRpY2EKPj4KZW5kb2JqCgo1IDAgb2JqCjw8Ci9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCi9GMSA5IFRmCjEwIDc1MiBUZAooVGVzdCBDZXJ0aWZpY2F0ZSkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQ1IDAwMDAwIG4gCjAwMDAwMDAzMjIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MTYKJSVFT0YK'
+    }
+];
 
 // Middleware
 app.use(cors({
@@ -95,7 +115,6 @@ app.use(cors({
         'http://localhost:3000', 
         'http://127.0.0.1:3000',
         'https://placement--portal.vercel.app',
-        'https://placement-portal.vercel.app',
         'https://3nt1rq0-3000.inc1.devtunnels.ms',
         /https:\/\/.*\.vercel\.app$/,  // Allow all Vercel URLs
         /https:\/\/.*\.devtunnels\.ms$/  // Allow all VS Code tunnel URLs
