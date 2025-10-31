@@ -97,6 +97,7 @@ app.use(cors({
         'https://placement--portal.vercel.app',
         'https://placement-portal.vercel.app',
         'https://3nt1rq0-3000.inc1.devtunnels.ms',
+        /https:\/\/.*\.vercel\.app$/,  // Allow all Vercel URLs
         /https:\/\/.*\.devtunnels\.ms$/  // Allow all VS Code tunnel URLs
     ],
     credentials: true,
