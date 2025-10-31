@@ -268,7 +268,15 @@ function StuProfile({ onLogout, onViewChange }) {
             }
         } catch (error) {
             console.error('Error loading student data:', error);
-            alert('Error loading profile data. Please try refreshing the page.');
+            
+            // Check if it's a network error
+            if (error.message.includes('fetch') || error.message.includes('network')) {
+                alert('Network error. Please check your internet connection and try again.');
+            } else if (error.message.includes('404')) {
+                alert('Student data not found. Please ensure you are logged in correctly.');
+            } else {
+                alert('Error loading profile data. Please try refreshing the page or contact support if the issue persists.');
+            }
         }
     }, []);
 
