@@ -13,25 +13,65 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// MongoDB Connection
+// MongoDB Connection with improved reliability for serverless
 const connectDB = async () => {
     try {
         if (!process.env.MONGODB_URI) {
-            console.log('MONGODB_URI not found in .env-atlas file. Falling back to in-memory storage.');
+            console.log('MONGODB_URI not found. Falling back to in-memory storage.');
             return false;
         }
+
+        // Check if already connected
+        if (mongoose.connection.readyState === 1) {
+            console.log('✅ MongoDB already connected');
+            return true;
+        }
+
+        // Connection options optimized for serverless (Vercel)
         const conn = await mongoose.connect(process.env.MONGODB_URI, {
             serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000
+            socketTimeoutMS: 45000,
+            maxPoolSize: 10, // Limit connection pool size for serverless
+            minPoolSize: 1,
+            maxIdleTimeMS: 30000, // Close idle connections after 30s
+            connectTimeoutMS: 10000,
+            retryWrites: true,
+            // Disable buffering for serverless
+            bufferCommands: false,
+            bufferMaxEntries: 0
         });
+        
         console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
+        
+        // Handle connection events
+        mongoose.connection.on('error', (err) => {
+            console.error('MongoDB connection error:', err);
+        });
+
+        mongoose.connection.on('disconnected', () => {
+            console.log('MongoDB disconnected - will reconnect on next request');
+        });
+
+        mongoose.connection.on('reconnected', () => {
+            console.log('MongoDB reconnected');
+        });
+
         return true;
     } catch (error) {
-        // This will now log the FULL, detailed error to show the real problem
         console.error('--- MONGODB ATLAS CONNECTION FAILED ---');
-        console.error(error);
+        console.error('Error details:', error.message);
         console.log("---------------------------------------");
         console.log('Falling back to in-memory storage for development...');
+        
+        // Close any partial connection
+        if (mongoose.connection.readyState !== 0) {
+            try {
+                await mongoose.connection.close();
+            } catch (closeError) {
+                // Ignore close errors
+            }
+        }
+        
         return false;
     }
 };
