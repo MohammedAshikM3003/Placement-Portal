@@ -24,3 +24,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Temporary documentation files
+*-FIX.md
+*-GUIDE.md
+*-SETUP.md
+*-DEPLOYMENT.md
+*-MIGRATION.md
+*-TROUBLESHOOT.md
+forceDeploy.txt
+query

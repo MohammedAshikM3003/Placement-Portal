@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CoordinatorMain from './CoordinatorMain.js';
 import AnimatedLoader from './components/AnimatedLoader.js';
 import './CoordinatorAccess.css';
 
@@ -19,26 +18,32 @@ const CoordinatorAccess = () => {
       // Add a small delay to prevent glitch
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const coordinatorAuth = localStorage.getItem('coordinatorAuthenticated');
+      const coordinatorAuth = localStorage.getItem('isCoordinatorLoggedIn');
       if (coordinatorAuth === 'true') {
         setIsAuthenticated(true);
+        // Redirect to coordinator dashboard if already authenticated
+        navigate('/coordinator/dashboard', { replace: true });
       }
       setIsLoading(false);
     };
     
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();
     // Simple authentication - in production, this would be more secure
     if (credentials.username === 'coordinator' && credentials.password === 'coordinator123') {
       setIsAuthenticated(true);
-      // Store authentication state in localStorage
-      localStorage.setItem('coordinatorAuthenticated', 'true');
+      // Store authentication state in localStorage using the new keys
+      localStorage.setItem('isCoordinatorLoggedIn', 'true');
+      localStorage.setItem('coordinatorData', JSON.stringify({
+        username: credentials.username,
+        role: 'coordinator'
+      }));
       localStorage.setItem('coordinatorUsername', credentials.username);
       // Navigate to coordinator dashboard URL
-      navigate('/coo-dashboard', { replace: true });
+      navigate('/coordinator/dashboard', { replace: true });
     } else {
       alert('Invalid credentials. Use username: coordinator, password: coordinator123');
     }
@@ -47,8 +52,9 @@ const CoordinatorAccess = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
-    // Clear authentication state from localStorage
-    localStorage.removeItem('coordinatorAuthenticated');
+    // Clear authentication state from localStorage using new keys
+    localStorage.removeItem('isCoordinatorLoggedIn');
+    localStorage.removeItem('coordinatorData');
     localStorage.removeItem('coordinatorUsername');
     navigate('/coordinator', { replace: true });
   };
@@ -61,8 +67,9 @@ const CoordinatorAccess = () => {
     />;
   }
 
+  // If authenticated, this component should not render since routing will handle it
   if (isAuthenticated) {
-    return <CoordinatorMain onLogout={handleLogout} />;
+    return <AnimatedLoader message="Redirecting to dashboard..." />;
   }
 
   return (

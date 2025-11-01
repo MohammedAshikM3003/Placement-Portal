@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import RegistrationDebug from "./components/RegistrationDebug.js";
 import AnimatedLoader from "./components/AnimatedLoader.js";
 
@@ -19,12 +19,33 @@ const Achievements = lazy(() => import("./Student Pages/achievements.js"));
 const Company = lazy(() => import("./Student Pages/company.js"));
 const StuProfile = lazy(() => import("./Student Pages/StuProfile.js"));
 
+// Lazy load Coordinator components
+const CooDashboard = lazy(() => import("./Coordinator Pages/Coo_Dashboard.js"));
+const ManageStudents = lazy(() => import("./Coordinator Pages/ManageStudents.js"));
+const CompanyProfile = lazy(() => import("./Coordinator Pages/Companyprofile.js"));
+const CompanyDrive = lazy(() => import("./Coordinator Pages/CompanyDrive.js"));
+const CertificateVerification = lazy(() => import("./Coordinator Pages/CertificateVerification.js"));
+const EligibleStudents = lazy(() => import("./Coordinator Pages/CoEligiblestudents.js"));
+const CooAttendance = lazy(() => import("./Coordinator Pages/Attendance.js"));
+const PlacedStudents = lazy(() => import("./Coordinator Pages/PlacedStudents.js"));
+const ReportAnalysis = lazy(() => import("./Coordinator Pages/ReportAnalysismain.js"));
+const ReportAnalysisCW = lazy(() => import("./Coordinator Pages/ReportAnalysisCW.js"));
+const ReportAnalysisSW = lazy(() => import("./Coordinator Pages/ReportAnalysisSW.js"));
+const CooProfile = lazy(() => import("./Coordinator Pages/Profile.js"));
+const ManageStudentsSemester = lazy(() => import("./Coordinator Pages/ManageStudentsSemester.js"));
+const ManageStudentsProfile = lazy(() => import("./Coordinator Pages/ManageStudentsProfile.js"));
+const CooViewpage = lazy(() => import("./Coordinator Pages/CooViewpage.js"));
+const CooViewMS = lazy(() => import("./Coordinator Pages/CooViewMS.js"));
+const CooViewPS = lazy(() => import("./Coordinator Pages/CooViewPS.js"));
+
 // This component now contains the main application logic
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("");
   const [userDepartment, setUserDepartment] = useState("");
+  const [isCoordinatorLoggedIn, setIsCoordinatorLoggedIn] = useState(false);
+  const [coordinatorData, setCoordinatorData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -32,22 +53,37 @@ function AppContent() {
       useEffect(() => {
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        const isCoordinatorLoggedIn = localStorage.getItem('isCoordinatorLoggedIn') === 'true';
+        const coordinatorData = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
         
-        console.log('App.js - Checking auth state:', { isLoggedIn, studentData }); // Debug log
+        console.log('App.js - Checking auth state:', { isLoggedIn, studentData, isCoordinatorLoggedIn, coordinatorData }); // Debug log
         
+        // Check student authentication
         if (isLoggedIn && studentData) {
           setIsLoggedIn(true);
           setUserEmail(studentData.primaryEmail || studentData.email || '');
           setUserRole('student');
           setUserDepartment(studentData.branch || '');
-          console.log('App.js - User authenticated:', studentData.firstName, studentData.lastName); // Debug log
+          console.log('App.js - Student authenticated:', studentData.firstName, studentData.lastName); // Debug log
         } else {
           setIsLoggedIn(false);
           setUserEmail('');
           setUserRole('');
           setUserDepartment('');
-          console.log('App.js - User not authenticated'); // Debug log
+          console.log('App.js - Student not authenticated'); // Debug log
         }
+
+        // Check coordinator authentication
+        if (isCoordinatorLoggedIn && coordinatorData) {
+          setIsCoordinatorLoggedIn(true);
+          setCoordinatorData(coordinatorData);
+          console.log('App.js - Coordinator authenticated:', coordinatorData); // Debug log
+        } else {
+          setIsCoordinatorLoggedIn(false);
+          setCoordinatorData(null);
+          console.log('App.js - Coordinator not authenticated'); // Debug log
+        }
+        
         setIsLoading(false);
       }, []);
 
@@ -71,11 +107,30 @@ function AppContent() {
           console.error('Logout error:', error);
         }
       };
+
+      const handleCoordinatorLogout = async () => {
+        try {
+          // Clear coordinator localStorage
+          localStorage.removeItem('coordinatorData');
+          localStorage.removeItem('isCoordinatorLoggedIn');
+          
+          setIsCoordinatorLoggedIn(false);
+          setCoordinatorData(null);
+          navigate("/"); // Redirect to landing page on logout
+        } catch (error) {
+          console.error('Coordinator logout error:', error);
+        }
+      };
   
   // Handlers for navigation
   const handleViewChange = (view) => {
     // You can use a switch or if/else here to navigate to the correct route
     navigate(`/${view}`);
+  };
+
+  const handleCoordinatorViewChange = (view) => {
+    // Navigate to coordinator routes with proper prefix
+    navigate(`/coordinator/${view}`);
   };
 
   const handleRedirectToLogin = () => {
@@ -219,8 +274,95 @@ function AppContent() {
         <Route path="*" element={<PlacementPortalLogin onLogin={handleLogin} onNavigateToSignUp={() => navigate("/signup")} />} />
       )}
 
-      {/* Coordinator Routes - Available without authentication for now */}
-      <Route path="/coo-dashboard" element={<CoordinatorMain onLogout={() => navigate('/')} />} />
+      {/* Coordinator Routes - No Authentication Required */}
+      <Route path="/coordinator" element={<Navigate to="/coordinator/dashboard" replace />} />
+      <Route path="/coordinator/dashboard" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooDashboard onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/manage-students" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ManageStudents onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/company-profile" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CompanyProfile onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/company-drive" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CompanyDrive onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/certificate-verification" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CertificateVerification onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/eligible-students" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <EligibleStudents onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/attendance" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooAttendance onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/placed-students" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <PlacedStudents onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/report-analysis" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ReportAnalysis onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/report-analysis-cw" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ReportAnalysisCW onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/report-analysis-sw" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ReportAnalysisSW onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/profile" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooProfile onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/manage-students-semester" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ManageStudentsSemester onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/manage-students-profile" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <ManageStudentsProfile onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/coo-view-page" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooViewpage onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/coo-view-ms" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooViewMS onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      <Route path="/coordinator/coo-view-ps" element={
+        <Suspense fallback={<AnimatedLoader />}>
+          <CooViewPS onLogout={handleCoordinatorLogout} onViewChange={handleCoordinatorViewChange} />
+        </Suspense>
+      } />
+      {/* Redirect /coo-dashboard to /coordinator/dashboard for backward compatibility */}
+      <Route path="/coo-dashboard" element={<Navigate to="/coordinator/dashboard" replace />} />
     </Routes>
   );
 }

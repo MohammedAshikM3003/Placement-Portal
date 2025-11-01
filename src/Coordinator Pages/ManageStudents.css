@@ -1,34 +1,44 @@
  /* --- Base Layout --- */
- .co-ms-layout {
+.co-ms-layout {
     display: flex;
     min-height: 100vh;
     background-color: #f6f8fb;
 }
 
 .co-ms-main-content {
-    flex-grow: 1;
-    padding: 10px;
+    flex: 1;
+    padding: 50px 32px 15px 32px;
+    background: #fff;
+    overflow: hidden; /* CRITICAL: Prevents scrollbar on desktop */
+    transition: margin-left 0.3s ease-in-out;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    overflow-x: hidden;
+    min-height: calc(100vh - 65px);
+    max-height: calc(100vh - 80px); /* Prevent vertical overflow on desktop */
+    margin-left: 270px;
+    box-sizing: border-box;
 }
 
 /* Desktop scrollbar - red styling to match theme */
-.co-ms-main-content::-webkit-scrollbar {
-  width: 10px;
-}
-.co-ms-main-content::-webkit-scrollbar-track {
-  background: #f0f2f5;
-}
-.co-ms-main-content::-webkit-scrollbar-thumb {
-  background-color: #d23b42;
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
-.co-ms-main-content::-webkit-scrollbar-thumb:hover {
-  background-color: #b32d34;
-}
+  .co-ms-students-table tbody::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 15px;
+  }
+.co-ms-students-table tbody::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-ms-students-table tbody::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-ms-students-table tbody::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
 
 /* ---------------------------------------------------------------------- */
 /* Top Card (Filter and Actions) */
@@ -42,10 +52,27 @@
     margin-top: 20px;
     margin-right: 20px;
 }
-
+   .co-ms-table-container::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    height:12px;
+  }
+.co-ms-table-container::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-ms-table-container::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #c1bfbf;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-ms-table-container::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #c1bfbf;
+  }
 /* Filter Section */
 .co-ms-filter-section {
-    flex: 0 0 480px;
+    flex: 0 0 424px;
     background-color: #e8e8e8;
     padding: 20px;
     border-radius: 43px;
@@ -502,7 +529,7 @@
     font-size: 0.95rem;
     display: flex;
     flex-direction: column;
-    height: 268px;
+    height: 260px;
 }
 
 /* Table Header */
@@ -727,39 +754,36 @@
     display: inline-block;
     vertical-align: middle;
   }
-  
+  .coordinator-content-area {
+    flex: 1 1;
+    background: #fff;
+    margin-left: 270px;
+    transition: margin-left 0.3s 
+ease-in-out;
+overflow: hidden  ;
+}
 /* --- Responsive Adjustments --- */
 /* --- Responsive Adjustments --- */
 @media (max-width: 768px) {
-    
-    /* Global Container Adjustments for Mobile Scrolling (Transferred from Dashboard) */
+    /* CRITICAL: Enable scrolling on mobile following student page patterns */
     .co-ms-main-content {
-        padding: 15px; 
-        width: 100%;
-        margin-left: 0; 
-        min-height: auto;
+        padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 120px) 16px;
+        overflow-y: auto; /* ENABLE vertical scrolling */
         overflow-x: hidden;
-        /* CRITICAL: Enables Vertical Scroll for the entire page content */
-        overflow-y: auto;
+        max-height: none; /* Allow content to expand */
+        margin-left: 0; /* Remove sidebar margin */
+        min-height: 100vh;
+        -webkit-overflow-scrolling: touch;
+        background-color: #fff;
         box-sizing: border-box;
-        height: 100vh;
-    
+        /* Hide scrollbar on mobile like Coo_Dashboard.css */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
     }
 
-    /* Red scrollbar on mobile */
+    /* Hide scrollbar on mobile (Chrome, Safari, Opera) */
     .co-ms-main-content::-webkit-scrollbar {
-      width: 10px;
-    }
-    .co-ms-main-content::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-    .co-ms-main-content::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-    .co-ms-main-content::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
+      display: none;
     }
 
     /* Top and Bottom Card Resets (Stacking and positioning fixes) */
@@ -776,11 +800,26 @@
     .co-ms-bottom-card {
        margin: 20px auto;
         padding: 10px;
-        height: auto;
+        height: 329px;
         width: 100%; 
        max-width: 700px;
+       position: relative;
+       top: -27px;
     }
-
+ .co-ms-table-container::-webkit-scrollbar {
+      width: 10px;
+    }
+    .co-ms-table-container::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+    .co-ms-table-container::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+    .co-ms-table-container::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
     .co-ms-filter-section {
         flex: 1 1 100%; 
         width: 100%; 
@@ -790,7 +829,20 @@
         border-radius: 20px; 
         margin-top: 60px;
     }
-    
+         .co-ms-students-table tbody::-webkit-scrollbar {
+      width: 10px;
+    }
+        .co-ms-students-table tbody::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-ms-students-table tbody::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-ms-students-table tbody::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
     .co-ms-filter-content {
         display: flex;
         flex-direction: column;
@@ -809,10 +861,24 @@
     .co-ms-dropdown-container-dept,
     .co-ms-dropdown-container-batch {
         width: 100%;
+        max-width: 100% !important; /* Remove max-width constraint on mobile */
         left: 0 !important;
         top: 0 !important;
         margin-top: 0 !important;
         margin-bottom: 15px;
+    }
+    
+    /* Ensure input fields use full width on mobile */
+    .co-ms-floating-input,
+    .co-ms-floating-select {
+        width: 100%;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure dropdown containers use full width */
+    .co-ms-dropdown-container-dept,
+    .co-ms-dropdown-container-batch {
+        max-width: 100% !important;
     }
 
     /* Button Group */
@@ -869,7 +935,7 @@
     .co-ms-students-table tbody {
         display: block; 
         width: 100%; 
-        max-height: 250px; 
+        max-height: 198px; 
         overflow-y: auto; 
         overflow-x: hidden;
     }

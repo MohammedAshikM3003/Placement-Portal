@@ -13,57 +13,103 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// MongoDB Connection with improved reliability for serverless
-const connectDB = async () => {
+// ========================================
+// BULLETPROOF MONGODB CONNECTION (24/7 Reliability)
+// ========================================
+
+// Connection state management
+let connectionAttempts = 0;
+const MAX_RETRIES = 5;
+const RETRY_DELAYS = [1000, 2000, 5000, 10000, 15000]; // Exponential backoff
+
+// Robust MongoDB connection with automatic retry and reconnection
+const connectDB = async (retryCount = 0) => {
     try {
         if (!process.env.MONGODB_URI) {
-            console.log('MONGODB_URI not found. Falling back to in-memory storage.');
+            console.log('⚠️ MONGODB_URI not found. Using in-memory storage.');
             return false;
         }
 
-        // Check if already connected
+        // Check if already connected and healthy
         if (mongoose.connection.readyState === 1) {
-            console.log('✅ MongoDB already connected');
-            return true;
+            // Verify connection is actually working
+            try {
+                await mongoose.connection.db.admin().ping();
+                return true;
+            } catch (pingError) {
+                console.log('⚠️ Connection exists but ping failed, reconnecting...');
+                // Force disconnect to reconnect fresh
+                await mongoose.connection.close().catch(() => {});
+            }
         }
 
-        // Connection options optimized for serverless (Vercel)
-        const conn = await mongoose.connect(process.env.MONGODB_URI, {
-            serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000,
-            maxPoolSize: 10, // Limit connection pool size for serverless
+        // Close any existing partial connection
+        if (mongoose.connection.readyState !== 0) {
+            try {
+                await mongoose.connection.close();
+            } catch (closeError) {
+                // Ignore - already closed or wasn't connected
+            }
+        }
+
+        // Advanced connection options for maximum reliability
+        const connectionOptions = {
+            // Timeout settings
+            serverSelectionTimeoutMS: 15000, // Increased from 10s
+            socketTimeoutMS: 60000, // Increased from 45s
+            connectTimeoutMS: 15000, // Increased from 10s
+            
+            // Connection pooling for serverless
+            maxPoolSize: 10,
             minPoolSize: 1,
-            maxIdleTimeMS: 30000, // Close idle connections after 30s
-            connectTimeoutMS: 10000,
+            maxIdleTimeMS: 45000, // Keep connections alive longer
+            
+            // Retry and reliability
             retryWrites: true,
-            // Disable buffering for serverless
+            retryReads: true,
+            
+            // Serverless optimizations
             bufferCommands: false,
-            bufferMaxEntries: 0
-        });
+            bufferMaxEntries: 0,
+            
+            // Heartbeat to keep connection alive
+            heartbeatFrequencyMS: 10000,
+        };
+
+        console.log(`🔄 Attempting MongoDB connection (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`);
         
+        const conn = await mongoose.connect(process.env.MONGODB_URI, connectionOptions);
+        
+        // Verify connection with ping
+        await conn.connection.db.admin().ping();
+        
+        connectionAttempts = 0; // Reset on success
         console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
         
-        // Handle connection events
-        mongoose.connection.on('error', (err) => {
-            console.error('MongoDB connection error:', err);
-        });
-
-        mongoose.connection.on('disconnected', () => {
-            console.log('MongoDB disconnected - will reconnect on next request');
-        });
-
-        mongoose.connection.on('reconnected', () => {
-            console.log('MongoDB reconnected');
-        });
-
-        return true;
-    } catch (error) {
-        console.error('--- MONGODB ATLAS CONNECTION FAILED ---');
-        console.error('Error details:', error.message);
-        console.log("---------------------------------------");
-        console.log('Falling back to in-memory storage for development...');
+        // Set up comprehensive connection event handlers
+        setupConnectionHandlers();
         
-        // Close any partial connection
+        return true;
+        
+    } catch (error) {
+        connectionAttempts++;
+        
+        console.error(`❌ MongoDB connection failed (attempt ${retryCount + 1}):`, error.message);
+        
+        // Retry with exponential backoff
+        if (retryCount < MAX_RETRIES) {
+            const delay = RETRY_DELAYS[retryCount] || 15000;
+            console.log(`⏳ Retrying in ${delay/1000} seconds...`);
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return connectDB(retryCount + 1); // Recursive retry
+        }
+        
+        // All retries exhausted
+        console.error('❌ All MongoDB connection attempts failed. Using in-memory storage.');
+        console.error('Error details:', error.message);
+        
+        // Clean up any partial connection
         if (mongoose.connection.readyState !== 0) {
             try {
                 await mongoose.connection.close();
@@ -74,6 +120,67 @@ const connectDB = async () => {
         
         return false;
     }
+};
+
+// Set up connection event handlers for automatic reconnection
+function setupConnectionHandlers() {
+    // Remove existing listeners to prevent duplicates
+    mongoose.connection.removeAllListeners();
+    
+    mongoose.connection.on('error', (err) => {
+        console.error('⚠️ MongoDB connection error:', err.message);
+        // Don't close - let it auto-reconnect
+    });
+
+    mongoose.connection.on('disconnected', () => {
+        console.log('⚠️ MongoDB disconnected - will auto-reconnect on next request');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+        console.log('✅ MongoDB reconnected successfully');
+        connectionAttempts = 0;
+    });
+
+    mongoose.connection.on('connected', () => {
+        console.log('✅ MongoDB connection established');
+    });
+
+    // Handle connection timeout
+    mongoose.connection.on('timeout', () => {
+        console.warn('⚠️ MongoDB connection timeout');
+    });
+
+    // Handle close events
+    mongoose.connection.on('close', () => {
+        console.log('ℹ️ MongoDB connection closed');
+    });
+}
+
+// Ensure connection is healthy before operations
+const ensureConnection = async () => {
+    if (mongoose.connection.readyState === 1) {
+        try {
+            // Quick ping to verify connection is alive
+            await mongoose.connection.db.admin().ping();
+            return true;
+        } catch (error) {
+            console.log('⚠️ Connection ping failed, reconnecting...');
+            // Connection exists but not working - reconnect
+            await mongoose.connection.close().catch(() => {});
+            return connectDB();
+        }
+    } else if (mongoose.connection.readyState === 0) {
+        // Not connected - connect now
+        return connectDB();
+    }
+    
+    // Connecting (readyState 2) - wait a bit and check again
+    if (mongoose.connection.readyState === 2) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return ensureConnection();
+    }
+    
+    return false;
 };
 
 // MongoDB Models
@@ -191,46 +298,101 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Middleware to ensure DB is initialized before handling requests (for Vercel serverless)
-// Define startServer function first
+// Database initialization flag (for serverless lazy initialization)
+let dbInitialized = false;
+
+// Start server function
 const startServer = async () => {
-    const isMongoConnected = await connectDB();
-    console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
-    return isMongoConnected;
+    try {
+        const isMongoConnected = await ensureConnection();
+        console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
+        return isMongoConnected;
+    } catch (error) {
+        console.error('Database initialization error:', error.message);
+        return false;
+    }
 };
 
-// Middleware to initialize DB on first request (for Vercel serverless)
-// Vercel runs in serverless mode, so we need to initialize on first request
+// Bulletproof middleware - ensures MongoDB connection before EVERY request
 app.use(async (req, res, next) => {
-    if (!dbInitialized) {
-        // Only initialize once, and skip if we're in dev mode with server running
-        if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-            try {
+    try {
+        // Initialize on first request (serverless)
+        if (!dbInitialized) {
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
                 await startServer();
                 dbInitialized = true;
-            } catch (error) {
-                console.error('Failed to initialize database:', error);
-                dbInitialized = true; // Mark as initialized to prevent retry loops
             }
+        } else {
+            // On subsequent requests, ensure connection is still healthy
+            // This automatically reconnects if connection was lost
+            await ensureConnection();
         }
+    } catch (error) {
+        console.error('Connection check error:', error.message);
+        // Continue anyway - fallback to in-memory if needed
     }
     next();
 });
 
 // --- API Routes ---
 
-// Health check
+// Health check with connection verification
 app.get('/api/health', async (req, res) => {
-    const actualConnectionStatus = mongoose.connection.readyState === 1;
-    res.json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        database: actualConnectionStatus ? 'MongoDB Atlas' : 'In-Memory Storage',
-        connection: actualConnectionStatus ? 'Connected' : 'Fallback Mode',
-        students: actualConnectionStatus ? 'Check MongoDB' : students.length,
-        analyses: actualConnectionStatus ? 'Check MongoDB' : resumeAnalyses.length,
-        note: actualConnectionStatus ? 'MongoDB Atlas connected successfully' : 'MongoDB Atlas connection failed. Using in-memory storage for development.'
-    });
+    try {
+        // Verify connection is actually working (not just reported as connected)
+        let connectionWorking = false;
+        
+        if (mongoose.connection.readyState === 1) {
+            try {
+                await mongoose.connection.db.admin().ping();
+                connectionWorking = true;
+            } catch (pingError) {
+                // Connection exists but not working - try to reconnect
+                console.log('Health check: Connection ping failed, attempting reconnect...');
+                connectionWorking = await ensureConnection();
+            }
+        } else {
+            // Not connected - try to connect
+            connectionWorking = await ensureConnection();
+        }
+
+        let studentCount = 0;
+        let analysisCount = 0;
+
+        if (connectionWorking) {
+            try {
+                studentCount = await Student.countDocuments();
+                analysisCount = await ResumeAnalysis.countDocuments();
+            } catch (countError) {
+                console.error('Health check: Error counting documents:', countError.message);
+                connectionWorking = false; // If we can't query, connection isn't working
+            }
+        } else {
+            studentCount = students.length;
+            analysisCount = resumeAnalyses.length;
+        }
+
+        res.json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            database: connectionWorking ? 'MongoDB Atlas' : 'In-Memory Storage',
+            connection: connectionWorking ? 'Connected ✅' : 'Fallback Mode',
+            students: studentCount,
+            analyses: analysisCount,
+            connectionState: mongoose.connection.readyState,
+            note: connectionWorking 
+                ? 'MongoDB Atlas connected successfully ✅' 
+                : 'MongoDB Atlas connection failed. Using in-memory storage.'
+        });
+    } catch (error) {
+        res.json({
+            status: 'ERROR',
+            timestamp: new Date().toISOString(),
+            database: 'Unknown',
+            connection: 'Error',
+            error: error.message
+        });
+    }
 });
 
 // Student registration
@@ -326,17 +488,19 @@ app.post('/api/students', async (req, res) => {
     }
 });
 
-// Student login
+// Student login with bulletproof connection handling
 app.post('/api/students/login', async (req, res) => {
-    const isMongoConnected = mongoose.connection.readyState === 1;
     const { regNo, dob } = req.body;
     let student;
 
     console.log('=== LOGIN ATTEMPT ===');
     console.log('RegNo:', regNo, 'DOB:', dob);
-    console.log('MongoDB connected:', isMongoConnected);
 
     try {
+        // Ensure MongoDB connection before querying
+        const isMongoConnected = await ensureConnection();
+        console.log('MongoDB connected:', isMongoConnected);
+
         if (isMongoConnected) {
             console.log('Searching for student in MongoDB...');
             student = await Student.findOne({ regNo, dob });
@@ -357,7 +521,17 @@ app.post('/api/students/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+        // If MongoDB fails during login, try in-memory
+        try {
+            student = students.find(s => s.regNo === regNo && s.dob === dob);
+            if (student) {
+                const token = jwt.sign({ userId: student._id, regNo: student.regNo, role: 'student' }, JWT_SECRET, { expiresIn: '24h' });
+                return res.json({ message: 'Login successful (fallback mode)', token, student });
+            }
+        } catch (fallbackError) {
+            // Ignore fallback errors
+        }
+        res.status(500).json({ error: 'Login failed', details: error.message });
     }
 });
 

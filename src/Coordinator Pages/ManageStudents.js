@@ -586,7 +586,7 @@ function Comanagestud({ onLogout, currentView, onViewChange }) {
                                                 </td>
                                                 <td onClick={() => {
                                     if (onViewChange) {
-                                        onViewChange('coo-view-page');
+                                        onViewChange('coo-view-ms');
                                     }
                                 }} className="co-ms-td co-ms-profile">
                                                
