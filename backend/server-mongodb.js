@@ -265,42 +265,63 @@ let certificates = [
     }
 ];
 
-// Middleware - CORS configuration (MUST BE FIRST)
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'https://placement--portal.vercel.app',
-            'https://placement-portal.vercel.app',
-            'https://3nt1rq0-3000.inc1.devtunnels.ms'
-        ];
-        
-        // Check if origin is in allowed list
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        
-        // Check if origin matches Vercel pattern
-        if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.devtunnels\.ms$/.test(origin)) {
-            return callback(null, true);
-        }
-        
-        // Allow the request
-        callback(null, true);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200 // Some legacy browsers (IE11) choke on 204
-}));
+// Middleware - CORS configuration (MUST BE FIRST - CRITICAL!)
+// This must work even if everything else fails
+try {
+    app.use(cors({
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+            
+            const allowedOrigins = [
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+                'https://placement--portal.vercel.app',
+                'https://placement-portal.vercel.app',
+                'https://3nt1rq0-3000.inc1.devtunnels.ms'
+            ];
+            
+            // Check if origin is in allowed list
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            
+            // Check if origin matches Vercel pattern
+            if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.devtunnels\.ms$/.test(origin)) {
+                return callback(null, true);
+            }
+            
+            // Allow all origins for now (can be restricted later)
+            callback(null, true);
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+        exposedHeaders: ['Content-Type', 'Authorization'],
+        optionsSuccessStatus: 200 // Some legacy browsers (IE11) choke on 204
+    }));
 
-// Handle preflight OPTIONS requests explicitly
-app.options('*', cors());
+    // Handle preflight OPTIONS requests explicitly - CRITICAL!
+    app.options('*', (req, res) => {
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.status(200).end();
+    });
+} catch (corsError) {
+    console.error('CORS setup error:', corsError);
+    // If CORS fails, use basic CORS
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+        next();
+    });
+}
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -347,37 +368,40 @@ const startServer = async () => {
 
 // Bulletproof middleware - ensures MongoDB connection before EVERY request
 // BUT: Don't block requests - connection check should be non-blocking
-app.use(async (req, res, next) => {
-    try {
-        // Skip connection check for OPTIONS requests (preflight)
-        if (req.method === 'OPTIONS') {
-            return next();
-        }
-        
-        // Initialize on first request (serverless) - non-blocking
-        if (!dbInitialized) {
-            if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-                // Don't await - initialize in background to avoid blocking
-                startServer().catch(err => {
-                    console.error('Background DB initialization error:', err.message);
-                });
-                dbInitialized = true;
-            }
-        } else {
-            // On subsequent requests, check connection - but don't block
-            // Only check if not already connected to avoid blocking requests
-            if (mongoose.connection.readyState !== 1) {
-                ensureConnection().catch(err => {
-                    console.error('Background connection check error:', err.message);
-                });
-            }
-        }
-    } catch (error) {
-        console.error('Connection check error:', error.message);
-        // Continue anyway - don't crash the function
+// IMPORTANT: This middleware must NEVER throw or the function will crash
+app.use((req, res, next) => {
+    // CRITICAL: Handle OPTIONS requests immediately without any async operations
+    if (req.method === 'OPTIONS') {
+        return next();
     }
     
-    // Always proceed - don't block requests waiting for DB
+    // Initialize DB in background (fire and forget)
+    if (!dbInitialized) {
+        if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+            // Mark as initialized immediately to prevent multiple attempts
+            dbInitialized = true;
+            
+            // Start in background - don't await or block
+            Promise.resolve().then(() => {
+                return startServer();
+            }).catch(err => {
+                console.error('Background DB initialization error:', err?.message || err);
+            });
+        }
+    } else {
+        // On subsequent requests, only check if definitely not connected
+        // Don't do any async operations here - just proceed
+        if (mongoose.connection.readyState === 0) {
+            // Start connection in background
+            Promise.resolve().then(() => {
+                return ensureConnection();
+            }).catch(err => {
+                console.error('Background connection check error:', err?.message || err);
+            });
+        }
+    }
+    
+    // Always proceed immediately - don't wait for anything
     next();
 });
 
@@ -543,7 +567,7 @@ app.post('/api/students', async (req, res) => {
     }
 });
 
-// Student login with bulletproof connection handling
+// Student login with bulletproof connection handling (non-blocking)
 app.post('/api/students/login', async (req, res) => {
     const { regNo, dob } = req.body;
     let student;
@@ -552,15 +576,30 @@ app.post('/api/students/login', async (req, res) => {
     console.log('RegNo:', regNo, 'DOB:', dob);
 
     try {
-        // Ensure MongoDB connection before querying
-        const isMongoConnected = await ensureConnection();
-        console.log('MongoDB connected:', isMongoConnected);
+        // Check MongoDB connection status (non-blocking)
+        const connectionState = mongoose.connection.readyState;
+        const isMongoConnected = connectionState === 1;
+        
+        console.log('MongoDB connection state:', connectionState, 'Connected:', isMongoConnected);
 
+        // Try MongoDB first (with timeout)
         if (isMongoConnected) {
-            console.log('Searching for student in MongoDB...');
-            student = await Student.findOne({ regNo, dob });
-            console.log('Student found:', student ? 'YES' : 'NO');
-        } else {
+            try {
+                console.log('Searching for student in MongoDB...');
+                const findPromise = Student.findOne({ regNo, dob });
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Query timeout')), 10000)
+                );
+                student = await Promise.race([findPromise, timeoutPromise]);
+                console.log('Student found:', student ? 'YES' : 'NO');
+            } catch (mongoError) {
+                console.log('MongoDB query failed:', mongoError.message);
+                // Fall through to in-memory
+            }
+        }
+
+        // Fallback to in-memory if MongoDB not available or query failed
+        if (!student) {
             console.log('Using in-memory storage...');
             student = students.find(s => s.regNo === regNo && s.dob === dob);
         }
@@ -569,24 +608,58 @@ app.post('/api/students/login', async (req, res) => {
             console.log('Student not found, returning 404');
             return res.status(404).json({ error: 'Student not found.' });
         }
+        
         console.log('Login successful for:', regNo);
         
-        const token = jwt.sign({ userId: student._id, regNo: student.regNo, role: 'student' }, JWT_SECRET, { expiresIn: '24h' });
-        res.json({ message: 'Login successful', token, student });
+        // Generate token
+        const token = jwt.sign({ 
+            userId: student._id || student.id, 
+            regNo: student.regNo, 
+            role: 'student' 
+        }, JWT_SECRET, { expiresIn: '24h' });
+        
+        res.json({ 
+            message: 'Login successful', 
+            token, 
+            student: {
+                _id: student._id || student.id,
+                regNo: student.regNo,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                primaryEmail: student.primaryEmail || student.email,
+                branch: student.branch,
+                degree: student.degree
+            }
+        });
 
     } catch (error) {
         console.error('Login error:', error);
-        // If MongoDB fails during login, try in-memory
+        
+        // Final fallback - try in-memory
         try {
             student = students.find(s => s.regNo === regNo && s.dob === dob);
             if (student) {
-                const token = jwt.sign({ userId: student._id, regNo: student.regNo, role: 'student' }, JWT_SECRET, { expiresIn: '24h' });
-                return res.json({ message: 'Login successful (fallback mode)', token, student });
+                const token = jwt.sign({ 
+                    userId: student._id || student.id, 
+                    regNo: student.regNo, 
+                    role: 'student' 
+                }, JWT_SECRET, { expiresIn: '24h' });
+                
+                return res.json({ 
+                    message: 'Login successful (fallback mode)', 
+                    token, 
+                    student 
+                });
             }
         } catch (fallbackError) {
-            // Ignore fallback errors
+            console.error('Fallback login error:', fallbackError.message);
         }
-        res.status(500).json({ error: 'Login failed', details: error.message });
+        
+        // Return error response
+        res.status(500).json({ 
+            error: 'Login failed', 
+            details: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message 
+        });
     }
 });
 
@@ -1172,16 +1245,27 @@ function getBasicAnalysisResult() {
 // For development - start server
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, async () => {
-        await startServer();
-        dbInitialized = true;
-        console.log(`Placement Portal Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`Status: Ready for development`);
+        try {
+            await startServer();
+            dbInitialized = true;
+            console.log(`Placement Portal Server running on port ${PORT}`);
+            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`Status: Ready for development`);
+        } catch (error) {
+            console.error('Server startup error:', error);
+            console.log('Server running without MongoDB connection');
+        }
     });
 } else {
     // In production (Vercel), DB initialization happens via middleware on first request
     // This ensures the serverless function can start quickly
-    console.log('Serverless mode: DB will initialize on first request');
+    // Don't do anything here - let middleware handle it
+    try {
+        console.log('Serverless mode: DB will initialize on first request');
+    } catch (error) {
+        // Even console.log can fail in some cases, so wrap it
+        // Ignore and continue - function must export successfully
+    }
 }
 
 // Global error handler - prevents function crashes
@@ -1200,4 +1284,24 @@ app.use((req, res) => {
 });
 
 // Export for Vercel - must export the app directly
-module.exports = app;
+// Wrap in try-catch to ensure export always succeeds
+try {
+    module.exports = app;
+} catch (error) {
+    // If export fails, create minimal app and export that
+    const express = require('express');
+    const minimalApp = express();
+    minimalApp.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+        next();
+    });
+    minimalApp.get('*', (req, res) => {
+        res.status(500).json({ error: 'Server initialization failed', message: error.message });
+    });
+    module.exports = minimalApp;
+}
