@@ -156,39 +156,66 @@ function setupConnectionHandlers() {
     });
 }
 
-// Ensure connection is healthy before operations
+// Ensure connection is healthy before operations - ALWAYS tries to connect
+// This makes MongoDB connection persistent and always connected
 const ensureConnection = async () => {
     try {
+        // If already connected, verify it's working
         if (mongoose.connection.readyState === 1) {
             try {
                 // Quick ping to verify connection is alive (with timeout)
                 const pingPromise = mongoose.connection.db.admin().ping();
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Ping timeout')), 5000)
+                    setTimeout(() => reject(new Error('Ping timeout')), 3000)
                 );
                 await Promise.race([pingPromise, timeoutPromise]);
-                return true;
+                return true; // Connection is working
             } catch (error) {
                 console.log('⚠️ Connection ping failed, reconnecting...');
-                // Connection exists but not working - reconnect
+                // Connection exists but not working - force reconnect
                 await mongoose.connection.close().catch(() => {});
-                return await connectDB();
+                // Retry connection
+                return await connectDB(0); // Start from retry 0
             }
-        } else if (mongoose.connection.readyState === 0) {
-            // Not connected - connect now
-            return await connectDB();
+        } 
+        
+        // Not connected (readyState 0) - ALWAYS try to connect
+        if (mongoose.connection.readyState === 0) {
+            console.log('🔄 MongoDB not connected, attempting connection...');
+            return await connectDB(0); // Start from retry 0
         }
         
-        // Connecting (readyState 2) - don't wait, just return false
-        // The connection will complete in background
+        // Connecting (readyState 2) - connection in progress
+        // Wait a bit and check again (for serverless, don't wait too long)
         if (mongoose.connection.readyState === 2) {
-            return false; // Don't block waiting for connection
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Check again after waiting
+            if (mongoose.connection.readyState === 1) {
+                return true;
+            }
+            // Still connecting or failed - try fresh connection
+            await mongoose.connection.close().catch(() => {});
+            return await connectDB(0);
         }
         
-        return false;
+        // Disconnecting (readyState 3) - close and reconnect
+        if (mongoose.connection.readyState === 3) {
+            await mongoose.connection.close().catch(() => {});
+            return await connectDB(0);
+        }
+        
+        // Default: try to connect
+        return await connectDB(0);
+        
     } catch (error) {
         console.error('ensureConnection error:', error.message);
-        return false; // Don't throw - just return false
+        // Even if error, try one more time
+        try {
+            await mongoose.connection.close().catch(() => {});
+            return await connectDB(0);
+        } catch (retryError) {
+            return false;
+        }
     }
 };
 
@@ -382,7 +409,7 @@ const startServer = async () => {
 };
 
 // Bulletproof middleware - ensures MongoDB connection before EVERY request
-// BUT: Don't block requests - connection check should be non-blocking
+// ALWAYS tries to connect if not connected - ensures persistent connection
 // IMPORTANT: This middleware must NEVER throw or the function will crash
 // NOTE: OPTIONS requests are already handled above, so they won't reach here
 app.use((req, res, next) => {
@@ -391,33 +418,43 @@ app.use((req, res, next) => {
         return next();
     }
     
-    // Initialize DB in background (fire and forget)
-    if (!dbInitialized) {
-        if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-            // Mark as initialized immediately to prevent multiple attempts
+    // ALWAYS try to ensure MongoDB connection is active
+    // This makes the connection persistent and always connected
+    if (mongoose.connection.readyState !== 1) {
+        // Not connected - try to connect in background
+        if (!dbInitialized) {
             dbInitialized = true;
-            
-            // Start in background - don't await or block
-            Promise.resolve().then(() => {
-                return startServer();
-            }).catch(err => {
-                console.error('Background DB initialization error:', err?.message || err);
-            });
         }
+        
+        // Start connection in background - fire and forget
+        Promise.resolve().then(async () => {
+            try {
+                await ensureConnection();
+                console.log('✅ MongoDB connection ensured on request');
+            } catch (err) {
+                console.error('Background connection error:', err?.message || err);
+            }
+        }).catch(err => {
+            console.error('Connection promise error:', err?.message || err);
+        });
     } else {
-        // On subsequent requests, only check if definitely not connected
-        // Don't do any async operations here - just proceed
-        if (mongoose.connection.readyState === 0) {
-            // Start connection in background
-            Promise.resolve().then(() => {
-                return ensureConnection();
-            }).catch(err => {
-                console.error('Background connection check error:', err?.message || err);
-            });
-        }
+        // Already connected - verify it's still working
+        Promise.resolve().then(async () => {
+            try {
+                // Quick ping to verify connection is alive
+                await mongoose.connection.db.admin().ping();
+            } catch (pingError) {
+                // Connection exists but not working - reconnect
+                console.log('⚠️ Connection ping failed, reconnecting...');
+                mongoose.connection.close().catch(() => {});
+                await ensureConnection();
+            }
+        }).catch(err => {
+            console.error('Connection verification error:', err?.message || err);
+        });
     }
     
-    // Always proceed immediately - don't wait for anything
+    // Always proceed immediately - don't wait for connection
     next();
 });
 
@@ -1273,11 +1310,21 @@ if (process.env.NODE_ENV !== 'production') {
         }
     });
 } else {
-    // In production (Vercel), DB initialization happens via middleware on first request
-    // This ensures the serverless function can start quickly
-    // Don't do anything here - let middleware handle it
+    // In production (Vercel), initialize DB connection immediately
+    // This ensures connection is ready when routes are called
     try {
-        console.log('Serverless mode: DB will initialize on first request');
+        console.log('Serverless mode: Initializing MongoDB connection...');
+        // Initialize in background - don't block export
+        Promise.resolve().then(async () => {
+            try {
+                await ensureConnection();
+                dbInitialized = true;
+                console.log('✅ MongoDB connection initialized in serverless mode');
+            } catch (error) {
+                console.error('MongoDB initialization error:', error.message);
+                // Connection will be retried on first request
+            }
+        });
     } catch (error) {
         // Even console.log can fail in some cases, so wrap it
         // Ignore and continue - function must export successfully
