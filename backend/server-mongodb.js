@@ -265,12 +265,53 @@ let certificates = [
     }
 ];
 
-// Middleware - CORS configuration (MUST BE FIRST - CRITICAL!)
-// This must work even if everything else fails
+// CRITICAL: CORS middleware - MUST be the FIRST middleware and handle OPTIONS IMMEDIATELY
+// Handle OPTIONS preflight requests FIRST - before anything else
+app.use((req, res, next) => {
+    // Get the origin from the request
+    const origin = req.headers.origin;
+    
+    // Set CORS headers for ALL requests
+    if (origin) {
+        // Check if origin should be allowed
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'https://placement--portal.vercel.app',
+            'https://placement-portal.vercel.app',
+            'https://3nt1rq0-3000.inc1.devtunnels.ms'
+        ];
+        
+        const isAllowed = allowedOrigins.includes(origin) || 
+                         /^https:\/\/.*\.vercel\.app$/.test(origin) || 
+                         /^https:\/\/.*\.devtunnels\.ms$/.test(origin);
+        
+        if (isAllowed) {
+            res.header('Access-Control-Allow-Origin', origin);
+        } else {
+            res.header('Access-Control-Allow-Origin', '*');
+        }
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Expose-Headers', 'Content-Type,Authorization');
+    
+    // CRITICAL: Handle OPTIONS preflight requests IMMEDIATELY
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
+    next();
+});
+
+// Also use cors middleware for additional support
 try {
     app.use(cors({
         origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps or curl requests)
             if (!origin) return callback(null, true);
             
             const allowedOrigins = [
@@ -281,46 +322,23 @@ try {
                 'https://3nt1rq0-3000.inc1.devtunnels.ms'
             ];
             
-            // Check if origin is in allowed list
-            if (allowedOrigins.includes(origin)) {
+            if (allowedOrigins.includes(origin) || 
+                /^https:\/\/.*\.vercel\.app$/.test(origin) || 
+                /^https:\/\/.*\.devtunnels\.ms$/.test(origin)) {
                 return callback(null, true);
             }
             
-            // Check if origin matches Vercel pattern
-            if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.devtunnels\.ms$/.test(origin)) {
-                return callback(null, true);
-            }
-            
-            // Allow all origins for now (can be restricted later)
             callback(null, true);
         },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
         exposedHeaders: ['Content-Type', 'Authorization'],
-        optionsSuccessStatus: 200 // Some legacy browsers (IE11) choke on 204
+        optionsSuccessStatus: 200
     }));
-
-    // Handle preflight OPTIONS requests explicitly - CRITICAL!
-    app.options('*', (req, res) => {
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.status(200).end();
-    });
 } catch (corsError) {
-    console.error('CORS setup error:', corsError);
-    // If CORS fails, use basic CORS
-    app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-        if (req.method === 'OPTIONS') {
-            return res.status(200).end();
-        }
-        next();
-    });
+    console.error('CORS middleware error:', corsError);
+    // Fallback is already handled above
 }
 
 app.use(express.json({ limit: '50mb' }));
@@ -351,9 +369,6 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Database initialization flag (for serverless lazy initialization)
-let dbInitialized = false;
-
 // Start server function
 const startServer = async () => {
     try {
@@ -369,8 +384,9 @@ const startServer = async () => {
 // Bulletproof middleware - ensures MongoDB connection before EVERY request
 // BUT: Don't block requests - connection check should be non-blocking
 // IMPORTANT: This middleware must NEVER throw or the function will crash
+// NOTE: OPTIONS requests are already handled above, so they won't reach here
 app.use((req, res, next) => {
-    // CRITICAL: Handle OPTIONS requests immediately without any async operations
+    // Skip OPTIONS (already handled in CORS middleware above)
     if (req.method === 'OPTIONS') {
         return next();
     }
