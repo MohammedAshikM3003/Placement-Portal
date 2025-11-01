@@ -158,29 +158,38 @@ function setupConnectionHandlers() {
 
 // Ensure connection is healthy before operations
 const ensureConnection = async () => {
-    if (mongoose.connection.readyState === 1) {
-        try {
-            // Quick ping to verify connection is alive
-            await mongoose.connection.db.admin().ping();
-            return true;
-        } catch (error) {
-            console.log('⚠️ Connection ping failed, reconnecting...');
-            // Connection exists but not working - reconnect
-            await mongoose.connection.close().catch(() => {});
-            return connectDB();
+    try {
+        if (mongoose.connection.readyState === 1) {
+            try {
+                // Quick ping to verify connection is alive (with timeout)
+                const pingPromise = mongoose.connection.db.admin().ping();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Ping timeout')), 5000)
+                );
+                await Promise.race([pingPromise, timeoutPromise]);
+                return true;
+            } catch (error) {
+                console.log('⚠️ Connection ping failed, reconnecting...');
+                // Connection exists but not working - reconnect
+                await mongoose.connection.close().catch(() => {});
+                return await connectDB();
+            }
+        } else if (mongoose.connection.readyState === 0) {
+            // Not connected - connect now
+            return await connectDB();
         }
-    } else if (mongoose.connection.readyState === 0) {
-        // Not connected - connect now
-        return connectDB();
+        
+        // Connecting (readyState 2) - don't wait, just return false
+        // The connection will complete in background
+        if (mongoose.connection.readyState === 2) {
+            return false; // Don't block waiting for connection
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('ensureConnection error:', error.message);
+        return false; // Don't throw - just return false
     }
-    
-    // Connecting (readyState 2) - wait a bit and check again
-    if (mongoose.connection.readyState === 2) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return ensureConnection();
-    }
-    
-    return false;
 };
 
 // MongoDB Models
@@ -256,20 +265,43 @@ let certificates = [
     }
 ];
 
-// Middleware
+// Middleware - CORS configuration (MUST BE FIRST)
 app.use(cors({
-    origin: [
-        'http://localhost:3000', 
-        'http://127.0.0.1:3000',
-        'https://placement--portal.vercel.app',
-        'https://3nt1rq0-3000.inc1.devtunnels.ms',
-        /https:\/\/.*\.vercel\.app$/,  // Allow all Vercel URLs
-        /https:\/\/.*\.devtunnels\.ms$/  // Allow all VS Code tunnel URLs
-    ],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'https://placement--portal.vercel.app',
+            'https://placement-portal.vercel.app',
+            'https://3nt1rq0-3000.inc1.devtunnels.ms'
+        ];
+        
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        // Check if origin matches Vercel pattern
+        if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.devtunnels\.ms$/.test(origin)) {
+            return callback(null, true);
+        }
+        
+        // Allow the request
+        callback(null, true);
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200 // Some legacy browsers (IE11) choke on 204
 }));
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors());
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -314,60 +346,80 @@ const startServer = async () => {
 };
 
 // Bulletproof middleware - ensures MongoDB connection before EVERY request
+// BUT: Don't block requests - connection check should be non-blocking
 app.use(async (req, res, next) => {
     try {
-        // Initialize on first request (serverless)
+        // Skip connection check for OPTIONS requests (preflight)
+        if (req.method === 'OPTIONS') {
+            return next();
+        }
+        
+        // Initialize on first request (serverless) - non-blocking
         if (!dbInitialized) {
             if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-                await startServer();
+                // Don't await - initialize in background to avoid blocking
+                startServer().catch(err => {
+                    console.error('Background DB initialization error:', err.message);
+                });
                 dbInitialized = true;
             }
         } else {
-            // On subsequent requests, ensure connection is still healthy
-            // This automatically reconnects if connection was lost
-            await ensureConnection();
+            // On subsequent requests, check connection - but don't block
+            // Only check if not already connected to avoid blocking requests
+            if (mongoose.connection.readyState !== 1) {
+                ensureConnection().catch(err => {
+                    console.error('Background connection check error:', err.message);
+                });
+            }
         }
     } catch (error) {
         console.error('Connection check error:', error.message);
-        // Continue anyway - fallback to in-memory if needed
+        // Continue anyway - don't crash the function
     }
+    
+    // Always proceed - don't block requests waiting for DB
     next();
 });
 
 // --- API Routes ---
 
-// Health check with connection verification
+// Health check with connection verification (non-blocking)
 app.get('/api/health', async (req, res) => {
     try {
-        // Verify connection is actually working (not just reported as connected)
+        // Quick check without blocking
+        const connectionState = mongoose.connection.readyState;
         let connectionWorking = false;
-        
-        if (mongoose.connection.readyState === 1) {
-            try {
-                await mongoose.connection.db.admin().ping();
-                connectionWorking = true;
-            } catch (pingError) {
-                // Connection exists but not working - try to reconnect
-                console.log('Health check: Connection ping failed, attempting reconnect...');
-                connectionWorking = await ensureConnection();
-            }
-        } else {
-            // Not connected - try to connect
-            connectionWorking = await ensureConnection();
-        }
-
         let studentCount = 0;
         let analysisCount = 0;
 
-        if (connectionWorking) {
+        // Check connection status
+        if (connectionState === 1) {
             try {
-                studentCount = await Student.countDocuments();
-                analysisCount = await ResumeAnalysis.countDocuments();
-            } catch (countError) {
-                console.error('Health check: Error counting documents:', countError.message);
-                connectionWorking = false; // If we can't query, connection isn't working
+                // Quick ping with timeout to avoid blocking
+                const pingPromise = mongoose.connection.db.admin().ping();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Ping timeout')), 3000)
+                );
+                await Promise.race([pingPromise, timeoutPromise]);
+                connectionWorking = true;
+                
+                // Get counts if connected
+                try {
+                    studentCount = await Student.countDocuments();
+                    analysisCount = await ResumeAnalysis.countDocuments();
+                } catch (countError) {
+                    console.error('Health check: Error counting documents:', countError.message);
+                }
+            } catch (pingError) {
+                // Ping failed - connection not working
+                connectionWorking = false;
             }
         } else {
+            connectionWorking = false;
+        }
+
+        // Use in-memory counts if not connected
+        if (!connectionWorking) {
             studentCount = students.length;
             analysisCount = resumeAnalyses.length;
         }
@@ -379,18 +431,21 @@ app.get('/api/health', async (req, res) => {
             connection: connectionWorking ? 'Connected ✅' : 'Fallback Mode',
             students: studentCount,
             analyses: analysisCount,
-            connectionState: mongoose.connection.readyState,
+            connectionState: connectionState,
             note: connectionWorking 
                 ? 'MongoDB Atlas connected successfully ✅' 
                 : 'MongoDB Atlas connection failed. Using in-memory storage.'
         });
     } catch (error) {
+        // Even if health check fails, return response
         res.json({
-            status: 'ERROR',
+            status: 'OK',
             timestamp: new Date().toISOString(),
             database: 'Unknown',
             connection: 'Error',
-            error: error.message
+            error: error.message,
+            students: students.length,
+            analyses: resumeAnalyses.length
         });
     }
 });
@@ -1128,6 +1183,21 @@ if (process.env.NODE_ENV !== 'production') {
     // This ensures the serverless function can start quickly
     console.log('Serverless mode: DB will initialize on first request');
 }
+
+// Global error handler - prevents function crashes
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(err.status || 500).json({
+        error: 'Internal Server Error',
+        message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message,
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found', path: req.path });
+});
 
 // Export for Vercel - must export the app directly
 module.exports = app;
