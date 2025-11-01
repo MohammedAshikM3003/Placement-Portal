@@ -126,6 +126,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Database initialization flag (for serverless lazy initialization)
+let dbInitialized = false;
+
 // File upload configuration (Multer)
 // Use memory storage for resume uploads to get file buffer for base64 conversion
 const upload = multer({ 
@@ -147,6 +150,32 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+// Middleware to ensure DB is initialized before handling requests (for Vercel serverless)
+// Define startServer function first
+const startServer = async () => {
+    const isMongoConnected = await connectDB();
+    console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
+    return isMongoConnected;
+};
+
+// Middleware to initialize DB on first request (for Vercel serverless)
+// Vercel runs in serverless mode, so we need to initialize on first request
+app.use(async (req, res, next) => {
+    if (!dbInitialized) {
+        // Only initialize once, and skip if we're in dev mode with server running
+        if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+            try {
+                await startServer();
+                dbInitialized = true;
+            } catch (error) {
+                console.error('Failed to initialize database:', error);
+                dbInitialized = true; // Mark as initialized to prevent retry loops
+            }
+        }
+    }
+    next();
+});
 
 // --- API Routes ---
 
@@ -869,26 +898,22 @@ function getBasicAnalysisResult() {
 
 
 // --- Server Startup Logic ---
-const startServer = async () => {
-    // Await the database connection before starting the listener
-    const isMongoConnected = await connectDB();
-    console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
-    return isMongoConnected;
-};
+// (startServer is already defined above in the middleware section)
 
-// For Vercel serverless deployment
+// For development - start server
 if (process.env.NODE_ENV !== 'production') {
-    // Only start server in development
     app.listen(PORT, async () => {
         await startServer();
+        dbInitialized = true;
         console.log(`Placement Portal Server running on port ${PORT}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`Status: Ready for development`);
     });
 } else {
-    // Initialize database connection for serverless
-    startServer();
+    // In production (Vercel), DB initialization happens via middleware on first request
+    // This ensures the serverless function can start quickly
+    console.log('Serverless mode: DB will initialize on first request');
 }
 
-// Export for Vercel
+// Export for Vercel - must export the app directly
 module.exports = app;
