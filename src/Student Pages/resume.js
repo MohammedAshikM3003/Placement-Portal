@@ -441,6 +441,7 @@ function MainContent({ onViewChange }) {
 
         console.log('🔄 Fetching resume data for student:', studentId);
         
+        const mongoDBService = (await import('../services/mongoDBService.js')).default;
         const resumeData = await mongoDBService.getResume(studentId);
         
         if (!isMounted) return;
