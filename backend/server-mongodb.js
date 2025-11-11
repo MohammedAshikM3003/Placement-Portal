@@ -882,6 +882,125 @@ app.put('/api/students/:id', async (req, res) => {
     }
 });
 
+// ⚡ SUPER FAST: Get complete student data (profile, resume, certificates) in ONE call
+app.get('/api/students/:studentId/complete', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { studentId } = req.params;
+    
+    try {
+        let studentData = null;
+        let resumeData = null;
+        let certificatesData = [];
+        
+        if (isMongoConnected) {
+            // Use Promise.all for parallel fetching - SUPER FAST!
+            const [student, resume, certificates] = await Promise.all([
+                Student.findById(studentId).lean(), // .lean() for faster queries
+                Resume.findOne({ studentId }).lean(),
+                Certificate.find({ studentId }).lean()
+            ]);
+            
+            studentData = student;
+            resumeData = resume;
+            certificatesData = certificates || [];
+        } else {
+            // In-memory fallback
+            studentData = students.find(s => (s._id || s.id) === studentId);
+            resumeData = resumes.find(r => r.studentId === studentId);
+            certificatesData = certificates.filter(c => c.studentId === studentId);
+        }
+        
+        if (!studentData) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+        
+        // Comprehensive response with all data
+        res.json({
+            success: true,
+            student: {
+                _id: studentData._id || studentData.id,
+                regNo: studentData.regNo,
+                firstName: studentData.firstName,
+                lastName: studentData.lastName,
+                primaryEmail: studentData.primaryEmail || studentData.email,
+                branch: studentData.branch,
+                degree: studentData.degree,
+                dob: studentData.dob,
+                profilePicURL: studentData.profilePicURL,
+                // Include all profile fields
+                ...studentData
+            },
+            resume: resumeData ? {
+                fileName: resumeData.fileName,
+                fileSize: resumeData.fileSize,
+                uploadedAt: resumeData.uploadedAt,
+                analysisResult: resumeData.analysisResult
+            } : null,
+            certificates: certificatesData.map(cert => ({
+                _id: cert._id || cert.id,
+                achievementId: cert.achievementId,
+                fileName: cert.fileName,
+                fileSize: cert.fileSize,
+                uploadDate: cert.uploadDate,
+                createdAt: cert.createdAt
+            })),
+            stats: {
+                totalCertificates: certificatesData.length,
+                hasResume: !!resumeData,
+                hasProfilePic: !!studentData.profilePicURL,
+                lastUpdated: new Date().toISOString()
+            }
+        });
+        
+    } catch (error) {
+        console.error('Complete student data fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch student data', details: error.message });
+    }
+});
+
+// Update student profile (including profile photo)
+app.put('/api/students/:studentId/profile', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { studentId } = req.params;
+    const updateData = req.body;
+    
+    try {
+        if (isMongoConnected) {
+            const updatedStudent = await Student.findByIdAndUpdate(
+                studentId, 
+                updateData, 
+                { new: true, runValidators: true }
+            );
+            
+            if (!updatedStudent) {
+                return res.status(404).json({ error: 'Student not found' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Profile updated successfully', 
+                student: updatedStudent 
+            });
+        } else {
+            // In-memory update
+            const studentIndex = students.findIndex(s => (s._id || s.id) === studentId);
+            if (studentIndex === -1) {
+                return res.status(404).json({ error: 'Student not found' });
+            }
+            
+            students[studentIndex] = { ...students[studentIndex], ...updateData };
+            res.json({ 
+                success: true, 
+                message: 'Profile updated successfully (in-memory)', 
+                student: students[studentIndex] 
+            });
+        }
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ error: 'Failed to update profile', details: error.message });
+    }
+});
+
 // Resume upload and analysis
 app.post('/api/resume/upload', upload.single('resume'), async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
@@ -1301,6 +1420,126 @@ function getBasicAnalysisResult() {
     };
 }
 
+
+// ⚡ SUPER FAST: Certificate upload endpoint
+app.post('/api/certificates/upload', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const certificateData = req.body;
+    
+    try {
+        if (!certificateData.studentId || !certificateData.fileName || !certificateData.fileData) {
+            return res.status(400).json({ error: 'Missing required fields: studentId, fileName, fileData' });
+        }
+        
+        console.log('🚀 FAST: Uploading certificate to MongoDB...', {
+            studentId: certificateData.studentId,
+            fileName: certificateData.fileName,
+            fileSize: certificateData.fileSize
+        });
+        
+        if (isMongoConnected) {
+            // Create new certificate in MongoDB
+            const newCertificate = new Certificate(certificateData);
+            await newCertificate.save();
+            
+            console.log('✅ Certificate uploaded to MongoDB:', newCertificate._id);
+            res.json({ 
+                success: true, 
+                message: 'Certificate uploaded successfully', 
+                certificate: newCertificate 
+            });
+        } else {
+            // In-memory storage fallback
+            const certificateWithId = {
+                ...certificateData,
+                id: Date.now().toString(),
+                _id: Date.now().toString()
+            };
+            certificates.push(certificateWithId);
+            
+            console.log('✅ Certificate stored in memory');
+            res.json({ 
+                success: true, 
+                message: 'Certificate uploaded successfully (in-memory)', 
+                certificate: certificateWithId 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Certificate upload error:', error);
+        res.status(500).json({ error: 'Failed to upload certificate', details: error.message });
+    }
+});
+
+// Delete certificate by studentId and achievementId
+app.delete('/api/certificates/student/:studentId/achievement/:achievementId', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { studentId, achievementId } = req.params;
+    
+    try {
+        if (isMongoConnected) {
+            const certificate = await Certificate.findOneAndDelete({ studentId, achievementId });
+            if (!certificate) {
+                return res.status(404).json({ error: 'Certificate not found' });
+            }
+            console.log('✅ Certificate deleted from MongoDB');
+            res.json({ success: true, message: 'Certificate deleted successfully' });
+        } else {
+            // In-memory storage fallback
+            const certificateIndex = certificates.findIndex(c => 
+                c.studentId === studentId && c.achievementId === achievementId
+            );
+            if (certificateIndex === -1) {
+                return res.status(404).json({ error: 'Certificate not found' });
+            }
+            certificates.splice(certificateIndex, 1);
+            console.log('✅ Certificate deleted from memory');
+            res.json({ success: true, message: 'Certificate deleted successfully (in-memory)' });
+        }
+    } catch (error) {
+        console.error('❌ Certificate delete error:', error);
+        res.status(500).json({ error: 'Failed to delete certificate', details: error.message });
+    }
+});
+
+// Update certificate by studentId and achievementId
+app.put('/api/certificates/student/:studentId/achievement/:achievementId', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { studentId, achievementId } = req.params;
+    const updateData = req.body;
+    
+    try {
+        if (isMongoConnected) {
+            const certificate = await Certificate.findOneAndUpdate(
+                { studentId, achievementId }, 
+                updateData, 
+                { new: true }
+            );
+            if (!certificate) {
+                return res.status(404).json({ error: 'Certificate not found' });
+            }
+            console.log('✅ Certificate updated in MongoDB');
+            res.json({ success: true, message: 'Certificate updated successfully', certificate });
+        } else {
+            // In-memory storage fallback
+            const certificateIndex = certificates.findIndex(c => 
+                c.studentId === studentId && c.achievementId === achievementId
+            );
+            if (certificateIndex === -1) {
+                return res.status(404).json({ error: 'Certificate not found' });
+            }
+            certificates[certificateIndex] = { ...certificates[certificateIndex], ...updateData };
+            console.log('✅ Certificate updated in memory');
+            res.json({ 
+                success: true, 
+                message: 'Certificate updated successfully (in-memory)', 
+                certificate: certificates[certificateIndex] 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Certificate update error:', error);
+        res.status(500).json({ error: 'Failed to update certificate', details: error.message });
+    }
+});
 
 // --- Server Startup Logic ---
 // (startServer is already defined above in the middleware section)

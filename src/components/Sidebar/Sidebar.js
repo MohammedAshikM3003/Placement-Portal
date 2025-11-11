@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Sidebar.css';
 import Adminicon from '../../assets/Adminicon.png';
+import fastDataService from '../../services/fastDataService.js';
 
 const sidebarItems = [
   { icon: require('../../assets/DashboardSideBarIcon.png'), text: 'Dashboard', view: 'dashboard' },
@@ -20,6 +21,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
       return null;
     }
   });
+  const [imageError, setImageError] = useState(false);
 
   // Update local state when studentData prop changes
   useEffect(() => {
@@ -38,25 +40,57 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     }
   }, [studentData]);
 
-  // Listen for profile updates
+  // ⚡ INSTANT: Listen for profile updates and fetch fresh data
   useEffect(() => {
-    const handleProfileUpdate = () => {
+    const handleProfileUpdate = async (event) => {
       try {
+        console.log('🔄 Sidebar: Profile update detected');
+        
+        // First, update from localStorage immediately
         const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (updatedStudentData) {
+          console.log('⚡ Sidebar: Updated from localStorage');
           setCurrentStudentData(updatedStudentData);
+          setImageError(false); // Reset image error when data updates
+        }
+        
+        // If we have event detail with fresh data, use that
+        if (event?.detail) {
+          console.log('⚡ Sidebar: Using fresh event data');
+          setCurrentStudentData(event.detail);
+        }
+        
+        // Also try to get instant cached data for profile photo
+        if (updatedStudentData?._id) {
+          const instantData = fastDataService.getInstantData(updatedStudentData._id);
+          if (instantData?.student?.profilePicURL) {
+            console.log('⚡ Sidebar: Updated profile photo from cache');
+            setCurrentStudentData(prev => ({
+              ...prev,
+              profilePicURL: instantData.student.profilePicURL
+            }));
+          }
         }
       } catch (error) {
-        console.error('Error updating sidebar student data:', error);
+        console.error('❌ Error updating sidebar student data:', error);
       }
     };
 
-    // Listen for custom events and storage changes
+    const handleStudentDataUpdate = (event) => {
+      if (event?.detail?.student) {
+        console.log('⚡ Sidebar: Student data update from fast service');
+        setCurrentStudentData(event.detail.student);
+      }
+    };
+
+    // Listen for multiple types of updates
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('studentDataUpdated', handleStudentDataUpdate);
     window.addEventListener('storage', handleProfileUpdate);
 
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('studentDataUpdated', handleStudentDataUpdate);
       window.removeEventListener('storage', handleProfileUpdate);
     };
   }, []);
@@ -65,10 +99,18 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="user-info">
         <div className="user-details">
-          {currentStudentData?.profilePicURL ? (
+          {currentStudentData?.profilePicURL && !imageError ? (
             <img 
               src={currentStudentData.profilePicURL} 
               alt="Profile" 
+              onError={() => {
+                console.log('❌ Sidebar: Profile image failed to load');
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('✅ Sidebar: Profile image loaded successfully');
+                setImageError(false);
+              }}
               style={{ 
                 width: '60px', 
                 height: '60px', 

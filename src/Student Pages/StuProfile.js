@@ -7,6 +7,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import './StuProfile.css';
 import Adminicons from '../assets/BlueAdminicon.png';
 import mongoDBService from '../services/mongoDBService.js';
+import fastDataService from '../services/fastDataService.js';
 
 // Helper components
 const MdUpload = () => (
@@ -236,51 +237,78 @@ function StuProfile({ onLogout, onViewChange }) {
 
     const loadStudentData = useCallback(async () => {
         try {
-            // Get stored credentials from login
-            const storedRegNo = localStorage.getItem('studentRegNo');
-            const storedDob = localStorage.getItem('studentDob');
+            const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
             
-            if (!storedRegNo || !storedDob) {
-                console.log('No login credentials found');
-                alert('Please log in to view your profile.');
+            if (!storedStudentData || !storedStudentData._id) {
+                console.log('No stored student data found');
                 return;
             }
             
-            console.log('Fetching student data from MongoDB with credentials:', { regNo: storedRegNo, dob: storedDob });
+            const studentId = storedStudentData._id || storedStudentData.id;
             
-            // Fetch fresh data from MongoDB
-            const mongoDBService = (await import('../services/mongoDBService.js')).default;
-            const studentData = await mongoDBService.getStudentByRegNoAndDob(storedRegNo, storedDob);
+            // ⚡ SUPER FAST: Get complete data in one call
+            console.log('🚀 Loading complete student data...');
+            const completeData = await fastDataService.getCompleteStudentData(studentId);
             
-            if (studentData) {
-                console.log('Successfully fetched student data from MongoDB:', studentData);
+            if (completeData && completeData.student) {
+                console.log('✅ INSTANT: Complete data loaded:', {
+                    student: !!completeData.student,
+                    resume: !!completeData.resume,
+                    certificates: completeData.certificates?.length || 0,
+                    hasProfilePic: completeData.stats?.hasProfilePic
+                });
                 
-                // Ensure we have the MongoDB _id as id
-                if (studentData._id && !studentData.id) {
-                    studentData.id = studentData._id;
+                // Populate form with complete data
+                populateFormFields(completeData.student);
+                
+                // Store additional data for other components
+                if (completeData.resume) {
+                    localStorage.setItem('resumeData', JSON.stringify(completeData.resume));
+                }
+                if (completeData.certificates) {
+                    localStorage.setItem('certificatesData', JSON.stringify(completeData.certificates));
                 }
                 
-                // Update with fresh data from API
-                populateFormFields(studentData);
             } else {
-                console.log('No student data found in MongoDB');
-                alert('Student data not found. Please check your registration.');
+                console.log('No complete data found');
+                // Fallback to old method if needed
+                const storedRegNo = localStorage.getItem('regNo');
+                const storedDob = localStorage.getItem('dob');
+                if (storedRegNo && storedDob) {
+                    const fallbackData = await mongoDBService.getStudentByRegNoAndDob(storedRegNo, storedDob);
+                    if (fallbackData) {
+                        populateFormFields(fallbackData);
+                    }
+                }
             }
         } catch (error) {
-            console.error('Error loading student data:', error);
-            alert('Error loading profile data. Please try refreshing the page.');
+            console.error('❌ Error loading complete student data:', error);
+            
+            // Fallback to localStorage data
+            const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+            if (storedStudentData) {
+                console.log('⚠️ Using localStorage fallback');
+                populateFormFields(storedStudentData);
+            }
         }
     }, []);
 
     useEffect(() => {
-        // First, load data from localStorage for instant display
+        // ⚡ INSTANT: Load data from cache/localStorage first
         const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData) {
-            console.log('Loading student data from localStorage for instant display:', storedStudentData);
+        if (storedStudentData && storedStudentData._id) {
+            console.log('⚡ INSTANT: Loading from localStorage:', storedStudentData);
             populateFormFields(storedStudentData);
+            
+            // Try to get instant cached data
+            const instantData = fastDataService.getInstantData(storedStudentData._id);
+            if (instantData && instantData.student) {
+                console.log('⚡ INSTANT: Using cached complete data');
+                populateFormFields(instantData.student);
+            }
         }
         
-        // Then fetch fresh data from API in background
+        // Then fetch fresh data from MongoDB in background
         loadStudentData();
     }, [loadStudentData]);
 
@@ -411,20 +439,17 @@ function StuProfile({ onLogout, onViewChange }) {
             console.log('Update data being sent:', updateData);
             console.log('Student ID being used:', studentId);
 
-            // Update MongoDB
-            await mongoDBService.updateStudent(studentId, updateData);
+            // ⚡ SUPER FAST: Update profile with instant cache update
+            console.log('🚀 FAST: Updating profile...');
+            const result = await fastDataService.updateProfile(studentId, updateData);
             
             // Update local state immediately
-            const updatedStudentData = { ...studentData, ...updateData };
+            const updatedStudentData = { ...studentData, ...result.student };
             setStudentData(updatedStudentData);
             
-            // Update localStorage ONLY after Save button is clicked
-            localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
+            console.log("✅ INSTANT: Profile updated in MongoDB with cache!");
             
-            console.log("Student data updated in MongoDB!");
-            
-            // Dispatch custom event to update sidebar and other pages ONLY after Save
-            window.dispatchEvent(new CustomEvent('profileUpdated'));
+            // Events are automatically dispatched by fastDataService
             
             // Show success popup after a short delay
             setTimeout(() => {

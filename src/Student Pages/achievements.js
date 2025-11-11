@@ -8,7 +8,8 @@ import UploadCertificatecardicon from '../assets/UploadCertificatecardicon.svg';
 import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 // import authService from '../services/authService.js';
 import mongoDBService from '../services/mongoDBService.js';
-import fileStorageService from '../services/fileStorageService.js';
+import certificateService from '../services/certificateService.js';
+import fastDataService from '../services/fastDataService.js';
 
 // NEW: Import download/preview alerts
 import { 
@@ -543,7 +544,7 @@ function AchievementsContent() {
   const handleClosePopup = () => setShowUploadPopup(false);
   const handleUploadSuccess = async (newAchievement) => {
     try {
-      console.log('=== UPLOAD START ===');
+      console.log('🚀 FAST: Starting certificate upload...');
       
       // Get student data from localStorage
       const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -551,152 +552,54 @@ function AchievementsContent() {
         throw new Error('User not authenticated. Please log in again.');
       }
 
-      console.log('Student data for upload:', studentData);
+      const studentId = studentData._id || studentData.id;
+      if (!studentId) {
+        throw new Error('Student ID not found. Please log in again.');
+      }
 
-      // Create achievement with unique ID
-      const achievementId = Date.now();
-      
-      // Create achievement WITHOUT fileData for Firebase (to avoid size limit)
-      const achievementForFirebase = {
-        id: achievementId.toString(),
-        reg: newAchievement.reg,
-        name: newAchievement.name,
-        year: newAchievement.year,
-        semester: newAchievement.semester,
-        section: newAchievement.section,
-        date: newAchievement.date,
-        comp: newAchievement.comp,
-        prize: newAchievement.prize,
-        status: "pending",
+      console.log('📋 Certificate data:', {
+        studentId,
         fileName: newAchievement.fileName,
-        uploadDate: newAchievement.uploadDate
-        // NO fileData field at all - this prevents document size limit issues
+        comp: newAchievement.comp
+      });
+
+      // ⚡ SUPER FAST: Upload directly to MongoDB
+      const result = await certificateService.uploadCertificate(
+        studentId,
+        newAchievement,
+        newAchievement.fileData
+      );
+
+      console.log('✅ Certificate uploaded successfully:', result.certificate._id);
+
+      // Update local state immediately
+      const newCertificate = {
+        ...result.certificate,
+        id: result.certificate.achievementId,
+        fileData: newAchievement.fileData // Keep for immediate viewing
       };
-      
-      // Create achievement WITH fileData for localStorage (for immediate UI)
-      const achievementForLocal = {
-        ...achievementForFirebase,
-        fileData: newAchievement.fileData // Include fileData for local storage
-      };
-      
-      // Add to achievements array
-      const updatedCertificatesForFirebase = [...achievements.map(a => {
-        const { fileData, ...achievementWithoutFileData } = a;
-        return achievementWithoutFileData;
-      }), achievementForFirebase];
-      const updatedCertificatesForLocal = [...achievements, achievementForLocal];
-      
-      // Update localStorage immediately for instant UI feedback
+
+      setAchievements(prev => [...prev, newCertificate]);
+      setSelectedRows([result.certificate.achievementId]);
+
+      // Update localStorage with new certificate
       const updatedStudentData = {
         ...studentData,
-        certificates: updatedCertificatesForLocal
+        certificates: [...(studentData.certificates || []), newCertificate]
       };
       localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
-      
-      // Update local state immediately
-      setAchievements(updatedCertificatesForLocal);
-      setSelectedRows([achievementId]);
       setStudentData(updatedStudentData);
-      
-      console.log('Local state updated immediately');
 
-      // Get Firebase service
-      const mongoDBService = (await import('../services/mongoDBService.js')).default;
-      
-      // Get student ID - try multiple possible fields
-      let studentId = studentData.id || studentData._id || studentData.studentId;
-      
-      console.log('🔍 Current student data:', studentData);
-      console.log('🔍 Looking for student ID in:', {
-        id: studentData.id,
-        _id: studentData._id,
-        studentId: studentData.studentId
-      });
-      
-      if (!studentId) {
-        console.log('⚠️ Student ID not found in localStorage, creating from regNo...');
-        // Create a consistent student ID from regNo
-        studentId = `student_${studentData.regNo}`;
-        console.log('🔧 Created student ID from regNo:', studentId);
-        const studentDataWithId = { ...studentData, id: studentId };
-        localStorage.setItem('studentData', JSON.stringify(studentDataWithId));
-      }
-      
-      console.log('🎯 Final student ID to use:', studentId);
+      // Trigger events for other components
+      window.dispatchEvent(new CustomEvent('certificateUploaded', { 
+        detail: { certificate: newCertificate, studentData: updatedStudentData } 
+      }));
 
-      // CRITICAL: Check if we need to use the MongoDB student ID format
-      // If the student ID doesn't match the format in MongoDB, we need to find the correct one
-      if (!studentId.startsWith('68e') && studentId.includes('student_')) {
-        console.log('⚠️ UPLOAD: Student ID format mismatch detected!');
-        console.log('⚠️ UPLOAD: Current ID format:', studentId);
-        console.log('⚠️ UPLOAD: Expected MongoDB format: 68e89cdc2b3351b306d7219a');
-        
-        // Try to get the correct student ID from existing certificates
-        try {
-          const allCertificates = await mongoDBService.getCertificatesByStudentId(studentId);
-          if (allCertificates && allCertificates.length > 0) {
-            console.log('🔍 UPLOAD: Found certificates with current ID, using it');
-          } else {
-            console.log('⚠️ UPLOAD: No certificates found with current ID, trying MongoDB format');
-            // Try with the MongoDB format
-            const mongoStudentId = '68e89cdc2b3351b306d7219a';
-            const mongoCertificates = await mongoDBService.getCertificatesByStudentId(mongoStudentId);
-            if (mongoCertificates && mongoCertificates.length > 0) {
-              console.log('✅ UPLOAD: Found certificates with MongoDB ID, switching to it');
-              studentId = mongoStudentId;
-            }
-          }
-        } catch (error) {
-          console.log('⚠️ UPLOAD: Error checking certificate IDs:', error.message);
-        }
-      }
+      console.log('✅ INSTANT: Certificate upload completed successfully!');
 
-      // Store file data separately in certificates collection
-      try {
-        const certificateDoc = {
-          studentId: studentId,
-          achievementId: achievementId.toString(),
-          fileName: newAchievement.fileName,
-          fileData: newAchievement.fileData,
-          fileType: newAchievement.fileType || 'application/pdf',
-          fileSize: newAchievement.fileSize || 0,
-          uploadDate: newAchievement.uploadDate,
-          createdAt: new Date().toISOString()
-        };
-        
-        await mongoDBService.createCertificate(certificateDoc);
-        console.log('Certificate file stored successfully in MongoDB');
-      } catch (fileError) {
-        console.error('Error storing certificate file separately:', fileError);
-        throw new Error('Failed to store certificate file. Please try again.');
-      }
-
-      // Update MongoDB with metadata only (no fileData)
-      console.log('Updating MongoDB with student ID:', studentId);
-      console.log('Updating MongoDB with certificates (metadata only):', updatedCertificatesForFirebase.length);
-      
-      await mongoDBService.updateStudent(studentId, {
-        certificates: updatedCertificatesForFirebase
-      });
-      
-      console.log('MongoDB update completed successfully');
-      
-      // Verify the update
-      const verifyData = await mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob);
-      if (verifyData && verifyData.certificates) {
-        console.log('Verification: MongoDB now has', verifyData.certificates.length, 'certificates');
-        console.log('✅ MongoDB persistence verified successfully');
-      }
-      
-      // Quick background refresh after upload
-      setTimeout(() => {
-        quickBackgroundRefresh();
-      }, 50); // Super fast refresh
-      
-      console.log('=== UPLOAD COMPLETE ===');
     } catch (error) {
-      console.error('Error saving achievement:', error);
-      throw new Error(error.message || 'Failed to save achievement. Please try again.');
+      console.error('❌ Certificate upload failed:', error);
+      throw error; // Re-throw to show error popup
     }
   };
   const handleEditClick = () => { 

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fileStorageService from "../services/fileStorageService.js";
+import certificateService from "../services/certificateService.js";
 
 // ++ NEW: Success Popup Component with Animation ++
 const SuccessPopup = ({ onClose }) => (
@@ -156,16 +156,16 @@ export default function CertificateUpload({ onClose, onUpload }) {
     }
 
     try {
-      // Upload file using free storage service (base64)
-      const fileData = await fileStorageService.uploadFile(file, `certificates/${Date.now()}`);
+      // Convert file to base64 directly
+      const fileData = await certificateService.fileToBase64(file);
 
-      setFileContent(fileData.url);
+      setFileContent(fileData);
       setError("");
       setFileName(file.name);
       setLastUploaded(new Date().toLocaleDateString());
     } catch (error) {
       console.error('File upload error:', error);
-      setError(error.message || "Failed to upload file. Please try again.");
+      setError(error.message || "Failed to process file. Please try again.");
       setFileName("");
       setFileContent("");
     }
