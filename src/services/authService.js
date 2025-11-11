@@ -5,8 +5,8 @@ class AuthService {
     let defaultBackendUrl;
     
     if (process.env.NODE_ENV === 'production') {
-      // Production: Use Vercel backend URL
-      defaultBackendUrl = 'https://placement-portal-backend-eight.vercel.app/api';
+      // Production: Use Render backend URL
+      defaultBackendUrl = 'https://placement-portal-zxo2.onrender.com/api';
     } else if (window.location.hostname.includes('devtunnels.ms')) {
       // Development: VS Code tunnel
       defaultBackendUrl = 'https://3nt1rq0-5000.inc1.devtunnels.ms/api';
