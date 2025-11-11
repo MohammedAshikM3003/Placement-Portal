@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fileStorageService from "../services/fileStorageService.js";
+import certificateService from "../services/certificateService.js";
 import uploadIcon from "../assets/popupUploadicon.png";
 
 // Helper function to parse date strings
@@ -178,15 +178,11 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
       setFileName(file.name);
       setError("");
       
-      // Parallel processing for maximum speed
-      const [fileData] = await Promise.all([
-        fileStorageService.uploadFile(file, `certificates/${Date.now()}`),
-        // Immediate UI feedback
-        new Promise(resolve => setTimeout(resolve, 0))
-      ]);
+      // Convert file to base64 directly
+      const fileData = await certificateService.fileToBase64(file);
       
       // Instant state updates
-      setFileContent(fileData.url);
+      setFileContent(fileData);
       setLastUploaded(new Date().toLocaleDateString());
     } catch (error) {
       setError(error.message || "Upload failed");

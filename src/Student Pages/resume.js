@@ -5,7 +5,6 @@ import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
 import './Resume.css';
 import Adminicon from '../assets/Adminicon.png';
-import fileStorageService from '../services/fileStorageService.js';
 import resumeAnalysisService from '../services/resumeAnalysisService.js';
 
 // Success Popup Component with Animation
@@ -1083,8 +1082,18 @@ function MainContent({ onViewChange }) {
         return;
       }
       
-      // Use file storage service to preview
-      fileStorageService.previewFile(uploadedFile.url);
+      // Direct preview implementation
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>Resume Preview</title></head>
+            <body style="margin:0;">
+              <embed src="${uploadedFile.url}" width="100%" height="100%" type="application/pdf">
+            </body>
+          </html>
+        `);
+      }
     } catch (error) {
       console.error('Preview error:', error);
       setValidationAction('preview');
@@ -1100,8 +1109,13 @@ function MainContent({ onViewChange }) {
     }
     
     try {
-      // Use file storage service to download
-      fileStorageService.downloadFile(uploadedFile.url, uploadedFile.name);
+      // Direct download implementation
+      const link = document.createElement('a');
+      link.href = uploadedFile.url;
+      link.download = uploadedFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Download error:', error);
       setValidationAction('download');

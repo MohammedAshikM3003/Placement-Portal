@@ -882,7 +882,13 @@ function AchievementsContent() {
 
           // INSTANT DOWNLOAD: Use requestAnimationFrame for immediate execution
           requestAnimationFrame(() => {
-            fileStorageService.downloadFile(formattedFileData, certificateData.fileName || 'certificate.pdf');
+            // Direct download implementation
+            const link = document.createElement('a');
+            link.href = formattedFileData;
+            link.download = certificateData.fileName || 'certificate.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             setDownloadPopupState('success');
           });
 
@@ -1205,8 +1211,18 @@ function AchievementsContent() {
           formattedFileData = `data:application/pdf;base64,${cachedFileData}`;
         }
         
-        // Use fileStorageService for consistent preview handling
-        fileStorageService.previewFile(formattedFileData);
+        // Direct preview implementation
+        const newWindow = window.open();
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head><title>Certificate Preview</title></head>
+              <body style="margin:0;">
+                <embed src="${formattedFileData}" width="100%" height="100%" type="application/pdf">
+              </body>
+            </html>
+          `);
+        }
         return; // Exit early for instant preview
       } catch (previewError) {
         console.error('❌ Preview error:', previewError);
@@ -1282,7 +1298,18 @@ function AchievementsContent() {
           
           // INSTANT PREVIEW: Use requestAnimationFrame for immediate execution
           requestAnimationFrame(() => {
-            fileStorageService.previewFile(formattedFileData);
+            // Direct preview implementation
+            const newWindow = window.open();
+            if (newWindow) {
+              newWindow.document.write(`
+                <html>
+                  <head><title>Certificate Preview</title></head>
+                  <body style="margin:0;">
+                    <embed src="${formattedFileData}" width="100%" height="100%" type="application/pdf">
+                  </body>
+                </html>
+              `);
+            }
             setPreviewPopupState('none');
           });
           
