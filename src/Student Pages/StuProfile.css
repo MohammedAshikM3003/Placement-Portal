@@ -6,12 +6,16 @@
     background: #f8f8fb;
     min-height: 100vh;
     overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 .main {
     display: flex;
-    height: calc(110vh - 55px);
+    height: calc(100vh - 60px);
     overflow: hidden;
+    margin-top: 60px;
 }
 
 .overlay {
@@ -96,12 +100,12 @@ body {
 .StuProfile-dashboard-area {
     flex: 1;
     background: #f8f8fb;
-    padding: 25px;
-    margin-left: 230px;
+    padding: 25px !important;
+    margin-left: 230px !important;
     overflow-y: auto; 
     overflow-x: hidden;
     position: relative;
-    height: calc(100vh - 65px);
+    height: calc(100vh - 60px) !important;
     box-sizing: border-box;
 }
 
@@ -109,12 +113,25 @@ body {
 .profile-area {
     flex: 1;
     background: #f8f8fb;
-    padding: 25px;
-    margin-left: 230px;
+    padding: 25px !important;
+    margin-left: 230px !important;
     overflow-y: auto; 
     overflow-x: hidden;
     position: relative;
-    height: calc(100vh - 65px);
+    height: calc(100vh - 60px) !important;
+    box-sizing: border-box;
+}
+
+/* Dashboard area - consistent with other pages */
+.dashboard-area {
+    flex: 1;
+    background: #f8f8fb;
+    padding: 25px !important;
+    margin-left: 230px !important;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    height: calc(100vh - 60px) !important;
     box-sizing: border-box;
 }
 
@@ -630,29 +647,35 @@ body {
 }
 
 
-/* === CORRECTED & CONSOLIDATED MOBILE STYLES === */
+/* === STABLE MOBILE STYLES - NO LAYOUT SHIFTS === */
 @media (max-width: 900px) {
-    /* Fix container and main for mobile */
+    /* Fix container and main for mobile - STABLE */
     .container {
-        min-height: 100vh;
-        overflow-x: hidden;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100vh !important;
+        overflow-x: hidden !important;
     }
 
     .main {
-        overflow-x: hidden;
-        min-height: calc(100vh - 60px);
+        overflow-x: hidden !important;
+        height: calc(100vh - 60px) !important;
+        margin-top: 60px !important;
     }
 
-    /* Make both possible content areas scrollable */
+    /* STABLE content areas - consistent padding */
     .StuProfile-dashboard-area,
     .profile-area,
     .dashboard-area {
         margin-left: 0 !important;
-        padding: 15px 20px calc(env(safe-area-inset-bottom, 20px) + 100px) 20px !important;
+        padding: 20px !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 80px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
-        min-height: 100vh;
+        height: calc(100vh - 60px) !important;
+        position: relative !important;
     }
 
     /* Mobile scrollbar styling */
@@ -687,9 +710,9 @@ body {
     }
 
     .StuProfile-main {
-        flex-direction: column;
-        margin-top: 50px;
-        min-height: calc(100vh - 50px);
+        flex-direction: column !important;
+        margin-top: 60px !important;
+        height: calc(100vh - 60px) !important;
     }
     .StuProfile-overlay {
         display: block;
@@ -772,11 +795,7 @@ body {
         font-size: 0.95rem;
     }
 
-    .StuProfile-dashboard-area,
-    .profile-area,
-    .dashboard-area {
-        padding-bottom: 120px !important;
-    }
+    /* Padding rules are handled above in the main mobile section */
 }
 
 /* Loading Spinner for Save Button */

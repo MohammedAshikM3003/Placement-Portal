@@ -306,6 +306,16 @@ function StuProfile({ onLogout, onViewChange }) {
                 console.log('⚡ INSTANT: Using cached complete data');
                 populateFormFields(instantData.student);
             }
+            
+            // ⚡ INSTANT: Update sidebar immediately with profile photo
+            if (storedStudentData.profilePicURL) {
+                window.dispatchEvent(new CustomEvent('profileUpdated', { 
+                    detail: { 
+                        profilePicURL: storedStudentData.profilePicURL,
+                        studentData: storedStudentData 
+                    } 
+                }));
+            }
         }
         
         // Then fetch fresh data from MongoDB in background
