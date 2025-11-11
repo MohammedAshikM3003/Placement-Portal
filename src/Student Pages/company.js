@@ -8,17 +8,18 @@ import PopUpPending from "./PopUpPending";
 import PopUpRejected from "./PopUpRejected";
 import './Company.css';
 
-const applicationHistory = [
-  { company: "TCS", position: "Assistant Software Engineer", status: "Rejected" },
-  { company: "Wipro", position: "Project Engineer", status: "Rejected" },
-  { company: "HCL", position: "Developer", status: "Pending" },
-  { company: "Capgemini", position: "Associate Consultant", status: "Rejected" },
-  { company: "Cognizant", position: "Programmer Analyst", status: "Pending" },
-  { company: "Accenture", position: "Software Engineer", status: "Pending" },
-  { company: "Deloitte", position: "Consultant", status: "Rejected" },
-  { company: "EY", position: "Developer", status: "Pending" },
-  { company: "Infosys", position: "System Engineer", status: "Placed" },
-];
+// Application history will be fetched from backend - no hardcoded mock data
+const getApplicationHistory = async (studentId) => {
+  try {
+    // TODO: Implement API call to fetch student's application history
+    // const response = await fetch(`/api/students/${studentId}/applications`);
+    // return await response.json();
+    return []; // Return empty array until API is implemented
+  } catch (error) {
+    console.error('Error fetching application history:', error);
+    return [];
+  }
+};
 
 const statusStyles = {
   Rejected: { background: "#FFC3C3", color: "#AD2C2C", border: "1.5px solid #FFC3C3" },
@@ -39,20 +40,26 @@ export default function Company({ onLogout, onViewChange }) {
   });
   const [activeSubView, setActiveSubView] = useState('list');
   const [selectedApp, setSelectedApp] = useState(null);
+  const [applicationHistory, setApplicationHistory] = useState([]);
   const statusOrder = { Rejected: 1, Pending: 2, Placed: 3 };
 
-  // Load student data for sidebar
+  // Load student data for sidebar and application history
   useEffect(() => {
     const handleProfileUpdate = () => {
       try {
         const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (updatedStudentData) {
           setStudentData(updatedStudentData);
+          // Load application history when student data is available
+          getApplicationHistory(updatedStudentData._id).then(setApplicationHistory);
         }
       } catch (error) {
         console.error('Error updating student data for sidebar:', error);
       }
     };
+    
+    // Initial load
+    handleProfileUpdate();
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);

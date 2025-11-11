@@ -70,7 +70,7 @@ const connectDB = async (retryCount = 0) => {
             
             // Serverless optimizations
             bufferCommands: false,
-            bufferMaxEntries: 0,
+            // Removed deprecated bufferMaxEntries option
             
             // Heartbeat to keep connection alive
             heartbeatFrequencyMS: 10000,
@@ -309,6 +309,11 @@ app.use((req, res, next) => {
             'https://3nt1rq0-3000.inc1.devtunnels.ms'
         ];
         
+        // Add environment-specific origins
+        if (process.env.CORS_ORIGINS) {
+            allowedOrigins.push(...process.env.CORS_ORIGINS.split(','));
+        }
+        
         const isAllowed = allowedOrigins.includes(origin) || 
                          /^https:\/\/.*\.vercel\.app$/.test(origin) || 
                          /^https:\/\/.*\.devtunnels\.ms$/.test(origin);
@@ -348,6 +353,11 @@ try {
                 'https://placement-portal.vercel.app',
                 'https://3nt1rq0-3000.inc1.devtunnels.ms'
             ];
+            
+            // Add environment-specific origins
+            if (process.env.CORS_ORIGINS) {
+                allowedOrigins.push(...process.env.CORS_ORIGINS.split(','));
+            }
             
             if (allowedOrigins.includes(origin) || 
                 /^https:\/\/.*\.vercel\.app$/.test(origin) || 

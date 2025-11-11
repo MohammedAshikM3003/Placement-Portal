@@ -132,9 +132,9 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
 
             {/* Row 2 - 2 Cards spanning different widths */}
             {/* Card 4: Attendance (spans 2 columns) */}
-            <div className="stu-db-card stu-db-attendance-card">
+            <div className="stu-db-card stu-db-attendance-card" onClick={() => handleViewChange('attendance')}>
               <h2 className="stu-db-new-attendance-title">Attendance</h2>
-              <AttendanceChart present={85} absent={15} />
+              <AttendanceChart present={studentData?.attendancePresent || 0} absent={studentData?.attendanceAbsent || 0} />
             </div>
 
             {/* Card 5: Company Placement */}

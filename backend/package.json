@@ -2,12 +2,12 @@
   "name": "placement-portal-backend",
   "version": "1.0.0",
   "description": "Backend service for Placement Portal with MongoDB database",
-  "main": "server.js",
+  "main": "server-mongodb.js",
   "scripts": {
-    "start": "node server.js",
-    "start:mongodb": "node --openssl-legacy-provider server-mongodb.js",
-    "dev": "nodemon server.js",
-    "dev:mongodb": "nodemon --openssl-legacy-provider server-mongodb.js",
+    "start": "node server-mongodb.js",
+    "start:mongodb": "node server-mongodb.js",
+    "dev": "nodemon server-mongodb.js",
+    "dev:mongodb": "nodemon server-mongodb.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

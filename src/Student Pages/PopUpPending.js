@@ -1,15 +1,26 @@
 import React from "react";
 import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
-const rounds = [
-  { name: "Round 1 (Aptitude)", status: "Passed", icon: <FaCheckCircle color="#197AFF" size={28} />, statusColor: "#197AFF", statusText: "Passed" },
-  { name: "Round 2 (Technical)", status: "Passed", icon: <FaCheckCircle color="#197AFF" size={28} />, statusColor: "#197AFF", statusText: "Passed" },
-  { name: "Round 3 (Group Discussion)", status: "N/A", icon: <FaExclamationCircle color="#949494" size={28} />, statusColor: "#717070", statusText: "Pending" },
-  { name: "Round 4 (Managerial)", status: "N/A", icon: <FaExclamationCircle color="#949494" size={28} />, statusColor: "#717070", statusText: "N/A" },
-  { name: "Round 5 (HR)", status: "N/A", icon: <FaExclamationCircle color="#949494" size={28} />, statusColor: "#717070", statusText: "N/A" }
-];
+// Dynamic rounds based on app data - no hardcoded mock data
+const generateRounds = (app) => {
+  if (!app || !app.rounds) {
+    return []; // Return empty array if no rounds data
+  }
+  
+  return app.rounds.map(round => ({
+    name: round.name,
+    status: round.status,
+    icon: round.status === "Passed" 
+      ? <FaCheckCircle color="#197AFF" size={28} />
+      : <FaExclamationCircle color="#949494" size={28} />,
+    statusColor: round.status === "Passed" ? "#197AFF" : "#717070",
+    statusText: round.status || "N/A"
+  }));
+};
 
 export default function PopUpPending({ app, onBack }) {
+  const rounds = generateRounds(app);
+
   return (
     <>
         <h2 style={{ fontWeight: 800, fontSize: "2rem", marginBottom: 20, marginLeft: 5, flexShrink: 0 }}>

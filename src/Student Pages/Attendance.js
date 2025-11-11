@@ -15,21 +15,38 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
             return null;
         }
     });
-    const attendancePercentage = 100;
+    const [attendanceData, setAttendanceData] = useState({ present: 0, absent: 0, records: [] });
+    const attendancePercentage = attendanceData.present + attendanceData.absent > 0 
+        ? Math.round((attendanceData.present / (attendanceData.present + attendanceData.absent)) * 100) 
+        : 0;
     const absentPercentage = 100 - attendancePercentage;
 
-    // Load student data for sidebar
+    // Load student data and attendance data
     useEffect(() => {
-        const handleProfileUpdate = () => {
+        const handleProfileUpdate = async () => {
             try {
                 const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
                 if (updatedStudentData) {
                     setStudentData(updatedStudentData);
+                    // TODO: Fetch attendance data from backend
+                    // const attendanceResponse = await fetch(`/api/students/${updatedStudentData._id}/attendance`);
+                    // const attendanceData = await attendanceResponse.json();
+                    // setAttendanceData(attendanceData);
+                    
+                    // For now, use data from studentData if available
+                    setAttendanceData({
+                        present: updatedStudentData.attendancePresent || 0,
+                        absent: updatedStudentData.attendanceAbsent || 0,
+                        records: updatedStudentData.attendanceRecords || []
+                    });
                 }
             } catch (error) {
                 console.error('Error updating student data for sidebar:', error);
             }
         };
+        
+        // Initial load
+        handleProfileUpdate();
         
         window.addEventListener('storage', handleProfileUpdate);
         window.addEventListener('profileUpdated', handleProfileUpdate);
@@ -142,18 +159,26 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
                                     <tr><th>S.No</th><th>Date</th><th>Type</th><th>Status</th></tr>
                                 </thead>
                                 <tbody>
-                                    {[...Array(15).keys()].map(i => (
-                                        <tr key={i}>
-                                            <td>{i + 1}</td>
-                                            <td>{`${i + 1 < 10 ? '0' : ''}${i + 1}/08/2025`}</td>
-                                            <td>Training Event</td>
-                                            <td>
-                                                <span className={`status-pill ${i % 3 === 2 ? 'status-absent' : 'status-present'}`}>
-                                                    {i % 3 === 2 ? 'Absent' : 'Present'}
-                                                </span>
+                                    {attendanceData.records.length > 0 ? (
+                                        attendanceData.records.map((record, index) => (
+                                            <tr key={index}>
+                                                <td>{index + 1}</td>
+                                                <td>{record.date}</td>
+                                                <td>{record.type}</td>
+                                                <td>
+                                                    <span className={`status-pill ${record.status === 'Absent' ? 'status-absent' : 'status-present'}`}>
+                                                        {record.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                                                No attendance records available
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
