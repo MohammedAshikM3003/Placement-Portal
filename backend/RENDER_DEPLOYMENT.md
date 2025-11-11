@@ -41,16 +41,16 @@ In the Render dashboard, add these environment variables:
 **Required Environment Variables:**
 ```
 NODE_ENV=production
-PORT=10000
 MONGODB_URI=mongodb+srv://placement-portal-user:UWaLa3a1iygV3cZ8@placement-portal-cluste.0zhp6cb.mongodb.net/placement-portal?retryWrites=true&w=majority&appName=placement-portal-cluster
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-12345
 CORS_ORIGINS=https://placement-portal.vercel.app,https://placement--portal.vercel.app
 ```
 
 **Important Notes:**
+- **DO NOT set PORT** - Render automatically provides the PORT environment variable
 - Replace `JWT_SECRET` with a secure random string in production
 - Add your actual frontend domain to `CORS_ORIGINS`
-- The `PORT` variable is automatically set by Render, but you can override it
+- Your server code should use `process.env.PORT || 5000` (already configured)
 
 ### 4. Deploy
 
@@ -99,9 +99,19 @@ REACT_APP_API_URL=https://your-app-name.onrender.com
    - Verify environment variables
    - Test MongoDB connection string
 
-3. **CORS Issues**
+3. **Port Binding Issues**
+   - **DO NOT** manually set PORT in environment variables
+   - Render automatically provides PORT (usually 10000)
+   - Your code should use `process.env.PORT || 5000`
+   - Remove any hardcoded port numbers
+
+4. **CORS Issues**
    - Update CORS origins in server code
    - Add your frontend domain to allowed origins
+
+5. **"Port already in use" Error**
+   - This means you set PORT manually - remove it
+   - Let Render handle port assignment automatically
 
 ### Monitoring
 
