@@ -137,9 +137,6 @@ class MultiProviderAnalysisService {
         return 'image pdf scan photo picture';
       }
 
-      // Convert file to base64 for API
-      const base64 = await this.fileToBase64(file);
-      
       // For now, use a simple approach since the API models are having issues
       // This will be improved once we have a working API endpoint
       console.log('🤗 Hugging Face API temporarily disabled due to model issues');

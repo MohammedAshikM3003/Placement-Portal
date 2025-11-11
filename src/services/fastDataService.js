@@ -6,6 +6,40 @@ class FastDataService {
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
   }
 
+  // ⚡ INSTANT: Initialize all student data for all pages
+  async initializeAllStudentData(studentId) {
+    try {
+      console.log('🚀 INITIALIZING: All student data for all pages...');
+      const completeData = await this.getCompleteStudentData(studentId, false); // Force fresh data
+      
+      if (completeData && completeData.student) {
+        // Update localStorage with all data
+        localStorage.setItem('studentData', JSON.stringify(completeData.student));
+        localStorage.setItem('completeStudentData', JSON.stringify(completeData));
+        
+        // Dispatch events for all components to update
+        window.dispatchEvent(new CustomEvent('studentDataUpdated', { detail: completeData }));
+        window.dispatchEvent(new CustomEvent('profileUpdated', { detail: completeData.student }));
+        window.dispatchEvent(new CustomEvent('resumeUpdated', { detail: completeData.resume }));
+        window.dispatchEvent(new CustomEvent('certificatesUpdated', { detail: completeData.certificates }));
+        
+        console.log('✅ ALL STUDENT DATA INITIALIZED:', {
+          profile: !!completeData.student,
+          resume: !!completeData.resume,
+          certificates: completeData.certificates?.length || 0,
+          profilePhoto: !!completeData.student?.profilePicURL
+        });
+        
+        return completeData;
+      }
+      
+      throw new Error('No student data received');
+    } catch (error) {
+      console.error('❌ Failed to initialize student data:', error);
+      throw error;
+    }
+  }
+
   // ⚡ INSTANT: Get complete student data (profile, resume, certificates) in ONE call
   async getCompleteStudentData(studentId, useCache = true) {
     const cacheKey = `complete_${studentId}`;

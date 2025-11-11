@@ -191,9 +191,7 @@ function AchievementsContent() {
     try {
       console.log('⚡ Super fast background refresh...');
       const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-      if (studentData && studentData.regNo && studentData.dob) {
-        const mongoDBService = (await import('../services/mongoDBService.js')).default;
-        
+      if (studentData && studentData._id) {
         // Ultra-fast timeout for maximum speed
         const fastDataService = (await import('../services/fastDataService.js')).default;
         const completeData = await Promise.race([
@@ -330,9 +328,7 @@ function AchievementsContent() {
     const syncInterval = setInterval(async () => {
       try {
         const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (studentData && studentData.regNo && studentData.dob) {
-          const mongoDBService = (await import('../services/mongoDBService.js')).default;
-          
+        if (studentData && studentData._id) {
           // Add timeout to prevent hanging
           const fastDataService = (await import('../services/fastDataService.js')).default;
           const completeData = await Promise.race([
@@ -390,9 +386,7 @@ function AchievementsContent() {
       console.log('🔄 Page focused, checking for updates...');
       try {
         const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (studentData && studentData.regNo && studentData.dob) {
-          const mongoDBService = (await import('../services/mongoDBService.js')).default;
-          
+        if (studentData && studentData._id) {
           // Add timeout to prevent hanging
           const fastDataService = (await import('../services/fastDataService.js')).default;
           const completeData = await Promise.race([
@@ -1147,8 +1141,6 @@ function AchievementsContent() {
         setIsLoading(false);
         return;
       }
-      
-      const mongoDBService = (await import('../services/mongoDBService.js')).default;
       
       // Get fresh student data from MongoDB with shorter timeout
       const fastDataService = (await import('../services/fastDataService.js')).default;

@@ -87,9 +87,23 @@ function AppContent() {
         setIsLoading(false);
       }, []);
 
-  const handleLogin = (regNo) => {
+  const handleLogin = async (regNo, dob) => {
     // This function is called after successful authentication
     console.log('Login successful for:', regNo);
+    
+    try {
+      // Initialize all student data for all pages
+      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (studentData && studentData._id) {
+        console.log('🚀 INITIALIZING: All student data after login...');
+        const fastDataService = (await import('./services/fastDataService.js')).default;
+        await fastDataService.initializeAllStudentData(studentData._id);
+        console.log('✅ ALL STUDENT DATA INITIALIZED FOR ALL PAGES');
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize student data after login:', error);
+      // Don't block login process, just log the error
+    }
   };
 
       const handleLogout = async () => {
