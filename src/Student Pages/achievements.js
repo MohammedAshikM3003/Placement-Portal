@@ -195,12 +195,14 @@ function AchievementsContent() {
         const mongoDBService = (await import('../services/mongoDBService.js')).default;
         
         // Ultra-fast timeout for maximum speed
-        const freshStudentData = await Promise.race([
-          mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+        const fastDataService = (await import('../services/fastDataService.js')).default;
+        const completeData = await Promise.race([
+          fastDataService.getCompleteStudentData(studentData._id || studentData.id),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout')), 500) // Reduced to 500ms
           )
         ]);
+        const freshStudentData = completeData?.student;
         
         if (freshStudentData && freshStudentData.certificates) {
           // Get correct student ID
@@ -332,12 +334,14 @@ function AchievementsContent() {
           const mongoDBService = (await import('../services/mongoDBService.js')).default;
           
           // Add timeout to prevent hanging
-          const freshStudentData = await Promise.race([
-            mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+          const fastDataService = (await import('../services/fastDataService.js')).default;
+          const completeData = await Promise.race([
+            fastDataService.getCompleteStudentData(studentData._id || studentData.id),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Auto-sync timeout')), 5000)
             )
           ]);
+          const freshStudentData = completeData?.student;
           
           if (freshStudentData && freshStudentData.certificates) {
             // Only update if data has changed
@@ -390,12 +394,14 @@ function AchievementsContent() {
           const mongoDBService = (await import('../services/mongoDBService.js')).default;
           
           // Add timeout to prevent hanging
-          const freshStudentData = await Promise.race([
-            mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+          const fastDataService = (await import('../services/fastDataService.js')).default;
+          const completeData = await Promise.race([
+            fastDataService.getCompleteStudentData(studentData._id || studentData.id),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Focus refresh timeout')), 5000)
             )
           ]);
+          const freshStudentData = completeData?.student;
           
           if (freshStudentData && freshStudentData.certificates) {
             if (freshStudentData.certificates.length !== achievements.length) {
@@ -452,16 +458,18 @@ function AchievementsContent() {
       console.log('Student data from localStorage:', studentData);
       setStudentData(studentData);
       
-      // Load ONLY from MongoDB - no localStorage fallback with timeout
-      const mongoDBService = (await import('../services/mongoDBService.js')).default;
+      // Load ONLY from MongoDB using fastDataService - no localStorage fallback with timeout
+      const fastDataService = (await import('../services/fastDataService.js')).default;
       console.log('⚡ Fetching latest data from MongoDB with timeout...');
       
-      const freshStudentData = await Promise.race([
-        mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+      const completeData = await Promise.race([
+        fastDataService.getCompleteStudentData(studentData._id || studentData.id),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Load timeout')), 5000) // Increased to 5 seconds for better reliability
         )
       ]);
+      
+      const freshStudentData = completeData?.student;
       
       // AUTO-CLEAR STALE DATA: If MongoDB is empty but localStorage has certificates, clear them
       if (!freshStudentData || !freshStudentData.certificates || freshStudentData.certificates.length === 0) {
@@ -1143,12 +1151,14 @@ function AchievementsContent() {
       const mongoDBService = (await import('../services/mongoDBService.js')).default;
       
       // Get fresh student data from MongoDB with shorter timeout
-      const freshStudentData = await Promise.race([
-        mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+      const fastDataService = (await import('../services/fastDataService.js')).default;
+      const completeData = await Promise.race([
+        fastDataService.getCompleteStudentData(studentData._id || studentData.id),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), 2000) // Reduced to 2s for faster refresh
         )
       ]);
+      const freshStudentData = completeData?.student;
       
       if (freshStudentData && freshStudentData.certificates) {
         console.log('⚡ Fresh data received:', freshStudentData.certificates.length, 'certificates');

@@ -406,17 +406,18 @@ function MainContent({ onViewChange }) {
         setAnalysisResult(null);
 
         // Step 2: Get correct student ID from MongoDB
-        const mongoDBService = (await import('../services/mongoDBService.js')).default;
+        const fastDataService = (await import('../services/fastDataService.js')).default;
         
         let studentId = null;
         let freshStudentData = null;
         
         try {
-          freshStudentData = await Promise.race([
-            mongoDBService.getStudentByRegNoAndDob(studentData.regNo, studentData.dob),
+          const completeData = await Promise.race([
+            fastDataService.getCompleteStudentData(studentData._id || studentData.id),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
           ]);
-          studentId = freshStudentData._id || freshStudentData.id;
+          freshStudentData = completeData?.student;
+          studentId = freshStudentData?._id || freshStudentData?.id;
           console.log('✅ Student ID fetched from MongoDB:', studentId);
         } catch (error) {
           console.error('❌ Error fetching student data:', error);

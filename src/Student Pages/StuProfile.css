@@ -100,7 +100,7 @@ body {
 .StuProfile-dashboard-area {
     flex: 1;
     background: #f8f8fb;
-    padding: 25px !important;
+    padding: 10px 25px 25px 25px !important; /* Reduced top padding from 25px to 10px */
     margin-left: 230px !important;
     overflow-y: auto; 
     overflow-x: hidden;
@@ -113,7 +113,7 @@ body {
 .profile-area {
     flex: 1;
     background: #f8f8fb;
-    padding: 25px !important;
+    padding: 10px 25px 25px 25px !important; /* Reduced top padding from 25px to 10px */
     margin-left: 230px !important;
     overflow-y: auto; 
     overflow-x: hidden;
@@ -126,7 +126,7 @@ body {
 .dashboard-area {
     flex: 1;
     background: #f8f8fb;
-    padding: 25px !important;
+    padding: 10px 25px 25px 25px !important; /* Reduced top padding from 25px to 10px */
     margin-left: 230px !important;
     overflow-y: auto; 
     overflow-x: hidden;
@@ -669,7 +669,7 @@ body {
     .profile-area,
     .dashboard-area {
         margin-left: 0 !important;
-        padding: 20px !important;
+        padding: 10px 20px 20px 20px !important; /* Reduced top padding for mobile too */
         padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 80px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
