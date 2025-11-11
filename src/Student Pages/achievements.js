@@ -106,6 +106,18 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
       }
     };
     
+    // ⚡ INSTANT: Dispatch profile update immediately on achievements page load
+    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+    if (storedStudentData && storedStudentData.profilePicURL) {
+      console.log('🚀 Achievements: Dispatching immediate profile update for sidebar');
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { 
+          profilePicURL: storedStudentData.profilePicURL,
+          studentData: storedStudentData 
+        } 
+      }));
+    }
+    
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
     

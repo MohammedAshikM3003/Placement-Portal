@@ -50,7 +50,7 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
     }
   });
 
-  // Load student data for sidebar
+  // Load student data for sidebar and dispatch immediate profile update
   React.useEffect(() => {
     const handleProfileUpdate = () => {
       try {
@@ -62,6 +62,18 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
         console.error('Error updating student data for sidebar:', error);
       }
     };
+    
+    // ⚡ INSTANT: Dispatch profile update immediately on dashboard load
+    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+    if (storedStudentData && storedStudentData.profilePicURL) {
+      console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { 
+          profilePicURL: storedStudentData.profilePicURL,
+          studentData: storedStudentData 
+        } 
+      }));
+    }
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);

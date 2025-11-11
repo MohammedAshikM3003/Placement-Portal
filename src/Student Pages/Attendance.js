@@ -48,6 +48,18 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
         // Initial load
         handleProfileUpdate();
         
+        // ⚡ INSTANT: Dispatch profile update immediately on attendance page load
+        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (storedStudentData && storedStudentData.profilePicURL) {
+            console.log('🚀 Attendance: Dispatching immediate profile update for sidebar');
+            window.dispatchEvent(new CustomEvent('profileUpdated', { 
+                detail: { 
+                    profilePicURL: storedStudentData.profilePicURL,
+                    studentData: storedStudentData 
+                } 
+            }));
+        }
+        
         window.addEventListener('storage', handleProfileUpdate);
         window.addEventListener('profileUpdated', handleProfileUpdate);
         

@@ -61,6 +61,18 @@ export default function Company({ onLogout, onViewChange }) {
     // Initial load
     handleProfileUpdate();
     
+    // ⚡ INSTANT: Dispatch profile update immediately on company page load
+    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+    if (storedStudentData && storedStudentData.profilePicURL) {
+      console.log('🚀 Company: Dispatching immediate profile update for sidebar');
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { 
+          profilePicURL: storedStudentData.profilePicURL,
+          studentData: storedStudentData 
+        } 
+      }));
+    }
+    
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
     

@@ -1619,6 +1619,18 @@ function Resume({ onLogout, onViewChange }) {
       }
     };
     
+    // ⚡ INSTANT: Dispatch profile update immediately on resume page load
+    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+    if (storedStudentData && storedStudentData.profilePicURL) {
+      console.log('🚀 Resume: Dispatching immediate profile update for sidebar');
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { 
+          profilePicURL: storedStudentData.profilePicURL,
+          studentData: storedStudentData 
+        } 
+      }));
+    }
+    
     // Also listen for updates
     const handleStorageChange = () => {
       loadStudentData();
