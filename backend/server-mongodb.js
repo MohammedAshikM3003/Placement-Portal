@@ -1305,25 +1305,26 @@ function getBasicAnalysisResult() {
 // --- Server Startup Logic ---
 // (startServer is already defined above in the middleware section)
 
-// For development - start server
-if (process.env.NODE_ENV !== 'production') {
+// Server startup logic - works for both development and production (Render)
+if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
+    // Development or Render production - start traditional server
     app.listen(PORT, async () => {
         try {
             await startServer();
             dbInitialized = true;
-            console.log(`Placement Portal Server running on port ${PORT}`);
-            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`Status: Ready for development`);
+            console.log(`✅ Placement Portal Server running on port ${PORT}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🚀 Status: Ready and accepting connections`);
+            console.log(`📊 MongoDB: Connected to Atlas cluster`);
         } catch (error) {
-            console.error('Server startup error:', error);
-            console.log('Server running without MongoDB connection');
+            console.error('❌ Server startup error:', error);
+            console.log('⚠️  Server running without MongoDB connection');
         }
     });
 } else {
-    // In production (Vercel), initialize DB connection immediately
-    // This ensures connection is ready when routes are called
+    // Serverless mode (Vercel) - initialize DB connection immediately
     try {
-        console.log('Serverless mode: Initializing MongoDB connection...');
+        console.log('☁️  Serverless mode: Initializing MongoDB connection...');
         // Initialize in background - don't block export
         Promise.resolve().then(async () => {
             try {
