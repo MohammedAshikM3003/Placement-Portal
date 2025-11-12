@@ -179,7 +179,6 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
 }
 
 // The rest of the file (AchievementsContent, etc.) remains unchanged.
-// ... (Your existing AchievementsContent component goes here)
 function AchievementsContent() {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -507,11 +506,18 @@ function AchievementsContent() {
       console.log('🔄 Cleared selections on page load');
       
       // Get student data from localStorage for authentication
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      // NEW: Safely parse this, though it's less critical here
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        console.warn('Invalid studentData in localStorage, will fetch fresh.');
+      }
+
       if (!studentData) {
         console.log('No student data found in localStorage');
         setAchievements([]);
-        setIsInitialLoading(false);
+        setIsInitialLoading(false); // Make sure to stop loading
         return;
       }
       
@@ -552,7 +558,7 @@ function AchievementsContent() {
           // Sync time tracking removed - not displayed to users
           
           console.log('✅ Stale data auto-cleared on page load');
-          return;
+          return; // Already cleared, no need to continue
         }
       }
       
@@ -600,17 +606,25 @@ function AchievementsContent() {
       }
     } catch (error) {
       console.error('⚡ Error loading student data:', error);
+      
       if (error.message === 'Load timeout') {
         console.warn('⚡ Load timeout - using cached data if available');
-        // Try to use cached data from localStorage
-        const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (studentData && studentData.certificates) {
-          setAchievements(studentData.certificates);
-          // Sync time tracking removed - not displayed to users
-        } else {
-          setAchievements([]);
+        
+        // NEW: Safely try to use cached data from localStorage
+        try {
+          const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+          if (studentData && studentData.certificates) {
+            setAchievements(studentData.certificates);
+          } else {
+            setAchievements([]);
+          }
+        } catch (cacheError) {
+          console.error('⚡ Fallback to cache FAILED, localStorage is invalid:', cacheError);
+          setAchievements([]); // Show empty table
         }
+
       } else {
+        // A different error happened (not a timeout)
         setAchievements([]);
       }
     } finally {
