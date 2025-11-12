@@ -122,25 +122,27 @@ export const AuthProvider = ({ children }) => {
     checkAuthState();
   }, []);
 
-  // Login function
+  // Login function - OPTIMIZED for instant login with background fetch
   const login = async (regNo, dob) => {
     try {
-      console.log('🚀 AuthContext: Starting login process...');
+      console.log('🚀 AuthContext: Starting FAST login process...');
+      
+      // PHASE 1: Quick authentication (don't wait for heavy data)
       dispatch({ type: AUTH_ACTIONS.LOGIN_START });
 
-      // Call the auth service
+      // Call the auth service for basic authentication
       const loginResult = await authService.loginStudent(regNo, dob);
 
       if (loginResult.success) {
-        console.log('✅ AuthContext: Login successful, updating global state');
+        console.log('✅ AuthContext: Authentication successful!');
         console.log('🖼️ AuthContext: Profile picture URL:', loginResult.student.profilePicURL);
 
-        // CRITICAL: Update global state with ALL user data at once
+        // CRITICAL: Update global state IMMEDIATELY with basic user data
         dispatch({
           type: AUTH_ACTIONS.LOGIN_SUCCESS,
           payload: {
             token: loginResult.token,
-            user: loginResult.student // This MUST include profilePicURL
+            user: loginResult.student
           }
         });
 
@@ -151,7 +153,36 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('studentRegNo', regNo);
         localStorage.setItem('studentDob', dob);
 
-        console.log('🎉 AuthContext: Login complete, state updated');
+        console.log('🎉 AuthContext: Login complete - UI can now render!');
+        
+        // PHASE 2: Background data prefetching (NON-BLOCKING)
+        // This runs in the background and doesn't delay navigation
+        setTimeout(async () => {
+          try {
+            console.log('📥 AuthContext: Starting background data fetch...');
+            const fastDataService = (await import('../services/fastDataService.js')).default;
+            
+            // Fetch all data in parallel without blocking UI
+            await Promise.allSettled([
+              fastDataService.initializeAllStudentData(loginResult.student._id),
+              fastDataService.preloadProfilePhoto(loginResult.student._id),
+              fastDataService.preloadResumeData(loginResult.student._id),
+              fastDataService.preloadCertificatesData(loginResult.student._id),
+              fastDataService.preloadAttendanceData(loginResult.student._id)
+            ]);
+            
+            console.log('✅ AuthContext: Background data fetch complete!');
+            
+            // Dispatch events to update all components with fresh data
+            window.dispatchEvent(new CustomEvent('allDataPreloaded', {
+              detail: { student: loginResult.student }
+            }));
+          } catch (bgError) {
+            console.error('⚠️ AuthContext: Background fetch error (non-critical):', bgError);
+            // Don't fail the login - data will load on-demand
+          }
+        }, 0); // Execute immediately but asynchronously
+
         return { success: true };
       } else {
         console.log('❌ AuthContext: Login failed:', loginResult.error);

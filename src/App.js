@@ -79,26 +79,7 @@ function AppRoutes() {
   const handleLogin = async (regNo, dob) => {
     // This function is called after successful authentication
     console.log('Login successful for:', regNo);
-    
-    try {
-      // Initialize all student data for all pages
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-      if (studentData && studentData._id) {
-        console.log('🚀 INITIALIZING: All student data after login...');
-        const fastDataService = (await import('./services/fastDataService.js')).default;
-        
-        // ⚡ HYPER-FAST: Preload ALL data immediately
-        await Promise.all([
-          fastDataService.initializeAllStudentData(studentData._id),
-          fastDataService.preloadAllData(studentData._id)
-        ]);
-        
-        console.log('✅ ALL STUDENT DATA INITIALIZED & PRELOADED FOR INSTANT ACCESS');
-      }
-    } catch (error) {
-      console.error('❌ Failed to initialize student data after login:', error);
-      // Don't block login process, just log the error
-    }
+    // Background data fetching is now handled in AuthContext
   };
 
   // Handlers for navigation

@@ -243,12 +243,21 @@ class FastDataService {
   // ⚡ INSTANT: Preload profile photo with aggressive caching
   async preloadProfilePhoto(studentId) {
     try {
+      window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+        detail: { type: 'profilePhoto', message: 'Loading profile photo...' }
+      }));
+      
       // First check if we already have the photo URL in localStorage
       const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
       if (storedStudentData && storedStudentData.profilePicURL) {
         // Preload the actual image immediately
         const img = new Image();
-        img.onload = () => console.log('✅ Profile photo preloaded from localStorage');
+        img.onload = () => {
+          console.log('✅ Profile photo preloaded from localStorage');
+          window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+            detail: { type: 'profilePhoto', message: '✓ Profile photo loaded' }
+          }));
+        };
         img.onerror = () => console.log('⚠️ Profile photo failed to load from localStorage');
         img.src = storedStudentData.profilePicURL;
         
@@ -272,7 +281,12 @@ class FastDataService {
         if (photoData.profilePicURL) {
           // Preload the actual image
           const img = new Image();
-          img.onload = () => console.log('✅ Profile photo preloaded from API');
+          img.onload = () => {
+            console.log('✅ Profile photo preloaded from API');
+            window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+              detail: { type: 'profilePhoto', message: '✓ Profile photo loaded' }
+            }));
+          };
           img.onerror = () => console.log('⚠️ Profile photo failed to load from API');
           img.src = photoData.profilePicURL;
           
@@ -296,11 +310,18 @@ class FastDataService {
   // ⚡ INSTANT: Preload resume data
   async preloadResumeData(studentId) {
     try {
+      window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+        detail: { type: 'resume', message: 'Loading resume data...' }
+      }));
+      
       const response = await fetch(`${this.baseURL}/students/${studentId}/resume`);
       if (response.ok) {
         const resumeData = await response.json();
         localStorage.setItem('resumeData', JSON.stringify(resumeData));
         console.log('✅ Resume data preloaded');
+        window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+          detail: { type: 'resume', message: '✓ Resume loaded' }
+        }));
         return resumeData;
       }
     } catch (error) {
@@ -311,11 +332,18 @@ class FastDataService {
   // ⚡ INSTANT: Preload certificates data
   async preloadCertificatesData(studentId) {
     try {
+      window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+        detail: { type: 'certificates', message: 'Loading certificates...' }
+      }));
+      
       const response = await fetch(`${this.baseURL}/students/${studentId}/certificates`);
       if (response.ok) {
         const certificatesData = await response.json();
         localStorage.setItem('certificatesData', JSON.stringify(certificatesData));
         console.log('✅ Certificates data preloaded');
+        window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+          detail: { type: 'certificates', message: '✓ Certificates loaded' }
+        }));
         return certificatesData;
       }
     } catch (error) {
@@ -326,11 +354,18 @@ class FastDataService {
   // ⚡ INSTANT: Preload attendance data
   async preloadAttendanceData(studentId) {
     try {
+      window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+        detail: { type: 'attendance', message: 'Loading attendance...' }
+      }));
+      
       const response = await fetch(`${this.baseURL}/students/${studentId}/attendance`);
       if (response.ok) {
         const attendanceData = await response.json();
         localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
         console.log('✅ Attendance data preloaded');
+        window.dispatchEvent(new CustomEvent('dataLoadProgress', {
+          detail: { type: 'attendance', message: '✓ Attendance loaded' }
+        }));
         return attendanceData;
       }
     } catch (error) {
