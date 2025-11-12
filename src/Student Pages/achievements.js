@@ -9,7 +9,7 @@ import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 // import authService from '../services/authService.js';
 import mongoDBService from '../services/mongoDBService.js';
 import certificateService from '../services/certificateService.js';
-import fastDataService from '../services/fastDataService.js';
+// import fastDataService from '../services/fastDataService.js'; // Unused - using dynamic imports instead
 
 // NEW: Import download/preview alerts
 import { 

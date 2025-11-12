@@ -7,7 +7,7 @@ import CooBackbtn from "../assets/CooBackbtn.svg"
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import './ManageStudentsProfile.css';
-import Adminicons from '../assets/Coordinatorcap.png';
+// import Adminicons from '../assets/Coordinatorcap.png'; // Unused
 
 // All helper components (MdUpload, IoMdClose, GraduationCapIcon, etc.) remain unchanged.
 // ... (Your helper components go here)

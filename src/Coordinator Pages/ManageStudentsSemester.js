@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import './ManageStudentsSemester.css';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";

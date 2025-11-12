@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Viewicon from "../assets/Viewicon.png";
-import Dashcompanydrive from '../assets/Dashcompanydrive.png';
+// import Dashcompanydrive from '../assets/Dashcompanydrive.png'; // Unused
 import PlacedStudentsCap from '../assets/PlacedStudentsCap.svg';
 import  jsPDF  from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -56,11 +56,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     setFilteredStudents(filtered);
     setIsFiltered(true);
   };
-    const [activeItem, setActiveItem] = useState("Eligible Students");
-  
-const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
-  };
+
   const handleClear = () => {
     setFilterData({
       batch: '',

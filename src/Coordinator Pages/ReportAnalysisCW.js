@@ -168,9 +168,9 @@ function  CoReportAnalysismain() {
   }, [companyFilter, batchFilter, startDateFilter, endDateFilter, statusFilter]); 
   
 
-  const navigateToCompanyAnalysis = () => {
-    navigate('/ReportanalysisCW'); 
-  };
+  // const navigateToCompanyAnalysis = () => { // Unused
+  //   navigate('/ReportanalysisCW'); 
+  // };
   
   const exportToExcel = () => {
     const header = [

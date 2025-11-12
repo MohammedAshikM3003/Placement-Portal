@@ -12,7 +12,7 @@ import './ReportAnalysismain.css';
 import Adminicon from "../assets/Adminicon.png";
 
 function CoReportAnalysismain({ onLogout, onViewChange }) {
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Unused
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const toggleSidebar = () => {

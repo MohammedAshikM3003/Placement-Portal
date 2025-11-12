@@ -674,19 +674,6 @@ Return JSON format: {"contact_info": "YES/NO", "linkedin": "YES/NO", "github": "
     };
   }
 
-  // Convert file to base64
-  fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = error => reject(error);
-    });
-  }
-
   // Get provider status
   getProviderStatus() {
     return {
@@ -697,4 +684,5 @@ Return JSON format: {"contact_info": "YES/NO", "linkedin": "YES/NO", "github": "
   }
 }
 
-export default new MultiProviderAnalysisService();
+const multiProviderService = new MultiProviderAnalysisService();
+export default multiProviderService;

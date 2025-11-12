@@ -7,7 +7,7 @@ import CooBackbtn from "../assets/CooBackbtn.svg"
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import './CooViewMS.css'; // Renamed CSS file import
-import Adminicons from '../assets/Coordinatorcap.png';
+// import Adminicons // Unused from '../assets/Coordinatorcap.png';
 
 // All helper components (MdUpload, IoMdClose, GraduationCapIcon, etc.) remain unchanged.
 // Only keeping necessary icons for the view-only mode
@@ -36,18 +36,18 @@ const CalendarIcon = () => (
 function CooViewMS({ onLogout, onViewChange }) {
     const navigate = useNavigate();
     // Initialize state with sample data for view-only mode
-    const [studyCategory, setStudyCategory] = useState('12th');
-    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/200x250?text=Student+Photo'); // Placeholder image for viewing
-    const [uploadInfo, setUploadInfo] = useState({ name: 'SampleProfile.jpg', date: '01/01/2024' });
+    // const [studyCategory, setStudyCategory] // Unused = useState('12th');
+    // const [profileImage, setProfileImage] // Unused = useState('https://via.placeholder.com/200x250?text=Student+Photo'); // Placeholder image for viewing
+    // const [uploadInfo, setUploadInfo] // Unused = useState({ name: 'SampleProfile.jpg', date: '01/01/2024' });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dob, setDob] = useState(new Date('2003-05-20')); // Sample DOB
+    // const [dob, setDob] // Unused = useState(new Date('2003-05-20')); // Sample DOB
 
     // Disabled handlers for view-only mode
-    const handleImageUpload = () => {};
-    const handleImageRemove = () => {};
+    // const handleImageUpload = // Unused () => {};
+    // const handleImageRemove = // Unused () => {};
     const handleSave = (e) => { e.preventDefault(); };
-    const handleDiscard = () => {};
-    const closePopup = () => {};
+    // const handleDiscard = // Unused () => {};
+    // const closePopup = // Unused () => {};
     const handleViewChange = (view) => {
         onViewChange(view);
         setIsSidebarOpen(false);

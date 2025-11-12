@@ -14,7 +14,9 @@ const getApplicationHistory = async (studentId) => {
     // TODO: Implement API call to fetch student's application history
     // const response = await fetch(`/api/students/${studentId}/applications`);
     // return await response.json();
-    return []; // Return empty array until API is implemented
+    
+    // Return empty array until API is implemented
+    return [];
   } catch (error) {
     console.error('Error fetching application history:', error);
     return [];

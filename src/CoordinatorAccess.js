@@ -49,15 +49,15 @@ const CoordinatorAccess = () => {
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCredentials({ username: '', password: '' });
-    // Clear authentication state from localStorage using new keys
-    localStorage.removeItem('isCoordinatorLoggedIn');
-    localStorage.removeItem('coordinatorData');
-    localStorage.removeItem('coordinatorUsername');
-    navigate('/coordinator', { replace: true });
-  };
+  // const handleLogout = () => { // Unused
+  //   setIsAuthenticated(false);
+  //   setCredentials({ username: '', password: '' });
+  //   // Clear authentication state from localStorage using new keys
+  //   localStorage.removeItem('isCoordinatorLoggedIn');
+  //   localStorage.removeItem('coordinatorData');
+  //   localStorage.removeItem('coordinatorUsername');
+  //   navigate('/coordinator', { replace: true });
+  // };
 
   // Show loading screen while checking authentication
   if (isLoading) {

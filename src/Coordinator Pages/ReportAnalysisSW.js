@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'; // Removed unused useEffect
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx'; 
 import { jsPDF } from 'jspdf';
@@ -45,7 +45,7 @@ const initialData = [
 ];
 
 function CoReportAnalysisSW({ onLogout, onViewChange }) {
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Unused
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     // Filter states

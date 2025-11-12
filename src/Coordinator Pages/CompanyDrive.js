@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import * as XLSX from 'xlsx';
 import  jsPDF  from 'jspdf';
 import autoTable from'jspdf-autotable';
-import { GiFireRay } from "react-icons/gi";
+// import { GiFireRay } from 'react-icons/gi'; // Unused
 import { FaEye } from "react-icons/fa"; // Importing the eye icon
 import searchcompany from '../assets/seachcompany.png';
 import searchbydept from '../assets/SearchbyDepartment.png';
 import searchdomain from '../assets/SearchDomain.png';
 import searchmode from '../assets/searchMode.png';
-import { useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
+import { useNavigate, BrowserRouter, Routes, Route } from 'react-router-dom'; // Removed unused Link
+// import styled from 'styled-components'; // Unused
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import Companyprofile from "../assets/Companyprofile.svg";
@@ -147,18 +147,18 @@ export default function App({ onLogout, currentView, onViewChange }) {
     department: '',
     mode: ''
   });
-  const [activeItem, setActiveItem] = useState("Company Drive");
+  // const [activeItem, setActiveItem] = useState("Company Drive"); // Unused
   const navigate = useNavigate();
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   // This function will set the active item when a menu item is clicked
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
-  };
+  // const handleItemClick = (itemName) => { // Unused
+  //   setActiveItem(itemName);
+  // };
 
   // State for filtered data
   const [filteredData, setFilteredData] = useState(sampleCompanyData);
-  const [showFiltered, setShowFiltered] = useState(true);
+  // const [showFiltered, setShowFiltered] = useState(true); // Unused
 
   // Handle input changes
   const handleFilterChange = (field, value) => {
@@ -200,7 +200,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
     filtered.sort((a, b) => a.company.localeCompare(b.company));
 
     setFilteredData(filtered);
-    setShowFiltered(true);
+    // setShowFiltered(true); // Unused
   };
 
   // Reset filters
@@ -212,7 +212,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
       mode: ''
     });
     setFilteredData(sampleCompanyData);
-    setShowFiltered(true);
+    // setShowFiltered(true); // Unused
   };
   const toggleExportMenu = () => {
     setShowExportMenu(prev => !prev);

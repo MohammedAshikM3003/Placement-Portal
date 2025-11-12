@@ -61,7 +61,7 @@ function Comanagestud({ onLogout, currentView, onViewChange }) {
     
     // ACTIVE FILTER STATES (only change on button click)
 
-    const [filterDept, setFilterDept] = useState(DEFAULT_DEPT);
+    const [filterDept] = useState(''); // Removed unused setFilterDeptDEFAULT_DEPT);
     const [filterBatch, setFilterBatch] = useState('');
     
     // DROPDOWN SELECTION STATES (change instantly as user selects)

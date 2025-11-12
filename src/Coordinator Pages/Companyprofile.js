@@ -159,24 +159,24 @@ const sampleCompanyData = [
 ];
 
 function CompanyProfile({ onLogout, currentView, onViewChange }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // const [sidebarOpen, setSidebarOpen] = useState(false); // Unused
 
   // State for search filters
   const [filters, setFilters] = useState({
     company: '',
-    domain: '',
-    jobRole: '',
-    mode: ''
+    // domain: '', // Unused
+    // jobRole: '', // Unused
+    // mode: '' // Unused
   });
 
- const [activeItem, setActiveItem] = useState("Company Profile");
+  // const [activeItem, setActiveItem] = useState("Company Profile"); // Unused
   const navigate = useNavigate();
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   // This function will set the active item when a menu item is clicked
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
-  };
+  // const handleItemClick = (itemName) => { // Unused
+  //   setActiveItem(itemName);
+  // };
 
   // This function will set the active item when a menu item is clicked
  
@@ -184,7 +184,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
 
   // State for filtered data
   const [filteredData, setFilteredData] = useState(sampleCompanyData);
-  const [showFiltered, setShowFiltered] = useState(true);
+  // const [showFiltered, setShowFiltered] = useState(false); // Unused
 
   // Handle input changes
   const handleFilterChange = (field, value) => {
@@ -227,7 +227,7 @@ const handleViewProfile = () => {
   filtered.sort((a, b) => a.company.localeCompare(b.company));
 
   setFilteredData(filtered);
-  setShowFiltered(true);
+  // setShowFiltered(true); // Unused
 };
 
   // Reset filters
@@ -239,39 +239,39 @@ const handleViewProfile = () => {
       mode: ''
     });
     setFilteredData(sampleCompanyData);
-    setShowFiltered(true);
+    // setShowFiltered(true); // Unused
   };
 const location = useLocation();
-useEffect(() => {
-  switch (location.pathname) {
-    case "/dashboard":
-      setActiveItem("Dashboard");
-      break;
-    case "/manage-students":
-      setActiveItem("Manage Students");
-      break;
-    case "/company-profile":
-      setActiveItem("Company Profile");
-      break;
-    case "/company-drive":
-      setActiveItem("Company Drive");
-      break;
-    case "/certificate-verification":
-      setActiveItem("Certificate Verification");
-      break;
-    case "/eligible-students":
-      setActiveItem("Eligible Students");
-      break;
-    case "/attendance":
-      setActiveItem("Attendance");
-      break;
-    case "/placed-students":
-      setActiveItem("Placed Students");
-      break;
-    default:
-      setActiveItem("Dashboard");
-  }
-}, [location.pathname]);
+// useEffect(() => { // Unused activeItem
+//   switch (location.pathname) {
+//     case "/dashboard":
+//       setActiveItem("Dashboard");
+//       break;
+//     case "/manage-students":
+//       setActiveItem("Manage Students");
+//       break;
+//     case "/company-profile":
+//       setActiveItem("Company Profile");
+//       break;
+//     case "/company-drive":
+//       setActiveItem("Company Drive");
+//       break;
+//     case "/certificate-verification":
+//       setActiveItem("Certificate Verification");
+//       break;
+//     case "/eligible-students":
+//       setActiveItem("Eligible Students");
+//       break;
+//     case "/attendance":
+//       setActiveItem("Attendance");
+//       break;
+//     case "/placed-students":
+//       setActiveItem("Placed Students");
+//       break;
+//     default:
+//       setActiveItem("Dashboard");
+//   }
+// }, [location.pathname]);
 
 
 

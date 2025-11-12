@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import CVManageStudents from "../assets/CVManageStudents.png";
 import Searchbysection from "../assets/Searchbysection.png";
 import Statusicon from "../assets/Statusicon.png";
 import VectorCertificatename from "../assets/VectorCertificateName.png";
@@ -7,29 +6,16 @@ import { useNavigate } from 'react-router-dom';
 
 import CVSearchicon from "../assets/CVSearchicon.png";
 import Dropdown from "../assets/Dropdown.png";
-import { MdOutlineLogout } from 'react-icons/md';
 import Viewicon from "../assets/Viewicon.png";
 import AdminBrowseStudenticon from "../assets/AdminBrowseStudenticon.png";
 import './CertificateVerification.css';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 
-// import './CertificateVerificationStyles.css'; // <--- **YOU MUST ADD THIS IMPORT**
-
-import styled from 'styled-components';
 import {
-  FaUserGraduate,
-  FaUser,
-  FaBuilding,
-  FaCalendarAlt,
-  FaChartBar,
-  FaStar,
-  FaSignOutAlt,
   FaEye,
 } from "react-icons/fa";
 
-
-// --- REMOVED THE 'styles' OBJECT ---
 
 const initialCertificates = [
   {
@@ -178,12 +164,12 @@ export default function PlacementPortal({ onLogout, currentView, onViewChange })
       [key]: e.target.value,
     }));
   };
-  const [activeItem, setActiveItem] = useState("Certificate Verification");
+  // const [activeItem, setActiveItem] = useState("Certificate Verification"); // Unused
 
   const navigate = useNavigate();
-  const handleItemClick = (itemName) => {
-      setActiveItem(itemName);
-    };
+  // const handleItemClick = (itemName) => { // Unused
+  //     setActiveItem(itemName);
+  //   };
   const [focus1, setFocus1] = useState(false);
   const [focus2, setFocus2] = useState(false);
   const [focus3, setFocus3] = useState(false);

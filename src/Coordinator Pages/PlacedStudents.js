@@ -43,19 +43,19 @@ const DonutChart = () => {
 
 
 const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
-  // Data for navigation links
-  const navLinks = [
-    { icon: <LuLayoutDashboard />, text: 'Dashboard' },
-    { icon: <FaUsers />, text: 'Manage Students' },
-    { icon: <FaBuilding />, text: 'Company Profile' },
-    { icon: <FaBriefcase />, text: 'Company Drive' },
-    { icon: <FaCertificate />, text: 'Certificate Verification' },
-    { icon: <FaUserCheck />, text: 'Eligible Students' },
-    { icon: <FaCalendarAlt />, text: 'Attendance' },
-    { icon: <FaUserGraduate />, text: 'Placed Students', active: true },
-    { icon: <FaChartBar />, text: 'Report Analysis' },
-    { icon: <FaUserCircle />, text: 'Profile' },
-  ];
+  // Data for navigation links - UNUSED
+  // const navLinks = [
+  //   { icon: <LuLayoutDashboard />, text: 'Dashboard' },
+  //   { icon: <FaUsers />, text: 'Manage Students' },
+  //   { icon: <FaBuilding />, text: 'Company Profile' },
+  //   { icon: <FaBriefcase />, text: 'Company Drive' },
+  //   { icon: <FaCertificate />, text: 'Certificate Verification' },
+  //   { icon: <FaUserCheck />, text: 'Eligible Students' },
+  //   { icon: <FaCalendarAlt />, text: 'Attendance' },
+  //   { icon: <FaUserGraduate />, text: 'Placed Students', active: true },
+  //   { icon: <FaChartBar />, text: 'Report Analysis' },
+  //   { icon: <FaUserCircle />, text: 'Profile' },
+  // ];
 
   // Data for the students table
   const allStudentsData = [
@@ -83,9 +83,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
 
   // State for Print dropdown visibility
   const [open, setOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState("Placed Students");
+  // const [activeItem, setActiveItem] = useState("Placed Students"); // Unused
   const navigate = useNavigate();
-  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showExportMenu] = useState(false); // Removed unused setter
 
   // Function to handle filter changes (only for batch and company)
   const handleFilterChange = (e) => {
@@ -165,9 +165,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
 
 
   // This function will set the active item when a menu item is clicked
-  const handleItemClick = (itemName) => {
-    setActiveItem(itemName);
-  };
+  // const handleItemClick = (itemName) => { // Unused
+  //   setActiveItem(itemName);
+  // };
 
 // --- inside PlacementDashboard ---
 

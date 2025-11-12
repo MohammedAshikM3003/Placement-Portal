@@ -8,7 +8,7 @@ import './Profile.css'; // Uses the user's original CSS file name
 
 // Placeholder image (check your path is correct: "./assets/Adminicon.png" and "./assets/Coordinatorcap.png")
 import Adminicon from "../assets/Adminicon.png"; 
-import GraduateCapIcon from "../assets/Coordinatorcap.png"; 
+// import GraduateCapIcon from '../assets/VectorGC.svg'; // Unused
 import ProfileGraduationcap from "../assets/ProfileGraduationcap.svg"
 
 // Icons to match ManageStudentsProfile styles
@@ -37,13 +37,13 @@ const CalendarIcon = () => (
         <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
 );
-// CORRECT SVG component for the specific Upload icon (arrow pointing up from a base)
-const UploadIconSVG = () => (
-    <svg className="co-profile-upload-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* UPDATED PATH: This path represents a standard upload icon: an arrow pointing up and a wide, stable base line */}
-        <path d="M11 16h2V9h4l-5-5-5 5h4v7zm-5 4h12v-2H6v2z" fill="currentColor"/>
-    </svg>
-);
+// CORRECT SVG component for the specific Upload icon (arrow pointing up from a base) - UNUSED
+// const UploadIconSVG = () => (
+//     <svg className="co-profile-upload-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+//         {/* UPDATED PATH: This path represents a standard upload icon: an arrow pointing up and a wide, stable base line */}
+//         <path d="M11 16h2V9h4l-5-5-5 5h4v7zm-5 4h12v-2H6v2z" fill="currentColor"/>
+//     </svg>
+// );
 
 
 function CoProfile({ onLogout, currentView, onViewChange }) {

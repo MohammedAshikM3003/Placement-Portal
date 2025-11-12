@@ -9,7 +9,7 @@ import PlacementPortalLogin from "./mainlogin.js";
 import MainSignUp from "./MainSingUp.js";
 import MainRegistration from "./MainRegistration.js";
 import CoordinatorAccess from "./CoordinatorAccess.js";
-import CoordinatorMain from "./CoordinatorMain.js";
+// import CoordinatorMain from "./CoordinatorMain.js"; // Unused import
 
 // Lazy load Student components
 const PlacementPortalDashboard = lazy(() => import("./Student Pages/dashboard.js"));
@@ -42,10 +42,10 @@ const CooViewPS = lazy(() => import("./Coordinator Pages/CooViewPS.js"));
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole] = useState("");
-  const [userDepartment, setUserDepartment] = useState("");
-  const [isCoordinatorLoggedIn, setIsCoordinatorLoggedIn] = useState(false);
-  const [coordinatorData, setCoordinatorData] = useState(null);
+  // const [userRole, setUserRole] = useState(""); // Unused
+  // const [userDepartment, setUserDepartment] = useState(""); // Unused
+  // const [isCoordinatorLoggedIn, setIsCoordinatorLoggedIn] = useState(false); // Unused
+  // const [coordinatorData, setCoordinatorData] = useState(null); // Unused
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -53,36 +53,36 @@ function AppContent() {
       useEffect(() => {
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        const isCoordinatorLoggedIn = localStorage.getItem('isCoordinatorLoggedIn') === 'true';
-        const coordinatorData = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
+        // const isCoordinatorLoggedIn = localStorage.getItem('isCoordinatorLoggedIn') === 'true'; // Unused
+        // const coordinatorData = JSON.parse(localStorage.getItem('coordinatorData') || 'null'); // Unused
         
-        console.log('App.js - Checking auth state:', { isLoggedIn, studentData, isCoordinatorLoggedIn, coordinatorData }); // Debug log
+        console.log('App.js - Checking auth state:', { isLoggedIn, studentData }); // Debug log
         
         // Check student authentication
         if (isLoggedIn && studentData) {
           setIsLoggedIn(true);
           setUserEmail(studentData.primaryEmail || studentData.email || '');
-          setUserRole('student');
-          setUserDepartment(studentData.branch || '');
+          // setUserRole('student'); // Unused
+          // setUserDepartment(studentData.branch || ''); // Unused
           console.log('App.js - Student authenticated:', studentData.firstName, studentData.lastName); // Debug log
         } else {
           setIsLoggedIn(false);
           setUserEmail('');
-          setUserRole('');
-          setUserDepartment('');
+          // setUserRole(''); // Unused
+          // setUserDepartment(''); // Unused
           console.log('App.js - Student not authenticated'); // Debug log
         }
 
-        // Check coordinator authentication
-        if (isCoordinatorLoggedIn && coordinatorData) {
-          setIsCoordinatorLoggedIn(true);
-          setCoordinatorData(coordinatorData);
-          console.log('App.js - Coordinator authenticated:', coordinatorData); // Debug log
-        } else {
-          setIsCoordinatorLoggedIn(false);
-          setCoordinatorData(null);
-          console.log('App.js - Coordinator not authenticated'); // Debug log
-        }
+        // Check coordinator authentication - COMMENTED OUT (unused)
+        // if (isCoordinatorLoggedIn && coordinatorData) {
+        //   setIsCoordinatorLoggedIn(true);
+        //   setCoordinatorData(coordinatorData);
+        //   console.log('App.js - Coordinator authenticated:', coordinatorData); // Debug log
+        // } else {
+        //   setIsCoordinatorLoggedIn(false);
+        //   setCoordinatorData(null);
+        //   console.log('App.js - Coordinator not authenticated'); // Debug log
+        // }
         
         setIsLoading(false);
       }, []);
@@ -114,8 +114,8 @@ function AppContent() {
           
           setIsLoggedIn(false);
           setUserEmail("");
-          setUserRole("");
-          setUserDepartment("");
+          // setUserRole(""); // Unused
+          // setUserDepartment(""); // Unused
           navigate("/"); // Redirect to landing page on logout
         } catch (error) {
           console.error('Logout error:', error);
