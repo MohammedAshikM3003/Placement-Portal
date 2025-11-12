@@ -42,16 +42,26 @@ const AttendanceChart = ({ present, absent }) => {
 
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const [studentData, setStudentData] = React.useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('studentData') || 'null');
-    } catch (error) {
-      return null;
-    }
-  });
+  const [studentData, setStudentData] = React.useState(null);
 
-  // ⚡ INSTANT: Load student data immediately from cache/localStorage
+  // ⚡ INSTANT: Load student data immediately on mount
   React.useEffect(() => {
+    const loadStudentData = () => {
+      try {
+        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (storedStudentData) {
+          console.log('⚡ Dashboard: Loaded student data from localStorage');
+          setStudentData(storedStudentData);
+        }
+      } catch (error) {
+        console.error('❌ Dashboard: Error loading student data:', error);
+      }
+    };
+
+    // Load immediately on mount
+    loadStudentData();
+    
+    // Listen for updates
     const handleProfileUpdate = () => {
       try {
         const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -59,71 +69,9 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
           setStudentData(updatedStudentData);
         }
       } catch (error) {
-        console.error('Error updating student data for sidebar:', error);
+        console.error('❌ Dashboard: Error updating student data:', error);
       }
     };
-    
-    // ⚡ INSTANT: Load from localStorage immediately
-    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData) {
-      console.log('⚡ Dashboard: INSTANT load from localStorage');
-      setStudentData(storedStudentData);
-      
-      // Try to get even faster cached data
-      if (storedStudentData._id) {
-        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
-          const instantData = fastDataService.getInstantData(storedStudentData._id);
-          if (instantData && instantData.student) {
-            console.log('⚡ Dashboard: INSTANT load from cache');
-            setStudentData(instantData.student);
-          }
-        });
-      }
-      
-      // Dispatch immediate profile update for sidebar
-      console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
-      window.dispatchEvent(new CustomEvent('profileUpdated', { 
-        detail: storedStudentData
-      }));
-      
-      // ⚡ FORCE: Immediate profile picture update for dashboard
-      if (storedStudentData.profilePicURL) {
-        console.log('🖼️ Dashboard: Forcing immediate profile picture update');
-        
-        // Preload the image to ensure it's ready
-        const img = new Image();
-        img.onload = () => {
-          console.log('✅ Dashboard: Profile picture loaded successfully, forcing sidebar refresh');
-          
-          const updatedData = {
-            ...storedStudentData,
-            _dashboardUpdate: Date.now() // Dashboard-specific update flag
-          };
-          
-          // Update localStorage
-          localStorage.setItem('studentData', JSON.stringify(updatedData));
-          
-          // Dispatch multiple events to ensure sidebar updates
-          window.dispatchEvent(new CustomEvent('profileUpdated', { 
-            detail: updatedData
-          }));
-          window.dispatchEvent(new CustomEvent('forceProfileRefresh', { 
-            detail: updatedData
-          }));
-          window.dispatchEvent(new CustomEvent('studentDataUpdated', { 
-            detail: { student: updatedData }
-          }));
-          
-          console.log('🚀 Dashboard: All profile update events dispatched from dashboard');
-        };
-        img.onerror = () => {
-          console.log('❌ Dashboard: Profile picture failed to load:', storedStudentData.profilePicURL);
-        };
-        img.src = storedStudentData.profilePicURL;
-      } else {
-        console.log('⚠️ Dashboard: No profile picture URL found in stored data');
-      }
-    }
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);

@@ -24,32 +24,62 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
 
-  // ⚡ INSTANT: Update local state when studentData prop changes
+  // ⚡ INSTANT: Aggressively load student data on mount
   useEffect(() => {
-    if (studentData) {
-      setCurrentStudentData(studentData);
-      // Preload profile photo immediately
-      if (studentData.profilePicURL) {
-        const img = new Image();
-        img.onload = () => console.log('⚡ Sidebar: Profile photo preloaded');
-        img.src = studentData.profilePicURL;
-      }
-    } else {
-      // If no studentData prop, try to load from localStorage
+    const loadStudentDataImmediately = () => {
       try {
-        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData) {
-          setCurrentStudentData(storedStudentData);
-          // Preload profile photo immediately
-          if (storedStudentData.profilePicURL) {
-            const img = new Image();
-            img.onload = () => console.log('⚡ Sidebar: Profile photo preloaded from localStorage');
-            img.src = storedStudentData.profilePicURL;
-          }
+        // Priority 1: Use prop if available
+        if (studentData?.profilePicURL) {
+          console.log('⚡ Sidebar: Using prop data with profile pic');
+          setCurrentStudentData(studentData);
+          setImageError(false);
+          setImageKey(Date.now());
+          return;
+        }
+
+        // Priority 2: Load from localStorage
+        const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (storedData?.profilePicURL) {
+          console.log('⚡ Sidebar: Loaded profile pic from localStorage immediately');
+          setCurrentStudentData(storedData);
+          setImageError(false);
+          setImageKey(Date.now());
+          
+          // Preload the image
+          const img = new Image();
+          img.onload = () => {
+            console.log('✅ Sidebar: Profile image preloaded successfully');
+            // Force another render to ensure display
+            setImageKey(Date.now());
+          };
+          img.onerror = () => {
+            console.log('❌ Sidebar: Profile image preload failed');
+            setImageError(true);
+          };
+          img.src = storedData.profilePicURL;
+        } else if (storedData) {
+          console.log('⚠️ Sidebar: Student data found but no profile pic URL');
+          setCurrentStudentData(storedData);
         }
       } catch (error) {
-        console.error('Error loading student data for sidebar:', error);
+        console.error('❌ Sidebar: Error loading student data:', error);
       }
+    };
+
+    // Load immediately on mount
+    loadStudentDataImmediately();
+  }, []);
+
+  // ⚡ Update when studentData prop changes
+  useEffect(() => {
+    if (studentData) {
+      console.log('🔄 Sidebar: Prop data updated', {
+        hasProfilePic: !!studentData.profilePicURL,
+        profileURL: studentData.profilePicURL
+      });
+      setCurrentStudentData(studentData);
+      setImageError(false);
+      setImageKey(Date.now());
     }
   }, [studentData]);
 
