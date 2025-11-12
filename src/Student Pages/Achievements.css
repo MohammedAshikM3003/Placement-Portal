@@ -361,19 +361,17 @@ body {
 .achievements-table th:nth-child(4),
 .achievements-table td:nth-child(4) { width: 80px; } /* Semester */
 .achievements-table th:nth-child(5),
-.achievements-table td:nth-child(5) { width: 80px; } /* Section */
+.achievements-table td:nth-child(5) { width: 250px; } /* Competition */
 .achievements-table th:nth-child(6),
-.achievements-table td:nth-child(6) { width: 200px; } /* Competition */
+.achievements-table td:nth-child(6) { width: 120px; } /* Date */
 .achievements-table th:nth-child(7),
-.achievements-table td:nth-child(7) { width: 120px; } /* Date */
+.achievements-table td:nth-child(7) { width: 120px; } /* Prize */
 .achievements-table th:nth-child(8),
-.achievements-table td:nth-child(8) { width: 120px; } /* Prize */
+.achievements-table td:nth-child(8) { width: 100px; text-align: center; } /* Status */
 .achievements-table th:nth-child(9),
-.achievements-table td:nth-child(9) { width: 100px; text-align: center; } /* Status */
+.achievements-table td:nth-child(9) { width: 80px; text-align: center; } /* View */
 .achievements-table th:nth-child(10),
-.achievements-table td:nth-child(10) { width: 80px; text-align: center; } /* View */
-.achievements-table th:nth-child(11),
-.achievements-table td:nth-child(11) { width: 100px; text-align: center; } /* Download */
+.achievements-table td:nth-child(10) { width: 100px; text-align: center; } /* Download */
 
 .row-checkbox {
     width: 18px;
@@ -912,19 +910,17 @@ body {
     .achievements-table th:nth-child(4),
     .achievements-table td:nth-child(4) { width: 90px; } /* Semester */
     .achievements-table th:nth-child(5),
-    .achievements-table td:nth-child(5) { width: 80px; } /* Section */
+    .achievements-table td:nth-child(5) { width: 250px; } /* Competition Name */
     .achievements-table th:nth-child(6),
-    .achievements-table td:nth-child(6) { width: 200px; } /* Competition Name */
+    .achievements-table td:nth-child(6) { width: 110px; } /* Date */
     .achievements-table th:nth-child(7),
-    .achievements-table td:nth-child(7) { width: 110px; } /* Date */
+    .achievements-table td:nth-child(7) { width: 80px; } /* Prize */
     .achievements-table th:nth-child(8),
-    .achievements-table td:nth-child(8) { width: 80px; } /* Prize */
+    .achievements-table td:nth-child(8) { width: 100px; } /* Status */
     .achievements-table th:nth-child(9),
-    .achievements-table td:nth-child(9) { width: 100px; } /* Status */
+    .achievements-table td:nth-child(9) { width: 70px; } /* View */
     .achievements-table th:nth-child(10),
-    .achievements-table td:nth-child(10) { width: 70px; } /* View */
-    .achievements-table th:nth-child(11),
-    .achievements-table td:nth-child(11) { width: 100px; } /* Download */
+    .achievements-table td:nth-child(10) { width: 100px; } /* Download */
     
     /* Increase checkbox size for mobile */
     .row-checkbox {

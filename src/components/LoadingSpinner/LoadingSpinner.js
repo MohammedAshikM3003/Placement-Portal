@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './LoadingSpinner.css';
 
-const LoadingSpinner = ({ message = "Loading...", showProgress = false }) => {
+const LoadingSpinner = ({ message = "Loading...", showProgress = false, mode = "full" }) => {
   const [progressMessages, setProgressMessages] = useState([]);
   const [currentProgress, setCurrentProgress] = useState(0);
 
@@ -36,8 +36,10 @@ const LoadingSpinner = ({ message = "Loading...", showProgress = false }) => {
     };
   }, [showProgress]);
 
+  const containerClass = mode === "table" ? "table-loading-spinner" : "loading-spinner-container";
+  
   return (
-    <div className="loading-spinner-container">
+    <div className={containerClass}>
       <div className="loading-spinner">
         <div className="spinner"></div>
         <p className="loading-message">{message}</p>
