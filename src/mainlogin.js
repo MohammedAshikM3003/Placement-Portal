@@ -9,6 +9,7 @@ import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
 import { useAuth } from './contexts/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 
 const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   // --- UPDATED: State changed from 'email' to 'registerNumber' ---
@@ -40,44 +41,70 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         return;
       }
 
-          // CRITICAL: Use AuthContext login method instead of direct authService
-          console.log('🚀 Login: Using AuthContext login method...');
-          const loginResult = await login(registerNumber, password);
+      console.log('🚀 Login: Using AuthContext login method...');
+      
+      // Call login which will handle background data fetching
+      const loginResult = await login(registerNumber, password);
+      
+      console.log('Login result:', loginResult);
+      
+      if (loginResult.success) {
+        console.log('✅ Login successful! AuthContext has updated global state');
+        
+        // Call the onLogin callback if provided
+        if (onLogin) {
+          onLogin(registerNumber, password);
+        }
+        
+        // ⚡ WAIT for initial data preload before navigation
+        console.log('⏳ Waiting for initial data preload...');
+        
+        // Wait for the background fetch to complete (give it 2 seconds max)
+        await new Promise(resolve => {
+          let timeout;
+          const handleDataLoaded = () => {
+            clearTimeout(timeout);
+            window.removeEventListener('allDataPreloaded', handleDataLoaded);
+            console.log('✅ Data preloaded, navigating to dashboard');
+            resolve();
+          };
           
-          console.log('Login result:', loginResult); // Debug log
+          window.addEventListener('allDataPreloaded', handleDataLoaded);
           
-          if (loginResult.success) {
-            console.log('✅ Login successful! AuthContext has updated global state');
-            
-            // Call the onLogin callback if provided
-            if (onLogin) {
-              onLogin(registerNumber, password);
-            }
-            
-            // CRITICAL: Navigate to dashboard - AuthContext will handle the rest
-            window.location.href = '/dashboard';
-          } else {
-            setError(loginResult.error || 'Login failed. Please check your credentials.');
-          }
+          // Fallback timeout - navigate anyway after 2 seconds
+          timeout = setTimeout(() => {
+            window.removeEventListener('allDataPreloaded', handleDataLoaded);
+            console.log('⏰ Timeout reached, navigating to dashboard');
+            resolve();
+          }, 2000);
+        });
+        
+        // Navigate to dashboard after data is loaded
+        window.location.href = '/dashboard';
+      } else {
+        setError(loginResult.error || 'Login failed. Please check your credentials.');
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please check your credentials.');
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: "#f5f7fc",
-        height: "100vh",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <>
+      {isLoading && <LoadingSpinner message="Authenticating..." showProgress={true} />}
+      <div
+        style={{
+          fontFamily: "Arial, sans-serif",
+          backgroundColor: "#f5f7fc",
+          height: "100vh",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
       <Navbar /> {/* Use the shared Navbar component here */}
       <div
         className="main-layout"
@@ -339,6 +366,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
       `}</style>
     </div>
+    </>
   );
 };
 
