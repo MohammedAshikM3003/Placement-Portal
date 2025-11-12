@@ -44,6 +44,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           
           if (loginResult.success) {
             console.log('Login successful! Redirecting to dashboard...'); // Debug log
+            console.log('✅ NEW STUDENT DATA:', {
+              name: `${loginResult.student.firstName} ${loginResult.student.lastName}`,
+              regNo: loginResult.student.regNo,
+              id: loginResult.student._id
+            });
             
             // Store authentication token and student data
             localStorage.setItem('authToken', loginResult.token);
@@ -51,6 +56,14 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             localStorage.setItem('studentRegNo', registerNumber);
             localStorage.setItem('studentDob', password);
             localStorage.setItem('studentData', JSON.stringify(loginResult.student));
+            
+            // Dispatch immediate update event for sidebar
+            window.dispatchEvent(new CustomEvent('studentDataUpdated', { 
+              detail: { student: loginResult.student } 
+            }));
+            window.dispatchEvent(new CustomEvent('profileUpdated', { 
+              detail: loginResult.student 
+            }));
             
             // Call the onLogin callback
             onLogin(registerNumber, password);

@@ -47,16 +47,39 @@ class AuthService {
   // Student login with registration number and date of birth
   async loginStudent(regNo, dob) {
     try {
+      // CRITICAL: Clear all previous student data before new login
+      console.log('🧹 CLEARING: Previous student data before new login');
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('completeStudentData');
+      localStorage.removeItem('resumeData');
+      localStorage.removeItem('certificatesData');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('studentRegNo');
+      localStorage.removeItem('studentDob');
+      
       const response = await this.apiCall('/students/login', {
         method: 'POST',
         body: JSON.stringify({ regNo, dob })
       });
 
-      if (response.token) {
+      if (response.token && response.student) {
+        console.log('✅ LOGIN SUCCESS: New student data received:', {
+          regNo: response.student.regNo,
+          name: `${response.student.firstName} ${response.student.lastName}`,
+          id: response.student._id
+        });
+        
         // Store token and student data
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('studentData', JSON.stringify(response.student));
         localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('studentRegNo', regNo);
+        localStorage.setItem('studentDob', dob);
+        
+        // Clear any cached data from fastDataService
+        const fastDataService = (await import('./fastDataService.js')).default;
+        fastDataService.clearCache();
         
         return {
           success: true,
@@ -65,7 +88,7 @@ class AuthService {
         };
       }
 
-      return { success: false, error: 'Login failed' };
+      return { success: false, error: 'Login failed - no student data received' };
     } catch (error) {
       console.error('Student login error:', error);
       return { success: false, error: error.message };

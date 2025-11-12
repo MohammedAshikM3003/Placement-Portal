@@ -127,7 +127,13 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
             }} />
           )}
           <div className="user-text">
-            <span>{currentStudentData ? `${currentStudentData.firstName} ${currentStudentData.lastName}` : 'Student'}</span>
+            <span>
+              {currentStudentData && currentStudentData.firstName && currentStudentData.lastName 
+                ? `${currentStudentData.firstName} ${currentStudentData.lastName}` 
+                : currentStudentData?.regNo 
+                  ? `Student ${currentStudentData.regNo}` 
+                  : 'Loading...'}
+            </span>
           </div>
         </div>
       </div>

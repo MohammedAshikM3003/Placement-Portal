@@ -180,10 +180,17 @@ class FastDataService {
   // Clear cache when needed
   clearCache(studentId = null) {
     if (studentId) {
+      console.log('🧹 CLEARING: Cache for student:', studentId);
       this.cache.delete(`complete_${studentId}`);
     } else {
+      console.log('🧹 CLEARING: All cache data');
       this.cache.clear();
     }
+    
+    // Also clear localStorage cache
+    localStorage.removeItem('completeStudentData');
+    localStorage.removeItem('resumeData');
+    localStorage.removeItem('certificatesData');
   }
 
   // Preload data for instant access
