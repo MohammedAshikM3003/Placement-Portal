@@ -21,6 +21,9 @@ import {
   PreviewProgressAlert 
 } from '../components/alerts';
 
+// Import useCallback for refreshAchievements
+import { useState, useEffect, useCallback } from 'react';
+
 // Delete Confirmation Popup Component - Matches PopupAchievements style
 const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
   <div className="Achievement-popup-container">
@@ -184,7 +187,6 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
 }
 
 // The rest of the file (AchievementsContent, etc.) remains unchanged.
-// ... (Your existing AchievementsContent component goes here)
 function AchievementsContent() {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -215,17 +217,98 @@ function AchievementsContent() {
   const [, setStudentData] = useState(null);
   // Removed lastSyncTime state - no longer displayed to users
 
-  // Super fast background refresh function (optimized)
-  const quickBackgroundRefresh = useCallback(async () => {
+  // Move refreshAchievements function here and wrap it with useCallback
+  const refreshAchievements = useCallback(async () => {
     try {
-      console.log('⚡ Super fast background refresh...');
+      console.log('⚡ SUPER FAST REFRESH STARTING...');
+      setIsLoading(true);
+      
       let studentData = null;
       try {
         studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
       } catch (e) {
-        console.warn('Invalid studentData in localStorage during quick refresh');
+        console.warn('No student data found in localStorage for refresh');
       }
+      
+      if (!studentData) {
+        console.warn('No student data found in localStorage');
+        setAchievements([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!studentData.regNo || !studentData.dob) {
+        console.warn('Missing regNo or dob in student data');
+        setAchievements([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get fresh student data from MongoDB with shorter timeout
+      const fastDataService = (await import('../services/fastDataService.js')).default;
+      const completeData = await Promise.race([
+        fastDataService.getCompleteStudentData(studentData._id || studentData.id),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 1000) // Reduced to 1s for faster refresh
+        )
+      ]);
+      const freshStudentData = completeData?.student;
+      
+      if (freshStudentData && freshStudentData.certificates) {
+        console.log('⚡ Fresh data received:', freshStudentData.certificates.length, 'certificates');
+        
+        // OPTIMIZED: Skip file data fetch for faster refresh
+        const achievementsWithoutFiles = freshStudentData.certificates.map(achievement => ({
+          ...achievement,
+          fileData: null, // Will be fetched on-demand when viewing
+          fileName: achievement.fileName
+        }));
+        
+        // Update state immediately
+        setAchievements(achievementsWithoutFiles);
+        setSelectedRows([]); // Clear selections
+        // Sync time tracking removed - not displayed to users
+        
+        // Update localStorage
+        const completeStudentData = {
+          ...freshStudentData,
+          certificates: achievementsWithoutFiles
+        };
+        localStorage.setItem('studentData', JSON.stringify(completeStudentData));
+        
+        console.log('⚡ SUPER FAST REFRESH COMPLETED');
+      } else {
+        console.log('⚡ No certificates found in MongoDB');
+        setAchievements([]);
+        setSelectedRows([]);
+        
+        // Clear localStorage certificate data
+        const updatedStudentData = {
+          ...studentData,
+          certificates: []
+        };
+        localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
+        // Sync time tracking removed - not displayed to users
+      }
+    } catch (error) {
+      console.error('⚡ Super fast refresh failed:', error);
+      
+      // Don't show alert for timeout, just log
+      if (error.message === 'Request timeout') {
+        console.warn('⚡ Refresh request timed out, keeping current data');
+      } else {
+        console.warn('⚡ Refresh failed, keeping current data:', error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []); // Empty dependency array since this function doesn't depend on any state variables
 
+  // Super fast background refresh function (optimized)
+  const quickBackgroundRefresh = useCallback(async () => {
+    try {
+      console.log('⚡ Super fast background refresh...');
+      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
       if (studentData && studentData._id) {
         // Ultra-fast timeout for maximum speed
         const fastDataService = (await import('../services/fastDataService.js')).default;
@@ -1257,91 +1340,7 @@ This record is locked and cannot be modified.
   const handleClearFilters = () => { setSearchQuery(""); setYearSemesterFilter(""); setSortBy(""); setStatusFilter("all"); setAppliedFilters({ searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "" }); setFiltersHaveBeenApplied(false); };
   
   
-  const refreshAchievements = async () => {
-    try {
-      console.log('⚡ SUPER FAST REFRESH STARTING...');
-      setIsLoading(true);
-      
-      let studentData = null;
-      try {
-        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-      } catch (e) {
-        console.warn('No student data found in localStorage for refresh');
-      }
-      
-      if (!studentData) {
-        console.warn('No student data found in localStorage');
-        setAchievements([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (!studentData.regNo || !studentData.dob) {
-        console.warn('Missing regNo or dob in student data');
-        setAchievements([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Get fresh student data from MongoDB with shorter timeout
-      const fastDataService = (await import('../services/fastDataService.js')).default;
-      const completeData = await Promise.race([
-        fastDataService.getCompleteStudentData(studentData._id || studentData.id),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 1000) // Reduced to 1s for faster refresh
-        )
-      ]);
-      const freshStudentData = completeData?.student;
-      
-      if (freshStudentData && freshStudentData.certificates) {
-        console.log('⚡ Fresh data received:', freshStudentData.certificates.length, 'certificates');
-        
-        // OPTIMIZED: Skip file data fetch for faster refresh
-        const achievementsWithoutFiles = freshStudentData.certificates.map(achievement => ({
-          ...achievement,
-          fileData: null, // Will be fetched on-demand when viewing
-          fileName: achievement.fileName
-        }));
-        
-        // Update state immediately
-        setAchievements(achievementsWithoutFiles);
-        setSelectedRows([]); // Clear selections
-        // Sync time tracking removed - not displayed to users
-        
-        // Update localStorage
-        const completeStudentData = {
-          ...freshStudentData,
-          certificates: achievementsWithoutFiles
-        };
-        localStorage.setItem('studentData', JSON.stringify(completeStudentData));
-        
-        console.log('⚡ SUPER FAST REFRESH COMPLETED');
-      } else {
-        console.log('⚡ No certificates found in MongoDB');
-        setAchievements([]);
-        setSelectedRows([]);
-        
-        // Clear localStorage certificate data
-        const updatedStudentData = {
-          ...studentData,
-          certificates: []
-        };
-        localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
-        // Sync time tracking removed - not displayed to users
-      }
-    } catch (error) {
-      console.error('⚡ Super fast refresh failed:', error);
-      
-      // Don't show alert for timeout, just log
-      if (error.message === 'Request timeout') {
-        console.warn('⚡ Refresh request timed out, keeping current data');
-      } else {
-        console.warn('⚡ Refresh failed, keeping current data:', error.message);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
   const handleViewFile = async (fileName, fileData, achievementId) => { 
     // Prevent multiple previews
     if (previewPopupState !== 'none') {
