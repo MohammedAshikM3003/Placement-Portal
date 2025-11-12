@@ -5,6 +5,7 @@ import {
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
@@ -21,6 +22,9 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   
   // Use AuthContext for login
   const { login } = useAuth();
+  
+  // Use React Router navigation instead of window.location
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,12 +60,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           onLogin(registerNumber, password);
         }
         
-        // ⚡ INSTANT NAVIGATION - No waiting!
-        // Keep isLoading true to prevent form from showing again
-        console.log('🚀 Navigating to dashboard immediately...');
-        window.location.href = '/dashboard';
+        // ⚡ INSTANT NAVIGATION using React Router - No page reload!
+        console.log('🚀 Navigating to dashboard using React Router...');
+        navigate('/dashboard', { replace: true });
         
-        // Don't set isLoading to false - page will navigate away
+        // Keep isLoading true during navigation - no flash of login page!
         // Background data will fetch automatically after navigation
       } else {
         setError(loginResult.error || 'Login failed. Please check your credentials.');
