@@ -8,7 +8,7 @@ import searchcompany from '../assets/seachcompany.png';
 import searchbydept from '../assets/SearchbyDepartment.png';
 import searchdomain from '../assets/SearchDomain.png';
 import searchmode from '../assets/searchMode.png';
-import { useNavigate, BrowserRouter, Routes, Route } from 'react-router-dom'; // Removed unused Link
+import { useNavigate } from 'react-router-dom'; // Removed unused BrowserRouter, Routes, Route, Link
 // import styled from 'styled-components'; // Unused
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";

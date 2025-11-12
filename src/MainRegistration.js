@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -191,13 +191,19 @@ function MainRegistration() {
     
     const [activeSection, setActiveSection] = useState('personal');
     const [completedSections, setCompletedSections] = useState({});
-    const sectionRefs = {
-        personal: useRef(null),
-        academic: useRef(null),
-        semester: useRef(null),
-        other: useRef(null),
-        login: useRef(null),
-    };
+    const personalRef = useRef(null);
+    const academicRef = useRef(null);
+    const semesterRef = useRef(null);
+    const otherRef = useRef(null);
+    const loginRef = useRef(null);
+    
+    const sectionRefs = useMemo(() => ({
+        personal: personalRef,
+        academic: academicRef,
+        semester: semesterRef,
+        other: otherRef,
+        login: loginRef,
+    }), [personalRef, academicRef, semesterRef, otherRef, loginRef]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const isScrollingRef = useRef(false);
     const scrollTimeoutRef = useRef(null);
@@ -282,7 +288,7 @@ function MainRegistration() {
         return () => dashboard.removeEventListener('scroll', handleScroll);
     }, [sectionRefs, sectionList]);
 
-    const handleInputChange = () => {
+    const handleInputChange = useCallback(() => {
         const updated = {};
         sectionList.forEach(({ key }) => {
             updated[key] = checkSectionComplete(key);
@@ -297,21 +303,21 @@ function MainRegistration() {
         const validation = validateAllFields();
         setIsRegisterEnabled(validation.isValid);
         setValidationErrors(validation.errors);
-    };
+    }, [sectionList, checkSectionComplete, validateAllFields]);
 
     useEffect(() => {
         handleInputChange();
-    }, [profileImage]);
+    }, [profileImage, handleInputChange]);
 
     // Trigger completion check when current year or semester changes
     useEffect(() => {
         handleInputChange();
-    }, [currentYear, currentSemester]);
+    }, [currentYear, currentSemester, handleInputChange]);
 
     // Trigger completion check when study category changes
     useEffect(() => {
         handleInputChange();
-    }, [studyCategory]);
+    }, [studyCategory, handleInputChange]);
 
     // Function to get available semesters based on selected year
     const getAvailableSemesters = (year) => {
@@ -455,7 +461,7 @@ function MainRegistration() {
         }
     };
 
-    const checkSectionComplete = (key) => {
+    const checkSectionComplete = useCallback((key) => {
         if (!sectionRefs[key] || !sectionRefs[key].current) {
             console.log(`Section ref not found for: ${key}`);
             return false;
@@ -576,10 +582,10 @@ function MainRegistration() {
         
         console.log(`Section ${key} completion check:`, completed);
         return completed;
-    };
+    }, [sectionRefs, currentYear, currentSemester, studyCategory]);
 
     // Add comprehensive validation function
-    const validateAllFields = () => {
+    const validateAllFields = useCallback(() => {
         const errors = [];
         
         // Check if form exists
@@ -747,7 +753,7 @@ function MainRegistration() {
         });
         
         return { isValid: errors.length === 0, errors };
-    };
+    }, [dob, studyCategory, currentYear, currentSemester, formRef]);
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];

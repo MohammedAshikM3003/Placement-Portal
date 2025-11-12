@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import{ useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import{ useState } from "react"; // Removed unused useEffect
+// import { useLocation } from "react-router-dom"; // Unused
 import  autoTable from 'jspdf-autotable';
 import searchcompany from '../assets/SearchCompanybaricon.png';
 import searchbydept from '../assets/searchvisitingyrbaricon.png'
@@ -241,7 +241,7 @@ const handleViewProfile = () => {
     setFilteredData(sampleCompanyData);
     // setShowFiltered(true); // Unused
   };
-const location = useLocation();
+// const location = useLocation(); // Unused
 // useEffect(() => { // Unused activeItem
 //   switch (location.pathname) {
 //     case "/dashboard":

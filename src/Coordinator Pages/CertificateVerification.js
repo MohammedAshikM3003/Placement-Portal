@@ -12,9 +12,7 @@ import './CertificateVerification.css';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 
-import {
-  FaEye,
-} from "react-icons/fa";
+// import { FaEye } from "react-icons/fa"; // Unused
 
 
 const initialCertificates = [

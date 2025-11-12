@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +36,7 @@ const CalendarIcon = () => (
 function CooViewMS({ onLogout, onViewChange }) {
     const navigate = useNavigate();
     // Initialize state with sample data for view-only mode
-    const [studyCategory, setStudyCategory] = useState('12th'); // Used in JSX
+    const [studyCategory] = useState('12th'); // Used in JSX, removed unused setter
     const [profileImage] = useState('https://via.placeholder.com/200x250?text=Student+Photo'); // Used in JSX, removed unused setter
     const [uploadInfo] = useState({ name: 'SampleProfile.jpg', date: '01/01/2024' }); // Used in JSX, removed unused setter
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

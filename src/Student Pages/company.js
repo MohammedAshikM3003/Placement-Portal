@@ -10,17 +10,17 @@ import './Company.css';
 
 // Application history will be fetched from backend - no hardcoded mock data
 const getApplicationHistory = async (studentId) => {
-  try {
-    // TODO: Implement API call to fetch student's application history
-    // const response = await fetch(`/api/students/${studentId}/applications`);
-    // return await response.json();
-    
-    // Return empty array until API is implemented
-    return [];
-  } catch (error) {
-    console.error('Error fetching application history:', error);
-    return [];
-  }
+  // TODO: Implement API call to fetch student's application history
+  // When implemented, wrap the fetch call in try-catch
+  // try {
+  //   const response = await fetch(`/api/students/${studentId}/applications`);
+  //   return await response.json();
+  // } catch (error) {
+  //   console.error('Error fetching application history:', error);
+  // }
+  
+  // Return empty array until API is implemented
+  return [];
 };
 
 const statusStyles = {
@@ -43,7 +43,7 @@ export default function Company({ onLogout, onViewChange }) {
   const [activeSubView, setActiveSubView] = useState('list');
   const [selectedApp, setSelectedApp] = useState(null);
   const [applicationHistory, setApplicationHistory] = useState([]);
-  const statusOrder = { Rejected: 1, Pending: 2, Placed: 3 };
+  // const statusOrder = { Rejected: 1, Pending: 2, Placed: 3 }; // Moved inside useMemo
 
   // Load student data for sidebar and application history
   useEffect(() => {
@@ -84,11 +84,18 @@ export default function Company({ onLogout, onViewChange }) {
     };
   }, []);
 
-  const sortedHistory = useMemo(() =>
-    [...applicationHistory].sort((a, b) =>
+  const sortedHistory = useMemo(() => {
+    // Define status order for sorting inside useMemo
+    const statusOrder = {
+      'Placed': 1,
+      'Pending': 2,
+      'Rejected': 3
+    };
+    
+    return [...applicationHistory].sort((a, b) =>
       statusOrder[a.status] - statusOrder[b.status]
-    ), [statusOrder]
-  );
+    );
+  }, [applicationHistory]);
 
   const handleViewChange = (view) => {
     if (onViewChange) {

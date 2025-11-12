@@ -239,7 +239,7 @@ function Comanagestud({ onLogout, currentView, onViewChange }) {
         });
     };
     
-    const isStudentSelected = selectedStudentIds.size > 0;
+    // const isStudentSelected = selectedStudentIds.size > 0; // Unused
 
     const handleBlock = () => {
         const newStudents = students.map(student =>

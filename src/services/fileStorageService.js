@@ -191,4 +191,5 @@ class FileStorageService {
   }
 }
 
-export default new FileStorageService();
+const fileStorageService = new FileStorageService();
+export default fileStorageService;

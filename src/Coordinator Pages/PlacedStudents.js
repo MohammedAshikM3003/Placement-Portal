@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react"; // Import useEffect
+import { useState, useEffect, useCallback } from "react"; // Import useEffect and useCallback
 import {
- FaUserCircle,  FaEye,
-  FaUsers, FaBuilding, FaBriefcase, FaCertificate, FaUserCheck,
-  FaCalendarAlt, FaUserGraduate, FaChartBar
+ FaEye
 } from 'react-icons/fa';
-import { LuLayoutDashboard } from "react-icons/lu";
+// import { LuLayoutDashboard } // Unused from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 
 import jsPDF from "jspdf";
@@ -85,7 +83,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   const [open, setOpen] = useState(false);
   // const [activeItem, setActiveItem] = useState("Placed Students"); // Unused
   const navigate = useNavigate();
-  const [showExportMenu] = useState(false); // Removed unused setter
+  // const [showExportMenu] = useState(false); // Unused
 
   // Function to handle filter changes (only for batch and company)
   const handleFilterChange = (e) => {
@@ -116,16 +114,16 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   };
 
   // New function to be called ONLY on the Filter button click
-  const applyTableFilters = () => {
+  const applyTableFilters = useCallback(() => {
       const filteredData = getFilteredStudents(allStudentsData);
       setDisplayedStudents(filteredData);
-  }
+  }, [allStudentsData, getFilteredStudents]);
 
   // useEffect to run the initial filtering when the component mounts
   // This ensures the table shows "CSE" students by default
   useEffect(() => {
     applyTableFilters();
-  }, []); // Empty dependency array means this runs only once on mount
+  }, [applyTableFilters]); // Include applyTableFilters in dependency array
 
 
   // Get unique batches and companies for dropdown options
