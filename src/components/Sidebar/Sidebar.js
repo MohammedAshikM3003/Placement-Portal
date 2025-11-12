@@ -10,16 +10,36 @@ const sidebarItems = [
   { icon: require('../../assets/CompanySideBarIcon.svg').default, text: 'Company', view: 'company' },
 ];
 
+// Cache for student data to prevent refetching
+let cachedStudentData = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) => {
-  // ⚡ Initialize with null - will fetch from MongoDB
-  const [currentStudentData, setCurrentStudentData] = useState(null);
+  // ⚡ Initialize with cached data if available, otherwise null
+  const [currentStudentData, setCurrentStudentData] = useState(() => {
+    // Check if cache is still valid
+    if (cachedStudentData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
+      console.log('⚡ Sidebar INIT: Using cached data (no flickering!)');
+      return cachedStudentData;
+    }
+    return null;
+  });
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
+  const [isLoading, setIsLoading] = useState(false);
 
-  // ⚡ Fetch student data from MongoDB on mount
+  // ⚡ Fetch student data from MongoDB ONLY if not cached
   useEffect(() => {
     const fetchStudentData = async () => {
+      // If we already have valid cached data, don't fetch again
+      if (cachedStudentData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
+        console.log('✅ Sidebar: Using cached data, no fetch needed');
+        return;
+      }
+
       try {
+        setIsLoading(true);
         // Get student ID from localStorage (minimal data)
         const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
         
@@ -37,6 +57,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
               hasProfilePic: !!completeData.student.profilePicURL,
               profileURL: completeData.student.profilePicURL
             });
+            
+            // Update cache
+            cachedStudentData = completeData.student;
+            cacheTimestamp = Date.now();
             
             setCurrentStudentData(completeData.student);
             setImageError(false);
@@ -59,6 +83,8 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         }
       } catch (error) {
         console.error('❌ Sidebar: Error fetching from MongoDB:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -170,9 +196,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="user-info">
         <div className="user-details">
+          {/* Always show image - either profile pic or placeholder */}
           {currentStudentData?.profilePicURL && !imageError ? (
             <img 
-              key={`${currentStudentData.profilePicURL}_${currentStudentData._id}_${imageKey}`} // Force re-render with key
+              key={`${currentStudentData.profilePicURL}_${currentStudentData._id}_${imageKey}`}
               src={currentStudentData.profilePicURL} 
               alt="Profile" 
               onError={() => {
@@ -181,30 +208,35 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
               }}
               onLoad={() => {
                 console.log('✅ Sidebar: Profile image loaded successfully:', currentStudentData.profilePicURL);
-                setImageError(false);
               }}
               style={{ 
                 width: '60px', 
                 height: '60px', 
                 borderRadius: '50%',
                 objectFit: 'cover',
-                border: '1px solid rgb(36 36 36)'
+                border: '1px solid rgb(36 36 36)',
+                display: 'block' // Prevent flickering
               }} 
             />
           ) : (
-            <img src={Adminicon} alt="Admin" style={{ 
-              width: '60px',
-              height: '60px',
-              filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)"
-            }} />
+            <img 
+              src={Adminicon} 
+              alt="Admin" 
+              style={{ 
+                width: '60px',
+                height: '60px',
+                filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)",
+                display: 'block' // Prevent flickering
+              }} 
+            />
           )}
           <div className="user-text">
-            <span>
-              {currentStudentData && currentStudentData.firstName && currentStudentData.lastName 
-                ? `${currentStudentData.firstName} ${currentStudentData.lastName}` 
+            <span style={{ display: 'block' }}>
+              {currentStudentData?.firstName && currentStudentData?.lastName 
+                ? `${currentStudentData.firstName} ${currentStudentData.lastName}`.toUpperCase()
                 : currentStudentData?.regNo 
-                  ? `Student ${currentStudentData.regNo}` 
-                  : 'Loading...'}
+                  ? currentStudentData.regNo
+                  : isLoading ? 'Loading...' : 'Student'}
             </span>
           </div>
         </div>

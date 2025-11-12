@@ -57,18 +57,20 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
         
         // ⚡ INSTANT NAVIGATION - No waiting!
+        // Keep isLoading true to prevent form from showing again
         console.log('🚀 Navigating to dashboard immediately...');
         window.location.href = '/dashboard';
         
+        // Don't set isLoading to false - page will navigate away
         // Background data will fetch automatically after navigation
       } else {
         setError(loginResult.error || 'Login failed. Please check your credentials.');
-        setIsLoading(false);
+        setIsLoading(false); // Only set false on error
       }
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please check your credentials.');
-      setIsLoading(false);
+      setIsLoading(false); // Only set false on error
     }
   };
 
