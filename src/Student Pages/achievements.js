@@ -1804,19 +1804,19 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
   const statusClass = `achievements-status-pill achievements-status-${status}`;
   
   // MODIFIED: This function correctly formats 'YYYY-MM-DD' to 'dd-MM-yyyy' for display.
-  const displayDate = date ? date.split('-').reverse().join('-') : '';
+  const displayDate = date ? date.split('-').reverse().join('-') : 'Loading...';
 
   return (
     <tr>
       <td data-label="Select"><input type="checkbox" checked={selected} onChange={() => onSelect(id)} className="row-checkbox" /></td>
       <td data-label="S.No">{no}</td>
-      <td data-label="Year">{year || ''}</td>
-      <td data-label="Semester">{semester || ''}</td>
-      <td data-label="Competition">{comp || ''}</td>
+      <td data-label="Year">{year || 'Loading...'}</td>
+      <td data-label="Semester">{semester || 'Loading...'}</td>
+      <td data-label="Competition">{comp || 'Loading...'}</td>
       {/* MODIFIED: Use the formatted displayDate variable */}
       <td data-label="Date">{displayDate}</td>
-      <td data-label="Prize">{prize || ''}</td>
-      <td data-label="Status"><span className={statusClass}>{status?.charAt(0).toUpperCase() + status?.slice(1) || ''}</span></td>
+      <td data-label="Prize">{prize || 'Loading...'}</td>
+      <td data-label="Status"><span className={statusClass}>{status?.charAt(0).toUpperCase() + status?.slice(1) || 'Loading...'}</span></td>
       <td data-label="View"><button onClick={onViewFile} className="table-action-btn"> <EyeIcon /> </button></td>
       <td data-label="Download"><button onClick={onDownloadFile} className="table-action-btn"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#2276fc" strokeWidth="2"/><polyline points="7,10 12,15 17,10" stroke="#2276fc" strokeWidth="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="#2276fc" strokeWidth="2"/></svg> </button></td>
     </tr>
