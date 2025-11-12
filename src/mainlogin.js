@@ -56,10 +56,10 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           onLogin(registerNumber, password);
         }
         
-        // ⚡ WAIT for initial data preload before navigation
+        // ⚡ WAIT for initial data preload before navigation (reduced to 1 second)
         console.log('⏳ Waiting for initial data preload...');
         
-        // Wait for the background fetch to complete (give it 2 seconds max)
+        // Wait for the background fetch to complete (give it 1 second max for faster UX)
         await new Promise(resolve => {
           let timeout;
           const handleDataLoaded = () => {
@@ -71,12 +71,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           
           window.addEventListener('allDataPreloaded', handleDataLoaded);
           
-          // Fallback timeout - navigate anyway after 2 seconds
+          // Fallback timeout - navigate anyway after 1 second (faster!)
           timeout = setTimeout(() => {
             window.removeEventListener('allDataPreloaded', handleDataLoaded);
             console.log('⏰ Timeout reached, navigating to dashboard');
             resolve();
-          }, 2000);
+          }, 1000); // Reduced from 2000ms to 1000ms
         });
         
         // Navigate to dashboard after data is loaded

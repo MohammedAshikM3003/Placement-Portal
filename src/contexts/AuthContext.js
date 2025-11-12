@@ -136,6 +136,7 @@ export const AuthProvider = ({ children }) => {
       if (loginResult.success) {
         console.log('✅ AuthContext: Authentication successful!');
         console.log('🖼️ AuthContext: Profile picture URL:', loginResult.student.profilePicURL);
+        console.log('📦 AuthContext: Full student data:', loginResult.student);
 
         // CRITICAL: Update global state IMMEDIATELY with basic user data
         dispatch({
@@ -146,27 +147,40 @@ export const AuthProvider = ({ children }) => {
           }
         });
 
-        // Store in localStorage for persistence
+        // CRITICAL: Store complete student data in localStorage with profile picture
+        const completeStudentData = {
+          ...loginResult.student,
+          _id: loginResult.student._id || loginResult.student.id,
+          profilePicURL: loginResult.student.profilePicURL || '',
+          _loginTimestamp: Date.now()
+        };
+        
         localStorage.setItem('authToken', loginResult.token);
-        localStorage.setItem('studentData', JSON.stringify(loginResult.student));
+        localStorage.setItem('studentData', JSON.stringify(completeStudentData));
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('studentRegNo', regNo);
         localStorage.setItem('studentDob', dob);
+        
+        console.log('💾 Stored student data:', completeStudentData);
+        console.log('🖼️ Profile URL stored:', completeStudentData.profilePicURL);
 
         console.log('🎉 AuthContext: Login complete - UI can now render!');
         
         // ⚡ INSTANT: Preload profile picture IMMEDIATELY (before navigation)
-        if (loginResult.student.profilePicURL) {
+        if (completeStudentData.profilePicURL) {
+          console.log('🖼️ Starting immediate profile pic preload...');
           const img = new Image();
           img.onload = () => {
             console.log('✅ AuthContext: Profile pic preloaded INSTANTLY');
-            // Force sidebar refresh
+            // Force sidebar refresh with complete data
             window.dispatchEvent(new CustomEvent('profileUpdated', {
-              detail: loginResult.student
+              detail: completeStudentData
             }));
           };
-          img.onerror = () => console.log('⚠️ Profile pic preload failed');
-          img.src = loginResult.student.profilePicURL;
+          img.onerror = () => console.log('⚠️ Profile pic preload failed:', completeStudentData.profilePicURL);
+          img.src = completeStudentData.profilePicURL;
+        } else {
+          console.log('⚠️ No profile picture URL found in student data');
         }
         
         // PHASE 2: Background data prefetching (NON-BLOCKING but starts immediately)
@@ -178,11 +192,11 @@ export const AuthProvider = ({ children }) => {
             
             // Fetch all data in parallel without blocking UI
             const results = await Promise.allSettled([
-              fastDataService.preloadProfilePhoto(loginResult.student._id),
-              fastDataService.preloadResumeData(loginResult.student._id),
-              fastDataService.preloadCertificatesData(loginResult.student._id),
-              fastDataService.preloadAttendanceData(loginResult.student._id),
-              fastDataService.initializeAllStudentData(loginResult.student._id)
+              fastDataService.preloadProfilePhoto(completeStudentData._id),
+              fastDataService.preloadResumeData(completeStudentData._id),
+              fastDataService.preloadCertificatesData(completeStudentData._id),
+              fastDataService.preloadAttendanceData(completeStudentData._id),
+              fastDataService.initializeAllStudentData(completeStudentData._id)
             ]);
             
             console.log('✅ AuthContext: Background data fetch complete!', {
@@ -195,11 +209,14 @@ export const AuthProvider = ({ children }) => {
             
             // Dispatch events to update all components with fresh data
             window.dispatchEvent(new CustomEvent('allDataPreloaded', {
-              detail: { student: loginResult.student }
+              detail: { student: completeStudentData }
             }));
           } catch (bgError) {
             console.error('⚠️ AuthContext: Background fetch error (non-critical):', bgError);
-            // Don't fail the login - data will load on-demand
+            // Dispatch completion event anyway
+            window.dispatchEvent(new CustomEvent('allDataPreloaded', {
+              detail: { student: completeStudentData }
+            }));
           }
         });
 
