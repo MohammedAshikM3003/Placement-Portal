@@ -108,36 +108,41 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
     };
     
     // ⚡ INSTANT: Load from localStorage immediately
-    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData) {
-      console.log('⚡ Achievements: INSTANT load from localStorage');
-      setStudentData(storedStudentData);
-      
-      // Try to get cached certificates data
-      const certificatesData = localStorage.getItem('certificatesData');
-      if (certificatesData) {
-        console.log('⚡ Achievements: INSTANT certificates data from cache');
-        // Certificates data is already cached and ready
+    try {
+      const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (storedStudentData) {
+        console.log('⚡ Achievements: INSTANT load from localStorage');
+        setStudentData(storedStudentData);
+        
+        // Try to get cached certificates data
+        const certificatesData = localStorage.getItem('certificatesData');
+        if (certificatesData) {
+          console.log('⚡ Achievements: INSTANT certificates data from cache');
+          // Certificates data is already cached and ready
+        }
+        
+        // Try to get even faster cached data
+        if (storedStudentData._id) {
+          import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+            const instantData = fastDataService.getInstantData(storedStudentData._id);
+            if (instantData && instantData.student) {
+              console.log('⚡ Achievements: INSTANT load from cache');
+              setStudentData(instantData.student);
+            }
+          });
+        }
+        
+        // Dispatch immediate profile update for sidebar
+        if (storedStudentData.profilePicURL) {
+          console.log('🚀 Achievements: Dispatching immediate profile update for sidebar');
+          window.dispatchEvent(new CustomEvent('profileUpdated', { 
+            detail: storedStudentData 
+          }));
+        }
       }
-      
-      // Try to get even faster cached data
-      if (storedStudentData._id) {
-        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
-          const instantData = fastDataService.getInstantData(storedStudentData._id);
-          if (instantData && instantData.student) {
-            console.log('⚡ Achievements: INSTANT load from cache');
-            setStudentData(instantData.student);
-          }
-        });
-      }
-      
-      // Dispatch immediate profile update for sidebar
-      if (storedStudentData.profilePicURL) {
-        console.log('🚀 Achievements: Dispatching immediate profile update for sidebar');
-        window.dispatchEvent(new CustomEvent('profileUpdated', { 
-          detail: storedStudentData 
-        }));
-      }
+    } catch (error) {
+      console.warn("Could not parse studentData from localStorage on init:", error);
+      localStorage.removeItem('studentData'); // Clear bad data
     }
     
     window.addEventListener('storage', handleProfileUpdate);
@@ -179,6 +184,7 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
 }
 
 // The rest of the file (AchievementsContent, etc.) remains unchanged.
+// ... (Your existing AchievementsContent component goes here)
 function AchievementsContent() {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -213,7 +219,13 @@ function AchievementsContent() {
   const quickBackgroundRefresh = useCallback(async () => {
     try {
       console.log('⚡ Super fast background refresh...');
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        console.warn('Invalid studentData in localStorage during quick refresh');
+      }
+
       if (studentData && studentData._id) {
         // Ultra-fast timeout for maximum speed
         const fastDataService = (await import('../services/fastDataService.js')).default;
@@ -330,7 +342,8 @@ function AchievementsContent() {
     // Then load fresh data from MongoDB in background
     // This will now run even if the cache parsing above fails
     loadStudentData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Quick refresh when component mounts (sidebar navigation to Achievements)
   useEffect(() => {
@@ -392,7 +405,13 @@ function AchievementsContent() {
   useEffect(() => {
     const syncInterval = setInterval(async () => {
       try {
-        const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        let studentData = null;
+        try {
+          studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        } catch (e) {
+          console.warn('Invalid studentData in localStorage during auto-sync');
+        }
+
         if (studentData && studentData._id) {
           // Add timeout to prevent hanging
           const fastDataService = (await import('../services/fastDataService.js')).default;
@@ -443,14 +462,20 @@ function AchievementsContent() {
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(syncInterval);
-  }, [achievements.length, selectedRows.length, cleanStaleSelections]);
+  }, [achievements.length, selectedRows.length, cleanStaleSelections, refreshAchievements]);
 
   // Auto-refresh when user returns to page (focus event)
   useEffect(() => {
     const handleFocus = async () => {
       console.log('🔄 Page focused, checking for updates...');
       try {
-        const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        let studentData = null;
+        try {
+          studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        } catch (e) {
+          console.warn('Invalid studentData in localStorage during focus refresh');
+        }
+
         if (studentData && studentData._id) {
           // Add timeout to prevent hanging
           const fastDataService = (await import('../services/fastDataService.js')).default;
@@ -495,7 +520,7 @@ function AchievementsContent() {
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [achievements.length, selectedRows.length]);
+  }, [achievements.length, selectedRows.length, refreshAchievements]);
 
   const loadStudentData = async () => {
     try {
@@ -506,7 +531,7 @@ function AchievementsContent() {
       console.log('🔄 Cleared selections on page load');
       
       // Get student data from localStorage for authentication
-      // NEW: Safely parse this, though it's less critical here
+      // NEW: Safely parse this
       let studentData = null;
       try {
         studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -605,6 +630,7 @@ function AchievementsContent() {
         // Sync time tracking removed - not displayed to users
       }
     } catch (error) {
+      // ===== THIS IS THE CORRECTED BLOCK =====
       console.error('⚡ Error loading student data:', error);
       
       if (error.message === 'Load timeout') {
@@ -627,6 +653,7 @@ function AchievementsContent() {
         // A different error happened (not a timeout)
         setAchievements([]);
       }
+      // ==========================================
     } finally {
       setIsLoading(false);
       setIsInitialLoading(false); // Stop initial loading animation
@@ -641,7 +668,13 @@ function AchievementsContent() {
       console.log('🚀 FAST: Starting certificate upload...');
       
       // Get student data from localStorage
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
+
       if (!studentData) {
         throw new Error('User not authenticated. Please log in again.');
       }
@@ -730,7 +763,13 @@ This record is locked and cannot be modified.
       const mongoDBService = (await import('../services/mongoDBService.js')).default;
       
       // Get student data from localStorage
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        throw new Error('User not authenticated');
+      }
+      
       console.log('Student data from localStorage:', studentData);
       
       if (!studentData) {
@@ -927,7 +966,13 @@ This record is locked and cannot be modified.
       if (!certificateData?.fileData) {
         // Try to fetch file data from backend using the same method as preview
         try {
-          const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+          let studentData = null;
+          try {
+            studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+          } catch(e) {
+            throw new Error('Please log in again to download files.');
+          }
+
           if (!studentData) {
             throw new Error('Please log in again to download files.');
           }
@@ -1025,7 +1070,13 @@ This record is locked and cannot be modified.
       setIsDeleting(true); // Start loading animation
       
       // Get student data from localStorage
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        throw new Error('User not authenticated');
+      }
+
       if (!studentData) {
         throw new Error('User not authenticated');
       }
@@ -1211,7 +1262,13 @@ This record is locked and cannot be modified.
       console.log('⚡ SUPER FAST REFRESH STARTING...');
       setIsLoading(true);
       
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        console.warn('No student data found in localStorage for refresh');
+      }
+      
       if (!studentData) {
         console.warn('No student data found in localStorage');
         setAchievements([]);
@@ -1348,7 +1405,14 @@ This record is locked and cannot be modified.
     }, 150); // Faster updates for smoother animation
     
     try {
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      let studentData = null;
+      try {
+        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (e) {
+        clearInterval(progressInterval);
+        throw new Error('Please log in again to view files.');
+      }
+
       if (!studentData) {
         clearInterval(progressInterval);
         throw new Error('Please log in again to view files.');
@@ -1874,7 +1938,11 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
       <td data-label="Prize">{renderCellContent(prize)}</td>
       <td data-label="Status">
         <span className={statusClass}>
-          {renderCellContent(status?.charAt(0).toUpperCase() + status?.slice(1))}
+          {/* FIX: This line is changed.
+            It now correctly passes 'null' or 'undefined' to renderCellContent
+            instead of passing 'NaN', which fixes the bug.
+          */}
+          {renderCellContent(status ? status.charAt(0).toUpperCase() + status.slice(1) : status)}
         </span>
       </td>
       <td data-label="View"><button onClick={onViewFile} className="table-action-btn"> <EyeIcon /> </button></td>
