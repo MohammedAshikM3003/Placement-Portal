@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
 
+// Import the clearSidebarCache function
+import { clearSidebarCache } from '../components/Sidebar/Sidebar';
+
 // Initial state with loading flag
 const initialState = {
   user: null,
@@ -251,6 +254,9 @@ export const AuthProvider = ({ children }) => {
         'certificatesData', 'attendanceData'
       ];
       keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Clear sidebar cache to prevent profile data clashes between users
+      clearSidebarCache();
 
       // Update global state
       dispatch({ type: AUTH_ACTIONS.LOGOUT });

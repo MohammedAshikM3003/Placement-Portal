@@ -15,6 +15,13 @@ let cachedStudentData = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+// Function to clear the cache - to be called on logout
+export const clearSidebarCache = () => {
+  cachedStudentData = null;
+  cacheTimestamp = null;
+  console.log('🗑️ Sidebar cache cleared');
+};
+
 const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) => {
   // ⚡ Initialize with cached data if available, otherwise null
   const [currentStudentData, setCurrentStudentData] = useState(() => {
@@ -121,6 +128,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           setCurrentStudentData(updatedStudentData);
           setImageError(false); // Reset image error when data updates
           setImageKey(Date.now()); // Force image re-render
+          
+          // Update cache with new data
+          cachedStudentData = updatedStudentData;
+          cacheTimestamp = Date.now();
         }
         
         // If we have event detail with fresh data, use that
@@ -133,6 +144,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           setCurrentStudentData(event.detail);
           setImageError(false); // Reset image error when new data comes in
           setImageKey(Date.now()); // Force image re-render
+          
+          // Update cache with new data
+          cachedStudentData = event.detail;
+          cacheTimestamp = Date.now();
           
           // Force image refresh if profile picture URL is present
           if (event.detail.profilePicURL) {
@@ -160,6 +175,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           setCurrentStudentData(event.detail);
           setImageError(false);
           
+          // Update cache with new data
+          cachedStudentData = event.detail;
+          cacheTimestamp = Date.now();
+          
           // Force complete re-render by updating a key or state
           setTimeout(() => {
             setImageError(false);
@@ -175,6 +194,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         console.log('⚡ Sidebar: Student data update from fast service');
         setCurrentStudentData(event.detail.student);
         setImageError(false);
+        
+        // Update cache with new data
+        cachedStudentData = event.detail.student;
+        cacheTimestamp = Date.now();
       }
     };
 
