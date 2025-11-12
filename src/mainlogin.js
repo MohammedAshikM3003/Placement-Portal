@@ -46,11 +46,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       }
 
       console.log('🚀 Login: Using AuthContext login method...');
+      console.log('🔑 Credentials:', { registerNumber, password });
       
       // Call login which will handle background data fetching
       const loginResult = await login(registerNumber, password);
       
-      console.log('Login result:', loginResult);
+      console.log('📦 Login result:', loginResult);
       
       if (loginResult.success) {
         console.log('✅ Login successful! AuthContext has updated global state');
@@ -67,13 +68,25 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         // Keep isLoading true during navigation - no flash of login page!
         // Background data will fetch automatically after navigation
       } else {
-        setError(loginResult.error || 'Login failed. Please check your credentials.');
-        setIsLoading(false); // Only set false on error
+        // Login failed - show error message
+        console.error('❌ Login failed:', loginResult.error);
+        const errorMsg = loginResult.error || 'Login failed. Please check your credentials.';
+        console.log('🚨 Setting error message:', errorMsg);
+        setError(errorMsg);
+        setIsLoading(false);
+        
+        // Clear password field on error
+        setPassword('');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please check your credentials.');
-      setIsLoading(false); // Only set false on error
+      console.error('❌ Login exception:', error);
+      const errorMsg = error.message || 'Login failed. Please check your credentials.';
+      console.log('🚨 Setting error message from exception:', errorMsg);
+      setError(errorMsg);
+      setIsLoading(false);
+      
+      // Clear password field on error
+      setPassword('');
     }
   };
 
@@ -88,6 +101,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
+          visibility: isLoading ? 'hidden' : 'visible' // Hide form while loading to prevent flashing
         }}
       >
       <Navbar /> {/* Use the shared Navbar component here */}
