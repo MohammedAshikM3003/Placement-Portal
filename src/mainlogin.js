@@ -10,7 +10,7 @@ import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
 import { useAuth } from './contexts/AuthContext';
-import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
+
 
 const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   // --- UPDATED: State changed from 'email' to 'registerNumber' ---
