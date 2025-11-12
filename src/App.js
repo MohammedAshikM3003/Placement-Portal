@@ -53,9 +53,15 @@ function AppRoutes() {
 
   // Student logout handler
   const handleStudentLogout = async () => {
-    const { logout } = useAuth();
-    await logout();
-    navigate("/");
+    try {
+      // Clear localStorage
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('isLoggedIn');
+      navigate("/");
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate("/");
+    }
   };
 
   // Coordinator logout handler (for coordinator pages)
@@ -95,21 +101,16 @@ function AppRoutes() {
     }
   };
 
-      const handleLogout = async () => {
-        try {
-          // Clear localStorage
-          localStorage.removeItem('studentData');
-          localStorage.removeItem('isLoggedIn');
-          
-          setIsLoggedIn(false);
-          setUserEmail("");
-          // setUserRole(""); // Unused
-          // setUserDepartment(""); // Unused
-          navigate("/"); // Redirect to landing page on logout
-        } catch (error) {
-          console.error('Logout error:', error);
-        }
-      };
+  const handleLogout = async () => {
+    try {
+      // Clear localStorage
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('isLoggedIn');
+      navigate("/"); // Redirect to landing page on logout
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   // Handlers for navigation
   const handleViewChange = (view) => {
@@ -118,7 +119,7 @@ function AppRoutes() {
   };
 
   const handleRedirectToLogin = () => {
-    setIsLoggedIn(false);
+    localStorage.removeItem('isLoggedIn');
     navigate("/mainlogin");
   };
 
