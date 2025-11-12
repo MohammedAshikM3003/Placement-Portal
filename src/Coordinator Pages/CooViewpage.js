@@ -36,11 +36,11 @@ const CalendarIcon = () => (
 function CooViewpage({ onLogout, onViewChange }) {
     const navigate = useNavigate();
     // Initialize state with sample data for view-only mode
-    // const [studyCategory, setStudyCategory] // Unused = useState('12th');
-    // const [profileImage, setProfileImage] // Unused = useState('https://via.placeholder.com/200x250?text=Student+Photo'); // Placeholder image for viewing
-    // const [uploadInfo, setUploadInfo] // Unused = useState({ name: 'SampleProfile.jpg', date: '01/01/2024' });
+    const [studyCategory, setStudyCategory] = useState('12th'); // Used in JSX
+    const [profileImage] = useState('https://via.placeholder.com/200x250?text=Student+Photo'); // Used in JSX, removed unused setter
+    const [uploadInfo] = useState({ name: 'SampleProfile.jpg', date: '01/01/2024' }); // Used in JSX, removed unused setter
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    // const [dob, setDob] // Unused = useState(new Date('2003-05-20')); // Sample DOB
+    const [dob] = useState(new Date('2003-05-20')); // Used in JSX, removed unused setter
 
     // Disabled handlers for view-only mode
     // const handleImageUpload = // Unused () => {};

@@ -128,8 +128,8 @@ function AppContent() {
           localStorage.removeItem('coordinatorData');
           localStorage.removeItem('isCoordinatorLoggedIn');
           
-          setIsCoordinatorLoggedIn(false);
-          setCoordinatorData(null);
+          // setIsCoordinatorLoggedIn(false); // Commented out - state not used
+          // setCoordinatorData(null); // Commented out - state not used
           navigate("/"); // Redirect to landing page on logout
         } catch (error) {
           console.error('Coordinator logout error:', error);
