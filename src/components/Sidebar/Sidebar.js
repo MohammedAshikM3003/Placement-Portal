@@ -30,7 +30,6 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   });
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   // ⚡ INSTANT: Preload image immediately if we have URL
   useEffect(() => {
@@ -43,7 +42,6 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         
         img.onload = () => {
           console.log('✅ Sidebar: Image preloaded successfully!');
-          setImageLoaded(true);
           setImageError(false);
           setImageKey(Date.now());
           
@@ -64,7 +62,8 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
 
     // Execute immediately
     preloadImage();
-  }, []); // Run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount - currentStudentData intentionally excluded
 
   // ⚡ Update when studentData prop changes
   useEffect(() => {
@@ -76,7 +75,6 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
       setCurrentStudentData(studentData);
       setImageError(false);
       setImageKey(Date.now());
-      setImageLoaded(true);
     }
   }, [studentData]);
 
