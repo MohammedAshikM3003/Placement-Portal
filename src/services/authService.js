@@ -63,10 +63,17 @@ class AuthService {
       localStorage.removeItem('studentRegNo');
       localStorage.removeItem('studentDob');
       
-      const response = await this.apiCall('/students/login', {
+      // Add timeout to prevent hanging
+      const loginPromise = this.apiCall('/students/login', {
         method: 'POST',
         body: JSON.stringify({ regNo, dob })
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 3000)
+      );
+      
+      const response = await Promise.race([loginPromise, timeoutPromise]);
 
       if (response.token && response.student) {
         console.log('✅ LOGIN SUCCESS: New student data received:', {

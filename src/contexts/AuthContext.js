@@ -184,8 +184,8 @@ export const AuthProvider = ({ children }) => {
         }
         
         // PHASE 2: Background data prefetching (NON-BLOCKING but starts immediately)
-        // Use setImmediate simulation for immediate execution
-        Promise.resolve().then(async () => {
+        // Use setTimeout with 0 delay for immediate execution without blocking
+        setTimeout(async () => {
           try {
             console.log('📥 AuthContext: Starting background data fetch...');
             const fastDataService = (await import('../services/fastDataService.js')).default;
@@ -218,7 +218,7 @@ export const AuthProvider = ({ children }) => {
               detail: { student: completeStudentData }
             }));
           }
-        });
+        }, 0); // 0 delay for immediate execution
 
         return { success: true };
       } else {
