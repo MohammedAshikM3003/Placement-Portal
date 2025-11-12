@@ -70,6 +70,16 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         if (event?.detail) {
           console.log('⚡ Sidebar: Using fresh event data');
           setCurrentStudentData(event.detail);
+          setImageError(false); // Reset image error when new data comes in
+          
+          // Force image refresh if profile picture URL is present
+          if (event.detail.profilePicURL) {
+            console.log('🖼️ Sidebar: Forcing profile picture refresh');
+            // Reset image error and force re-render
+            setTimeout(() => {
+              setImageError(false);
+            }, 100);
+          }
         }
         
         // Also try to get instant cached data for profile photo
@@ -113,14 +123,15 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         <div className="user-details">
           {currentStudentData?.profilePicURL && !imageError ? (
             <img 
+              key={currentStudentData.profilePicURL + '_' + currentStudentData._id} // Force re-render with key
               src={currentStudentData.profilePicURL} 
               alt="Profile" 
               onError={() => {
-                console.log('❌ Sidebar: Profile image failed to load');
+                console.log('❌ Sidebar: Profile image failed to load:', currentStudentData.profilePicURL);
                 setImageError(true);
               }}
               onLoad={() => {
-                console.log('✅ Sidebar: Profile image loaded successfully');
+                console.log('✅ Sidebar: Profile image loaded successfully:', currentStudentData.profilePicURL);
                 setImageError(false);
               }}
               style={{ 

@@ -60,7 +60,19 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             // ⚡ INSTANT: Preload profile photo immediately after login
             if (loginResult.student.profilePicURL) {
               const img = new Image();
-              img.onload = () => console.log('⚡ Login: Profile photo preloaded immediately');
+              img.onload = () => {
+                console.log('⚡ Login: Profile photo preloaded immediately');
+                // Force immediate sidebar update with loaded image
+                window.dispatchEvent(new CustomEvent('profileUpdated', { 
+                  detail: {
+                    ...loginResult.student,
+                    profilePicURL: loginResult.student.profilePicURL + '?loaded=' + Date.now()
+                  }
+                }));
+              };
+              img.onerror = () => {
+                console.log('❌ Login: Profile photo failed to preload');
+              };
               img.src = loginResult.student.profilePicURL;
             }
             

@@ -81,11 +81,29 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
       }
       
       // Dispatch immediate profile update for sidebar
+      console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: storedStudentData
+      }));
+      
+      // ⚡ FORCE: Additional profile picture update
       if (storedStudentData.profilePicURL) {
-        console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
-        window.dispatchEvent(new CustomEvent('profileUpdated', { 
-          detail: storedStudentData
-        }));
+        console.log('🖼️ Dashboard: Forcing profile picture update');
+        // Preload the image to ensure it's ready
+        const img = new Image();
+        img.onload = () => {
+          console.log('✅ Dashboard: Profile picture loaded, dispatching update');
+          window.dispatchEvent(new CustomEvent('profileUpdated', { 
+            detail: {
+              ...storedStudentData,
+              profilePicURL: storedStudentData.profilePicURL + '?t=' + Date.now() // Cache bust
+            }
+          }));
+        };
+        img.onerror = () => {
+          console.log('❌ Dashboard: Profile picture failed to load');
+        };
+        img.src = storedStudentData.profilePicURL;
       }
     }
     

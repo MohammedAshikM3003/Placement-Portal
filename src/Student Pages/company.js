@@ -45,7 +45,7 @@ export default function Company({ onLogout, onViewChange }) {
   const [applicationHistory, setApplicationHistory] = useState([]);
   // const statusOrder = { Rejected: 1, Pending: 2, Placed: 3 }; // Moved inside useMemo
 
-  // Load student data for sidebar and application history
+  // ⚡ INSTANT: Load student data immediately from cache/localStorage
   useEffect(() => {
     const handleProfileUpdate = () => {
       try {
@@ -60,27 +60,43 @@ export default function Company({ onLogout, onViewChange }) {
       }
     };
     
-    // Initial load
-    handleProfileUpdate();
-    
-    // ⚡ INSTANT: Dispatch profile update immediately on company page load
+    // ⚡ INSTANT: Load from localStorage immediately
     const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData && storedStudentData.profilePicURL) {
-      console.log('🚀 Company: Dispatching immediate profile update for sidebar');
-      window.dispatchEvent(new CustomEvent('profileUpdated', { 
-        detail: { 
-          profilePicURL: storedStudentData.profilePicURL,
-          studentData: storedStudentData 
-        } 
-      }));
+    if (storedStudentData) {
+      console.log('⚡ Company: INSTANT load from localStorage');
+      setStudentData(storedStudentData);
+      
+      // Load application history immediately
+      getApplicationHistory(storedStudentData._id).then(setApplicationHistory);
+      
+      // Try to get even faster cached data
+      if (storedStudentData._id) {
+        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+          const instantData = fastDataService.getInstantData(storedStudentData._id);
+          if (instantData && instantData.student) {
+            console.log('⚡ Company: INSTANT load from cache');
+            setStudentData(instantData.student);
+          }
+        });
+      }
+      
+      // Dispatch immediate profile update for sidebar
+      if (storedStudentData.profilePicURL) {
+        console.log('🚀 Company: Dispatching immediate profile update for sidebar');
+        window.dispatchEvent(new CustomEvent('profileUpdated', { 
+          detail: storedStudentData 
+        }));
+      }
     }
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('allDataPreloaded', handleProfileUpdate);
     
     return () => {
       window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('allDataPreloaded', handleProfileUpdate);
     };
   }, []);
 

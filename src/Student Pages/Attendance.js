@@ -21,7 +21,7 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
         : 0;
     const absentPercentage = 100 - attendancePercentage;
 
-    // Load student data and attendance data
+    // ⚡ INSTANT: Load student data and attendance data immediately from cache/localStorage
     useEffect(() => {
         const handleProfileUpdate = async () => {
             try {
@@ -45,27 +45,59 @@ function Attendance({ onLogout, onViewChange }) { // Removed currentView from pr
             }
         };
         
-        // Initial load
-        handleProfileUpdate();
-        
-        // ⚡ INSTANT: Dispatch profile update immediately on attendance page load
+        // ⚡ INSTANT: Load from localStorage immediately
         const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData && storedStudentData.profilePicURL) {
-            console.log('🚀 Attendance: Dispatching immediate profile update for sidebar');
-            window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                detail: { 
-                    profilePicURL: storedStudentData.profilePicURL,
-                    studentData: storedStudentData 
-                } 
-            }));
+        if (storedStudentData) {
+            console.log('⚡ Attendance: INSTANT load from localStorage');
+            setStudentData(storedStudentData);
+            
+            // Load attendance data immediately
+            setAttendanceData({
+                present: storedStudentData.attendancePresent || 0,
+                absent: storedStudentData.attendanceAbsent || 0,
+                records: storedStudentData.attendanceRecords || []
+            });
+            
+            // Try to get cached attendance data
+            const attendanceData = localStorage.getItem('attendanceData');
+            if (attendanceData) {
+                try {
+                    const parsedAttendance = JSON.parse(attendanceData);
+                    console.log('⚡ Attendance: INSTANT attendance data from cache');
+                    setAttendanceData(parsedAttendance);
+                } catch (error) {
+                    console.error('Error parsing cached attendance data:', error);
+                }
+            }
+            
+            // Try to get even faster cached data
+            if (storedStudentData._id) {
+                import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+                    const instantData = fastDataService.getInstantData(storedStudentData._id);
+                    if (instantData && instantData.student) {
+                        console.log('⚡ Attendance: INSTANT load from cache');
+                        setStudentData(instantData.student);
+                    }
+                });
+            }
+            
+            // Dispatch immediate profile update for sidebar
+            if (storedStudentData.profilePicURL) {
+                console.log('🚀 Attendance: Dispatching immediate profile update for sidebar');
+                window.dispatchEvent(new CustomEvent('profileUpdated', { 
+                    detail: storedStudentData 
+                }));
+            }
         }
         
         window.addEventListener('storage', handleProfileUpdate);
         window.addEventListener('profileUpdated', handleProfileUpdate);
+        window.addEventListener('allDataPreloaded', handleProfileUpdate);
         
         return () => {
             window.removeEventListener('storage', handleProfileUpdate);
             window.removeEventListener('profileUpdated', handleProfileUpdate);
+            window.removeEventListener('allDataPreloaded', handleProfileUpdate);
         };
     }, []);
 
