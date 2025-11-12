@@ -56,31 +56,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           onLogin(registerNumber, password);
         }
         
-        // ⚡ WAIT for initial data preload before navigation (reduced to 1 second)
-        console.log('⏳ Waiting for initial data preload...');
-        
-        // Wait for the background fetch to complete (give it 1 second max for faster UX)
-        await new Promise(resolve => {
-          let timeout;
-          const handleDataLoaded = () => {
-            clearTimeout(timeout);
-            window.removeEventListener('allDataPreloaded', handleDataLoaded);
-            console.log('✅ Data preloaded, navigating to dashboard');
-            resolve();
-          };
-          
-          window.addEventListener('allDataPreloaded', handleDataLoaded);
-          
-          // Fallback timeout - navigate anyway after 1 second (faster!)
-          timeout = setTimeout(() => {
-            window.removeEventListener('allDataPreloaded', handleDataLoaded);
-            console.log('⏰ Timeout reached, navigating to dashboard');
-            resolve();
-          }, 1000); // Reduced from 2000ms to 1000ms
-        });
-        
-        // Navigate to dashboard after data is loaded
+        // ⚡ INSTANT NAVIGATION - No waiting!
+        console.log('🚀 Navigating to dashboard immediately...');
         window.location.href = '/dashboard';
+        
+        // Background data will fetch automatically after navigation
       } else {
         setError(loginResult.error || 'Login failed. Please check your credentials.');
         setIsLoading(false);

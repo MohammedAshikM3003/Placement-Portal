@@ -11,59 +11,60 @@ const sidebarItems = [
 ];
 
 const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) => {
-  // ⚡ INSTANT: Initialize with localStorage data immediately
-  const [currentStudentData, setCurrentStudentData] = useState(() => {
-    try {
-      const stored = localStorage.getItem('studentData');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        console.log('⚡ Sidebar INIT: Loaded from localStorage', {
-          hasProfilePic: !!parsed.profilePicURL,
-          url: parsed.profilePicURL
-        });
-        return parsed;
-      }
-    } catch (error) {
-      console.error('❌ Sidebar INIT: Error loading from localStorage:', error);
-    }
-    return studentData || null;
-  });
+  // ⚡ Initialize with null - will fetch from MongoDB
+  const [currentStudentData, setCurrentStudentData] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
 
-  // ⚡ INSTANT: Preload image immediately if we have URL
+  // ⚡ Fetch student data from MongoDB on mount
   useEffect(() => {
-    const preloadImage = () => {
-      const data = currentStudentData || JSON.parse(localStorage.getItem('studentData') || 'null');
-      
-      if (data?.profilePicURL) {
-        console.log('⚡ Sidebar: Preloading profile image immediately');
-        const img = new Image();
+    const fetchStudentData = async () => {
+      try {
+        // Get student ID from localStorage (minimal data)
+        const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
         
-        img.onload = () => {
-          console.log('✅ Sidebar: Image preloaded successfully!');
-          setImageError(false);
-          setImageKey(Date.now());
+        if (storedData?._id) {
+          console.log('📥 Sidebar: Fetching fresh data from MongoDB for:', storedData._id);
           
-          // Update state if we got data from localStorage
-          if (!currentStudentData && data) {
-            setCurrentStudentData(data);
+          // Import fastDataService dynamically
+          const { default: fastDataService } = await import('../../services/fastDataService.js');
+          
+          // Fetch complete data from MongoDB
+          const completeData = await fastDataService.getCompleteStudentData(storedData._id);
+          
+          if (completeData?.student) {
+            console.log('✅ Sidebar: Got fresh data from MongoDB:', {
+              hasProfilePic: !!completeData.student.profilePicURL,
+              profileURL: completeData.student.profilePicURL
+            });
+            
+            setCurrentStudentData(completeData.student);
+            setImageError(false);
+            setImageKey(Date.now());
+            
+            // Preload the image if URL exists
+            if (completeData.student.profilePicURL) {
+              const img = new Image();
+              img.onload = () => {
+                console.log('✅ Sidebar: Profile image loaded from MongoDB');
+                setImageKey(Date.now());
+              };
+              img.onerror = () => {
+                console.log('❌ Sidebar: Profile image failed to load');
+                setImageError(true);
+              };
+              img.src = completeData.student.profilePicURL;
+            }
           }
-        };
-        
-        img.onerror = () => {
-          console.log('❌ Sidebar: Image preload failed');
-          setImageError(true);
-        };
-        
-        img.src = data.profilePicURL;
+        }
+      } catch (error) {
+        console.error('❌ Sidebar: Error fetching from MongoDB:', error);
       }
     };
 
     // Execute immediately
-    preloadImage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount - currentStudentData intentionally excluded
+    fetchStudentData();
+  }, []); // Run only once on mount
 
   // ⚡ Update when studentData prop changes
   useEffect(() => {
