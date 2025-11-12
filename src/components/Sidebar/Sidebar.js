@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Sidebar.css';
 import Adminicon from '../../assets/Adminicon.png';
-import fastDataService from '../../services/fastDataService.js';
 
 const sidebarItems = [
   { icon: require('../../assets/DashboardSideBarIcon.png'), text: 'Dashboard', view: 'dashboard' },
@@ -68,7 +67,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
 
     // Load immediately on mount
     loadStudentDataImmediately();
-  }, []);
+  }, [studentData]); // Added studentData dependency
 
   // ⚡ Update when studentData prop changes
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
@@ -98,17 +98,6 @@ function AppRoutes() {
     } catch (error) {
       console.error('❌ Failed to initialize student data after login:', error);
       // Don't block login process, just log the error
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      // Clear localStorage
-      localStorage.removeItem('studentData');
-      localStorage.removeItem('isLoggedIn');
-      navigate("/"); // Redirect to landing page on logout
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 
