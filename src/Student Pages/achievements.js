@@ -21,8 +21,7 @@ import {
   PreviewProgressAlert 
 } from '../components/alerts';
 
-// Import useCallback for refreshAchievements
-import { useState, useEffect, useCallback } from 'react';
+
 
 // Delete Confirmation Popup Component - Matches PopupAchievements style
 const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
