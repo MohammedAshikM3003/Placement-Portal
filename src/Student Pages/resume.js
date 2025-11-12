@@ -6,6 +6,13 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import './Resume.css';
 import Adminicon from '../assets/Adminicon.png';
 import resumeAnalysisService from '../services/resumeAnalysisService.js';
+import { 
+  DownloadFailedAlert, 
+  DownloadSuccessAlert, 
+  DownloadProgressAlert, 
+  PreviewFailedAlert, 
+  PreviewProgressAlert 
+} from '../components/alerts';
 
 // Success Popup Component with Animation
 const SuccessPopup = ({ onClose }) => (
@@ -349,6 +356,10 @@ function MainContent({ onViewChange }) {
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [showValidationPopup, setShowValidationPopup] = React.useState(false);
   const [validationAction, setValidationAction] = React.useState('');
+  const [downloadPopupState, setDownloadPopupState] = React.useState('none'); // 'none', 'progress', 'success', 'failed'
+  const [previewPopupState, setPreviewPopupState] = React.useState('none'); // 'none', 'progress', 'failed'
+  const [downloadProgress, setDownloadProgress] = React.useState(0);
+  const [previewProgress, setPreviewProgress] = React.useState(0);
   const [studentData, setStudentData] = React.useState(() => {
     // Initialize immediately with localStorage data to prevent glitch
     try {
@@ -1062,12 +1073,24 @@ function MainContent({ onViewChange }) {
     return suggestions;
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (!uploadedFile) {
       setValidationAction('preview');
       setShowValidationPopup(true);
       return;
     }
+    
+    // Show preview progress popup
+    setPreviewPopupState('progress');
+    setPreviewProgress(0);
+    
+    // Dynamic progress simulation
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => {
+        if (prev >= 85) return prev;
+        return prev + Math.random() * 12;
+      });
+    }, 150);
     
     try {
       console.log('Previewing resume file:', { 
@@ -1079,50 +1102,91 @@ function MainContent({ onViewChange }) {
       
       // Check if the URL is a valid base64 string
       if (!uploadedFile.url || !uploadedFile.url.includes('data:')) {
-        setValidationAction('preview');
-        setShowValidationPopup(true);
+        clearInterval(progressInterval);
+        setPreviewPopupState('failed');
         return;
       }
       
-      // Direct preview implementation
-      const newWindow = window.open();
-      if (newWindow) {
-        newWindow.document.write(`
-          <html>
-            <head><title>Resume Preview</title></head>
-            <body style="margin:0;">
-              <embed src="${uploadedFile.url}" width="100%" height="100%" type="application/pdf">
-            </body>
-          </html>
-        `);
-      }
+      // Complete progress to 100%
+      clearInterval(progressInterval);
+      setPreviewProgress(100);
+      
+      // Use requestAnimationFrame for immediate execution
+      requestAnimationFrame(() => {
+        // Direct preview implementation
+        const newWindow = window.open();
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head><title>Resume Preview</title></head>
+              <body style="margin:0;">
+                <embed src="${uploadedFile.url}" width="100%" height="100%" type="application/pdf">
+              </body>
+            </html>
+          `);
+        }
+        setPreviewPopupState('none');
+      });
     } catch (error) {
       console.error('Preview error:', error);
-      setValidationAction('preview');
-      setShowValidationPopup(true);
+      clearInterval(progressInterval);
+      setPreviewPopupState('failed');
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!uploadedFile) {
       setValidationAction('download');
       setShowValidationPopup(true);
       return;
     }
     
+    // Show download progress popup
+    setDownloadPopupState('progress');
+    setDownloadProgress(0);
+    
+    // Dynamic progress simulation
+    const progressInterval = setInterval(() => {
+      setDownloadProgress(prev => {
+        if (prev >= 85) return prev;
+        return prev + Math.random() * 12;
+      });
+    }, 150);
+    
     try {
-      // Direct download implementation
-      const link = document.createElement('a');
-      link.href = uploadedFile.url;
-      link.download = uploadedFile.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Let the progress animation run for a bit
+      setTimeout(() => {
+        // Complete progress to 100%
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        
+        // Use requestAnimationFrame for immediate execution
+        requestAnimationFrame(() => {
+          // Direct download implementation
+          const link = document.createElement('a');
+          link.href = uploadedFile.url;
+          link.download = uploadedFile.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setDownloadPopupState('success');
+        });
+      }, 1500);
     } catch (error) {
       console.error('Download error:', error);
-      setValidationAction('download');
-      setShowValidationPopup(true);
+      clearInterval(progressInterval);
+      setDownloadPopupState('failed');
     }
+  };
+
+  const closeDownloadPopup = () => {
+    setDownloadPopupState('none');
+    setDownloadProgress(0);
+  };
+
+  const closePreviewPopup = () => {
+    setPreviewPopupState('none');
+    setPreviewProgress(0);
   };
 
   const handleReAnalyze = async () => {
@@ -1592,6 +1656,32 @@ function MainContent({ onViewChange }) {
           />
         </div>
       )}
+
+      {/* Download/Preview Popup Components */}
+      <DownloadProgressAlert 
+        isOpen={downloadPopupState === 'progress'} 
+        progress={downloadProgress} 
+      />
+      
+      <DownloadSuccessAlert 
+        isOpen={downloadPopupState === 'success'} 
+        onClose={closeDownloadPopup} 
+      />
+      
+      <DownloadFailedAlert 
+        isOpen={downloadPopupState === 'failed'} 
+        onClose={closeDownloadPopup} 
+      />
+      
+      <PreviewProgressAlert 
+        isOpen={previewPopupState === 'progress'} 
+        progress={previewProgress} 
+      />
+      
+      <PreviewFailedAlert 
+        isOpen={previewPopupState === 'failed'} 
+        onClose={closePreviewPopup} 
+      />
     </Box>
     </>
   );

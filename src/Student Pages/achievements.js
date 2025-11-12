@@ -9,6 +9,7 @@ import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 // import authService from '../services/authService.js';
 import mongoDBService from '../services/mongoDBService.js';
 import certificateService from '../services/certificateService.js';
+import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner.js';
 // import fastDataService from '../services/fastDataService.js'; // Unused - using dynamic imports instead
 
 // NEW: Import download/preview alerts
@@ -680,7 +681,11 @@ function AchievementsContent() {
       console.log('Found selected achievement:', selected);
       
       if (selected.status === "approved" || selected.status === "rejected") { 
-        setRestrictionMessage(`❌ Cannot edit ${selected.status} achievements!\n\nThis record is locked and cannot be modified.\n\n📝 Only pending records can be edited.`); 
+        setRestrictionMessage(`❌ Cannot edit ${selected.status} achievements!
+
+This record is locked and cannot be modified.
+
+📝 Only pending records can be edited.`); 
         setShowRestrictionPopup(true); 
         return; 
       } 
@@ -1622,42 +1627,6 @@ function AchievementsContent() {
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button 
-              onClick={refreshAchievements}
-              className="refresh-btn"
-              disabled={isLoading}
-              title={isLoading ? 'Refreshing...' : 'Refresh'}
-              style={{
-                background: isLoading ? '#6c757d' : '#28a745',
-                color: 'white',
-                border: 'none',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s',
-                opacity: isLoading ? 0.7 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '44px'
-              }}
-              onMouseOver={(e) => {
-                if (!isLoading) e.target.style.backgroundColor = '#218838';
-              }}
-              onMouseOut={(e) => {
-                if (!isLoading) e.target.style.backgroundColor = '#28a745';
-              }}
-            >
-              {isLoading ? (
-                <span style={{ fontSize: '18px' }}>⏳</span>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                  <path fill="white" d="M12 20q-3.35 0-5.675-2.325T4 12t2.325-5.675T12 4q1.725 0 3.3.712T18 6.75V5q0-.425.288-.712T19 4t.713.288T20 5v5q0 .425-.288.713T19 11h-5q-.425 0-.712-.288T13 10t.288-.712T14 9h3.2q-.8-1.4-2.187-2.2T12 6Q9.5 6 7.75 7.75T6 12t1.75 4.25T12 18q1.7 0 3.113-.862t2.187-2.313q.2-.35.563-.487t.737-.013q.4.125.575.525t-.025.75q-1.025 2-2.925 3.2T12 20" strokeWidth="0.4" stroke="white"/>
-                </svg>
-              )}
-            </button>
-            <button 
               onClick={handleDeleteClick}
               className="delete-selected-btn"
             style={{
@@ -1685,30 +1654,8 @@ function AchievementsContent() {
           </div>
         </div>
         <div className="table-scroll-wrapper">
-            {isInitialLoading ? (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '60px 20px',
-                color: '#666',
-                fontSize: '16px'
-              }}>
-                <div className="achievements-loading-spinner" style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '4px solid #f3f3f3',
-                  borderTop: '4px solid #2276fc',
-                  borderRadius: '50%',
-                  animation: 'achievements-spin 1s linear infinite',
-                  marginBottom: '20px'
-                }}></div>
-                <div>Loading achievements...</div>
-                <div style={{ fontSize: '14px', color: '#999', marginTop: '8px' }}>
-                  Fetching data from database
-                </div>
-              </div>
+            {isInitialLoading || isLoading ? (
+              <LoadingSpinner message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} showProgress={false} />
             ) : (
               <table className="achievements-table">
                 <thead>
@@ -1717,7 +1664,6 @@ function AchievementsContent() {
                     <th>S.No</th>
                     <th>Year</th>
                     <th>Semester</th>
-                    <th>Section</th>
                     <th>Competition Name</th>
                     <th>Date</th>
                     <th>Prize</th>
@@ -1831,7 +1777,6 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
       <td data-label="S.No">{no}</td>
       <td data-label="Year">{year}</td>
       <td data-label="Semester">{semester}</td>
-      <td data-label="Section">{section}</td>
       <td data-label="Competition">{comp}</td>
       {/* MODIFIED: Use the formatted displayDate variable */}
       <td data-label="Date">{displayDate}</td>

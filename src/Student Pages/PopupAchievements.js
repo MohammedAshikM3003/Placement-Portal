@@ -12,7 +12,7 @@ const SuccessPopup = ({ onClose }) => (
         <circle className="Achievement-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
         <path className="Achievement-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
       </svg>
-      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Submitted ✓
       </h2>
       <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
@@ -30,13 +30,13 @@ const SuccessPopup = ({ onClose }) => (
 // ++ NEW: Error Popup Component with Animation ++
 const ErrorPopup = ({ onClose, errorMessage }) => (
   <div className="Achievement-popup-container">
-    <div className="Achievement-popup-header">Upload Failed!</div>
+    <div className="Achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>Upload Failed!</div>
     <div className="Achievement-popup-body">
       <svg className="Achievement-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
         <circle className="Achievement-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
         <path className="Achievement-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
       </svg>
-      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Upload Failed ✗
       </h2>
       <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
@@ -145,7 +145,12 @@ export default function CertificateUpload({ onClose, onUpload }) {
     }
     
     if (file.size > maxSize) {
-      setError(`File size limit exceeded!\n\nMaximum allowed: 500KB\nYour file size: ${fileSizeKB}KB\n\nPlease compress your PDF or choose a smaller file.`);
+      setError(`File size limit exceeded!
+
+Maximum allowed: 500KB
+Your file size: ${fileSizeKB}KB
+
+Please compress your PDF or choose a smaller file.`);
       setFileName("");
       setFileContent("");
       // Clear the file input

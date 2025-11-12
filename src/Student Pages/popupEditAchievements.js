@@ -26,7 +26,7 @@ const SuccessPopup = ({ onClose }) => (
         <circle className="Edit-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
         <path className="Edit-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
       </svg>
-      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Updated ✓
       </h2>
       <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
@@ -44,13 +44,13 @@ const SuccessPopup = ({ onClose }) => (
 // ++ NEW: Error Popup Component ++
 const ErrorPopup = ({ onClose, errorMessage }) => (
   <div className="Edit-popup-container">
-    <div className="Edit-popup-header">Update Failed!</div>
+    <div className="Edit-popup-header" style={{ backgroundColor: '#D23B42' }}>Update Failed!</div>
     <div className="Edit-popup-body">
       <svg className="Edit-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
         <circle className="Edit-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
         <path className="Edit-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
       </svg>
-      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
+      <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Update Failed ✗
       </h2>
       <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
@@ -163,7 +163,12 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
     }
     
     if (file.size > maxSize) {
-      setError(`File size limit exceeded!\n\nMaximum allowed: 500KB\nYour file size: ${fileSizeKB}KB\n\nPlease compress your PDF or choose a smaller file.`);
+      setError(`File size limit exceeded!
+
+Maximum allowed: 500KB
+Your file size: ${fileSizeKB}KB
+
+Please compress your PDF or choose a smaller file.`);
       setFileName(initialData?.fileName || "");
       setFileContent(initialData?.fileContent || "");
       // Clear the file input
@@ -338,11 +343,21 @@ export default function EditCertificate({ onClose, onUpdate, initialData }) {
         .Edit-popup-body { padding: 2rem; }
         .Edit-popup-footer { padding: 1.5rem; background-color: #f7f7f7; }
         .Edit-popup-close-btn {
-            background-color: #d9534f; color: white; border: none; padding: 0.8rem 1.5rem;
-            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: background-color 0.2s;
+            background-color: #D23B42;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
         }
-        .Edit-popup-close-btn:hover { background-color: #c9302c; }
+        .Edit-popup-close-btn:hover {
+            background-color: #b53138;
+            box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+        }
 
         /* Success icon animations */
         .Edit-success-icon {
