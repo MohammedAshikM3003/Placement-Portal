@@ -302,31 +302,6 @@ class FastDataService {
       console.log('⚠️ Attendance data preload failed:', error);
     }
   }
-
-  // ⚡ INSTANT: Get data from cache or localStorage
-  getInstantData(studentId) {
-    const cacheKey = `complete_${studentId}`;
-    
-    // Try cache first
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    // Try localStorage
-    const cachedData = localStorage.getItem('completeStudentData');
-    if (cachedData) {
-      try {
-        return JSON.parse(cachedData);
-      } catch (error) {
-        console.error('Error parsing cached data:', error);
-      }
-    }
-
-    return null;
-  }
 }
 
 // Export singleton instance
