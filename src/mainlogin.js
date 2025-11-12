@@ -190,13 +190,20 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                   color: "#d32f2f",
                   fontSize: "14px",
                   textAlign: "center",
-                  marginTop: "10px",
-                  padding: "8px",
+                  marginBottom: "16px",
+                  padding: "12px 16px",
                   backgroundColor: "#ffebee",
-                  borderRadius: "4px",
-                  border: "1px solid #ffcdd2"
+                  borderRadius: "12px",
+                  border: "1px solid #ef5350",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  animation: "slideDown 0.3s ease-out"
                 }}>
-                  {error}
+                  <span style={{ fontSize: "16px" }}>⚠️</span>
+                  <span>{error}</span>
                 </div>
               )}
               <div
@@ -267,6 +274,19 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           opacity: 0 !important;
         }
         .login-button { width: 100%; padding: 16px; font-size: 16px; border-radius: 14px; border: none; background: #5932EA; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        
+        /* Error message animation */
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
         * { box-sizing: border-box; }
         @media (max-width: 1024px) {
           .main-layout {

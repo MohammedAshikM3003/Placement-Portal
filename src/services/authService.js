@@ -33,11 +33,16 @@ class AuthService {
         ...options
       });
 
+      // Parse response body first
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        // Use backend error message if available
+        const errorMessage = data.message || data.error || `API Error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      return data;
     } catch (error) {
       console.error(`API call failed for ${endpoint}:`, error);
       throw error;
@@ -88,10 +93,31 @@ class AuthService {
         };
       }
 
-      return { success: false, error: 'Login failed - no student data received' };
+      return { success: false, error: response.message || 'Login failed - no student data received' };
     } catch (error) {
       console.error('Student login error:', error);
-      return { success: false, error: error.message };
+      
+      // Parse error message from backend
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.message) {
+        // Check for specific error messages
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = '❌ User not found. Please check your registration number.';
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('password')) {
+          errorMessage = '❌ Incorrect password. Please try again.';
+        } else if (error.message.includes('400') || error.message.includes('Bad Request')) {
+          errorMessage = '❌ Invalid credentials. Please check your details.';
+        } else if (error.message.includes('500') || error.message.includes('Server Error')) {
+          errorMessage = '❌ Server error. Please try again later.';
+        } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+          errorMessage = '❌ Network error. Please check your connection.';
+        } else {
+          errorMessage = `❌ ${error.message}`;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   }
 
