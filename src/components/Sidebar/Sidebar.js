@@ -11,67 +11,64 @@ const sidebarItems = [
 ];
 
 const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) => {
+  // ⚡ INSTANT: Initialize with localStorage data immediately
   const [currentStudentData, setCurrentStudentData] = useState(() => {
-    // Initialize immediately with localStorage data if no prop provided
-    if (studentData) return studentData;
     try {
-      return JSON.parse(localStorage.getItem('studentData') || 'null');
+      const stored = localStorage.getItem('studentData');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('⚡ Sidebar INIT: Loaded from localStorage', {
+          hasProfilePic: !!parsed.profilePicURL,
+          url: parsed.profilePicURL
+        });
+        return parsed;
+      }
     } catch (error) {
-      return null;
+      console.error('❌ Sidebar INIT: Error loading from localStorage:', error);
     }
+    return studentData || null;
   });
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  // ⚡ INSTANT: Aggressively load student data on mount
+  // ⚡ INSTANT: Preload image immediately if we have URL
   useEffect(() => {
-    const loadStudentDataImmediately = () => {
-      try {
-        // Priority 1: Use prop if available
-        if (studentData?.profilePicURL) {
-          console.log('⚡ Sidebar: Using prop data with profile pic');
-          setCurrentStudentData(studentData);
-          setImageError(false);
-          setImageKey(Date.now());
-          return;
-        }
-
-        // Priority 2: Load from localStorage
-        const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedData?.profilePicURL) {
-          console.log('⚡ Sidebar: Loaded profile pic from localStorage immediately');
-          setCurrentStudentData(storedData);
+    const preloadImage = () => {
+      const data = currentStudentData || JSON.parse(localStorage.getItem('studentData') || 'null');
+      
+      if (data?.profilePicURL) {
+        console.log('⚡ Sidebar: Preloading profile image immediately');
+        const img = new Image();
+        
+        img.onload = () => {
+          console.log('✅ Sidebar: Image preloaded successfully!');
+          setImageLoaded(true);
           setImageError(false);
           setImageKey(Date.now());
           
-          // Preload the image
-          const img = new Image();
-          img.onload = () => {
-            console.log('✅ Sidebar: Profile image preloaded successfully');
-            // Force another render to ensure display
-            setImageKey(Date.now());
-          };
-          img.onerror = () => {
-            console.log('❌ Sidebar: Profile image preload failed');
-            setImageError(true);
-          };
-          img.src = storedData.profilePicURL;
-        } else if (storedData) {
-          console.log('⚠️ Sidebar: Student data found but no profile pic URL');
-          setCurrentStudentData(storedData);
-        }
-      } catch (error) {
-        console.error('❌ Sidebar: Error loading student data:', error);
+          // Update state if we got data from localStorage
+          if (!currentStudentData && data) {
+            setCurrentStudentData(data);
+          }
+        };
+        
+        img.onerror = () => {
+          console.log('❌ Sidebar: Image preload failed');
+          setImageError(true);
+        };
+        
+        img.src = data.profilePicURL;
       }
     };
 
-    // Load immediately on mount
-    loadStudentDataImmediately();
-  }, [studentData]); // Added studentData dependency
+    // Execute immediately
+    preloadImage();
+  }, []); // Run only once on mount
 
   // ⚡ Update when studentData prop changes
   useEffect(() => {
-    if (studentData) {
+    if (studentData && studentData.profilePicURL) {
       console.log('🔄 Sidebar: Prop data updated', {
         hasProfilePic: !!studentData.profilePicURL,
         profileURL: studentData.profilePicURL
@@ -79,6 +76,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
       setCurrentStudentData(studentData);
       setImageError(false);
       setImageKey(Date.now());
+      setImageLoaded(true);
     }
   }, [studentData]);
 

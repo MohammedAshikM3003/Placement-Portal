@@ -42,45 +42,49 @@ const AttendanceChart = ({ present, absent }) => {
 
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const [studentData, setStudentData] = React.useState(null);
-
-  // ⚡ INSTANT: Load student data immediately on mount
-  React.useEffect(() => {
-    const loadStudentData = () => {
-      try {
-        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData) {
-          console.log('⚡ Dashboard: Loaded student data from localStorage');
-          setStudentData(storedStudentData);
-        }
-      } catch (error) {
-        console.error('❌ Dashboard: Error loading student data:', error);
+  
+  // ⚡ INSTANT: Initialize with localStorage data immediately (synchronous)
+  const [studentData, setStudentData] = React.useState(() => {
+    try {
+      const stored = localStorage.getItem('studentData');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('⚡ Dashboard INIT: Loaded student data synchronously', {
+          hasProfilePic: !!parsed.profilePicURL
+        });
+        return parsed;
       }
-    };
+    } catch (error) {
+      console.error('❌ Dashboard INIT: Error loading student data:', error);
+    }
+    return null;
+  });
 
-    // Load immediately on mount
-    loadStudentData();
-    
-    // Listen for updates
-    const handleProfileUpdate = () => {
+  // ⚡ Listen for updates from background data fetch
+  React.useEffect(() => {
+    const handleProfileUpdate = (event) => {
       try {
-        const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (updatedStudentData) {
-          setStudentData(updatedStudentData);
+        // Prioritize event data over localStorage
+        const updatedData = event?.detail || JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (updatedData) {
+          console.log('🔄 Dashboard: Student data updated', {
+            hasProfilePic: !!updatedData.profilePicURL
+          });
+          setStudentData(updatedData);
         }
       } catch (error) {
         console.error('❌ Dashboard: Error updating student data:', error);
       }
     };
     
-    window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('allDataPreloaded', handleProfileUpdate);
+    window.addEventListener('studentDataUpdated', handleProfileUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener('allDataPreloaded', handleProfileUpdate);
+      window.removeEventListener('studentDataUpdated', handleProfileUpdate);
     };
   }, []);
 

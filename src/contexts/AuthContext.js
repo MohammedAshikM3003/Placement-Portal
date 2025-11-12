@@ -155,23 +155,43 @@ export const AuthProvider = ({ children }) => {
 
         console.log('🎉 AuthContext: Login complete - UI can now render!');
         
-        // PHASE 2: Background data prefetching (NON-BLOCKING)
-        // This runs in the background and doesn't delay navigation
-        setTimeout(async () => {
+        // ⚡ INSTANT: Preload profile picture IMMEDIATELY (before navigation)
+        if (loginResult.student.profilePicURL) {
+          const img = new Image();
+          img.onload = () => {
+            console.log('✅ AuthContext: Profile pic preloaded INSTANTLY');
+            // Force sidebar refresh
+            window.dispatchEvent(new CustomEvent('profileUpdated', {
+              detail: loginResult.student
+            }));
+          };
+          img.onerror = () => console.log('⚠️ Profile pic preload failed');
+          img.src = loginResult.student.profilePicURL;
+        }
+        
+        // PHASE 2: Background data prefetching (NON-BLOCKING but starts immediately)
+        // Use setImmediate simulation for immediate execution
+        Promise.resolve().then(async () => {
           try {
             console.log('📥 AuthContext: Starting background data fetch...');
             const fastDataService = (await import('../services/fastDataService.js')).default;
             
             // Fetch all data in parallel without blocking UI
-            await Promise.allSettled([
-              fastDataService.initializeAllStudentData(loginResult.student._id),
+            const results = await Promise.allSettled([
               fastDataService.preloadProfilePhoto(loginResult.student._id),
               fastDataService.preloadResumeData(loginResult.student._id),
               fastDataService.preloadCertificatesData(loginResult.student._id),
-              fastDataService.preloadAttendanceData(loginResult.student._id)
+              fastDataService.preloadAttendanceData(loginResult.student._id),
+              fastDataService.initializeAllStudentData(loginResult.student._id)
             ]);
             
-            console.log('✅ AuthContext: Background data fetch complete!');
+            console.log('✅ AuthContext: Background data fetch complete!', {
+              profilePhoto: results[0].status,
+              resume: results[1].status,
+              certificates: results[2].status,
+              attendance: results[3].status,
+              complete: results[4].status
+            });
             
             // Dispatch events to update all components with fresh data
             window.dispatchEvent(new CustomEvent('allDataPreloaded', {
@@ -181,7 +201,7 @@ export const AuthProvider = ({ children }) => {
             console.error('⚠️ AuthContext: Background fetch error (non-critical):', bgError);
             // Don't fail the login - data will load on-demand
           }
-        }, 0); // Execute immediately but asynchronously
+        });
 
         return { success: true };
       } else {
