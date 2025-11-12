@@ -582,7 +582,7 @@ function MainRegistration() {
         
         console.log(`Section ${key} completion check:`, completed);
         return completed;
-    }, [sectionRefs, currentYear, currentSemester, studyCategory]);
+    }, [sectionRefs, currentYear, currentSemester, studyCategory, getRequiredGPAFields]);
 
     // Add comprehensive validation function
     const validateAllFields = useCallback(() => {
@@ -753,7 +753,7 @@ function MainRegistration() {
         });
         
         return { isValid: errors.length === 0, errors };
-    }, [dob, studyCategory, currentYear, currentSemester, formRef]);
+    }, [dob, studyCategory, currentYear, currentSemester, formRef, getRequiredGPAFields]);
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];

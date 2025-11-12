@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"; // Import useEffect and useCallback
+import { useState, useEffect, useCallback, useMemo } from "react"; // Import useEffect, useCallback, and useMemo
 import {
  FaEye
 } from 'react-icons/fa';
@@ -55,8 +55,8 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   //   { icon: <FaUserCircle />, text: 'Profile' },
   // ];
 
-  // Data for the students table
-  const allStudentsData = [
+  // Data for the students table - wrapped in useMemo to prevent re-creation on every render
+  const allStudentsData = useMemo(() => [
     { sno: 1, name: 'Ridhan', regNo: '73152313001', dept: 'CSE', batch: '2023-2027', company: 'Infosys', role: 'Software Engineer', pkg: '12.0 LPA', date: '29/08/25', status: 'Accepted' },
     { sno: 2, name: 'Vibin', regNo: '73152313002', dept: 'CSE', batch: '2023-2027', company: 'Wipro', role: 'Data Analyst', pkg: '4.0 LPA', date: '19/09/25', status: 'Rejected' },
     { sno: 3, name: 'Nithin', regNo: '73152313003', dept: 'CSE', batch: '2023-2027', company: 'TCS', role: 'Tester', pkg: '3.0 LPA', date: '26/07/25', status: 'Pending' },
@@ -67,7 +67,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     { sno: 8, name: 'Lilly', regNo: '73152313008', dept: 'CSE', batch: '2024-2028', company: 'Infosys', role: 'Tester', pkg: '12.0 LPA', date: '26/07/25', status: 'Pending' },
    { sno: 9, name: 'Chann', regNo: '73152313009', dept: 'CSE', batch: '2023-2027', company: 'Infosys', role: 'Software Engineer', pkg: '12.0 LPA', date: '29/08/25', status: 'Accepted' },
     { sno: 10, name: 'Karan', regNo: '73152313010', dept: 'CSE', batch: '2024-2028', company: 'Wipro', role: 'Software Engineer', pkg: '4.0 LPA', date: '29/08/25', status: 'Accepted' },
-  ];
+  ], []);
 
   // State for filter values. Dept is fixed to 'CSE' and not changeable via dropdown.
   const [filters, setFilters] = useState({
@@ -94,8 +94,8 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     }));
   };
 
-  // Function to filter students based on current filters state
-  const getFilteredStudents = (data) => {
+  // Function to filter students based on current filters state - wrapped in useCallback
+  const getFilteredStudents = useCallback((data) => {
     // NOTE: Department filter is HARDCODED to 'CSE' as requested.
     const FIXED_DEPT = 'CSE';
     
@@ -111,7 +111,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
       
       return deptMatch && batchMatch && companyMatch;
     });
-  };
+  }, [filters]);
 
   // New function to be called ONLY on the Filter button click
   const applyTableFilters = useCallback(() => {
