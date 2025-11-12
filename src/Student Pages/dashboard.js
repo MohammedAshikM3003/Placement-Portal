@@ -86,24 +86,42 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
         detail: storedStudentData
       }));
       
-      // ⚡ FORCE: Additional profile picture update
+      // ⚡ FORCE: Immediate profile picture update for dashboard
       if (storedStudentData.profilePicURL) {
-        console.log('🖼️ Dashboard: Forcing profile picture update');
+        console.log('🖼️ Dashboard: Forcing immediate profile picture update');
+        
         // Preload the image to ensure it's ready
         const img = new Image();
         img.onload = () => {
-          console.log('✅ Dashboard: Profile picture loaded, dispatching update');
+          console.log('✅ Dashboard: Profile picture loaded successfully, forcing sidebar refresh');
+          
+          const updatedData = {
+            ...storedStudentData,
+            _dashboardUpdate: Date.now() // Dashboard-specific update flag
+          };
+          
+          // Update localStorage
+          localStorage.setItem('studentData', JSON.stringify(updatedData));
+          
+          // Dispatch multiple events to ensure sidebar updates
           window.dispatchEvent(new CustomEvent('profileUpdated', { 
-            detail: {
-              ...storedStudentData,
-              profilePicURL: storedStudentData.profilePicURL + '?t=' + Date.now() // Cache bust
-            }
+            detail: updatedData
           }));
+          window.dispatchEvent(new CustomEvent('forceProfileRefresh', { 
+            detail: updatedData
+          }));
+          window.dispatchEvent(new CustomEvent('studentDataUpdated', { 
+            detail: { student: updatedData }
+          }));
+          
+          console.log('🚀 Dashboard: All profile update events dispatched from dashboard');
         };
         img.onerror = () => {
-          console.log('❌ Dashboard: Profile picture failed to load');
+          console.log('❌ Dashboard: Profile picture failed to load:', storedStudentData.profilePicURL);
         };
         img.src = storedStudentData.profilePicURL;
+      } else {
+        console.log('⚠️ Dashboard: No profile picture URL found in stored data');
       }
     }
     

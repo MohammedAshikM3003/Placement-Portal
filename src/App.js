@@ -1,5 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import RegistrationDebug from "./components/RegistrationDebug.js";
 import AnimatedLoader from "./components/AnimatedLoader.js";
 
@@ -38,54 +40,35 @@ const CooViewpage = lazy(() => import("./Coordinator Pages/CooViewpage.js"));
 const CooViewMS = lazy(() => import("./Coordinator Pages/CooViewMS.js"));
 const CooViewPS = lazy(() => import("./Coordinator Pages/CooViewPS.js"));
 
-// This component now contains the main application logic
-function AppContent() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  // const [userRole, setUserRole] = useState(""); // Unused
-  // const [userDepartment, setUserDepartment] = useState(""); // Unused
-  // const [isCoordinatorLoggedIn, setIsCoordinatorLoggedIn] = useState(false); // Unused
-  // const [coordinatorData, setCoordinatorData] = useState(null); // Unused
-  const [isLoading, setIsLoading] = useState(true);
+// Protected Routes Component using AuthContext
+function AppRoutes() {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
-      // Check MongoDB authentication
-      useEffect(() => {
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        // const isCoordinatorLoggedIn = localStorage.getItem('isCoordinatorLoggedIn') === 'true'; // Unused
-        // const coordinatorData = JSON.parse(localStorage.getItem('coordinatorData') || 'null'); // Unused
-        
-        console.log('App.js - Checking auth state:', { isLoggedIn, studentData }); // Debug log
-        
-        // Check student authentication
-        if (isLoggedIn && studentData) {
-          setIsLoggedIn(true);
-          setUserEmail(studentData.primaryEmail || studentData.email || '');
-          // setUserRole('student'); // Unused
-          // setUserDepartment(studentData.branch || ''); // Unused
-          console.log('App.js - Student authenticated:', studentData.firstName, studentData.lastName); // Debug log
-        } else {
-          setIsLoggedIn(false);
-          setUserEmail('');
-          // setUserRole(''); // Unused
-          // setUserDepartment(''); // Unused
-          console.log('App.js - Student not authenticated'); // Debug log
-        }
+  // CRITICAL: If the app is checking authentication (loading state),
+  // show a full-page loading spinner. Do NOT render Dashboard or Sidebar yet.
+  if (isLoading) {
+    return <LoadingSpinner message="Authenticating..." />;
+  }
 
-        // Check coordinator authentication - COMMENTED OUT (unused)
-        // if (isCoordinatorLoggedIn && coordinatorData) {
-        //   setIsCoordinatorLoggedIn(true);
-        //   setCoordinatorData(coordinatorData);
-        //   console.log('App.js - Coordinator authenticated:', coordinatorData); // Debug log
-        // } else {
-        //   setIsCoordinatorLoggedIn(false);
-        //   setCoordinatorData(null);
-        //   console.log('App.js - Coordinator not authenticated'); // Debug log
-        // }
-        
-        setIsLoading(false);
-      }, []);
+  // Student logout handler
+  const handleStudentLogout = async () => {
+    const { logout } = useAuth();
+    await logout();
+    navigate("/");
+  };
+
+  // Coordinator logout handler (for coordinator pages)
+  const handleCoordinatorLogout = () => {
+    console.log('Coordinator logout clicked');
+    navigate("/");
+  };
+
+  // Coordinator view change handler
+  const handleCoordinatorViewChange = (view) => {
+    console.log('Coordinator view change:', view);
+    navigate(`/coordinator/${view}`);
+  };
 
   const handleLogin = async (regNo, dob) => {
     // This function is called after successful authentication
@@ -128,29 +111,10 @@ function AppContent() {
         }
       };
 
-      const handleCoordinatorLogout = async () => {
-        try {
-          // Clear coordinator localStorage
-          localStorage.removeItem('coordinatorData');
-          localStorage.removeItem('isCoordinatorLoggedIn');
-          
-          // setIsCoordinatorLoggedIn(false); // Commented out - state not used
-          // setCoordinatorData(null); // Commented out - state not used
-          navigate("/"); // Redirect to landing page on logout
-        } catch (error) {
-          console.error('Coordinator logout error:', error);
-        }
-      };
-  
   // Handlers for navigation
   const handleViewChange = (view) => {
     // You can use a switch or if/else here to navigate to the correct route
     navigate(`/${view}`);
-  };
-
-  const handleCoordinatorViewChange = (view) => {
-    // Navigate to coordinator routes with proper prefix
-    navigate(`/coordinator/${view}`);
   };
 
   const handleRedirectToLogin = () => {
@@ -255,43 +219,42 @@ function AppContent() {
         element={<CoordinatorAccess />} 
       />
 
-      {/* Authenticated Routes */}
-      {isLoggedIn ? (
+      {/* Protected Student Routes - Only render if authenticated */}
+      {isAuthenticated ? (
         <>
           <Route path="/dashboard" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <PlacementPortalDashboard onLogout={handleLogout} userEmail={userEmail} onViewChange={handleViewChange} />
+              <PlacementPortalDashboard onLogout={handleStudentLogout} userEmail={user?.email} onViewChange={handleViewChange} />
             </Suspense>
           } />
           <Route path="/resume" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <Resume onLogout={handleLogout} onViewChange={handleViewChange} />
+              <Resume onLogout={handleStudentLogout} onViewChange={handleViewChange} />
             </Suspense>
           } />
           <Route path="/attendance" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <Attendance onLogout={handleLogout} onViewChange={handleViewChange} />
+              <Attendance onLogout={handleStudentLogout} onViewChange={handleViewChange} />
             </Suspense>
           } />
           <Route path="/achievements" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <Achievements onLogout={handleLogout} onViewChange={handleViewChange} />
+              <Achievements onLogout={handleStudentLogout} onViewChange={handleViewChange} />
             </Suspense>
           } />
           <Route path="/company" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <Company onLogout={handleLogout} onViewChange={handleViewChange} />
+              <Company onLogout={handleStudentLogout} onViewChange={handleViewChange} />
             </Suspense>
           } />
           <Route path="/profile" element={
             <Suspense fallback={<AnimatedLoader />}>
-              <StuProfile onLogout={handleLogout} onViewChange={handleViewChange} />
+              <StuProfile onLogout={handleStudentLogout} onViewChange={handleViewChange} />
             </Suspense>
           } />
         </>
       ) : (
-        // Redirect to the login page if the user is not logged in and tries to access a protected route
-        <Route path="*" element={<PlacementPortalLogin onLogin={handleLogin} onNavigateToSignUp={() => navigate("/signup")} />} />
+        <Route path="*" element={<PlacementPortalLogin onLogin={() => {}} onNavigateToSignUp={() => navigate("/signup")} />} />
       )}
 
       {/* Coordinator Routes - No Authentication Required */}
@@ -387,12 +350,14 @@ function AppContent() {
   );
 }
 
-// The main App component that sets up the router
+// The main App component that sets up the router and AuthProvider
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <AppContent />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );

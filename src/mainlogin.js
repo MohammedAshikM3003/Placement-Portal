@@ -8,6 +8,7 @@ import {
 import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
+import { useAuth } from './contexts/AuthContext';
 import authService from "./services/authService.js";
 
 const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
@@ -17,6 +18,9 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Use AuthContext for login
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,63 +41,21 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         return;
       }
 
-          // Use MongoDB authentication
-          const loginResult = await authService.loginStudent(registerNumber, password);
+          // CRITICAL: Use AuthContext login method instead of direct authService
+          console.log('🚀 Login: Using AuthContext login method...');
+          const loginResult = await login(registerNumber, password);
           
           console.log('Login result:', loginResult); // Debug log
           
           if (loginResult.success) {
-            console.log('Login successful! Redirecting to dashboard...'); // Debug log
-            console.log('✅ NEW STUDENT DATA:', {
-              name: `${loginResult.student.firstName} ${loginResult.student.lastName}`,
-              regNo: loginResult.student.regNo,
-              id: loginResult.student._id
-            });
+            console.log('✅ Login successful! AuthContext has updated global state');
             
-            // Store authentication token and student data
-            localStorage.setItem('authToken', loginResult.token);
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('studentRegNo', registerNumber);
-            localStorage.setItem('studentDob', password);
-            localStorage.setItem('studentData', JSON.stringify(loginResult.student));
-            
-            // ⚡ INSTANT: Preload profile photo immediately after login
-            if (loginResult.student.profilePicURL) {
-              const img = new Image();
-              img.onload = () => {
-                console.log('⚡ Login: Profile photo preloaded immediately');
-                // Force immediate sidebar update with loaded image
-                window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                  detail: {
-                    ...loginResult.student,
-                    profilePicURL: loginResult.student.profilePicURL + '?loaded=' + Date.now()
-                  }
-                }));
-              };
-              img.onerror = () => {
-                console.log('❌ Login: Profile photo failed to preload');
-              };
-              img.src = loginResult.student.profilePicURL;
+            // Call the onLogin callback if provided
+            if (onLogin) {
+              onLogin(registerNumber, password);
             }
             
-            // Dispatch immediate update event for sidebar
-            window.dispatchEvent(new CustomEvent('studentDataUpdated', { 
-              detail: { student: loginResult.student } 
-            }));
-            window.dispatchEvent(new CustomEvent('profileUpdated', { 
-              detail: loginResult.student 
-            }));
-            
-            // ⚡ INSTANT: Start preloading all data in background
-            import('./services/fastDataService.js').then(({ default: fastDataService }) => {
-              console.log('🚀 Login: Starting background preload...');
-              fastDataService.preloadAllData(loginResult.student._id);
-            });
-            
-            // Call the onLogin callback
-            onLogin(registerNumber, password);
-            
-            // Force page reload to trigger App.js authentication check
+            // CRITICAL: Navigate to dashboard - AuthContext will handle the rest
             window.location.href = '/dashboard';
           } else {
             setError(loginResult.error || 'Login failed. Please check your credentials.');

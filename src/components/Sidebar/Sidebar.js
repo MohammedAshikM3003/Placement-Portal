@@ -22,6 +22,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     }
   });
   const [imageError, setImageError] = useState(false);
+  const [imageKey, setImageKey] = useState(Date.now()); // Force image re-render
 
   // ⚡ INSTANT: Update local state when studentData prop changes
   useEffect(() => {
@@ -56,21 +57,30 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   useEffect(() => {
     const handleProfileUpdate = async (event) => {
       try {
-        console.log('🔄 Sidebar: Profile update detected');
+        console.log('🔄 Sidebar: Profile update detected', event?.type);
         
         // First, update from localStorage immediately
         const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (updatedStudentData) {
-          console.log('⚡ Sidebar: Updated from localStorage');
+          console.log('⚡ Sidebar: Updated from localStorage', {
+            hasProfilePic: !!updatedStudentData.profilePicURL,
+            profileURL: updatedStudentData.profilePicURL
+          });
           setCurrentStudentData(updatedStudentData);
           setImageError(false); // Reset image error when data updates
+          setImageKey(Date.now()); // Force image re-render
         }
         
         // If we have event detail with fresh data, use that
         if (event?.detail) {
-          console.log('⚡ Sidebar: Using fresh event data');
+          console.log('⚡ Sidebar: Using fresh event data', {
+            hasProfilePic: !!event.detail.profilePicURL,
+            profileURL: event.detail.profilePicURL,
+            forceUpdate: event.detail._forceUpdate
+          });
           setCurrentStudentData(event.detail);
           setImageError(false); // Reset image error when new data comes in
+          setImageKey(Date.now()); // Force image re-render
           
           // Force image refresh if profile picture URL is present
           if (event.detail.profilePicURL) {
@@ -78,23 +88,33 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
             // Reset image error and force re-render
             setTimeout(() => {
               setImageError(false);
-            }, 100);
-          }
-        }
-        
-        // Also try to get instant cached data for profile photo
-        if (updatedStudentData?._id) {
-          const instantData = fastDataService.getInstantData(updatedStudentData._id);
-          if (instantData?.student?.profilePicURL) {
-            console.log('⚡ Sidebar: Updated profile photo from cache');
-            setCurrentStudentData(prev => ({
-              ...prev,
-              profilePicURL: instantData.student.profilePicURL
-            }));
+              setImageKey(Date.now()); // Additional force re-render
+            }, 50);
           }
         }
       } catch (error) {
-        console.error('❌ Error updating sidebar student data:', error);
+        console.error('❌ Error in handleProfileUpdate:', error);
+      }
+    };
+
+    const handleForceRefresh = (event) => {
+      try {
+        console.log('🔄 Sidebar: Force refresh triggered');
+        if (event?.detail) {
+          console.log('⚡ Sidebar: Force refresh with data', {
+            hasProfilePic: !!event.detail.profilePicURL,
+            profileURL: event.detail.profilePicURL
+          });
+          setCurrentStudentData(event.detail);
+          setImageError(false);
+          
+          // Force complete re-render by updating a key or state
+          setTimeout(() => {
+            setImageError(false);
+          }, 10);
+        }
+      } catch (error) {
+        console.error('❌ Error in handleForceRefresh:', error);
       }
     };
 
@@ -102,17 +122,20 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
       if (event?.detail?.student) {
         console.log('⚡ Sidebar: Student data update from fast service');
         setCurrentStudentData(event.detail.student);
+        setImageError(false);
       }
     };
 
     // Listen for multiple types of updates
     window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('studentDataUpdated', handleStudentDataUpdate);
+    window.addEventListener('forceProfileRefresh', handleForceRefresh);
     window.addEventListener('storage', handleProfileUpdate);
 
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener('studentDataUpdated', handleStudentDataUpdate);
+      window.removeEventListener('forceProfileRefresh', handleForceRefresh);
       window.removeEventListener('storage', handleProfileUpdate);
     };
   }, []);
@@ -123,7 +146,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         <div className="user-details">
           {currentStudentData?.profilePicURL && !imageError ? (
             <img 
-              key={currentStudentData.profilePicURL + '_' + currentStudentData._id} // Force re-render with key
+              key={`${currentStudentData.profilePicURL}_${currentStudentData._id}_${imageKey}`} // Force re-render with key
               src={currentStudentData.profilePicURL} 
               alt="Profile" 
               onError={() => {
