@@ -277,51 +277,61 @@ function AchievementsContent() {
     // Start loading immediately
     setIsInitialLoading(true);
     
-    // ⚡ INSTANT: Try to get preloaded certificates data first
-    const certificatesData = localStorage.getItem('certificatesData');
-    if (certificatesData) {
-      try {
-        const parsedCertificates = JSON.parse(certificatesData);
-        console.log('⚡ Achievements: INSTANT certificates from preloaded cache');
-        setAchievements(parsedCertificates);
-        setIsInitialLoading(false); // Stop loading animation immediately
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error parsing preloaded certificates:', error);
-      }
-    }
-    
-    // ⚡ INSTANT: Show cached student data immediately if available
-    const cachedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (cachedStudentData) {
-      console.log('⚡ Achievements: INSTANT student data from localStorage');
-      setStudentData(cachedStudentData);
-      
-      // If we have certificates in student data and no preloaded certificates
-      if (cachedStudentData.certificates && !certificatesData) {
-        console.log('⚡ Achievements: Using certificates from student data');
-        setAchievements(cachedStudentData.certificates);
-        setIsInitialLoading(false);
-        setIsLoading(false);
+    try {
+      // ⚡ INSTANT: Try to get preloaded certificates data first
+      const certificatesData = localStorage.getItem('certificatesData');
+      if (certificatesData) {
+        try {
+          const parsedCertificates = JSON.parse(certificatesData);
+          console.log('⚡ Achievements: INSTANT certificates from preloaded cache');
+          setAchievements(parsedCertificates);
+          setIsInitialLoading(false); // Stop loading animation immediately
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error parsing preloaded certificates:', error);
+          // If parsing fails, clear the bad data
+          localStorage.removeItem('certificatesData');
+        }
       }
       
-      // Try to get even faster cached data from fastDataService
-      if (cachedStudentData._id) {
-        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
-          const instantData = fastDataService.getInstantData(cachedStudentData._id);
-          if (instantData && instantData.certificates) {
-            console.log('⚡ Achievements: INSTANT certificates from fastDataService cache');
-            setAchievements(instantData.certificates);
-            setIsInitialLoading(false);
-            setIsLoading(false);
-          }
-        });
+      // ⚡ INSTANT: Show cached student data immediately if available
+      const cachedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (cachedStudentData) {
+        console.log('⚡ Achievements: INSTANT student data from localStorage');
+        setStudentData(cachedStudentData);
+        
+        // If we have certificates in student data and no preloaded certificates
+        if (cachedStudentData.certificates && !certificatesData) {
+          console.log('⚡ Achievements: Using certificates from student data');
+          setAchievements(cachedStudentData.certificates);
+          setIsInitialLoading(false);
+          setIsLoading(false);
+        }
+        
+        // Try to get even faster cached data from fastDataService
+        if (cachedStudentData._id) {
+          import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+            const instantData = fastDataService.getInstantData(cachedStudentData._id);
+            if (instantData && instantData.certificates) {
+              console.log('⚡ Achievements: INSTANT certificates from fastDataService cache');
+              setAchievements(instantData.certificates);
+              setIsInitialLoading(false);
+              setIsLoading(false);
+            }
+          });
+        }
       }
+    } catch (error) {
+      console.error('Error loading data from localStorage cache:', error);
+      // If any cache logic fails, clear it to prevent future errors
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('certificatesData');
     }
     
     // Then load fresh data from MongoDB in background
+    // This will now run even if the cache parsing above fails
     loadStudentData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Quick refresh when component mounts (sidebar navigation to Achievements)
   useEffect(() => {
