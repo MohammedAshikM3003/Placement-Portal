@@ -1662,7 +1662,35 @@ This record is locked and cannot be modified.
         </div>
         <div className="table-scroll-wrapper">
             {isInitialLoading || isLoading ? (
-              <LoadingSpinner message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} showProgress={false} mode="table" />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '300px',
+                flexDirection: 'column',
+                gap: '20px'
+              }}>
+                <div className="table-refresh-spinner" style={{
+                  width: '30px',
+                  height: '30px',
+                  border: '3px solid #f3f3f3',
+                  borderTop: '3px solid #2196F3',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }}></div>
+                <p style={{
+                  fontSize: '16px',
+                  color: '#333',
+                  fontWeight: '500',
+                  margin: 0,
+                }}>{isInitialLoading ? "Loading achievements..." : "Refreshing..."}</p>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+              </div>
             ) : (
               <table className="achievements-table">
                 <thead>
