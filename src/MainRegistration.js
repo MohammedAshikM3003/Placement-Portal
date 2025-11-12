@@ -288,50 +288,8 @@ function MainRegistration() {
         return () => dashboard.removeEventListener('scroll', handleScroll);
     }, [sectionRefs, sectionList]);
 
-    const handleInputChange = useCallback(() => {
-        const updated = {};
-        sectionList.forEach(({ key }) => {
-            updated[key] = checkSectionComplete(key);
-        });
-        
-        // Debug: Log completed sections
-        console.log('Completed sections:', updated);
-        
-        setCompletedSections(updated);
-        
-        // Validate all fields and update register button state
-        const validation = validateAllFields();
-        setIsRegisterEnabled(validation.isValid);
-        setValidationErrors(validation.errors);
-    }, [sectionList, checkSectionComplete, validateAllFields]);
-
-    useEffect(() => {
-        handleInputChange();
-    }, [profileImage, handleInputChange]);
-
-    // Trigger completion check when current year or semester changes
-    useEffect(() => {
-        handleInputChange();
-    }, [currentYear, currentSemester, handleInputChange]);
-
-    // Trigger completion check when study category changes
-    useEffect(() => {
-        handleInputChange();
-    }, [studyCategory, handleInputChange]);
-
-    // Function to get available semesters based on selected year
-    const getAvailableSemesters = (year) => {
-        const semesterMap = {
-            'I': ['1', '2'],
-            'II': ['3', '4'],
-            'III': ['5', '6'],
-            'IV': ['7', '8'] // 7th and 8th semesters for 4th year
-        };
-        return semesterMap[year] || [];
-    };
-
-    // Function to get required GPA fields based on current year and semester
-    const getRequiredGPAFields = () => {
+    // Define getRequiredGPAFields first (used by other functions)
+    const getRequiredGPAFields = useCallback(() => {
         console.log('getRequiredGPAFields - currentYear:', currentYear, 'currentSemester:', currentSemester);
         
         if (!currentYear || !currentSemester) {
@@ -358,109 +316,9 @@ function MainRegistration() {
         
         console.log('getRequiredGPAFields - regular case, returning:', requiredFields);
         return requiredFields;
-    };
+    }, [currentYear, currentSemester]);
 
-    // Function to get all GPA fields to display (including optional ones)
-    const getAllGPAFields = () => {
-        if (!currentYear || !currentSemester) return [];
-        
-        const semesterNum = parseInt(currentSemester);
-        const allFields = [];
-        
-        // Special case: IV year 8th sem - show all semesters 1-8 (8th optional)
-        if (currentYear === 'IV' && currentSemester === '8') {
-            for (let i = 1; i <= 8; i++) {
-                allFields.push(`semester${i}GPA`);
-            }
-            return allFields;
-        }
-        
-        // Regular case: collect all previous semesters + current semester (optional)
-        for (let i = 1; i <= semesterNum; i++) {
-            allFields.push(`semester${i}GPA`);
-        }
-        
-        return allFields;
-    };
-
-    const handleSidebarClick = (key) => {
-        console.log('Sidebar clicked:', key); // Debug log
-        isScrollingRef.current = true;
-        setActiveSection(key);
-        const ref = sectionRefs[key];
-
-        if (ref && ref.current) {
-            console.log('Section ref found:', ref.current); // Debug log
-            
-            // Simple and reliable scrolling method
-            const scrollToSection = () => {
-                const sectionElement = ref.current;
-                console.log('Scrolling to section:', sectionElement); // Debug log
-                
-                // Method 1: Try scrollIntoView first
-                try {
-                    sectionElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start',
-                        inline: 'nearest'
-                    });
-                    console.log('scrollIntoView executed'); // Debug log
-                } catch (error) {
-                    console.log('scrollIntoView failed:', error); // Debug log
-                }
-                
-                // Method 2: Calculate position and use window.scrollTo
-                setTimeout(() => {
-                    const rect = sectionElement.getBoundingClientRect();
-                    const headerHeight = 65;
-                    const targetPosition = window.pageYOffset + rect.top - headerHeight - 20;
-                    
-                    console.log('Target position:', targetPosition); // Debug log
-                    console.log('Current scroll position:', window.pageYOffset); // Debug log
-                    
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }, 200);
-                
-                // Method 3: Force scroll as last resort
-                setTimeout(() => {
-                    const rect = sectionElement.getBoundingClientRect();
-                    const headerHeight = 65;
-                    const targetPosition = window.pageYOffset + rect.top - headerHeight - 20;
-                    
-                    window.scrollTo(0, targetPosition);
-                    console.log('Force scroll executed to:', targetPosition); // Debug log
-                }, 500);
-            };
-
-            // Execute scrolling
-            setTimeout(scrollToSection, 100);
-
-            // Close sidebar immediately on mobile for better UX
-            if (window.innerWidth <= 992) {
-                setTimeout(() => {
-                    setIsSidebarOpen(false);
-                }, 300); // Close sidebar after 300ms
-            }
-
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-
-            scrollTimeoutRef.current = setTimeout(() => {
-                isScrollingRef.current = false;
-            }, 600);
-        } else {
-            console.log('Section ref not found for:', key); // Debug log
-            isScrollingRef.current = false;
-            if (window.innerWidth <= 992) {
-                setIsSidebarOpen(false);
-            }
-        }
-    };
-
+    // Define checkSectionComplete before handleInputChange uses it
     const checkSectionComplete = useCallback((key) => {
         if (!sectionRefs[key] || !sectionRefs[key].current) {
             console.log(`Section ref not found for: ${key}`);
@@ -584,7 +442,7 @@ function MainRegistration() {
         return completed;
     }, [sectionRefs, currentYear, currentSemester, studyCategory, getRequiredGPAFields]);
 
-    // Add comprehensive validation function
+    // Define validateAllFields before handleInputChange uses it
     const validateAllFields = useCallback(() => {
         const errors = [];
         
@@ -754,6 +612,151 @@ function MainRegistration() {
         
         return { isValid: errors.length === 0, errors };
     }, [dob, studyCategory, currentYear, currentSemester, formRef, getRequiredGPAFields]);
+
+    const handleInputChange = useCallback(() => {
+        const updated = {};
+        sectionList.forEach(({ key }) => {
+            updated[key] = checkSectionComplete(key);
+        });
+        
+        // Debug: Log completed sections
+        console.log('Completed sections:', updated);
+        
+        setCompletedSections(updated);
+        
+        // Validate all fields and update register button state
+        const validation = validateAllFields();
+        setIsRegisterEnabled(validation.isValid);
+        setValidationErrors(validation.errors);
+    }, [sectionList, checkSectionComplete, validateAllFields]);
+
+    useEffect(() => {
+        handleInputChange();
+    }, [profileImage, handleInputChange]);
+
+    // Trigger completion check when current year or semester changes
+    useEffect(() => {
+        handleInputChange();
+    }, [currentYear, currentSemester, handleInputChange]);
+
+    // Trigger completion check when study category changes
+    useEffect(() => {
+        handleInputChange();
+    }, [studyCategory, handleInputChange]);
+
+    // Function to get available semesters based on selected year
+    const getAvailableSemesters = (year) => {
+        const semesterMap = {
+            'I': ['1', '2'],
+            'II': ['3', '4'],
+            'III': ['5', '6'],
+            'IV': ['7', '8'] // 7th and 8th semesters for 4th year
+        };
+        return semesterMap[year] || [];
+    };
+
+
+    // Function to get all GPA fields to display (including optional ones)
+    const getAllGPAFields = () => {
+        if (!currentYear || !currentSemester) return [];
+        
+        const semesterNum = parseInt(currentSemester);
+        const allFields = [];
+        
+        // Special case: IV year 8th sem - show all semesters 1-8 (8th optional)
+        if (currentYear === 'IV' && currentSemester === '8') {
+            for (let i = 1; i <= 8; i++) {
+                allFields.push(`semester${i}GPA`);
+            }
+            return allFields;
+        }
+        
+        // Regular case: collect all previous semesters + current semester (optional)
+        for (let i = 1; i <= semesterNum; i++) {
+            allFields.push(`semester${i}GPA`);
+        }
+        
+        return allFields;
+    };
+
+    const handleSidebarClick = (key) => {
+        console.log('Sidebar clicked:', key); // Debug log
+        isScrollingRef.current = true;
+        setActiveSection(key);
+        const ref = sectionRefs[key];
+
+        if (ref && ref.current) {
+            console.log('Section ref found:', ref.current); // Debug log
+            
+            // Simple and reliable scrolling method
+            const scrollToSection = () => {
+                const sectionElement = ref.current;
+                console.log('Scrolling to section:', sectionElement); // Debug log
+                
+                // Method 1: Try scrollIntoView first
+                try {
+                    sectionElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                        inline: 'nearest'
+                    });
+                    console.log('scrollIntoView executed'); // Debug log
+                } catch (error) {
+                    console.log('scrollIntoView failed:', error); // Debug log
+                }
+                
+                // Method 2: Calculate position and use window.scrollTo
+                setTimeout(() => {
+                    const rect = sectionElement.getBoundingClientRect();
+                    const headerHeight = 65;
+                    const targetPosition = window.pageYOffset + rect.top - headerHeight - 20;
+                    
+                    console.log('Target position:', targetPosition); // Debug log
+                    console.log('Current scroll position:', window.pageYOffset); // Debug log
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }, 200);
+                
+                // Method 3: Force scroll as last resort
+                setTimeout(() => {
+                    const rect = sectionElement.getBoundingClientRect();
+                    const headerHeight = 65;
+                    const targetPosition = window.pageYOffset + rect.top - headerHeight - 20;
+                    
+                    window.scrollTo(0, targetPosition);
+                    console.log('Force scroll executed to:', targetPosition); // Debug log
+                }, 500);
+            };
+
+            // Execute scrolling
+            setTimeout(scrollToSection, 100);
+
+            // Close sidebar immediately on mobile for better UX
+            if (window.innerWidth <= 992) {
+                setTimeout(() => {
+                    setIsSidebarOpen(false);
+                }, 300); // Close sidebar after 300ms
+            }
+
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            scrollTimeoutRef.current = setTimeout(() => {
+                isScrollingRef.current = false;
+            }, 600);
+        } else {
+            console.log('Section ref not found for:', key); // Debug log
+            isScrollingRef.current = false;
+            if (window.innerWidth <= 992) {
+                setIsSidebarOpen(false);
+            }
+        }
+    };
+
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
