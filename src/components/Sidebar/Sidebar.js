@@ -23,16 +23,28 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   });
   const [imageError, setImageError] = useState(false);
 
-  // Update local state when studentData prop changes
+  // ⚡ INSTANT: Update local state when studentData prop changes
   useEffect(() => {
     if (studentData) {
       setCurrentStudentData(studentData);
+      // Preload profile photo immediately
+      if (studentData.profilePicURL) {
+        const img = new Image();
+        img.onload = () => console.log('⚡ Sidebar: Profile photo preloaded');
+        img.src = studentData.profilePicURL;
+      }
     } else {
       // If no studentData prop, try to load from localStorage
       try {
         const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (storedStudentData) {
           setCurrentStudentData(storedStudentData);
+          // Preload profile photo immediately
+          if (storedStudentData.profilePicURL) {
+            const img = new Image();
+            img.onload = () => console.log('⚡ Sidebar: Profile photo preloaded from localStorage');
+            img.src = storedStudentData.profilePicURL;
+          }
         }
       } catch (error) {
         console.error('Error loading student data for sidebar:', error);

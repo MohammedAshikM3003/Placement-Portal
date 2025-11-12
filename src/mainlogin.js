@@ -57,6 +57,13 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             localStorage.setItem('studentDob', password);
             localStorage.setItem('studentData', JSON.stringify(loginResult.student));
             
+            // ⚡ INSTANT: Preload profile photo immediately after login
+            if (loginResult.student.profilePicURL) {
+              const img = new Image();
+              img.onload = () => console.log('⚡ Login: Profile photo preloaded immediately');
+              img.src = loginResult.student.profilePicURL;
+            }
+            
             // Dispatch immediate update event for sidebar
             window.dispatchEvent(new CustomEvent('studentDataUpdated', { 
               detail: { student: loginResult.student } 
@@ -64,6 +71,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             window.dispatchEvent(new CustomEvent('profileUpdated', { 
               detail: loginResult.student 
             }));
+            
+            // ⚡ INSTANT: Start preloading all data in background
+            import('./services/fastDataService.js').then(({ default: fastDataService }) => {
+              console.log('🚀 Login: Starting background preload...');
+              fastDataService.preloadAllData(loginResult.student._id);
+            });
             
             // Call the onLogin callback
             onLogin(registerNumber, password);

@@ -240,17 +240,52 @@ class FastDataService {
     }
   }
 
-  // ⚡ INSTANT: Preload profile photo
+  // ⚡ INSTANT: Preload profile photo with aggressive caching
   async preloadProfilePhoto(studentId) {
     try {
+      // First check if we already have the photo URL in localStorage
+      const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (storedStudentData && storedStudentData.profilePicURL) {
+        // Preload the actual image immediately
+        const img = new Image();
+        img.onload = () => console.log('✅ Profile photo preloaded from localStorage');
+        img.onerror = () => console.log('⚠️ Profile photo failed to load from localStorage');
+        img.src = storedStudentData.profilePicURL;
+        
+        // Also cache in browser
+        if ('caches' in window) {
+          try {
+            const cache = await caches.open('profile-photos');
+            await cache.add(storedStudentData.profilePicURL);
+            console.log('✅ Profile photo cached in browser');
+          } catch (cacheError) {
+            console.log('⚠️ Browser cache failed:', cacheError);
+          }
+        }
+        return;
+      }
+
+      // If not in localStorage, fetch from API
       const response = await fetch(`${this.baseURL}/students/${studentId}/profile-photo`);
       if (response.ok) {
         const photoData = await response.json();
         if (photoData.profilePicURL) {
           // Preload the actual image
           const img = new Image();
+          img.onload = () => console.log('✅ Profile photo preloaded from API');
+          img.onerror = () => console.log('⚠️ Profile photo failed to load from API');
           img.src = photoData.profilePicURL;
-          console.log('✅ Profile photo preloaded');
+          
+          // Cache in browser
+          if ('caches' in window) {
+            try {
+              const cache = await caches.open('profile-photos');
+              await cache.add(photoData.profilePicURL);
+              console.log('✅ Profile photo cached in browser');
+            } catch (cacheError) {
+              console.log('⚠️ Browser cache failed:', cacheError);
+            }
+          }
         }
       }
     } catch (error) {

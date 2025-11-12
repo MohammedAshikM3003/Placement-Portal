@@ -93,7 +93,7 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
     }
   });
 
-  // Load student data for sidebar
+  // ⚡ INSTANT: Load student data immediately from cache/localStorage
   useEffect(() => {
     const handleProfileUpdate = () => {
       try {
@@ -106,24 +106,47 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
       }
     };
     
-    // ⚡ INSTANT: Dispatch profile update immediately on achievements page load
+    // ⚡ INSTANT: Load from localStorage immediately
     const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData && storedStudentData.profilePicURL) {
-      console.log('🚀 Achievements: Dispatching immediate profile update for sidebar');
-      window.dispatchEvent(new CustomEvent('profileUpdated', { 
-        detail: { 
-          profilePicURL: storedStudentData.profilePicURL,
-          studentData: storedStudentData 
-        } 
-      }));
+    if (storedStudentData) {
+      console.log('⚡ Achievements: INSTANT load from localStorage');
+      setStudentData(storedStudentData);
+      
+      // Try to get cached certificates data
+      const certificatesData = localStorage.getItem('certificatesData');
+      if (certificatesData) {
+        console.log('⚡ Achievements: INSTANT certificates data from cache');
+        // Certificates data is already cached and ready
+      }
+      
+      // Try to get even faster cached data
+      if (storedStudentData._id) {
+        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+          const instantData = fastDataService.getInstantData(storedStudentData._id);
+          if (instantData && instantData.student) {
+            console.log('⚡ Achievements: INSTANT load from cache');
+            setStudentData(instantData.student);
+          }
+        });
+      }
+      
+      // Dispatch immediate profile update for sidebar
+      if (storedStudentData.profilePicURL) {
+        console.log('🚀 Achievements: Dispatching immediate profile update for sidebar');
+        window.dispatchEvent(new CustomEvent('profileUpdated', { 
+          detail: storedStudentData 
+        }));
+      }
     }
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('allDataPreloaded', handleProfileUpdate);
     
     return () => {
       window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('allDataPreloaded', handleProfileUpdate);
     };
   }, []);
 
@@ -248,22 +271,54 @@ function AchievementsContent() {
     }
   }, []);
 
-  // Load student data and achievements on component mount
+  // ⚡ INSTANT: Load student data and achievements on component mount
   useEffect(() => {
     // Start loading immediately
     setIsInitialLoading(true);
     
-    // Show cached data immediately if available for faster UI
-    const cachedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (cachedStudentData && cachedStudentData.certificates) {
-      console.log('⚡ Showing cached data immediately for faster UI');
-      setAchievements(cachedStudentData.certificates);
-      setStudentData(cachedStudentData);
-      // Sync time tracking removed - not displayed to users
-      setIsInitialLoading(false); // Stop loading animation immediately
+    // ⚡ INSTANT: Try to get preloaded certificates data first
+    const certificatesData = localStorage.getItem('certificatesData');
+    if (certificatesData) {
+      try {
+        const parsedCertificates = JSON.parse(certificatesData);
+        console.log('⚡ Achievements: INSTANT certificates from preloaded cache');
+        setAchievements(parsedCertificates);
+        setIsInitialLoading(false); // Stop loading animation immediately
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error parsing preloaded certificates:', error);
+      }
     }
     
-    // Then load fresh data from MongoDB
+    // ⚡ INSTANT: Show cached student data immediately if available
+    const cachedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+    if (cachedStudentData) {
+      console.log('⚡ Achievements: INSTANT student data from localStorage');
+      setStudentData(cachedStudentData);
+      
+      // If we have certificates in student data and no preloaded certificates
+      if (cachedStudentData.certificates && !certificatesData) {
+        console.log('⚡ Achievements: Using certificates from student data');
+        setAchievements(cachedStudentData.certificates);
+        setIsInitialLoading(false);
+        setIsLoading(false);
+      }
+      
+      // Try to get even faster cached data from fastDataService
+      if (cachedStudentData._id) {
+        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+          const instantData = fastDataService.getInstantData(cachedStudentData._id);
+          if (instantData && instantData.certificates) {
+            console.log('⚡ Achievements: INSTANT certificates from fastDataService cache');
+            setAchievements(instantData.certificates);
+            setIsInitialLoading(false);
+            setIsLoading(false);
+          }
+        });
+      }
+    }
+    
+    // Then load fresh data from MongoDB in background
     loadStudentData();
   }, []);
 
