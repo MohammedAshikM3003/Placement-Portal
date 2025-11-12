@@ -322,7 +322,7 @@ function StuProfile({ onLogout, onViewChange }) {
         loadStudentData();
     }, [loadStudentData]);
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (file && file.type === "image/jpeg") {
             // Check file size (500KB = 500 * 1024 bytes)

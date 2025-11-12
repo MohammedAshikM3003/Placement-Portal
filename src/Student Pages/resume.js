@@ -1608,7 +1608,7 @@ function Resume({ onLogout, onViewChange }) {
     }
   });
 
-  // Load student data for sidebar
+  // ⚡ INSTANT: Load student data and resume data from cache/localStorage
   useEffect(() => {
     const loadStudentData = () => {
       try {
@@ -1621,16 +1621,37 @@ function Resume({ onLogout, onViewChange }) {
       }
     };
     
-    // ⚡ INSTANT: Dispatch profile update immediately on resume page load
+    // ⚡ INSTANT: Load from localStorage immediately
     const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData && storedStudentData.profilePicURL) {
-      console.log('🚀 Resume: Dispatching immediate profile update for sidebar');
-      window.dispatchEvent(new CustomEvent('profileUpdated', { 
-        detail: { 
-          profilePicURL: storedStudentData.profilePicURL,
-          studentData: storedStudentData 
-        } 
-      }));
+    if (storedStudentData) {
+      console.log('⚡ Resume: INSTANT load from localStorage');
+      setStudentData(storedStudentData);
+      
+      // Try to get cached resume data
+      const resumeData = localStorage.getItem('resumeData');
+      if (resumeData) {
+        console.log('⚡ Resume: INSTANT resume data from cache');
+        // Resume data is already cached and ready
+      }
+      
+      // Try to get even faster cached data
+      if (storedStudentData._id) {
+        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+          const instantData = fastDataService.getInstantData(storedStudentData._id);
+          if (instantData && instantData.student) {
+            console.log('⚡ Resume: INSTANT load from cache');
+            setStudentData(instantData.student);
+          }
+        });
+      }
+      
+      // Dispatch immediate profile update for sidebar
+      if (storedStudentData.profilePicURL) {
+        console.log('🚀 Resume: Dispatching immediate profile update for sidebar');
+        window.dispatchEvent(new CustomEvent('profileUpdated', { 
+          detail: storedStudentData 
+        }));
+      }
     }
     
     // Also listen for updates
@@ -1640,10 +1661,12 @@ function Resume({ onLogout, onViewChange }) {
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('profileUpdated', handleStorageChange);
+    window.addEventListener('allDataPreloaded', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profileUpdated', handleStorageChange);
+      window.removeEventListener('allDataPreloaded', handleStorageChange);
     };
   }, []);
 

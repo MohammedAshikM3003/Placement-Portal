@@ -1,9 +1,11 @@
-// ⚡ SUPER FAST Data Service - Instant MongoDB fetching
+// ⚡ HYPER-FAST Data Service - INSTANT MongoDB fetching with aggressive caching
 class FastDataService {
   constructor() {
     this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
     this.cache = new Map(); // In-memory cache for instant loading
-    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
+    this.cacheTimeout = 30 * 60 * 1000; // 30 minutes cache (extended)
+    this.preloadQueue = new Set(); // Track preloaded data
+    this.isPreloading = false;
   }
 
   // ⚡ INSTANT: Initialize all student data for all pages
@@ -193,14 +195,137 @@ class FastDataService {
     localStorage.removeItem('certificatesData');
   }
 
-  // Preload data for instant access
-  async preloadData(studentId) {
+  // ⚡ INSTANT: Preload ALL data immediately after login
+  async preloadAllData(studentId) {
+    if (this.isPreloading || this.preloadQueue.has(studentId)) {
+      console.log('⚡ PRELOAD: Already in progress for student:', studentId);
+      return;
+    }
+
+    this.isPreloading = true;
+    this.preloadQueue.add(studentId);
+
     try {
-      await this.getCompleteStudentData(studentId, false); // Force fresh fetch
-      console.log('✅ Data preloaded for instant access');
+      console.log('🚀 PRELOADING: All student data for instant access...');
+      
+      // Preload complete data in parallel
+      const promises = [
+        this.getCompleteStudentData(studentId, false),
+        this.preloadProfilePhoto(studentId),
+        this.preloadResumeData(studentId),
+        this.preloadCertificatesData(studentId),
+        this.preloadAttendanceData(studentId)
+      ];
+
+      const results = await Promise.allSettled(promises);
+      
+      console.log('✅ PRELOAD COMPLETE:', {
+        completeData: results[0].status === 'fulfilled',
+        profilePhoto: results[1].status === 'fulfilled',
+        resumeData: results[2].status === 'fulfilled',
+        certificates: results[3].status === 'fulfilled',
+        attendance: results[4].status === 'fulfilled'
+      });
+
+      // Dispatch immediate updates
+      const completeData = results[0].status === 'fulfilled' ? results[0].value : null;
+      if (completeData) {
+        window.dispatchEvent(new CustomEvent('allDataPreloaded', { detail: completeData }));
+      }
+
     } catch (error) {
       console.error('❌ Preload failed:', error);
+    } finally {
+      this.isPreloading = false;
     }
+  }
+
+  // ⚡ INSTANT: Preload profile photo
+  async preloadProfilePhoto(studentId) {
+    try {
+      const response = await fetch(`${this.baseURL}/students/${studentId}/profile-photo`);
+      if (response.ok) {
+        const photoData = await response.json();
+        if (photoData.profilePicURL) {
+          // Preload the actual image
+          const img = new Image();
+          img.src = photoData.profilePicURL;
+          console.log('✅ Profile photo preloaded');
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Profile photo preload failed:', error);
+    }
+  }
+
+  // ⚡ INSTANT: Preload resume data
+  async preloadResumeData(studentId) {
+    try {
+      const response = await fetch(`${this.baseURL}/students/${studentId}/resume`);
+      if (response.ok) {
+        const resumeData = await response.json();
+        localStorage.setItem('resumeData', JSON.stringify(resumeData));
+        console.log('✅ Resume data preloaded');
+        return resumeData;
+      }
+    } catch (error) {
+      console.log('⚠️ Resume data preload failed:', error);
+    }
+  }
+
+  // ⚡ INSTANT: Preload certificates data
+  async preloadCertificatesData(studentId) {
+    try {
+      const response = await fetch(`${this.baseURL}/students/${studentId}/certificates`);
+      if (response.ok) {
+        const certificatesData = await response.json();
+        localStorage.setItem('certificatesData', JSON.stringify(certificatesData));
+        console.log('✅ Certificates data preloaded');
+        return certificatesData;
+      }
+    } catch (error) {
+      console.log('⚠️ Certificates data preload failed:', error);
+    }
+  }
+
+  // ⚡ INSTANT: Preload attendance data
+  async preloadAttendanceData(studentId) {
+    try {
+      const response = await fetch(`${this.baseURL}/students/${studentId}/attendance`);
+      if (response.ok) {
+        const attendanceData = await response.json();
+        localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        console.log('✅ Attendance data preloaded');
+        return attendanceData;
+      }
+    } catch (error) {
+      console.log('⚠️ Attendance data preload failed:', error);
+    }
+  }
+
+  // ⚡ INSTANT: Get data from cache or localStorage
+  getInstantData(studentId) {
+    const cacheKey = `complete_${studentId}`;
+    
+    // Try cache first
+    if (this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        return cached.data;
+      }
+    }
+
+    // Try localStorage
+    const cachedData = localStorage.getItem('completeStudentData');
+    if (cachedData) {
+      try {
+        return JSON.parse(cachedData);
+      } catch (error) {
+        console.error('Error parsing cached data:', error);
+      }
+    }
+
+    return null;
   }
 }
 

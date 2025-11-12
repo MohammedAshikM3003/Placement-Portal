@@ -97,8 +97,14 @@ function AppContent() {
       if (studentData && studentData._id) {
         console.log('🚀 INITIALIZING: All student data after login...');
         const fastDataService = (await import('./services/fastDataService.js')).default;
-        await fastDataService.initializeAllStudentData(studentData._id);
-        console.log('✅ ALL STUDENT DATA INITIALIZED FOR ALL PAGES');
+        
+        // ⚡ HYPER-FAST: Preload ALL data immediately
+        await Promise.all([
+          fastDataService.initializeAllStudentData(studentData._id),
+          fastDataService.preloadAllData(studentData._id)
+        ]);
+        
+        console.log('✅ ALL STUDENT DATA INITIALIZED & PRELOADED FOR INSTANT ACCESS');
       }
     } catch (error) {
       console.error('❌ Failed to initialize student data after login:', error);

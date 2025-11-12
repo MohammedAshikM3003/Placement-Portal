@@ -50,7 +50,7 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
     }
   });
 
-  // Load student data for sidebar and dispatch immediate profile update
+  // ⚡ INSTANT: Load student data immediately from cache/localStorage
   React.useEffect(() => {
     const handleProfileUpdate = () => {
       try {
@@ -63,24 +63,40 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
       }
     };
     
-    // ⚡ INSTANT: Dispatch profile update immediately on dashboard load
+    // ⚡ INSTANT: Load from localStorage immediately
     const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData && storedStudentData.profilePicURL) {
-      console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
-      window.dispatchEvent(new CustomEvent('profileUpdated', { 
-        detail: { 
-          profilePicURL: storedStudentData.profilePicURL,
-          studentData: storedStudentData 
-        } 
-      }));
+    if (storedStudentData) {
+      console.log('⚡ Dashboard: INSTANT load from localStorage');
+      setStudentData(storedStudentData);
+      
+      // Try to get even faster cached data
+      if (storedStudentData._id) {
+        import('../services/fastDataService.js').then(({ default: fastDataService }) => {
+          const instantData = fastDataService.getInstantData(storedStudentData._id);
+          if (instantData && instantData.student) {
+            console.log('⚡ Dashboard: INSTANT load from cache');
+            setStudentData(instantData.student);
+          }
+        });
+      }
+      
+      // Dispatch immediate profile update for sidebar
+      if (storedStudentData.profilePicURL) {
+        console.log('🚀 Dashboard: Dispatching immediate profile update for sidebar');
+        window.dispatchEvent(new CustomEvent('profileUpdated', { 
+          detail: storedStudentData
+        }));
+      }
     }
     
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('allDataPreloaded', handleProfileUpdate);
     
     return () => {
       window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('allDataPreloaded', handleProfileUpdate);
     };
   }, []);
 
