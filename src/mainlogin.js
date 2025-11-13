@@ -74,7 +74,8 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         console.error('❌ Login failed:', loginResult.error);
         const errorMsg = loginResult.error || 'Login failed. Please check your credentials.';
         console.log('🚨 Setting error message:', errorMsg);
-        setError(errorMsg);
+        const suggestSignup = /User not found/i.test(errorMsg);
+        setError(suggestSignup ? `${errorMsg} Click Sign up to register.` : errorMsg);
         setIsLoading(false);
         
         // Clear password field on error

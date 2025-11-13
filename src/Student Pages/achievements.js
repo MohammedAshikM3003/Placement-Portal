@@ -1725,8 +1725,8 @@ This record is locked and cannot be modified.
                   <col style={{ width: '64px' }} />
                   <col style={{ width: '72px' }} />
                   <col style={{ width: '88px' }} />
-                  <col style={{ width: '42%' }} />
-                  <col style={{ width: '136px' }} />
+                  <col style={{ width: '28%' }} />
+                  <col style={{ width: '140px' }} />
                   <col style={{ width: '120px' }} />
                   <col style={{ width: '128px' }} />
                   <col style={{ width: '84px' }} />
