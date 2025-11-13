@@ -745,6 +745,11 @@ function AchievementsContent() {
 
   const handleUploadClick = () => setShowUploadPopup(true);
   const handleClosePopup = () => setShowUploadPopup(false);
+  
+  /**
+   * Handles successful upload from the popup.
+   * This function now triggers a full refresh of the table.
+   */
   const handleUploadSuccess = async (newAchievement) => {
     try {
       console.log('🚀 FAST: Starting certificate upload...');
@@ -781,36 +786,37 @@ function AchievementsContent() {
 
       console.log('✅ Certificate uploaded successfully:', result.certificate._id);
 
-      // Update local state immediately
-      const newCertificate = {
-        ...result.certificate,
-        id: result.certificate.achievementId,
-        fileData: newAchievement.fileData // Keep for immediate viewing
-      };
+      // --- MODIFICATION ---
+      // DO NOT update local state here. Instead, trigger a full refresh
+      // to fetch the newly added data directly from MongoDB.
+      // This avoids race conditions with the auto-sync.
+      
+      console.log('✅ Upload successful. Triggering table refresh...');
+      
+      // 1. Show the loading spinner in the table
+      setIsLoading(true); 
 
-      setAchievements(prev => [...prev, newCertificate]);
-      setSelectedRows([result.certificate.achievementId]);
-
-      // Update localStorage with new certificate
-      const updatedStudentData = {
-        ...studentData,
-        certificates: [...(studentData.certificates || []), newCertificate]
-      };
-      localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
-      setStudentData(updatedStudentData);
-
-      // Trigger events for other components
-      window.dispatchEvent(new CustomEvent('certificateUploaded', { 
-        detail: { certificate: newCertificate, studentData: updatedStudentData } 
-      }));
-
-      console.log('✅ INSTANT: Certificate upload completed successfully!');
+      // 2. Call the main refresh function (which is wrapped in useCallback)
+      // This will fetch all achievements, including the new one.
+      // It will also set setIsLoading(false) when it's done.
+      await refreshAchievements();
+      
+      // 3. Select the newly uploaded row after the refresh
+      // We need to find the ID from the server response
+      const newAchievementId = result.certificate.achievementId || result.certificate.id;
+      if (newAchievementId) {
+        setSelectedRows([newAchievementId]);
+      }
+      
+      console.log('✅ INSTANT: Certificate upload completed, table refresh triggered!');
+      // --- END MODIFICATION ---
 
     } catch (error) {
       console.error('❌ Certificate upload failed:', error);
       throw error; // Re-throw to show error popup
     }
   };
+
   const handleEditClick = () => { 
     console.log('Edit clicked. Selected rows:', selectedRows);
     console.log('Selected rows length:', selectedRows.length);
@@ -836,6 +842,11 @@ This record is locked and cannot be modified.
     } 
   };
   const handleCloseEditPopup = () => { setShowEditPopup(false); setEditingRow(null); };
+  
+  /**
+   * Handles successful update from the edit popup.
+   * This function triggers a quick background refresh.
+   */
   const handleUpdateAchievement = async (updated) => {
     try {
       console.log('=== UPDATE START ===');
@@ -878,33 +889,6 @@ This record is locked and cannot be modified.
       }
       
       console.log('🎯 UPDATE: Final student ID to use:', studentId);
-
-      // CRITICAL: Check if we need to use the MongoDB student ID format
-      // If the student ID doesn't match the format in MongoDB, we need to find the correct one
-      if (!studentId.startsWith('68e') && studentId.includes('student_')) {
-        console.log('⚠️ UPDATE: Student ID format mismatch detected!');
-        console.log('⚠️ UPDATE: Current ID format:', studentId);
-        console.log('⚠️ UPDATE: Expected MongoDB format: 68e89cdc2b3351b306d7219a');
-        
-        // Try to get the correct student ID from existing certificates
-        try {
-          const allCertificates = await mongoDBService.getCertificatesByStudentId(studentId);
-          if (allCertificates && allCertificates.length > 0) {
-            console.log('🔍 UPDATE: Found certificates with current ID, using it');
-          } else {
-            console.log('⚠️ UPDATE: No certificates found with current ID, trying MongoDB format');
-            // Try with the MongoDB format
-            const mongoStudentId = '68e89cdc2b3351b306d7219a';
-            const mongoCertificates = await mongoDBService.getCertificatesByStudentId(mongoStudentId);
-            if (mongoCertificates && mongoCertificates.length > 0) {
-              console.log('✅ UPDATE: Found certificates with MongoDB ID, switching to it');
-              studentId = mongoStudentId;
-            }
-          }
-        } catch (error) {
-          console.log('⚠️ UPDATE: Error checking certificate IDs:', error.message);
-        }
-      }
 
       // Create updated achievement WITHOUT fileData for Firebase
       const { fileData, ...updatedForFirebase } = updated;
@@ -1004,10 +988,12 @@ This record is locked and cannot be modified.
       console.log('MongoDB update result:', updateResult);
       console.log('Firebase update completed successfully');
       
+      // --- MODIFICATION ---
       // Ultra-fast refresh for maximum speed
       setTimeout(() => {
         quickBackgroundRefresh();
       }, 1); // Ultra-fast refresh timing
+      // --- END MODIFICATION ---
       
       console.log('=== UPDATE COMPLETE ===');
     } catch (error) {
@@ -1146,6 +1132,10 @@ This record is locked and cannot be modified.
     setPreviewProgress(0);
   };
 
+  /**
+   * Handles the delete confirmation.
+   * This function now triggers a full refresh of the table.
+   */
   const handleConfirmDelete = async () => {
     try {
       console.log('=== DELETE START ===');
@@ -1167,7 +1157,8 @@ This record is locked and cannot be modified.
       const deletedCerts = achievements.filter(a => selectedRows.includes(a.id));
       console.log('Certificates to be deleted:', deletedCerts.map(c => c.comp));
 
-      // Remove selected achievements from the certificates array
+      // --- MODIFICATION ---
+      // Prepare local data *in case* the refresh fails
       const updatedCertificatesForFirebase = achievements
         .filter(a => !selectedRows.includes(a.id))
         .map(a => {
@@ -1175,12 +1166,13 @@ This record is locked and cannot be modified.
           return achievementWithoutFileData;
         });
       const updatedCertificatesForLocal = achievements.filter(a => !selectedRows.includes(a.id));
-      
-      // Update localStorage immediately
       const updatedStudentData = {
         ...studentData,
         certificates: updatedCertificatesForLocal
       };
+      // --- END MODIFICATION ---
+      
+      // Update localStorage immediately (this is safe)
       localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
 
       // Update UI state immediately but keep deleted items visible briefly for user feedback
@@ -1188,39 +1180,34 @@ This record is locked and cannot be modified.
       
       console.log('⚡ IMMEDIATE LOCAL UI UPDATE COMPLETED');
 
-      // Start table refresh immediately while delete button animation is running
+      // --- MODIFICATION ---
+      // Start table refresh immediately
       setTimeout(async () => {
         try {
-          console.log('⚡ Starting background refresh while delete animation is running...');
-          setIsLoading(true); // Start table loading animation (refresh button shows "Refreshing...")
-          
-          // Call the refresh function to update the table
+          console.log('⚡ Starting background refresh after delete...');
+          // `refreshAchievements` will handle setting isLoading(true),
+          // fetching the new data, updating the state, clearing selections,
+          // updating localStorage, and setting isLoading(false).
           await refreshAchievements();
           
           console.log('⚡ Background refresh completed successfully');
           
-          // After refresh completion, show success popup and stop delete button animation
-          setDeletePopupState('success'); // Transition to success popup
-          setIsDeleting(false); // Stop delete button loading animation
-          
-          // Remove deleted items from UI after refresh
-          setAchievements(updatedCertificatesForLocal);
-          setStudentData(updatedStudentData);
-          setSelectedRows([]);
-          
-          console.log('⚡ Success popup shown after refresh completion');
         } catch (error) {
           console.warn('⚡ Background refresh failed:', error);
-          // Still show success popup even if refresh fails
-          setDeletePopupState('success');
-          setIsDeleting(false);
+          
+          // If refresh fails, fall back to updating the UI locally
+          // so the user isn't stuck.
           setAchievements(updatedCertificatesForLocal);
           setStudentData(updatedStudentData);
           setSelectedRows([]);
         } finally {
-          setIsLoading(false); // Stop table loading animation
+          // This runs after refresh (success or fail)
+          // Show success popup and stop delete button loading animation
+          setDeletePopupState('success'); // Transition to success popup
+          setIsDeleting(false); // Stop delete button loading animation
         }
-      }, 100); // Start refresh after 100ms to let delete animation be visible
+      }, 100); // Start refresh after 100ms
+      // --- END MODIFICATION ---
 
       // Ultra-fast background deletion
       setTimeout(async () => {
@@ -1451,7 +1438,7 @@ This record is locked and cannot be modified.
         try {
           // Ensure the file data has the correct data URL format
           let formattedFileData = certificateData.fileData;
-          if (!certificateData.fileData.startsWith('data:')) {
+          if (!formattedFileData.startsWith('data:')) {
             // If it's raw base64, add the PDF data URL prefix
             formattedFileData = `data:application/pdf;base64,${certificateData.fileData}`;
           }
