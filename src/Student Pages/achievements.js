@@ -10,6 +10,7 @@ import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 import mongoDBService from '../services/mongoDBService.js';
 import certificateService from '../services/certificateService.js';
 
+
 // import fastDataService from '../services/fastDataService.js'; // Unused - using dynamic imports instead
 
 // NEW: Import download/preview alerts
@@ -18,7 +19,8 @@ import {
   DownloadSuccessAlert, 
   DownloadProgressAlert, 
   PreviewFailedAlert, 
-  PreviewProgressAlert 
+  PreviewProgressAlert,
+  ErrorAlert
 } from '../components/alerts';
 
 
@@ -214,6 +216,8 @@ function AchievementsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // For initial page load animation
   const [, setStudentData] = useState(null);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorAlertMsg, setErrorAlertMsg] = useState('');
   // Removed lastSyncTime state - no longer displayed to users
 
   // Move refreshAchievements function here and wrap it with useCallback
@@ -243,38 +247,24 @@ function AchievementsContent() {
         return;
       }
       
-      // Get fresh student data from MongoDB with shorter timeout
       const fastDataService = (await import('../services/fastDataService.js')).default;
       const completeData = await Promise.race([
         fastDataService.getCompleteStudentData(studentData._id || studentData.id),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 1000) // Reduced to 1s for faster refresh
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
         )
       ]);
       const freshStudentData = completeData?.student;
       
       if (freshStudentData && freshStudentData.certificates) {
         console.log('⚡ Fresh data received:', freshStudentData.certificates.length, 'certificates');
-        
-        // OPTIMIZED: Skip file data fetch for faster refresh
-        const achievementsWithoutFiles = freshStudentData.certificates.map(achievement => ({
-          ...achievement,
-          fileData: null, // Will be fetched on-demand when viewing
-          fileName: achievement.fileName
-        }));
-        
-        // Update state immediately
-        setAchievements(achievementsWithoutFiles);
-        setSelectedRows([]); // Clear selections
-        // Sync time tracking removed - not displayed to users
-        
-        // Update localStorage
+        setAchievements(freshStudentData.certificates);
+        setSelectedRows([]);
         const completeStudentData = {
           ...freshStudentData,
-          certificates: achievementsWithoutFiles
+          certificates: freshStudentData.certificates
         };
         localStorage.setItem('studentData', JSON.stringify(completeStudentData));
-        
         console.log('⚡ SUPER FAST REFRESH COMPLETED');
       } else {
         console.log('⚡ No certificates found in MongoDB');
@@ -297,6 +287,8 @@ function AchievementsContent() {
         console.warn('⚡ Refresh request timed out, keeping current data');
       } else {
         console.warn('⚡ Refresh failed, keeping current data:', error.message);
+        setErrorAlertMsg(error.message || 'Failed to refresh achievements');
+        setShowErrorAlert(true);
       }
     } finally {
       setIsLoading(false);
@@ -314,7 +306,7 @@ function AchievementsContent() {
         const completeData = await Promise.race([
           fastDataService.getCompleteStudentData(studentData._id || studentData.id),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 500) // Reduced to 500ms
+            setTimeout(() => reject(new Error('Timeout')), 10000)
           )
         ]);
         const freshStudentData = completeData?.student;
@@ -326,31 +318,7 @@ function AchievementsContent() {
             studentId = `student_${studentData.regNo}`;
           }
           
-          // OPTIMIZED: Only fetch file data if needed, use parallel processing
-          const achievementsWithFiles = await Promise.allSettled(
-            freshStudentData.certificates.map(async (achievement) => {
-              try {
-                // Skip file data fetch for faster refresh - only get metadata
-                return {
-                  ...achievement,
-                  // Don't fetch fileData unless specifically needed
-                  fileData: null, // Will be fetched on-demand
-                  fileName: achievement.fileName
-                };
-              } catch (error) {
-                console.error(`Error processing achievement ${achievement.id}:`, error);
-                return achievement;
-              }
-            })
-          );
-          
-          // Filter successful results
-          const successfulAchievements = achievementsWithFiles
-            .filter(result => result.status === 'fulfilled')
-            .map(result => result.value);
-          
-          // Update state immediately
-          setAchievements(successfulAchievements);
+          setAchievements(freshStudentData.certificates);
           setSelectedRows([]); // Clear selections on refresh
           // Sync time tracking removed - not displayed to users
           console.log('⚡ Super fast background refresh completed');
@@ -500,7 +468,7 @@ function AchievementsContent() {
           const completeData = await Promise.race([
             fastDataService.getCompleteStudentData(studentData._id || studentData.id),
             new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Auto-sync timeout')), 5000)
+              setTimeout(() => reject(new Error('Auto-sync timeout')), 10000)
             )
           ]);
           const freshStudentData = completeData?.student;
@@ -564,7 +532,7 @@ function AchievementsContent() {
           const completeData = await Promise.race([
             fastDataService.getCompleteStudentData(studentData._id || studentData.id),
             new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Focus refresh timeout')), 5000)
+              setTimeout(() => reject(new Error('Focus refresh timeout')), 10000)
             )
           ]);
           const freshStudentData = completeData?.student;
@@ -638,7 +606,7 @@ function AchievementsContent() {
       const completeData = await Promise.race([
         fastDataService.getCompleteStudentData(studentData._id || studentData.id),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Load timeout')), 3000) // Reduced to 3 seconds for faster loading
+          setTimeout(() => reject(new Error('Load timeout')), 10000)
         )
       ]);
       
@@ -671,34 +639,14 @@ function AchievementsContent() {
       
       if (freshStudentData && freshStudentData.certificates) {
         console.log('MongoDB data received:', freshStudentData.certificates.length, 'certificates');
-        
-        // Get correct student ID
-        let studentId = studentData.id || studentData._id || studentData.studentId;
-        if (!studentId) {
-          studentId = `student_${studentData.regNo}`;
-        }
-        
-        // FAST LOADING: Skip file data fetch initially for faster loading
-        const achievementsWithoutFiles = freshStudentData.certificates.map(achievement => ({
-          ...achievement,
-          fileData: null, // Will be fetched on-demand when viewing
-          fileName: achievement.fileName
-        }));
-        
-        console.log('⚡ Fast loaded achievements:', achievementsWithoutFiles.length);
-        
-        // Update with metadata only (faster loading)
-        setAchievements(achievementsWithoutFiles);
+        setAchievements(freshStudentData.certificates);
         setStudentData(freshStudentData);
-        
-        // Update localStorage with metadata only
         const completeStudentData = {
           ...freshStudentData,
-          certificates: achievementsWithoutFiles
+          certificates: freshStudentData.certificates
         };
         localStorage.setItem('studentData', JSON.stringify(completeStudentData));
         console.log('✅ Data synced with MongoDB successfully');
-        // Sync time tracking removed - not displayed to users
       } else {
         console.log('No certificates found in MongoDB');
         setAchievements([]);
@@ -734,6 +682,8 @@ function AchievementsContent() {
       } else {
         // A different error happened (not a timeout)
         setAchievements([]);
+        setErrorAlertMsg(error.message || 'Failed to load achievements');
+        setShowErrorAlert(true);
       }
       // ==========================================
     } finally {
@@ -1741,35 +1691,7 @@ This record is locked and cannot be modified.
         </div>
         <div className="table-scroll-wrapper">
             {isInitialLoading || isLoading ? (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '300px',
-                flexDirection: 'column',
-                gap: '20px'
-              }}>
-                <div className="table-refresh-spinner" style={{
-                  width: '30px',
-                  height: '30px',
-                  border: '3px solid #f3f3f3',
-                  borderTop: '3px solid #2196F3',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                }}></div>
-                <p style={{
-                  fontSize: '16px',
-                  color: '#333',
-                  fontWeight: '500',
-                  margin: 0,
-                }}>{isInitialLoading ? "Loading achievements..." : "Refreshing..."}</p>
-                <style>{`
-                  @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                  }
-                `}</style>
-              </div>
+              <TableLoader message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} />
             ) : (
               <table className="achievements-table">
                 <thead>
@@ -1875,6 +1797,12 @@ This record is locked and cannot be modified.
         isOpen={previewPopupState === 'failed'} 
         onClose={closePreviewPopup} 
       />
+      <ErrorAlert 
+        isOpen={showErrorAlert} 
+        onClose={() => setShowErrorAlert(false)} 
+        title="Fetch Error" 
+        message={errorAlertMsg || 'Failed to fetch achievements. Please try again.'} 
+      />
     </>
   );
 }
@@ -1917,3 +1845,14 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
     </tr>
   );
 }
+const TableLoader = ({ message }) => (
+  <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <style>{`@keyframes tableSpin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '5px solid #bfdbfe', borderTopColor: '#2563eb', animation: 'tableSpin 0.8s linear infinite' }} />
+      <div style={{ marginTop: '12px', color: '#1e3a8a', fontWeight: 600, fontSize: '14px' }}>
+        {message || 'Please wait Certificates are Fetching.'}
+      </div>
+    </div>
+  </div>
+);

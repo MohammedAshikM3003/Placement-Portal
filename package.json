@@ -36,9 +36,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:local": "REACT_APP_ENV=development react-scripts start",
+    "start:local": "cross-env REACT_APP_ENV=development react-scripts start",
     "build": "react-scripts build",
-    "build:prod": "CI=false GENERATE_SOURCEMAP=false react-scripts build",
+    "build:prod": "cross-env CI=false GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:backend": "cd backend && npm run start:mongodb",
@@ -70,6 +70,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11"
   }

@@ -7,11 +7,11 @@ export const DownloadFailedAlert = ({ isOpen, onClose }) => {
 
   return (
     <div className="alert-overlay">
-      <div className="achievement-popup-container">
-        <div className="achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
+      <div className="Achievement-popup-container">
+        <div className="Achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
           Download Failed !
         </div>
-        <div className="achievement-popup-body">
+        <div className="Achievement-popup-body">
           <div className="download-error-icon-container">
             <svg className="download-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="download-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
@@ -26,8 +26,8 @@ export const DownloadFailedAlert = ({ isOpen, onClose }) => {
             Please try again or contact support.
           </p>
         </div>
-        <div className="achievement-popup-footer">
-          <button onClick={onClose} className="download-close-btn">
+        <div className="Achievement-popup-footer">
+          <button onClick={onClose} className="Achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -42,11 +42,11 @@ export const DownloadSuccessAlert = ({ isOpen, onClose }) => {
 
   return (
     <div className="alert-overlay">
-      <div className="achievement-popup-container">
-        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="Achievement-popup-container">
+        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Downloaded !
         </div>
-        <div className="achievement-popup-body">
+        <div className="Achievement-popup-body">
           <svg className="download-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
             <circle className="download-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
             <path className="download-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
@@ -59,8 +59,8 @@ export const DownloadSuccessAlert = ({ isOpen, onClose }) => {
             downloaded as PDF to your device.
           </p>
         </div>
-        <div className="achievement-popup-footer">
-          <button onClick={onClose} className="download-close-btn">
+        <div className="Achievement-popup-footer">
+          <button onClick={onClose} className="Achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -75,11 +75,11 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25 }) => {
 
   return (
     <div className="alert-overlay">
-      <div className="achievement-popup-container">
-        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="Achievement-popup-container">
+        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Downloading...
         </div>
-        <div className="achievement-popup-body">
+        <div className="Achievement-popup-body">
           <div className="download-progress-icon-container">
             <svg className="download-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="download-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
@@ -120,11 +120,11 @@ export const PreviewFailedAlert = ({ isOpen, onClose }) => {
 
   return (
     <div className="alert-overlay">
-      <div className="achievement-popup-container">
-        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="Achievement-popup-container">
+        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Preview Failed !
         </div>
-        <div className="achievement-popup-body">
+        <div className="Achievement-popup-body">
           <div className="preview-error-icon-container">
             <svg className="preview-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="preview-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
@@ -139,8 +139,8 @@ export const PreviewFailedAlert = ({ isOpen, onClose }) => {
             Please try downloading it instead.
           </p>
         </div>
-        <div className="achievement-popup-footer">
-          <button onClick={onClose} className="preview-close-btn">
+        <div className="Achievement-popup-footer">
+          <button onClick={onClose} className="Achievement-popup-close-btn">
             Close
           </button>
         </div>
