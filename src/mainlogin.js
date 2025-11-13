@@ -10,6 +10,7 @@ import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as needed
 import { useAuth } from './contexts/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner.js';
 
 
 const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
@@ -28,6 +29,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
     setError("");
 
@@ -93,46 +95,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   return (
     <>
       {isLoading && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-        }}>
-          <div style={{
-            textAlign: 'center',
-            padding: '20px',
-            borderRadius: '10px',
-          }}>
-            <div className="login-spinner" style={{
-              width: '40px',
-              height: '40px',
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #5932EA',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 15px',
-            }}></div>
-            <p style={{
-              fontSize: '16px',
-              color: '#333',
-              fontWeight: '500',
-              margin: 0,
-            }}>Authenticating...</p>
-          </div>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
+        <LoadingSpinner message="Authenticating..." showProgress={true} />
       )}
       <div
         style={{

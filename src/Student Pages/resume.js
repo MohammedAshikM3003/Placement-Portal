@@ -4,6 +4,7 @@ import { Upload, Preview, Download } from '@mui/icons-material';
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
 import './Resume.css';
+import '../components/alerts/AlertStyles.css';
 import Adminicon from '../assets/Adminicon.png';
 import resumeAnalysisService from '../services/resumeAnalysisService.js';
 

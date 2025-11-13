@@ -222,6 +222,8 @@ function AchievementsContent() {
 
   // Move refreshAchievements function here and wrap it with useCallback
   const refreshAchievements = useCallback(async () => {
+    const MIN_LOADER_MS = 2000;
+    const startedAt = Date.now();
     try {
       console.log('⚡ SUPER FAST REFRESH STARTING...');
       setIsLoading(true);
@@ -249,7 +251,7 @@ function AchievementsContent() {
       
       const fastDataService = (await import('../services/fastDataService.js')).default;
       const completeData = await Promise.race([
-        fastDataService.getCompleteStudentData(studentData._id || studentData.id),
+        fastDataService.getCompleteStudentData(studentData._id || studentData.id, false),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), 10000)
         )
@@ -291,6 +293,11 @@ function AchievementsContent() {
         setShowErrorAlert(true);
       }
     } finally {
+      const elapsed = Date.now() - startedAt;
+      const waitMs = Math.max(0, MIN_LOADER_MS - elapsed);
+      if (waitMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      }
       setIsLoading(false);
     }
   }, []); // Empty dependency array since this function doesn't depend on any state variables
@@ -304,7 +311,7 @@ function AchievementsContent() {
         // Ultra-fast timeout for maximum speed
         const fastDataService = (await import('../services/fastDataService.js')).default;
         const completeData = await Promise.race([
-          fastDataService.getCompleteStudentData(studentData._id || studentData.id),
+          fastDataService.getCompleteStudentData(studentData._id || studentData.id, false),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout')), 10000)
           )
@@ -736,30 +743,30 @@ function AchievementsContent() {
 
       console.log('✅ Certificate uploaded successfully:', result.certificate._id);
 
-      // --- MODIFICATION ---
-      // DO NOT update local state here. Instead, trigger a full refresh
-      // to fetch the newly added data directly from MongoDB.
-      // This avoids race conditions with the auto-sync.
-      
-      console.log('✅ Upload successful. Triggering table refresh...');
-      
-      // 1. Show the loading spinner in the table
-      setIsLoading(true); 
+      // Update student's certificates metadata so the table can render it
+      const mongoDB = (await import('../services/mongoDBService.js')).default;
+      const fastDataService = (await import('../services/fastDataService.js')).default;
+      const metaId = result.certificate.achievementId || String(Date.now());
+      const { fileData, fileSize, fileType, createdAt, _id, ...meta } = newAchievement;
+      const newMeta = { ...meta, id: metaId };
+      const updatedCertificatesForFirebase = [...achievements].map(a => {
+        const { fileData, ...rest } = a;
+        return rest;
+      }).concat([newMeta]);
 
-      // 2. Call the main refresh function (which is wrapped in useCallback)
-      // This will fetch all achievements, including the new one.
-      // It will also set setIsLoading(false) when it's done.
+      await mongoDB.updateStudent(studentId, { certificates: updatedCertificatesForFirebase });
+      // Clear caches to force fresh data fetch
+      fastDataService.clearCache(studentId);
+
+      // Trigger a full refresh with a visible loader
+      console.log('✅ Upload successful. Updating student document and refreshing table...');
+      setIsLoading(true);
       await refreshAchievements();
-      
-      // 3. Select the newly uploaded row after the refresh
-      // We need to find the ID from the server response
-      const newAchievementId = result.certificate.achievementId || result.certificate.id;
-      if (newAchievementId) {
-        setSelectedRows([newAchievementId]);
+
+      if (metaId) {
+        setSelectedRows([metaId]);
       }
-      
-      console.log('✅ INSTANT: Certificate upload completed, table refresh triggered!');
-      // --- END MODIFICATION ---
+      console.log('✅ Certificate upload completed, table shows latest data');
 
     } catch (error) {
       console.error('❌ Certificate upload failed:', error);
@@ -938,12 +945,12 @@ This record is locked and cannot be modified.
       console.log('MongoDB update result:', updateResult);
       console.log('Firebase update completed successfully');
       
-      // --- MODIFICATION ---
-      // Ultra-fast refresh for maximum speed
-      setTimeout(() => {
-        quickBackgroundRefresh();
-      }, 1); // Ultra-fast refresh timing
-      // --- END MODIFICATION ---
+      setIsLoading(true);
+      await refreshAchievements();
+      const updatedId = updated.id;
+      if (updatedId) {
+        setSelectedRows([updatedId]);
+      }
       
       console.log('=== UPDATE COMPLETE ===');
     } catch (error) {
@@ -1135,6 +1142,12 @@ This record is locked and cannot be modified.
       setTimeout(async () => {
         try {
           console.log('⚡ Starting background refresh after delete...');
+          try {
+            const fastDataService = (await import('../services/fastDataService.js')).default;
+            const sData = JSON.parse(localStorage.getItem('studentData') || 'null');
+            const sid = sData?._id || sData?.id || sData?.studentId;
+            if (sid) fastDataService.clearCache(sid);
+          } catch(e) {}
           // `refreshAchievements` will handle setting isLoading(true),
           // fetching the new data, updating the state, clearing selections,
           // updating localStorage, and setting isLoading(false).
@@ -1435,13 +1448,19 @@ This record is locked and cannot be modified.
     }
   };
   const getFilteredAndSortedAchievements = () => {
-    if (!filtersHaveBeenApplied) return achievements;
-    let filtered = [...achievements];
+    let filtered = achievements
+      .filter(a => !!a)
+      .filter(a => {
+        const hasComp = typeof a.comp === 'string' && a.comp.trim() !== '';
+        const hasYear = typeof a.year === 'string' && a.year.trim() !== '';
+        const hasSemester = typeof a.semester === 'string' && a.semester.trim() !== '';
+        return hasComp && hasYear && hasSemester;
+      });
     const { searchQuery, yearSemesterFilter, statusFilter, sortBy } = appliedFilters;
-    if (searchQuery) filtered = filtered.filter(a => a.comp.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (searchQuery) filtered = filtered.filter(a => (a.comp || '').toLowerCase().includes(searchQuery.toLowerCase()));
     if (yearSemesterFilter) { const [year, semester] = yearSemesterFilter.split('/'); filtered = filtered.filter(a => a.year === year && a.semester === semester); }
     if (statusFilter !== "all") filtered = filtered.filter(a => a.status === statusFilter);
-    if (sortBy) { return [...filtered].sort((a, b) => { if (sortBy === "date") return new Date(b.date) - new Date(a.date); if (sortBy === "prize") return a.prize.localeCompare(b.prize); return 0; }); }
+    if (sortBy) { return [...filtered].sort((a, b) => { if (sortBy === "date") return new Date(b.date) - new Date(a.date); if (sortBy === "prize") return (a.prize || '').localeCompare(b.prize || ''); return 0; }); }
     return filtered;
   };
 
@@ -1691,7 +1710,15 @@ This record is locked and cannot be modified.
         </div>
         <div className="table-scroll-wrapper">
             {isInitialLoading || isLoading ? (
-              <TableLoader message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} />
+              <div style={{
+                minHeight: '300px',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <TableLoader message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} />
+              </div>
             ) : (
               <table className="achievements-table">
                 <thead>
