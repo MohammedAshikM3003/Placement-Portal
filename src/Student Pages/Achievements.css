@@ -888,7 +888,7 @@ body {
     }
 
     .table-header h2 {
-        font-size: 22px; /* Increased from 20px for better visibility */
+        font-size: 24px; /* Increased from 20px for better visibility */
         font-weight: 800;
     }
 
@@ -987,7 +987,7 @@ body {
     
     /* Mobile: Make header single line with icon only */
     .table-header h2 {
-        font-size: 16px;
+        font-size: 20px; /* Increased from 16px for better visibility on small screens */
         font-weight: 700;
     }
     

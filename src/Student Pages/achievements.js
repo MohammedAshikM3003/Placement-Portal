@@ -1898,28 +1898,10 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
   // MODIFIED: This function correctly formats 'YYYY-MM-DD' to 'dd-MM-yyyy' for display.
   const displayDate = date ? date.split('-').reverse().join('-') : '';
   
-  // Function to render cell content with loading spinner
+  // Function to render cell content without loading spinner
   const renderCellContent = (content) => {
     if (content === undefined || content === null || content === '') {
-      return (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100%',
-          minHeight: '20px'
-        }}>
-          <div className="table-cell-spinner" style={{
-            width: '16px',
-            height: '16px',
-            border: '2px solid #f3f3f3',
-            borderTop: '2px solid #2196F3',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: 'auto'
-          }}></div>
-        </div>
-      );
+      return ''; // Return empty string instead of spinner
     }
     return content;
   };

@@ -164,7 +164,9 @@ Please compress your PDF or choose a smaller file.`);
       // Convert file to base64 directly
       const fileData = await certificateService.fileToBase64(file);
 
-      setFileContent(fileData);
+      // Remove data URL prefix for cleaner storage in MongoDB
+      const base64Data = fileData.split(',')[1] || fileData;
+      setFileContent(base64Data);
       setError("");
       setFileName(file.name);
       setLastUploaded(new Date().toLocaleDateString());
