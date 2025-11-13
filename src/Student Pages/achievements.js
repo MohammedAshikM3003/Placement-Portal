@@ -352,8 +352,8 @@ function AchievementsContent() {
           const parsedCertificates = JSON.parse(certificatesData);
           console.log('⚡ Achievements: INSTANT certificates from preloaded cache');
           setAchievements(parsedCertificates);
-          setIsInitialLoading(false); // Stop loading animation immediately
-          setIsLoading(false);
+          // Keep initial loader visible until fresh fetch completes
+          setIsLoading(true);
         } catch (error) {
           console.error('Error parsing preloaded certificates:', error);
           // If parsing fails, clear the bad data
@@ -371,8 +371,8 @@ function AchievementsContent() {
         if (cachedStudentData.certificates && !certificatesData) {
           console.log('⚡ Achievements: Using certificates from student data');
           setAchievements(cachedStudentData.certificates);
-          setIsInitialLoading(false);
-          setIsLoading(false);
+          // Keep initial loader visible until fresh fetch completes
+          setIsLoading(true);
         }
         
         // Try to get even faster cached data from fastDataService
@@ -382,8 +382,8 @@ function AchievementsContent() {
             if (instantData && instantData.certificates) {
               console.log('⚡ Achievements: INSTANT certificates from fastDataService cache');
               setAchievements(instantData.certificates);
-              setIsInitialLoading(false);
-              setIsLoading(false);
+              // Keep initial loader visible until fresh fetch completes
+              setIsLoading(true);
             }
           });
         }
@@ -1720,6 +1720,18 @@ This record is locked and cannot be modified.
               </div>
             ) : (
               <table className="achievements-table">
+                <colgroup>
+                  <col style={{ width: '64px' }} />
+                  <col style={{ width: '64px' }} />
+                  <col style={{ width: '72px' }} />
+                  <col style={{ width: '88px' }} />
+                  <col style={{ width: '42%' }} />
+                  <col style={{ width: '136px' }} />
+                  <col style={{ width: '120px' }} />
+                  <col style={{ width: '128px' }} />
+                  <col style={{ width: '84px' }} />
+                  <col style={{ width: '104px' }} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Select</th>

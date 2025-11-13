@@ -70,10 +70,22 @@ class AuthService {
       });
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login timeout - please try again')), 3000)
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 10000)
       );
       
-      const response = await Promise.race([loginPromise, timeoutPromise]);
+      let response;
+      try {
+        response = await Promise.race([loginPromise, timeoutPromise]);
+      } catch (e) {
+        const retryLoginPromise = this.apiCall('/students/login', {
+          method: 'POST',
+          body: JSON.stringify({ regNo, dob })
+        });
+        const retryTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Login timeout - please try again')), 12000)
+        );
+        response = await Promise.race([retryLoginPromise, retryTimeout]);
+      }
 
       if (response.token && response.student) {
         console.log('✅ LOGIN SUCCESS: New student data received:', {

@@ -355,6 +355,8 @@ function MainContent({ onViewChange }) {
   const [previewPopupState, setPreviewPopupState] = React.useState('none'); // 'none', 'progress', 'failed'
   const [downloadProgress, setDownloadProgress] = React.useState(0);
   const [previewProgress, setPreviewProgress] = React.useState(0);
+  const [uploadPopupState, setUploadPopupState] = React.useState('none'); // 'none', 'progress', 'failed'
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   const [studentData, setStudentData] = React.useState(() => {
     // Initialize immediately with localStorage data to prevent glitch
     try {
@@ -529,6 +531,14 @@ function MainContent({ onViewChange }) {
     try {
       setIsAnalyzing(true);
       setUploadError('');
+      setUploadPopupState('progress');
+      setUploadProgress(0);
+      const uploadInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 85) return prev;
+          return prev + Math.random() * 12;
+        });
+      }, 150);
 
       // Get student data from localStorage
       const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -618,6 +628,9 @@ function MainContent({ onViewChange }) {
       setShowSuccess(true);
       
       console.log('✅ UI updated successfully with new resume and analysis');
+      clearInterval(uploadInterval);
+      setUploadProgress(100);
+      setUploadPopupState('none');
 
       // Step 5: Background MongoDB sync (non-blocking)
       setTimeout(async () => {
@@ -635,6 +648,7 @@ function MainContent({ onViewChange }) {
     } catch (error) {
       console.error('❌ Upload error:', error);
       setUploadError(error.message || 'Failed to upload file. Please try again.');
+      setUploadPopupState('failed');
     } finally {
       setIsAnalyzing(false);
     }
@@ -1814,6 +1828,76 @@ function MainContent({ onViewChange }) {
             </div>
             <div className="achievement-popup-footer">
               <button onClick={closePreviewPopup} className="preview-close-btn">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadPopupState === 'progress' && (
+        <div className="alert-overlay">
+          <div className="achievement-popup-container">
+            <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+              Uploading...
+            </div>
+            <div className="achievement-popup-body">
+              <div className="preview-progress-icon-container">
+                <svg className="preview-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                  <circle className="preview-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
+                  <circle 
+                    className="preview-progress-icon--progress" 
+                    cx="26" 
+                    cy="26" 
+                    r="20" 
+                    fill="none" 
+                    stroke="#197AFF" 
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${uploadProgress * 1.256} 125.6`}
+                    transform="rotate(-90 26 26)"
+                  />
+                </svg>
+              </div>
+              <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+                Uploading {Math.round(uploadProgress)}%
+              </h2>
+              <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+                {uploadProgress < 85 ? 'Uploading file to database...' : 
+                 uploadProgress < 100 ? 'Finalizing upload...' : 
+                 'Completing...'}
+              </p>
+              <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
+                {uploadProgress >= 100 ? 'Almost ready!' : 'Please wait...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadPopupState === 'failed' && (
+        <div className="alert-overlay">
+          <div className="achievement-popup-container">
+            <div className="achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
+              Upload Failed !
+            </div>
+            <div className="achievement-popup-body">
+              <div className="preview-error-icon-container">
+                <svg className="preview-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                  <circle className="preview-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
+                  <path className="preview-error-icon--cross" fill="white" d="M16 16l20 20M36 16L16 36" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+                Upload Failed !
+              </h2>
+              <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+                Unable to upload the resume.<br />
+                Please try again or contact support.
+              </p>
+            </div>
+            <div className="achievement-popup-footer">
+              <button onClick={() => setUploadPopupState('none')} className="preview-close-btn">
                 Close
               </button>
             </div>
