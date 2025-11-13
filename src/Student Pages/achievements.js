@@ -211,7 +211,6 @@ function AchievementsContent() {
   const [appliedFilters, setAppliedFilters] = useState({
     searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "",
   });
-  const [filtersHaveBeenApplied, setFiltersHaveBeenApplied] = useState(false);
   const [achievements, setAchievements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // For initial page load animation
@@ -1285,8 +1284,8 @@ This record is locked and cannot be modified.
   const handleStatusFilterChange = (e) => setStatusFilter(e.target.value);
   const handleYearSemesterFilterChange = (e) => setYearSemesterFilter(e.target.value);
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handleApplyFilters = () => { setAppliedFilters({ searchQuery, yearSemesterFilter, statusFilter, sortBy }); setFiltersHaveBeenApplied(true); };
-  const handleClearFilters = () => { setSearchQuery(""); setYearSemesterFilter(""); setSortBy(""); setStatusFilter("all"); setAppliedFilters({ searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "" }); setFiltersHaveBeenApplied(false); };
+  const handleApplyFilters = () => { setAppliedFilters({ searchQuery, yearSemesterFilter, statusFilter, sortBy }); };
+  const handleClearFilters = () => { setSearchQuery(""); setYearSemesterFilter(""); setSortBy(""); setStatusFilter("all"); setAppliedFilters({ searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "" }); };
   
   
 
