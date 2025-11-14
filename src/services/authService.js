@@ -25,27 +25,57 @@ class AuthService {
       const fullUrl = `${this.baseURL}${endpoint}`;
       console.log('🔍 API Call:', fullUrl, options);
       
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers
         },
+        signal: controller.signal,
         ...options
       });
+      
+      clearTimeout(timeoutId);
 
-      // Parse response body first
-      const data = await response.json();
+      // Handle network errors and non-JSON responses
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        if (!response.ok) {
+          throw new Error(`Network error: Unable to connect to server. Please check your internet connection.`);
+        }
+        throw new Error('Server returned invalid response format.');
+      }
 
       if (!response.ok) {
         // Use backend error message if available
-        const errorMessage = data.message || data.error || `API Error: ${response.status} ${response.statusText}`;
+        const errorMessage = data.message || data.error || `Server error: ${response.status} ${response.statusText}`;
         throw new Error(errorMessage);
       }
 
       return data;
     } catch (error) {
       console.error(`API call failed for ${endpoint}:`, error);
-      throw error;
+      
+      // Handle different types of errors with user-friendly messages
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        // Network connection error
+        throw new Error('❌ Network error: Unable to connect to server. Please check your internet connection and try again.');
+      } else if (error.name === 'AbortError') {
+        // Request timeout
+        throw new Error('❌ Request timeout: Server is taking too long to respond. Please try again.');
+      } else if (error.message.includes('Failed to fetch')) {
+        // General fetch failure (CORS, network issues, etc.)
+        throw new Error('❌ Connection failed: Unable to reach the server. Please check your internet connection.');
+      } else {
+        // Re-throw the original error if it's already formatted
+        throw error;
+      }
     }
   }
 

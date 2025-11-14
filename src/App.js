@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import RegistrationDebug from "./components/RegistrationDebug.js";
@@ -44,10 +44,18 @@ const CooViewPS = lazy(() => import("./Coordinator Pages/CooViewPS.js"));
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // CRITICAL: If the app is checking authentication (loading state),
-  // show a full-page loading spinner. Do NOT render Dashboard or Sidebar yet.
-  if (isLoading) {
+  // Treat login / signup / registration as public auth pages that should
+  // stay mounted while AuthContext is performing login checks.
+  const isOnAuthPage =
+    location.pathname === "/mainlogin" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/registration";
+
+  // Only block the whole app with a full-page spinner when we are
+  // loading on non-auth pages (e.g. navigating directly to /dashboard).
+  if (isLoading && !isOnAuthPage) {
     return <LoadingSpinner message="Authenticating..." />;
   }
 
@@ -97,10 +105,6 @@ function AppRoutes() {
     navigate("/registration");
   };
 
-  // Show loading screen while checking authentication
-  if (isLoading) {
-    return <AnimatedLoader />;
-  }
 
   return (
         <Routes>
@@ -225,7 +229,17 @@ function AppRoutes() {
           } />
         </>
       ) : (
-        <Route path="*" element={<PlacementPortalLogin onLogin={() => {}} onNavigateToSignUp={() => navigate("/signup")} />} />
+        <>
+          {/* Redirect protected routes to login */}
+          <Route path="/dashboard" element={<Navigate to="/mainlogin" replace />} />
+          <Route path="/resume" element={<Navigate to="/mainlogin" replace />} />
+          <Route path="/attendance" element={<Navigate to="/mainlogin" replace />} />
+          <Route path="/achievements" element={<Navigate to="/mainlogin" replace />} />
+          <Route path="/company" element={<Navigate to="/mainlogin" replace />} />
+          <Route path="/profile" element={<Navigate to="/mainlogin" replace />} />
+          {/* Catch-all for unknown routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </>
       )}
 
       {/* Coordinator Routes - No Authentication Required */}

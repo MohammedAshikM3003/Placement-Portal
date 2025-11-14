@@ -12,6 +12,142 @@ import Navbar from "./components/Navbar/LandingNavbar.js"; // Adjust the path as
 import { useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner.js';
 
+// User Not Found Popup Component - Matching the design from image
+const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10000,
+      fontFamily: 'Poppins, Arial, sans-serif'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        width: '400px',
+        maxWidth: '90vw',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden',
+        animation: 'popupSlideIn 0.3s ease-out'
+      }}>
+        {/* Purple Header */}
+        <div style={{
+          backgroundColor: '#5932EA',
+          color: 'white',
+          padding: '20px',
+          textAlign: 'center',
+          fontSize: '24px',
+          fontWeight: '600',
+          letterSpacing: '1px'
+        }}>
+          Error !
+        </div>
+        
+        {/* Body */}
+        <div style={{
+          padding: '40px 30px',
+          textAlign: 'center'
+        }}>
+          {/* 404 Text */}
+          <div style={{
+            fontSize: '120px',
+            fontWeight: '700',
+            color: '#dc3545',
+            lineHeight: '1',
+            marginBottom: '20px',
+            fontFamily: 'Arial, sans-serif'
+          }}>
+            404
+          </div>
+          
+          {/* Title */}
+          <h2 style={{
+            fontSize: '28px',
+            fontWeight: '600',
+            color: '#333',
+            margin: '0 0 15px 0'
+          }}>
+            User Not Found...!
+          </h2>
+          
+          {/* Description */}
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            margin: '0 0 10px 0',
+            lineHeight: '1.4'
+          }}>
+            The User is not Found in the Portal,
+          </p>
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            margin: '0 0 40px 0',
+            lineHeight: '1.4'
+          }}>
+            Please SignUp to continue.
+          </p>
+          
+          {/* Buttons */}
+          <div style={{
+            display: 'flex',
+            gap: '50px',
+            justifyContent: 'center'
+          }}>
+            <button
+              onClick={onClose}
+              style={{
+                backgroundColor: 'rgb(108, 117, 125)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 30px',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: '0.2s',
+                minWidth: '100px'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgb(92, 101, 110)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'rgb(108, 117, 125)'}
+            >
+              Close
+            </button>
+            <button
+              onClick={onSignUp}
+              style={{
+                backgroundColor: 'rgb(89, 50, 234)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 30px',
+                borderRadius: '10px',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: '0.2s',
+                minWidth: '100px'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgb(70, 40, 200)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'rgb(89, 50, 234)'}
+            >
+              Sign up
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   // --- UPDATED: State changed from 'email' to 'registerNumber' ---
@@ -20,6 +156,8 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [forceRender, setForceRender] = useState(0);
+  const [showUserNotFoundPopup, setShowUserNotFoundPopup] = useState(false);
   const handleInlineSignup = (e) => {
     e.preventDefault();
     if (onNavigateToSignUp) onNavigateToSignUp();
@@ -34,19 +172,22 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
-    setIsLoading(true);
+
+    // Clear previous error and hide popup
     setError("");
+    setShowUserNotFoundPopup(false);
+    setIsLoading(true);
 
     try {
       // Validate input format
       if (!/^\d{11}$/.test(registerNumber)) {
-        setError(' Enter Your Registration number must be exactly 11 digits');
+        setError('❌ Enter Your Registration number must be exactly 11 digits');
         setIsLoading(false);
         return;
       }
 
       if (!/^\d{8}$/.test(password)) {
-        setError('Password must be your date of birth in DDMMYYYY format (8 digits)');
+        setError('❌ Password must be your date of birth in DDMMYYYY format (8 digits)');
         setIsLoading(false);
         return;
       }
@@ -54,10 +195,13 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       console.log('🚀 Login: Using AuthContext login method...');
       console.log('🔑 Credentials:', { registerNumber, password });
       
+      
       // Call login which will handle background data fetching
       const loginResult = await login(registerNumber, password);
       
       console.log('📦 Login result:', loginResult);
+      console.log('🔍 Login result success:', loginResult.success);
+      console.log('🔍 Login result error:', loginResult.error);
       
       if (loginResult.success) {
         console.log('✅ Login successful! AuthContext has updated global state');
@@ -74,24 +218,30 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         // Keep isLoading true during navigation - no flash of login page!
         // Background data will fetch automatically after navigation
       } else {
-        // Login failed - show error message
+        // Login failed - show popup instead of banner
         console.error('❌ Login failed:', loginResult.error);
-        const errorMsg = loginResult.error || 'Login failed. Please check your credentials.';
-        console.log('🚨 Setting error message:', errorMsg);
-        const suggestSignup = /user\s*not\s*found/i.test(errorMsg);
-        setError(suggestSignup ? 'User not found. Please Sign up to create an account.' : errorMsg);
         setIsLoading(false);
-        
-        // Clear password field on error
+        setShowUserNotFoundPopup(true);
         setPassword('');
       }
     } catch (error) {
       console.error('❌ Login exception:', error);
       const errorMsg = error.message || 'Login failed. Please check your credentials.';
-      console.log('🚨 Setting error message from exception:', errorMsg);
-      setError(errorMsg);
-      setIsLoading(false);
+      console.log('🚨 Exception error message:', errorMsg);
       
+      // Stop loading immediately
+      setIsLoading(false);
+
+      // Network-type errors still use the red banner
+      if (errorMsg.includes('Network error') || errorMsg.includes('Connection failed') || 
+          errorMsg.includes('Failed to fetch') || errorMsg.includes('Request timeout')) {
+        setError(errorMsg);
+        setForceRender(prev => prev + 1);
+      } else {
+        // Any other error (including user not found) shows the popup
+        setShowUserNotFoundPopup(true);
+      }
+
       // Clear password field on error
       setPassword('');
     }
@@ -102,6 +252,16 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       {isLoading && (
         <LoadingSpinner message="Authenticating..." showProgress={true} />
       )}
+      
+      {/* User Not Found Popup */}
+      <UserNotFoundPopup 
+        isOpen={showUserNotFoundPopup}
+        onClose={() => setShowUserNotFoundPopup(false)}
+        onSignUp={() => {
+          setShowUserNotFoundPopup(false);
+          if (onNavigateToSignUp) onNavigateToSignUp();
+        }}
+      />
       <div
         style={{
           fontFamily: "Arial, sans-serif",
@@ -211,24 +371,34 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 </div>
               </div>
               {error && (
-                <div role="alert" aria-live="assertive" style={{
+                <div key={`error-${forceRender}`} role="alert" aria-live="assertive" style={{
                   color: "#d32f2f",
                   fontSize: "14px",
                   textAlign: "center",
                   marginBottom: "16px",
-                  padding: "12px 16px",
+                  padding: "14px 18px",
                   backgroundColor: "#ffebee",
                   borderRadius: "12px",
-                  border: "1px solid #ef5350",
+                  border: "2px solid #ef5350",
                   fontWeight: "500",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   justifyContent: "center",
                   gap: "8px",
-                  animation: "slideDown 0.3s ease-out"
+                  animation: "slideDown 0.3s ease-out",
+                  boxShadow: "0 4px 12px rgba(239, 83, 80, 0.2)",
+                  minHeight: "48px",
+                  lineHeight: "1.4"
                 }}>
-                  <span style={{ fontSize: "16px" }}>⚠️</span>
-                  <span>
+                  <span style={{ 
+                    fontSize: "16px", 
+                    marginTop: "1px",
+                    flexShrink: 0
+                  }}>⚠️</span>
+                  <span style={{ 
+                    flex: 1,
+                    wordBreak: "break-word"
+                  }}>
                     {error}
                     {/Sign up/i.test(error) && (
                       <> {" "}
@@ -316,6 +486,18 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        
+        /* Popup animation */
+        @keyframes popupSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
           }
         }
         
