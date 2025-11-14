@@ -109,8 +109,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           height: "100vh",
           overflow: "hidden",
           display: "flex",
-          flexDirection: "column",
-          visibility: isLoading ? 'hidden' : 'visible' // Hide form while loading to prevent flashing
+          flexDirection: "column"
         }}
       >
       <Navbar /> {/* Use the shared Navbar component here */}
