@@ -20,6 +20,10 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const handleInlineSignup = (e) => {
+    e.preventDefault();
+    if (onNavigateToSignUp) onNavigateToSignUp();
+  };
   
   // Use AuthContext for login
   const { login } = useAuth();
@@ -74,8 +78,8 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         console.error('❌ Login failed:', loginResult.error);
         const errorMsg = loginResult.error || 'Login failed. Please check your credentials.';
         console.log('🚨 Setting error message:', errorMsg);
-        const suggestSignup = /User not found/i.test(errorMsg);
-        setError(suggestSignup ? `${errorMsg} Click Sign up to register.` : errorMsg);
+        const suggestSignup = /user\s*not\s*found/i.test(errorMsg);
+        setError(suggestSignup ? 'User not found. Please Sign up to create an account.' : errorMsg);
         setIsLoading(false);
         
         // Clear password field on error
@@ -208,7 +212,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 </div>
               </div>
               {error && (
-                <div style={{
+                <div role="alert" aria-live="assertive" style={{
                   color: "#d32f2f",
                   fontSize: "14px",
                   textAlign: "center",
@@ -225,7 +229,14 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                   animation: "slideDown 0.3s ease-out"
                 }}>
                   <span style={{ fontSize: "16px" }}>⚠️</span>
-                  <span>{error}</span>
+                  <span>
+                    {error}
+                    {/Sign up/i.test(error) && (
+                      <> {" "}
+                        <a href="#signup" onClick={handleInlineSignup} style={{ color: "#5932EA", fontWeight: 600, textDecoration: "none", marginLeft: 6 }}>Sign up</a>
+                      </>
+                    )}
+                  </span>
                 </div>
               )}
               <div

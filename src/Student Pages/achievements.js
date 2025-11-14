@@ -1402,7 +1402,7 @@ This record is locked and cannot be modified.
           let formattedFileData = certificateData.fileData;
           if (!formattedFileData.startsWith('data:')) {
             // If it's raw base64, add the PDF data URL prefix
-            formattedFileData = `data:application/pdf;base64,${certificateData.fileData}`;
+            formattedFileData = `data:application/pdf;base64,${formattedFileData}`;
           }
           
           // INSTANT PREVIEW: Use requestAnimationFrame for immediate execution
@@ -1720,25 +1720,14 @@ This record is locked and cannot be modified.
               </div>
             ) : (
               <table className="achievements-table">
-                <colgroup>
-                  <col style={{ width: '64px' }} />
-                  <col style={{ width: '64px' }} />
-                  <col style={{ width: '72px' }} />
-                  <col style={{ width: '88px' }} />
-                  <col style={{ width: '28%' }} />
-                  <col style={{ width: '140px' }} />
-                  <col style={{ width: '120px' }} />
-                  <col style={{ width: '128px' }} />
-                  <col style={{ width: '84px' }} />
-                  <col style={{ width: '104px' }} />
-                </colgroup>
+                {/* <colgroup> was removed to allow auto-sizing */ }
                 <thead>
                   <tr>
                     <th>Select</th>
                     <th>S.No</th>
                     <th>Year</th>
                     <th>Semester</th>
-                    <th>Competition Name</th>
+                    <th>Competition</th> {/* CHANGED from Competition Name */}
                     <th>Date</th>
                     <th>Prize</th>
                     <th>Status</th>
