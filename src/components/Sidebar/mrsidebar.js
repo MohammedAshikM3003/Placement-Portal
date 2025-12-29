@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+// 1. Import module
+import styles from "./mrsidebar.module.css";
+
 import Adminicons from '../../assets/BlueAdminicon.png';
 import personalinfo from "../../assets/personal information icon.svg";
 import academicIcon from "../../assets/academic.svg";
 import semesterIcon from "../../assets/semester.svg";
 import otherDetailsIcon from "../../assets/otherdetails.svg";
 import loginDetailsIcon from "../../assets/logindetails.svg";
-import "./mrsidebar.css";
 
 const sectionList = [
     { key: 'personal', label: 'Personal Information', icon: personalinfo },
@@ -16,36 +18,39 @@ const sectionList = [
     { key: 'login', label: 'Login Details', icon: loginDetailsIcon },
 ];
 
-const Sidebar = ({ isOpen, currentView, completedSections, onViewChange, onLoginClick }) => {
+const Sidebar = ({ isOpen, currentView, completedSections, onViewChange }) => {
     const handleClick = (key) => {
         onViewChange(key);
-        // The parent component should handle closing the sidebar for mobile view after a click.
     };
 
     return (
-        <div className={`mr-sidebar ${isOpen ? 'active' : ''}`}>
+        // 2. Use styles['mr-sidebar']
+        <div className={`${styles['mr-sidebar']} ${isOpen ? styles.active : ''}`}>
+            
             {/* Welcome Section */}
-            <div className="mr-sidebar-welcome">
-                <img src={Adminicons} alt="Welcome Icon" className="mr-sidebar-welcome-icon" />
+            <div className={styles['mr-sidebar-welcome']}>
+                <img src={Adminicons} alt="Welcome Icon" className={styles['mr-sidebar-welcome-icon']} />
                 <span>WE WELCOME YOU</span>
             </div>
 
             {/* Navigation */}
-            <nav className="mr-sidebar-nav">
-                <div className="mr-sidebar-menu-table">
+            <nav className={styles['mr-sidebar-nav']}>
+                <div className={styles['mr-sidebar-menu-table']}>
                     {sectionList.map(({ key, label, icon }) => {
                         const isActive = currentView === key;
                         const isCompleted = completedSections[key];
-                        const completedClass = isCompleted ? 'completed' : '';
-                        const selectedClass = isActive ? 'active' : '';
+                        // Conditional classes
+                        const activeClass = isActive ? styles.active : '';
+                        const completedClass = isCompleted ? styles.completed : '';
+                        
                         return (
                             <div
                                 key={key}
-                                className={`mr-sidebar-menu-row ${selectedClass} ${completedClass}`}
+                                className={`${styles['mr-sidebar-menu-row']} ${activeClass} ${completedClass}`}
                                 onClick={() => handleClick(key)}
                             >
-                                <img src={icon} alt={label} className="mr-sidebar-menu-icon" />
-                                <span className="mr-sidebar-menu-label-cell">
+                                <img src={icon} alt={label} className={styles['mr-sidebar-menu-icon']} />
+                                <span className={styles['mr-sidebar-menu-label-cell']}>
                                     {label}
                                 </span>
                             </div>
@@ -55,13 +60,13 @@ const Sidebar = ({ isOpen, currentView, completedSections, onViewChange, onLogin
             </nav>
 
             {/* Divider */}
-            <hr style={{width : '100%'}} />
+            <div className={styles['mr-sidebar-divider-container']}></div>
 
             {/* Login Section */}
-            <div className="mr-sidebar-login-section">
-                <p className="mr-sidebar-login-text" style={{marginLeft : '10px'}}>Already have an account?</p>
-                <Link to="/mainlogin"  style={{position : "relative",marginLeft : '65px'}}>
-                    <button className="mr-login-btn">Login</button>
+            <div className={styles['mr-sidebar-welcome']}> {/* Reusing welcome container style for alignment */}
+                <p style={{ marginBottom: '10px' }}>Already have an account?</p>
+                <Link to="/mainlogin">
+                    <button className={styles['mr-sidebar-login-button']}>Login</button>
                 </Link>
             </div>
         </div>

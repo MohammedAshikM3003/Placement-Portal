@@ -1,0 +1,217 @@
+/* FIXED: Removed global * and ::-webkit-scrollbar tags to prevent clashing */
+
+/* --- Global Layout --- */
+.Admin-main-profile-layout {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background-color: #f6f8fb;
+    position: relative;
+    /* Added font-family here to keep it scoped */
+    font-family: 'Poppins', sans-serif; 
+}
+
+.Admin-main-profile-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 65px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 75px);
+    background-color: #f6f8fb;
+    margin-left: 260px;
+    margin-top: 75px; 
+
+    /* Hide scrollbar ONLY for this specific container */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar ONLY for this specific container in Chrome/Safari */
+.Admin-main-profile-main-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* --- Master Card Container --- */
+.Admin-main-profile-master-card {
+    background-color: #ffffff;
+    border-radius: 17px;
+    width: 100%;
+    max-width: 1400px; 
+    height: fit-content;
+    padding: 30px 30px 40px 35px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    margin-left: 0; 
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+/* --- Content Grid (Forms + Photo) --- */
+.Admin-main-profile-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-top: -25px;
+    align-items: start;
+    flex: 1;
+}
+
+.Admin-main-profile-form-area {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1;
+}
+
+/* --- Section Styling --- */
+.Admin-main-profile-section {
+    padding-bottom: 15px;
+}
+
+.Admin-main-profile-section-header {
+    font-size: 1.40em;
+    font-weight: 649;
+    color: #333;
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #4EA24E;
+    width: fit-content;
+}
+
+/* --- Input Grid Layout --- */
+.Admin-main-profile-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.Admin-main-profile-input-grid-three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+/* --- Form Inputs --- */
+.Admin-main-profile-form-input {
+    width: 100%;
+    height: 53.6px;
+    padding: 12px 15px;
+    border: 1px solid #dff4df;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    background-color: #eaf5ea;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.Admin-main-profile-form-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(79, 236, 79, 0.2);
+}
+
+/* --- Login Details Section --- */
+.Admin-main-profile-form-input-login {
+    width: 100%; 
+    height: 53.6px;
+    margin-bottom: 18px;
+    padding: 12px 15px;
+    border: 1px solid #dff4df;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    background-color: #eaf5ea;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* --- Profile Photo Card --- */
+.Admin-main-profile-photo-card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 0px 20px 20px 20px;
+    border: 1px solid #eeeeee;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.Admin-main-profile-photo-preview {
+    width: 150px;
+    height: 165px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #dff4df;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.Admin-main-profile-photo-clickable:hover {
+    transform: scale(1.05);
+    border-color: #4EA24E;
+}
+
+/* --- Action Buttons --- */
+.Admin-main-profile-action-buttons {
+    display: flex;
+    justify-content: flex-end; 
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.Admin-main-profile-discard-btn,
+.Admin-main-profile-save-btn {
+    padding: 10px 25px;
+    border-radius: 24px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 165px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.Admin-main-profile-discard-btn { background-color: #bbb; color: white; }
+.Admin-main-profile-save-btn { background-color: #4EA24E; color: white; }
+
+/* --- Responsive Adjustments --- */
+
+@media (max-width: 768px) {
+    .Admin-main-profile-layout {
+        padding-top: 60px;
+        flex-direction: column;
+    }
+    
+    .Admin-main-profile-main-content {
+        padding: 10px;
+        margin-left: 0;
+        margin-top: 0;
+        height: calc(100vh - 60px);
+    }
+    
+    .Admin-main-profile-master-card {
+        padding: 20px 15px 30px 15px;
+    }
+
+    .Admin-main-profile-content-grid {
+        grid-template-columns: 1fr;
+        margin-top: 0;
+    }
+
+    .Admin-main-profile-photo-card {
+        grid-column: unset;
+        grid-row: unset;
+    }
+    
+    .Admin-main-profile-action-buttons {
+        justify-content: center;
+    }
+}

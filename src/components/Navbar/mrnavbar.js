@@ -1,21 +1,24 @@
 import React from 'react';
 import Adminicon from "../../assets/Adminicon.png";
-import "./mrnavbar.css";
+// 1. Import the CSS Module
+import styles from "./mrnavbar.module.css";
 
 const Navbar = ({ onToggleSidebar }) => {
     return (
-        <div className="mr-navbar">
-            <div className="mr-left">
-                <span className="mr-portal-logo">
+        // 2. Update all className strings to use styles object
+        <div className={styles['mr-navbar']}>
+            <div className={styles['mr-left']}>
+                <span className={styles['mr-portal-logo']}>
                     <img src={Adminicon} alt="Portal Logo" />
                 </span>
-                <span className="mr-portal-name">Placement Portal</span>
+                <span className={styles['mr-portal-name']}>Placement Portal</span>
             </div>
-            {/* The hamburger button now has the onClick handler */}
-            <button className="mr-hamburger-btn" onClick={onToggleSidebar}>
-                <span className="mr-hamburger-line"></span>
-                <span className="mr-hamburger-line"></span>
-                <span className="mr-hamburger-line"></span>
+            
+            {/* Hamburger Button */}
+            <button className={styles['mr-hamburger-btn']} onClick={onToggleSidebar}>
+                <span className={styles['mr-hamburger-line']}></span>
+                <span className={styles['mr-hamburger-line']}></span>
+                <span className={styles['mr-hamburger-line']}></span>
             </button>
         </div>
     );

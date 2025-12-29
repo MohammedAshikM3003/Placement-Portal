@@ -1,0 +1,203 @@
+/* MainSingUp.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* --- Layout --- */
+.pageContainer {
+  font-family: Arial, sans-serif;
+  background-color: #f5f7fc;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainLayout {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 80px;
+  overflow: hidden;
+  
+  /* Custom Scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #4f46e5 #f1f3f4;
+}
+
+/* Scrollbar Webkit */
+.mainLayout::-webkit-scrollbar { width: 12px; }
+.mainLayout::-webkit-scrollbar-track { background-color: #f1f3f4; border-radius: 10px; }
+.mainLayout::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%); border-radius: 10px; border: 3px solid #f1f3f4; }
+.mainLayout::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #4338ca 0%, #3730a3 100%); }
+.mainLayout::-webkit-scrollbar-button { display: none; }
+
+/* --- Right Image Section --- */
+.rightImageContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.visualImage {
+  width: 100%;
+  max-width: 700px;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* --- SignUp Box --- */
+.signupBox {
+  width: 420px;
+  min-height: 450px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 32px;
+  box-shadow: 0 8px 32px rgba(89, 50, 234, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s ease;
+  flex-shrink: 0;
+}
+
+.signupBox:hover {
+  box-shadow: 0 0 35px rgba(89, 50, 234, 0.9), 0 0 15px rgba(89, 50, 234, 0.4);
+  transform: translateY(-5px);
+}
+
+.logoContainer {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logoImage {
+  height: 90px;
+  width: 90px;
+  object-fit: contain;
+}
+
+/* --- Buttons --- */
+.signupButton {
+  width: 100%;
+  padding: 18px 0;
+  border-radius: 16px;
+  border: 2px solid #ded5fa;
+  background: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.signupButton:hover {
+  color: #fff !important;
+  background: #5932ea;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(89, 50, 234, 0.4);
+  border-color: #5932ea;
+}
+
+/* Coordinator Button specific overrides */
+.coordinatorButton {
+  width: 100%;
+  padding: 18px 0;
+  border-radius: 16px;
+  border: 2px solid #fecaca;
+  background: #fef2f2;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.coordinatorButton:hover {
+  color: #fff !important;
+  background: #dc2626 !important;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+  border-color: #dc2626 !important;
+  opacity: 1 !important;
+}
+
+/* Admin Button specific overrides */
+.adminButton {
+  width: 100%;
+  padding: 18px 0;
+  border-radius: 16px;
+  border: 2px solid #84db84;
+  background: #b4ddbc;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  opacity: 1;
+}
+
+.adminButton:hover {
+  color: #fff !important;
+  background: #4ea24e !important;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(78, 162, 78, 0.6);
+  border-color: #4ea24e !important;
+  opacity: 1 !important;
+}
+
+/* --- Footer Links --- */
+.footerText {
+  font-size: 16px;
+  text-align: center;
+}
+
+.link {
+  color: #5932ea;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+  .mainLayout {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+  }
+  .rightImageContainer {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainLayout {
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .signupBox {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px 24px;
+    box-shadow: none;
+    border: 1px solid #e1e5e9;
+    min-height: auto;
+    margin: 0 auto;
+  }
+}

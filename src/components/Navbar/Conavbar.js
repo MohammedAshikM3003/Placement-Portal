@@ -1,25 +1,28 @@
 import React from 'react';
-import './Conavbar.css';
+import styles from './Conavbar.module.css';
 import Adminicon from '../../assets/Adminicon.png';
 
 const Navbar = ({ onToggleSidebar }) => {
   return (
-    <div className="navbar coordinator-navbar">
-      <div className="navbar-left"> {/* Group logo and name */}
-        <span className="portal-logo">
-          <img src={Adminicon} alt="Portal Logo" />
+    <header className={styles.navbar}>
+      <div className={styles.navbarLeft}>
+        <span className={styles.portalLogo}>
+          <img src={Adminicon} alt="Placement Portal Logo" />
         </span>
-        <span className="portal-name">Placement Portal</span>
+        <span className={styles.portalName}>Placement Portal</span>
       </div>
-      <div className="menu"> {/* This will be hidden on mobile */}
-      </div>
-      {/* Hamburger menu for small screens, aligned right */}
-      <button className="hamburger-menu" onClick={onToggleSidebar}>
-          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-          </svg>
+      <div className={styles.menu} aria-hidden="true" />
+      <button
+        type="button"
+        className={styles.hamburgerMenu}
+        onClick={onToggleSidebar}
+        aria-label="Toggle coordinator navigation"
+      >
+        <svg className={styles.hamburgerIcon} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+        </svg>
       </button>
-    </div>
+    </header>
   );
 };
 

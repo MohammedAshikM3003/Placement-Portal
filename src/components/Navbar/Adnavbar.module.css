@@ -1,0 +1,73 @@
+.ad-navbar {
+  display: flex;
+  align-items: center;
+  background: #4ea24e;
+  color: #fff;
+  padding: 15px 32px 15px 26px;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* FIX: Increased z-index to be higher than the sidebar */
+  z-index: 1003; 
+  height: 65px;
+  box-sizing: border-box;
+}
+.ad-navbar-left {
+  display: flex;
+  align-items: center;
+}
+.ad-portal-logo {
+  height: 35px;
+  width: 35px;
+  margin-right: 18px;
+}
+.ad-portal-logo img {
+  height: 30px;
+  width: 40px;
+  filter: brightness(0) invert(1);
+}
+.ad-portal-name {
+  font-size: 1.48rem;
+  font-weight: bold !important;
+  font-family: 'Inter', sans-serif;
+}
+.ad-navbar .ad-menu {
+  display: flex;
+  gap: 35px;
+}
+.ad-hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* This z-index is no longer needed as the parent has it */
+}
+.ad-hamburger-menu svg {
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 992px) {
+  .ad-navbar .ad-menu {
+    display: none;
+  }
+  .ad-hamburger-menu {
+    display: flex;
+  }
+  .ad-navbar {
+    padding: 15px 20px;
+  }
+  .ad-portal-name {
+    font-size: 1.2rem;
+  }
+}
+:global {
+}

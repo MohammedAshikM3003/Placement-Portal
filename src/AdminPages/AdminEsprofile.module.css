@@ -1,0 +1,203 @@
+/* FIXED: Removed global body selector to prevent clashing */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.Admin-ES-StuProfile-container {
+    /* Styles moved from global body to this scoped container */
+    background: #f8f8fb;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', Arial, sans-serif;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.Admin-ES-StuProfile-main {
+    display: flex;
+    margin-top: 65px;
+    height: calc(100vh - 65px);
+    overflow: hidden;
+}
+
+/* Sidebar container with fixed height and no horizontal overflow */
+.Admin-ES-StuProfile-sidebar {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 230px;
+    height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    background: #fff;
+    box-sizing: border-box;
+    padding: 0 15px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 999; 
+}
+
+/* Prevent children inside sidebar from causing horizontal overflow */
+.Admin-ES-StuProfile-sidebar * {
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.Admin-ES-StuProfile-dashboard-area {
+    flex: 1;
+    background: #f9fbf8;
+    padding: 25px;
+    margin-left: 270px; 
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.Admin-ES-StuProfile-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* Profile form section */
+.Admin-ES-StuProfile-profile-section-container {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.Admin-ES-StuProfile-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.Admin-ES-StuProfile-header-with-back {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.Admin-ES-StuProfile-back-btn {
+    background-color: #e23d3d;
+    color: white;
+    padding: 0.7rem 1.4rem;
+    border-radius: 14px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.Admin-ES-StuProfile-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
+}
+
+.Admin-ES-StuProfile-form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.Admin-ES-StuProfile-personal-info-fields {
+    grid-column: 1 / span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.Admin-ES-StuProfile-form-grid input,
+.Admin-ES-StuProfile-form-grid select,
+.Admin-ES-StuProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    background-color: #f9fff9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Photo Box Styling */
+.Admin-ES-StuProfile-profile-photo-box {
+    background-color: #ffffff;
+    border: 1px solid #e6f4dd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.Admin-ES-StuProfile-profile-preview-img {
+    width: 200px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #e0f4dd;
+}
+
+/* Action Buttons */
+.Admin-ES-StuProfile-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.Admin-ES-StuProfile-save-btn {
+    background-color: #4EA24E;
+    color: white;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 900px) {
+    .Admin-ES-StuProfile-dashboard-area {
+        margin-left: 0;
+        padding: 15px 20px;
+    }
+    .Admin-ES-StuProfile-main {
+        flex-direction: column;
+        height: auto;
+    }
+    .Admin-ES-StuProfile-sidebar {
+        width: 100vw;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .Admin-ES-StuProfile-sidebar.active {
+        transform: translateX(0);
+    }
+    .Admin-ES-StuProfile-form-grid {
+        display: block;
+    }
+    .Admin-ES-StuProfile-personal-info-fields {
+        display: block;
+    }
+    .Admin-ES-StuProfile-profile-section-container input,
+    .Admin-ES-StuProfile-profile-section-container select {
+        margin-bottom: 1rem;
+    }
+}

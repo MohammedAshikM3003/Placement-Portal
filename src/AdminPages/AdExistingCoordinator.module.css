@@ -1,0 +1,744 @@
+/* --- Base Layout --- */
+.Admin-MC-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+/* Main content static (no page scroll) */
+.Admin-MC-main-content {
+    flex-grow: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden; 
+    /* FIXED: Set initial margin-left here to account for the sidebar width */
+    margin-left: 280px;
+    margin-top: 67px; /* Adjusted for navbar */
+    padding-bottom: 20px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Top Card (Filter and Actions) */
+.Admin-MC-top-card {
+    display: flex;
+    gap: 0px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    /* FIXED: Removed margin-left and margin-top from main content elements */
+    margin-left: 0;
+    margin-top: 0;
+    flex-shrink: 0; 
+}
+
+/* Filter Section */
+.Admin-MC-filter-section {
+    flex: 0 0 450px;
+    background-color: #e8e8e8;
+    padding: 24px 0px;
+    border-radius: 43px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Admin-MC-filter-header-container {
+    position: relative;
+    margin-bottom: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.Admin-MC-filter-header {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background-color: #4EA24E;
+    color: white;
+    margin-bottom: -10px;
+    padding: 8px 37px;
+    border-radius: 30px;
+    display: inline-block;
+}
+
+.Admin-MC-filter-icon-container {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    font-size: 1.3rem;
+    color: #4EA24E;
+    cursor: pointer;
+}
+
+.Admin-MC-filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.Admin-MC-text-container {
+    position: relative;
+    border: 2px solid #9d9d9d;
+    border-radius: 12px;
+    overflow: visible;
+    height: 45px;
+    /* Adjusted width and margin to flow within max-width: 400px */
+    width: 90%; 
+    margin: 0 auto; 
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-MC-text-container:hover{
+    border-color: #4EA24E;
+}
+
+.Admin-MC-floating-label {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 5px;
+    color: #999;
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1;
+    background-color: transparent;
+}
+
+.Admin-MC-text-container.has-value .Admin-MC-floating-label,
+.Admin-MC-text-container.is-focused .Admin-MC-floating-label {
+    top: -12px;
+    left: 5px;
+    font-size: 0.8rem;
+    color: #4EA24E;
+    font-weight: 600;
+    padding: 0 8px;
+}
+
+.Admin-MC-text {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    cursor: text;
+    font-size: 0.95rem;
+    color: #333;
+    position: relative;
+    z-index: 0;
+}
+
+.Admin-MC-text::placeholder {
+    color: transparent;
+}
+
+.Admin-MC-text:focus,
+.Admin-MC-dropdown:focus {
+    outline: none;
+}
+
+.Admin-MC-text-container:hover {
+    border-color: #3d8a3d;
+}
+
+.Admin-MC-text-container.is-focused {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 2px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-MC-button-group {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    gap: 40px;
+    width: 100%;
+}
+
+.Admin-MC-button {
+    padding: 6px 34px;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: 700;
+    flex: 1;
+    max-width: 150px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-MC-view-students-btn {
+    background-color: #ffffff;
+    color: #4EA24E;
+    border: 2px solid transparent;
+}
+
+.Admin-MC-view-students-btn:hover {
+    color: #ffffff;
+    background-color: #4EA24E;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.Admin-MC-blocklist-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.Admin-MC-blocklist-btn:hover {
+    background-color: #c2191e;
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+}
+
+/* Branch Info and Action Cards Container */
+.Admin-MC-action-cards-section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 21px;
+    margin-top: 0px;
+    gap: 15px;
+}
+
+/* Branch Info Top Section */
+.Admin-MC-branch-info-top {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.Admin-MC-branch-info-card {
+    background-color: #ffffff;
+    border: 2px solid #b0b0b0;
+    border-radius: 12px;
+    /* Adjusted padding to be flexible */
+    padding: 0px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    flex: 1 1 50%; /* Allows it to grow in the available space */
+}
+
+.Admin-MC-branch-info-text {
+    font-size: 1.2rem;
+    color: #8a8a8a;
+    font-weight: 600;
+    margin: 10px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.Admin-MC-back-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    margin-left: 7px;
+    flex-shrink: 0;
+}
+
+.Admin-MC-back-btn:hover {
+    background-color: #c2191e;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.Admin-MC-back-arrow {
+    font-size: 1.2rem;
+    transform: rotate(180deg);
+}
+
+/* Action Cards Row */
+.Admin-MC-action-cards-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.Admin-MC-action-card {
+    flex: 1 1 122px; /* Changed from fixed width to flexible */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 20px 15px;
+    padding-bottom: 10px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 2px solid #808080;
+}
+
+.Admin-MC-action-firstheader{
+    font-size: 1.2rem;
+    font-weight: 720;
+    line-height: 20px;
+    margin-bottom: -20px;
+    margin-top: -18px;
+    color: #D23B42;
+}
+
+.Admin-MC-action-header {
+    font-size: 1.2rem;
+    font-weight: 720;
+    margin-bottom: -20px;
+    margin-top: -10px;
+    color: #D23B42;
+}
+
+.Admin-MC-action-description {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 15px;
+    padding: 0 5px;
+    font-weight: 500;
+    line-height: 1.5;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.Admin-MC-action-btn {
+    padding: 8px 25px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    min-width: 70px;
+    transition: opacity 0.2s;
+    font-size: 0.8rem;
+}
+
+.Admin-MC-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Specific Action Button Colors */
+.Admin-MC-add-btn{ background-color: #2d9f37; color: white;}
+.Admin-MC-edit-btn { background-color: #5932EA; color: white; }
+.Admin-MC-block-btn { background-color: #d23b42; color: white; }
+.Admin-MC-unblock-btn { background-color: #949494; color: white; }
+.Admin-MC-delete-btn { background-color: #ff0000; color: white; }
+
+/* ---------------------------------------------------------------------- */
+/* Bottom Card (Coordinator Table) */
+.Admin-MC-bottom-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 10px;
+    /* FIXED: Removed margin-left */
+    margin-left: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding-bottom: 0px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+}
+
+.Admin-MC-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -20px;
+    padding-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.Admin-MC-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-left: 25px;
+    color: #000000;
+}
+
+.Admin-MC-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.Admin-MC-print-button-container {
+    position: relative;
+    display: inline-block;
+}
+
+.Admin-MC-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Admin-MC-print-btn:hover {
+    background-color: #2ea730;
+}
+
+.Admin-MC-export-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Admin-MC-export-menu button {
+    border: none;
+    background: none;
+    padding: 8px 20px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+    color: #444;
+    transition: background 0.15s ease;
+}
+
+.Admin-MC-export-menu button:hover {
+    background-color: #f2f2f2;
+}
+
+/* Horizontal Scroll on Container Only */
+.Admin-MC-table-container {
+    overflow-x: auto;
+    margin-bottom: -1px;
+    flex: 1; 
+    width: 100%;
+}
+
+/* Scrollbar for Horizontal Container (Gray) */
+.Admin-MC-table-container::-webkit-scrollbar {
+    height: 8px; 
+}
+.Admin-MC-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    border-radius: 10px;
+}
+.Admin-MC-table-container::-webkit-scrollbar-thumb {
+    background: #949494; /* Gray Horizontal Scrollbar */
+    border-radius: 10px;
+}
+.Admin-MC-table-container::-webkit-scrollbar-thumb:hover {
+    background: #7a7a7a; 
+}
+
+.Admin-MC-students-table {
+    /* Adjusted width to match the sum of column widths (1490px) */
+    width: 1490px; 
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- TABLE HEADER (STATIC) --- */
+.Admin-MC-students-table thead {
+    display: block; 
+    box-sizing: border-box;
+    background-color: #ffffff;
+    /* Padding to align with scrollbar width */
+    padding-right: 8px; 
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.Admin-MC-table-head-row {
+    border-bottom: 2px solid #e0e0e0;
+    display: flex; 
+    width: 100%; 
+}
+
+.Admin-MC-th {
+    padding: 12px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+/* --- TABLE BODY (SCROLLABLE) --- */
+.Admin-MC-students-table tbody {
+    height: 350px; /* Fixed height */
+    overflow-y: scroll; /* FORCE SCROLLBAR TO APPEAR */
+    display: block; 
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Scrollbar for Vertical Body (Green) */
+.Admin-MC-students-table tbody::-webkit-scrollbar {
+    width: 8px; 
+}
+.Admin-MC-students-table tbody::-webkit-scrollbar-track {
+    background: #e6e6e6; /* VISIBLE GRAY TRACK */
+    border-radius: 10px;
+}
+.Admin-MC-students-table tbody::-webkit-scrollbar-thumb {
+    background: #4EA24E; /* Green Vertical Scrollbar */
+    border-radius: 10px;
+}
+.Admin-MC-students-table tbody::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d; 
+}
+
+/* Table Data Rows */
+.Admin-MC-table-row {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex; 
+    width: 100%;
+    align-items: center;
+}
+
+.Admin-MC-table-row:hover {
+    background-color: #fafafa;
+}
+
+.Admin-MC-selected-row {
+    background-color: #f7fff5 !important;
+}
+
+.Admin-MC-td {
+    padding: 14px 12px;
+    text-align: left;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.95rem;
+    font-weight: 500;
+    flex-shrink: 0; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Column Specific Styling (Must match header widths) */
+.Admin-MC-select { width: 80px; text-align: center; }
+.Admin-MC-sno { width: 80px; text-align: center; }
+.Admin-MC-name { width: 200px; text-align: left; padding-left: 20px;} /* Aligned to left for names */
+.Admin-MC-coordinator-id { width: 180px; text-align: center; }
+.Admin-MC-branch { width: 120px; text-align: center; }
+.Admin-MC-gender { width: 100px; text-align: center; }
+.Admin-MC-email-id { width: 280px; text-align: left; padding-left: 20px; } /* Aligned to left for emails */
+.Admin-MC-domain-email { width: 200px; text-align: left; padding-left: 20px; } /* Aligned to left for domain emails */
+.Admin-MC-phone { width: 150px; text-align: center; }
+.Admin-MC-view { width: 100px; text-align: center; }
+
+.Admin-MC-profile-eye-icon {
+    color: #4EA24E;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.Admin-MC-profile-eye-icon:hover {
+    transform: scale(1.1);
+}
+
+/* --- Checkbox Styling --- */
+.Admin-MC-td.Admin-MC-select input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    vertical-align: middle; 
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 1400px) {
+    /* Reset margins for mobile/tablet */
+    .Admin-MC-main-content { margin-left: 0; margin-top: 0; padding-top: 80px; height: auto; overflow-y: auto; }
+    .Admin-MC-top-card { flex-wrap: wrap; }
+    .Admin-MC-filter-section { flex: 0 0 100%; }
+    .Admin-MC-action-cards-section { flex: 1 1 100%; margin-left: 0; }
+    .Admin-MC-bottom-card { margin-left: 0; }
+    .Admin-MC-students-table tbody { height: 300px; }
+}
+@media (max-width: 1200px) {
+    .Admin-MC-action-card { flex: 1 1 calc(50% - 10px); }
+    .Admin-MC-action-cards-row { flex-wrap: wrap; }
+    .Admin-MC-branch-info-card { flex: 1 1 auto; }
+}
+@media (max-width: 768px) {
+    .Admin-MC-main-content { padding: 15px; padding-top: 90px; }
+    .Admin-MC-top-card { gap: 12px; flex-direction: column; }
+    .Admin-MC-action-card { flex: 1 1 100%; }
+    .Admin-MC-action-cards-row { flex-direction: column; }
+    .Admin-MC-filter-section { padding: 20px; }
+    .Admin-MC-button-group { flex-direction: column; gap: 15px; }
+    .Admin-MC-button { max-width: 100%; }
+    .Admin-MC-branch-info-top { flex-direction: column; align-items: stretch; }
+    .Admin-MC-back-btn { margin-left: 0; justify-content: center; }
+}
+
+/* --- POPUP MODAL STYLES --- */
+.Admin-MC-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+}
+
+.Admin-MC-popup-content {
+    background-color: white;
+    width: 400px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    transform: scale(0.8);
+    animation: scaleUp 0.3s forwards;
+    padding-bottom: 25px;
+}
+
+.Admin-MC-popup-header {
+    background-color: #4EA24E;
+    padding: 20px 0;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.Admin-MC-popup-title {
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Icon Container Circle */
+.Admin-MC-popup-icon-container {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    animation: iconPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s forwards;
+    transform: scale(0);
+}
+
+/* Specific Icon Background Colors (FIXED for clarity) */
+.Admin-MC-icon-bg-block { 
+    background-color: #D23B42; /* Red for Block action */
+}   
+.Admin-MC-icon-bg-unblock { 
+    background-color: #3d8a3d; /* Dark Green for Unblock action */
+} 
+.Admin-MC-icon-bg-warning { 
+    background-color: #E9DE48; /* Yellow for Warning */
+} 
+.Admin-MC-icon-bg-deleted { 
+    background-color: #4EA24E; /* Green for Deleted/Success */
+} 
+
+.Admin-MC-popup-icon-svg {
+    width: 45px;
+    height: 45px;
+    fill: white;
+}
+
+/* Text Content */
+.Admin-MC-popup-message-large {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #000;
+    margin-bottom: 10px;
+}
+
+.Admin-MC-popup-message-small {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 25px;
+    padding: 0 30px;
+    line-height: 1.4;
+}
+
+/* Button Area */
+.Admin-MC-popup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.Admin-MC-popup-btn {
+    padding: 10px 40px;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.Admin-MC-popup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Specific Button Colors */
+.Admin-MC-btn-close { background-color: #B84349; }
+.Admin-MC-btn-back { background-color: #B84349; }
+.Admin-MC-btn-confirm { background-color: #7F7676; }
+
+/* --- ANIMATIONS --- */
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    to { transform: scale(1); }
+}
+
+@keyframes iconPop {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}

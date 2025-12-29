@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap');
+
+/* --- CUSTOM SCROLLBAR (Applied to dashboard-area) --- */
+.dashboardArea::-webkit-scrollbar {
+    width: 10px;
+}
+.dashboardArea::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+.dashboardArea::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+.dashboardArea::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA;
+}
+
+/* --- BASE LAYOUT --- */
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden; /* prevent browser default scrollbar; scroll only inside dashboardArea */
+}
+
+.main {
+    display: flex;
+    height: calc(100vh - 55px); /* fixed height like Achievements so body doesn't grow */
+    margin-top: 55px;
+    /* CRITICAL FOR DESKTOP */
+    overflow: hidden; 
+}
+
+.dashboardArea {
+    flex: 1;
+    height: calc(100vh - 65px); /* Desktop fixed height */
+    padding: 25px 30px;
+    background: #fff;
+    margin-left: 230px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    transition: margin-left 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+/* --- COMPANY SPECIFIC STYLES --- */
+
+.hubTitle {
+    font-weight: 800;
+    font-size: 25px;
+    color: #000000;
+    flex-shrink: 0;
+    margin-bottom: 24px;
+}
+
+.placementHub { flex-shrink: 0; }
+
+.congratsBanner {
+    background: #C9FAC9;
+    border: 1.5px solid #47BA47;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    padding: 30px 45px;
+    gap: 22px;
+    box-shadow: 0 2px 10px rgba(56, 168, 92, 0.07);
+    min-height: 115px;
+}
+
+.congratsIcon { width: 40px; height: 40px; margin-right: 18px; flex-shrink: 0; }
+.congratsText { display: flex; flex-direction: column; justify-content: center; }
+.congratsTitle { font-weight: 800; font-size: 22.5px; color: #178A2E; margin-bottom: 3px; }
+.congratsDesc { font-weight: 400; font-size: 15.8px; color: #285F2B; }
+.congratsDesc span { color: #159051; font-weight: 700; }
+
+.downloadOfferBtn {
+    margin-left: auto;
+    background: none; border: none; display: flex; flex-direction: column;
+    align-items: center; cursor: pointer; gap: 6px; flex-shrink: 0;
+}
+.downloadOfferBtn img { width: 31px; height: 31px; }
+.downloadOfferBtn span { color: #178A2E; font-weight: 800; font-size: 17.5px; }
+
+.historyContainer {
+    background: #3B6FB6;
+    border-radius: 18px;
+    padding: 32px 22px;
+    margin-top: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.historyTitle { color: #fff; font-weight: 800; font-size: 24px; margin-bottom: 14px; }
+
+.appList {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-right: 10px;
+}
+
+.appItem {
+    background: #fff; border-radius: 14px; padding: 25px 32px; margin-bottom: 23px;
+    display: flex; align-items: center; border: 1.5px solid #E6EEF7; cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* Status-based hover styles for App Item */
+.appItem:hover { border: 3px solid #8b8b8b; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); }
+.appItem.statusPlaced:hover { border: 3px solid #159051; }
+.appItem.statusRejected:hover { border: 3px solid #DE463E; }
+.appItem.statusPending:hover { border: 3px solid #4378A5; }
+
+.appItem:last-child { margin-bottom: 0 !important; }
+
+.appLogo {
+    width: 45px; height: 45px; border-radius: 50%; background: #E3E9F9;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 23px; color: #4286F7; margin-right: 21px; flex-shrink: 0;
+}
+
+.appDetails { flex: 1; min-width: 0; }
+.appCompany { font-weight: 800; font-size: 18.6px; color: #273455; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appPosition { font-weight: 400; font-size: 13.2px; color: #7D8BA6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.appStatus {
+    border-radius: 20px; font-weight: 700; font-size: 15px; padding: 8.5px 34px; margin-left: 18px; flex-shrink: 0;
+}
+
+.appArrow { font-size: 27px; color: #8EA3B3; margin-left: 20px; }
+
+/* Scrollbar Styles - Light Gray with Transparent Background for History List */
+.appList::-webkit-scrollbar { width: 8px; }
+.appList::-webkit-scrollbar-track { background: transparent; }
+.appList::-webkit-scrollbar-thumb { background-color: #d3d3d3; border-radius: 20px; }
+.appList::-webkit-scrollbar-thumb:hover { background-color: #a9a9a9; }
+
+
+/* --- MOBILE RESPONSIVE FIXES --- */
+@media (max-width: 992px) {
+    /* Mobile: still hide page scrollbar; scroll only inside dashboardArea (with custom scrollbar) */
+    .container { overflow: hidden !important; min-height: 100vh; }
+    .main { height: calc(100vh - 50px); margin-top: 50px; overflow: hidden !important; }
+    
+    .dashboardArea {
+        margin-left: 0;
+        padding: 20px 15px 100px 15px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100%; /* Fill main and scroll inside */
+    }
+    
+    /* Congrats Banner */
+    .congratsBanner {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        padding: 20px;
+    }
+
+    .downloadOfferBtn {
+        margin-left: 0;
+        margin-top: 20px;
+        flex-direction: row;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 10px;
+        border-radius: 10px;
+        justify-content: center;
+    }
+    
+    /* History Container */
+    .historyContainer {
+        min-height: 400px;
+        margin-bottom: 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hubTitle { font-size: 22px; margin-bottom: 15px; }
+    .historyContainer { padding: 20px 15px; }
+
+    .appItem {
+        flex-wrap: wrap;
+        padding: 15px;
+        gap: 10px;
+        position: relative;
+    }
+
+    .appLogo { width: 40px; height: 40px; font-size: 20px; margin-right: 15px; }
+
+    .appStatus {
+        display: inline-block;
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+        padding: 8px 15px;
+        order: 3;
+    }
+
+    .appArrow {
+        position: absolute;
+        top: 20px;
+        right: 15px;
+    }
+    
+    .dashboardArea { padding-bottom: 120px; }
+}

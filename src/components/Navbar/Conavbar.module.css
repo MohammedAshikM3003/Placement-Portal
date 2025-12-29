@@ -1,0 +1,80 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #D23B42;
+    color: #fff;
+    padding: 15px 32px 15px 26px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1003;
+    height: 65px;
+    box-sizing: border-box;
+}
+
+.navbarLeft {
+    display: flex;
+    align-items: center;
+}
+
+.portalLogo {
+    height: 35px;
+    width: 35px;
+    margin-right: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.portalLogo img {
+    height: 30px;
+    width: 40px;
+    filter: brightness(0) invert(1);
+}
+
+.portalName {
+    font-size: 1.48rem;
+    font-weight: bold;
+}
+
+.menu {
+    display: flex;
+    gap: 35px;
+}
+
+.hamburgerMenu {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.hamburgerIcon {
+    width: 28px;
+    height: 28px;
+}
+
+@media (max-width: 992px) {
+    .menu {
+        display: none;
+    }
+
+    .hamburgerMenu {
+        display: flex;
+    }
+
+    .navbar {
+        padding: 15px 20px;
+    }
+
+    .portalName {
+        font-size: 1.2rem;
+    }
+}

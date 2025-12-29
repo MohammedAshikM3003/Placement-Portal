@@ -7,11 +7,11 @@ export const DownloadFailedAlert = ({ isOpen, onClose }) => {
 
   return (
     <div className="alert-overlay">
-      <div className="Achievement-popup-container">
-        <div className="Achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
           Download Failed !
         </div>
-        <div className="Achievement-popup-body">
+        <div className="achievement-popup-body">
           <div className="download-error-icon-container">
             <svg className="download-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="download-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
@@ -26,8 +26,8 @@ export const DownloadFailedAlert = ({ isOpen, onClose }) => {
             Please try again or contact support.
           </p>
         </div>
-        <div className="Achievement-popup-footer">
-          <button onClick={onClose} className="Achievement-popup-close-btn">
+        <div className="achievement-popup-footer">
+          <button onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -36,31 +36,31 @@ export const DownloadFailedAlert = ({ isOpen, onClose }) => {
   );
 };
 
-// Download Success Popup
+// Download Success Popup (Fixed Capital 'A's)
 export const DownloadSuccessAlert = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <div className="alert-overlay">
-      <div className="Achievement-popup-container">
-        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Downloaded !
         </div>
-        <div className="Achievement-popup-body">
+        <div className="achievement-popup-body">
           <svg className="download-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
             <circle className="download-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
             <path className="download-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
           <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-            PDF Downloaded ✓
+            Resume Downloaded ✓
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-            The certificate has been successfully<br />
+            The resume has been successfully<br />
             downloaded as PDF to your device.
           </p>
         </div>
-        <div className="Achievement-popup-footer">
-          <button onClick={onClose} className="Achievement-popup-close-btn">
+        <div className="achievement-popup-footer">
+          <button onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -69,17 +69,17 @@ export const DownloadSuccessAlert = ({ isOpen, onClose }) => {
   );
 };
 
-// Download Progress Popup
+// Download Progress Popup (Fixed Capital 'A's)
 export const DownloadProgressAlert = ({ isOpen, progress = 25 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="alert-overlay">
-      <div className="Achievement-popup-container">
-        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Downloading...
         </div>
-        <div className="Achievement-popup-body">
+        <div className="achievement-popup-body">
           <div className="download-progress-icon-container">
             <svg className="download-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="download-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
@@ -101,7 +101,7 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25 }) => {
             Downloading {Math.round(progress)}%
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-            {progress < 85 ? 'Preparing certificate for download...' : 
+            {progress < 85 ? 'Preparing resume for download...' : 
              progress < 100 ? 'Finalizing download...' : 
              'Starting download...'}
           </p>
@@ -114,17 +114,17 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25 }) => {
   );
 };
 
-// Preview Failed Popup
+// Preview Failed Popup (Fixed Capital 'A's)
 export const PreviewFailedAlert = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <div className="alert-overlay">
-      <div className="Achievement-popup-container">
-        <div className="Achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
           Preview Failed !
         </div>
-        <div className="Achievement-popup-body">
+        <div className="achievement-popup-body">
           <div className="preview-error-icon-container">
             <svg className="preview-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
               <circle className="preview-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
@@ -139,8 +139,8 @@ export const PreviewFailedAlert = ({ isOpen, onClose }) => {
             Please try downloading it instead.
           </p>
         </div>
-        <div className="Achievement-popup-footer">
-          <button onClick={onClose} className="Achievement-popup-close-btn">
+        <div className="achievement-popup-footer">
+          <button onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -149,15 +149,15 @@ export const PreviewFailedAlert = ({ isOpen, onClose }) => {
   );
 };
 
-// Preview Progress Popup
-export const PreviewProgressAlert = ({ isOpen, progress = 25 }) => {
+// Preview Progress Popup (Already correct, left as is)
+export const PreviewProgressAlert = ({ isOpen, progress = 25, title = 'Previewing...', messages, color = '#197AFF', progressColor = '#197AFF' }) => {
   if (!isOpen) return null;
 
   return (
     <div className="alert-overlay">
       <div className="achievement-popup-container">
-        <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
-          Previewing...
+        <div className="achievement-popup-header" style={{ backgroundColor: color }}>
+          {title}
         </div>
         <div className="achievement-popup-body">
           <div className="preview-progress-icon-container">
@@ -169,7 +169,7 @@ export const PreviewProgressAlert = ({ isOpen, progress = 25 }) => {
                 cy="26" 
                 r="20" 
                 fill="none" 
-                stroke="#197AFF" 
+                stroke={progressColor}
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray={`${progress * 1.256} 125.6`}
@@ -181,9 +181,11 @@ export const PreviewProgressAlert = ({ isOpen, progress = 25 }) => {
             Loading {Math.round(progress)}%
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-            {progress < 85 ? 'Fetching certificate from database...' : 
-             progress < 100 ? 'Preparing preview...' : 
-             'Opening preview...'}
+            {progress < 85 
+              ? (messages?.initial || 'Fetching resume from database...') 
+              : progress < 100 
+                ? (messages?.mid || 'Preparing preview...') 
+                : (messages?.final || 'Opening preview...')}
           </p>
           <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
             {progress >= 100 ? 'Almost ready!' : 'Please wait...'}

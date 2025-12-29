@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './LoadingSpinner.css';
+import styles from './LoadingSpinner.module.css';
 
 const LoadingSpinner = ({ message = "Loading...", showProgress = false, mode = "full" }) => {
   const [progressMessages, setProgressMessages] = useState([]);
@@ -36,25 +36,29 @@ const LoadingSpinner = ({ message = "Loading...", showProgress = false, mode = "
     };
   }, [showProgress]);
 
-  const containerClass = mode === "table" ? "table-loading-spinner" : "loading-spinner-container";
+  // 1. Logic to choose the correct class from module
+  const containerClass = mode === "table" 
+    ? styles['table-loading-spinner'] 
+    : styles['loading-spinner-container'];
   
   return (
+    // 2. Use the scoped classes
     <div className={containerClass}>
-      <div className="loading-spinner">
-        <div className="spinner"></div>
-        <p className="loading-message">{message}</p>
+      <div className={styles['loading-spinner']}>
+        <div className={styles['spinner']}></div>
+        <p className={styles['loading-message']}>{message}</p>
         
         {showProgress && (
-          <div className="loading-progress">
-            <div className="progress-bar">
+          <div className={styles['loading-progress']}>
+            <div className={styles['progress-bar']}>
               <div 
-                className="progress-fill" 
+                className={styles['progress-fill']}
                 style={{ width: `${currentProgress}%` }}
               ></div>
             </div>
-            <div className="progress-messages">
+            <div className={styles['progress-messages']}>
               {progressMessages.map((msg, idx) => (
-                <div key={idx} className="progress-msg fade-in">
+                <div key={idx} className={styles['progress-msg']}>
                   {msg}
                 </div>
               ))}

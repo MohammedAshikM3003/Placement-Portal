@@ -284,6 +284,11 @@
 
 .achievement-popup-body {
   padding: 2rem;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .achievement-popup-footer {
