@@ -32,9 +32,6 @@ export default function Company({ onLogout, onViewChange }) {
   const [activeSubView, setActiveSubView] = useState('list');
   const [selectedApp, setSelectedApp] = useState(null);
   const [applicationHistory, setApplicationHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     const handleProfileUpdate = () => {

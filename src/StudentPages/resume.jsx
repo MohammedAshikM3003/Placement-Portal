@@ -169,8 +169,6 @@ function ResumeScore({ analysisResult }) {
 function MainContent({ onViewChange }) {
   const [selectedFile, setSelectedFile] = React.useState(null);
   const [uploadedFile, setUploadedFile] = React.useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [uploadDate, setUploadDate] = useState(null);
   const [uploadError, setUploadError] = useState(null);
