@@ -1,0 +1,760 @@
+.Admin-cood-detail-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Changed from min-height to fixed height to enable internal scroll */
+    width: 100%;
+    overflow: hidden; /* Prevents the whole page from scrolling */
+    background-color: #f6f8fb;
+}
+
+.Admin-cood-detail-main-content {
+    flex-grow: 1;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0; 
+    margin-top: 65px;
+    max-width: 100%; 
+    transition: margin-left 0.3s ease-in-out, max-width 0.3s ease-in-out; 
+    
+    /* SCROLLING CORE PROPERTIES */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    height: calc(100vh - 65px); 
+}
+
+/* --- CUSTOM SCROLLBAR STYLING --- */
+.Admin-cood-detail-main-content::-webkit-scrollbar { 
+    width: 10px; 
+}
+.Admin-cood-detail-main-content::-webkit-scrollbar-track { 
+    background: #f0f2f5; 
+}
+.Admin-cood-detail-main-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E; /* Matched your theme green */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+.Admin-cood-detail-main-content::-webkit-scrollbar-thumb:hover { 
+    background-color: #3d8a3d; 
+}
+
+/* --- Main Card Wrapper --- */
+.Admin-cood-detail-main-card {
+    width: 100%;
+    max-width: 1280px; 
+    box-sizing: border-box;
+    height: auto; 
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8e8e8;
+}
+
+/* --- Title Bar --- */
+.Admin-cood-detail-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.Admin-cood-detail-main-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #333;
+    padding-bottom: 5px;
+    border-bottom: 3px solid #4EA24E;
+    width: fit-content;
+}
+
+/* --- Back Button --- */
+.Admin-cood-detail-back-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 8px 18px 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 0px;
+    height: fit-content;
+}
+.Admin-cood-detail-back-btn:hover {
+    background-color: #b5323a;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+.Admin-cood-detail-back-arrow {
+    font-size: 1.1rem;
+    transform: rotate(180deg);
+    line-height: 1;
+}
+
+/* --- Layout Grids --- */
+.Admin-cood-detail-top-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.Admin-cood-detail-credentials-card {
+    width: 100%;
+    max-width: 1280px; 
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Admin-cood-detail-credentials-card .Admin-cood-detail-card-title {
+    margin: 0;
+    padding: 18px 24px 12px;
+}
+
+.Admin-cood-detail-credentials-card .Admin-cood-detail-card-content {
+    padding: 0 24px 24px;
+}
+
+.Admin-cood-detail-card-title {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    margin-top: -8px;
+    padding-bottom: 4px;
+    border-bottom: 3px solid #4EA24E;
+    width: fit-content;
+}
+
+.Admin-cood-detail-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0;
+    width: 100%; 
+    height: 100%;
+}
+
+.Admin-cood-detail-section {
+    padding-bottom: 0;
+    flex-grow: 1;
+}
+
+.Admin-cood-detail-input-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.Admin-cood-detail-input-grid-three-col {
+    display: grid;
+    width: 100%; 
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 0; 
+}
+
+.Admin-cood-detail-login-actions-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.Admin-cood-detail-login-credentials-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.Admin-cood-detail-login-fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.Admin-cood-detail-login-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e8e8e8;
+}
+
+/* --- Form Inputs --- */
+.Admin-cood-detail-form-input {
+    width: 100%;
+    height: 48px;
+    padding: 12px 15px;
+    border: 1px solid #def4dd; 
+    border-radius: 8px;
+    font-size: 0.95em;
+    color: #333;
+    background-color: #f9fff9; 
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    font-family: 'Poppins', sans-serif; 
+}
+.Admin-cood-detail-form-input::placeholder { color: #999; }
+.Admin-cood-detail-form-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 2px rgba(79, 236, 79, 0.15);
+}
+
+/* --- Select Wrapper --- */
+.Admin-cood-detail-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+.Admin-cood-detail-select-wrapper .Admin-cood-detail-dropdown-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+    transition: transform 0.3s;
+}
+.Admin-cood-detail-select-wrapper select:focus + .Admin-cood-detail-dropdown-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+.Admin-cood-detail-form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color: #888;
+    padding-right: 40px;
+    cursor: pointer;
+}
+.Admin-cood-detail-form-select:not([value=""]) { color: #333; }
+
+/* --- DatePicker Styles --- */
+.Admin-cood-detail-datepicker-wrapper { width: 100%; }
+.Admin-cood-detail-datepicker-wrapper .react-datepicker-wrapper { width: 100%; }
+.Admin-cood-detail-datepicker-wrapper .react-datepicker__input-container { width: 100%; display: block; position: relative; }
+.Admin-cood-detail-datepicker-input {
+    width: 100%;
+    height: 48px;
+    padding: 12px 15px;
+    border: 1px solid #def4dd !important; 
+    border-radius: 8px !important;
+    font-size: 0.95em;
+    color: #333;
+    background-color: #f9fff9 !important; 
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+.Admin-cood-detail-datepicker-input::placeholder { color: #999; }
+.Admin-cood-detail-datepicker-input:focus {
+    outline: none; border-color: #4EA24E !important; box-shadow: 0 0 0 2px rgba(79, 236, 79, 0.15);
+}
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range {
+    background-color: #4EA24E !important; color: white !important;
+}
+.react-datepicker__day:hover { background-color: #e9f1fc; color: #333; }
+.react-datepicker__header { background-color: #f9fbff; border-bottom: 1px solid #dde6f4; }
+
+/* --- Error Styling --- */
+.Admin-cood-detail-status-error {
+    color: #d23b42;
+}
+.Admin-cood-detail-input-error {
+    border-color: #d23b42 !important;
+    box-shadow: 0 0 0 2px rgba(210, 59, 66, 0.15);
+}
+
+
+/* --- Photo Wrapper --- */
+.Admin-cood-detail-photo-wrapper {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+}
+
+/* Profile Photo Box - Updated to match main card styling */
+.Admin-cood-detail-photo-box {
+    background-color: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    max-height: 480px;
+}
+
+.Admin-cood-detail-photo-title {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 0.8rem 0;
+    padding-bottom: 4px;
+    border-bottom: 3px solid #4EA24E;
+    width: fit-content;
+}
+
+.Admin-cood-detail-profile-icon-container {
+    padding: 0.5rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    max-height: 220px;
+}
+
+.Admin-cood-detail-profile-preview-img {
+    width: 160px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid #d0e8d0;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.Admin-cood-detail-profile-preview-img:hover {
+    transform: scale(1.02);
+    border-color: #4EA24E;
+}
+
+.Admin-cood-detail-graduation-cap-icon {
+    width: 80px;
+    height: 70px;
+}
+
+.Admin-cood-detail-upload-info-container {
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    padding: 0.8rem;
+    background-color: #f0f8f0;
+    border: 1px solid #d0e8d0;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.8rem;
+}
+
+.Admin-cood-detail-upload-info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+}
+
+.Admin-cood-detail-upload-action-area {
+    margin-top: auto;
+}
+
+.Admin-cood-detail-upload-hint {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 6px;
+    text-align: center;
+}
+
+.Admin-cood-detail-upload-success-message {
+    font-size: 0.85rem;
+    color: #4EA24E;
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.Admin-cood-detail-upload-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-cood-detail-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 0.8rem;
+    background-color: #f0f8f0;
+    border: 1.5px solid #d0e8d0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #4EA24E;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.Admin-cood-detail-profile-upload-btn:hover {
+    background-color: #e1f0e1;
+    border-color: #4EA24E;
+}
+
+.Admin-cood-detail-upload-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.Admin-cood-detail-remove-image-btn {
+    background: #fde8e8;
+    border: 1.5px solid #f9c6c6;
+    color: #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transition: all 0.2s ease;
+}
+
+.Admin-cood-detail-remove-image-btn:hover {
+    background: #fcd5d5;
+    border-color: #f59a9a;
+}
+
+.Admin-cood-detail-hidden-input {
+    display: none;
+}
+
+/* Section Subtitle for Login Credentials */
+.Admin-cood-detail-section-subtitle {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #333;
+    margin: 1.5rem 0 1rem 0;
+    padding-bottom: 5px;
+    border-bottom: 3px solid #4EA24E;
+    width: fit-content;
+}
+
+/* --- Final Actions --- */
+.Admin-cood-detail-final-actions {
+    display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 1280px; box-sizing: border-box; margin-top: 0; flex-shrink: 0; 
+}
+.Admin-cood-detail-discard-btn, .Admin-cood-detail-confirm-save-btn {
+    padding: 12px 15px; 
+    border-radius: 8px; 
+    font-size: 0.95em; 
+    font-weight: 600; 
+    cursor: pointer;
+    transition: all 0.2s; 
+    min-width: auto; 
+    border: none; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    height: 48px;
+    white-space: nowrap;
+}
+.Admin-cood-detail-discard-btn { background-color: #949494; color: white; }
+.Admin-cood-detail-discard-btn:hover { background-color: #808080; box-shadow: none; }
+.Admin-cood-detail-confirm-save-btn { background-color: #4EA24E; color: white; }
+.Admin-cood-detail-confirm-save-btn:hover { background-color: #3d8a3d; box-shadow: none; }
+.Admin-cood-detail-confirm-save-btn:disabled { background-color: #a8d5a8; cursor: not-allowed; }
+
+/* --- Modals (Image Preview) --- */
+.co-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85);
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
+}
+.co-modal-content { position: relative; max-width: 90%; max-height: 90%; }
+.co-modal-image { display: block; max-width: 100%; max-height: 100vh; border-radius: 4px; object-fit: contain; }
+.co-modal-close {
+    position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold;
+    cursor: pointer; opacity: 0.9; transition: opacity 0.2s; z-index: 1001;
+}
+.co-modal-close:hover { opacity: 1; }
+
+/* --- DESKTOP STYLES --- */
+@media (min-width: 769px) {
+    .Admin-cood-detail-layout { flex-direction: row; height: 100vh; overflow: hidden; }
+    
+    .Admin-cood-detail-main-content { 
+        padding: 20px 20px 0px 20px; 
+        overflow-y: auto; 
+        height: calc(100vh - 67px); 
+    } 
+
+    .Admin-cood-detail-main-content.sidebar-open { margin-left: 300px; max-width: calc(100% - 300px); }
+    .Admin-cood-detail-main-card { padding: 25px 30px 30px 30px; }
+    .Admin-cood-detail-credentials-card { padding: 0; }
+    .Admin-cood-detail-top-row { 
+        grid-template-columns: 1fr 360px; 
+        gap: 40px;
+        align-items: start;
+    }
+    .Admin-cood-detail-photo-wrapper {
+        align-self: flex-start;
+        margin-top: -80px;
+    }
+    .Admin-cood-detail-input-grid { grid-template-columns: 1fr 1fr; gap: 25px; }
+    .Admin-cood-detail-input-grid-three-col { grid-template-columns: 1fr 1fr 1fr; gap: 25px; }
+    .Admin-cood-detail-login-actions-row {
+        grid-template-columns: 1.2fr 1fr 1fr 140px 160px;
+        gap: 15px;
+        align-items: center;
+    }
+    .Admin-cood-detail-login-credentials-wrapper {
+        grid-template-columns: 1fr 280px;
+        gap: 40px;
+        align-items: start;
+    }
+    .Admin-cood-detail-login-fields {
+        grid-template-columns: repeat(3, 1fr) 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .Admin-cood-detail-login-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        width: 100%;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e8e8e8;
+    }
+    .Admin-cood-detail-final-actions { flex-direction: row; justify-content: flex-end; gap: 12px; }
+    .Admin-cood-detail-discard-btn, .Admin-cood-detail-confirm-save-btn { padding: 10px 20px; min-width: 100px; width: 100%; }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .Admin-cood-detail-top-row { grid-template-columns: 1fr; }
+    .Admin-cood-detail-input-grid-three-col { grid-template-columns: 1fr 1fr; }
+}
+
+/* --- SUCCESS MODAL STYLES --- */
+
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.success-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.success-modal-content {
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.success-modal-header {
+    background-color: #4EA24E; 
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 15px 20px;
+}
+
+.success-modal-body {
+    padding: 20px 30px 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.success-modal-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    background-color: #4EA24E;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -50px; 
+    margin-bottom: 20px;
+    border: 5px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.success-modal-icon {
+    width: 60px;
+    height: 60px;
+    filter: brightness(0) invert(1);
+    animation: popIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.success-modal-body h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px 0;
+}
+
+.success-modal-body p {
+    font-size: 1rem;
+    color: #555;
+    margin: 0 0 25px 0;
+    line-height: 1.5;
+}
+
+.success-modal-close-btn {
+    background-color: #B84349; 
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 80%;
+    max-width: 200px;
+}
+
+.success-modal-close-btn:hover {
+    background-color: #a03a40;
+}
+
+/* --- MOBILE SCROLLING OVERRIDES --- */
+@media (max-width: 768px) {
+    .Admin-cood-detail-layout {
+        height: 100vh;
+        overflow: hidden;
+    }
+    .Admin-cood-detail-main-content {
+        overflow-y: auto !important;
+        height: calc(100vh - 65px) !important;
+        padding-bottom: 80px !important;
+    }
+}
+/* --- Popup Styles (from MainRegistration) --- */
+.mr-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.mr-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.mr-popup-header {
+    background-color: #2085f6;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.mr-popup-body {
+    padding: 2.5rem;
+}
+
+.mr-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mr-popup-close-btn-blue {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mr-popup-close-btn-blue:hover {
+    background-color: #1565c0;
+}
+
+/* File Size Error Specifics */
+.mr-image-error-icon-container {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #d32f2f;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(211, 47, 47, 0.4);
+}
+
+.mr-image-error-icon {
+    width: 48px;
+    height: 48px;
+    display: block;
+}
+
+
+.mr-popup-close-btn-red {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mr-popup-close-btn-red:hover {
+    background-color: #b71c1c;
+}

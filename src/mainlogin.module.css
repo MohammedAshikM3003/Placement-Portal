@@ -1,0 +1,363 @@
+/* mainlogin.module.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* --- Page Layout --- */
+.pageContainer {
+    font-family: Arial, sans-serif;
+    background-color: #f5f7fc;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainLayout {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 80px;
+    overflow: auto;
+    /* Custom Scrollbar Logic */
+    scrollbar-width: thin;
+    scrollbar-color: #4F46E5 #f1f3f4;
+}
+
+.mainLayout::-webkit-scrollbar {
+    width: 12px;
+}
+
+.mainLayout::-webkit-scrollbar-track {
+    background-color: #f1f3f4;
+    border-radius: 10px;
+}
+
+.mainLayout::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #4F46E5 0%, #4338CA 100%);
+    border-radius: 10px;
+    border: 3px solid #f1f3f4;
+}
+
+.mainLayout::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #4338CA 0%, #3730A3 100%);
+}
+
+.mainLayout::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* --- Left Side Image --- */
+.leftImageContainer {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.loginVisual {
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* --- Login Box --- */
+.loginBox {
+    width: 420px;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(89, 50, 234, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: 0.3s ease;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.glowOnHover:hover {
+    box-shadow: 0 0 20px rgba(89, 50, 234, 0.9), 0 0 20px rgba(89, 50, 234, 0.4);
+    transform: scale(1.02) translateY(-5px);
+}
+
+.formWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logoContainer {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.logoImage {
+    height: 80px;
+    width: 80px;
+    object-fit: contain;
+}
+
+/* --- Form Fields --- */
+.form {
+    width: 100%;
+}
+
+.field {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.fieldLabel {
+    margin-bottom: 8px;
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 4px;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e1e5e9;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #fafbff;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.inputWrapper:focus-within {
+    border-color: #5932EA;
+    box-shadow: 0 0 0 3px rgba(89, 50, 234, 0.1);
+}
+
+.inputIcon {
+    margin-right: 12px;
+    color: #90a4ae;
+    font-size: 16px;
+}
+
+.inputField {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    width: 100%;
+    color: #333;
+}
+
+/* Hide default password icons */
+.inputField[type="password"]::-ms-reveal,
+.inputField[type="password"]::-webkit-credentials-auto-fill-button { 
+    display: none !important; 
+}
+
+.eyeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #90a4ae;
+    padding: 0;
+    margin-left: 8px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* --- Buttons & Links --- */
+.loginButtonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.loginButton {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 14px;
+    border: none;
+    background: #5932EA;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.loginButtonDisabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.signupText {
+    margin-top: 24px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.link {
+    color: #5932EA;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* --- Error Messages --- */
+.errorMessage {
+    color: #d32f2f;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background-color: #ffebee;
+    border-radius: 12px;
+    border: 2px solid #ef5350;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px;
+    animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+    min-height: 48px;
+    line-height: 1.4;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Popup Styles --- */
+.popupOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+.popupContainer {
+    background-color: white;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: popupSlideIn 0.3s ease-out;
+}
+
+.popupHeader {
+    background-color: #5932EA;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.popupBody {
+    padding: 40px 30px;
+    text-align: center;
+}
+
+.popup404 {
+    font-size: 120px;
+    font-weight: 700;
+    color: #dc3545;
+    line-height: 1;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.popupTitle {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 15px 0;
+}
+
+.popupDesc {
+    font-size: 16px;
+    color: #666;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.popupButtons {
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.popupBtnClose {
+    background-color: rgb(108, 117, 125);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    min-width: 100px;
+}
+
+.popupBtnClose:hover { background-color: rgb(92, 101, 110); }
+
+.popupBtnSignup {
+    background-color: rgb(89, 50, 234);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    min-width: 100px;
+}
+
+.popupBtnSignup:hover { background-color: rgb(70, 40, 200); }
+
+@keyframes popupSlideIn {
+    from { opacity: 0; transform: scale(0.8) translateY(-20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+    .mainLayout {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        gap: 30px;
+    }
+    .leftImageContainer { display: none; }
+}
+
+@media (max-width: 768px) {
+    .mainLayout { padding: 20px; height: 100vh; overflow: hidden; }
+    .loginBox { width: 100%; max-width: 400px; padding: 30px 24px; box-shadow: none; border: 1px solid #e1e5e9; min-height: auto; margin: 0 auto; }
+}
+
+@media (max-height: 500px) and (max-width: 1024px) {
+    .mainLayout { justify-content: flex-start; padding-top: 20px; }
+    .loginBox { padding: 20px; }
+}

@@ -1,0 +1,799 @@
+/* --- Base Layout --- */
+.Admin-cp-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+    position: relative;
+    /* ADDED: Ensure layout uses full height on desktop */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar Wrapper: Defaults for Desktop */
+.Admin-cp-sidebar-wrapper {
+    width: auto;
+    flex-shrink: 0;
+    /* Desktop: Sidebar is just part of the flow */
+    position: relative; 
+    transform: none;
+}
+
+/* Main Content */
+.Admin-cp-main-content {
+    flex-grow: 1;
+    padding: 10px;
+    margin: 65px 2px 0px 286px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-x: hidden;
+}
+
+/* Mobile Toggle Button (Hidden by default on Desktop) */
+.Admin-cp-mobile-toggle {
+    display: none; /* Desktop: Hidden */
+    cursor: pointer;
+    padding: 10px 0;
+    margin-left: 5px;
+    align-self: flex-start;
+    z-index: 100;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Top Card (Filter and Actions) */
+.Admin-cp-top-card {
+    background-color: transparent;
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    margin-left: 15px;
+    height: 245px;
+}
+
+/* Filter Section */
+.Admin-cp-filter-section {
+    flex: 1;
+    background-color: #e8e8e8;
+    padding: 20px;
+    border-radius: 43px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 750px;
+}
+
+.Admin-cp-filter-header-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.Admin-cp-filter-header {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    background-color: #4EA24E;
+    color: white;
+    padding: 6px 0px 9px 0px;
+    margin: 0 auto; 
+    border-radius: 30px;
+    display: block;
+    width: 228px;
+}
+
+.Admin-cp-filter-icon-container {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #4EA24E;
+}
+
+.Admin-cp-filter-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex-grow: 1;
+    align-content: center;
+}
+
+/* Dropdown styling */
+.Admin-cp-dropdown-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-cp-dropdown {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    appearance: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #999;
+}
+
+.Admin-cp-dropdown-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+}
+
+.Admin-cp-select-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+    line-height: 1;
+    z-index: 2;
+}
+
+.Admin-cp-text-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: visible;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+/* Visiting Date Filter Styling */
+.Admin-cp-text-container.date-container { 
+    overflow: visible;
+    position: relative;
+    z-index: 1000;
+}
+
+/* Hide floating label for date field */
+.Admin-cp-text-container.date-container .Admin-cp-floating-label {
+    display: none;
+}
+
+/* Show placeholder for date field */
+.Admin-cp-text-container.date-container .Admin-cp-datepicker-input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-cp-datepicker-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Global datepicker popper styling */
+:global(.datepicker-popper) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker-popper) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker__tab-loop) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker-wrapper) {
+    z-index: 1000;
+}
+
+.Admin-cp-datepicker-input {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 42px;
+}
+
+.Admin-cp-datepicker-input::placeholder {
+    color: #999;
+}
+
+.Admin-cp-datepicker-input:focus {
+    outline: none;
+}
+
+.Admin-cp-text.date-input {
+    width: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.Admin-cp-text.date-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    opacity: 0.6;
+    width: 20px;
+    height: 20px;
+}
+.Admin-cp-text.date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+
+.Admin-cp-floating-label {
+    position: absolute;
+    left: 15px;
+    top: 45%;
+    transform: translateY(-50%);
+    padding: 0;
+    color: #999;
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1;
+    background-color: #ffffff;
+}
+.Admin-cp-text-container.has-value .Admin-cp-floating-label,
+.Admin-cp-text-container.is-focused .Admin-cp-floating-label {
+    top: -15px;
+    left: 10px;
+    font-size: 0.75rem;
+    color: #4EA24E;
+    font-weight: 600;
+    padding: 0 5px;
+    background-color: #e8e8e8;
+}
+
+.Admin-cp-text {
+width: 89%;
+height: 100%;
+padding: 0px 15px;
+border: none;
+background-color: transparent;
+cursor: text;
+font-size: 0.95rem;
+color: #999;
+position: relative;
+z-index: 0;
+}
+
+.Admin-cp-select {
+    width: 100%;
+    padding: 8px 15px 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+}
+
+.Admin-cp-text::placeholder {
+color: transparent;
+}
+
+.Admin-cp-text:focus,
+.Admin-cp-dropdown:focus {
+outline: none;
+}
+
+.Admin-cp-text-container:hover,
+.Admin-cp-text-container.is-focused,
+.Admin-cp-dropdown-container:hover {
+border-color: #4EA24E;
+}
+
+.Admin-cp-dropdown-container {
+position: relative;
+}
+
+.Admin-cp-dropdown-container .Admin-cp-floating-label {
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    color: #999;
+    font-weight: 500;
+}
+
+.Admin-cp-dropdown-container:not([data-filled="true"]) .Admin-cp-dropdown {
+    color: #999;
+}
+
+.Admin-cp-dropdown-container[data-filled="true"] .Admin-cp-dropdown {
+    color: #333;
+}
+
+.Admin-cp-button-group {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    margin-bottom: 5px;
+    gap: 45px;
+    border-radius: 10px;
+}
+
+.Admin-cp-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 700;
+    flex: 1;
+    transition: opacity 0.2s;
+    max-width: 150px;
+}
+
+.Admin-cp-search-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+}
+
+.Admin-cp-search-btn:hover { background-color: #3d8a3d; }
+
+/* Action Cards Section */
+.Admin-cp-action-cards-section {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.Admin-cp-action-card {
+    flex: 0 0 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 12px 15px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 2px solid #808080;
+}
+
+.Admin-cp-action-addcard {
+    text-align: center;
+    width: 211px;
+    flex-shrink: 0;
+    padding: 5px 15px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 2px solid #808080;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Add Company Card Special Styling */
+.Admin-cp-add-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-color: #808088;
+}
+
+.Admin-cp-add-card:hover {
+    box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
+    border-color: #4EA24E;
+}
+
+.Admin-cp-add-icon { margin-bottom: 10px; margin-top: 10px; }
+.Admin-cp-add-header {
+    font-size: 1.9rem;
+    font-weight: 720;
+    margin-bottom: 10px;
+    color: #0f0e0e;
+    margin: auto;
+    letter-spacing: 1.5px;
+    line-height: 30px;
+}
+.Admin-cp-add-description {
+    font-size: 1rem;
+    color: #666;
+    margin-top: 8px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+/* Edit/Delete Card Styling */
+.Admin-cp-action-card:nth-child(2), .Admin-cp-action-card:nth-child(3) { border: 2px solid #808080; }
+.Admin-cp-action-header { font-size: 1.4rem; font-weight: 500; margin-bottom: 5px; margin-top: 0; color: #4EA24E; }
+.Admin-cp-action-description {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 15px;
+    margin-top: -2px;
+    padding: 0 5px;
+    font-weight: 500;
+    line-height: 1.3;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    min-height: 70px;
+}
+
+.Admin-cp-action-btn {
+    padding: 8px 25px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 100px;
+    transition: opacity 0.2s;
+    font-size: 0.9rem;
+}
+.Admin-cp-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.Admin-cp-edit-btn { background-color: #5932EA; color: white; border-radius: 20px; }
+.Admin-cp-delete-btn { background-color: #ff0000; color: white; border-radius: 20px; }
+
+/* ---------------------------------------------------------------------- */
+/* Bottom Card (Company Table) */
+.Admin-cp-bottom-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 10px 25px;
+    /* FIXED: Removed desktop margin and fixed width */
+    margin-left: 0;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.Admin-cp-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    z-index: 15;
+    margin-bottom: -20px;
+    top: -17px;
+}
+
+.Admin-cp-table-title { font-size: 1.5rem; font-weight: 700; color: #333; }
+.Admin-cp-table-actions { display: flex; align-items: center; gap: 12px; }
+.Admin-cp-print-button-container { position: relative; display: inline-block; z-index: 15; }
+.Admin-cp-print-btn { background-color: #4EA24E; color: white; border: none; padding: 8px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; }
+.Admin-cp-print-btn:hover { background-color: #3d8a3d; }
+
+.Admin-cp-export-menu {
+    position: absolute; top: 40px; right: 0; z-index: 2000; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); min-width: 180px; display: flex; flex-direction: column; overflow: hidden;
+}
+.Admin-cp-export-menu button { padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer; font-size: 0.95rem; color: #333; transition: background-color 0.2s; }
+.Admin-cp-export-menu button:hover { background-color: #f0f0f0; }
+
+/* Table Styles */
+.Admin-cp-table-container { height: 300px; overflow-y: scroll; overflow-x: auto; border: none; border-radius: 0; }
+
+/* --- GREEN SCROLLBARS --- */
+.Admin-cp-table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+.Admin-cp-table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 2px; }
+.Admin-cp-table-container::-webkit-scrollbar-thumb { background: #4EA24E; border-radius: 4px; }
+.Admin-cp-table-container::-webkit-scrollbar-thumb:hover { background: #3d8a3d; }
+
+.Admin-cp-students-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 0.9rem; white-space: nowrap; }
+.Admin-cp-table-head-row { position: sticky; top: 0; background-color: #ffffff; border-bottom: none; z-index: 11; }
+.Admin-cp-th { padding: 8px 10px; text-align: center; font-weight: 600; color: #666; text-transform: uppercase; font-size: 0.85rem; background-color: #ffffff; border-bottom: none; }
+.Admin-cp-table-row { cursor: pointer; transition: background-color 0.1s; border-bottom: 1px solid #eee; height: 47px; }
+.Admin-cp-table-row:hover { background-color: #f6f6f6; }
+.Admin-cp-selected-row { background-color: #e0ffe0 !important; }
+.Admin-cp-td { padding: 8px 10px; text-align: left; color: #2e2e2e; font-weight: 450px; white-space: nowrap; }
+
+/* Column widths */
+.Admin-cp-checkbox { width: 50px; text-align: center; }
+.Admin-cp-sno { width: 50px; text-align: center; }
+.Admin-cp-company { width: 120px; text-align: center; }
+.Admin-cp-domain { width: 100px; text-align: center; }
+.Admin-cp-job-role { width: 120px; text-align: center; }
+.Admin-cp-hr-name { width: 100px; text-align: center; }
+.Admin-cp-mode { width: 80px; text-align: center; }
+.Admin-cp-visit-date { width: 110px; text-align: center; }
+.Admin-cp-location { width: 100px; text-align: center; }
+.Admin-cp-profile { width: 60px; text-align: center; }
+.Admin-cp-package { width: 60px; text-align: center; }
+.Admin-cp-location { min-width: 80px; text-align: center; }
+
+/* Status Tag Styles */
+.Admin-cp-status-tag { display: inline-block; padding: 4px 10px; border-radius: 5px; font-weight: 600; font-size: 0.8rem; text-transform: capitalize; text-align: center; min-width: 70px; }
+.Admin-cp-status-confirmed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 30px; }
+.Admin-cp-status-pending { background-color: #ffe3ce; border: 1px solid #ffe3ce; color: #856404; border-radius: 30px; }
+.Admin-cp-checkbox-input { width: 18px; height: 18px; cursor: pointer; accent-color: #4EA24E; }
+
+/* --- POPUP STYLES --- */
+.Admin-cp-popup-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;
+}
+
+.Admin-cp-delete-popup-container {
+    background-color: #ffffff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); width: 100%; max-width: 380px; text-align: center; overflow: hidden; animation: slideUp 0.3s ease-in-out; z-index: 1002;
+}
+
+.Admin-cp-delete-popup-header { background-color: #4EA24E; color: white; font-size: 2.2rem; font-weight: 700; padding: 20px 30px; }
+.Admin-cp-delete-popup-header.warning-header { background-color: #4EA24E; }
+.Admin-cp-delete-popup-header.deleted-header { background-color: #4EA24E; }
+.Admin-cp-delete-popup-header.updated-header { background-color: #4EA24E; }
+
+.Admin-cp-delete-popup-content { padding: 30px 40px; display: flex; flex-direction: column; align-items: center; }
+
+.Admin-cp-delete-icon-wrapper {
+    width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+.Admin-cp-update-icon-wrapper svg {
+    animation: rotateIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rotateIn { from { transform: rotate(-180deg) scale(0.5); opacity: 0; } to { transform: rotate(0) scale(1); opacity: 1; } }
+
+.Admin-cp-delete-title { font-size: 1.6rem; font-weight: 700; color: #333; margin-top: 0px; margin-bottom: 10px; }
+.Admin-cp-delete-text { font-size: 0.95rem; color: #666; margin: 0 0 25px 0; line-height: 1.5; }
+.Admin-cp-delete-button-group { display: flex; justify-content: center; gap: 15px; width: 100%; }
+
+.Admin-cp-delete-btn { border: none; border-radius: 30px; padding: 8px 25px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; flex: 1; }
+.Admin-cp-delete-btn.confirm-btn { background-color: #7F7676; color: white; }
+.Admin-cp-delete-btn.confirm-btn:hover { background-color: #6a6161; }
+.Admin-cp-delete-btn.close-btn { background-color: #B84349; color: white; }
+.Admin-cp-delete-btn.close-btn:hover { background-color: #a03a40; }
+
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+
+@media screen and (max-width: 1024px) {
+    /* 1. Reset Fixed Margins used in Desktop */
+    .Admin-cp-top-card, .Admin-cp-bottom-card {
+        margin-left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* 2. Sidebar Drawer Logic */
+    .Admin-cp-print-button-container { position: relative; display: inline-block; z-index: 15; margin-top: -80px; }
+    .Admin-cp-sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: auto;
+        z-index: 3000;
+        pointer-events: none;
+    }
+    .Admin-cp-sidebar-wrapper.open { pointer-events: auto; }
+
+    /* Dark Overlay to dim content when sidebar is open */
+    .Admin-cp-sidebar-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 2990;
+        pointer-events: auto;
+    }
+    
+    /* Show Toggle Button on Mobile */
+    .Admin-cp-mobile-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    /* --- FIX: Main Content Area --- */
+    .Admin-cp-main-content {
+        padding: 15px;
+        padding-top: 80px; 
+        height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        gap: 15px;
+    }
+
+    /* --- FIX: Green Scrollbar for Main Content --- */
+    .Admin-cp-main-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .Admin-cp-main-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    .Admin-cp-main-content::-webkit-scrollbar-thumb {
+        background: #4EA24E;
+        border-radius: 4px;
+    }
+    .Admin-cp-main-content::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    /* Top Card Layout: Stack vertically */
+    .Admin-cp-top-card {
+        flex-direction: column;
+        height: auto;
+        gap: 15px;
+        margin-top: 0px;
+        position: relative;
+    }
+
+    /* Filter Section Adjustments */
+    .Admin-cp-filter-section {
+        min-width: unset;
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 20px;
+    }
+    
+    .Admin-cp-filter-content {
+        grid-template-columns: 1fr;
+    }
+
+    /* Add Card Adjustments */
+    .Admin-cp-action-addcard {
+        width: 100%;
+        height: auto;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    /* Edit/Delete Cards Container */
+    .Admin-cp-action-cards-section {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding-bottom: 0;
+        justify-content: flex-start;
+    }
+    
+    .Admin-cp-action-card {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 140px;
+    }
+
+    /* Table Section Adjustments */
+    .Admin-cp-bottom-card {
+        padding: 10px;
+        margin-top: 20px; /* Reduced margin from 600px */
+        position: relative;
+        box-sizing: border-box;
+    }
+    
+    .Admin-cp-table-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .Admin-cp-table-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .Admin-cp-table-container {
+        max-height: 60vh; 
+        overflow: auto; 
+        -webkit-overflow-scrolling: touch; 
+        overscroll-behavior: contain;
+        scrollbar-width: thin; 
+        scrollbar-color: #4EA24E #f0f0f0 !important; 
+    }
+
+    /* Explicit Green scrollbar for Mobile Table */
+    .Admin-cp-table-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .Admin-cp-table-container::-webkit-scrollbar-track {
+        background: #f0f0f0; 
+        border-radius: 4px;
+    }
+    .Admin-cp-table-container::-webkit-scrollbar-thumb {
+        background-color: #4EA24E !important; 
+        border-radius: 6px;
+    }
+
+    /* Align popup to top for scrolling */
+    .Admin-cp-popup-overlay {
+        align-items: flex-start;
+        padding: 90px 10px;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
+    .Admin-cp-popup-container.is-form,
+    .Admin-cp-popup-container.is-success {
+        max-width: 95vw;
+        margin-top: 0;
+    }
+}
+
+/* Loading Spinner Styles */
+.Admin-cp-loading-cell {
+    text-align: center;
+    padding: 48px 0;
+    width: 100%;
+    min-height: calc(72px * 3);
+    position: relative;
+}
+
+.Admin-cp-loading-row {
+    height: 100%;
+}
+
+.Admin-cp-loading-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    text-align: center;
+}
+
+.Admin-cp-spinner {
+    width: 34px;
+    margin-top: 50px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adminCompanyProfileSpin 0.7s linear infinite;
+}
+
+@keyframes adminCompanyProfileSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Admin-cp-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Eye Icon for View Column */
+.Admin-cp-profile-eye-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #4EA24E;
+}
+
+.Admin-cp-profile-eye-icon:hover {
+    transform: scale(1.1);
+    color: #3d9142;
+}

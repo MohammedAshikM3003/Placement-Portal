@@ -1,0 +1,437 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* =================================== */
+/* ===== CUSTOM SCROLLBAR STYLING ===== */
+/* =================================== */
+
+/* Desktop Custom Scrollbar Styles */
+.stu-db-dashboard-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+.stu-db-dashboard-area::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+
+.stu-db-dashboard-area::-webkit-scrollbar-thumb {
+    background-color: #2085f6; /* Blue theme for student pages */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.stu-db-dashboard-area::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA; /* Darker shade for hover */
+}
+
+/* =================================== */
+/* ===== BASE LAYOUT STYLES ===== */
+/* =================================== */
+
+.stu-db-container {
+  font-family: 'Poppins', sans-serif;
+  background: #f8f8fb;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.stu-db-main {
+  display: flex;
+  margin-top: 55px;
+  height: calc(100vh - 55px);
+  overflow: hidden;
+}
+
+.stu-db-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+/* =================================== */
+/* ===== DASHBOARD CONTENT AREA ===== */
+/* =================================== */
+
+.stu-db-dashboard-area {
+  flex: 1;
+  padding: 50px 32px 15px 32px;
+  background: #fff;
+  overflow: hidden; /* CRITICAL: Prevents scrollbar on desktop */
+  transition: margin-left 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Move content to bottom */
+  align-items: center; /* Center content horizontally */
+  min-height: calc(100vh - 65px);
+  max-height: calc(100vh - 80px); /* Prevent vertical overflow on desktop */
+  margin-left: 230px;
+  box-sizing: border-box;
+}
+
+/* =================================== */
+/* ===== COLLEGE HEADER ===== */
+/* =================================== */
+
+.stu-db-college-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-shrink: 0; 
+  justify-content: center;
+  width: 100%;
+}
+
+.stu-db-college-logo {
+  width: 130px;
+  height: 115px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.stu-db-college-name {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 2.3em;
+  font-weight: bold;
+  color: #191c24;
+}
+
+.stu-db-college-name span {
+  color: #e84343;
+}
+
+/* =================================== */
+/* ===== DASHBOARD GRID (DESKTOP) ===== */
+/* =================================== */
+
+.stu-db-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 250px 220px; /* Fixed heights */
+  gap: 20px;
+  row-gap: 30px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* =================================== */
+/* ===== CARD STYLES ===== */
+/* =================================== */
+
+.stu-db-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 3px solid #e0e0e0;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.stu-db-card:hover {
+  border-color: #2085f6; /* Blue theme for students */
+  box-shadow: 0 4px 12px rgba(32, 133, 246, 0.15);
+  transform: translateY(-5px);
+}
+
+.stu-db-card-icon {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.stu-db-card-icon img {
+  height: 55px;
+  width: auto;
+}
+
+.stu-db-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.stu-db-card-sub {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0; 
+}
+
+/* =================================== */
+/* ===== ATTENDANCE CARD STYLES ===== */
+/* =================================== */
+
+.stu-db-attendance-card {
+  grid-column: span 2;
+  justify-content: center; 
+  cursor: pointer;
+}
+
+.stu-db-new-attendance-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a202c;
+  margin-bottom: 24px;
+  width: 100%;
+  text-align: left;
+}
+
+.stu-db-attendance-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-grow: 1;
+  width: 100%;
+  margin-bottom: 30px;
+  padding: 0 40px;
+}
+
+.stu-db-attendance-chart-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  order: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stu-db-attendance-donut-chart {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+}
+
+.stu-db-attendance-chart-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 75%;
+  height: 75%;
+  background-color: #ffffff;
+  border-radius: 50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stu-db-attendance-chart-center-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a202c;
+}
+
+.stu-db-attendance-chart-center-label {
+  font-size: 0.8rem;
+  color: #718096;
+  text-transform: uppercase;
+}
+
+.stu-db-attendance-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+  flex-grow: 0;
+  order: 1;
+}
+
+.stu-db-attendance-detail-item {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  color: #718096;
+}
+
+.stu-db-attendance-detail-value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stu-db-attendance-present-value { 
+  color: #00C495; 
+}
+
+.stu-db-attendance-absent-value { 
+  color: #FF6B6B; 
+}
+
+/* =================================== */
+/* ===== TABLET RESPONSIVENESS ===== */
+/* =================================== */
+
+@media (max-width: 992px) {
+  .stu-db-dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 15px;
+    row-gap: 20px;
+  }
+  
+  .stu-db-attendance-card {
+    grid-column: span 2;
+    flex-direction: row;
+  }
+}
+
+/* =================================== */
+/* ===== MOBILE RESPONSIVENESS ===== */
+/* =================================== */
+
+@media (max-width: 768px) {
+  /* CRITICAL: Enable scrolling on mobile */
+  .stu-db-dashboard-area {
+    padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 120px) 16px;
+    overflow-y: auto; /* ENABLE vertical scrolling */
+    overflow-x: hidden;
+    max-height: none; /* Allow content to expand */
+    margin-left: 0; /* Remove sidebar margin */
+    justify-content: flex-start; /* Reset alignment for scrolling */
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile Scrollbar Styling */
+  .stu-db-dashboard-area::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .stu-db-dashboard-area::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .stu-db-dashboard-area::-webkit-scrollbar-thumb {
+    background-color: #2085f6;
+    border-radius: 20px;
+    border: 2px solid #f0f2f5;
+  }
+
+  .stu-db-dashboard-area::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA;
+  }
+
+  /* College Header Mobile Styles */
+  .stu-db-college-header {
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .stu-db-college-name {
+    font-size: 1.5em;
+  }
+
+  /* Grid Mobile Styles */
+  .stu-db-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    row-gap: 15px;
+  }
+
+  .stu-db-attendance-card {
+    grid-column: span 1;
+    flex-direction: column;
+  }
+
+  /* Card Mobile Styles */
+  .stu-db-card {
+    transform: none !important;
+    padding: 12px;
+  }
+
+  .stu-db-card:hover {
+    transform: none;
+  }
+
+  .stu-db-attendance-card-content {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
+    padding: 0 10px;
+  }
+
+  .stu-db-attendance-chart-wrapper {
+    order: -1;
+    margin-left: 0;
+    width: 120px;
+    height: 120px;
+  }
+
+  .stu-db-attendance-details-wrapper {
+    text-align: left;
+    gap: 15px;
+    order: 1;
+    flex-grow: 0;
+  }
+
+  .stu-db-card-icon img {
+    height: 45px;
+  }
+
+  .stu-db-dashboard-area {
+    padding-bottom: 120px;
+  }
+}
+
+/* =================================== */
+/* ===== EXTRA SMALL SCREENS ===== */
+/* =================================== */
+
+@media (max-width: 480px) {
+  .stu-db-attendance-card-content {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0px;
+  }
+
+  .stu-db-attendance-chart-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-left: 0;
+  }
+
+  .stu-db-attendance-details-wrapper {
+    gap: 12px;
+    flex-grow: 0;
+  }
+
+  .stu-db-attendance-detail-value {
+    font-size: 28px;
+  }
+
+  .stu-db-attendance-chart-center-value {
+    font-size: 1.5rem;
+  }
+
+  .stu-db-attendance-chart-center-label {
+    font-size: 0.7rem;
+  }
+
+  .stu-db-dashboard-area {
+    padding-bottom: 120px;
+  }
+}
+

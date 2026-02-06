@@ -1,0 +1,430 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap');
+
+/* --- GLOBAL & WRAPPER STYLES --- */
+.co-db-wrapper {
+  font-family: 'Poppins', sans-serif;
+  background: #fff;
+  padding-top: 64px; /* Space for fixed navbar */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.co-db-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  margin-top: -64px;
+}
+
+/* --- MAIN CONTAINER --- */
+.coordinator-dashboard-page {
+  display: flex;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.coordinator-dashboard-page .co-db-main {
+  display: flex;
+  flex: 1;
+  margin-top: 64px;
+  align-items: stretch;
+}
+
+/* --- DASHBOARD CONTENT AREA --- */
+.coordinator-dashboard-page .co-db-dashboard-area {
+  flex: 1;
+  padding: 15px 35px 15px 35px;
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-left: 290px;
+  transition: margin-left 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  height: calc(100vh - 64px);
+  box-sizing: border-box;
+}
+
+/* --- HEADER --- */
+.coordinator-dashboard-page .co-db-college-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-shrink: 0; 
+  justify-content: center; /* Center the header */
+  width: 100%;
+}
+.coordinator-dashboard-page .co-db-college-logo {
+  width: 130px;
+  height: 115px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.coordinator-dashboard-page .co-db-college-name {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 2.3em;
+  font-weight: bold;
+  color: #191c24;
+}
+.coordinator-dashboard-page .co-db-college-name span {
+  color: #e84343;
+}
+
+/* --- GRID & CARD STYLES (DESKTOP) --- */
+.coordinator-dashboard-page .co-db-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 250px 220px; /* Fixed heights: 250px for top row, 220px for bottom row */
+  gap: 20px;
+  row-gap: 30px; /* Extra gap between rows */
+  max-width: 1200px; /* Increased width for 4 columns */
+  width: 100%;
+  align-self: stretch;
+}
+
+.coordinator-dashboard-page .co-db-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 3px solid #e0e0e0;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 15px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.coordinator-dashboard-page .co-db-card:hover {
+  border-color: #d23b42;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.15);
+  transform: translateY(-5px);
+}
+
+.coordinator-dashboard-page .co-db-card-icon {
+  margin-bottom: 10px;
+  text-align: center;
+}
+.coordinator-dashboard-page .co-db-card-icon img {
+  height: 55px;
+  width: auto;
+}
+.coordinator-dashboard-page .co-db-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+.coordinator-dashboard-page .co-db-card-sub {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0; 
+}
+
+/* Specific Card Adjustments */
+.coordinator-dashboard-page .co-db-card-drive .co-db-card-icon img { height: 50px; }
+/* This negative margin is for desktop only */
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-icon img { height: 100px; width: 110px; margin-left: -100px;}
+.coordinator-dashboard-page .co-db-account-card .co-db-card-icon img { height: 55px; }
+.coordinator-dashboard-page .co-db-drive-details { text-align: left; font-size: 0.8rem; margin-top: 6px; }
+.coordinator-dashboard-page .co-db-drive-details p { margin: 3px 0; }
+.coordinator-dashboard-page .co-db-drive-details strong {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.coordinator-dashboard-page .co-db-card-certificates {
+  grid-column: span 2;
+  flex-direction: row; 
+  align-items: center; 
+  gap: 20px;
+  justify-content: flex-start;
+  padding: 25px;
+}
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-icon {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-icon img {
+  height: 80px;
+  width: auto;
+  margin-left: 0;
+}
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-content {
+  flex: 1;
+}
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-title, 
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-sub { 
+  text-align: left; 
+  margin: 0;
+}
+.coordinator-dashboard-page .co-db-card-certificates .co-db-card-title {
+  margin-bottom: 8px;
+}
+
+.coordinator-dashboard-page .co-db-attendance-card {
+  grid-column: span 2;
+  justify-content: center; 
+}
+
+/* New Attendance Card Styles */
+.coordinator-dashboard-page .co-db-new-attendance-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a202c;
+  margin-bottom: 24px;
+  width: 100%;
+  text-align: left;
+}
+
+/* Flex container for the chart and the text details */
+.coordinator-dashboard-page .co-db-attendance-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-grow: 1;
+  width: 100%;
+  margin-bottom: 30px;
+  padding: 0 40px;
+}
+
+/* Wrapper for the donut chart */
+.coordinator-dashboard-page .co-db-attendance-chart-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  order: -1;
+}
+
+/* The actual donut chart circle using a conic gradient */
+.coordinator-dashboard-page .co-db-attendance-donut-chart {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+}
+
+/* The white circle in the middle with the percentage */
+.coordinator-dashboard-page .co-db-attendance-chart-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 75%;
+  height: 75%;
+  background-color: #ffffff;
+  border-radius: 50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Styles for the text inside the center circle */
+.coordinator-dashboard-page .co-db-attendance-chart-center-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a202c;
+}
+
+.coordinator-dashboard-page .co-db-attendance-chart-center-label {
+  font-size: 0.8rem;
+  color: #718096;
+  text-transform: uppercase;
+}
+
+/* Wrapper for the "Present" and "Absent" details on the right */
+.coordinator-dashboard-page .co-db-attendance-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+  flex-grow: 0;
+  order: 1;
+}
+
+/* Styles for each detail item ("Present", "Absent") */
+.coordinator-dashboard-page .co-db-attendance-detail-item {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  color: #718096;
+}
+
+/* Styles for the large number values */
+.coordinator-dashboard-page .co-db-attendance-detail-value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Specific colors for present and absent values */
+.coordinator-dashboard-page .co-db-attendance-present-value { color: #00C495; }
+.coordinator-dashboard-page .co-db-attendance-absent-value { color: #FF6B6B; }
+
+/* Desktop scrollbar - red styling to match theme */
+.coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 992px) {
+  /* Red scrollbar on mobile */
+  .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+
+  .coordinator-dashboard-page .co-db-dashboard-area {
+    margin-left: 0;
+    padding: 20px 15px;
+  }
+  .coordinator-dashboard-page .co-db-dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto; /* Auto height for mobile */
+    gap: 15px;
+    row-gap: 20px;
+  }
+  .coordinator-dashboard-page .co-db-card-certificates, 
+  .coordinator-dashboard-page .co-db-attendance-card {
+    grid-column: span 2; /* Keep spanning 2 columns on tablets */
+    flex-direction: row;
+  }
+  .coordinator-dashboard-page .co-db-card-certificates .co-db-card-title, 
+  .coordinator-dashboard-page .co-db-card-certificates .co-db-card-sub { 
+    text-align: left;
+  }
+  .coordinator-dashboard-page .co-db-card-certificates .co-db-card-icon img {
+    margin-left: 0;
+    height: 60px;
+    width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .coordinator-dashboard-page .co-db-dashboard-area {
+    padding: 15px 16px 30px 16px;
+    overflow-y: auto;
+    max-height: none; /* Allow scrolling on mobile */
+    position:absolute;
+  }
+  .coordinator-dashboard-page .co-db-college-header {
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  .coordinator-dashboard-page .co-db-college-name {
+    font-size: 1.5em;
+  }
+  .coordinator-dashboard-page .co-db-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    row-gap: 15px;
+  }
+  .coordinator-dashboard-page .co-db-card-certificates, 
+  .coordinator-dashboard-page .co-db-attendance-card {
+    grid-column: span 1; /* Single column on mobile */
+    flex-direction: column;
+  }
+  .coordinator-dashboard-page .co-db-card-certificates .co-db-card-title, 
+  .coordinator-dashboard-page .co-db-card-certificates .co-db-card-sub { 
+    text-align: center;
+  }
+  .coordinator-dashboard-page .co-db-card {
+    transform: none !important;
+    padding: 12px;
+  }
+  .coordinator-dashboard-page .co-db-card:hover {
+    transform: none;
+  }
+  .coordinator-dashboard-page .co-db-attendance-card-content {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
+    padding: 0 10px;
+  }
+  .coordinator-dashboard-page .co-db-attendance-chart-wrapper {
+    order: -1;
+    margin-left: 0;
+    width: 120px;
+    height: 120px;
+  }
+  .coordinator-dashboard-page .co-db-attendance-details-wrapper {
+    text-align: left;
+    gap: 15px;
+    order: 1;
+    flex-grow: 0;
+  }
+  .coordinator-dashboard-page .co-db-card-icon img {
+    height: 45px;
+  }
+}
+
+/* Extra small screens - maintain horizontal layout but adjust sizing */
+@media (max-width: 480px) {
+  .coordinator-dashboard-page .co-db-attendance-card-content {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0 5px;
+  }
+  .coordinator-dashboard-page .co-db-attendance-chart-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-left: 0;
+  }
+  .coordinator-dashboard-page .co-db-attendance-details-wrapper {
+    gap: 12px;
+    flex-grow: 0;
+  }
+  .coordinator-dashboard-page .co-db-attendance-detail-value {
+    font-size: 28px;
+  }
+  .coordinator-dashboard-page .co-db-attendance-chart-center-value {
+    font-size: 1.5rem;
+  }
+  .coordinator-dashboard-page .co-db-attendance-chart-center-label {
+    font-size: 0.7rem;
+  }
+}

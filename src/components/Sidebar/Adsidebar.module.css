@@ -1,0 +1,208 @@
+.adsidebar {
+  background: #fff;
+  width: 290px;
+  height: calc(100vh - 64px);
+  box-shadow: 2px 0 12px #e1e6ef3a;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 64px;
+  /* Allow scrolling when sidebar content is taller than viewport so Logout
+     and lower items are always reachable. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000; /* Below popup overlay */
+  transition: transform 0.3s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 1px;
+  will-change: transform; /* Improve animation smoothness */
+}
+
+/* Responsive rules for mobile view */
+@media (max-width: 992px) {
+  .adsidebar {
+    transform: translateX(-100%);
+  }
+  .adsidebar.open {
+    transform: translateX(0);
+  }
+}
+
+.adsidebar .ad-user-info {
+  padding: 0px 20px 0px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-user-details {
+  margin-top: 8px;
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #191c24;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Style for profile images */
+.adsidebar .ad-user-details img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #4ea24e;
+}
+
+/* Placeholder circle when no profile photo */
+.adsidebar .ad-placeholder-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.adsidebar .ad-placeholder-circle img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border: none;
+}
+
+
+
+.adsidebar .ad-user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+  text-align: left;
+}
+
+.adsidebar .ad-user-text span {
+  font-size: 1em;
+  font-weight: 600;
+  color: #191c24;
+  line-height: 1.2;
+  word-break: break-word;
+  text-align: left;
+}
+
+.adsidebar .ad-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 0;
+}
+
+.adsidebar .ad-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-nav-item {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  padding: 10px 25px;
+  color: #222;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  gap: 15px;
+  border-left: 4px solid transparent;
+  margin: 3px 0;
+}
+
+.adsidebar .ad-nav-text {
+  white-space: nowrap;
+}
+
+
+/* FIX: Split hover and selected styles. Bold text is now ONLY on selected items. */
+
+/* --- SELECTED ITEM STYLES (Clicked) --- */
+.adsidebar .ad-nav-item.selected {
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
+  color: #4ea24e;
+  font-weight: 600; /* Bold text for selected item */
+}
+
+.adsidebar .ad-nav-item.selected img {
+filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+}
+.adsidebar .ad-nav-item.selected img {
+  /* Remove the filter line */
+  fill: #eef0ee; /* Only works if 'img' is an SVG */
+}
+
+
+/* --- HOVER ITEM STYLES (Mouse over) --- */
+.adsidebar .ad-nav-item:hover:not(.selected) {
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
+  color: #4ea24e;
+  /* No font-weight change on hover */
+}
+
+.adsidebar .ad-nav-item:hover:not(.selected) img {
+  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+
+}
+/* --- END OF FIX --- */
+
+
+.adsidebar .ad-nav-item img {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.2s;
+}
+
+.adsidebar .ad-nav-divider {
+  height: 1px;
+  width: 85%;
+  background: #e0e0e0;
+  margin: 4px auto;
+  border-top: 1px dotted #ccc;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-logout-btn {
+  background: #d23b42;
+  color: #fff;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  width: calc(100% - 40px);
+  margin: 5px 20px 20px 20px;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.adsidebar .ad-logout-btn:hover {
+  background: #d55a6a;
+}

@@ -1,0 +1,459 @@
+/* ============================================================ */
+/* === ADMIN BRANCH MAIN PAGE - LIST VIEW (FULLY FIXED) === */
+/* ============================================================ */
+
+.Admin-add-branch-layout {
+  display: flex;
+  height: 100vh; /* Fixed viewport height to block browser scroll */
+  background: #f8f8f8;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden; 
+  margin: 0;
+  padding: 0;
+}
+
+.Admin-add-branch-main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 40px 20px 40px; /* Moves cards up */
+  margin-left: 280px; /* Sidebar offset */
+  margin-top: 67px;  /* Navbar offset */
+  height: calc(100vh - 67px);
+  overflow: hidden; 
+}
+
+/* Three Cards: Identical grid and fixed height for perfect matching */
+.Admin-add-branch-stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  flex-shrink: 0;
+  height: 220px; /* Locked height */
+  margin-bottom: 30px; 
+}
+
+/* Card Styling: Center-aligned to match Image 2 */
+.Admin-add-branch-card {
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Centers all text/icons vertically */
+  text-align: center;
+  height: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+.Admin-add-branch-card-green { background: #4EA24E; }
+.Admin-add-branch-card-blue { background: #4A90E2; }
+.Admin-add-branch-card-red { background: #E55353; }
+
+.Admin-add-branch-card-icon { margin-bottom: 5px; }
+
+.Admin-add-branch-card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.Admin-add-branch-card-number {
+  font-size: 4.5rem;
+  font-weight: 800;
+  margin-top: 5px;
+}
+
+/* Purple Section: Matches the form area on the next page */
+.Admin-add-branch-section {
+  background: #6B5F96;
+  border-radius: 20px;
+  padding: 15px 25px 25px 25px; /* Reduced top gap */
+  flex-grow: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.Admin-add-branch-section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+/* Header with title and search bar */
+.Admin-add-branch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 20px;
+}
+
+/* Search Bar Styling */
+.Admin-add-branch-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 300px;
+}
+
+.Admin-add-branch-search-input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.Admin-add-branch-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.Admin-add-branch-search-input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.Admin-add-branch-search-icon {
+  position: absolute;
+  right: 15px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Loading Bar Styling */
+.Admin-add-branch-loading-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.Admin-add-branch-loading-container {
+  width: 60%;
+  max-width: 500px;
+}
+
+.Admin-add-branch-loading-bar-background {
+  width: 100%;
+  height: 6px;
+  background: rgba(211, 211, 211, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.Admin-add-branch-loading-bar-fill {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.6));
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  animation: slideLoader 1.5s ease-in-out infinite;
+  position: absolute;
+  left: 0;
+}
+
+@keyframes slideLoader {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.Admin-add-branch-loading-text {
+  color: #ffffff;
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.Admin-add-branch-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.Admin-add-branch-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* White Rows */
+.Admin-add-branch-item {
+  background-color: #ffffff !important;
+  border-radius: 15px;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 90px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.Admin-add-branch-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.Admin-add-branch-item-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.Admin-add-branch-coordinator-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  min-width: 70px;
+}
+
+.Admin-add-branch-count-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.Admin-add-branch-count-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.Admin-add-branch-item-arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Admin-add-branch-item-code {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin: 0;
+}
+.Admin-add-branch-item-name {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Scroll Indicator Bar */
+.Admin-add-branch-scroll-indicator {
+  position: absolute;
+  right: 15px;
+  top: 110px;
+  bottom: 30px;
+  width: 6px;
+  background: rgba(211, 211, 211, 0.25);
+  border-radius: 10px;
+  z-index: 10;
+}
+
+.Admin-add-branch-scroll-indicator-thumb {
+  position: absolute;
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+  border-radius: 10px;
+  transition: top 0.1s ease;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%);
+}
+
+/* Empty and Error States */
+.Admin-add-branch-empty,
+.Admin-add-branch-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.Admin-add-branch-error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* ============================================================ */
+/* === MOBILE VERSION - NO BROWSER SCROLL (FIXED) === */
+/* ============================================================ */
+
+@media (max-width: 768px) {
+  /* 1. Prevent Browser Scroll */
+  .Admin-add-branch-layout {
+    height: 100vh;
+    overflow: hidden; 
+    position: fixed;
+    width: 100%;
+  }
+
+  .Admin-add-branch-main-content {
+    margin-left: 0;
+    margin-top: 67px; /* Matches Navbar height */
+    padding: 15px;
+    height: calc(100vh - 67px); /* Fills remaining screen exactly */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 2. Stats Container: Fixed height for the group of cards */
+  .Admin-add-branch-stats-container {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    height: auto; /* Let it shrink to fit */
+    flex-shrink: 0;
+    margin-bottom: 15px;
+  }
+
+  /* 3. Fix Green Card Icon & Card Heights */
+  .Admin-add-branch-card {
+    height: 100px; /* Compact height to save space */
+    padding: 10px;
+    flex-direction: row; /* Horizontal layout looks better on mobile */
+    justify-content: space-around;
+  }
+
+  .Admin-add-branch-card-icon {
+    margin-bottom: 0;
+    transform: scale(0.8); /* Shrinks icon if it's too large */
+    display: flex;
+    align-items: center;
+  }
+
+  .Admin-add-branch-card-title {
+    font-size: 1.2rem;
+  }
+
+  .Admin-add-branch-card-number {
+    font-size: 2.2rem;
+    margin-top: 0;
+  }
+
+  /* 4. The Purple Section: Fills remaining space */
+  .Admin-add-branch-section {
+    flex-grow: 1;
+    overflow: hidden; /* Important: Clips children to prevent page scroll */
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header adjustments for mobile */
+  .Admin-add-branch-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .Admin-add-branch-section-title {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  .Admin-add-branch-search-container {
+    min-width: 100%;
+  }
+
+  .Admin-add-branch-search-input {
+    padding: 8px 35px 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* 5. The Internal List: This is where the scroll happens */
+  .Admin-add-branch-list {
+    flex-grow: 1;
+    overflow-y: auto; /* Only the list scrolls */
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* 6. White Card Rows: More compact for mobile */
+  .Admin-add-branch-item {
+    min-height: 70px; /* Reduced from 90px */
+    padding: 12px 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .Admin-add-branch-item-info {
+    gap: 10px;
+  }
+
+  .Admin-add-branch-coordinator-count {
+    padding: 6px 12px;
+    min-width: 60px;
+  }
+
+  .Admin-add-branch-count-number {
+    font-size: 1.4rem;
+  }
+
+  .Admin-add-branch-count-label {
+    font-size: 0.6rem;
+  }
+
+  .Admin-add-branch-item-arrow {
+    align-self: center;
+  }
+
+  .Admin-add-branch-item-code {
+    font-size: 1.1rem;
+    width: auto;
+  }
+
+  .Admin-add-branch-item-name {
+    font-size: 0.85rem;
+    white-space: normal;
+    word-break: break-word;
+    width: auto;
+  }
+}

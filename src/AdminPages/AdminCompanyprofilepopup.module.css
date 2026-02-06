@@ -1,0 +1,583 @@
+/* Popup Overlay */
+.Admin-cp-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Popup Container */
+.Admin-cp-popup-container {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-height: auto;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-in-out;
+    transition: max-width 0.3s ease-in-out;
+}
+
+/* Width Logic */
+.Admin-cp-popup-container.is-form {
+    max-width: 650px;
+}
+.Admin-cp-popup-container.is-success {
+    max-width: 380px;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ----------------------------------------------
+--- FORM STYLES ---
+----------------------------------------------
+*/
+
+/* Popup Header */
+.Admin-cp-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: none;
+    background: linear-gradient(135deg, #4EA24E 0%, #3d8a3d 100%);
+    border-radius: 15px 15px 0 0;
+}
+
+.Admin-cp-popup-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.Admin-cp-popup-close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    border-radius: 50%;
+}
+
+.Admin-cp-popup-close-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Popup Form */
+.Admin-cp-popup-form {
+    padding: 20px 30px 25px 30px;
+}
+
+.Admin-cp-popup-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+/* Form Group */
+.Admin-cp-popup-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.Admin-cp-popup-form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333333;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+}
+
+.Admin-cp-popup-form-group input,
+.Admin-cp-popup-form-group select {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.Admin-cp-popup-form-group input::placeholder {
+    color: #999999;
+}
+
+.Admin-cp-popup-form-group input:focus,
+.Admin-cp-popup-form-group select:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    background-color: #ffffff;
+}
+
+.Admin-cp-popup-form-group input:hover,
+.Admin-cp-popup-form-group select:hover {
+    border-color: #4EA24E;
+}
+
+.Admin-cp-popup-form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px;
+    padding-right: 35px;
+}
+
+.Admin-cp-popup-date-wrapper {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+    display: block;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+    display: block;
+}
+
+.Admin-cp-popup-date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.Admin-cp-popup-date-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    background-color: #ffffff;
+}
+
+.Admin-cp-popup-date-input::placeholder {
+    color: #999999;
+}
+
+.Admin-cp-popup-date-popper {
+    z-index: 1200;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker-popper) {
+    z-index: 1200 !important;
+}
+
+/* Form Actions */
+.Admin-cp-popup-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.Admin-cp-popup-btn-cancel,
+.Admin-cp-popup-btn-submit {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.Admin-cp-popup-btn-cancel {
+    background-color: #f0f0f0;
+    color: #666666;
+    border: 2px solid #e0e0e0;
+}
+
+.Admin-cp-popup-btn-cancel:hover {
+    background-color: #e8e8e8;
+    border-color: #d0d0d0;
+}
+
+.Admin-cp-popup-btn-submit {
+    background: linear-gradient(135deg, #4EA24E 0%, #3d8a3d 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+.Admin-cp-popup-btn-submit:hover {
+    box-shadow: 0 6px 16px rgba(71, 147, 71, 0.4);
+}
+
+.Admin-cp-popup-btn-submit:active {
+    transform: translateY(0);
+}
+
+
+/* ----------------------------------------------
+--- SUCCESS POPUP STYLES ---
+----------------------------------------------
+*/
+
+/* Success Popup Header */
+.Admin-cp-added-popup-header {
+    background-color: #4EA24E; /* Header Green #4EA24E */
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 700;
+    padding: 20px 30px;
+    text-align: center;
+}
+
+/* Success Popup Content */
+.Admin-cp-added-popup-content {
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Icon Wrapper with Pop Animation */
+.Admin-cp-added-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    background-color: #22C55E;
+    animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* SVG Icon Styles */
+.Admin-cp-added-icon {
+    width: 60px;
+    height: 60px;
+}
+
+.Admin-cp-added-icon-circle {
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: none; 
+    fill: none;
+    animation: none; 
+}
+
+/* Animation for Checkmark Stroke */
+.Admin-cp-added-icon-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke-width: 3;
+    stroke: #ffffff;
+    fill: none;
+    animation: stroke 0.4s 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Text Styles */
+.Admin-cp-added-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px 0;
+}
+
+.Admin-cp-added-text {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0 0 25px 0;
+    line-height: 1.5;
+}
+
+/* Footer for Success Popup */
+.Admin-cp-added-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    text-align: center;
+}
+
+/* Close Button */
+.Admin-cp-added-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-cp-added-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+
+/* ----------------------------------------------
+--- RESPONSIVE STYLES ---
+----------------------------------------------
+*/
+@media (max-width: 768px) {
+    /* --- FIX: Align popup to top for scrolling --- */
+    .Admin-cp-popup-overlay {
+        align-items: flex-start;
+        padding: 90px 10px;
+        overflow-y: auto; 
+        box-sizing: border-box;
+    }
+
+    .Admin-cp-popup-container {
+        max-width: 95vw; 
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Override desktop width logic */
+    .Admin-cp-popup-container.is-form,
+    .Admin-cp-popup-container.is-success {
+        max-width: 95vw;
+        margin-top: 0;
+    }
+
+    .Admin-cp-popup-form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .Admin-cp-popup-header {
+        padding: 18px 25px;
+        flex-shrink: 0;
+    }
+
+    .Admin-cp-popup-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .Admin-cp-popup-form {
+        padding: 18px 25px 20px 25px;
+        overflow-y: auto;
+        flex-grow: 1;
+        flex-shrink: 1;
+        
+        /* Green Scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: #4EA24E #f1f1f1;
+    }
+    
+    .Admin-cp-popup-form::-webkit-scrollbar {
+        width: 8px;
+    }
+    .Admin-cp-popup-form::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    .Admin-cp-popup-form::-webkit-scrollbar-thumb {
+        background: #4EA24E;
+        border-radius: 4px;
+    }
+    .Admin-cp-popup-form::-webkit-scrollbar-thumb:hover {
+        background: #459645;
+    }
+
+    .Admin-cp-popup-form-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    .Admin-cp-popup-btn-cancel,
+    .Admin-cp-popup-btn-submit {
+        width: 100%;
+    }
+}
+
+/* Green Theme for DatePicker - Scoped to this page only */
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day--selected),
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day--selected:hover),
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #2E7D32 !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #c8e6c9 !important;
+    color: #333 !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #4EA24E;
+    border-radius: 50%;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__header) {
+    background-color: #4EA24E !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.Admin-cp-popup-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+@media (max-width: 480px) {
+    .Admin-cp-popup-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .Admin-cp-popup-form {
+        padding: 15px 20px;
+    }
+
+    .Admin-cp-popup-form-grid {
+        gap: 10px;
+    }
+
+    .Admin-cp-popup-form-group input,
+    .Admin-cp-popup-form-group select {
+        padding: 9px 10px;
+        font-size: 0.85rem;
+    }
+
+    .Admin-cp-popup-form-group label {
+        font-size: 0.8rem;
+    }
+
+    /* Adjust success popup for small screens */
+    .Admin-cp-added-popup-header {
+        font-size: 1.8rem;
+        padding: 15px 20px;
+    }
+    .Admin-cp-added-popup-content {
+        padding: 25px 30px;
+    }
+    .Admin-cp-added-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+    }
+    .Admin-cp-added-icon {
+        width: 50px;
+        height: 50px;
+    }
+    .Admin-cp-added-title {
+        font-size: 1.4rem;
+    }
+    .Admin-cp-added-text {
+        font-size: 0.9rem;
+    }
+}

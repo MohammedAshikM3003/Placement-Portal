@@ -1,0 +1,19 @@
+/* Copied from AlertStyles.css for CSS Modules usage */
+/* (Existing alert/layout/animation styles preserved as-is) */
+
+/* Alert Overlay */
+.alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ... full contents of AlertStyles.css should be here ... */

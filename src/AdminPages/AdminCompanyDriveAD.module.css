@@ -1,0 +1,1421 @@
+/* Hide browser default scrollbar */
+
+
+/* Global Layout */
+.Admin-Drive-AD-layout {
+    display: flex;
+    height: 100vh;
+    background-color: #f0f2f5;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.Admin-Drive-AD-main-content {
+    flex: 1;
+    margin-left: 280px;
+    margin-top: 65px;
+    padding: 20px;
+    padding-right: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 65px);
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Custom Scrollbar - Green Theme */
+.Admin-Drive-AD-main-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.Admin-Drive-AD-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.Admin-Drive-AD-main-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.Admin-Drive-AD-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #2E7D32;
+}
+
+/* Remove scrollbar buttons */
+.Admin-Drive-AD-main-content::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* Main Container */
+.Admin-Drive-AD-container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+    background-color: transparent;
+    margin-left: 0;
+    padding-right: 20px;
+}
+
+/* Left Section - Add Company Drive */
+.Admin-Drive-AD-left-section {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.Admin-Drive-AD-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4EA24E;
+}
+
+.Admin-Drive-AD-section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #4EA24E;
+    margin: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-back-button {
+    padding: 8px 16px;
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.Admin-Drive-AD-back-button:hover {
+    background-color: #2E7D32;
+    transform: translateX(-3px);
+}
+
+.Admin-Drive-AD-back-button:active {
+    transform: translateX(-3px) scale(0.98);
+}
+
+/* Form Grid */
+.Admin-Drive-AD-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 15px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-form-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.Admin-Drive-AD-input {
+    width: 100%; 
+    padding: 10px 14px;
+    border: 2px solid #c8e6c9;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #333333;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.Admin-Drive-AD-input[type="date"] {
+    cursor: pointer;
+    position: relative;
+}
+
+.Admin-Drive-AD-input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    color: transparent;
+    background: transparent;
+}
+
+/* --- FIX: Hide arrows from number input (FIXED WARNING) --- */
+.Admin-Drive-AD-input[type="number"]::-webkit-outer-spin-button,
+.Admin-Drive-AD-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.Admin-Drive-AD-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: none;
+}
+/* --- End of number arrow fix --- */
+
+
+.Admin-Drive-AD-input::placeholder {
+    color: #aaaaaa;
+}
+
+.Admin-Drive-AD-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    background-color: #ffffff;
+    color: #333333;
+}
+
+/* Required field styling - removed red border for invalid state */
+.Admin-Drive-AD-input:required {
+    border-color: #c8e6c9;
+}
+
+/* Removed red border on invalid - will use tooltip instead */
+.Admin-Drive-AD-input:required:invalid {
+    border-color: #c8e6c9;
+}
+
+/* Custom validation tooltip */
+.Admin-Drive-AD-input:required:invalid:focus::after {
+    content: attr(data-error-message);
+}
+
+/* Validation wrapper for showing custom warning */
+.Admin-Drive-AD-form-group {
+    position: relative;
+}
+
+/* Warning icon for required fields */
+.Admin-Drive-AD-warning-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    background-color: #ff9800;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Tooltip for warning */
+.Admin-Drive-AD-warning-tooltip {
+    position: absolute;
+    top: -35px;
+    left: 0;
+    background-color: #333;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.Admin-Drive-AD-warning-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 10px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+/* DatePicker Styling */
+.Admin-Drive-AD-datepicker-wrapper {
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+    display: block;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+    display: block;
+}
+
+.Admin-Drive-AD-datepicker-wrapper input {
+    width: 100% !important;
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+/* Green Theme for DatePicker - Scoped to this page only */
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day--selected),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day--selected:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #2E7D32 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #c8e6c9 !important;
+    color: #333 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #4EA24E;
+    border-radius: 50%;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__header) {
+    background-color: #4EA24E !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    text-align: center !important;
+    margin: 0 !important;
+    display: inline-block !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__week) {
+    margin: 0 !important;
+    display: flex !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker) {
+    padding-bottom: 8px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: white !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #f0f0f0 !important;
+}
+
+/* Month and Year Select Input Fields */
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select) {
+    background-color: white !important;
+    color: #333 !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    margin: 0 6px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select) {
+    margin-right: 10px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select) {
+    margin-left: 10px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select:hover) {
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select:focus),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select:focus) {
+    border-color: white !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select option),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select option) {
+    background-color: white !important;
+    color: #333 !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select option:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select option:hover) {
+    background-color: #c8e6c9 !important;
+    color: #2E7D32 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-select option:checked),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-select option:checked) {
+    background-color: #4EA24E !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Month and Year Dropdown Styling */
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown) {
+    background-color: white !important;
+    border: 2px solid #4EA24E !important;
+    border-radius: 8px !important;
+    padding: 8px 0 !important;
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.15) !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-option),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-option) {
+    padding: 8px 16px !important;
+    cursor: pointer !important;
+    color: #333 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-option:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-option:hover) {
+    background-color: #c8e6c9 !important;
+    color: #2E7D32 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-option--selected),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-option--selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-read-view--selected-month),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-read-view--selected-year) {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-read-view),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-read-view) {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-read-view:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-read-view:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown-container),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown-container) {
+    margin: 0 8px !important;
+}
+
+/* Scrollbar for dropdowns */
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar) {
+    width: 6px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-track),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-track) {
+    background: #f1f1f1 !important;
+    border-radius: 10px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb) {
+    background: #4EA24E !important;
+    border-radius: 10px !important;
+}
+
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb:hover),
+.Admin-Drive-AD-datepicker-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb:hover) {
+    background: #2E7D32 !important;
+}
+
+/* Round Details Section */
+.Admin-Drive-AD-round-section {
+    background:#D2D1D1;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Admin-Drive-AD-round-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #4EA24E;
+    border-bottom: 2px solid #4EA24E;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-round-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-height: 144px;
+    min-height: 50px; 
+    overflow-y: auto;
+    padding-right: 10px; 
+    overflow-x: hidden;
+}
+
+.Admin-Drive-AD-round-placeholder {
+    grid-column: 1 / -1; 
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+    color: #777;
+    font-style: italic;
+}
+
+
+/* --- Scrollbar styling for the round grid --- */
+.Admin-Drive-AD-round-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.Admin-Drive-AD-round-grid::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+.Admin-Drive-AD-round-grid::-webkit-scrollbar-thumb {
+    background: #4EA24E;
+    border-radius: 10px;
+}
+.Admin-Drive-AD-round-grid::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+/* --- End of new scrollbar style --- */
+
+
+.Admin-Drive-AD-round-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden; 
+}
+
+.Admin-Drive-AD-round-item label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #000000;
+    white-space: nowrap;
+    min-width: 75px;
+}
+.Admin-Drive-AD-round-input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #333333;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    min-width: 0;
+}
+.Admin-Drive-AD-round-input:hover{
+    border-color: #4EA24E;
+}
+.Admin-Drive-AD-round-input::placeholder {
+    color: #aaaaaa;
+    font-size: 0.8rem;
+}
+
+.Admin-Drive-AD-round-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    background-color: #ffffff;
+    color: #333333;
+}
+/* Action Buttons */
+.Admin-Drive-AD-action-buttons {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.Admin-Drive-AD-add-btn,
+.Admin-Drive-AD-discard-btn {
+    flex: 1;
+    min-width: 120px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+}
+
+.Admin-Drive-AD-add-btn {
+    background: linear-gradient(135deg, #4EA24E 0%, #3d8a3d 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(78, 162, 78, 0.3);
+}
+
+.Admin-Drive-AD-add-btn:hover {
+    box-shadow: 0 6px 20px rgba(53, 112, 53, 0.4);
+}
+
+.Admin-Drive-AD-discard-btn {
+    background: linear-gradient(135deg, #dc4f4f 0%, #c73e3e 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(220, 79, 79, 0.3);
+}
+
+.Admin-Drive-AD-discard-btn:hover {
+    box-shadow: 0 6px 20px rgba(162, 58, 58, 0.4);
+}
+
+.Admin-Drive-AD-btn-icon {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-btn-subtitle {
+    font-size: 0.68rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+.Admin-Drive-AD-btn-subtitle1 {
+    font-size: 0.68rem;
+    font-weight: 400;
+    line-height: 0%;
+    opacity: 0.9;
+}
+/* Right Section - Company Details */
+.Admin-Drive-AD-right-section {
+    flex: 0.75;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.Admin-Drive-AD-right-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.Admin-Drive-AD-right-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.Admin-Drive-AD-right-section::-webkit-scrollbar-thumb {
+    background: #4EA24E;
+    border-radius: 10px;
+}
+
+.Admin-Drive-AD-right-section::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+/* Details Container */
+.Admin-Drive-AD-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
+}
+
+.Admin-Drive-AD-details-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.Admin-Drive-AD-details-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.Admin-Drive-AD-details-container::-webkit-scrollbar-thumb {
+    background: #4EA24E;
+    border-radius: 10px;
+}
+
+.Admin-Drive-AD-details-container::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+.Admin-Drive-AD-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-detail-row label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #000000;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-detail-value {
+    flex: 1;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: #666666;
+    padding: 7px 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 2px solid #c8e6c9;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.Admin-Drive-AD-detail-value:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+ /* Responsive Design */
+@media (max-width: 1400px) {
+    .Admin-Drive-AD-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .Admin-Drive-AD-left-section,
+    .Admin-Drive-AD-right-section {
+        flex: 1;
+        max-height: none;
+    }
+
+    .Admin-Drive-AD-form-grid {
+        grid-template-columns: 1fr 1fr; /* Keep 2 columns on larger tablet/small desktop */
+    }
+
+    .Admin-Drive-AD-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .Admin-Drive-AD-round-grid {
+        grid-template-columns: 1fr 1fr; /* Keep 2 columns */
+    }
+
+    .Admin-Drive-AD-round-item {
+        /* No need to stack vertically here, as grid handles layout */
+        flex-direction: row; 
+        align-items: center;
+    }
+
+    .Admin-Drive-AD-round-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 1024px) {
+    .Admin-Drive-AD-main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .Admin-Drive-AD-form-grid,
+    .Admin-Drive-AD-round-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .Admin-Drive-AD-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .Admin-Drive-AD-round-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .Admin-Drive-AD-round-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .Admin-Drive-AD-main-content {
+        padding: 15px;
+        margin-top: 70px;
+        margin-left: 0;
+        margin-right: 0;
+        align-items: center;
+        overflow-y: auto;
+        height: calc(100vh - 70px);
+    }
+
+    .Admin-Drive-AD-container {
+        gap: 15px;
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        max-width: 100%;
+    }
+
+    .Admin-Drive-AD-left-section,
+    .Admin-Drive-AD-right-section {
+        padding: 20px 18px;
+        border-radius: 12px;
+        overflow-y: visible;
+        flex: 1;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .Admin-Drive-AD-left-section::-webkit-scrollbar,
+    .Admin-Drive-AD-right-section::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .Admin-Drive-AD-left-section::-webkit-scrollbar-track,
+    .Admin-Drive-AD-right-section::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .Admin-Drive-AD-left-section::-webkit-scrollbar-thumb,
+    .Admin-Drive-AD-right-section::-webkit-scrollbar-thumb {
+        background: #4EA24E;
+        border-radius: 10px;
+    }
+
+    .Admin-Drive-AD-left-section::-webkit-scrollbar-thumb:hover,
+    .Admin-Drive-AD-right-section::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-Drive-AD-section-title {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+
+    .Admin-Drive-AD-form-grid {
+        gap: 10px;
+        margin-left: 0;
+        margin-bottom: 15px;
+        grid-template-columns: 1fr;
+    }
+
+    .Admin-Drive-AD-form-group {
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 14px;
+    }
+
+    .Admin-Drive-AD-round-section {
+        padding: 18px 18px;
+        margin-bottom: 15px;
+    }
+
+    .Admin-Drive-AD-round-title {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
+    .Admin-Drive-AD-round-grid {
+        gap: 12px;
+        grid-template-columns: 1fr;
+        max-height: 200px;
+    }
+
+    .Admin-Drive-AD-round-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-round-item label {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-round-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 9px 12px;
+    }
+
+    .Admin-Drive-AD-action-buttons {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .Admin-Drive-AD-add-btn,
+    .Admin-Drive-AD-discard-btn {
+        padding: 18px 18px;
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        gap: 15px;
+        align-items: center;
+        position: relative;
+    }
+
+    .Admin-Drive-AD-btn-icon {
+        flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        position: absolute;
+        left: 18px;
+    }
+
+    .Admin-Drive-AD-btn-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-btn-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .Admin-Drive-AD-btn-subtitle,
+    .Admin-Drive-AD-btn-subtitle1 {
+        white-space: nowrap;
+        line-height: 1.1;
+        font-size: 0.75rem;
+        font-weight: 400;
+        text-align: center;
+    }
+    
+    .Admin-Drive-AD-right-section {
+        overflow-y: auto;
+        max-height: 500px;
+    }
+
+
+    .Admin-Drive-AD-details-container {
+        gap: 10px;
+    }
+
+    .Admin-Drive-AD-detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-detail-row label {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-detail-value {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 480px) {
+    .Admin-Drive-AD-main-content {
+        padding: 10px;
+    }
+
+    .Admin-Drive-AD-container {
+        max-width: 100%;
+    }
+
+    .Admin-Drive-AD-left-section,
+    .Admin-Drive-AD-right-section {
+        max-width: 100%;
+        padding: 15px 12px;
+        box-sizing: border-box;
+        overflow-y: visible;
+    }
+
+    .Admin-Drive-AD-section-title {
+        font-size: 1.2rem;
+    }
+
+    .Admin-Drive-AD-form-grid {
+        margin-left: 0;
+    }
+
+    .Admin-Drive-AD-input {
+        width: 100%;
+        padding: 9px 10px;
+        font-size: 0.85rem;
+        box-sizing: border-box;
+    }
+
+    .Admin-Drive-AD-round-section {
+        padding: 15px 12px;
+    }
+    
+    .Admin-Drive-AD-round-grid {
+        max-height: 150px;
+    }
+
+
+    .Admin-Drive-AD-round-input {
+        width: 100%;
+        padding: 9px 10px;
+        font-size: 0.85rem;
+        box-sizing: border-box;
+    }
+
+    .Admin-Drive-AD-action-buttons {
+        gap: 12px;
+    }
+
+    .Admin-Drive-AD-add-btn,
+    .Admin-Drive-AD-discard-btn {
+        padding: 16px 16px;
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        gap: 12px;
+        align-items: center;
+        position: relative;
+    }
+
+    .Admin-Drive-AD-btn-icon {
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+        position: absolute;
+        left: 16px;
+    }
+
+    .Admin-Drive-AD-btn-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        width: 100%;
+    }
+
+    .Admin-Drive-AD-btn-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .Admin-Drive-AD-btn-subtitle,
+    .Admin-Drive-AD-btn-subtitle1 {
+        white-space: nowrap;
+        line-height: 1.1;
+        font-size: 0.7rem;
+        font-weight: 400;
+        text-align: center;
+    }
+}
+
+
+/* ----------------------------------------------
+--- NEW: SUCCESS POPUP STYLES ---
+----------------------------------------------
+*/
+
+.Admin-Drive-AD-Success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.Admin-Drive-AD-Success-container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 400px;
+    max-width: 90vw;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-in-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Success Popup Header */
+.Admin-Drive-AD-Success-header {
+    background-color: #4EA24E;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 1.2rem;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+/* Success Popup Content */
+.Admin-Drive-AD-Success-content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 220px;
+    justify-content: center;
+}
+
+/* Icon Wrapper with Pop Animation */
+.Admin-Drive-AD-Success-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    background-color: #22C55E;
+    animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* SVG Icon Styles */
+.Admin-Drive-AD-Success-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.Admin-Drive-AD-Success-icon-circle {
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: none;
+    fill: none;
+    animation: none;
+}
+
+/* Animation for Checkmark Stroke */
+.Admin-Drive-AD-Success-icon-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke-width: 3;
+    stroke: #ffffff;
+    fill: none;
+    animation: stroke 0.4s 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Text Styles */
+.Admin-Drive-AD-Success-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #1E1F24;
+    margin: 0 0 8px 0;
+}
+
+.Admin-Drive-AD-Success-text {
+    font-size: 0.98rem;
+    color: #6B6D74;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Success Popup Footer */
+.Admin-Drive-AD-Success-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    text-align: center;
+}
+
+/* Close Button */
+.Admin-Drive-AD-Success-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-Drive-AD-Success-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* Responsive fix for popup on mobile */
+@media (max-width: 768px) {
+    .Admin-Drive-AD-Success-overlay {
+        align-items: flex-start;
+        padding: 90px 10px;
+        overflow-y: auto; 
+        box-sizing: border-box;
+    }
+
+    .Admin-Drive-AD-Success-container {
+        max-width: 95vw;
+        margin-top: 0; 
+    }
+}
+
+/* Department Selection Popup */
+.Admin-Drive-AD-dept-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.Admin-Drive-AD-dept-popup-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.Admin-Drive-AD-dept-popup-header {
+    padding: 20px 25px;
+    background: linear-gradient(135deg, #4EA24E 0%, #3d8a3d 100%);
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+}
+
+.Admin-Drive-AD-dept-popup-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.Admin-Drive-AD-dept-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 18px;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.Admin-Drive-AD-dept-item:hover {
+    background: #f0f2f5;
+    border-color: #4EA24E;
+}
+
+.Admin-Drive-AD-dept-item-selected {
+    background: #e8f5e9;
+    border-color: #4EA24E;
+}
+
+.Admin-Drive-AD-dept-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #4EA24E;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: white;
+}
+
+.Admin-Drive-AD-dept-item-selected .Admin-Drive-AD-dept-checkbox {
+    background: white;
+}
+
+.Admin-Drive-AD-dept-label {
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.Admin-Drive-AD-dept-popup-actions {
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.Admin-Drive-AD-dept-btn-close,
+.Admin-Drive-AD-dept-btn-select {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.Admin-Drive-AD-dept-btn-close {
+    background: #f0f2f5;
+    color: #666;
+}
+
+.Admin-Drive-AD-dept-btn-close:hover {
+    background: #e0e2e5;
+}
+
+.Admin-Drive-AD-dept-btn-select {
+    background: #4EA24E;
+    color: white;
+}
+
+.Admin-Drive-AD-dept-btn-select:hover {
+    background: #3d8a3d;
+}

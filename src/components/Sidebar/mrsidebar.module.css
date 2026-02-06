@@ -1,0 +1,154 @@
+/* --- Sidebar Main Layout --- */
+.mr-sidebar {
+  background: #fff;
+  width: 230px;
+  height: calc(100vh - 65px);
+  box-shadow: 2px 0 12px #e1e6ef3a;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 65px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1002;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* --- Welcome Section --- */
+.mr-sidebar-welcome {
+  text-align: center;
+  font-size: 1rem;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.mr-sidebar-welcome-icon {
+  width: 50px;
+  height: 40px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+/* --- Navigation Table --- */
+.mr-sidebar-nav {
+  flex: 1;
+  width: 100%;
+}
+
+.mr-sidebar-menu-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.mr-sidebar-menu-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem; /* Match MainRegistration input text size */
+  font-weight: 500;
+  padding: 10px 22px;
+  color: #1f2933;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  gap: 18px;
+  border-left: 4px solid transparent;
+  margin: 4px 0;
+}
+
+/* Active State (Selected Menu Item) */
+.mr-sidebar-menu-row.active {
+  background: #eef3ff; /* Soft blue like signup page */
+  border-left: 4px solid #197AFF;
+  color: #197AFF;
+  font-weight: 600;
+}
+
+/* Completed State Styles */
+.mr-sidebar-menu-row.completed {
+  color: #28a745 !important;
+  background: #f8fff8 !important;
+  border-left: 4px solid #28a745 !important;
+  font-weight: 600 !important;
+}
+
+/* Hover States */
+.mr-sidebar-menu-row:hover:not(.active):not(.completed) {
+  background: #f3f7ff;
+  border-left: 4px solid #197AFF;
+  color: #197AFF;
+}
+
+.mr-sidebar-menu-row.active:hover {
+  color: #197AFF;
+}
+
+/* Icon Styles */
+.mr-sidebar-menu-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s;
+  filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+}
+
+.mr-sidebar-menu-row.active .mr-sidebar-menu-icon {
+  filter: brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%);
+}
+
+/* Completed Icon Override */
+.mr-sidebar-menu-row.completed .mr-sidebar-menu-icon,
+.mr-sidebar-menu-row.completed.active .mr-sidebar-menu-icon {
+    filter: invert(40%) sepia(100%) saturate(1000%) hue-rotate(90deg) brightness(100%) contrast(100%) !important;
+}
+
+/* Label Styles */
+.mr-sidebar-menu-label-cell {
+  flex: 1;
+}
+
+/* Divider */
+.mr-sidebar-divider-container {
+  height: 1px;
+  width: 100%;
+  background: #e0e0e0;
+  margin: 10px 0;
+}
+
+/* Login Button */
+.mr-sidebar-login-button {
+  background: #197AFF;
+  color: #fff;
+  padding: 10px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 5px;
+}
+
+.mr-sidebar-login-button:hover {
+  background: #1563cc;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 992px) {
+  .mr-sidebar {
+    transform: translateX(-100%);
+    width: 280px; /* Slightly wider on mobile */
+  }
+
+  /* This class is toggled by JS when isOpen is true */
+  .mr-sidebar.active {
+    transform: translateX(0);
+  }
+}

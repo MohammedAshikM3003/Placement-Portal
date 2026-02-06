@@ -1,0 +1,205 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* --- COMPREHENSIVE SCROLLBAR BUTTON REMOVAL --- */
+/* Remove scrollbar buttons from ALL elements globally EXCEPT student dashboard */
+
+/* Target all possible scrollbar containers EXCEPT student dashboard */
+html::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Target specific button types EXCEPT student dashboard */
+html::-webkit-scrollbar-button:start:decrement,
+html::-webkit-scrollbar-button:end:increment,
+body::-webkit-scrollbar-button:start:decrement,
+body::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Target all button variations EXCEPT student dashboard */
+html::-webkit-scrollbar-button:vertical:start:decrement,
+html::-webkit-scrollbar-button:vertical:end:increment,
+html::-webkit-scrollbar-button:horizontal:start:decrement,
+html::-webkit-scrollbar-button:horizontal:end:increment,
+body::-webkit-scrollbar-button:vertical:start:decrement,
+body::-webkit-scrollbar-button:vertical:end:increment,
+body::-webkit-scrollbar-button:horizontal:start:decrement,
+body::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* EXCEPTION: Allow scrollbar buttons for student dashboard */
+.stu-student-dashboard-page *::-webkit-scrollbar-button,
+.stu-db-dashboard-area::-webkit-scrollbar-button {
+  display: block !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure admin branch list scrollbars never show arrow buttons, even with hashed class names */
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+}
+
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:single-button,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:start:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:start:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:end:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:end:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:start:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:start:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:end:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:end:decrement {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+}
+
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:horizontal:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:horizontal:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:increment,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:decrement,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:increment:hover,
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-button:vertical:decrement:hover {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:single-button,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:start:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:start:decrement,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:end:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:end:decrement,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:start:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:start:decrement,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:end:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:end:decrement,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:vertical:decrement,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:increment,
+[class^="Admin-add-branch-list_"]::-webkit-scrollbar-button:decrement {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+[class*="Admin-add-branch-list"]::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Custom Scrollbar for Rounds Listing */
+.scroll-rounds::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-rounds::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.scroll-rounds::-webkit-scrollbar-thumb {
+  background-color: #2085f6;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.scroll-rounds::-webkit-scrollbar-thumb:hover {
+  background-color: #4338CA;
+}
+
+/* Remove scrollbar buttons for rounds */
+.scroll-rounds::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Mobile Fix: Proper scrolling without fixed positioning */
+@media (max-width: 900px) {
+  html {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  body {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  
+  #root {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}

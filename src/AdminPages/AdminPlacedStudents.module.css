@@ -1,0 +1,804 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+.Admin-ps-portal-container {
+  display: flex;
+  background: #f6f6f6;
+  /* ADDED: Ensure full height on desktop */
+  min-height: 100vh; 
+  overflow: hidden; 
+}
+
+/* Main Content Styles */
+.Admin-ps-main-content {
+  flex-grow: 1;
+  padding: 20px 0px;
+  /* FIXED: Set desktop margin here to offset sidebar */
+  margin-top: 50px;
+  margin-left: 260px;
+  overflow-y: auto;
+}
+
+.Admin-ps-main-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.Admin-ps-filters-container {
+  background-color: #D3D2D2;
+  padding: 16px 28px;
+  border-radius: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 10px 10px 20px 40px;
+  box-shadow: 0 2px 8px #eee;
+  height: 79px;
+}
+
+.Admin-ps-filter-select {
+  flex-grow: 1;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 2px solid #808080;
+  background-color: #ffffff;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 20px;
+  padding-right: 45px;
+  height: 44px;
+  transition: border-color 0.2s;
+}
+
+.Admin-ps-filter-select:hover {
+  border-color: #4EA24E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-ps-filter-select:focus {
+  outline: none;
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-ps-filter-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 0 30px;
+  border-radius: 42px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 44px;
+  box-shadow: 0 2px 8px #eee;
+  transition: all 0.2s;
+}
+
+.Admin-ps-filter-btn:hover{
+  background-color: #ffffff;
+  color: #4EA24E;
+  border: 2px solid #4EA24E;
+}
+
+.Admin-ps-dashboard-grid {
+  display: flex;
+  gap: 24px;
+  margin: 20px 10px 0px 45px;
+  align-items: flex-start;
+}
+
+.Admin-ps-stats-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  min-width: 680px;
+  max-width: 680px;
+}
+
+.Admin-ps-stat-card {
+  color: white;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 130px;
+  width: 100%;
+}
+
+.Admin-ps-stat-card h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.Admin-ps-stat-card p {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+/* Specific Stat Card Styling */
+.Admin-ps-card-purple {
+  background: linear-gradient(135deg, #6f42c1, #9d78e3);
+}
+
+.Admin-ps-card-teal {
+  background: linear-gradient(135deg, #19787D, #2a9ba1);
+}
+
+.Admin-ps-card-blue {
+  background: linear-gradient(135deg, #0522BC, #1e3dd6);
+}
+
+.Admin-ps-card-orange {
+  background: linear-gradient(135deg, #007BFF, #3395ff);
+}
+
+/* Bar Chart Styles */
+.Admin-ps-chart-container {
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  min-width: 480px;
+  height: 290px;
+}
+
+.Admin-ps-chart-container h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+/* Table Styles */
+.Admin-ps-table-container {
+  background-color: #ffffff;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin: 10px 10px 20px 40px;
+  max-height: 230px;
+  overflow: visible;
+  border: 2px solid #808080;
+}
+
+.Admin-ps-table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.Admin-ps-table-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.Admin-ps-table-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.Admin-ps-table-container h3 {
+  margin-top: 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.Admin-ps-students-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.Admin-ps-students-table th {
+  padding: -5px 9px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  word-wrap: break-word;
+}
+
+.Admin-ps-students-table td {
+  padding: 1px 16px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.Admin-ps-table-scroll {
+  max-height: 250px; /* Reduced fixed height */
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* New table structure similar to AdminAttendance */
+.Admin-ps-students-table-header, 
+.Admin-ps-students-table-body {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.Admin-ps-table-body-scroll {
+  height: 100px; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Green scrollbar styling */
+.Admin-ps-table-body-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-thumb {
+  background-color: #4EA24E;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #2E7D32;
+}
+
+/* Remove scrollbar buttons */
+.Admin-ps-table-body-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+.Admin-ps-students-table-header thead th {
+  text-align: center;
+  padding: 12px 4px;
+  color: #777;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.Admin-ps-students-table-body tbody td {
+  text-align: center;
+  padding: 14px 4px;
+  font-size: 0.95rem;
+  color: #000;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.Admin-ps-students-table-body tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.Admin-ps-students-table th {
+  font-weight: 600;
+  color: #888;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff; /* Sticky background */
+  z-index: 10;
+}
+
+.Admin-ps-status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.Admin-ps-status-accepted {
+  background-color: #D0F2EA;
+  color: #0F9575;
+}
+
+.Admin-ps-status-rejected {
+  background-color: #f8d7da;
+  color: #E80000;
+}
+
+.Admin-ps-status-pending {
+  background-color: #D9D9D9;
+  color: #787878;
+}
+
+.Admin-ps-action-icon {
+  color: #4EA24E;
+  cursor: pointer;
+}
+
+/* Print Button Styles */
+.Admin-ps-print-button-container {
+  position: relative;
+  display: inline-block;
+  z-index: 15;
+}
+
+.Admin-ps-print-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.Admin-ps-print-btn:hover {
+  background-color: #3d8a3d;
+}
+
+/* Export Menu Styles */
+.Admin-ps-export-menu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 2000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.Admin-ps-export-menu button {
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.Admin-ps-export-menu button:last-child {
+  border-bottom: none;
+}
+
+.Admin-ps-export-menu button:hover {
+  background-color: #f8f9fa;
+}
+
+.Admin-ps-dropdown-container {
+  position: relative;
+  /* FIXED: Use margin auto to position dropdown */
+  margin-left: auto;
+  margin-bottom: 10px;
+  margin-top: -62px;
+  width: fit-content;
+}
+
+.Admin-ps-dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: #fff;
+  min-width: 160px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.Admin-ps-dropdown-menu span {
+  display: block;
+  padding: 10px 16px;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.Admin-ps-dropdown-menu span:hover {
+  background-color: #f1f1f1;
+}
+   /* Responsive Styles */
+
+/* Tablet Styles (768px - 1024px) */
+@media (max-width: 1024px) {
+  .Admin-ps-main-content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .Admin-ps-filters-container {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    margin-top: 62px;
+    width: 100%;
+  }
+
+  .Admin-ps-filter-select {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .Admin-ps-filter-btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .Admin-ps-dashboard-grid {
+    /* FIXED: Stack stats section above chart */
+    grid-template-columns: 1fr;
+    margin-left: 0;
+    gap: 20px;
+    margin-top: 0;
+    width: 100%;
+  }
+
+  .Admin-ps-stats-section {
+    grid-column: span 1;
+    grid-template-columns: 1fr 1fr; /* Keep 2 columns for stat cards */
+    margin-left: 0;
+    gap: 15px;
+    width: 100%;
+  }
+  
+  .Admin-ps-stat-card {
+    margin: 0; /* Reset specific card margins */
+    width: 100%;
+  }
+
+  .Admin-ps-chart-container {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+  }
+
+  .Admin-ps-table-container {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 15px;
+    overflow-x: auto;
+  }
+
+  .Admin-ps-table-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  .Admin-ps-students-table thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 10;
+  }
+
+  .Admin-ps-dropdown-container {
+    margin-left: auto;
+    margin-right: 0;
+  }
+}
+
+/* Mobile Styles (max-width: 767px) */
+@media (max-width: 767px) {
+  .Admin-ps-portal-container {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  .Admin-ps-main-content {
+    margin-left: 0;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .Admin-ps-filters-container {
+    flex-direction: column;
+    padding: 15px;
+    gap: 12px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 15px;
+    border-radius: 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-filter-select {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-filter-btn {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  /* Print Button Styling */
+  .Admin-ps-table-container .Admin-ps-filter-btn,
+  .Admin-ps-dropdown-container .Admin-ps-filter-btn {
+    width: 200px !important;
+    max-width: 200px;
+    margin: 0 auto 15px auto;
+    display: block;
+  }
+
+  .Admin-ps-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-left: 0;
+    margin-top: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .Admin-ps-stats-section {
+    grid-column: span 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 columns for stat cards on mobile */
+    margin-left: 0;
+    gap: 10px;
+    width: 100%;
+    order: -1; /* Place stats section above chart */
+  }
+
+  .Admin-ps-stat-card {
+    margin: 0;
+    width: 100%;
+  }
+
+  .Admin-ps-card-purple,
+  .Admin-ps-card-teal,
+  .Admin-ps-card-blue,
+  .Admin-ps-card-orange {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 15px;
+    height: auto;
+    min-height: 100px;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-stat-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .Admin-ps-stat-card p {
+    font-size: 2rem;
+  }
+
+  .Admin-ps-chart-container {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 20px 15px;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-chart-container h3 {
+    font-size: 1.1rem;
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .Admin-ps-table-container {
+    width: 100%;
+    margin: 0;
+    padding: 15px;
+    max-height: none;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-table-container h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  /* Wrapper for Both Scrolls */
+  .Admin-ps-table-scroll {
+    max-height: 350px;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+
+  .Admin-ps-students-table {
+    font-size: 0.85rem;
+    min-width: 800px; /* Ensure horizontal scroll bar appears */
+    width: max-content;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .Admin-ps-students-table th,
+  .Admin-ps-students-table td {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    min-width: 100px;
+  }
+
+  /* Specific column width adjustment for mobile table readability */
+  .Admin-ps-students-table th:first-child, .Admin-ps-students-table td:first-child { min-width: 60px; }
+  .Admin-ps-students-table th:nth-child(2), .Admin-ps-students-table td:nth-child(2) { min-width: 150px; }
+  .Admin-ps-students-table th:nth-child(3), .Admin-ps-students-table td:nth-child(3) { min-width: 140px; }
+  .Admin-ps-students-table th:nth-child(6), .Admin-ps-students-table td:nth-child(6) { min-width: 130px; }
+
+
+  .Admin-ps-dropdown-container {
+    position: static;
+    margin: 0 0 15px 0;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+/* Small Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+  .Admin-ps-main-content {
+    padding: 10px;
+  }
+
+  .Admin-ps-filters-container {
+    padding: 12px;
+    gap: 10px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 68px;
+  }
+
+  .Admin-ps-filter-select {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .Admin-ps-filter-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Print Button Styling */
+  .Admin-ps-table-container .Admin-ps-filter-btn,
+  .Admin-ps-dropdown-container .Admin-ps-filter-btn {
+    width: 180px !important;
+    max-width: 180px;
+    margin: 0 auto 12px auto;
+    display: block;
+  }
+
+  .Admin-ps-stats-section {
+    grid-template-columns: 1fr; /* Stack stat cards */
+    gap: 10px;
+    width: 100%;
+  }
+
+  .Admin-ps-card-purple,
+  .Admin-ps-card-teal,
+  .Admin-ps-card-blue,
+  .Admin-ps-card-orange {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 15px;
+  }
+
+  .Admin-ps-stat-card h3 {
+    font-size: 1rem;
+  }
+
+  .Admin-ps-stat-card p {
+    font-size: 1.8rem;
+  }
+
+  .Admin-ps-chart-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 15px 10px;
+    margin: 0;
+  }
+
+  .Admin-ps-table-container {
+    width: 100%;
+    padding: 12px;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .Admin-ps-table-container h3 {
+    text-align: center;
+  }
+
+  .Admin-ps-table-scroll {
+    max-height: 300px;
+  }
+}
+
+/* Loading Spinner Styles */
+.Admin-ps-loading-cell {
+    text-align: center;
+    padding: 48px 0;
+    width: 100%;
+    min-height: calc(72px * 3);
+    position: relative;
+}
+
+.Admin-ps-loading-row {
+    height: 100%;
+}
+
+.Admin-ps-loading-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    text-align: center;
+}
+
+.Admin-ps-spinner {
+    width: 34px;
+    margin-top: 50px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adminPlacedStudentsSpin 0.7s linear infinite;
+}
+
+@keyframes adminPlacedStudentsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Admin-ps-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}

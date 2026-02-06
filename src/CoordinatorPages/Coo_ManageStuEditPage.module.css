@@ -1,0 +1,1584 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.co-profile-section-container {
+    background-color: #fff;
+    padding: 4.0rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+        width: 1171px;
+    position: relative;
+    left: 25px;
+}
+
+.co-profile-section-container:last-child {
+    margin-bottom: 0;
+}
+
+.co-profile-section-container input,
+    .co-profile-section-container select {
+        margin-bottom: 1rem; /* Reduced from 1.5rem to prevent excessive spacing */
+        background-color: #fff9f9;
+    }
+
+    .co-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.co-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #d73d3d;
+    border-radius: 2px;
+}
+.co-section-header {
+    margin-bottom: 1rem;
+    text-align: left;
+    border-bottom: none;
+}
+.co-form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+}
+
+.co-form-grid input,
+.co-form-grid select,
+.StuProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    background-color: #fff9f9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-form-grid input:focus,
+.co-form-grid select:focus,
+.StuProfile-datepicker-input:focus {
+    outline: none;
+    border-color: #d23b24;
+    background-color: #fff9f9;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+.co-password-toggle-btn {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    color: #90a4ae !important;
+    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    z-index: 10 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+.co-ms-StuProfile-container, .StuProfile-container {
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.co-ms-StuProfile-main, .StuProfile-main {
+    display: flex;
+    margin-top: 65px;
+    min-height: calc(100vh - 65px);
+    overflow: visible;
+}
+
+/* Sidebar container with fixed height and no horizontal overflow */
+.co-ms-StuProfile-sidebar, .StuProfile-sidebar {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 230px;
+    height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    background: #fff;
+    box-sizing: border-box;
+    padding: 0 15px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-ms-StuProfile-content::-webkit-scrollbar,
+.StuProfile-content::-webkit-scrollbar,
+.co-ms-StuProfile-sidebar::-webkit-scrollbar,
+.StuProfile-sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+.co-ms-StuProfile-content::-webkit-scrollbar-track,
+.StuProfile-content::-webkit-scrollbar-track,
+.co-ms-StuProfile-sidebar::-webkit-scrollbar-track,
+.StuProfile-sidebar::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-ms-StuProfile-content::-webkit-scrollbar-thumb,
+.StuProfile-content::-webkit-scrollbar-thumb,
+.co-ms-StuProfile-sidebar::-webkit-scrollbar-thumb,
+.StuProfile-sidebar::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-ms-StuProfile-content::-webkit-scrollbar-thumb:hover,
+.StuProfile-content::-webkit-scrollbar-thumb:hover,
+.co-ms-StuProfile-sidebar::-webkit-scrollbar-thumb:hover,
+.StuProfile-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+
+/* Prevent children inside sidebar from causing horizontal overflow */
+.co-ms-StuProfile-sidebar *, .StuProfile-sidebar * {
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.co-ms-StuProfile-dashboard-area, .StuProfile-dashboard-area {
+    flex: 1;
+    background: #f8f8fb;
+    padding: 25px;
+    margin-left: 270px;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    min-height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    box-sizing: border-box;
+}
+        .co-ms-StuProfile-dashboard-area::-webkit-scrollbar {
+      width: 10px;
+    }
+        .co-ms-StuProfile-dashboard-area::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-ms-StuProfile-dashboard-area::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-ms-StuProfile-dashboard-area::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+.co-ms-StuProfile-overlay, .StuProfile-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* Profile form section */
+.co-ms-StuProfile-profile-section-container, .StuProfile-profile-section-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    margin-left: 25px;
+}
+
+.co-ms-StuProfile-profile-section-container:last-child, .StuProfile-profile-section-container:last-child {
+    margin-bottom: 0;
+}
+
+.co-ms-StuProfile-section-header, .StuProfile-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.co-ms-StuProfile-section-header::after, .StuProfile-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #d73d3d;
+    border-radius: 2px;
+}
+
+.co-ms-StuProfile-form-grid, .StuProfile-form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+}
+
+.co-ms-StuProfile-personal-info-fields, .StuProfile-personal-info-fields {
+    grid-column: 1 / span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-content: start;
+}
+
+/* Additional info fields for community, medium of study, blood group */
+.co-ms-StuProfile-additional-info-fields, .StuProfile-additional-info-fields {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 3px;
+}
+
+.co-ms-StuProfile-additional-info-fields input, .StuProfile-additional-info-fields input,
+.co-ms-StuProfile-additional-info-fields select, .StuProfile-additional-info-fields select {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    background-color: #fff9f9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-ms-StuProfile-additional-info-fields input:focus, .StuProfile-additional-info-fields input:focus,
+.co-ms-StuProfile-additional-info-fields select:focus, .StuProfile-additional-info-fields select:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+
+.co-ms-StuProfile-profile-photo-wrapper, .StuProfile-profile-photo-wrapper {
+    grid-column: 3 / 4;
+}
+
+.co-ms-StuProfile-form-grid input, .StuProfile-form-grid input,
+.co-ms-StuProfile-form-grid select, .StuProfile-form-grid select,
+.co-ms-StuProfile-datepicker-input, .StuProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    background-color: #fff9f9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-ms-StuProfile-form-grid input:focus, .StuProfile-form-grid input:focus,
+.co-ms-StuProfile-form-grid select:focus, .StuProfile-form-grid select:focus,
+.co-ms-StuProfile-datepicker-input:focus, .StuProfile-datepicker-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+/* --- Add this for Dropdown Option Hover --- */
+.co-ms-StuProfile-form-grid option:hover, 
+.StuProfile-form-grid option:hover {
+    background-color: #d73d3d !important; /* Your desired hover color */
+    color: white !important;
+}
+/* React-Datepicker Custom Styles */
+.co-ms-StuProfile-datepicker-wrapper, .StuProfile-datepicker-wrapper {
+    width: 100%;
+    display: flex;
+}
+
+.co-ms-StuProfile-datepicker-wrapper .react-datepicker-wrapper,
+.StuProfile-datepicker-wrapper .react-datepicker-wrapper {
+    width: 100%;
+}
+
+.co-ms-StuProfile-datepicker-wrapper .react-datepicker__input-container,
+.StuProfile-datepicker-wrapper .react-datepicker__input-container {
+    width: 100%;
+}
+
+/* Base style for the input field to match other form inputs */
+.co-ms-StuProfile-datepicker-input, .StuProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    background-color: #f9fbff;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-ms-StuProfile-datepicker-input:focus, .StuProfile-datepicker-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+/* Styling the calendar popover */
+.react-datepicker-wrapper {
+    width: 100%;
+}
+.react-datepicker__input-container {
+    display: block;
+}
+
+/* Calendar icon from React-Datepicker */
+.react-datepicker__input-container::after {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: %23555;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+    background-color: #d73d3d !important;
+    color: white !important;
+}
+
+.react-datepicker__day--outside-month {
+    color: #ccc !important;
+}
+
+.react-datepicker__day:hover {
+    background-color: #e9f1fc;
+    color: #333;
+}
+
+.react-datepicker__header {
+    background-color: #f9fbff;
+    border-bottom: 1px solid #dde6f4;
+}
+
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle::after,
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle::before {
+    border-bottom-color: #f9fbff !important;
+}
+
+.co-ms-StuProfile-date-wrapper, .StuProfile-date-wrapper {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker-wrapper),
+.StuProfile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100% !important;
+    display: block;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__input-container),
+.StuProfile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100% !important;
+    display: block;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__input-container input),
+.StuProfile-date-wrapper :global(.react-datepicker__input-container input) {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.co-ms-StuProfile-date-input, .StuProfile-date-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    background-color: #fff9f9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-ms-StuProfile-date-input:focus, .StuProfile-date-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    background-color: #fff9f9;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+
+.co-ms-StuProfile-date-input::placeholder, .StuProfile-date-input::placeholder {
+    color: #999999;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day--selected),
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected),
+.StuProfile-date-wrapper :global(.react-datepicker__day--selected),
+.StuProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #d73d3d !important;
+    color: #ffffff !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover),
+.StuProfile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.StuProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #bc1b09 !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day:hover),
+.StuProfile-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #ffe6e6 !important;
+    color: #333 !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day--today),
+.StuProfile-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #d73d3d;
+    border-radius: 50%;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__header),
+.StuProfile-date-wrapper :global(.react-datepicker__header) {
+    background-color: #d73d3d !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__current-month),
+.StuProfile-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__navigation),
+.StuProfile-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day-name),
+.StuProfile-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day-names),
+.StuProfile-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: #ffffff !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__day),
+.StuProfile-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__month),
+.StuProfile-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__navigation-icon::before),
+.StuProfile-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.co-ms-StuProfile-date-wrapper :global(.react-datepicker__navigation:hover *::before),
+.StuProfile-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+.co-ms-StuProfile-profile-photo-box, .StuProfile-profile-photo-box {
+    background-color: #fff;
+    border: 1px solid #dde6f4;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.co-ms-StuProfile-profile-photo-box .co-ms-StuProfile-section-header, .StuProfile-profile-photo-box .StuProfile-section-header {
+    margin-bottom: 1rem;
+    text-align: left;
+    border-bottom: none;
+}
+
+.co-ms-StuProfile-profile-icon-container, .StuProfile-profile-icon-container {
+    padding: 1rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+}
+
+.co-ms-StuProfile-profile-preview-img, .StuProfile-profile-preview-img {
+    width: 200px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #f4dddd;
+    cursor: pointer;
+}
+
+.co-ms-StuProfile-upload-action-area, .StuProfile-upload-action-area {
+    margin-top: auto;
+}
+
+.co-ms-StuProfile-upload-hint, .StuProfile-upload-hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.co-ms-StuProfile-upload-success-message, .StuProfile-upload-success-message {
+    font-size: 0.9rem;
+    color: #28a745;
+    font-weight: 500;
+    text-align: center;
+    margin: 10px 0 0 0;
+}
+
+.co-ms-StuProfile-upload-btn-wrapper, .StuProfile-upload-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.co-ms-StuProfile-profile-upload-btn, .StuProfile-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1rem;
+    background-color: #fff9f9;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+
+.co-ms-StuProfile-profile-upload-btn:hover, .StuProfile-profile-upload-btn:hover {
+    background-color: #fae9e9;
+    border-color: #f4dddd;
+}
+
+.co-ms-StuProfile-remove-image-btn, .StuProfile-remove-image-btn {
+    background: #fde8e8;
+    border: 1px solid #f9c6c6;
+    color: #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.co-ms-StuProfile-remove-image-btn:hover, .StuProfile-remove-image-btn:hover {
+    background: #d9534f;
+    color: white;
+    border-color: #d9534f;
+}
+
+.co-ms-StuProfile-upload-info-container, .StuProfile-upload-info-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.co-ms-StuProfile-upload-info-item, .StuProfile-upload-info-item {
+    display: flex;
+    align-items: center;
+    color: #555;
+}
+
+.co-ms-StuProfile-upload-info-item:not(:last-child), .StuProfile-upload-info-item:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.co-ms-StuProfile-study-category, .StuProfile-study-category {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #fff9f9;
+    border-radius: 8px;
+    border: 1px solid #f4dddd;
+}
+
+.co-ms-StuProfile-study-category label, .StuProfile-study-category label {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.co-ms-StuProfile-study-category input[type='radio'], .StuProfile-study-category input[type='radio'] {
+    display: none;
+}
+
+.co-ms-StuProfile-study-category input[type='radio']:checked + label, .StuProfile-study-category input[type='radio']:checked + label {
+    background-color: #d73d3d;
+    color: white;
+    font-weight: 500;
+}
+
+/* Checkbox styling - scaled down to match other coordinator pages */
+.co-ms-StuProfile-form-grid input[type='checkbox'], .StuProfile-form-grid input[type='checkbox'],
+input[type='checkbox'] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+
+/* Checkbox group styling - Red theme matching admin layout */
+.co-ms-StuProfile-checkbox-group, .StuProfile-checkbox-group {
+    background-color: #fef5f5;
+    border: 1px solid #f4dddd;
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.co-ms-StuProfile-checkbox-group-label, .StuProfile-checkbox-group-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #c62828;
+    margin-bottom: 0;
+}
+
+.co-ms-StuProfile-checkbox-options, .StuProfile-checkbox-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.co-ms-StuProfile-checkbox-option, .StuProfile-checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: #333;
+    user-select: none;
+}
+
+.co-ms-StuProfile-checkbox-option:hover, .StuProfile-checkbox-option:hover {
+    opacity: 0.8;
+}
+
+.co-ms-StuProfile-checkbox-option input[type='checkbox'], .StuProfile-checkbox-option input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #d23b42;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.co-ms-StuProfile-checkbox-option input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.co-ms-StuProfile-checkbox-option input[type="checkbox"]:checked + span {
+    color: #c62828;
+    font-weight: 500;
+}
+
+.co-ms-StuProfile-checkbox-option input[type="checkbox"]:disabled ~ span {
+    color: #999;
+}
+
+.co-ms-StuProfile-checkbox-option span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.co-ms-StuProfile-action-buttons, .StuProfile-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.co-ms-StuProfile-action-buttons button, .StuProfile-action-buttons button {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* New button styles */
+.co-ms-StuProfile-edit-btn, .StuProfile-edit-btn {
+    background-color: #eef2ff; /* Indigo 50 */
+    color: #4f46e5; /* Indigo 600 */
+    margin-left: 25px;
+}
+
+.co-ms-StuProfile-edit-btn:hover, .StuProfile-edit-btn:hover {
+    background-color: #e0e7ff; /* Indigo 100 */
+}
+
+.co-ms-StuProfile-block-btn, .StuProfile-block-btn {
+    background-color: #374151; /* Cool Gray 700 */
+    color: white;
+    margin-right: auto; /* This pushes the first two buttons to the left */
+}
+
+.co-ms-StuProfile-block-btn:hover, .StuProfile-block-btn:hover {
+    background-color: #1f2937; /* Cool Gray 800 */
+}
+/* End of new button styles */
+
+
+.co-ms-StuProfile-discard-btn, .StuProfile-discard-btn {
+    background-color: #ffeaec;
+    color: #d73d3d;
+}
+
+.co-ms-StuProfile-save-btn, .StuProfile-save-btn {
+    background-color: #d73d3d;
+    color: white;
+}
+
+.co-ms-StuProfile-save-btn:hover, .StuProfile-save-btn:hover {
+    background-color: #bc1b09;
+}
+
+.co-ms-StuProfile-discard-btn:hover, .StuProfile-discard-btn:hover {
+    background-color: #f0caca;
+}
+/* Image preview modal */
+.co-ms-StuProfile-image-preview-overlay, .StuProfile-image-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    cursor: pointer;
+}
+
+.co-ms-StuProfile-image-preview-container, .StuProfile-image-preview-container {
+    position: relative;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    cursor: default;
+}
+
+.co-ms-StuProfile-image-preview-content, .StuProfile-image-preview-content {
+    max-width: 100%;
+    max-height: calc(90vh - 20px);
+    display: block;
+    border-radius: 8px;
+}
+
+.co-ms-StuProfile-image-preview-close-btn, .StuProfile-image-preview-close-btn {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: white;
+    color: #333;
+    border: 2px solid #333;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 0 5px 0;
+}
+
+/* Success popup */
+.co-ms-StuProfile-popup-overlay, .StuProfile-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.co-ms-StuProfile-popup-container, .StuProfile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-ms-StuProfile-popup-header, .StuProfile-popup-header {
+    background-color: #d73d3d;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.co-ms-StuProfile-popup-body, .StuProfile-popup-body {
+    padding: 2rem;
+}
+
+.co-ms-StuProfile-popup-body h2, .StuProfile-popup-body h2 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.co-ms-StuProfile-popup-body p, .StuProfile-popup-body p {
+    margin: 0.25rem 0;
+    color: #666;
+}
+
+.co-ms-StuProfile-popup-footer, .StuProfile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.co-ms-StuProfile-popup-close-btn, .StuProfile-popup-close-btn {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.co-ms-StuProfile-popup-close-btn:hover, .StuProfile-popup-close-btn:hover {
+    background-color: #c9302c;
+}
+
+/* Success icon animations */
+.co-ms-StuProfile-success-icon, .StuProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4bb71b;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-StuProfile-success-icon--circle, .StuProfile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4bb71b;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ms-StuProfile-success-icon--check, .StuProfile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #4bb71b;
+    }
+}
+
+/* --- NEW: Delete Warning Popup Specific Styles --- */
+.co-ms-StuProfile-popup-header.delete-warning-header {
+    background-color: #d23b42; /* Warning yellow color */
+}
+
+.co-ms-StuProfile-warning-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    color: #f0ad4e; /* Warning yellow color for the icon */
+}
+.co-ms-StuProfile-warning-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+.co-ms-StuProfile-popup-back-btn, .StuProfile-popup-back-btn {
+    background-color: #6c757d; /* Grey for "Back" button */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    margin-right: 10px; /* Space between buttons */
+}
+
+.co-ms-StuProfile-popup-back-btn:hover, .StuProfile-popup-back-btn:hover {
+    background-color: #5a6268;
+}
+
+.co-ms-StuProfile-popup-confirm-btn, .StuProfile-popup-confirm-btn {
+    background-color: #d23b42; /* Red for "Confirm" button */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.co-ms-StuProfile-popup-confirm-btn:hover, .StuProfile-popup-confirm-btn:hover {
+    background-color: #bd2130;
+}
+
+
+/* --- NEW: Student Deleted Popup Specific Styles --- */
+.co-ms-StuProfile-popup-header.delete-success-header {
+    background-color: #d23b42; /* Red for deleted header */
+}
+
+.co-ms-StuProfile-delete-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    color: #d23b42; /* Red for the trash icon */
+}
+
+/* File: Coo_ManageStuEditPage.css */
+
+/* ... (Existing styles for layout, buttons, and delete header colors) ... */
+
+/* 2. Warning Icon (Exclamation Mark) Styles */
+.co-ms-StuProfile-warning-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 3;
+    stroke: #E9DE48;
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 transparent;
+    /* FIX: No fill/scale animation for warning for visibility */
+    animation: co-ms-DeleteWarning-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteWarning-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-StuProfile-warning-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #E9DE48;
+    fill: none;
+    /* Uses the generic stroke keyframe */
+    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ms-StuProfile-warning-icon--exclamation {
+    stroke-width: 3;
+    stroke: #fff; 
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* Uses the generic dash keyframe */
+    animation: co-ms-StuProfile-dash 0.3s 0.6s ease-in-out forwards;
+    stroke-dasharray: 16;
+    stroke-dashoffset: 16;
+}
+
+/* REMOVED: .Achievement-warning-icon--trashbin CSS class is no longer needed/used. */
+
+/* 3. Delete Success Icon (Bin) Styles */
+/* 3. Delete Success Icon (Bin) Styles */
+.co-ms-StuProfile-delete-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    fill: none;
+    background-color: transparent; 
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 transparent;
+    /* Uses the dedicated success fill and scale keyframes */
+    animation: co-ms-DeleteSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteSuccess-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-StuProfile-delete-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #D23B42;
+    fill: none;
+    /* Uses the generic stroke keyframe */
+    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ms-StuProfile-delete-icon--bin {
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    fill: none;
+    /* Uses the generic dash keyframe for the bin paths */
+    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+    stroke-dasharray: 100; /* Adjust this value if the bin paths are not drawing correctly */
+    stroke-dashoffset: 100;
+}
+/* =================================== */
+/* ===== DELETE POPUP KEYFRAMES ===== */
+/* =================================== */
+
+/* --- SHARED STROKE/DASH ANIMATIONS (Used by both warning and success) --- */
+@keyframes co-ms-StuProfile-stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes co-ms-StuProfile-dash {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* --- DELETE SUCCESS KEYFRAMES (RED Fill for Trash Bin) --- */
+@keyframes co-ms-DeleteSuccess-scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes co-ms-DeleteSuccess-fill {
+    100% {
+        /* Fills the circle with Delete Red (#D23B42) */
+        box-shadow: inset 0 0 0 80px #D23B42;
+    }
+}
+
+/* --- DELETE WARNING KEYFRAMES (YELLOW Fill - Provided but NOT used in final CSS for visibility) --- */
+/* Note: The warning icon in the CSS below relies only on the stroke animation for visibility. */
+@keyframes co-ms-DeleteWarning-scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.05, 1.05, 1);
+    }
+}
+
+@keyframes co-ms-DeleteWarning-fill {
+    100% {
+        /* Fills the circle with Warning Yellow (#E9DE48) */
+        box-shadow: inset 0 0 0 80px #E9DE48;
+    }
+}
+/* ... (Achievement-delete-icon--circle and Achievement-delete-icon--bin styles remain unchanged) ... */
+
+/* 4. ANIMATION KEYFRAMES (Remain Unchanged) */
+/* ... (@keyframes Achievement-stroke, @keyframes Achievement-scale, @keyframes Achievement-fill, @keyframes Achievement-dash) ... */
+.co-ms-StuProfile-delete-icon svg {
+    width: 100%;
+    height: 100%;
+}
+/* --- Block/Unblock Button Styling --- */
+
+/* Base style for the block button when it shows 'Block' (default style for co-ms-StuProfile-edit-btn is assumed to be ok, but we ensure the color is correct) */
+.co-ms-StuProfile-edit-btn.block-btn, .StuProfile-edit-btn.block-btn {
+    background-color: #eef2ff; /* Orange/Yellow for the 'Block' button */
+    color: #4f46e5;
+}
+.co-ms-StuProfile-edit-btn.block-btn:hover, .StuProfile-edit-btn.block-btn:hover {
+    background-color: #e0e7ff;
+}
+
+/* Style for the button when it shows 'Unblock' */
+.co-ms-StuProfile-edit-btn.unblock-btn, .StuProfile-edit-btn.unblock-btn {
+    background-color: #eef2ff; /* Green for the 'Unblock' button */
+    color: #4f46e5;
+}
+.co-ms-StuProfile-edit-btn.unblock-btn:hover, .StuProfile-edit-btn.unblock-btn:hover {
+    background-color: #e0e7ff;
+}
+
+
+/* --- NEW: Blocked Popup Specific Styles --- */
+.co-ms-StuProfile-popup-header.block-popup-header {
+    background-color: #d23b42; /* Orange/Yellow for blocked header */
+}
+
+.co-ms-StuProfile-block-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    color: #f0ad4e; /* Orange/Yellow for the lock icon */
+}
+.co-ms-StuProfile-block-icon svg {
+    width: 100%;
+    height: 100%;
+}
+/* --- UNBLOCK SUCCESS ICON (GREEN - Unlocked Padlock) --- */
+.co-ms-StuProfile-unblock-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff; /* White icon stroke against green fill */
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 transparent;
+    /* Applies Green Fill and Scale animations */
+    animation: co-ms-UnblockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-UnblockSuccess-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-StuProfile-unblock-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4CAF50; /* Green circle stroke */
+    fill: none;
+    /* Uses the shared stroke keyframe */
+    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ms-StuProfile-unblock-icon--lock {
+    stroke-width: 2;
+    stroke: #fff; 
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* Uses the shared dash keyframe to draw the unlocked padlock */
+    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+}
+
+/* --- BLOCK SUCCESS ICON (RED - Locked Padlock) --- */
+.co-ms-StuProfile-block-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff; /* White icon stroke against red fill */
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 transparent;
+    /* Applies Red Fill and Scale animations */
+    animation: co-ms-BlockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-BlockSuccess-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-StuProfile-block-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #D23B42; /* Red circle stroke */
+    fill: none;
+    /* Uses the shared stroke keyframe */
+    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ms-StuProfile-block-icon--lock {
+    stroke-width: 2;
+    stroke: #fff; 
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* Uses the shared dash keyframe to draw the locked padlock */
+    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+}
+/* --- UNBLOCK SUCCESS KEYFRAMES (GREEN Fill for Unlocked Padlock) --- */
+@keyframes co-ms-UnblockSuccess-scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes co-ms-UnblockSuccess-fill {
+    100% {
+        /* Fills the circle with Success Green (#4CAF50) */
+        box-shadow: inset 0 0 0 80px #4CAF50;
+    }
+}
+
+/* --- BLOCK SUCCESS KEYFRAMES (RED Fill for Locked Padlock) --- */
+@keyframes co-ms-BlockSuccess-scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes co-ms-BlockSuccess-fill {
+    100% {
+        /* Fills the circle with Block Red (#D23B42) */
+        box-shadow: inset 0 0 0 80px #D23B42;
+    }
+}
+/* --- NEW: Unblocked Popup Specific Styles --- */
+.co-ms-StuProfile-popup-header.unblock-popup-header {
+    background-color: #d23b42; /* Green for unblocked header */
+}
+
+.co-ms-StuProfile-unblock-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    color: #5cb85c; /* Green for the unlock icon */
+}
+
+.co-ms-StuProfile-unblock-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 900px) {
+    .co-ms-StuProfile-dashboard-area, .StuProfile-dashboard-area {
+        margin-left: -293px;
+        position:fixed;
+        padding: 15px 20px;
+        min-height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+    .co-ms-StuProfile-main, .StuProfile-main {
+        flex-direction: column;
+        height: auto;
+        margin-top: 60px;
+    }
+    .co-ms-StuProfile-overlay, .StuProfile-overlay {
+        display: block;
+    }
+    .co-ms-StuProfile-sidebar, .StuProfile-sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 999;
+        padding: 0 15px;
+        border-right: none;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .co-ms-StuProfile-sidebar.active, .StuProfile-sidebar.active {
+        transform: translateX(0);
+    }
+    .co-ms-StuProfile-form-grid, .StuProfile-form-grid {
+        display: block;
+        gap: 0;
+    }
+    .co-ms-StuProfile-personal-info-fields, .StuProfile-personal-info-fields {
+        grid-column: auto;
+        display: block;
+    }
+    
+    /* Adding spacing to each input field on mobile */
+    .co-ms-StuProfile-profile-section-container input:not(:last-child), .StuProfile-profile-section-container input:not(:last-child),
+    .co-ms-StuProfile-profile-section-container select:not(:last-child), .StuProfile-profile-section-container select:not(:last-child) {
+        margin-bottom: 1.5rem; /* Adjust this value to control spacing */
+    }
+
+    /* To handle the last input field, you might need a different approach if it's the last element in its parent container */
+    .co-ms-StuProfile-profile-section-container input, .StuProfile-profile-section-container input,
+    .co-ms-StuProfile-profile-section-container select, .StuProfile-profile-section-container select {
+        margin-bottom: 1rem; /* A general margin for all form elements on mobile */
+    }
+    
+    .co-ms-StuProfile-profile-photo-wrapper, .StuProfile-profile-photo-wrapper {
+        grid-column: auto;
+        margin-top: 1.5rem;
+    }
+    .co-ms-StuProfile-form-grid input, .StuProfile-form-grid input,
+    .co-ms-StuProfile-form-grid select, .StuProfile-form-grid select {
+        width: 100%;
+    }
+    .co-ms-StuProfile-action-buttons, .StuProfile-action-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .co-ms-StuProfile-action-buttons button, .StuProfile-action-buttons button {
+        width: 100%;
+    }
+
+    .co-ms-StuProfile-card, .StuProfile-card {
+        width: 100% !important;
+        margin-bottom: 1rem;
+        padding: 1rem 1.2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background-color: white;
+        transition: box-shadow 0.3s ease;
+    }
+    .co-ms-StuProfile-card:hover, .StuProfile-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .co-ms-StuProfile-btn, .StuProfile-btn,
+    .co-ms-StuProfile-profile-upload-btn, .StuProfile-profile-upload-btn,
+    .co-ms-StuProfile-save-btn, .StuProfile-save-btn,
+    .co-ms-StuProfile-discard-btn, .StuProfile-discard-btn {
+        width: 100% !important;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+    }
+    .co-ms-StuProfile-card-button, .StuProfile-card-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+      .co-form-grid {
+        display: block;
+        gap: 0;
+    }      
+    .co-form-grid input,
+    .co-form-grid select {
+        width: 100%;
+    } 
+    .co-password-toggle-btn {
+        position: absolute !important;
+        right: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        color: #90a4ae !important;
+        font-size: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* Red scrollbar on mobile */
+@media (max-width: 992px) {
+  .co-ms-StuProfile-content::-webkit-scrollbar,
+  .StuProfile-content::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 10px;
+  }
+  .co-ms-StuProfile-content::-webkit-scrollbar-track,
+  .StuProfile-content::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-ms-StuProfile-content::-webkit-scrollbar-thumb,
+  .StuProfile-content::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-ms-StuProfile-content::-webkit-scrollbar-thumb:hover,
+  .StuProfile-content::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+  .co-form-grid {
+        display: block;
+        gap: 0;
+    }
+    .co-form-grid input,
+    .co-form-grid select {
+        width: 100%;
+    }
+    .co-password-toggle-btn {
+        position: absolute !important;
+        right: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        color: #90a4ae !important;
+        font-size: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+    }
+}
+/* Certificate Button */
+.co-ms-certificate-btn,
+.certificate-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    background-color: #d23b42;
+    color: white;
+    box-shadow: 0 2px 4px rgba(210, 59, 66, 0.2);
+}
+
+.co-ms-certificate-btn:hover,
+.certificate-btn:hover {
+    background-color: #b32d34;
+    box-shadow: 0 4px 8px rgba(210, 59, 66, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Resume Button */
+.co-ms-resume-btn,
+.resume-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    background-color: #d23b42;
+    color: white;
+    box-shadow: 0 2px 4px rgba(210, 59, 66, 0.2);
+}
+
+.co-ms-resume-btn:hover,
+.resume-btn:hover {
+    background-color: #b32d34;
+    box-shadow: 0 4px 8px rgba(210, 59, 66, 0.3);
+    transform: translateY(-1px);
+}

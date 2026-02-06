@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: placement-portal-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER
+        value: true
+      - key: MONGODB_URI
+        value: mongodb+srv://placement-portal-user:UWaLa3a1iygV3cZ8@placement-portal-cluste.0zhp6cb.mongodb.net/placement-portal?retryWrites=true&w=majority&appName=placement-portal-cluster
+      - key: JWT_SECRET
+        value: your-super-secret-jwt-key-change-this-in-production-12345
+      - key: CORS_ORIGINS
+        value: https://placement-portal.vercel.app,https://placement--portal.vercel.app
+    healthCheckPath: /api/health

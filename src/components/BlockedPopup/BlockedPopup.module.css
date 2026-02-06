@@ -1,0 +1,135 @@
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 15, 23, 0.68);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 11000;
+    padding: 16px;
+}
+
+.popup-container {
+    width: min(420px, 94vw);
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.24);
+    overflow: hidden;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+.popup-header {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    padding: 20px 28px;
+    text-align: center;
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.popup-body {
+    padding: 32px 28px 26px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.block-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: rgba(220, 53, 69, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: #dc3545;
+}
+
+.block-icon svg {
+    width: 58px;
+    height: 58px;
+    color: inherit;
+}
+
+.blocked-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.blocked-message {
+    color: #4b5563;
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.visit-card {
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 16px;
+    padding: 20px 18px;
+    background: rgba(37, 99, 235, 0.05);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.visit-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 1rem;
+    color: #1f2937;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.info-value {
+    font-weight: 500;
+    color: #111827;
+}
+
+.popup-footer {
+    padding: 18px 24px 24px;
+    display: flex;
+    justify-content: center;
+    background: #f9fafb;
+}
+
+.close-btn {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 36px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 12px 24px rgba(55, 65, 81, 0.25);
+}
+
+.close-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(55, 65, 81, 0.28);
+}
+
+.close-btn:active {
+    transform: translateY(0);
+}

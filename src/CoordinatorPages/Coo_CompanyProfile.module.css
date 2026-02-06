@@ -1,0 +1,1028 @@
+/* Layout */
+.co-cp-layout {
+  display: flex;
+  background: #f6f6f6;
+  height: calc(100vh - 72px);
+  overflow: hidden;
+  height: 727px;
+}
+
+/* Main Section */
+.co-cp-main-content {
+  flex: 1;
+  padding-top: 0px;
+  overflow-x: hidden;
+  padding-left: -40px;
+  overflow-y: hidden;
+ width:1000px;
+  box-sizing: border-box;
+  height: 100vh;
+  box-sizing: border-box;
+  background: #f6f8fb;
+
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-cp-main-content::-webkit-scrollbar{width: 10px;}
+.co-cp-table-scroll-wrapper::-webkit-scrollbar,
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 15px;
+}
+.co-cp-main-content::-webkit-scrollbar-track,
+.co-cp-table-scroll-wrapper::-webkit-scrollbar-track,
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-cp-main-content::-webkit-scrollbar-thumb,
+.co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb,
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-cp-main-content::-webkit-scrollbar-thumb:hover,
+.co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal {
+height: 12px !important ;/* height of the horizontal scrollbar */
+}
+
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal {
+background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+border-radius: 20px;
+border: 3px solid #f0f2f5;
+}
+
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
+background-color: #c1bfbf !important; /* darker grey on hover */
+}
+
+.co-cp-top-cards-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  min-width: 100%;
+  padding-bottom: 21px;
+  padding-left: 320px;
+  padding-top: 100px;
+  margin-left:-66px;
+}
+
+/* ================================================================
+   GENERAL LAYOUT & CARD STYLE
+================================================================ */
+
+/* Base styles for all cards */
+.co-cp-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #e0e0e0;
+}
+
+.co-cp-card-title {
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height:33px;
+}
+
+.co-cp-card-desc {
+ color: #888;
+  font-size: 0.96rem;
+  line-height: 21px;
+  margin-top: -14px;
+  font-weight: 600;
+}
+
+.co-cp-card.co-cp-report-analysis-card{
+  flex: 1;
+   max-width: 211px; 
+   min-width: 211px;
+    align-items: center;
+    min-height: 245px; 
+    margin-left: 40px; 
+}
+.co-cp-card.co-cp-company-profile-card{
+flex:1;
+max-width: 243.2px;
+min-width:130px;
+ align-items:center;
+  min-height: 245px;
+   margin-left: -41px;
+}
+/* Hover effect for the Report Analysis card */
+.co-cp-report-analysis-card:hover {
+  box-shadow: 0 8px 20px rgba(215, 61, 61, 0.2);
+  border: 2px solid #d73d3d;
+}
+
+/* Hover effect for the Company Profile card */
+.co-cp-company-profile-card:hover {
+  box-shadow: 0 8px 20px rgba(215, 61, 61, 0.2);
+  border: 2px solid #d73d3d;
+}
+.co-cp-floating-select {
+  width: 100%;
+  height: 100%;
+  padding: 15px 15px 5px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 0.95rem;
+  color: #333;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s 
+ease;
+}
+/* ================================================================
+   1. REPORT ANALYSIS CARD
+================================================================ */
+.co-cp-report-analysis-card {
+  border: 2px solid #808080;
+}
+.co-cp-report-analysis-card__image {
+  width: 54px;
+  height: 54px;
+}
+.co-cp-report-analysis-card__title {
+  margin-top: 18px;
+  margin-bottom: 3px;
+}
+
+/* ================================================================
+   2. SEARCH FILTER CARD
+================================================================ */
+.co-cp-search-filter-card {
+  background: #D2D1D1;
+  min-width: 330px;
+  max-width: 628px;
+  height: 245px;
+  border-radius: 43px;
+  box-shadow: 0px 2.5px 13px #e6e6e6c7;
+  padding: 16px 24px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 0 8px;
+  flex: 2 1 0;
+}
+
+.co-cp-search-filter-card__tabs-container {
+  width: 570px;
+  top: -30px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.co-cp-search-filter-card__tab-button {
+  background: #d73d3d;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 30px;
+  padding: 9px 0px 9px 0px;
+  width: 220px;
+}
+
+.co-cp-search-filter-card__fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 570px;
+  margin-bottom: 20px;
+  margin-right: 10px;
+  justify-content: space-evenly;
+}
+
+.co-cp-search-filter-card__fields-row {
+  display: flex;
+  gap: 20px;
+  width: 570px;
+  height: 46px;
+  justify-content: space-evenly;
+}
+
+.co-cp-search-filter-card__input-wrapper {
+  position: relative;
+  flex: 1;
+  height: 46px;
+  width: 280px;
+}
+
+.co-cp-search-filter-card__input-wrapper1 {
+  position: relative;
+  flex: 1;
+  height: 46px;
+  width: 280px;
+  color:#999;
+}
+
+.co-cp-search-filter-card__input {
+  border-radius: 8px;
+  border: 1px solid #e1e1e1;
+  padding: 12px 14px 12px 32px;
+  font-size: 1rem;
+  outline: none;
+  width: 280px;
+  background: #fff;
+}
+
+.co-cp-search-filter-card__input:hover {
+  border-color: #d73d3d;
+}
+
+.co-cp-search-filter-card__input:focus {
+  border-color: #d73d3d;
+  box-shadow: 0 0 4px rgba(215, 61, 61, 0.4);
+}
+
+.co-cp-input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: #bbb;
+}
+
+.co-cp-search-filter-card__button-group {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.co-cp-search-filter-card__view-button {
+      background: #fff;
+  color: #d73d3d;
+  border-radius: 10px;
+  border: 1.5px solid #d73d3d;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 7px 37px;
+  cursor: pointer;
+  box-shadow: 0px 2px 7px #ececec;
+  transition: all 0.2s 
+ease-in-out;
+}
+.co-cp-search-filter-card__view-button:hover {
+  background: #f8f8f8;
+  box-shadow: 0 4px 12px rgba(215, 61, 61, 0.2);
+}
+
+.co-cp-search-filter-card__clear-button {
+  background: #E0E0E0;
+  color: #000;
+  border-radius: 10px;
+  border: 1.5px solid #6c757d;
+  font-size: 1rem;
+  font-weight: 550;
+  padding: 7px 25px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+.co-cp-search-filter-card__clear-button:hover {
+  background: #fff;
+  color: #d73d3d;
+  border: 1.5px solid #d73d3d;
+}
+
+.co-cp-search-filter-card__label {
+  position: absolute;
+  top: 23px;
+  transform: translateY(-65%);
+  left: 15px;
+  color: #999;
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+  font-size: 1rem;
+}
+.co-cp-search-filter-card__input:focus + .co-cp-search-filter-card__label,
+.co-cp-search-filter-card__input:valid + .co-cp-search-filter-card__label {
+  top: -20px;
+  left: 10px;
+  font-size: 0.85rem;
+  color: #d73d3d;
+  padding: 0 5px;
+  font-weight: 600;
+  transform: translateY(0);
+}
+
+/* ================================================================
+   3. COMPANY PROFILE CARD
+================================================================ */
+.co-cp-company-profile-card {
+  border: 2px solid #808080;
+}
+.co-cp-company-profile-card__image {
+  width: 54px;
+  height: 54px;
+}
+.co-cp-company-profile-card__title {
+  margin-top: 18px;
+}
+
+/* Stat cards (Companies / Confirmed) */
+.co-cp-stat-card {
+  border: 2px solid #808080;
+  min-height: 245px;
+  max-width: 160px;
+  min-width: 160px;
+  gap: 8px;
+  justify-content: center;
+}
+
+.co-cp-stat-card__image {
+  width: 65px;
+  height: 65px;
+  margin-top: -7px;
+}
+
+.co-cp-stat-card__label {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.co-cp-stat-card__value {
+  font-size: 3.4rem;
+  font-weight: 700;
+  color: #9a9a9a;
+  line-height: 1;
+}
+
+
+/* ================================================================
+   4. COMPANY DRIVE TABLE - Updated with Admin-like styling
+================================================================ */
+.co-cp-drive-table-container {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: -16px;
+  width: 1219.6px;
+  height: 379px;
+  padding: 10px 25px;
+  position: relative;
+  border: 2px solid #808080;
+  margin-left:305px;
+  transition: all 0.3s ease;
+}
+
+.co-cp-drive-table-container__print-button {
+  top: 25px;
+  bottom: 15px;
+  right: 32px;
+  background: #d73d3d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 24px;
+  cursor: pointer;
+  box-shadow: 0px 2px 7px #ececec;
+  z-index: 4;
+}
+
+.co-cp-drive-table-container__print-button:hover {
+  background: #b92d39;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+
+.co-cp-print-menu-wrapper {
+  position: absolute;
+  top: 25px;
+  right: 32px;
+  z-index: 10;
+}
+
+.co-cp-export-menu {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  overflow: hidden;
+}
+.co-cp-export-menu div {
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.co-cp-export-menu div:hover {
+  background-color: #f5f5f5;
+}
+
+.co-cp-drive-table-container__title-bar {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #333;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.co-cp-drive-table-container__results-count {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: normal;
+  margin-left: 10px;
+}
+
+.co-cp-drive-table-container__table-wrapper {
+  height: 300px;
+  overflow-y: scroll;
+  overflow-x: auto;
+  border: none;
+  border-radius: 0;
+  width:1179px;
+}
+
+/* Red Scrollbars for table */
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb {
+  background: #d23b42;
+  border-radius: 4px;
+}
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #b32d34;
+}
+
+.co-cp-drive-table-container__table-wrapper table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.co-cp-drive-table-container__table-wrapper thead tr {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom: none;
+  z-index: 11;
+}
+
+.co-cp-drive-table-container__table-wrapper th {
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  background-color: #ffffff;
+  border-bottom: none;
+}
+
+.co-cp-drive-table-container__table-wrapper tbody tr {
+  cursor: pointer;
+  transition: background-color 0.1s;
+  border-bottom: 1px solid #eee;
+  height: 47px;
+}
+
+.co-cp-drive-table-container__table-wrapper tbody tr:hover {
+  background-color: #f6f6f6;
+}
+
+.co-cp-drive-table-container__table-wrapper td {
+  padding: 8px 10px;
+  text-align: center;
+  color: #2e2e2e;
+  font-weight: 450;
+  white-space: nowrap;
+  border-bottom: 1px solid #eee;
+}
+
+.co-cp-drive-table-container__table-wrapper tbody tr:last-child td {
+  border-bottom: none;
+}
+.coordinator-content-area {
+  flex: 1 1;
+  background: #fff;
+  margin-left: 270px;
+ 
+  transition: margin-left 0.3s 
+ease-in-out;
+}
+
+/* ============================================
+   Export Popup Styles
+   ============================================ */
+
+/* Popup Overlay */
+.co-cp-export-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: co-cp-export-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes co-cp-export-popup-fade-in {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
+/* Popup Container */
+.co-cp-export-popup-container {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: co-cp-export-popup-scale-in 0.3s ease-out;
+}
+
+@keyframes co-cp-export-popup-scale-in {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+@keyframes co-cp-scale {
+  0%, 100% { transform: none; }
+  50% { transform: scale(1.1); }
+}
+@keyframes co-cp-fill-color {
+  0% { fill: none; }
+  100% { fill: #4caf50; } /* Fill the circle with green after stroke */
+}
+@keyframes co-cp-stroke {
+  100% {
+      stroke-dashoffset: 0;
+  }
+}
+
+@keyframes co-cp-fill {
+  100% {
+      box-shadow: inset 0px 0px 0px 60px #4caf50; /* Adjust to match the fill color */
+      background-color: #4caf50;
+  }
+}
+
+/* Popup Header */
+.co-cp-export-popup-header {
+  background-color: #d23b42;
+  color: white;
+  padding: 15px 20px;
+  font-size: 2.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Popup Body */
+.co-cp-export-popup-body {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Progress Circle Container */
+.co-cp-export-progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.co-cp-export-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d23b42;
+}
+
+/* Success Icon */
+.co-cp-export-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: co-cp-scale 0.3s ease-in-out 0.9s both; 
+}
+
+.co-cp-success-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4caf50;
+  fill: none;
+  animation: co-cp-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards, 
+               co-cp-fill-color 0.4s ease-in-out 0.6s forwards;
+}
+
+.co-cp-success-icon--check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #ffffff;
+  stroke-width: 3;
+  fill: none;
+  animation: co-cp-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+/* Failed Icon */
+.co-cp-export-failed-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Popup Title */
+.co-cp-export-popup-title {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Popup Message */
+.co-cp-export-popup-message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Popup Footer */
+.co-cp-export-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* Close Button */
+.co-cp-export-popup-close-btn {
+  background-color: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.co-cp-export-popup-close-btn:hover {
+  background-color: #b32d34;
+}
+
+.co-cp-export-popup-close-btn:active {
+  transform: scale(0.98);
+}
+/* Existing Media Queries for larger screens (1200px and 700px) */
+@media (max-width: 768px) {
+  /* 1. Mobile Scrolling and Layout */
+  .co-cp-main-content {
+    /* This is the container for the entire content on the right */
+    position:absolute;
+    overflow-y: auto;
+    box-sizing: border-box; /* Enable vertical scroll for the entire main content */
+    height: 100vh; /* Set to full viewport height for mobile scroll */
+    width: 100%; /* Full width */
+    padding: 10px; /* Reduced padding */
+    padding-top: 70px; /* Push content below fixed Navbar */
+  }
+
+  /* 2. Card Stacking and Full Width */
+  .co-cp-top-cards-row {
+    display: flex;
+    flex-direction: column; /* Stack cards vertically */
+    gap: 15px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    margin-left: 15px;
+    margin-top: 10px;
+    justify-content: center; /* Ensures the cards are centered */
+    align-items: center; /* Ensures the cards are centered */
+    width: 100%; /* Full width container for cards */
+  }
+
+  .co-cp-card.co-cp-report-analysis-card{
+    flex: 1 1;
+    max-width: 243.2px;
+    min-width: 450px;
+    align-items: center;
+    min-height: 253.2px;
+    margin-left: -28px;
+    margin-top: 28px;
+  }
+  
+  .co-cp-card.co-cp-company-profile-card{
+    flex:1;
+    max-width: 243.2px;
+    min-width:450px;
+     align-items:center;
+      min-height: 273.2px;
+       margin-left: -28px;
+       margin-top: -12px;
+    }
+
+  /* Card Ordering and Full Width Sizing */
+  .co-cp-card {
+    width: 100%; /* Full width of the parent container */
+    max-width: 400px; /* Keep a maximum width for readability if container is very large */
+    margin: 0;
+    min-width: unset;
+    order: 1; /* Default order, will be overwritten by specific classes below */
+  }
+
+  /* Specific Card Ordering based on user request: */
+
+  /* Company Drive Card (Assumed to be the first card in the HTML structure) */
+  .co-cp-card:nth-child(1) {
+    order: 1; /* Company Drive Card */
+  }
+
+  /* Filter Card (Assumed to be the next element in HTML) */
+  .co-cp-search-filter-card {
+    order: 2; /* Filter Card */
+   margin-left: -26px;
+    width: 95%; /* Full width requested */
+    height: auto;
+    padding: 15px 10px;
+    margin: 0 0 15px -30px; /* Adjust margin for proper spacing */
+  }
+
+  /* Placed Students Card (Assumed to be the third card in the HTML structure) */
+  .co-cp-card:nth-child(3) {
+    order: 3; /* Placed Students Card */
+  }
+  
+  /* Filter Card Input Layout FIX */
+  .co-cp-search-filter-card__fields-row {
+    flex-direction: column;
+      width: 76%;
+      height: auto;
+      gap: 10px;
+      margin-left: 67px;
+      margin-right: 0;
+  }
+  .co-cp-floating-select {
+  width: 185%;
+  height: 100%;
+  padding: 15px 15px 5px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 0.95rem;
+  color: #333;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s 
+ease;
+}
+  .co-cp-search-filter-card__input-wrapper {
+      width: 100%; /* Input wrapper should fill 100% of its column container */
+      box-sizing: border-box;
+  }
+  .co-cp-search-filter-card__input-wrapper1 {
+    position: relative;
+    flex: 1;
+    height: 36px;
+    width: 430px;
+  }
+  .co-cp-search-filter-card__input {
+      width: 100%; /* Input element should fill its wrapper */
+      box-sizing: border-box;
+  }
+
+  /* 3. Table Section */
+  .co-cp-company-drive-table-container {
+    width: 100%; /* Full width requested */
+    margin: 15px 0;
+    padding: 15px 10px;
+    min-width: unset;
+  }
+
+
+  .co-cp-drive-table-container {
+    background: #fff;
+    border-radius: 13px;
+    box-shadow: 0px 2.5px 13px rgba(0,0,0,0.09);
+    margin-top: -16px;
+    width: 458px;
+    padding-top: 30px;
+    padding-bottom: 0px;
+    padding-left: 32px;
+    padding-right: 32px;
+    position: relative;
+    border: 2px solid #808080;
+    margin-left:3px;
+  }
+
+  .co-cp-drive-table-container__table-wrapper {
+    border-radius: 8px;
+    overflow-x: auto;
+    max-height: 290px;
+    overflow-y: auto;
+    width:420px;
+  }
+  /* Table Scrolling (Horizontal and Vertical) FIX */
+  .co-cp-table-scroll-wrapper {
+    overflow-x: auto; /* Horizontal scroll */
+    overflow-y: auto; /* Vertical scroll for the table content */
+    max-height: 300px; /* Restrict height to enable vertical scroll */
+    /* FIX: Removing position relative that might interfere with sticky headers and scrolling */
+    position: static; 
+  }
+  
+  .co-cp-table {
+    min-width: 768px; /* Force horizontal scroll within the wrapper */
+  }
+  
+  /* FIX: Ensure table header is visible when scrolling */
+  .co-cp-table th {
+      position: sticky; /* Keep headers sticky */
+      top: 0; /* Stick to the top of the scroll wrapper */
+      z-index: 10;
+      background-color: #f8f8f8; /* Ensure background is set for sticky header */
+  }
+
+  .co-cp-table th, .co-cp-table td {
+    padding: 8px 5px;
+    font-size: 0.8em;
+    min-width: 80px;
+  }
+
+  /* Red scrollbar on mobile */
+  .co-cp-table-scroll-wrapper::-webkit-scrollbar,
+  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 15px;
+  }
+  .co-cp-table-scroll-wrapper::-webkit-scrollbar-track,
+  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb,
+  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+  .co-cp-floating-input-container{max-width:400px;}
+  
+  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal {
+height: 12px !important ;/* height of the horizontal scrollbar */
+}
+
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal {
+background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+border-radius: 20px;
+border: 3px solid #f0f2f5;
+}
+
+.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
+background-color: #c1bfbf !important; /* darker grey on hover */
+}
+
+}
+
+/* ================================================================
+   LOADING SPINNER STYLES (Red Theme)
+================================================================ */
+
+.co-cp-loading-cell {
+    text-align: center;
+    padding: 48px 0;
+    width: 100%;
+    min-height: calc(72px * 3);
+    position: relative;
+}
+
+.co-cp-loading-row {
+    height: 100%;
+}
+
+.co-cp-loading-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    text-align: center;
+}
+
+.co-cp-spinner {
+    width: 34px;
+    margin-top: 50px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(210, 59, 66, 0.25);
+    border-top-color: #d23b42;
+    animation: coCompanyProfileSpin 0.7s linear infinite;
+}
+
+@keyframes coCompanyProfileSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.co-cp-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Eye Icon for View Column */
+.co-cp-eye-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #d23b42;
+}
+
+.co-cp-eye-icon:hover {
+    transform: scale(1.1);
+    color: #b32d34;
+}

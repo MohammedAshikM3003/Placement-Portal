@@ -1,0 +1,961 @@
+.co-layout {
+  display: flex;
+}
+
+.co-ram-filter-box {
+  background: #D3D1D1;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 25px auto 0 15px; 
+  padding: 16px 26px 8px 26px;
+  box-shadow: 0 0 12px #e1e6ef32;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 90px;
+  overflow: hidden;
+}
+
+.co-ram-tab-container {
+  display: flex;
+  gap: 62px;
+  margin-bottom: 8px;
+  text-align:center;
+}
+
+.co-ram-tab-inactive{
+  background: #D3D1D1;
+  color: #222;
+  border-radius: 8px;
+  padding: 5px 96px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 6px 8px -4px #333; 
+  transition: background 0.2s, color 0.2s;
+  width:350.69px;
+  height:62.6px;
+}
+.co-main-content{margin-left:300px; height:730px;}
+.co-ram-tab-active {
+  background: #d23b42;
+  color: #fff;
+  border-radius: 8px;
+  padding: 5px 100px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 4px 6px -6px #333; 
+  height:62.6px;
+  width:350.69px;
+}
+
+.co-ram-tab-inactive:hover {
+  background: #d23b42; 
+  color: #fff; 
+}
+
+.co-ram-filter-inputs {
+  display: flex;
+  gap: 44px;
+  margin-left: 0px;
+}
+
+.co-ram-filter-select, .co-ram-filter-date-input {
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 262px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ram-filter-select-1{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+.co-ram-filter-select-2{
+  background: #f6f8fb;
+  border: 2px solid #808080; /* Default border is 2px solid */
+  height: 51px;
+  width: 950px; 
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:center; 
+  transition: border-color 0.2s; 
+}
+
+
+.co-ram-filter-select-1:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ram-filter-select-1:hover{
+  border-color: #d23b42; 
+}
+
+.co-ram-filter-select-2:focus{
+  border-color: #d23b42;
+    outline: none !important;
+    box-shadow: none !important; 
+}
+.co-ram-filter-select-2:hover{
+  border-color: #d23b42; 
+}
+
+.co-ram-filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.co-ram-filter-select:hover, .co-ram-filter-date-input:hover {
+  border-color: #d23b42; 
+}
+
+/* --- FIX APPLIED HERE --- */
+.co-ram-filter-select:focus, .co-ram-filter-date-input:focus {
+  /* Explicitly setting the border ensures the 2px thickness is maintained, 
+     preventing size shift on focus. */
+  border: 2px solid #d23b42; 
+  width: 262px !important; 
+  box-sizing: border-box !important;
+  outline: none;
+}
+
+
+
+/* ------------------------ */
+
+.co-ram-round-buttons-container {
+  max-width: 1180px;
+  margin: 30px auto auto 10px;
+  display: flex;
+  gap: 14px;
+  overflow-x: auto; 
+  white-space: nowrap; 
+  padding-bottom: 10px;
+  scrollbar-width: thin; 
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar {
+  height: 8px; 
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  background: #d23b42;
+  border-radius: 4px;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+
+
+
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover,
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* Specific override: make round-buttons container scrollbar thumb light and track invisible */
+.co-ram-round-buttons-container {
+  /* Firefox: thumb + track */
+  scrollbar-width: 12px;
+  scrollbar-color: #c7c9c9 transparent;
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-track {
+  background: transparent; /* make track invisible */
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  background-color: #bbb2b2; /* thumb light color */
+  border-radius: 20px;
+  border: none;
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
+  background-color: #c7c9cc; /* keep same on hover */
+}
+
+.co-ram-round-button {
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px; 
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0; 
+}
+
+.co-ram-round-button-active {
+  background: #d23b42;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+.co-ram-round-button-inactive {
+  background: #f6f8fb;
+  color: #444;
+  font-weight: 600;
+  border: 1px solid #d4d6db;
+}
+
+.co-ram-round-button-inactive:hover {
+  background: #d23b42;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.co-ram-table-section {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 30px auto 30px 15px;
+  padding: 26px 32px 0px 12px;
+  box-shadow: 0 0 14px #e3e6ee2a;
+  border: 2px solid #808080;
+  height:341px;
+  /* Horizontal scrolling handled by the outer section so the vertical scrollbar stays on the inner body */
+}
+
+.co-ram-table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.co-ram-table-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #191c2f;
+  margin-bottom:33px;
+  margin-top:-16px;
+  margin-left:10px;
+}
+
+.co-ram-table-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom:20px;
+  
+}
+
+.co-ram-view-status-btn-all, .co-ram-view-status-btn-filtered, .co-ram-print-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.co-ram-view-status-btn-all {
+  background: #4ea24e;
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ram-view-status-btn-filtered {
+  background: #397639; 
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+}
+.co-ram-view-status-btn-all:hover{
+  background:#397639;
+}
+.co-ram-print-btn {
+  background: #d23b42;
+  color: #ffffffff;
+  padding: 9px 45px;
+  border-radius: 11px;
+  z-index: 1001; 
+}
+.co-ram-print-btn:hover{
+  background:#a72e33;
+}
+
+.co-ram-print-button-container {
+  position: relative;
+}
+
+.co-ram-export-menu {
+  position: absolute; 
+  top: 33px;
+  right: 0;
+  margin-top: 5px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000; 
+  min-width: 180px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.co-ram-export-menu-button {
+  display: block;
+  width: 180px;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.1s;
+}
+
+.co-ram-export-menu-button:hover {
+  background: #f0f0f0;
+}
+
+.co-ram-data-table {
+  min-width: 1290px;
+  width: 100%;
+  margin-top: -8px;
+  font-size: 1.02rem;
+  table-layout: fixed;
+  
+}
+
+.co-ram-data-table thead {
+  display: block;
+  width: 1290px; 
+}
+
+.co-ram-data-table th {
+  background: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  color:rgb(175, 175, 175);
+  /* Changed padding to be consistent and lower to give more space for content width */
+ padding:0px 0px;
+  border-radius: 3px;
+  text-align: center;
+  border-bottom: 2px solid #f2f0f2;
+  
+}
+
+
+  .co-ram-table-body-scroll {
+    /* vertical scrolling container (scrollbar will be on this element and stay at its right edge) */
+    width: 1160px;
+    max-height: 252px;
+    overflow-y: auto;
+    overflow-x: visible; /* allow the wide table to overflow so the outer .co-ram-table-section can horizontally scroll it */
+    scrollbar-gutter: stable; /* reserve gutter so content doesn't shift when scrollbar appears */
+  }
+/* table thead will scroll with the table body; no sticky positioning */
+
+.co-ram-table-body-scroll::-webkit-scrollbar-button {
+    display: none !important;
+}
+
+/* --- VERTICAL SCROLLBAR (Y-axis) --- */
+.co-ram-table-body-scroll::-webkit-scrollbar {
+    width: 15px;       /* vertical width */
+}
+
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb {
+    background: #d23b24 !important;    /* vertical thumb color */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5 !important;
+}
+
+.co-ram-table-body-scroll::-webkit-scrollbar-track {
+    background: #e3e5e7 !important;
+}
+
+/* --- HORIZONTAL SCROLLBAR (X-axis) --- */
+.co-ram-table-body-scroll::-webkit-scrollbar:horizontal {
+    height: 10px !important;           /* horizontal height */
+}
+
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background: #e3e5e7 !important;     /* horizontal thumb color */
+    border-radius: 20px;
+    border: 3px solid #ffffff00 !important;  /* transparent border */
+}
+
+.co-ram-table-body-scroll::-webkit-scrollbar-track:horizontal {
+    background: #ffffff !important;     /* cleaner look */
+}
+.co-ram-table-body-scroll thead{
+  position:sticky;
+  top:0px;
+}
+.co-ram-data-table tbody 
+{
+  display: block;
+  /* Must match thead width */
+  width: 1290px;
+}
+
+
+.co-ram-data-table {
+  min-width: 1290px; /* force horizontal overflow inside the outer section */
+  width: auto;
+  border-collapse: separate;
+  margin-top: -8px;
+  font-size: 1.02rem;
+  table-layout: fixed; 
+}
+.co-ram-data-table td {
+  padding: 9px 5px;
+  color: #30334e;
+  min-width:148px;
+  font-weight: 500;
+  border-bottom: 1.5px solid #f2f0f2;
+}
+
+.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 50px; }
+.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 140px; }
+.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 115px; }
+.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 85px; }
+.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 90px; }
+.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 60px; }
+.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 100px; }
+.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 120px; }
+.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 75px; }
+.co-ram-data-table th:nth-child(10), .co-ram-data-table td:nth-child(10) { width: 70px; }
+.co-ram-data-table th:nth-child(11), .co-ram-data-table td:nth-child(11) { width: 100px; }
+.co-ram-data-table th:nth-child(12), .co-ram-data-table td:nth-child(12) { width: 95px; }
+.co-ram-data-table th:nth-child(13), .co-ram-data-table td:nth-child(13) { width: 95px; }
+
+.co-ram-status-cell-passed {
+  padding: 6px 22px;
+  background: #c2f6ea;
+  color: #16c098;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block; 
+}
+
+.co-ram-status-cell-rejected {
+  padding: 6px 18px;
+  background:rgb(250, 213, 215);
+  color: #d23b42;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block;
+}
+       .co-ram-table-section::-webkit-scrollbar {
+      width: 15px;
+    }
+        .co-ram-table-section::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-ram-table-section::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-ram-table-section::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+     .co-ram-table-section::-webkit-scrollbar:horizontal {
+  height: 12px !important ;/* height of the horizontal scrollbar */
+}
+
+ .co-ram-table-section::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+ .co-ram-table-section::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #c1bfbf !important; /* darker grey on hover */
+}
+/* ... (Existing styles up to the media query) ... */
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  height: 8px; /* horizontal scrollbar height */
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-track {
+  background: transparent; /* background behind scrollbar */
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  color: #f0f2f5; /* scrollbar color */
+  border-radius: 4px;
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
+  background-color: #f0f2f5; /* slightly darker on hover */
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar {
+  height: 0px;
+  margin-top: 2px;
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-track {
+  background: #f8f8f8;
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  background: #808080;
+  border-radius: 4px;
+}
+
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
+  background: #606060;
+}
+
+/* ============================================
+   Export Popup Styles
+   ============================================ */
+
+/* Popup Overlay */
+.co-ram-export-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: co-ram-export-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes co-ram-export-popup-fade-in {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
+/* Popup Container */
+.co-ram-export-popup-container {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: co-ram-export-popup-scale-in 0.3s ease-out;
+}
+
+@keyframes co-ram-export-popup-scale-in {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+
+/* Popup Header */
+.co-ram-export-popup-header {
+  background-color: #d23b42;
+  color: white;
+  padding: 15px 20px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Popup Body */
+.co-ram-export-popup-body {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Progress Circle Container */
+.co-ram-export-progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.co-ram-export-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d23b42;
+}
+
+/* Success Icon */
+.co-ram-export-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: co-ram-fill 0.4s ease-in-out 0.4s forwards, co-ram-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ram-success-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4caf50;
+  fill: #4caf50;
+  animation: co-ram-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-ram-success-icon--check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #ffffff;
+  stroke-width: 3;
+  fill: none;
+  animation: co-ram-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+/* Failed Icon */
+.co-ram-export-failed-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Popup Title */
+.co-ram-export-popup-title {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Popup Message */
+.co-ram-export-popup-message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Popup Footer */
+.co-ram-export-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* Close Button */
+.co-ram-export-popup-close-btn {
+  background-color: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.co-ram-export-popup-close-btn:hover {
+  background-color: #b32d34;
+}
+
+.co-ram-export-popup-close-btn:active {
+  transform: scale(0.98);
+}
+
+/* Desktop scrollbar - red styling to match theme */
+
+
+
+
+
+/* ======================================================= */
+/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
+/* ======================================================= */
+@media (max-width: 1024px) {
+  /* Main Content Shift for screens where the sidebar might hide */
+  .co-main-content {
+      margin-left: 0 !important; /* Override the fixed desktop margin */
+      width: 100%;
+      margin-top:60px;
+  }
+}
+
+
+/* ======================================================= */
+/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
+/* ======================================================= */
+@media (max-width: 768px) {
+    /* 1. Main Content Container Fix */
+    .co-main-content {
+        /* *** REMOVED: position: absolute; and height: 100vh; which caused the issue *** */
+        margin-left: 0; /* Overrides the desktop margin-left: 35px; */
+        width: 100%;
+        margin-top: 10px; 
+        height:100vh; /* Prevent horizontal scrolling on the page body */
+        box-sizing: border-box;
+            position: absolute;
+    margin-left: 159px;
+    left: 1px;
+    overflow-y: auto;
+    }
+
+    /* 2. Filter Box Fix */
+    .co-ram-filter-box {
+        /* This box was causing the left gap with its 'margin: 25px auto 0 15px;' */
+        max-width: calc(100% - 20px); /* 100% minus the left/right margin */
+        width: auto;
+        margin: 80px 10px 0 10px; /* NEW: Top margin for spacing, 10px on L/R */
+        padding: 15px; /* Consistent inner padding */
+        box-sizing: border-box;
+    }
+
+    /* --- Tabs: Horizontal Scrollable --- */
+    .co-ram-tab-container {
+        gap: 10px; 
+        overflow-x: auto; 
+        white-space: nowrap; 
+        justify-content: flex-start; 
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+    }
+    
+    .co-ram-tab-inactive, 
+    .co-ram-tab-active {
+        width: 220px; 
+        height: auto;
+        padding: 10px 15px;
+        font-size: 1rem;
+        flex-shrink: 0; 
+    }
+
+    /* --- Filter Inputs: Vertical Stack (Inputs now take up 100% of their parent) --- */
+    .co-ram-filter-inputs {
+        flex-direction: column; 
+        gap: 15px; 
+        margin-left: 0;
+    }
+       .co-main-content::-webkit-scrollbar {
+      width: 10px;
+    }
+        .co-main-content::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-main-content::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-main-content::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+    .co-ram-filter-select, 
+    .co-ram-filter-date-input,
+    .co-ram-filter-select-1,
+    .co-ram-filter-select-2 {
+        width: 100% !important; /* Full width */
+        max-width: 100%;
+        height: 45px; 
+        font-size: 0.95rem;
+        padding: 8px 15px;
+        text-align: left; 
+    }
+           .co-ram-table-section::-webkit-scrollbar {
+      width: 15px;
+    }
+        .co-ram-table-section::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-ram-table-section::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-ram-table-section::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+     .co-ram-table-section::-webkit-scrollbar:horizontal {
+  height: 12px !important ;/* height of the horizontal scrollbar */
+}
+
+ .co-ram-table-section::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+ .co-ram-table-section::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #c1bfbf !important; /* darker grey on hover */
+}
+    /* 3. Round Buttons Container Fix */
+    .co-ram-round-buttons-container {
+        max-width: calc(100% - 20px);
+        margin: 20px 10px 20px 10px; /* Matches the 10px filter box margin */
+        padding-bottom: 10px;
+    }
+
+    /* 4. Table Section Fix */
+    .co-ram-table-section {
+        max-width: calc(100% - 20px);
+        margin: 40px 10px 100px 10px; /* Matches 10px margin, 100px bottom for scroll */
+        padding: 15px 5px 0 5px; /* Reduced padding for more space */
+        border-radius: 8px;
+        height: auto; 
+    }
+
+    /* --- Table Header/Actions: Back to Top/Bottom Alignment --- */
+    .co-ram-table-header-row {
+        flex-direction: column; 
+        align-items: flex-start; 
+        margin-bottom: 10px;
+    }
+    
+    .co-ram-table-title {
+        margin-bottom: 15px; 
+        font-size: 1.1rem;
+    }
+    
+    .co-ram-table-actions {
+        width: 100%; 
+        gap: 10px;
+        /* NEW: Changed from column to row to prevent buttons from taking full height */
+        flex-direction: row; 
+        justify-content: space-between; /* Space out the button groups */
+        margin-bottom: 15px;
+    }
+    
+    /* NEW: Adjusted button widths so they don't force a wrap */
+    .co-ram-view-status-btn-all, 
+    .co-ram-view-status-btn-filtered {
+        width: 55%; /* Allow status button to take a bit more space */
+        padding: 12px 5px; 
+        font-size: 0.9rem;
+        position: static; /* REMOVED relative/left from previous attempt */
+    }
+    
+    .co-ram-print-button-container {
+        width: 40%; /* Print container takes remaining space */
+        margin-left: 0; /* REMOVED problematic margin-left */
+        margin-top: 0; /* REMOVED problematic margin-top */
+    }
+
+    .co-ram-print-btn {
+        width: 100%;
+        padding: 12px 0;
+        font-size: 0.9rem;
+    }
+
+    /* Print Menu Positioning */
+    .co-ram-export-menu {
+        right: 0;
+        left: auto;
+        min-width: 100%; 
+    }
+
+    /* 5. Table Body Scroll Overflow Fix */
+    .co-ram-table-body-scroll {
+        max-height: 40vh; 
+        
+        /* CHANGE: We need horizontal scroll for the table content, but not the page body */
+         
+        /* REMOVE: Setting fixed width (e.g., 1900px) on this element causes the page overflow! */
+        width: 100%; /* Should be 100% of its parent */
+    }
+    
+    .co-ram-data-table {
+        /* REMOVE: width: 100%; on table and REMOVE min-width: 1290px;
+           Let the table content (th/td) define the width for horizontal scroll */
+        min-width: 1200px; /* Maintain a large enough min-width to force horizontal scroll */
+        width: auto;
+        font-size: 0.9rem;
+    }
+    
+    /* Ensure thead and tbody align horizontally */
+    .co-ram-data-table thead,
+    .co-ram-data-table tbody {
+        width: auto; /* Let the table content define width */
+    }
+.co-ram-round-buttons-container {
+  /* Firefox: thumb + track */
+  scrollbar-width: 12px;
+  scrollbar-color: #c7c9c9 transparent;
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-track {
+  background: transparent; /* make track invisible */
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
+  background-color: #bbb2b2; /* thumb light color */
+  border-radius: 20px;
+  border: none;
+}
+.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
+  background-color: #c7c9cc; /* keep same on hover */
+}
+
+
+.co-ram-tab-container {
+  /* Firefox: thumb + track */
+  scrollbar-width: 12px;
+  scrollbar-color: #a5a7a7 transparent;
+}
+.co-ram-tab-container::-webkit-scrollbar-track {
+  background: transparent; /* make track invisible */
+}
+.co-ram-tab-container::-webkit-scrollbar-thumb {
+  background-color: #bbb2b2; /* thumb light color */
+  border-radius: 20px;
+  border: none;
+}
+.co-ram-tab-container::-webkit-scrollbar-thumb:hover {
+  background-color: #c7c9cc; /* keep same on hover */
+}
+    /* Red scrollbar on mobile */
+    /* (Kept existing scrollbar styling) */
+}

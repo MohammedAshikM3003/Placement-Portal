@@ -1,0 +1,519 @@
+/* ============================================================ */
+/* === ADMIN CERTIFICATE VIEW PAGE - MATCHING THEME === */
+/* ============================================================ */
+
+.certificate-layout {
+  display: flex;
+  height: 100vh;
+  background: #f8f8f8;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.certificate-main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 40px 20px 40px;
+  margin-left: 280px; /* Sidebar offset */
+  margin-top: 67px;  /* Navbar offset */
+  height: calc(100vh - 67px);
+  overflow: hidden;
+}
+
+/* Three Cards: Identical grid */
+.certificate-stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  flex-shrink: 0;
+  height: 220px;
+  margin-bottom: 60px;
+}
+
+/* Card Styling */
+.certificate-card {
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+.certificate-card-student { 
+  background: linear-gradient(135deg, #4EA24E 0%, #3D8B3D 100%);
+  box-shadow: 0 4px 15px rgba(78, 162, 78, 0.3);
+}
+
+.certificate-card-blue { 
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.certificate-card-rating { 
+  background: linear-gradient(135deg, #E55353 0%, #C73E3E 100%);
+  box-shadow: 0 4px 15px rgba(229, 83, 83, 0.3);
+}
+
+.certificate-card-content {
+  width: 100%;
+}
+
+.certificate-card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  line-height: 1.2;
+}
+
+.certificate-card-number {
+  font-size: 4.5rem;
+  font-weight: 800;
+  margin-top: 5px;
+}
+
+.certificate-student-info {
+  margin-top: 10px;
+}
+
+/* Profile Picture Styles */
+.certificate-profile-pic-container {
+  margin: 15px auto 10px;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.certificate-profile-pic {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.certificate-default-profile {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.certificate-student-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 5px 0;
+  color: #ffffff;
+}
+
+.certificate-student-regno {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 5px 0;
+  opacity: 0.9;
+}
+
+.certificate-student-dept {
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 5px 0;
+  opacity: 0.85;
+}
+
+/* Student Details for Red Card */
+.certificate-student-details {
+  margin-top: 15px;
+  text-align: left;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.certificate-detail-item {
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin: 8px 0;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.certificate-detail-label {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.certificate-star-rating {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+/* Dark Blue Section - Matching AdAddBranchMainPage */
+.certificate-section {
+  background: #003D82; /* Dark blue matching the image */
+  border-radius: 20px;
+  padding: 15px 25px 25px 25px;
+  flex-grow: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  
+
+}
+
+.certificate-section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Header with title, search bar, and back button */
+.certificate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 20px;
+}
+
+.certificate-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Search Bar Styling */
+.certificate-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 300px;
+}
+
+.certificate-search-input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.certificate-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.certificate-search-input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.certificate-search-icon {
+  position: absolute;
+  right: 15px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Back Button */
+.certificate-back-btn {
+  padding: 10px 25px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 25px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.certificate-back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Loading Bar Styling */
+.certificate-loading-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 40px 20px;
+}
+
+.certificate-loading-container {
+  width: 60%;
+  max-width: 500px;
+}
+
+.certificate-loading-bar-background {
+  width: 100%;
+  height: 6px;
+  background: rgba(211, 211, 211, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.certificate-loading-bar-fill {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.6), rgba(34, 197, 94, 1), rgba(34, 197, 94, 0.6));
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+  animation: slideLoader 1.5s ease-in-out infinite;
+  position: absolute;
+  left: 0;
+}
+
+@keyframes slideLoader {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.certificate-loading-text {
+  color: #003D82;
+  font-size: 1rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Certificate List */
+.certificate-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.certificate-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Empty State */
+.certificate-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+}
+
+.certificate-empty svg {
+  stroke: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.certificate-empty p {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Certificate Items - White Rows */
+.certificate-item {
+  background-color: #ffffff !important;
+  border-radius: 15px;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  min-height: 90px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  gap: 20px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.certificate-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.certificate-item-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #003D82;
+  min-width: 40px;
+  text-align: center;
+}
+
+.certificate-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.certificate-item-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.certificate-item-date {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+.certificate-item-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.certificate-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #ffffff;
+}
+
+.certificate-view-btn {
+  background: #4A90E2;
+}
+
+.certificate-view-btn:hover {
+  background: #357ABD;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.certificate-download-btn {
+  background: #4EA24E;
+}
+
+.certificate-download-btn:hover {
+  background: #3D8B3D;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(78, 162, 78, 0.3);
+}
+
+.certificate-action-btn svg {
+  flex-shrink: 0;
+}
+
+/* Scroll Indicator */
+.certificate-scroll-indicator {
+  position: absolute;
+  right: 15px;
+  top: 80px;
+  bottom: 30px;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.certificate-scroll-indicator-thumb {
+  position: absolute;
+  width: 100%;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  transition: top 0.1s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .certificate-main-content {
+    padding: 10px 20px 20px 20px;
+  }
+
+  .certificate-stats-container {
+    gap: 15px;
+  }
+
+  .certificate-card-title {
+    font-size: 1.5rem;
+  }
+
+  .certificate-card-number {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .certificate-stats-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .certificate-card {
+    height: 150px;
+  }
+
+  .certificate-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .certificate-actions-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .certificate-search-container {
+    min-width: 100%;
+  }
+
+  .certificate-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .certificate-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

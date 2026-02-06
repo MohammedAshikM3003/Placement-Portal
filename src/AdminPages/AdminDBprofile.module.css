@@ -1,0 +1,746 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Limit base styles to the Admin profile container so they don't affect other pages */
+.Admin-DB-AdProfile-container {
+    background: #f8f8fb;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+/* Custom Scrollbar - Green Theme matching MainRegistration style */
+.Admin-DB-AdProfile-container ::-webkit-scrollbar {
+    width: 10px;
+}
+
+.Admin-DB-AdProfile-container ::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.Admin-DB-AdProfile-container ::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.Admin-DB-AdProfile-container ::-webkit-scrollbar-thumb:hover {
+    background-color: #2E7D32;
+}
+
+/* Hide default password reveal icons */
+.Admin-DB-AdProfile-container input[type="password"]::-ms-reveal,
+.Admin-DB-AdProfile-container input[type="password"]::-webkit-credentials-auto-fill-button,
+.Admin-DB-AdProfile-container input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
+.Admin-DB-AdProfile-container, .AdProfile-container {
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.Admin-DB-AdProfile-main, .AdProfile-main {
+    display: flex;
+    margin-top: 65px;
+    height: calc(100vh - 65px);
+    overflow: hidden;
+}
+
+/* Sidebar container */
+.Admin-DB-AdProfile-sidebar, .AdProfile-sidebar {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 230px;
+    height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    background: #fff;
+    box-sizing: border-box;
+    padding: 0 15px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.Admin-DB-AdProfile-sidebar *, .AdProfile-sidebar * {
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.Admin-DB-AdProfile-dashboard-area, .AdProfile-dashboard-area {
+    flex: 1;
+    background: #f9fbf8;
+    padding: 25px;
+    margin-left: 230px;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.Admin-DB-AdProfile-overlay, .AdProfile-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* Profile form section */
+.Admin-DB-AdProfile-profile-section-container, .AdProfile-profile-section-container {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
+    margin-left: 70px;
+}
+
+.Admin-DB-AdProfile-profile-section-container:last-child, .AdProfile-profile-section-container:last-child {
+    margin-bottom: 0;
+}
+
+.Admin-DB-AdProfile-section-header, .AdProfile-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.Admin-DB-AdProfile-section-header::after, .AdProfile-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
+}
+
+.Admin-DB-AdProfile-form-grid, .AdProfile-form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+}
+
+.Admin-DB-AdProfile-personal-info-fields, .AdProfile-personal-info-fields {
+    grid-column: 1 / span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-content: start;
+}
+
+.Admin-DB-AdProfile-profile-photo-wrapper, .AdProfile-profile-photo-wrapper {
+    grid-column: 3 / 4;
+}
+
+.Admin-DB-AdProfile-form-grid input, .AdProfile-form-grid input,
+.Admin-DB-AdProfile-form-grid select, .AdProfile-form-grid select,
+.Admin-DB-AdProfile-datepicker-input, .AdProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    background-color: #f9fff9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Admin-DB-AdProfile-form-grid input:focus, .AdProfile-form-grid input:focus,
+.Admin-DB-AdProfile-form-grid select:focus, .AdProfile-form-grid select:focus,
+.Admin-DB-AdProfile-datepicker-input:focus, .Admin-DB-AdProfile-date-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+    background-color: #f9fff9;
+}
+
+.Admin-DB-AdProfile-date-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    background-color: #f9fff9;
+    color: #333;
+}
+
+.Admin-DB-AdProfile-date-input::placeholder {
+    color: #999999;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker-popper) {
+    z-index: 1200 !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day--selected),
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #2E7D32 !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #c8e6c9 !important;
+    color: #333 !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #4EA24E;
+    border-radius: 50%;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__header) {
+    background-color: #4EA24E !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100% !important;
+    display: block;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100% !important;
+    display: block;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__input-container input) {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.Admin-DB-AdProfile-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+.Admin-DB-AdProfile-profile-photo-box, .AdProfile-profile-photo-box {
+    background-color: #ffffff;
+    border: 1px solid #e6f4dd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.Admin-DB-AdProfile-profile-icon-container, .AdProfile-profile-icon-container {
+    padding: 1rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+}
+
+.Admin-DB-AdProfile-profile-preview-img, .AdProfile-profile-preview-img {
+    width: 200px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #e0f4dd;
+    cursor: pointer;
+}
+
+.Admin-DB-AdProfile-upload-action-area, .AdProfile-upload-action-area { margin-top: auto; }
+.Admin-DB-AdProfile-upload-hint, .AdProfile-upload-hint { font-size: 0.8rem; color: #888; margin-top: 8px; text-align: center; }
+.Admin-DB-AdProfile-upload-success-message, .AdProfile-upload-success-message { font-size: 0.9rem; color: #28a745; font-weight: 500; text-align: center; margin: 10px 0 0 0; }
+.Admin-DB-AdProfile-upload-btn-wrapper, .AdProfile-upload-btn-wrapper { display: flex; align-items: center; gap: 10px; }
+
+.Admin-DB-AdProfile-profile-upload-btn, .AdProfile-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1rem;
+    background-color: #fafff9;
+    border: 1px solid #e1f4dd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+
+.Admin-DB-Profile-profile-upload-btn:hover, .AdProfile-profile-upload-btn:hover { background-color: #edfae9; border-color: #e6f4dd; }
+
+.Admin-DB-AdProfile-remove-image-btn, .AdProfile-remove-image-btn {
+    background: #edfde8;
+    border: 1px solid #d9f9c6;
+    color: #6bd94f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.Admin-DB-AdProfile-remove-image-btn:hover, .AdProfile-remove-image-btn:hover { background: #74d94f; color: white; border-color: #6dd94f; }
+
+.Admin-DB-AdProfile-upload-info-container, .AdProfile-upload-info-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.Admin-DB-AdProfile-upload-info-item, .AdProfile-upload-info-item { display: flex; align-items: center; color: #555; }
+.Admin-DB-AdProfile-upload-info-item:not(:last-child), .AdProfile-upload-info-item:not(:last-child) { margin-bottom: 0.75rem; }
+
+.Admin-DB-AdProfile-study-category, .AdProfile-study-category {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #f9fff9;
+    border-radius: 8px;
+    border: 1px solid #e2f4dd;
+}
+
+.Admin-DB-AdProfile-study-category label, .AdProfile-study-category label {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.Admin-DB-AdProfile-study-category input[type='radio'], .AdProfile-study-category input[type='radio'] { display: none; }
+.Admin-DB-AdProfile-study-category input[type='radio']:checked + label, .AdProfile-study-category input[type='radio']:checked + label {
+    background-color: #4EA24E;
+    color: white;
+    font-weight: 500;
+
+}
+
+.Admin-DB-AdProfile-action-buttons, .AdProfile-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    margin-left: 70px;
+}
+
+.Admin-DB-AdProfile-action-buttons button, .AdProfile-action-buttons button {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.Admin-DB-AdProfile-edit-btn, .AdProfile-edit-btn { display: none; }
+.Admin-DB-AdProfile-block-btn, .AdProfile-block-btn { color: white; margin-right: auto; min-width: 110px; }
+.Admin-DB-AdProfile-block-btn:hover, .AdProfile-block-btn:hover { filter: brightness(90%); }
+.Admin-DB-AdProfile-discard-btn, .AdProfile-discard-btn { background-color: #eaffea; color: #4EA24E; }
+.Admin-DB-AdProfile-discard-btn-disabled, .AdProfile-discard-btn-disabled { 
+    background-color: #f0f0f0 !important; 
+    color: #999 !important; 
+    cursor: not-allowed !important; 
+}
+.Admin-DB-AdProfile-save-btn, .AdProfile-save-btn { 
+    background-color: #4EA24E; 
+    color: white; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.Admin-DB-AdProfile-save-btn:hover, .AdProfile-save-btn:hover { background-color: #2dbc09; }
+.Admin-DB-AdProfile-save-btn:disabled, .AdProfile-save-btn:disabled {
+    background-color: #a8d5a8 !important;
+    cursor: not-allowed !important;
+}
+.Admin-DB-AdProfile-discard-btn:hover, .AdProfile-discard-btn:hover { background-color: #d3f0ca; }
+
+/* Loading Spinner in Button */
+.Admin-DB-AdProfile-loading-spinner, .AdProfile-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: admin-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes admin-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Image preview & Popup styles */
+.Admin-DB-Profile-image-preview-overlay, .AdProfile-image-preview-overlay,
+.Admin-DB-AdProfile-popup-overlay, .AdProfile-popup-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex; align-items: center; justify-content: center; z-index: 3000;
+}
+
+.Admin-DB-AdProfile-image-preview-container, .AdProfile-image-preview-container {
+    position: relative; background-color: #fff; padding: 10px; border-radius: 12px; max-width: 90vw; max-height: 90vh;
+}
+.Admin-DB-AdProfile-image-preview-content, .AdProfile-image-preview-content { max-width: 100%; max-height: calc(90vh - 20px); border-radius: 8px; }
+.Admin-DB-AdProfile-image-preview-close-btn, .AdProfile-image-preview-close-btn {
+    position: absolute; top: -15px; right: -15px; background: white; color: #333; border: 2px solid #333; border-radius: 50%; width: 40px; height: 40px; font-size: 2rem; display: flex; align-items: center; justify-content: center; padding-bottom: 5px; cursor: pointer;
+}
+
+.Admin-DB-AdProfile-popup-container, .AdProfile-popup-container { background-color: #fff; border-radius: 12px; width: 400px; text-align: center; overflow: hidden; }
+.Admin-DB-AdProfile-popup-header, .AdProfile-popup-header { background-color: #4EA24E; color: white; padding: 1rem; font-size: 1.5rem; font-weight: 600; }
+.Admin-DB-AdProfile-popup-body, .AdProfile-popup-body { padding: 2rem; }
+.Admin-DB-AdProfile-popup-footer, .AdProfile-popup-footer { padding: 1.5rem; background-color: #f7f7f7; }
+.Admin-DB-AdProfile-popup-close-btn, .AdProfile-popup-close-btn { background-color: #d9534f; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; }
+
+/* Success icon animations */
+.Admin-DB-AdProfile-success-icon, .AdProfile-success-icon {
+    width: 80px; height: 80px; border-radius: 50%; display: block; stroke-width: 2; stroke: #fff; margin: 0 auto; box-shadow: inset 0 0 0 #4bb71b; animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+.Admin-DB-AdProfile-success-icon--circle, .AdProfile-success-icon--circle {
+    stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke: #4bb71b; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+.Admin-DB-AdProfile-success-icon--check, .AdProfile-success-icon--check {
+    transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+@keyframes stroke { 100% { stroke-dashoffset: 0; } }
+@keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+@keyframes fill { 100% { box-shadow: inset 0 0 0 40px #4bb71b; } }
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 900px) {
+    .Admin-DB-AdProfile-dashboard-area, .AdProfile-dashboard-area {
+        margin-left: 0;
+        padding: 15px 20px;
+        height: auto;
+    }
+    .Admin-DB-AdProfile-main, .AdProfile-main {
+        flex-direction: column;
+        height: auto;
+        margin-top: 60px;
+    }
+    .Admin-DB-AdProfile-overlay, .AdProfile-overlay {
+        display: block;
+    }
+    .Admin-DB-AdProfile-sidebar, .AdProfile-sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 999;
+        padding: 0 15px;
+        border-right: none;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .Admin-DB-AdProfile-sidebar.active, .AdProfile-sidebar.active {
+        transform: translateX(0);
+    }
+    
+    /* Reset Profile Container Margins */
+    .Admin-DB-AdProfile-profile-section-container, .AdProfile-profile-section-container {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+
+    .Admin-DB-AdProfile-form-grid, .AdProfile-form-grid {
+        display: block;
+        gap: 0;
+    }
+    .Admin-DB-AdProfile-personal-info-fields, .AdProfile-personal-info-fields {
+        grid-column: auto;
+        display: block;
+    }
+    
+    /* Adding spacing to inputs on mobile */
+    .Admin-DB-AdProfile-profile-section-container input:not(:last-child), .AdProfile-profile-section-container input:not(:last-child),
+    .Admin-DB-AdProfile-profile-section-container select:not(:last-child), .AdProfile-profile-section-container select:not(:last-child) {
+        margin-bottom: 1.5rem;
+    }
+    
+    .Admin-DB-AdProfile-profile-photo-wrapper, .AdProfile-profile-photo-wrapper {
+        grid-column: auto;
+        margin-top: 1.5rem;
+    }
+    
+    /* Fix Photo Box Height on Mobile to avoid overflow */
+    .Admin-DB-AdProfile-profile-photo-box, .AdProfile-profile-photo-box {
+        height: auto !important;
+        min-height: 400px;
+    }
+
+    .Admin-DB-AdProfile-form-grid input, .AdProfile-form-grid input,
+    .Admin-DB-AdProfile-form-grid select, .AdProfile-form-grid select {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* Fix Action Buttons Alignment on Mobile */
+    .Admin-DB-Ad-action-buttons, .Ad-action-buttons {
+        margin-left: 0;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .Admin-DB-AdProfile-action-buttons button, .AdProfile-action-buttons button {
+        width: 100%;
+        margin-right: 0;
+    }
+}
+
+/* --- NEW: POPUP STYLES from AdminstudDB.css --- */
+/* These use 'Admin-DB-' prefixes for the new Block/Unblock popups */
+
+.Admin-DB-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: overlayFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.Admin-DB-popup-container {
+    background-color: #fff;
+    border-radius: 20px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: popupSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes popupSlideIn { 0% { opacity: 0; transform: translateY(-30px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+.Admin-DB-popup-header { color: white; padding: 15px; font-size: 1.8rem; font-weight: 700; }
+.Admin-DB-header-green { background-color: #4EA24E; }
+.Admin-DB-popup-body { padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.Admin-DB-popup-icon-box { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+
+.Admin-DB-popup-icon-box svg { opacity: 0; transform: scale(0.5); animation: iconBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s forwards; }
+@keyframes iconBounceIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+
+.Admin-DB-icon-bg-green { background-color: #4EA24E; }
+.Admin-DB-icon-bg-grey { background-color: #DBDADA; }
+.Admin-DB-popup-body h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #000; }
+.Admin-DB-popup-body p { margin: 0; color: #666; font-size: 0.95rem; }
+.Admin-DB-popup-btn-group { display: flex; gap: 20px; margin-top: 15px; width: 100%; justify-content: center; }
+.Admin-DB-popup-btn { padding: 12px 40px; border: none; border-radius: 15px; font-size: 1rem; font-weight: 600; color: white; cursor: pointer; transition: opacity 0.2s; min-width: 120px; }
+.Admin-DB-popup-btn:hover { opacity: 0.9; }
+.Admin-DB-btn-red { background-color: #B84349; }
+.Admin-DB-btn-grey { background-color: #7F7676; }
+
+/* Checkbox Group Styles - Green Theme */
+.Admin-DB-AdProfile-checkbox-group {
+    background-color: #f1f8f4;
+    border: 1px solid #c8e6c9;
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.Admin-DB-AdProfile-checkbox-group-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2E7D32;
+    margin-bottom: 0;
+}
+
+.Admin-DB-AdProfile-checkbox-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.Admin-DB-AdProfile-checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: #333;
+    user-select: none;
+}
+
+.Admin-DB-AdProfile-checkbox-option:hover {
+    opacity: 0.8;
+}
+
+.Admin-DB-AdProfile-checkbox-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4EA24E;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.Admin-DB-AdProfile-checkbox-option input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.Admin-DB-AdProfile-checkbox-option input[type="checkbox"]:checked + span {
+    color: #2E7D32;
+    font-weight: 500;
+}
+
+.Admin-DB-AdProfile-checkbox-option input[type="checkbox"]:disabled ~ span {
+    color: #999;
+}
+
+.Admin-DB-AdProfile-checkbox-option span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+/* Certificates and Resume Buttons */
+.Admin-DB-AdProfile-certificate-btn,
+.Admin-DB-AdProfile-resume-btn {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.Admin-DB-AdProfile-certificate-btn {
+    background-color: #4EA24E;
+    color: white;
+    box-shadow: 0 2px 4px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-DB-AdProfile-certificate-btn:hover {
+    background-color: #3d8a3d;
+    box-shadow: 0 4px 8px rgba(78, 162, 78, 0.3);
+    transform: translateY(-1px);
+}
+
+.Admin-DB-AdProfile-resume-btn {
+    background-color: #4EA24E;
+    color: white;
+    box-shadow: 0 2px 4px rgba(78, 162, 78, 0.2);
+    border: 2px solid white;
+}
+
+.Admin-DB-AdProfile-resume-btn:hover {
+    background-color: #3d8a3d;
+    box-shadow: 0 4px 8px rgba(78, 162, 78, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Mobile: Increase gap between checkboxes */
+@media (max-width: 768px) {
+    .Admin-DB-AdProfile-checkbox-options {
+        gap: 14px;
+    }
+    
+    .Admin-DB-AdProfile-certificate-btn,
+    .Admin-DB-AdProfile-resume-btn {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+}

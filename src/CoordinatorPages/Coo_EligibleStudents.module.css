@@ -1,0 +1,988 @@
+.co-es-container {
+  font-family: 'Poppins', Arial, sans-serif;
+  background: #f8f8fb;
+  height: 100vh;
+  overflow: hidden;
+  margin-top:-20px;
+    position: absolute;
+    
+}
+
+/* Dashboard-area */
+.co-es-dashboard-area {
+  flex: 1;
+  padding: 20px 34px 0 36px;
+  overflow-y: auto;
+  height: 100%;
+      margin-top: 70px;
+
+margin-left: 260px;
+
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-es-table-container::-webkit-scrollbar,
+.co-es-company-profile::-webkit-scrollbar,
+
+.co-es-table-container::-webkit-scrollbar-track,
+.co-es-company-profile::-webkit-scrollbar-track,
+
+.co-es-table-container::-webkit-scrollbar-thumb,
+.co-es-company-profile::-webkit-scrollbar-thumb,
+
+.co-es-table-container::-webkit-scrollbar-thumb:hover,
+.co-es-company-profile::-webkit-scrollbar-thumb:hover,
+
+.co-es-table-container::-webkit-scrollbar:horizontal,
+.co-es-company-profile::-webkit-scrollbar:horizontal,
+
+
+.co-es-table-container::-webkit-scrollbar-thumb:horizontal,
+.co-es-company-profile::-webkit-scrollbar-thumb:horizontal,
+
+
+.co-es-table-container::-webkit-scrollbar-thumb:horizontal:hover,
+.co-es-company-profile::-webkit-scrollbar-thumb:horizontal:hover,
+
+/* Summary Cards */
+.co-es-summary-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+  margin-left: -3px;
+  align-items: start;
+  margin-top:10px;
+  
+}
+.co-es-summary-cards > .co-es-company-profile-search {
+  justify-self: center;
+ background-color: #D2D1D1;
+  max-width: 628px;
+    height: 273.2px;
+    margin-left:13px;
+}
+.co-es-summary-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  height:258px;
+  width:231px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-left:50px;
+  border: 2px solid grey;
+
+}
+
+.co-es-summary-card:hover {
+ border: 2px solid red;    
+}
+.co-es-summary-card-icon {
+  width: 90px;
+  height: 50px;
+  margin: 0 auto 15px auto;
+  background: #f8f9fa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 50px
+            
+}
+.co-es-summary-card-icon img {
+  width: 60px;
+  height: 60px;
+  margin-top:48px;
+  
+}
+.co-es-summary-card-title-1 {
+  margin-top: 45px;
+    color: #333;
+    font-size: 1.9rem;
+    font-weight: 600;
+    line-height: 33px;
+        
+}
+
+.co-es-summary-card-title-2 {
+  margin-top: 45px;
+    color: #333;
+    font-size: 1.9rem;
+    font-weight: 600;
+    line-height: 33px;
+}
+
+.co-es-summary-card-desc-1 {
+     color: #888;
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 21px;
+    margin-top: 17px;
+}
+
+.co-es-summary-card-desc-2 {
+     color: #888;
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 21px;
+    margin-top: 17px;
+  
+}
+
+/* Company Drive Card Specific Styles */
+.co-es-company-drive-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+      width: 243.2px;
+    height: 273.2px;
+  
+   
+  /* Add your custom styles here */
+}
+.co-es-company-drive-card .co-es-summary-card-icon {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 15px auto;
+  background: none;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.co-es-company-drive-card .co-es-summary-card-title {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: #333;
+  
+}
+.co-es-company-drive-card .co-es-summary-card-desc {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.9;
+
+}
+.co-es-summary-card .co-es-company-drive-card{
+  height:258px;
+  width:231px;
+   transform: translateX(-30px);
+    margin-right:-5px;
+}
+
+.co-es-summary-card.co-es-placed-students-card{
+  height:258px;
+   width:231px;
+    transform: translateX(-30px);
+     margin-left:42px;
+     margin-top:0px; 
+
+}
+
+/* Search Filters */
+.co-es-search-filters {
+  background: #d2d1d1;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  width:650px;
+  height: 250px;
+  box-sizing: border-box;
+}
+.co-es-search-tab {
+  background: #E80000;
+  color: white;
+  padding-left:20px;
+  border-radius: 6px 6px 0 0;
+  font-size: 0.9em;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 20px;
+  margin-top:75px;
+  margin-left:130px;
+}
+.co-es-search-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  margin-bottom: 20px;
+}
+.co-es-search-input {
+  position: relative;
+   border: 2px solid transparent; /* Border exists but invisible */
+   border-radius: 10px; /* Keep same radius as hover */
+}
+  .co-es-search-input:hover{
+  border: 2px solid #E80000;
+}
+.co-es-search-input input {
+  width: 100%;
+  padding: 100px 35px 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9em;
+  background: #fff;
+  outline: none;
+}
+  .co-es-search-input label {
+   position: absolute;
+   left: 12px;
+   top: 50%;
+   transform: translateY(-50%);
+   color: #888;
+   pointer-events: none;
+   transition: 0.2s ease all;
+   background: white;
+   padding: 0 4px;
+}
+
+  .co-es-search-input input:focus + label,
+  .co-es-search-input.filled label 
+  {
+    top: -12px;
+    font-size: 0.75em;
+    color: #E80000;
+    background: #E0E0E0;
+    
+}
+ .co-es-search-input .co-es-search-icon {
+   position: absolute;
+   left: 8px;
+   top: 50%;
+   transform: translateY(-50%);
+   color: #007bff;
+   font-size: 14px;
+}
+.co-es-search-input .co-es-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+}
+          
+    .co-es-search-btn-filter{
+    background: white;
+    color: #E80000;
+    border: 2px solid #E80000;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.05em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    margin-top: 3px;
+    transition: background 0.2s, transform 0.15s;
+    align-self: center;
+    cursor: pointer;
+    
+        width: 128.98px;
+    height: 34px;
+    }
+  .co-es-search-btn-filter:hover {
+    
+    background: #f8f8f8; /* A very light red background on hover */
+  box-shadow: 0 4px 12px rgba(215, 61, 61, 0.2); /* A more prominent shadow on hover */
+    }
+
+    
+  .co-es-clear-search-btn {
+    background: #E0E0E0;
+    color: #787878;
+    border: 2px solid #787878;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.05em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    margin-top: 3px;
+    transition: background 0.2s, transform 0.15s;
+    align-self: center;
+    cursor: pointer;
+    width: 128.98px;
+    height: 34px;
+  }
+    .co-es-clear-search-btn:hover{
+    background: white;
+    color: #E80000;
+    border:2px solid #E80000;
+    }
+.co-es-search-btn:hover {
+  background: #E80000; 
+   transform: translateY(-2px) scale(1.03); 
+   box-shadow: 0 4px 16px rgba(0,0,0,0.13); 
+}
+/* Eiligible Students Table */
+.co-es-company-profile {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top:-5px;
+  border:2px solid #808080;
+  height: 346px;
+width:1192px;
+margin-left:15px;
+}
+.co-es-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  margin-top:-10px;
+}
+.co-es-profile-title {
+  
+  margin-left:6px;
+  font-size: 1.22rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #232323;
+}
+.co-es-print-btn-container {
+  position: relative;
+  display: inline-block;
+}
+.co-es-print-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.05em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s, transform 0.15s;
+  cursor: pointer;
+  margin-bottom:5px;
+  position: relative;
+}
+.co-es-print-btn:hover {
+  background: #b92d39;
+ /* transform: translateY(-2px) scale(1.03);*/
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+.co-es-print-btn::after {
+  margin-left: 8px;
+  font-size: 0.8em;
+}
+
+.co-es-profile-eye-icon{
+  color: #dc3545;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.co-es-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(193, 185, 185, 0.15);
+  z-index: 100;
+  min-width: 180px;
+  margin-top: 5px;
+}
+.co-es-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.co-es-dropdown-item:last-child {
+  border-bottom: none;
+}
+.co-es-dropdown-item:hover {
+  background: #f8f9fa;
+}
+.co-es-dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+.co-es-dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+.co-es-table-container {
+  overflow-x: auto;
+  max-height: 284px;
+  width: 1160px;
+  position: relative;
+}
+.co-es-profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  min-width: 1340px;
+  table-layout: fixed;
+  font-size:"large";
+}
+.co-es-profile-table th {
+    background: #fff;
+    padding: 8px 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1em;
+    color: #808080;
+    border-bottom: 2px solid #dee2e6;
+    font-family: 'Poppins', Arial, sans-serif;
+    white-space: nowrap;
+    width: 160px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.96rem;
+}
+.co-es-profile-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 1em;
+  color: #000;
+  font-family: 'Poppins', Arial, sans-serif;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 80px;
+  position: sticky;
+  top: 0;
+  font-weight:500;
+  
+}
+.co-es-profile-table th:first-child,
+.co-es-profile-table td:first-child {
+  padding-left: 20px;
+  text-align: center;
+  min-width: 60px;
+  
+  
+  
+}
+.co-es-summary-card.co-es-placed-students-card
+{width:243.2px;
+   height:273.2px;
+   margin-left:46px;
+}
+
+.co-es-profile-table th:last-child,
+.co-es-profile-table td:last-child {
+  padding-right: 20px;
+  text-align: center;
+}
+.co-es-status-badge-one{
+  background: #D0F2EA;
+  color: #16C098;
+  padding: 6px 20px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 600;
+  display: inline-block;
+}
+  .co-es-status-badge-two {
+  background: #D9D9D9;
+  color: #787878;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 600;
+  display: inline-block;
+}
+.co-es-profile-table th:first-child, .co-es-profile-table td:first-child{width:70px;}
+.co-es-export-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: co-es-export-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes co-es-export-popup-fade-in {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
+/* Popup Container */
+.co-es-export-popup-container {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: co-es-export-popup-scale-in 0.3s ease-out;
+}
+
+@keyframes co-es-export-popup-scale-in {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+@keyframes co-es-scale {
+  0%, 100% { transform: none; }
+  50% { transform: scale(1.1); }
+}
+@keyframes co-es-fill-color {
+  0% { fill: none; }
+  100% { fill: #4caf50; } /* Fill the circle with green after stroke */
+}
+@keyframes co-es-stroke {
+  100% {
+      stroke-dashoffset: 0;
+  }
+}
+
+@keyframes co-es-fill {
+  100% {
+      box-shadow: inset 0px 0px 0px 60px #4caf50; /* Adjust to match the fill color */
+      background-color: #4caf50;
+  }
+}
+/* Popup Header */
+.co-es-export-popup-header {
+  background-color: #d23b42;
+  color: white;
+  padding: 15px 20px;
+  font-size: 2.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Popup Body */
+.co-es-export-popup-body {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Progress Circle Container */
+.co-es-export-progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.co-es-export-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d23b42;
+}
+
+/* Success Icon */
+.co-es-export-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: co-es-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-es-success-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4caf50;
+  fill: none;
+  animation: co-es-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards, 
+               co-es-fill-color 0.4s ease-in-out 0.6s forwards; 
+
+}
+
+.co-es-success-icon--check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #ffffff;
+  stroke-width: 3;
+  fill: none;
+  animation: co-es-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+/* Failed Icon */
+.co-es-export-failed-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Popup Title */
+.co-es-export-popup-title {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Popup Message */
+.co-es-export-popup-message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Popup Footer */
+.co-es-export-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* Close Button */
+.co-es-export-popup-close-btn {
+  background-color: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.co-es-export-popup-close-btn:hover {
+  background-color: #b32d34;
+}
+
+.co-es-export-popup-close-btn:active {
+  transform: scale(0.98);
+}
+/* Responsive */
+@media (max-width: 1200px) {
+  .co-es-summary-cards {
+    grid-template-columns: 1fr;
+   
+  }
+  .co-es-search-inputs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+  .co-es-dashboard-area {
+    padding: 20px;
+  }
+  .co-es-search-inputs {
+    grid-template-columns: 1fr;
+  }
+
+.co-es-company-profile-search {
+  background: #E0E0E0;
+  border-radius: 14px;
+  width: 700px;
+  height: 250px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 50px 32px 40px 32px;
+  justify-content: center;
+}
+.co-es-company-profile-search .co-es-search-tab {
+  position: absolute;
+  top: 19px;
+  left: 305px;
+  transform: translateX(-50%);
+  margin-top: 9px;
+margin-left: 10px;
+height:32px;
+background: #d73d3d;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 16px;
+        width: 187.14px;
+        padding-left: 40px;
+    padding-top: 3px;
+}
+.co-es-company-profile-search .co-es-search-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+  width: 100%;
+  margin-bottom: 18px;
+  margin-top: 44px;
+}
+.co-es-company-profile-search .co-es-search-input {
+  position: relative;
+  width: 100%;
+}
+.co-es-company-profile-search .co-es-search-input input {
+  width: 280px;
+  height: 36px;
+  padding: 10px 35px 10px 32px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1em;
+  background: #fff;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+.co-es-company-profile-search .co-es-search-input input:focus {
+  
+  outline: none;
+}
+.co-es-summary-card.co-es-placed-students-card {
+margin-left:45px;
+}
+.co-es-company-profile-search .co-es-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7b7b7b;
+  font-size: 1.1em;
+  z-index: 1;
+}
+.co-es-company-profile-search .co-es-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bbb;
+  font-size: 1.1em;
+  z-index: 1;
+}
+.co-es-company-profile-search .co-es-search-btn {
+  background: #ffffff;
+  color: #b92d39;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 80px;
+  font-weight: 600;
+  font-size: 1.05em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  margin-top: 0px;
+  transition: background 0.2s;
+  align-self: center;
+  cursor: pointer;
+  height: 45px;
+}
+.co-es-company-profile-search .co-es-search-btn:hover {
+  background: #ffffff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+.co-es-company-drive-card,
+.co-es-placed-students-card {
+  transition: box-shadow 0.2s, transform 0.15s;
+  margin-left:25px;
+}
+
+@media (max-width: 768px) {
+  /* 1. Main Content Vertical Scroll & Layout Reset */
+  .co-es-container {
+    overflow-y: auto; 
+    margin-left: 0 !important; /* Reset margin */
+    position: relative;
+    /* Enable vertical scroll for the entire app content */
+  }
+  .co-es-dashboard-area {
+            padding: 20px 10px;
+        margin-left: 0 !important;
+        margin-top: 50px;
+        height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        position: fixed;/* Let the container handle the scroll */
+        left:5px;
+  }
+
+  
+
+  /* 2. Stack Cards Vertically in the specified order: Card 1, Filter, Card 2 */
+  .co-es-summary-cards {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Make filter form almost full width */
+    max-width: 450px; 
+    height: auto;
+   margin-left:-9px;
+    align-items: center;
+    /* Center the cards */
+    margin-bottom: 20px;
+    margin-top:25px;
+  }
+  
+  /* 3. Card Sizing and Positioning Reset */
+ 
+
+  /* Target the Placed Students Card to ensure it comes after the Filter Card in the flex container */
+  .co-es-summary-card.co-es-placed-students-card {
+    order: 3; /* Placed Students Card */
+    
+    
+  }
+
+  .co-es-summary-card.co-es-company-drive-card{
+    height:258px;
+    width:450px;
+    margin-left: 60px;
+     transform: translateX(-30px);
+      margin-right:-31px;
+  }
+
+  .co-es-summary-card.co-es-placed-students-card{
+    height:258px;
+     width:450px;
+      transform: translateX(-30px);
+       margin-left:80px;
+       margin-top:11px; 
+
+  }
+
+  /* 4. Filter Card Reset and Sizing (Filter Card is the second element in HTML) */
+  .co-es-search-filters.co-es-company-profile-search {
+    order: 2; /* Explicitly enforce order 2 */
+    width: 100%; /* Make filter form almost full width */
+    max-width: 450px; 
+    height: auto; /* Auto height based on content */
+    margin-left:15px; /* Center it, removed bottom margin to be managed by gap */
+    padding: 30px 20px;
+  }
+
+  /* Filter input layout adjustment */
+  .co-es-company-profile-search .co-es-search-inputs {
+    grid-template-columns: 1fr; /* Stack filter inputs vertically */
+    gap: 15px;
+    margin-top: 40px; /* Adjust top margin after the tab */
+  }
+  .co-es-search-tab {
+    margin-top: 10px;
+    margin-left: 0;
+    padding: 8px 20px;
+    border-radius: 80px;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Input field sizing for mobile */
+  .co-es-company-profile-search .co-es-search-input input {
+      width: 100%;
+      padding: 12px 10px; /* Better padding for mobile input */
+  }
+
+  /* 5. Eligible Students Table */
+  .co-es-company-profile {
+           width: 32%;
+        margin: 20px auto;
+        height: 360px;
+        min-width: unset;
+        margin-left: 0px;
+  }
+  /* 6. Table scrolling (Horizontal and Vertical) */
+  .co-es-table-container {
+    overflow: auto; /* Combined vertical and horizontal scroll */
+    max-height: 300px; /* Vertical scroll for the table content */
+    width: 105%; 
+  }
+  .co-es-profile-table {
+    min-width: 750px; /* Ensure horizontal scroll is triggered */
+  }
+  .co-es-profile-table th, .co-es-profile-table td {
+      min-width: 100px;
+      padding: 10px 5px;
+      font-size: 0.9em;
+  }
+  
+  /* Custom vertical scrollbar for the entire page */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.co-es-container::-webkit-scrollbar,
+.co-es-dashboard-area::-webkit-scrollbar {
+  width: 15px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.co-es-container::-webkit-scrollbar-track,
+.co-es-dashboard-area::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.co-es-container::-webkit-scrollbar-thumb,
+.co-es-dashboard-area::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.co-es-container::-webkit-scrollbar-thumb:hover,
+.co-es-dashboard-area::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* Optional: horizontal scrollbar style for full-page scroll if needed */
+html::-webkit-scrollbar:horizontal,
+body::-webkit-scrollbar:horizontal,
+.co-es-container::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
+
+html::-webkit-scrollbar-thumb:horizontal,
+body::-webkit-scrollbar-thumb:horizontal,
+.co-es-container::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfbf;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+html::-webkit-scrollbar-thumb:horizontal:hover,
+body::-webkit-scrollbar-thumb:horizontal:hover,
+.co-es-container::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #a9a9a9;
+}
+
+  /* Red scrollbar on mobile */
+  
+}

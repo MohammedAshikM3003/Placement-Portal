@@ -1,0 +1,818 @@
+  .co-at-layout-main {
+    display: flex;
+    background: #FCFCFC;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: calc(100vh - 72px);
+    padding-top: 64px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Main Content Layout */
+  .co-at-main-content-layout {
+    background: #f6f6f6;
+    padding: 10px 0px 5px 10px;
+    margin: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    margin-left: 260px;
+    margin-top: 0;
+    overflow-y: auto;
+  }
+  /* Filter Section */
+  .co-at-filter-section {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin: 0 0 28px 0;
+    background: #D2D1D1;
+    border-radius: 32px;
+    padding: 16px 28px;
+    box-shadow: 0 2px 8px #eee;
+    width: 95%;
+    max-width: 1200px;
+    height: 79.2px;
+  }
+  
+  .co-at-filter-input,
+  .co-at-filter-select {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 2px solid #808080;
+    border-radius: 12px;
+    padding: 0 15px;
+    height: 44px;
+    min-width: 180px;
+    flex-grow: 1;
+    position: relative;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  
+  .co-at-filter-input input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.13rem;
+    color: #888;
+    text-align: center;
+    width: 100%;
+    height: 44px;
+  }
+  
+  /* Hover and Active States */
+  .co-at-filter-input:hover,
+  .co-at-filter-select:hover {
+    border-color: #d73d3d;
+  }
+  
+  .co-at-filter-input.active-filter,
+  .co-at-filter-select.active-filter {
+    border-color: #d73d3d;
+  }
+  
+  .co-at-filter-select {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .co-at-filter-select:has(.co-at-filter-select-options-open) {
+    z-index: 100;
+  }
+  
+  .co-at-filter-select-display {
+    width: 100%;
+    height: 40px;
+    font-size: 1.13rem;
+    color: #888;
+    padding: 9px 15px;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+  
+  .co-at-filter-select-options {
+    position: absolute;
+    top: 100%;
+    left: -2px;
+    width: calc(100% + 4px);
+    background: #fff;
+    border: 2px solid #808080;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+  }
+  
+  .co-at-filter-select-options-open {
+    display: block;
+  }
+  
+  .co-at-filter-select-option {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1.13rem;
+    color: #555;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  .co-at-filter-select-option:last-child {
+    border-bottom: none;
+  }
+  
+  .co-at-filter-select-option:hover {
+    background: #f0f0f0;
+  }
+  
+  .co-at-filter-select .co-at-filter-select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: all;
+    cursor: pointer;
+    height: 14px;
+    width: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .co-at-filter-btn {
+    background: #d73d3d;
+    color: #fff;
+    border: none;
+    border-radius: 42px;
+    padding: 0 28px;
+    height: 34px;
+    font-weight: bold;
+    font-size: 1.13rem;
+    box-shadow: 0 2px 8px #eee;
+    width: 116px;
+    flex-shrink: 0;
+  }
+  
+  .co-at-filter-btn:hover,
+  .co-at-filter-btn:active {
+    background: #b32d34;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  
+  /* Grid and Pie Chart Section */
+  .co-at-summary-pie-layout {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+    width: 95%;
+    max-width: 1200px;
+    margin-left: 0;
+    margin-top: -11px;
+  }
+  .co-at-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 18px;
+    min-width: 40%;
+    max-width: 40%;
+    margin-left: 10px;
+  }
+  
+  .co-at-summary-card {
+    color: #fff;
+    border-radius: 16px;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px #eee;
+    height: 124px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 330px; 
+  }
+  
+  .co-at-summary-card-blue { background: #4B7CF3; }
+  .co-at-summary-card-darkblue { background: #05057b; }
+  .co-at-summary-card-green { background: #2DBE7F; }
+  .co-at-summary-card-red { background: #F04F4F; }
+  .co-at-card-value { font-size: 58px; font-weight: bold; }
+  .co-at-card-label { font-size: 29px; margin-bottom: -9px; }
+  
+  .co-at-pie-chart-section {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px #eee;
+    border: 2px solid #808080;
+    padding: 22px;
+    min-width: 40%;
+    max-width: 40%;
+    display: flex;
+    flex-direction: column; 
+    margin-left: 190px; 
+    margin-top: 0;
+    height: 270px;
+  }
+  
+  .co-at-pie-chart-title {
+    font-weight: bold;
+    font-size: 20px;
+    color: #222;
+    margin-top: -15px;
+  }
+  
+  .co-at-pie-chart-date {
+    font-size: 20px;
+    color: #777; /* Lighter color */
+  }
+  
+  .co-at-pie-chart-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    margin-top: -25px;
+  }
+  
+  .co-at-pie-chart-svg {
+    width: 210px;
+    height: 210px;
+    margin-right: 55px;
+  }
+  
+  .co-at-pie-chart-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .co-at-pie-chart-stat-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .co-at-pie-chart-stat-label {
+    font-size: 20px;
+    margin-right:6px;
+  }
+  
+  .co-at-pie-chart-stat-value {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-left:12px;
+  }
+  .co-at-pie-chart-stat-present .co-at-pie-chart-stat-value {
+    color: #2DBE7F;
+  }
+  
+  
+  
+  /* Table Section */
+  .co-at-table-section {
+    background: #fff;
+    padding: 9px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    width: 95%;
+    max-width: 1200px;
+    border: 2px solid #808080;
+    margin-left: 0;
+    margin-top: 0;
+  }
+  
+  .co-at-table-header {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0px;
+    color: #333;
+    margin-left:9px;
+  }
+  
+  .co-at-attendance-table-header, 
+  .co-at-attendance-table-body {
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  
+  .co-at-table-body-scroll {
+    height: 176px; 
+    overflow-y: auto;
+    overflow-x:hidden;
+    width: 1160px;
+  }
+  
+  /* Red scrollbar styling - matches coordinator theme */
+  .co-at-table-body-scroll::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .co-at-table-body-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  
+  .co-at-table-body-scroll::-webkit-scrollbar-thumb {
+    background-color: #F44336;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  
+  .co-at-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #D32F2F;
+  }
+  
+  /* Remove scrollbar buttons */
+  .co-at-table-body-scroll::-webkit-scrollbar-button {
+    display: none;
+  }
+  
+  .co-at-attendance-table-header thead th {
+    text-align: center;
+    padding: 12px 2px;
+    color: #777;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+  
+  .co-at-attendance-table-body tbody td {
+    text-align: center;
+    padding: 12px 2px;
+    font-size: 0.95rem;
+    color: #000;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+  
+  .co-at-attendance-table thead th {
+    text-align: center;
+    padding: 12px 2px;
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  
+  .co-at-attendance-table tbody tr {
+    border-bottom: 1px solid #eee;
+  }
+  
+  .co-at-attendance-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  
+  .co-at-attendance-table tbody td {
+    text-align: center;
+    padding: 12px 2px;
+    font-size: 0.95rem;
+    vertical-align: middle;
+  }
+  
+  /* Status Styling */
+  .co-at-status-present {
+    color: #2DBE7F;
+    font-weight: 600;
+  }
+  
+  .co-at-status-absent {
+    color: #F04F4F;
+    font-weight: 600;
+  }
+  
+  .co-at-status-unmarked {
+    color: #888;
+    font-weight: 500;
+  }
+  
+  /* --- Global Loading Styles --- */
+  .co-at-loading-cell {
+    text-align: center;
+    padding: 48px 0;
+    width: 100%;
+    position: relative;
+    /* Ensures the row stays expanded while loading */
+    min-height: 150px; 
+  }
+  
+  .co-at-loading-row {
+    height: 100%;
+  }
+  
+  .co-at-loading-wrapper {
+    position: absolute;
+    top: 50%; /* Changed from 100% to 50% for vertical centering */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  .co-at-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    /* Using your theme's red color: #D73D3D */
+    border: 4px solid rgba(215, 61, 61, 0.2);
+    border-top-color: #d73d3d; 
+    animation: cooAttendanceSpin 0.8s linear infinite;
+  }
+  
+  @keyframes cooAttendanceSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .co-at-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  
+  /* ======================================================= */
+  /* RESPONSIVE STYLES (TABLET & MOBILE)           */
+  /* ======================================================= */
+  
+  /* Hamburger Menu (Hidden by default on Desktop) */
+  .co-at-hamburger-menu {
+    display: none; 
+    position: fixed;
+    top: 20px; 
+    left: 20px;
+    z-index: 1001; 
+    cursor: pointer;
+    font-size: 30px;
+    color: #333;
+    background: #fff;
+    border-radius: 5px;
+    padding: 5px 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  /* --- Default Sidebar Transition --- */
+  /* Assuming .co-at-sidebar is the root of the Sidebar component for the transition */
+  .co-at-sidebar {
+    transition: transform 0.3s ease-in-out; 
+  }
+  .co-at-attendance-table thead{
+    position: absolute;
+    top: 490px;
+    width: 71%;
+    background-color: #fff;
+  }
+  .co-at-table-body-content{
+    margin-top: 40px;
+  }
+  .co-at-attendance-table th:nth-child(4){padding-left:0px;}
+  /* Media Query for Tablet and Mobile (< 768px) */
+  @media (max-width: 768px) {
+    
+    /* 1. Sidebar Collapse */
+    .co-at-hamburger-menu {
+      display: block;
+  }
+  
+  /* Sidebar collapse into an off-screen menu */
+  .co-at-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      z-index: 1000;
+      height: 100vh;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease-in-out; 
+  }
+  .co-at-sidebar-open {
+      transform: translateX(0);
+  }
+  
+  /* Adjust Main Content Layout - FIX: Use PlacedStudents logic for overflow */
+  .co-at-main-content-layout {
+    position: absolute;
+      margin-left: -10px;
+      padding: 15px;
+      min-height: auto;
+      height: 98vh; /* Match PlacedStudents height */
+      overflow-y: auto;
+      box-sizing: border-box;
+      overflow-x: hidden; /* Ensures main page does not scroll horizontally */
+      width: 100%;
+      min-width: unset;
+      max-width: unset;
+      margin-top: -15px;
+  }
+  
+  /* 2. Top Filter Bar Stack Vertically */
+  .co-at-filter-section {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      width: 100%;
+      height: auto;
+      padding: 16px;
+      margin: 10px 0 20px 0;
+  }
+  
+  .co-at-filter-section > * {
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+   
+  }
+  .co-at-filter-btn {
+    /* Kept original button styles for better appearance, only centered it */
+    background: #d73d3d;
+    color: #fff;
+    border: none;
+    border-radius: 42px;
+    padding: 0 28px;
+    height: 34px;
+    font-weight: bold;
+    font-size: 1.13rem;
+    box-shadow: 0 2px 8px #eee;
+    width: 116px;
+    margin-left: auto; /* Replaced fixed margin for centering */
+    margin-right: auto;
+    display: block;
+  }
+  
+  .co-at-filter-input,
+  .co-at-filter-select {
+      padding: 0 15px;
+      min-width: unset;
+      width: 100%;
+  }
+  .co-at-filter-input input, .co-at-filter-select-display {
+      text-align: left;
+      padding-left: 0;
+      width: 100%;
+  }
+  
+  /* 3 & 4. Grid, Pie Chart Layout (Stack cards & chart) */
+  .co-at-summary-pie-layout {
+      flex-direction: column;
+      gap: 20px;
+      width: 100% !important;
+      margin-left: 0 !important;
+  }
+  
+  /* 3. Statistic Cards Layout - Two Columns (Tablet default) */
+  .co-at-summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      min-width: unset;
+      max-width: unset;
+      width: 100%;
+      margin-left: 0 !important;
+  }
+  
+  .co-at-summary-card {
+      width: auto;
+      height: 100px;
+      padding: 10px;
+  }
+  .co-at-summary-card-green, .co-at-summary-card-red {
+      margin-left: 0 !important;
+  }
+  .co-at-card-value { font-size: 38px; }
+  .co-at-card-label { font-size: 18px; margin-bottom: 0; }
+  
+  /* 4. Pie Chart Resizing/Positioning (Resize and move below cards) */
+  .co-at-pie-chart-section {
+      width: 100% !important;
+      min-width: unset;
+      max-width: unset;
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+      height: auto;
+      position: relative;
+      top: -10px;
+      
+      /* Apply Table Border/Shadow to Pie Chart Card for consistency */
+      background: #fff;
+      border: 2px solid #808080;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      
+      /* Flexbox layout for Pie Chart and Stats (Chart Left, Text Right) */
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      padding: 15px;
+  }
+  
+  .co-at-pie-chart-header {
+      /* Re-position the header for the new flex layout */
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: calc(100% - 30px);
+      margin-bottom: 0;
+  }
+  .co-at-pie-chart-title {
+      margin-top: 493px;
+      margin-left:20px;
+  }
+  .co-at-pie-chart-date {
+      /* Resetting previous offsets */
+              position: relative;
+          margin-top: 488px;
+          /* margin-left: 47px; */
+          margin-right: 10px;
+  }
+  
+  .co-at-pie-chart-content {
+      flex-direction: row; /* Chart and stats side by side */
+      margin-top: 30px; /* Space from header */
+      gap: 20px;
+      margin-left: 0;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+  }
+  
+  .co-at-pie-chart-svg {
+      width: 150px;
+      height: 150px;
+      margin: 0;
+  }
+  
+  .co-at-pie-chart-stats {
+      margin: 0;
+      padding-right: 15px; /* Add some spacing on the right */
+  }
+  
+  /* 5. Attendance Table Horizontal Scroll & Sticky Header (FIXED FOR SINGLE TABLE) */
+  .co-at-table-section {
+      padding: 15px;
+      margin: 10px 0;
+      max-height: none;
+      width: 100% !important;
+      box-sizing: border-box;
+      background: #fff;
+      border: 2px solid #808080;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+          position: relative;
+      top: -21px;
+  }
+   .co-at-main-content-layout{
+    width:98%;
+   }
+  /* Wrapper for horizontal scrolling (Applied to the existing class) */
+  .co-at-fixed-header-wrapper {
+      width: 100%;
+      overflow-x: auto; /* CRITICAL: Enables horizontal scrolling on mobile */
+      box-sizing: border-box;
+  }
+  
+  /* Wrapper for vertical scrolling (Applied to the existing class) */
+  .co-at-table-body-scroll {
+      max-height: 182px; /* Adjust height for visible rows (from PlacedStudents) */
+      overflow-y: auto;
+      overflow-x: auto; /* Vertical scroll only for this container */
+      width: 100%;
+      position: relative;
+      top: 0;
+  }
+  
+  /* Red scrollbar on mobile */
+   .co-at-main-content-layout::-webkit-scrollbar{width:10px;}
+    .co-at-table-body-scroll::-webkit-scrollbar,
+    .co-at-fixed-header-wrapper::-webkit-scrollbar,
+    .co-at-layout-main::-webkit-scrollbar
+    {
+      width: 15px;
+    }
+    .co-at-table-body-scroll::-webkit-scrollbar-track,
+    .co-at-fixed-header-wrapper::-webkit-scrollbar-track,
+    .co-at-layout-main::-webkit-scrollbar-track,
+    .co-at-main-content-layout::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+    .co-at-table-body-scroll::-webkit-scrollbar-thumb,
+    .co-at-fixed-header-wrapper::-webkit-scrollbar-thumb,
+    .co-at-layout-main::-webkit-scrollbar-thumb,
+    .co-at-main-content-layout::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+    .co-at-table-body-scroll::-webkit-scrollbar-thumb:hover,
+    .co-at-fixed-header-wrapper::-webkit-scrollbar-thumb:hover,
+    .co-at-layout-main::-webkit-scrollbar-thumb:hover,
+    .co-at-main-content-layout::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    
+  }
+  .co-at-table-body-scroll::-webkit-scrollbar:horizontal {
+    height: 12px !important ;/* height of the horizontal scrollbar */
+  }
+  
+  .co-at-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  
+  .co-at-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #c1bfbf !important; /* darker grey on hover */
+  }
+  
+  /* Single Table Structure for both header and body */
+  /* Assumes you are now using a single <table class="co-at-attendance-table"> */
+  .co-at-attendance-table {
+      min-width: 850px; /* Min-width to force horizontal scroll for 9 columns */
+      table-layout: fixed;
+      width: 100%; 
+      border-collapse: collapse;
+      /* Ensure the table itself does not control the scrolling */
+      display: table;
+  }
+  
+  /* Remove conflicting styles for old split tables */
+  .co-at-attendance-table-header, .co-at-attendance-table-body {
+    display: none; /* These should not be used in the new mobile view */
+  }
+  
+  /* Sticky Header Fix (CRITICAL: Match PlacedStudents logic exactly) */
+  .co-at-attendance-table thead th {
+    font-weight: 600;
+    color: #888;
+    position: sticky; /* Make the header sticky */
+    top: 0; /* Stick it to the top of the scroll container (.co-at-table-body-scroll) */
+    background-color: #ffffff; /* CRITICAL: Adds background to prevent body content from showing through */
+    z-index: 10; /* Ensures the header is above the scrolling body content */
+    white-space: nowrap;
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    text-align: center; /* Match PlacedStudents center alignment */
+    border-bottom: 1px solid #eee;
+  }
+  
+  /* Body cell styles (MATCH PLACEDSTUDENTS) */
+  .co-at-attendance-table tbody td {
+      white-space: nowrap;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      text-align: center; /* Match PlacedStudents center alignment */
+      border-bottom: 1px solid #eee;
+      font-weight:500;
+  }
+  
+  .co-at-table-body-content{
+    margin-top: 0px;
+    width: 100%;
+  }
+  
+  .co-at-attendance-table thead{
+    position: sticky;
+    top: 0px;
+    width: 71%;
+    background-color: #fff;
+  }
+  
+  /* Column Widths (Explicitly defining 9 column widths for alignment) - Target the single table */
+  .co-at-attendance-table th:nth-child(1), .co-at-attendance-table td:nth-child(1) { width: 48px; } /* S.No */
+  .co-at-attendance-table th:nth-child(2), .co-at-attendance-table td:nth-child(2) { width: 115px; padding-left:30px; margin-left:20px;} /* Student Name */
+  .co-at-attendance-table th:nth-child(3), .co-at-attendance-table td:nth-child(3) { width: 120px; } /* Reg No */
+  .co-at-attendance-table th:nth-child(4), .co-at-attendance-table td:nth-child(4) { width: 83px; } /* Batch */
+  .co-at-attendance-table th:nth-child(5), .co-at-attendance-table td:nth-child(5) { width: 150px; } /* Dept */
+  .co-at-attendance-table th:nth-child(6), .co-at-attendance-table td:nth-child(6) { width: 47px; } /* Date */
+  .co-at-attendance-table th:nth-child(7), .co-at-attendance-table td:nth-child(7) { width: 90px; } /* Status */
+  .co-at-attendance-table th:nth-child(8), .co-at-attendance-table td:nth-child(8) { width: 110px; } /* In Time */
+  .co-at-attendance-table th:nth-child(9), .co-at-attendance-table td:nth-child(9) { width: 110px; } /* Out Time */
+  .co-at-attendance-table td:nth-child(1),.co-at-attendance-table td:nth-child(2),.co-at-attendance-table td:nth-child(3),
+  .co-at-attendance-table td:nth-child(4),.co-at-attendance-table td:nth-child(5),.co-at-attendance-table td:nth-child(6),
+  .co-at-attendance-table td:nth-child(7),.co-at-attendance-table td:nth-child(8),.co-at-attendance-table td:nth-child(9)
+  {padding:10px 23px;}
+  .co-at-attendance-table th:nth-child(4){padding-left: 25px; padding-right: 0px;}
+  .co-at-attendance-table th:nth-child(5){padding-left: 0px;}
+  .co-at-attendance-table td:nth-child(5){padding-left:30px}
+  .co-at-attendance-table th:nth-child(6){padding-left: 0px;}
+  .co-at-attendance-table td:nth-child(6){padding-left:40px;}
+  .co-at-attendance-table th:nth-child(7){padding-left: 50px;}
+  .co-at-attendance-table th:nth-child(8){padding-left:30px; padding-right: 0px;}
+  .co-at-attendance-table th:nth-child(9){padding-left: 20px;}
+  .co-at-attendance-table td:nth-child(3){padding-left:25px;}
+  
+  }

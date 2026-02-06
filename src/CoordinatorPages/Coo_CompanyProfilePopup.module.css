@@ -1,0 +1,580 @@
+/* Popup Overlay */
+.Coo-cp-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Popup Container */
+.Coo-cp-popup-container {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-height: auto;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-in-out;
+    transition: max-width 0.3s ease-in-out;
+}
+
+/* Width Logic */
+.Coo-cp-popup-container.is-form {
+    max-width: 650px;
+}
+.Coo-cp-popup-container.is-success {
+    max-width: 380px;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ----------------------------------------------
+--- FORM STYLES ---
+----------------------------------------------
+*/
+
+/* Popup Header - RED THEME */
+.Coo-cp-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: none;
+    background: linear-gradient(135deg, #d23b42 0%, #b32d34 100%);
+    border-radius: 15px 15px 0 0;
+}
+
+.Coo-cp-popup-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.Coo-cp-popup-close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    border-radius: 50%;
+}
+
+.Coo-cp-popup-close-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Popup Form */
+.Coo-cp-popup-form {
+    padding: 20px 30px 25px 30px;
+}
+
+.Coo-cp-popup-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+/* Form Group */
+.Coo-cp-popup-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.Coo-cp-popup-form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333333;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+}
+
+.Coo-cp-popup-form-group input,
+.Coo-cp-popup-form-group select {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.Coo-cp-popup-form-group input::placeholder {
+    color: #999999;
+}
+
+.Coo-cp-popup-form-group input:focus,
+.Coo-cp-popup-form-group select:focus {
+    outline: none;
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(210, 59, 66, 0.1);
+    background-color: #ffffff;
+}
+
+.Coo-cp-popup-form-group input:hover,
+.Coo-cp-popup-form-group select:hover {
+    border-color: #d23b42;
+}
+
+.Coo-cp-popup-form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px;
+    padding-right: 35px;
+}
+
+.Coo-cp-popup-date-wrapper {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+    display: block;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+    display: block;
+}
+
+.Coo-cp-popup-date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.Coo-cp-popup-date-input:focus {
+    outline: none;
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(210, 59, 66, 0.1);
+    background-color: #ffffff;
+}
+
+.Coo-cp-popup-date-input::placeholder {
+    color: #999999;
+}
+
+.Coo-cp-popup-date-popper {
+    z-index: 1200;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker-popper) {
+    z-index: 1200 !important;
+}
+
+/* Form Actions */
+.Coo-cp-popup-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.Coo-cp-popup-btn-cancel,
+.Coo-cp-popup-btn-submit {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.Coo-cp-popup-btn-cancel {
+    background-color: #f0f0f0;
+    color: #666666;
+    border: 2px solid #e0e0e0;
+}
+
+.Coo-cp-popup-btn-cancel:hover {
+    background-color: #e8e8e8;
+    border-color: #d0d0d0;
+}
+
+.Coo-cp-popup-btn-submit {
+    background: linear-gradient(135deg, #d23b42 0%, #b32d34 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Coo-cp-popup-btn-submit:hover {
+    box-shadow: 0 6px 16px rgba(210, 59, 66, 0.4);
+}
+
+.Coo-cp-popup-btn-submit:active {
+    transform: translateY(0);
+}
+
+
+/* ----------------------------------------------
+--- SUCCESS POPUP STYLES ---
+----------------------------------------------
+*/
+
+/* Success Popup Header - RED THEME */
+.Coo-cp-added-popup-header {
+    background-color: #d23b42;
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 700;
+    padding: 20px 30px;
+    text-align: center;
+}
+
+/* Success Popup Content */
+.Coo-cp-added-popup-content {
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Icon Wrapper with Pop Animation - RED THEME */
+.Coo-cp-added-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    background-color: #d23b42;
+    animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* SVG Icon Styles */
+.Coo-cp-added-icon {
+    width: 60px;
+    height: 60px;
+}
+
+.Coo-cp-added-icon-circle {
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: none; 
+    fill: none;
+    animation: none; 
+}
+
+/* Animation for Checkmark Stroke */
+.Coo-cp-added-icon-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke-width: 3;
+    stroke: #ffffff;
+    fill: none;
+    animation: stroke 0.4s 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Text Styles */
+.Coo-cp-added-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px 0;
+}
+
+.Coo-cp-added-text {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0 0 25px 0;
+    line-height: 1.5;
+}
+
+/* Footer for Success Popup */
+.Coo-cp-added-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    text-align: center;
+}
+
+/* Close Button - RED THEME */
+.Coo-cp-added-close-btn {
+    background-color: #d23b42;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Coo-cp-added-close-btn:hover {
+    background-color: #b32d34;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+
+/* ----------------------------------------------
+--- RESPONSIVE STYLES ---
+----------------------------------------------
+*/
+@media (max-width: 768px) {
+    .Coo-cp-popup-overlay {
+        align-items: flex-start;
+        padding: 90px 10px;
+        overflow-y: auto; 
+        box-sizing: border-box;
+    }
+
+    .Coo-cp-popup-container {
+        max-width: 95vw; 
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Coo-cp-popup-container.is-form,
+    .Coo-cp-popup-container.is-success {
+        max-width: 95vw;
+        margin-top: 0;
+    }
+
+    .Coo-cp-popup-form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .Coo-cp-popup-header {
+        padding: 18px 25px;
+        flex-shrink: 0;
+    }
+
+    .Coo-cp-popup-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .Coo-cp-popup-form {
+        padding: 18px 25px 20px 25px;
+        overflow-y: auto;
+        flex-grow: 1;
+        flex-shrink: 1;
+        
+        /* Red Scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: #d23b42 #f1f1f1;
+    }
+    
+    .Coo-cp-popup-form::-webkit-scrollbar {
+        width: 8px;
+    }
+    .Coo-cp-popup-form::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    .Coo-cp-popup-form::-webkit-scrollbar-thumb {
+        background: #d23b42;
+        border-radius: 4px;
+    }
+    .Coo-cp-popup-form::-webkit-scrollbar-thumb:hover {
+        background: #b32d34;
+    }
+
+    .Coo-cp-popup-form-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    .Coo-cp-popup-btn-cancel,
+    .Coo-cp-popup-btn-submit {
+        width: 100%;
+    }
+}
+
+/* Red Theme for DatePicker */
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day--selected),
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #d23b42 !important;
+    color: white !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day--selected:hover),
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #b32d34 !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #ffe0e0 !important;
+    color: #333 !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #d23b42;
+    border-radius: 50%;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__header) {
+    background-color: #d23b42 !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.Coo-cp-popup-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+@media (max-width: 480px) {
+    .Coo-cp-popup-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .Coo-cp-popup-form {
+        padding: 15px 20px;
+    }
+
+    .Coo-cp-popup-form-grid {
+        gap: 10px;
+    }
+
+    .Coo-cp-popup-form-group input,
+    .Coo-cp-popup-form-group select {
+        padding: 9px 10px;
+        font-size: 0.85rem;
+    }
+
+    .Coo-cp-popup-form-group label {
+        font-size: 0.8rem;
+    }
+
+    .Coo-cp-added-popup-header {
+        font-size: 1.8rem;
+        padding: 15px 20px;
+    }
+    .Coo-cp-added-popup-content {
+        padding: 25px 30px;
+    }
+    .Coo-cp-added-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+    }
+    .Coo-cp-added-icon {
+        width: 50px;
+        height: 50px;
+    }
+    .Coo-cp-added-title {
+        font-size: 1.4rem;
+    }
+    .Coo-cp-added-text {
+        font-size: 0.9rem;
+    }
+}

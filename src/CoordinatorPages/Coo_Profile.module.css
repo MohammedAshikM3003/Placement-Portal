@@ -1,0 +1,1522 @@
+/* --- Global Layout --- */
+.co-profile-layout {
+    display: flex;
+    min-height: 90vh;
+    background-color: #f6f8fb; /* Light background for the overall page */
+}
+
+.co-profile-main-content {
+    flex-grow: 1;
+    /* Implements the requested 10px gap around the master card */
+    padding: 10px; 
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start; /* Align content to the top */
+    margin-left:-218px;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-profile-main-content::-webkit-scrollbar,
+.co-profile-content::-webkit-scrollbar {
+  width: 10px;
+}
+.co-profile-main-content::-webkit-scrollbar-track,
+.co-profile-content::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-profile-main-content::-webkit-scrollbar-thumb,
+.co-profile-content::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-profile-main-content::-webkit-scrollbar-thumb:hover,
+.co-profile-content::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* --- Master Card Container (One Card for Everything) --- */
+.co-profile-master-card {
+    background-color: #ffffff;
+    border-radius: 17px;
+    width: 1176px; 
+    max-width: none; 
+    height:635px;
+    padding: 30px;
+    padding-bottom: 110px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    margin-left: 511px;
+    margin-top: 76px;
+}
+
+/* --- Content Grid (Forms + Photo) --- */
+.co-profile-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Forms on the left (2x wider), Photo on the right */
+    gap: 30px;
+    margin-bottom: 20px;
+    /* KEY CHANGE: Forces grid items (including photo card) to stretch vertically to match the height of the tallest item (the form area) */
+    align-items: stretch; 
+}
+
+.co-profile-form-area {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    height: 350px;
+    margin-top: -15px;
+    position: relative; /* z-index only works on positioned elements */
+    z-index: 2; 
+}
+
+/* --- Section Styling (Personal Info / Office Details) --- */
+.co-profile-section {
+    padding-bottom: 15px;
+}
+
+/* Base header style */
+.co-profile-section-header {
+    font-size: 1.40em;
+    font-weight: 649;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    /* FIX 1: Make header relative to position its own ::after line */
+    position: relative;
+    width: fit-content;
+}
+
+/* Styling for the red line under Personal Info and Office Details */
+.co-profile-section-header::after{
+    background-color: #d23b42;
+    border-radius: 2px;
+    /* FIX 2: Position line relative to the header element */
+    bottom: 0px; 
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    width: 40px;
+}
+
+/* REMOVE: .co-profile-section-header2::after and .co-profile-section-header3::after as they are no longer needed */
+.co-profile-section-header2 {
+    /* To correctly position the header inside here for the fixed positioning of the line */
+    position: relative;
+}
+
+/* --- Input Grid Layout --- */
+.co-profile-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for inputs */
+    gap: 20px;
+}
+
+.co-profile-input-grid-two-col {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* --- Form Inputs --- */
+.co-profile-form-input {
+    width: 353.96px;
+    height:53.6px;
+    padding: 12px 15px;
+    /* This rule sets the default grey border (2px solid #808080) for all inputs */
+    border:1px solid  #f4dddd;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    background-color: #fff9f9;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.co-profile-form-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+
+/* Dropdown Styling */
+.co-profile-form-select {
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23999%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-4.9%200-9.2%201.8-12.9%205.4-3.7%203.6-5.5%208-5.5%2013s1.8%209.4%205.5%2013l128.8%20128.8c3.7%203.7%208%205.5%2013%205.5s9.4-1.8%2013-5.5l128.8-128.8c3.7-3.6%205.4-8%205.4-13s-1.7-9.4-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    
+    background-size: 10px;
+    color: #888; 
+    /* This ensures the select maintains the correct border */
+    border: 1px solid #f4dddd; 
+}
+
+.co-profile-form-select:not([value=""]) {
+    color: #333; 
+}
+
+/* Date input specific style to add a calendar icon to the right */
+.co-profile-form-input-date {
+    padding-left: 15px; 
+    padding-right: 15px;
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 20px;
+}
+
+.co-profile-date-wrapper {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+    display: block;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+    display: block;
+}
+
+.co-profile-date-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #f4dddd;
+    border-radius: 6px;
+    font-size: 1em;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background-color: #fff9f9;
+    color: #333;
+    height: 53.6px;
+    box-sizing: border-box;
+}
+
+.co-profile-date-input::placeholder {
+    color: #999999;
+}
+
+.co-profile-date-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+    background-color: #ffffff;
+}
+
+.co-profile-date-input:hover {
+    border-color: #d73d3d;
+}
+
+.co-profile-date-popper {
+    z-index: 1200;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker-popper) {
+    z-index: 1200 !important;
+}
+
+/* DatePicker Styling aligned with Admin Company Drive */
+.co-profile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+    display: block;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+    display: block;
+}
+
+.co-profile-date-wrapper input {
+    width: 100% !important;
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day--selected),
+.co-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #d23b42 !important;
+    color: #ffffff !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.co-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #b32d34 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #f9d8da !important;
+    color: #6b1116 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #d23b42;
+    border-radius: 50%;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__header) {
+    background-color: #d23b42 !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: #ffffff !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    text-align: center !important;
+    margin: 0 !important;
+    display: inline-block !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__week) {
+    margin: 0 !important;
+    display: flex !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker) {
+    padding-bottom: 8px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: white !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #f0f0f0 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select),
+.co-profile-date-wrapper :global(.react-datepicker__year-select) {
+    background-color: #fff9f9 !important;
+    color: #6b1116 !important;
+    border: 1px solid #f4dddd !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    margin: 0 6px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select) {
+    margin-right: 10px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__year-select) {
+    margin-left: 10px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select:hover),
+.co-profile-date-wrapper :global(.react-datepicker__year-select:hover) {
+    border-color: #d73d3d !important;
+    background-color: #ffffff !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select:focus),
+.co-profile-date-wrapper :global(.react-datepicker__year-select:focus) {
+    border-color: #d73d3d !important;
+    box-shadow: 0 0 0 2px rgba(236, 98, 79, 0.2) !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select option),
+.co-profile-date-wrapper :global(.react-datepicker__year-select option) {
+    background-color: white !important;
+    color: #333 !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select option:hover),
+.co-profile-date-wrapper :global(.react-datepicker__year-select option:hover) {
+    background-color: #f9d8da !important;
+    color: #6b1116 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-select option:checked),
+.co-profile-date-wrapper :global(.react-datepicker__year-select option:checked) {
+    background-color: #d23b42 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown) {
+    background-color: #ffffff !important;
+    border: 2px solid #d23b42 !important;
+    border-radius: 8px !important;
+    padding: 8px 0 !important;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.18) !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-option),
+.co-profile-date-wrapper :global(.react-datepicker__year-option) {
+    padding: 8px 16px !important;
+    cursor: pointer !important;
+    color: #333 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-option:hover),
+.co-profile-date-wrapper :global(.react-datepicker__year-option:hover) {
+    background-color: #f9d8da !important;
+    color: #6b1116 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-option--selected),
+.co-profile-date-wrapper :global(.react-datepicker__year-option--selected) {
+    background-color: #d23b42 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-read-view--selected-month),
+.co-profile-date-wrapper :global(.react-datepicker__year-read-view--selected-year) {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-read-view),
+.co-profile-date-wrapper :global(.react-datepicker__year-read-view) {
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-read-view:hover),
+.co-profile-date-wrapper :global(.react-datepicker__year-read-view:hover) {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown-container),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown-container) {
+    margin: 0 8px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar) {
+    width: 6px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-track),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-track) {
+    background: #f1f1f1 !important;
+    border-radius: 10px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb) {
+    background: #d23b42 !important;
+    border-radius: 10px !important;
+}
+
+.co-profile-date-wrapper :global(.react-datepicker__month-dropdown::-webkit-scrollbar-thumb:hover),
+.co-profile-date-wrapper :global(.react-datepicker__year-dropdown::-webkit-scrollbar-thumb:hover) {
+    background: #b32d34 !important;
+}
+
+
+/* --- Profile Photo Card (Small Card Inside Master Card) --- */
+.co-profile-photo-card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 25px 20px; /* Increased vertical padding */
+    border: 1px solid #eee;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: -14px;
+    margin-left: 31px;
+   /* border: 1px solid #808080; */
+    /* Adjusted height to accommodate status message if needed, keeping flex layout */
+    height: 375px; 
+    width: 290px;
+    justify-content: space-between; /* Adjusted to space-around to better fit new element */
+}
+
+/* Profile Photo Header (Desktop) */
+.co-profile-photo-header {
+    width: 100%;
+    text-align: left;
+    margin-top:-10px;
+    font-size: 22px;
+    padding-bottom: 5px;
+    margin-bottom: 8px; 
+    margin-left: 0px;/* Reduced margin */
+    /* FIX 3: Make header relative to position its own ::after line */
+    position: relative;
+}
+
+/* FIX 4: Specific Red Line for Profile Photo Header (Desktop & Mobile) */
+.co-profile-photo-header::after{
+    background-color: #d23b42;
+    border-radius: 2px;
+    bottom: 0px; /* Position relative to the header element */
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    width: 40px;
+}
+
+/* REMOVE: .co-profile-photo-header-line::after as it is no longer needed */
+
+
+.co-profile-photo-upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Increased gap between photo and details/button */
+    gap: 15px; /* Reduced gap to accommodate new details */
+    
+    /* Pushes this block to be vertically centered within the remaining card space */
+    margin-top: auto; 
+    margin-bottom: auto; 
+    flex-grow: 1; 
+    justify-content: center;
+    width: 100%; /* Ensure children can use max-width */
+}
+
+.co-profile-photo-preview {
+    /* Set fixed size for the image (no circle/ring around it) */
+    border: none !important; 
+    width:150px;
+    height:150px;
+    margin-top:-300px; /* Adjusted to center better with the new text */
+    /* 2. Ensure no outline is applied (important for focus states, but good to check) */
+    outline: none !important;
+
+    /* 3. Ensure no box-shadow is creating a square frame */
+    box-shadow: none !important;
+}
+
+/* NEW: Style for the active border when a photo is uploaded */
+.co-profile-photo-active {
+    /* Apply a border with your theme color */
+    border: 2px solid #808080 !important; 
+    border-radius: 6px; /* Match input border radius for consistency */
+    padding: 2px; 
+    margin-top:-15px;
+    position: relative;
+    top: -5px;/* Small padding so the border doesn't immediately touch the image */
+}
+
+/* NEW: Style to show the image is clickable */
+.co-profile-photo-clickable {
+    cursor: zoom-in;
+    transition: transform 0.2s;
+}
+.co-profile-photo-clickable:hover {
+    transform: scale(1.05);
+}
+
+
+/* NEW: Style for file details */
+.co-profile-file-details {
+    width: 100%;
+    max-width: 220px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 15px; /* Space between details and button */
+}
+
+.co-profile-file-name {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ... for long file names */
+    margin: 0;
+}
+
+.co-profile-upload-date {
+    font-size: 0.75em;
+    color: #666;
+    margin: 5px 0 0 0;
+}
+/* --- End of File Details Styles --- */
+
+
+/* --- Upload Button Styling with Icons --- */
+.co-profile-upload-button {
+    background-color: #e7effa;
+    color: rgb(137, 135, 135);
+    padding: 12px 15px; /* Adjust horizontal padding to fit content better */
+    width: 100%; /* Make it full width of its container */
+    max-width: 220px; /* Constrain max width for design consistency */
+    border-radius: 8px;
+    border: 1px solid #808080;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1em; 
+    display: flex;
+    justify-content: space-between; /* Distribute content */
+    align-items: center;
+    transition: background-color 0.2s;
+    text-transform: uppercase;
+    box-sizing: border-box; /* Include padding/border in width */
+}
+
+.co-profile-upload-button:hover {
+    background-color: #cb4f53;
+    color: #fff;
+}
+
+/* Styling for the Upload text itself */
+.co-profile-upload-text {
+    flex-grow: 1;
+    text-align: center;
+    margin: 0 5px; /* Small buffer for the symbols */
+}
+
+/* Styling for the icons/symbols container */
+.co-profile-icon {
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Specifically style the SVG upload icon to match the size */
+.co-profile-upload-svg {
+    width: 1.2em; /* Adjust size relative to button font size */
+    height: 1.2em;
+    fill: currentColor; 
+    transition: fill 0.2s;
+}
+
+/* Specifically style the close/cross icon */
+.co-profile-icon-close {
+    font-size: 1.2em;
+    color: rgb(137, 135, 135); 
+    transition: color 0.2s;
+}
+
+.co-profile-upload-button:hover .co-profile-icon-close {
+    color: white; 
+}
+
+.co-profile-hidden-input {
+    display: none;
+}
+/* --- End of Upload Button Styling --- */
+
+
+/* --- Image Preview Modal Styles --- */
+.co-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Dark semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's on top of everything */
+}
+
+.co-modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.co-modal-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+.co-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    z-index: 1001; /* Above the image */
+}
+
+.co-modal-close:hover {
+    opacity: 1;
+}
+
+.co-profile-photo-circle-wrapper {
+    /* Set a fixed size for the entire circle area */
+    width: 150px; /* Example size */
+    height: 150px; /* Must match width for a perfect circle */
+    border-radius: 50%; /* Makes the container circular */
+    
+    /* Apply the red outline/shadow here */
+    border: 3px solid #E53935; /* Example red border (adjust color/thickness) */
+    /* Or use box-shadow if that's what you were using: */
+    /* box-shadow: 0 0 0 3px #E53935; */
+
+    /* Centering the image inside */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    overflow: hidden; /* Important to clip the image to the circle */
+}
+/* --- End of Image Preview Modal Styles --- */
+
+/* --- Profile Photo Upload Styles --- */
+.co-profile-photo-icon-container {
+    padding: 1rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 95px;
+    
+}
+
+.co-profile-photo-preview {
+    width: 150px;
+    height: 190px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #f4dddd;
+    cursor: pointer;
+}
+
+.co-profile-photo-clickable {
+    cursor: zoom-in;
+    transition: transform 0.2s;
+}
+
+.co-profile-photo-clickable:hover {
+    transform: scale(1.05);
+}
+
+.co-profile-photo-active {
+    border: 2px solid #808080 !important;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.co-profile-upload-info-container {
+    margin-top: 0rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    word-break: break-all;
+    position: relative;
+    top: -13px;
+}
+
+.co-profile-upload-info-item {
+    display: flex;
+    align-items: center;
+    color: #555;
+}
+
+.co-profile-upload-info-item:not(:last-child) {
+    margin-bottom: 0.5rem;
+}
+
+.co-profile-upload-hint {
+    margin-top: 4px;
+}
+
+.co-profile-upload-action-area {
+    margin-top: 8px;
+    position: relative;
+    top:-8px;
+   
+}
+
+.co-profile-upload-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    left: 5px;
+}
+
+.co-profile-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 0rem;
+    background-color: #fff9f9;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+    height:44px;
+    width:160px;
+    transition: all 0.2s ease-in-out;
+}
+
+.co-profile-profile-upload-btn:hover {
+    background-color: #fae9e9;
+    border-color: #f4dddd;
+}
+
+.co-profile-upload-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.co-profile-remove-image-btn {
+    background: #fde8e8;
+    border: 1px solid #f9c6c6;
+    color: #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.co-profile-remove-image-btn:hover {
+    background: #d9534f;
+    color: white;
+    border-color: #d9534f;
+}
+
+.co-profile-upload-success-message {
+    font-size: 0.82rem;
+    color: #28a745;
+    font-weight: 500;
+    text-align: center;
+    margin: 6px 0 0 0;
+}
+
+.co-profile-upload-hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 6px;
+    text-align: center;
+}
+
+
+/* --- NEW: Status Message Styles (TEXT ONLY) --- */
+.co-profile-status-message {
+    font-size: 0.9em;
+    font-weight: 600;
+    position: relative;
+    top: -73px;
+    margin-bottom: -50px; 
+    text-align: center;
+    /* REMOVED: padding, border, and width properties */
+}
+
+.co-profile-status-success {
+    color: #4CAF50; /* Green for success */
+    /* REMOVED: background-color and border */
+}
+
+.co-profile-status-error {
+    color: #d23b42; /* Red for not saved/error */
+    /* REMOVED: background-color and border */
+}
+/* --- End of Status Message Styles --- */
+
+
+/* --- Action Buttons --- */
+.co-profile-action-buttons {
+    display: flex;
+    justify-content: flex-end; 
+    gap: 1rem;
+    padding-top: 0;
+    margin-right: 0px;
+    margin-top: 2rem; 
+    margin-bottom: 0;
+}
+
+.co-profile-discard-btn,
+.co-profile-save-btn {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    border: none;
+}
+
+.co-profile-discard-btn {
+    background-color: #e8e8e8; 
+    color: #666;
+}
+
+.co-profile-discard-btn:hover {
+    background-color: #d4d4d4;
+}
+
+.co-profile-save-btn {
+    background-color: #d23b42;
+    color: white;
+}
+
+.co-profile-save-btn:hover {
+    background-color: #a72e33;
+}
+
+.co-profile-discard-btn:disabled,
+.co-profile-save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* --- Success Popup Styles --- */
+
+/* Success popup overlay */
+.CoProfile-popup-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+} 
+
+.CoProfile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.CoProfile-popup-header {
+    background-color: #d23b42;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.CoProfile-popup-body {
+    padding: 2rem;
+}
+
+.CoProfile-popup-body h2 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 24px;
+    color: #000;
+    font-weight: 700;
+}
+
+.CoProfile-popup-body p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+}
+
+.CoProfile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+}
+
+.CoProfile-popup-close-btn {
+    background-color: #d23b42;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.CoProfile-popup-close-btn:hover {
+    background-color: #a72e33;
+}
+
+/* Success icon styling and animation */
+.CoProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
+    animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
+}
+
+.CoProfile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4caf50;
+    fill: none;
+    animation: CoProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.CoProfile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #ffffff;
+    stroke-width: 3;
+    fill: none;
+    animation: CoProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes CoProfile-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes CoProfile-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes CoProfile-fill {
+    100% { box-shadow: inset 0 0 0 40px #4caf50; }
+}
+
+
+/* --- MOBILE RESPONSIVE ADJUSTMENTS (Max 768px) --- */
+@media screen and (max-width: 768px) {
+    
+    /* 1. Overall Layout */
+
+    .co-profile-section {
+        padding-bottom: 15px;
+    }
+    
+    .co-profile-main-content {
+        padding: 0; 
+        margin-top: 50px;
+        align-items: stretch; /* Stretch to fill container for full width effect */
+        overflow-y: auto;
+        height: 93vh;
+        box-sizing: border-box;
+            width: 484px;
+    margin-left: 8px;
+    }
+
+    /* 2. Master Card (Full Width, No Margin, No Fixed Height) */
+    .co-profile-master-card {
+        width: 100%;
+        max-width: 100%;
+        height: auto; /* Allow height to grow with content */
+        margin: 0; /* Remove fixed margins */
+        border-radius: 0; 
+        padding: 15px; 
+        padding-bottom: 90px; /* Essential space for fixed action buttons */
+        box-shadow: none;
+        border: none;
+    }
+
+    /* 3. Content Grid (Single Column) */
+    .co-profile-content-grid {
+        /* Forms on top, Photo Card below (1fr 1fr grid or simple column, the order is handled by the DOM order which is form-area then photo-card) */
+        grid-template-columns: 1fr; 
+        gap: 25px; 
+        margin-bottom: 0;
+    }
+
+    /* 4. Form Area Adjustments */
+    .co-profile-form-area {
+        height: auto; /* Remove fixed height */
+        margin-top: 0;
+        gap: 20px; /* Slightly reduced gap */
+    }
+    
+    /* FIX: Re-adjust .co-profile-section-header::after for mobile (Personal Info/Office Details) */
+    .co-profile-section-header::after {
+        bottom: 0px; 
+        left: 0;
+        top: initial;
+    }
+    
+    /* REMOVED: co-profile-section-header2::after and co-profile-section-header3::after from here */
+    
+    /* 5. Input Grid (Single Column) */
+    .co-profile-input-grid,
+    .co-profile-input-grid-two-col {
+        grid-template-columns: 1fr; /* Single column stack */
+        gap: 15px; /* Reduced gap */
+    }
+
+    .co-profile-form-input {
+        width: 100%; /* Full width input */
+        max-width: none;
+        height: 50px; /* Slight height adjustment for mobile */
+    }
+    
+    /* 6. Profile Photo Card (Below Forms, Full Width) */
+    .co-profile-photo-card {
+        width: 100%;
+        
+        margin: 0; /* Remove fixed margins/offsets */
+        padding: 20px; 
+        align-items: center;
+        /* Reset positioning specific to desktop grid */
+        margin-top: 0;
+        margin-left: 0;
+    }
+    .co-profile-layout{position:absolute; left:2px;}
+    .co-profile-photo-header {
+        text-align: left; /* Aligns header text to the left */
+        margin-left: -30px; /* Remove desktop margin offset */
+        font-size: 22px;
+        padding-bottom: 0;
+        position: relative;
+        width: 100%;
+    }
+
+    /* FIX: Ensure the photo header line works correctly in mobile, using the specific class */
+    .co-profile-photo-header::after {
+        /* This rule correctly positions the line below the Profile Photo header in mobile */
+        bottom: 0px; /* Position it correctly at the bottom of the header */
+        left: 0;
+        top: initial; 
+    }
+    
+    /* REMOVED: .co-profile-photo-header-line::after from here */
+
+    .co-profile-photo-icon-container {
+        min-height: 100px;
+        padding: 0;
+    }
+    
+    .co-profile-photo-preview {
+        /* Center photo better */
+        margin-top: 0; 
+        width: 150px;
+        height: 200px;
+        object-fit: contain; /* Use contain for better mobile display of profile pics */
+    }
+    
+    .co-profile-photo-active {
+        margin-top: 15px; /* Re-add margin around border */
+    }
+    
+    /* Center the placeholder image too */
+    .co-profile-photo-card img[alt="Graduation Cap"] {
+        margin-top: 0 !important;
+    }
+    
+    .co-profile-upload-info-container,
+    .co-profile-upload-action-area {
+        width: 55%;
+        position: relative;
+    top: 13px;
+    }
+    
+    
+    .co-profile-upload-action-area {
+        width: 100%;
+        position: relative;
+    top: -50px;
+    }
+
+    .co-profile-upload-btn-wrapper {
+        gap: 8px;
+        width: 195px;
+    margin-left: 105px;
+    }
+    
+    .co-profile-profile-upload-btn {
+        height: 45px;
+        width: auto;
+        padding: 0.7rem 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .co-profile-remove-image-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .co-profile-status-message {
+        /* Adjust status message to appear below the card, not floating */
+        margin-top: 15px; 
+        margin-bottom: 0;
+    }
+
+    /* 7. Fixed Action Buttons */
+    .co-profile-action-buttons {
+         /* Fix to viewport */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        
+        padding: 15px; 
+        border-radius: 0;
+        gap: 10px;
+        z-index: 50; 
+        justify-content: space-between; /* Spread discard and save */
+    }
+    
+    .co-profile-discard-btn, .co-profile-save-btn {
+        flex-grow: 1; /* Make both buttons equal width */
+        min-width: 45%;
+        padding: 12px 0;
+    }
+    /* Success popup overlay */
+.CoProfile-popup-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+} 
+
+.CoProfile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: StuProfile-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes CoProfile-popup-fade-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.CoProfile-popup-header {
+    background-color: #d23b42; /* Green for success */
+    color: white;
+    padding: 15px 20px;
+    font-size: 2.25rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.CoProfile-popup-body {
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.CoProfile-popup-body h2 {
+    color: #d23b42;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.CoProfile-popup-body p {
+    color: #666;
+    margin: 5px 0;
+}
+
+.CoProfile-popup-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+    position: relative;
+    left: -140px;
+    background-color: #ffffff;
+}
+
+.CoProfile-popup-close-btn {
+    background-color: #d23b42;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.CoProfile-popup-close-btn:hover {
+    background-color: #d23b42;
+}
+
+/* Success icon styling and animation */
+.CoProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
+    animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
+}
+
+.CoProfile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4caf50;
+    fill: #4caf50;
+    animation: CoProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.CoProfile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #ffffff;
+    stroke-width: 3;
+    fill: none;
+    animation: CoProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes CoProfile-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes CoProfile-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes CoProfile-fill {
+    100% { box-shadow: inset 0 0 0 30px #4caf50; }
+}
+}
+
+/* Red scrollbar on mobile */
+@media (max-width: 992px) {
+  .co-profile-content::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  html::-webkit-scrollbar {
+    width: 10px;
+  }
+  .co-profile-content::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track,
+  html::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-profile-content::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb,
+  html::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-profile-content::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover,
+  html::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+
+}
+/* --- Success Popup Styles --- */
+
+/* Success popup overlay */
+.CoProfile-popup-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+} 
+
+.CoProfile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: CoProfile-popup-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes CoProfile-popup-fade-in {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.CoProfile-popup-header {
+    background-color: #d23b42; /* Green for success */
+    color: white;
+    padding: 15px 20px;
+    font-size: 2.25rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.CoProfile-popup-body {
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.CoProfile-popup-body h2 {
+    color: #d23b42;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.CoProfile-popup-body p {
+    color: #666;
+    margin: 5px 0;
+}
+
+.CoProfile-popup-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+    position: relative;
+    left: -140px;
+    background-color: #ffffff;
+}
+
+.CoProfile-popup-close-btn {
+    background-color: #d23b42;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.CoProfile-popup-close-btn:hover {
+    background-color: #d9534f;
+}
+
+/* Success icon styling and animation */
+.CoProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    fill: none;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
+    animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
+}
+
+.CoProfile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4caf50;
+    fill: none;
+    animation: CoProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.CoProfile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #ffffff;
+    stroke-width: 3;
+    fill: none;
+    animation: CoProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes CoProfile-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes CoProfile-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes CoProfile-fill {
+    100% { box-shadow: inset 0 0 0 40px #4caf50; }
+}

@@ -1,0 +1,1026 @@
+.co-layout {
+  display: flex;
+}
+
+.co-main-content {
+      flex-grow: 1;
+    padding: 0 4px;
+    margin-left: 300px;
+    margin-top: 20px;
+    overflow: hidden;
+    /* max-width: 1400px; */
+    max-height: 700px;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+
+
+.co-rat-filter-box {
+  background: #D3D1D1;
+  border-radius: 16px;
+  max-width: 1180px; 
+  margin: 25px auto 0 15px; 
+  padding: 16px 26px 8px 26px;
+  box-shadow: 0 0 12px #e1e6ef32;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 70px;
+}
+
+.co-rat-tab-container {
+  display: flex;
+  gap: 62px;
+  margin-bottom: 8px;
+  text-align:center;
+}
+  
+.co-rat-tab-inactive{
+  background: #D3D1D1;
+  color: #222;
+  border-radius: 8px;
+  padding: 3px 100px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 6px 8px -4px #333; 
+  transition: background 0.2s, color 0.2s;
+  height:62.8px;
+  width:350.69px;
+}
+  
+.co-rat-tab-active {
+  background: #d23b42;
+  color: #fff;
+  border-radius: 8px;
+  padding: 3px 100px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 4px 6px -6px #333; 
+  height:62.8px;
+  width:355.69px;
+}
+  
+.co-rat-tab-inactive:hover {
+  background: #d23b42; 
+  color: #fff; 
+}
+  
+.co-rat-filter-inputs {
+  display: flex;
+  gap: 44px;
+}
+  
+.co-rat-filter-select, .co-rat-filter-date-input {
+background: #f6f8fb;
+border: 2px solid #808080; /* Default border is 2px solid */
+height: 51px;
+width: 262px; 
+border-radius: 7px;
+font-size: 1rem;
+color: #282828;
+font-weight: 600;
+box-sizing: border-box;
+padding: 10px 15px; 
+line-height: normal;
+text-align:center; 
+transition: border-color 0.2s; 
+}
+
+.co-rat-filter-select-1{
+background: #f6f8fb;
+border: 2px solid #808080; /* Default border is 2px solid */
+height: 51px;
+min-width: 260px; 
+border-radius: 7px;
+font-size: 1rem;
+color: #282828;
+font-weight: 600;
+box-sizing: border-box;
+padding: 10px 15px; 
+line-height: normal;
+text-align:center; 
+transition: border-color 0.2s; 
+}
+.co-rat-filter-select-1:focus{
+border-color: #d23b42;
+  outline: none !important;
+  box-shadow: none !important; 
+}
+.co-rat-filter-select-1:hover{
+border-color: #d23b42; 
+}
+
+.co-rat-filter-select-2{
+background: #f6f8fb;
+border: 2px solid #808080; /* Default border is 2px solid */
+height: 51px;
+min-width: 260px; 
+border-radius: 7px;
+font-size: 1rem;
+color: #282828;
+font-weight: 600;
+box-sizing: border-box;
+padding: 10px 15px; 
+line-height: normal;
+text-align:center; 
+transition: border-color 0.2s; 
+}
+
+.co-rat-filter-select-2:focus{
+border-color: #d23b42;
+  outline: none !important;
+  box-shadow: none !important; 
+}
+.co-rat-filter-select-2:hover{
+border-color: #d23b42; 
+}
+
+
+.co-rat-filter-date-input input {
+  width: 100%; 
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 0; 
+  margin: 0;
+  box-sizing: border-box;
+  outline: none; 
+}
+
+.react-datepicker-popper {
+  z-index: 1000;
+}
+
+.co-rat-filter-select:focus,
+.co-rat-filter-date-input:focus,
+.co-rat-filter-date-input:focus-within {
+  border-color: #d23b42;
+  outline: none !important;
+  box-shadow: none !important; 
+}
+  
+.co-rat-filter-date-input input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+  
+.co-rat-filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+  
+.co-rat-filter-select:hover, .co-rat-filter-date-input:hover {
+  border-color: #d23b42; 
+}
+  
+.co-rat-search-row {
+  display: flex;
+  align-items: center;
+  gap: 15px; 
+  padding: 5px 0 10px 0;
+}
+  
+.co-rat-filter-label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #222;
+}
+  
+.co-rat-search-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid #808080;
+  font-size: 1rem;
+  width: 150px; 
+  line-height: 1.5; 
+  transition: border-color 0.2s; 
+}
+  
+.co-rat-search-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid #808080;
+  font-size: 1rem;
+  flex-grow: 1; 
+  max-width: 400px; 
+  line-height: 1.5; 
+  transition: border-color 0.2s; 
+}
+
+.co-rat-search-select:hover, .co-rat-search-input:hover {
+  border-color: #d23b42; 
+}
+
+.co-rat-search-select:focus,
+.co-rat-search-input:focus {
+  border: 2px solid #d23b42;
+  outline: none;
+  box-shadow: none; 
+}
+
+.co-rat-search-btn {
+  background-color: #197AFF; 
+  color: white;
+  border: none;
+  padding: 10px 28px;
+  margin-right: 2px;
+  border-radius: 7px;
+  font-size: 1rem;
+  border: 1px solid #808080;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: auto; 
+}
+  
+.co-rat-search-btn:hover {
+  background-color: #046bfb; 
+}
+  
+/* --- TABLE STYLES REPLACED FROM ReportAnalysismain.css BELOW --- */
+
+.co-rat-table-section {
+background: #fff;
+border-radius: 16px;
+max-width: 1180px; 
+margin: 4px auto 30px 15px;
+padding: 26px 32px 0px 12px;
+box-shadow: 0 0 14px #e3e6ee2a;
+border: 2px solid #808080;
+height:380px;
+}
+
+.co-rat-table-header-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+position: sticky;
+left: 0px;
+}
+
+.co-rat-table-title {
+font-size: 1.25rem;
+font-weight: bold;
+color: #191c2f;
+margin-bottom:33px;
+}
+
+.co-rat-table-actions {
+display: flex;
+gap: 16px;
+align-items: center;
+margin-bottom:20px;
+}
+
+.co-rat-view-status-btn-all, .co-rat-view-status-btn-filtered, .co-rat-print-btn {
+border: none;
+border-radius: 6px;
+padding: 9px 22px;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+}
+
+.co-rat-view-status-btn-all {
+background: #4ea24e;
+color: #ffffff;
+border-radius: 11px;
+height:36px;
+}
+.co-rat-view-status-btn-filtered {
+background: #397639; 
+color: #ffffff;
+border-radius: 11px;
+height:36px;
+}
+.co-rat-view-status-btn-all:hover{
+background:#397639;
+}
+.co-rat-print-btn {
+background: #d23b42;
+color: #ffffffff;
+padding: 9px 45px;
+border-radius: 11px;
+z-index: 1001; 
+}
+.co-rat-print-btn:hover{
+background:#a72e33;
+}
+
+.co-rat-print-button-container {
+position: relative;
+}
+
+.co-rat-export-menu {
+position: absolute; 
+top: 33px;
+right: 0;
+margin-top: 5px;
+background: #fff;
+border: 1px solid #ccc;
+border-radius: 6px;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+z-index: 1000; 
+min-width: 180px;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+.co-rat-export-menu-button {
+  display: block;
+  width: 180px;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.1s;
+}
+
+.co-rat-export-menu-button:hover {
+  background: #f0f0f0;
+}
+
+.co-rat-export-menu button {
+display: block;
+width: 180px;
+padding: 10px 15px;
+border: none;
+background: none;
+text-align: left;
+cursor: pointer;
+font-size: 0.95rem;
+font-weight: 500;
+color: #333;
+transition: background 0.1s;
+}
+
+.co-rat-export-menu button:hover {
+background: #f0f0f0;
+}
+
+.co-rat-data-table {
+min-width: 1290px;
+width: 100%;
+border-collapse: separate;
+margin-top: -8px;
+font-size: 1.02rem;
+table-layout: fixed; 
+}
+
+.co-rat-data-table thead {
+display: block;
+width: 1290px; 
+}
+
+.co-rat-data-table th {
+background: #ffffff;
+font-size: 1rem;
+font-weight: 700;
+color:rgb(175, 175, 175);
+padding: 5px 37px; 
+border-radius: 3px;
+text-align: center;
+border-bottom: 2px solid #f2f0f2;
+}
+
+.co-rat-table-body-scroll {
+  /* vertical scrolling container (scrollbar will be on this element and stay at its right edge) */
+  width: 1160px; /* inner container width so vertical scrollbar stays at its edge */
+  max-height: 290px;
+  overflow-y: auto; /* vertical scroll handled here */
+  overflow-x: visible; /* allow the wide table to overflow so the outer .co-rat-table-section can horizontally scroll it */
+  scrollbar-gutter: stable; /* reserve gutter so content doesn't shift when scrollbar appears */
+}
+.co-rat-table-body-scroll thead{
+  position:sticky;
+  top:0px;
+}
+.co-rat-data-table tbody {
+display: block;
+width: 1290px;
+}
+
+
+.co-rat-data-table tr {
+display: flex; 
+width: 2182px;
+}
+
+.co-rat-data-table th, .co-rat-data-table td {
+min-width: 0;
+text-align: center;
+}
+
+/* --- WebKit scrollbar styling (horizontal scrollbar matches RW file) --- */
+/* Outer section horizontal scrollbar (height + grey thumb) and vertical red thumb */
+.co-rat-table-section::-webkit-scrollbar {
+  width: 15px;
+}
+.co-rat-table-section::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-rat-table-section::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-rat-table-section::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+.co-rat-table-section::-webkit-scrollbar:horizontal {
+  height: 12px !important; /* horizontal scrollbar height */
+}
+.co-rat-table-section::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-rat-table-section::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #c1bfbf !important; /* darker grey on hover */
+}
+
+/* Inner body scroll (vertical thumb remains red while horizontal uses grey) */
+.co-rat-table-body-scroll::-webkit-scrollbar {
+  width: 15px;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar:horizontal {
+  height: 12px !important; /* horizontal scrollbar height */
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #c1bfbf !important; /* darker grey on hover */
+}
+
+
+.co-rat-data-table td {
+padding: 9px 5px;
+color: #30334e;
+min-width:148px;
+font-weight: 500;
+border-bottom: 1.5px solid #f2f0f2;
+}
+
+/* Column widths from ReportAnalysismain.css (13 columns) */
+.co-rat-data-table th:nth-child(1), .co-rat-data-table td:nth-child(1) { width: 50px; }
+.co-rat-data-table th:nth-child(2), .co-rat-data-table td:nth-child(2) { width: 140px; }
+.co-rat-data-table th:nth-child(3), .co-rat-data-table td:nth-child(3) { width: 115px; }
+.co-rat-data-table th:nth-child(4), .co-rat-data-table td:nth-child(4) { width: 85px; }
+.co-rat-data-table th:nth-child(5), .co-rat-data-table td:nth-child(5) { width: 90px; }
+.co-rat-data-table th:nth-child(6), .co-rat-data-table td:nth-child(6) { width: 60px; }
+.co-rat-data-table th:nth-child(7), .co-rat-data-table td:nth-child(7) { width: 100px; }
+.co-rat-data-table th:nth-child(8), .co-rat-data-table td:nth-child(8) { width: 120px; }
+.co-rat-data-table th:nth-child(9), .co-rat-data-table td:nth-child(9) { width: 75px; }
+.co-rat-data-table th:nth-child(10), .co-rat-data-table td:nth-child(10) { width: 70px; }
+.co-rat-data-table th:nth-child(11), .co-rat-data-table td:nth-child(11) { width: 100px; }
+.co-rat-data-table th:nth-child(12), .co-rat-data-table td:nth-child(12) { width: 95px; }
+.co-rat-data-table th:nth-child(13), .co-rat-data-table td:nth-child(13) { width: 95px; }
+
+/* Preserved 14th and 15th column widths from original ReportAnalysisSW.css */
+.co-rat-data-table th:nth-child(14), .co-rat-data-table td:nth-child(14) { width: 100px; }
+.co-rat-data-table th:nth-child(15), .co-rat-data-table td:nth-child(15) { width: 200px; }
+
+.co-rat-status-cell-passed {
+padding: 6px 22px;
+background: #c2f6ea;
+color: #16c098;
+border-radius: 32px;
+font-weight: 600;
+display: inline-block; 
+}
+
+.co-rat-status-cell-rejected {
+padding: 6px 18px;
+background:rgb(250, 213, 215);
+color: #d23b42;
+border-radius: 32px;
+font-weight: 600;
+display: inline-block;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-button {
+    display: none !important;
+}
+
+/* --- VERTICAL SCROLLBAR (Y-axis) --- */
+.co-rat-table-body-scroll::-webkit-scrollbar {
+    width: 15px;       /* vertical width */
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb {
+    background: #d23b24 !important;    /* vertical thumb color */
+    border-radius: 20px;
+    border: 3px solid #f0f2f5 !important;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-track {
+    background: #e3e5e7 !important;
+}
+
+/* --- HORIZONTAL SCROLLBAR (X-axis) --- */
+.co-rat-table-section::-webkit-scrollbar:horizontal {
+    height: 10px !important;           /* horizontal height */
+}
+
+.co-rat-table-section::-webkit-scrollbar-thumb:horizontal {
+    background: #e3e5e7 !important;     /* horizontal thumb color */
+    border-radius: 20px;
+    border: 3px solid #ffffff00 !important;  /* transparent border */
+}
+
+.co-rat-table-section::-webkit-scrollbar-track:horizontal {
+    background: #ffffff !important;     /* cleaner look */
+}
+
+/* ============================================
+   Export Popup Styles
+   ============================================ */
+
+/* Popup Overlay */
+.co-rat-export-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: co-rat-export-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes co-rat-export-popup-fade-in {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
+/* Popup Container */
+.co-rat-export-popup-container {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: co-rat-export-popup-scale-in 0.3s ease-out;
+}
+
+@keyframes co-rat-export-popup-scale-in {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+
+/* Popup Header */
+.co-rat-export-popup-header {
+  background-color: #d23b42;
+  color: white;
+  padding: 15px 20px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Popup Body */
+.co-rat-export-popup-body {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Progress Circle Container */
+.co-rat-export-progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.co-rat-export-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d23b42;
+}
+
+/* Success Icon */
+.co-rat-export-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: co-rat-fill 0.4s ease-in-out 0.4s forwards, co-rat-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-rat-success-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4caf50;
+  fill: #4caf50;
+  animation: co-rat-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-rat-success-icon--check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #ffffff;
+  stroke-width: 3;
+  fill: none;
+  animation: co-rat-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+/* Failed Icon */
+.co-rat-export-failed-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Popup Title */
+.co-rat-export-popup-title {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Popup Message */
+.co-rat-export-popup-message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Popup Footer */
+.co-rat-export-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* Close Button */
+.co-rat-export-popup-close-btn {
+  background-color: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.co-rat-export-popup-close-btn:hover {
+  background-color: #b32d34;
+}
+
+.co-rat-export-popup-close-btn:active {
+  transform: scale(0.98);
+}
+@media (max-width: 768px) {
+/* 1. Main Layout Adjustments for Mobile */
+.co-main-content {
+    /* Reset margin added by JS for desktop view */
+    margin-left: 0;
+    margin-top:0px; 
+    padding: 0 10px; /* Add horizontal padding to the main content */
+}
+
+/* Adjust filter box width and margin */
+.co-rat-filter-box {
+    max-width: 100%;
+    margin: 70px auto 0 auto; /* Center and give margin from fixed header */
+    padding: 16px 15px 15px 15px; /* Adjust padding */
+}
+
+/* 2. Primary Tab Container (Round wise, Company wise, Student wise) */
+.co-rat-tab-container {
+    /* Make the container scrollable horizontally if tabs overflow (e.g., if we added a 4th tab) */
+    overflow-x: auto; 
+    white-space: nowrap; /* Prevent wrapping of the main tabs */
+    padding-bottom: 5px; /* Space for scroll bar if needed */
+    justify-content: flex-start; /* Align to start */
+    gap: 10px; /* Smaller gap between the primary cards */
+    margin-bottom: 15px;
+}
+
+/* Primary Tabs: Inactive/Active (Round wise, Company wise, Student wise) */
+.co-rat-tab-inactive,
+.co-rat-tab-active {
+    /* Mimic the small, rounded card style from the image */
+    display: inline-block;
+    flex-shrink: 0; /* Important: prevents shrinking on mobile */
+    width: auto;
+    height: auto;
+    padding: 12px 15px; /* Adjust padding to make it compact */
+    font-size: 0.95rem; /* Smaller font size */
+    font-weight: 600;
+    border-radius: 8px; /* Use 8px to match filter fields */
+    border: 1px solid #808080; /* Thinner border for mobile card look */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+    background: #D3D1D1; /* Inactive color from original CSS */
+    color: #222;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.co-rat-tab-active {
+    /* Active Tab (Student wise) style */
+    background: #d23b42;
+    color: #fff;
+    font-weight: bold;
+    border: 1px solid #d23b42; /* Use active color for border */
+}
+
+/* 3. Filter Inputs (Date, Batch, Company) - Stacked vertically */
+.co-rat-filter-inputs {
+    flex-direction: column; /* Stack inputs vertically */
+    gap: 15px; /* Spacing between stacked inputs */
+}
+
+/* Make all filter inputs full width */
+.co-rat-filter-select, 
+.co-rat-filter-date-input,
+.co-rat-filter-select-1,
+.co-rat-filter-select-2 {
+    width: 100%; /* Full width for stacking */
+    max-width: 100%; /* Ensure max-width is respected */
+    /* Restore original height and border styles */
+    height: 51px;
+    padding: 10px 15px;
+}
+
+/* Ensure the date input wrapper takes full width for its children */
+.co-rat-filter-date-input {
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+/* 4. Search Row (Mobile and Email Filter) */
+.co-rat-search-row {
+    flex-direction: column; /* Stack search elements for max width */
+    gap: 10px;
+    align-items: flex-start; /* Align items to the left */
+    padding-top: 15px;
+}
+
+.co-rat-filter-label {
+    font-size: 1rem;
+}
+
+.co-rat-search-select {
+    width: 100%; /* Full width */
+    max-width: 100%;
+}
+
+.co-rat-search-input {
+    width: 100%; /* Full width */
+    max-width: 100%;
+    order: 3; /* Move input below the select and label if column is used */
+}
+
+.co-rat-search-btn {
+    width: 100%; /* Full width button */
+    margin-left: 0; /* Remove auto margin */
+    order: 4; /* Place button at the bottom */
+}
+
+/* Error Message Styling */
+.co-rat-search-error {
+    font-size: 0.9rem;
+    color: #d23b42;
+    padding-left: 5px;
+    margin-top: -5px; 
+}
+
+/* 5. Table Section (The main content that needs scroll) */
+.co-rat-table-section {
+   
+    margin: 20px auto 20px auto; /* Center and tighten margin */
+    padding: 15px 10px 0 10px; /* Adjust padding */
+    
+    height: 350px; /* Allow height to adjust */
+    border: 1px solid #ccc;
+}
+
+/* Table Header and Actions */
+.co-rat-table-header-row {
+    flex-direction: column; /* Stack title and actions */
+    align-items: flex-start;
+     /* Unstick on mobile */
+}
+
+.co-rat-table-title {
+    font-size: 1.1rem; /* Smaller title */
+    margin-bottom: 10px;
+}
+
+.co-rat-table-actions {
+    flex-direction: column; /* Stack action buttons */
+    width: 100%;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: stretch; /* Stretch buttons to full width */
+}
+
+/* Make Action Buttons Full Width */
+.co-rat-view-status-btn-all, 
+.co-rat-view-status-btn-filtered, 
+.co-rat-print-btn {
+    width: 100%;
+    padding: 10px 0; /* Adjust vertical padding */
+    font-size: 0.95rem;
+}
+
+.co-rat-view-status-btn-all{
+    
+    padding: 10px 0; /* Adjust vertical padding */
+    font-size: 0.95rem;
+    width: 190px;
+  position: relative;
+  left: 30px;
+}
+.co-rat-view-status-btn-filtered{
+  padding: 10px 0; /* Adjust vertical padding */
+  font-size: 0.95rem;
+  width: 190px;
+position: relative;
+left: 30px;
+} 
+
+.co-rat-print-btn {
+  display:flex;
+  justify-content:center;
+  margin-left:247px;
+  margin-top:-48px;
+    width: 8%;
+    padding: 10px 80px; /* Adjust vertical padding */
+    font-size: 0.95rem;
+    z-index: 1001;
+    
+}
+/* Export Menu positioning */
+.co-rat-print-button-container {
+    position: static; /* Revert to static for proper stacking in flex column */
+    width: 100%; /* Full width */
+    margin-left: 0; /* Remove incorrect margin */
+    margin-top: 0; /* Remove incorrect margin */
+    /* Ensure the button inside is full width as well */
+}
+.co-rat-export-menu {
+    position: absolute; /* Keep absolute positioning relative to its container */
+    top: 100%; /* Position right below the button */
+    right: 0;
+    left: auto; /* Aligns to the right of the container */
+    margin-top: -25px; /* Spacing below the button */
+    width: auto; /* Let content determine width, or set a minimum */
+    min-width: 180px; /* Ensure it's wide enough */
+    /* THIS IS THE CRITICAL FIX */
+    z-index: 2000; /* Must be significantly higher than the table's z-index and any other elements */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow to pop */
+}
+.co-rat-export-menu button {
+    width: 100%;
+}
+
+/* 6. Data Table: Ensure scrollable content */
+.co-rat-data-table {
+    /* Keep min-width > 100% to force horizontal scroll in the parent .co-rat-table-section */
+    min-width: 1300px; /* Sufficient width to ensure horizontal scrolling */
+    width: 100%;
+    font-size: 0.85rem;
+
+    
+}
+
+/* Unset desktop fixed header/body setup for simpler scrolling */
+.co-rat-data-table thead, .co-rat-data-table tbody {
+    
+    width: auto;
+}
+.co-rat-data-table tr {
+    display: table-row;
+    width: 157%;
+}
+.co-rat-table-body-scroll {
+    /* Disable custom scroll container and rely on parent's overflow-x */
+    overflow-y: auto;
+    width: 143%;
+    height:184px;
+}
+
+/* Column Widths - Set consistent small width to ensure scroll */
+.co-rat-data-table th, .co-rat-data-table td {
+    min-width: 80px !important; /* Set a small minimum width for all columns */
+    white-space: nowrap; /* Prevent text wrap in table cells */
+    padding: 8px 5px; 
+}
+
+
+
+/* Column widths from ReportAnalysismain.css (13 columns) */
+.co-rat-data-table th:nth-child(1), .co-rat-data-table td:nth-child(1) { width: 5px; }
+.co-rat-data-table th:nth-child(2), .co-rat-data-table td:nth-child(2) { width: 0px; }
+.co-rat-data-table th:nth-child(3), .co-rat-data-table td:nth-child(3) { width: 115px; padding-left: 40px; }
+.co-rat-data-table th:nth-child(4), .co-rat-data-table td:nth-child(4) { width: 85px; padding-left: 70px; }
+.co-rat-data-table th:nth-child(5), .co-rat-data-table td:nth-child(5) { width: 40px; padding-left:60px }
+.co-rat-data-table th:nth-child(6), .co-rat-data-table td:nth-child(6) { width: 60px; padding-left:40px}
+.co-rat-data-table th:nth-child(7), .co-rat-data-table td:nth-child(7) { width: 100px; padding-left: 40px;}
+.co-rat-data-table th:nth-child(8), .co-rat-data-table td:nth-child(8) { width: 120px; padding-left:50px; }
+.co-rat-data-table th:nth-child(9), .co-rat-data-table td:nth-child(9) { width: 75px; padding-left:60px; }
+.co-rat-data-table th:nth-child(10), .co-rat-data-table td:nth-child(10) { width: 70px;}
+.co-rat-data-table th:nth-child(11), .co-rat-data-table td:nth-child(11) { width: 100px; }
+.co-rat-data-table th:nth-child(12), .co-rat-data-table td:nth-child(12) { width: 95px; }
+.co-rat-data-table th:nth-child(13), .co-rat-data-table td:nth-child(13) { width: 95px; }
+.co-rat-data-table td:nth-child(5) { width: 40px; padding-left: 80px; }
+.co-rat-data-table td:nth-child(7) { padding-left: 65px;}
+.co-rat-data-table td:nth-child(9){padding-left:30px;}
+.co-rat-data-table td:nth-child(13) {padding-left:5px;}
+.co-rat-data-table th:nth-child(10){padding-left:0px;}
+.co-rat-data-table td:nth-child(10) {padding-left:px;}
+.co-rat-data-table th:nth-child(11){padding-left:30px;}
+.co-rat-status-cell-passed{margin-left:14px;}
+.co-rat-status-cell-rejected{margin-left:14px;}
+.co-rat-data-table th:nth-child(15){padding-left:150px;}
+.co-rat-data-table th:nth-child(13){padding-left:33px;}
+
+/* Red scrollbar on mobile */
+.co-rat-table-body-scroll::-webkit-scrollbar,
+.co-rat-round-buttons-container::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-track,
+.co-rat-round-buttons-container::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb,
+.co-rat-round-buttons-container::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb:hover,
+.co-rat-round-buttons-container::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+}

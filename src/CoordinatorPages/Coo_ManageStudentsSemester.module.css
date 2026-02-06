@@ -1,0 +1,1165 @@
+.co-ms-sem-filter-card-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 20px;
+  margin-top: 30px;
+  box-sizing: border-box;
+}
+
+.co-ms-sem-filter-header {
+  width: 100%;
+  max-width: 1060px;
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 26px 32px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.co-ms-sem-filter-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 26px;
+  background: linear-gradient(130deg, rgba(210, 59, 66, 0.12), rgba(255, 112, 112, 0.08));
+  pointer-events: none;
+}
+
+.co-ms-sem-filter-header-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.co-ms-sem-semester-btn {
+  align-self: flex-start;
+  padding: 12px 40px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c93544 0%, #a3222f 100%);
+  color: #fff;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(201, 53, 68, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.co-ms-sem-semester-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(201, 53, 68, 0.4);
+}
+
+.co-ms-sem-filters-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+}
+
+.co-ms-sem-floating-field,
+.co-ms-sem-dropdown-wrapper,
+.co-ms-sem-dropdown-alt-wrapper {
+  position: relative;
+  width: 100%;
+  height: 56px;
+}
+
+.co-ms-sem-floating-input,
+.co-ms-sem-dropdown,
+.co-ms-sem-dropdown-alt {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  font-size: 0.98rem;
+  color: #2f2f2f;
+  padding: 18px 18px 6px 18px;
+  box-sizing: border-box;
+  transition: border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.co-ms-sem-floating-input:hover,
+.co-ms-sem-dropdown:hover,
+.co-ms-sem-dropdown-alt:hover {
+  border: 1px solid rgba(201, 53, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.co-ms-sem-floating-input:focus,
+.co-ms-sem-dropdown:focus,
+.co-ms-sem-dropdown-alt:focus {
+  border: 1px solid #c93544;
+  box-shadow: 0 0 0 4px rgba(201, 53, 68, 0.16);
+  outline: none;
+}
+
+.co-ms-sem-dropdown,
+.co-ms-sem-dropdown-alt {
+  appearance: none;
+  padding-right: 42px;
+  cursor: pointer;
+}
+
+.co-ms-sem-dropdown-wrapper::after,
+.co-ms-sem-dropdown-alt-wrapper::after {
+  content: '\25BE';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  color: #b7b7b7;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.co-ms-sem-dropdown-wrapper:focus-within::after,
+.co-ms-sem-dropdown-alt-wrapper:focus-within::after {
+  color: #c93544;
+}
+
+.co-ms-sem-floating-label {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  font-size: 1rem;
+  color: #8d8d8d;
+  pointer-events: none;
+  transition: transform 0.16s ease, font-size 0.16s ease, color 0.16s ease;
+  background: transparent;
+  padding: 0 6px;
+}
+
+.co-ms-sem-floating-input:focus + .co-ms-sem-floating-label,
+.co-ms-sem-floating-input:not(:placeholder-shown) + .co-ms-sem-floating-label,
+.co-ms-sem-dropdown:focus + .co-ms-sem-floating-label,
+.co-ms-sem-dropdown-alt:focus + .co-ms-sem-floating-label,
+.co-ms-sem-dropdown:not([value=""]) + .co-ms-sem-floating-label,
+.co-ms-sem-dropdown-alt:not([value=""]) + .co-ms-sem-floating-label {
+  top: -10px;
+  font-size: 0.76rem;
+  color: #c93544;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.co-ms-sem-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.co-ms-sem-filter-btn,
+.co-ms-sem-filter-btn-clear {
+  min-width: 150px;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.co-ms-sem-filter-btn {
+  background: linear-gradient(135deg, #c93544 0%, #b12d39 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(201, 53, 68, 0.25);
+}
+
+.co-ms-sem-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px rgba(201, 53, 68, 0.33);
+}
+
+.co-ms-sem-filter-btn-clear {
+  background: #f4f4f6;
+  color: #3f3f3f;
+}
+
+.co-ms-sem-filter-btn-clear:hover {
+  background: rgba(201, 53, 68, 0.12);
+  color: #c93544;
+}
+
+@media (max-width: 900px) {
+  .co-ms-sem-filter-card-container {
+    padding: 0 16px;
+  }
+
+  .co-ms-sem-filter-header {
+    padding: 22px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .co-ms-sem-filters-row {
+    grid-template-columns: 1fr;
+  }
+
+  .co-ms-sem-filter-actions {
+    flex-direction: column;
+  }
+
+  .co-ms-sem-filter-btn,
+  .co-ms-sem-filter-btn-clear {
+    width: 100%;
+  }
+}
+
+.co-ms-sem-main-content {
+    padding: 20px 30px 30px 30px;
+    background: #fff;
+    min-height: 100vh;
+    margin-left: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Desktop scrollbar - red styling to match theme */
+  .co-ms-sem-main-content::-webkit-scrollbar,
+  .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar {
+    width: 15px;
+  }
+  .co-ms-sem-main-content::-webkit-scrollbar-track,
+  .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+  .co-ms-sem-main-content::-webkit-scrollbar-thumb,
+  .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+  .co-ms-sem-main-content::-webkit-scrollbar-thumb:hover,
+  .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+  
+  .co-ms-sem-main-content__table-section {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px 25px 25px 25px;
+    margin-left: 290px;
+    margin-right: 40px;
+    margin-bottom: 30px;
+    width: calc(100% - 300px);
+    min-height: 400px;
+    border: 2px solid #777474;
+  }
+  
+  .co-ms-sem-main-content__table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .co-ms-sem-main-content__table-title {
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+  
+  .co-ms-sem-main-content__print-btn {
+    background: #c93544;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width:101px;
+    height:36px;
+    font-size: 1.08rem;
+  }
+  .co-ms-sem-main-content__print-btn:hover{
+    background-color: #b1404b;
+  }
+  .export-wrap {
+    position: relative;
+  }
+  
+  .export-dropdown {
+    position: absolute;
+    right: 0;
+    top: 42px;
+    background: #fff;
+    border: 1px solid #eee;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    z-index: 50;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .export-option {
+    background: transparent;
+    border: none;
+    padding: 10px 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .export-option:hover {
+    background: #f7f7f7;
+  }
+  
+  
+  .co-ms-sem-main-content__table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    overflow-x: auto;
+    margin-top: 10px;
+    border: 1px solid #f5f5f5;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .co-ms-sem-main-content__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    min-width: 1100px;
+  }
+  
+  .co-ms-sem-main-content__table th,
+  .co-ms-sem-main-content__table td {
+    padding: 14px 12px;
+    text-align: center;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #e8e8e8;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+  
+  .co-ms-sem-main-content__table th {
+    font-weight: 600;
+    color: #999;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  
+  .co-ms-sem-col-select {
+    width: 60px;
+    text-align: center;
+  }
+
+  .co-ms-sem-col-regno {
+    width: 150px;
+  }
+
+  .co-ms-sem-col-name {
+    width: 180px;
+    text-align: left;
+  }
+
+  .co-ms-sem-col-sno {
+    width: 70px;
+    text-align: center;
+  }
+
+  .co-ms-sem-col-yearsec {
+    width: 140px;
+  }
+
+  .co-ms-sem-col-sem {
+    width: 90px;
+  }
+
+  .co-ms-sem-col-section {
+    width: 110px;
+  }
+
+  .co-ms-sem-col-arrears {
+    width: 120px;
+  }
+
+  .co-ms-sem-student-photo {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #f0f0f0;
+  }
+
+  .co-ms-sem-loading,
+  .co-ms-sem-error {
+    text-align: center !important;
+    font-weight: 600;
+    padding: 40px 0 !important;
+  }
+
+  .co-ms-sem-error {
+    color: #d23b42;
+  }
+  
+  .co-ms-sem-main-content__table th:nth-child(1),
+  .co-ms-sem-main-content__table td:nth-child(1) { width: 60px; }
+  .co-ms-sem-main-content__table th:nth-child(2),
+  .co-ms-sem-main-content__table td:nth-child(2) { width: 7%; }
+  .co-ms-sem-main-content__table th:nth-child(3),
+  .co-ms-sem-main-content__table td:nth-child(3) { width: 14%; }
+  .co-ms-sem-main-content__table th:nth-child(4),
+  .co-ms-sem-main-content__table td:nth-child(4) { width: 18%; }
+  .co-ms-sem-main-content__table th:nth-child(5),
+  .co-ms-sem-main-content__table td:nth-child(5) { width: 14%; }
+  .co-ms-sem-main-content__table th:nth-child(6),
+  .co-ms-sem-main-content__table td:nth-child(6) { width: 9%; }
+  .co-ms-sem-main-content__table th:nth-child(7),
+  .co-ms-sem-main-content__table td:nth-child(7) { width: 11%; }
+  .co-ms-sem-main-content__table th:nth-child(8),
+  .co-ms-sem-main-content__table td:nth-child(8) { width: 12%; }
+  .co-ms-sem-main-content__table th:nth-child(9),
+  .co-ms-sem-main-content__table td:nth-child(9) { width: 13%; }
+
+  /* Checkbox Styling */
+  .co-ms-sem-main-content__table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #d23b42;
+    transform: scale(1.3);
+  } 
+  
+  .co-ms-sem-main-content__table td[colspan="10"] {
+      text-align: center;
+      font-style: italic;
+      padding: 20px;
+      border-bottom: none;
+  }
+  
+  .co-ms-sem-main-content__table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  
+  .co-ms-sem-main-content__table tbody tr:hover {
+    background-color: #fafafa;
+  }
+  
+  .co-ms-sem-main-content__student-photo {
+    font-size: 2rem;
+    display: inline-block;
+  }
+
+  
+/* ============================================
+   Export Popup Styles
+   ============================================ */
+
+/* Popup Overlay */
+.co-ms-sem-export-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: co-ms-sem-export-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes co-ms-sem-export-popup-fade-in {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
+/* Popup Container */
+.co-ms-sem-export-popup-container {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: co-ms-sem-export-popup-scale-in 0.3s ease-out;
+}
+
+@keyframes co-ms-sem-export-popup-scale-in {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+@keyframes co-ms-sem-scale {
+  0%, 100% { transform: none; }
+  50% { transform: scale(1.1); }
+}
+@keyframes co-ms-sem-stroke {
+  100% {
+      stroke-dashoffset: 0;
+  }
+}
+
+@keyframes co-ms-sem-fill {
+  100% {
+      box-shadow: inset 0px 0px 0px 60px #4caf50; /* Adjust to match the fill color */
+      background-color: #4caf50;
+  }
+}
+
+/* Popup Header */
+.co-ms-sem-export-popup-header {
+  background-color: #d23b42;
+  color: white;
+  padding: 15px 20px;
+  font-size: 2.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Popup Body */
+.co-ms-sem-export-popup-body {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Progress Circle Container */
+.co-ms-sem-export-progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.co-ms-sem-export-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d23b42;
+}
+
+/* Success Icon */
+.co-ms-sem-export-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: co-ms-sem-scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-ms-sem-success-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4caf50;
+  fill: none;
+  animation: co-ms-sem-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards, 
+               co-ms-sem-fill-color 0.4s ease-in-out 0.6s forwards;
+}
+
+.co-ms-sem-success-icon--check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #ffffff;
+  stroke-width: 3;
+  fill: none;
+  animation: co-ms-sem-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+/* Failed Icon */
+.co-ms-sem-export-failed-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@keyframes co-ms-sem-fill-color {
+  0% { fill: none; }
+  100% { fill: #4caf50; } /* Fill the circle with green after stroke */
+}
+
+/* Popup Title */
+.co-ms-sem-export-popup-title {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Popup Message */
+.co-ms-sem-export-popup-message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Popup Footer */
+.co-ms-sem-export-popup-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* Close Button */
+.co-ms-sem-export-popup-close-btn {
+  background-color: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.co-ms-sem-export-popup-close-btn:hover {
+  background-color: #b32d34;
+}
+
+.co-ms-sem-export-popup-close-btn:active {
+  transform: scale(0.98);
+}
+  
+  @media (max-width: 768px) {
+    .co-ms-sem-main-content {
+      padding: 14px;
+      height: 100vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+        position: absolute;
+    left: 248px;
+    max-width: 490px;
+
+    }
+    
+    /* Red scrollbar on mobile */
+    .co-ms-sem-main-content::-webkit-scrollbar,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar {
+      width: 15px;
+    }
+    .co-ms-sem-main-content::-webkit-scrollbar-track,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+    .co-ms-sem-main-content::-webkit-scrollbar-thumb,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb {
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+    .co-ms-sem-main-content::-webkit-scrollbar-thumb:hover,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+
+    }
+  
+    .co-ms-sem-main-content__header {
+      width: 100%;
+      margin-left: 0;
+      margin-top: 105px;
+      padding: 16px;
+      height: 485px;
+    }
+  
+    .co-ms-sem-main-content__semester-btn {
+      align-self: flex-end;
+      background: #c93544;
+      color: #fff;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 200px;
+        height: 40px;
+        font-size:1.05rem;
+        margin-right:125px;
+        margin-top:-10px;
+    }
+
+    .co-ms-sem-main-content__filters {
+      margin-left: 0;
+      gap: 20px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .co-ms-sem-main-content__search, .co-ms-sem-main-content__dropdown,
+    .co-ms-sem-floating-field {
+      width: 100%;
+    }
+    .co-ms-sem-main-content__search{
+      width: 100%;
+      height: 50px;
+    }
+
+    .co-ms-sem-main-content__dropdown {
+      width: 100%;
+      height: 50px;
+    }
+    .co-ms-sem-main-content__dropdown-1 {
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: #fff;
+      font-size: 16px;
+     height:50px;
+     margin-left: 3px;
+      outline: none;
+      width:423px;
+      border: none;
+      color: #8a8a8a;
+      position: relative;
+    top: -120px;
+    }
+
+    .co-ms-sem-floating-label {
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      margin-top:4px;
+      color: #8a8a8a;
+      font-family: 'poppins', sans-serif;
+      font-size: 1.05rem;
+      pointer-events: none;
+      transition: transform 150ms ease, font-size 150ms ease, top 150ms ease, color 150ms ease;
+    }
+    .co-coms-backbtn{
+      color:#fff;
+      background-color: #c93544;
+      border:none;
+      border-radius:41px;
+      width:80px;
+     left:370px;
+     top:-570px;
+      /* Adjusted for mobile view */
+     margin: 0 !important; /* Position below Navbar but above header */
+      position: relative;
+      height: 35px;
+      font-size:1.03rem;
+    }
+    .co-ms-sem-main-content__filter-btn {
+      background: #fff;
+      border: 2px solid #c93544;
+      color: #c93544;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-left:20px;
+      position: relative;
+    top: 82px;
+    width: 150px;
+      transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    }
+    
+    .co-ms-sem-main-content__filter-btn--clear {
+      background: #e9e9e9;
+      border: 2px solid #4a4848;
+      color: #4a4848;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-left: 10px;
+      position: relative;
+    left: 220px;
+    top: 20px;
+     transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .co-ms-sem-main-content__table-section {
+      margin-left: 0;
+      margin-top: 12px;
+      padding: 16px;
+      width: 100%;
+      position: relative;
+    top: -30px;
+    height: 420px;
+    }
+  
+    .co-ms-sem-main-content__table-wrapper {
+      width: 100%;
+      overflow-x:auto;
+      margin-top: 0px;
+    }
+  
+    .navbar .hamburger {
+      display: inline-flex;
+    }
+
+    /* Red scrollbar on mobile */
+    .co-ms-sem-main-content::-webkit-scrollbar,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      width: 10px;
+    }
+    .co-ms-sem-main-content::-webkit-scrollbar-track,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+  .co-ms-sem-main-content::-webkit-scrollbar-thumb,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+    .co-ms-sem-main-content::-webkit-scrollbar-thumb:hover,
+    .co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+    .co-ms-floating-input-container{max-width:400px;}
+    
+.co-ms-sem-main-content__table-wrapper::-webkit-scrollbar:horizontal {
+  height: 12px !important ;/* height of the horizontal scrollbar */
+}
+
+.co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.co-ms-sem-main-content__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #c1bfbf !important; /* darker grey on hover */
+}
+
+  }
+
+/* ============================================
+   Semester Popup Styles (Red Coordinator Theme)
+   ============================================ */
+
+.semester-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: semesterFadeIn 0.3s ease;
+}
+
+@keyframes semesterFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.semester-popup-container {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: semesterSlideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes semesterSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.semester-popup-header {
+  background: linear-gradient(135deg, #c93544 0%, #b32d34 100%);
+  color: white;
+  padding: 18px 24px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 12px 12px 0 0;
+}
+
+.semester-popup-body {
+  padding: 4px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Custom Scrollbar for Popup Body */
+.semester-popup-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.semester-popup-body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.semester-popup-body::-webkit-scrollbar-thumb {
+  background: #c93544;
+  border-radius: 10px;
+}
+
+.semester-popup-body::-webkit-scrollbar-thumb:hover {
+  background: #b32d34;
+}
+
+.semester-student-card {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  border-radius: 10px;
+  border: 2px solid #c93544;
+  margin-bottom: 20px;
+}
+
+.semester-student-photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(201, 53, 68, 0.2);
+  flex-shrink: 0;
+}
+
+.semester-student-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.semester-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.semester-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.semester-info-label {
+  font-size: 0.7rem;
+  color: #c93544;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.semester-info-value {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Scrollable Semester Container */
+.semester-scroll-container {
+  max-height: 145px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 15px;
+}
+
+/* Custom Scrollbar for Semester List */
+.semester-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.semester-scroll-container::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.semester-scroll-container::-webkit-scrollbar-thumb {
+  background: #c93544;
+  border-radius: 10px;
+}
+
+.semester-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #b32d34;
+}
+
+.semester-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.semester-dual-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.semester-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.semester-field-label {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 600;
+  margin-bottom: 2px;
+  transition: color 0.2s;
+}
+
+.semester-field-wrapper:focus-within .semester-field-label {
+  color: #c93544;
+}
+
+.semester-input-label {
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: 600;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.semester-input-field {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.semester-input-field:focus {
+  border-color: #c93544;
+  box-shadow: 0 0 0 3px rgba(201, 53, 68, 0.1);
+}
+
+.semester-input-field::placeholder {
+  color: #999;
+}
+
+.semester-bottom-inputs {
+  margin-bottom: 15px;
+}
+
+.semester-status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.semester-select-field {
+  padding: 10px 14px;
+  border: 2px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.semester-select-field:focus {
+  border-color: #c93544;
+  box-shadow: 0 0 0 3px rgba(201, 53, 68, 0.1);
+}
+
+.semester-popup-footer {
+  display: flex;
+  gap: 12px;
+  padding: 18px 24px;
+  border-top: 2px solid #f0f2f5;
+  background: #fafafa;
+}
+
+.semester-discard-btn,
+.semester-save-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.semester-discard-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.semester-discard-btn:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.semester-save-btn {
+  background: linear-gradient(135deg, #c93544 0%, #b32d34 100%);
+  color: white;
+}
+
+.semester-save-btn:hover {
+  background: linear-gradient(135deg, #b32d34 0%, #a02630 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(201, 53, 68, 0.4);
+}

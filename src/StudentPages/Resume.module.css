@@ -1,0 +1,217 @@
+/* Resume.module.css */
+
+/* Spinner animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- SCOPED WRAPPER --- */
+.resume-page-wrapper {
+    background: #f8f8fb;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', Arial, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Main container */
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Wrapper for the main content area */
+.main {
+    display: flex;
+    margin-top: 55px;
+    height: calc(100vh - 55px);
+}
+
+/* Overlay */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1003;
+}
+
+/* The primary content display area */
+.dashboard-area {
+    flex: 1;
+    margin-left: 230px;
+    height: 100%;
+    background: #fff;
+    position: relative;
+    width: calc(100% - 230px);
+    padding: 15px;
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+/* --- POPUP STYLES --- */
+.Resume-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: Resume-scale 0.3s ease-out forwards;
+}
+
+.Resume-popup-header {
+    background-color: #197AFF;
+    color: white;
+    padding: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.Resume-popup-body {
+    padding: 2rem;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.Resume-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7ff;
+}
+
+.Resume-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Resume-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* Success icon animations */
+.Resume-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #22C55E;
+    animation: Resume-fill 0.4s ease-in-out 0.4s forwards, Resume-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Resume-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22C55E;
+    fill: none;
+    animation: Resume-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Resume-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: Resume-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Keyframes need to be global or correctly scoped. 
+   We keep them here for the module to use. */
+@keyframes Resume-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+@keyframes Resume-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+@keyframes Resume-fill {
+    100% { box-shadow: inset 0 0 0 40px #22C55E; }
+}
+
+/* Scrollbars */
+.resume-area::-webkit-scrollbar,
+.main::-webkit-scrollbar,
+.container::-webkit-scrollbar,
+.resume-page-wrapper::-webkit-scrollbar {
+    width: 10px;
+}
+
+.resume-area::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track,
+.container::-webkit-scrollbar-track,
+.resume-page-wrapper::-webkit-scrollbar-track {
+    background: #f0f2f5; 
+}
+
+.resume-area::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb,
+.container::-webkit-scrollbar-thumb,
+.resume-page-wrapper::-webkit-scrollbar-thumb {
+    background-color: #2085f6;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.resume-area::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover,
+.container::-webkit-scrollbar-thumb:hover,
+.resume-page-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #4338CA;
+}
+
+/* Mobile Styles */
+@media (max-width: 900px) {
+    .dashboard-area::-webkit-scrollbar,
+    .main::-webkit-scrollbar,
+    .container::-webkit-scrollbar,
+    .resume-page-wrapper::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .dashboard-area {
+        margin-left: 0; 
+        overflow-y: auto !important; 
+        overflow-x: hidden !important;
+        padding: 10px 15px 120px 15px !important;
+        height: calc(100vh - 55px);
+        max-height: calc(100vh - 55px);
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    .container .main .dashboard-area.resume-page {
+        padding-bottom: 150px !important;
+    }
+
+    .main {
+        overflow: hidden;
+        min-height: calc(100vh - 55px);
+    }
+
+    .container {
+        overflow: hidden;
+    }
+}
