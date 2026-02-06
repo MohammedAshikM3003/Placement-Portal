@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../utils/apiConfig';
+
 // Admin Image Cache Service - Caches profile photos for instant loading
 class AdminImageCacheService {
   constructor() {
@@ -133,7 +135,7 @@ class AdminImageCacheService {
       }
 
       // Fetch from server
-      const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`);
+      const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`);
       if (response.ok) {
         const result = await response.json();
         

@@ -3,6 +3,8 @@
  * Handles fetching and caching of college images from the backend
  */
 
+import { API_BASE_URL } from '../utils/apiConfig';
+
 const CACHE_KEY = 'collegeImagesCache';
 const CACHE_TIMESTAMP_KEY = 'collegeImagesCacheTimestamp';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (reduced for faster updates)
@@ -23,7 +25,7 @@ export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
 
     console.log('📡 Fetching college images from server...');
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'

@@ -3,6 +3,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import useAdminAuth from '../utils/useAdminAuth';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
+import { API_BASE_URL } from '../utils/apiConfig';
 // Assuming these paths are correct for your existing files
 import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
@@ -278,7 +279,7 @@ function Admainprofile() {
                 // If no cache, fetch from server as fallback
                 console.log('⚠️ No cache found, fetching from server...');
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
                     headers:{ 'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     }
@@ -477,7 +478,7 @@ function Admainprofile() {
             const adminLoginID = getAdminLoginID();
             
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`, {
+            const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
@@ -587,7 +588,7 @@ function Admainprofile() {
             }
             
             const authToken = localStorage.getItem('authToken');
-            const response = await fetch('http://localhost:5000/api/admin/profile', {
+            const response = await fetch(`${API_BASE_URL}/admin/profile`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

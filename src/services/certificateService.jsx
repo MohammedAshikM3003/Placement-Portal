@@ -1,7 +1,9 @@
+import { API_BASE_URL } from '../utils/apiConfig';
+
 // ⚡ SUPER FAST Certificate Service - Direct MongoDB Upload
 class CertificateService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    this.baseURL = API_BASE_URL;
   }
 
   normalizeStatusForApi(status) {

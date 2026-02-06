@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_BASE_URL } from '../../utils/apiConfig';
 import styles from './Adsidebar.module.css';
 import AdDashboard from "../../assets/addashboardicon.svg";
 import ManageStudents from "../../assets/adstuddbicon.svg";
@@ -73,7 +74,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
       const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
       const authToken = localStorage.getItem('authToken');
       
-      const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'

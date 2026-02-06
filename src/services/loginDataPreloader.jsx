@@ -1,5 +1,6 @@
 // Login Data Preloader - Fetches and caches all necessary data during login
 import adminImageCacheService from './adminImageCacheService.jsx';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 class LoginDataPreloader {
   constructor() {
@@ -352,7 +353,7 @@ class LoginDataPreloader {
         return null;
       }
 
-      const response = await fetch('http://localhost:5000/api/attendance', {
+      const response = await fetch(`${API_BASE_URL}/attendance`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

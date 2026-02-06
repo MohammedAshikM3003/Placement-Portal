@@ -1,7 +1,9 @@
+import { API_BASE_URL } from '../utils/apiConfig';
+
 // ⚡ HYPER-FAST Data Service - INSTANT MongoDB fetching with aggressive caching
 class FastDataService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    this.baseURL = API_BASE_URL;
     this.cache = new Map(); // In-memory cache for instant loading
     this.cacheTimeout = 30 * 60 * 1000; // 30 minutes cache (extended)
     this.preloadQueue = new Set(); // Track preloaded data

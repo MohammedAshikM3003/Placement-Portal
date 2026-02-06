@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { API_BASE_URL } from '../utils/apiConfig';
 
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
@@ -421,7 +422,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 
                 // Fetch latest data from server with JWT token
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:5000/api/students/${studentId}`, {
+                const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
@@ -482,7 +483,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 
                 // Fetch latest data from server with JWT token
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:5000/api/students/${studentId}`, {
+                const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'

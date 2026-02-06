@@ -14,6 +14,7 @@ import { useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner.js';
 import BlockedPopup from './components/BlockedPopup/BlockedPopup.jsx';
 import { BLOCKED_INFO_STORAGE_KEY } from './constants/storageKeys';
+import { API_BASE_URL } from './utils/apiConfig';
 import styles from './mainlogin.module.css';
 
 // Internal Popup Component using Module Styles
@@ -177,7 +178,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             
             // Always fetch from MongoDB, don't check cache
             console.log('🔍 Fetching profile for:', adminLoginID);
-            const response = await fetch(`http://localhost:5000/api/admin/profile/${adminLoginID}`, {
+            const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
               headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'

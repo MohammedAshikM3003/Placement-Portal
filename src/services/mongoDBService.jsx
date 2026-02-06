@@ -1,8 +1,9 @@
 // MongoDB Service for Frontend
+import { API_BASE_URL } from '../utils/apiConfig';
+
 class MongoDBService {
   constructor() {
-    // Use environment variable or fallback to localhost
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    this.baseURL = API_BASE_URL;
   }
 
   // Ultra-fast API calls with timeout
