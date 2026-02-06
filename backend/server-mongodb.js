@@ -9,6 +9,14 @@ const mongoose = require('mongoose');
 // Load environment variables from backend directory
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+// Debug: Log environment variable status on startup
+console.log('🔍 ENV DEBUG:');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('  RENDER:', process.env.RENDER || 'not set');
+console.log('  MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('  JWT_SECRET exists:', !!process.env.JWT_SECRET);
+console.log('  PORT:', process.env.PORT || 'not set');
+
 /**
  * ========================================
  * PERFORMANCE OPTIMIZATIONS FOR 1000+ STUDENTS
