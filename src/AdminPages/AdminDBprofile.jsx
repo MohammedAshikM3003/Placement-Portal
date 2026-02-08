@@ -799,10 +799,17 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                     if (merged.dob) {
                         const dobStr = merged.dob.toString();
                         if (dobStr.length === 8) {
+                            // DDMMYYYY format
                             const day = dobStr.substring(0, 2);
                             const month = dobStr.substring(2, 4);
                             const year = dobStr.substring(4, 8);
                             setDob(new Date(year, month - 1, day));
+                        } else if (dobStr.includes('-')) {
+                            // ISO format (YYYY-MM-DD or full date)
+                            const dateObj = new Date(dobStr);
+                            if (!isNaN(dateObj.getTime())) {
+                                setDob(dateObj);
+                            }
                         }
                     }
                     if (merged.profilePicURL) {

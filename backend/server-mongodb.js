@@ -3299,6 +3299,21 @@ const startServer = async () => {
     }
 };
 
+// Request logging middleware - Log all incoming requests
+app.use((req, res, next) => {
+    if (req.method !== 'OPTIONS') {
+        console.log(`\n🌐 ${req.method} ${req.path}`);
+        if (req.body && Object.keys(req.body).length > 0) {
+            // Log body but hide sensitive fields
+            const sanitized = { ...req.body };
+            if (sanitized.password) sanitized.password = '***';
+            if (sanitized.dob) sanitized.dob = '***';
+            console.log('📦 Body:', sanitized);
+        }
+    }
+    next();
+});
+
 // Bulletproof middleware - ensures MongoDB connection before EVERY request
 // ALWAYS tries to connect if not connected - ensures persistent connection
 // IMPORTANT: This middleware must NEVER throw or the function will crash
@@ -4344,7 +4359,7 @@ app.get('/api/students/reg/:regNo/dob/:dob', async (req, res) => {
 });
 
 // Update student
-app.put('/api/students/:id', authenticateToken, checkRole('student', 'admin'), async (req, res) => {
+app.put('/api/students/:id', authenticateToken, checkRole('student', 'admin', 'coordinator'), async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { id } = req.params;
     const updateData = req.body;
@@ -5525,6 +5540,18 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found', path: req.path });
+});
+
+// Handle unhandled promise rejections - PREVENT CRASHES
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️  Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit - keep server running
+});
+
+// Handle uncaught exceptions - PREVENT CRASHES  
+process.on('uncaughtException', (error) => {
+    console.error('⚠️  Uncaught Exception:', error);
+    // Don't exit - keep server running
 });
 
 // Export for Vercel - must export the app directly

@@ -1,293 +1,494 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import * as XLSX from 'xlsx'; 
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Import necessary assets for the Navbar (Adminicon)
-import Adminicon from "../assets/Adminicon.png";
-
-// NEW IMPORTS for Date Picker
-import DatePicker from "react-datepicker";
-//import "react-datepicker/dist/react-datepicker.css";
+import "react-datepicker/dist/react-datepicker.css"; 
 
 // Import New Components
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
+import mongoDBService from '../services/mongoDBService.jsx';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 // Import CSS Files
 import styles from './Coo_ReportAnalysisSW.module.css';
 
-const cx = (...classNames) => classNames.filter(Boolean).join(' ');
-
-
-// Utility functions for validation
-const isEmail = (text) => /@/.test(text); // Simple check for '@' symbol
-const isMobile = (text) => /^\d{10}$/.test(text); // Exact 10 digits
-
-// Export Popup Components
-const ExportProgressPopup = ({ isOpen, operation, progress, onClose }) => {
-  if (!isOpen) return null;
-  
-  const operationText = operation === 'excel' ? 'Exporting...' : 'Downloading...';
-  const progressText = operation === 'excel' ? 'Exported' : 'Downloaded';
-  
-  // Calculate the stroke-dasharray for circular progress
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-  
-  return (
-      <div className={styles["co-rat-export-popup-overlay"]}>
-          <div className={styles["co-rat-export-popup-container"]}>
-              <div className={styles["co-rat-export-popup-header"]}>{operationText}</div>
-              <div className={styles["co-rat-export-popup-body"]}>
-                  <div className={styles["co-rat-export-progress-circle"]}>
-                      <svg width="100" height="100" viewBox="0 0 100 100">
-                          {/* Background circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#e0e0e0"
-                              strokeWidth="8"
-                          />
-                          {/* Progress circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#d23b42"
-                              strokeWidth="8"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={offset}
-                              strokeLinecap="round"
-                              transform="rotate(-90 50 50)"
-                              style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-                          />
-                      </svg>
-                      <div className={styles["co-rat-export-progress-text"]}>{progress}%</div>
-                  </div>
-                  <h2 className={styles["co-rat-export-popup-title"]}>{progressText} {progress}%</h2>
-                  <p className={styles["co-rat-export-popup-message"]}>
-                      The Details have been {operation === 'excel' ? 'Exporting...' : 'Downloading...'}
-                  </p>
-                  <p className={styles["co-rat-export-popup-message"]}>Please wait...</p>
-              </div>
-          </div>
-      </div>
-  );
+// Helper function to read coordinator data from storage
+const readStoredCoordinatorData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('coordinatorData');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to parse coordinatorData:', error);
+    return null;
+  }
 };
 
-const ExportSuccessPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported To Excel ✓' : 'PDF Downloaded ✓';
-  const message = operation === 'excel' 
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles["co-rat-export-popup-overlay"]}>
-          <div className={styles["co-rat-export-popup-container"]}>
-              <div className={styles["co-rat-export-popup-header"]}>{headerText}</div>
-              <div className={styles["co-rat-export-popup-body"]}>
-                  <div className={styles["co-rat-export-success-icon"]}>
-                      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                          <circle cx="40" cy="40" r="38" fill="#28a745" />
-                          <path
-                              d="M25 40 L35 50 L55 30"
-                              stroke="white"
-                              strokeWidth="4"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                          />
-                      </svg>
-                  </div>
-                  <h2 className={styles["co-rat-export-popup-title"]}>{title}</h2>
-                  <p className={styles["co-rat-export-popup-message"]}>{message}</p>
-              </div>
-              <div className={styles["co-rat-export-popup-footer"]}>
-                  <button onClick={onClose} className={styles["co-rat-export-popup-close-btn"]}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
+// Helper function to resolve coordinator's department/branch
+const resolveCoordinatorDepartment = (data) => {
+  if (!data) return null;
+  const deptValue =
+    data.department ||
+    data.branch ||
+    data.dept ||
+    data.departmentName ||
+    data.coordinatorDepartment ||
+    data.assignedDepartment;
+  return deptValue ? deptValue.toString().toUpperCase() : null;
 };
 
-const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported Failed!' : 'Downloaded Failed!';
-  const message = operation === 'excel'
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles["co-rat-export-popup-overlay"]}>
-          <div className={styles["co-rat-export-popup-container"]}>
-              <div className={styles["co-rat-export-popup-header"]}>{headerText}</div>
-              <div className={styles["co-rat-export-popup-body"]}>
-                  <div className={styles["co-rat-export-failed-icon"]}>
-                      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                          <circle cx="40" cy="40" r="38" fill="#dc3545" />
-                          <path
-                              d="M30 30 L50 50 M50 30 L30 50"
-                              stroke="white"
-                              strokeWidth="4"
-                              strokeLinecap="round"
-                          />
-                      </svg>
-                  </div>
-                  <h2 className={styles["co-rat-export-popup-title"]}>{title}</h2>
-                  <p className={styles["co-rat-export-popup-message"]}>{message}</p>
-              </div>
-              <div className={styles["co-rat-export-popup-footer"]}>
-                  <button onClick={onClose} className={styles["co-rat-export-popup-close-btn"]}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
-};
+// Eye Icon Component
+const EyeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d23b42" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'pointer' }}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+);
 
-
-// Master data array (Email IDs are long to demonstrate size fix)
-const initialData = [
-  { "So No": 1, "Student Name": "Arun Kumar S.", "Register No.": "731523130001", "Department": "CSE", "Batch": "2023-2027", "Section": "A", "Company": "Infosys", "Job Role": "Software Engineer", "Package": "12.0 LPA", "Rounds": "Round 3", "Status": "Passed", "Start Date": "01/08/25", "End Date": "05/08/25", "Mobile": "9876543201", "Email": "arunkumars.placement.longemail@gmail.com" },
-  { "So No": 2, "Student Name": "Priya V.", "Register No.": "731523130002", "Department": "CSE", "Batch": "2023-2027", "Section": "B", "Company": "Wipro", "Job Role": "Data Analyst", "Package": "7.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "06/08/25", "End Date": "10/08/25", "Mobile": "9876543202", "Email": "priyav.data.longemail@gmail.com" },
-  { "So No": 3, "Student Name": "Gowtham M.", "Register No.": "731523130003", "Department": "CSE", "Batch": "2023-2027", "Section": "A", "Company": "TCS", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 1", "Status": "Rejected", "Start Date": "11/08/25", "End Date": "15/08/25", "Mobile": "9876543203", "Email": "gowthamm.project@gmail.com" },
-  { "So No": 4, "Student Name": "Nithya R.", "Register No.": "731523130004", "Department": "CSE", "Batch": "2023-2027", "Section": "A", "Company": "TCS", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Passed", "Start Date": "16/08/25", "End Date": "20/08/25", "Mobile": "9876543204", "Email": "nithyar.jobs@gmail.com" },
-  { "So No": 5, "Student Name": "Vikram K.", "Register No.": "731523130005", "Department": "CSE", "Batch": "2023-2027", "Section": "B", "Company": "Wipro", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "21/08/25", "End Date": "25/08/25", "Mobile": "9876543205", "Email": "vikramk.software@gmail.com" },
-  { "So No": 6, "Student Name": "Deepika P.", "Register No.": "731523130006", "Department": "CSE", "Batch": "2023-2027", "Section": "C", "Company": "Infosys", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Passed", "Start Date": "26/08/25", "End Date": "30/08/25", "Mobile": "9876543206", "Email": "deepikap.college@gmail.com" },
-  
-  // New Batch: 2024-2028
-  { "So No": 7, "Student Name": "Sanjay R.", "Register No.": "731523130007", "Department": "CSE", "Batch": "2024-2028", "Section": "A", "Company": "IBM", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Rejected", "Start Date": "01/09/25", "End Date": "05/09/25", "Mobile": "9876543207", "Email": "sanjayr.analysis@gmail.com" },
-  { "So No": 8, "Student Name": "Meena L.", "Register No.": "731523130008", "Department": "CSE", "Batch": "2024-2028", "Section": "B", "Company": "TCS", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Passed", "Start Date": "06/09/25", "End Date": "10/09/25", "Mobile": "9876543208", "Email": "meenal.tech@gmail.com" },
-  { "So No": 9, "Student Name": "Kavin S.", "Register No.": "731523130009", "Department": "CSE", "Batch": "2024-2028", "Section": "C", "Company": "Wipro", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Rejected", "Start Date": "11/09/25", "End Date": "15/09/25", "Mobile": "9876543209", "Email": "kavins.campus@gmail.com" },
-  { "So No": 10, "Student Name": "Harini B.", "Register No.": "731523130010", "Department": "CSE", "Batch": "2024-2028", "Section": "A", "Company": "Infosys", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Passed", "Start Date": "16/09/25", "End Date": "20/09/25", "Mobile": "9876543210", "Email": "harinib.placement@gmail.com" },
-  { "So No": 11, "Student Name": "Ramesh C.", "Register No.": "731523130011", "Department": "CSE", "Batch": "2024-2028", "Section": "B", "Company": "IBM", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "21/09/25", "End Date": "25/09/25", "Mobile": "9876543211", "Email": "rameshc.eng@gmail.com" },
-  { "So No": 12, "Student Name": "Shalini D.", "Register No.": "731523130012", "Department": "CSE", "Batch": "2024-2028", "Section": "C", "Company": "TCS", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Passed", "Start Date": "26/09/25", "End Date": "30/09/25", "Mobile": "9876543212", "Email": "shalinid.project@gmail.com" },
-  
-  // New Batch: 2025-2029
-  { "So No": 13, "Student Name": "Ajith V.", "Register No.": "731523130013", "Department": "CSE", "Batch": "2025-2029", "Section": "A", "Company": "Wipro", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Rejected", "Start Date": "01/10/25", "End Date": "05/10/25", "Mobile": "9876543213", "Email": "ajithv.data@gmail.com" },
-  { "So No": 14, "Student Name": "Sindhu M.", "Register No.": "731523130014", "Department": "CSE", "Batch": "2025-2029", "Section": "B", "Company": "Infosys", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Passed", "Start Date": "06/10/25", "End Date": "10/10/25", "Mobile": "9876543214", "Email": "sindhum.eng@gmail.com" },
-  { "So No": 15, "Student Name": "Dinesh S.", "Register No.": "731523130015", "Department": "CSE", "Batch": "2025-2029", "Section": "C", "Company": "IBM", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Rejected", "Start Date": "11/10/25", "End Date": "15/10/25", "Mobile": "9876543215", "Email": "dineshs.tech@gmail.com" },
-  { "So No": 16, "Student Name": "Janani P.", "Register No.": "731523130016", "Department": "CSE", "Batch": "2025-2029", "Section": "A", "Company": "TCS", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Passed", "Start Date": "16/10/25", "End Date": "20/10/25", "Mobile": "9876543216", "Email": "jananip.placement@gmail.com" },
-  { "So No": 17, "Student Name": "Praveen J.", "Register No.": "731523130017", "Department": "CSE", "Batch": "2025-2029", "Section": "B", "Company": "Wipro", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "21/10/25", "End Date": "25/10/25", "Mobile": "9876543217", "Email": "praveenj.software@gmail.com" },
-  { "So No": 18, "Student Name": "Anjali A.", "Register No.": "731523130018", "Department": "CSE", "Batch": "2025-2029", "Section": "C", "Company": "Infosys", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Passed", "Start Date": "26/10/25", "End Date": "30/10/25", "Mobile": "9876543218", "Email": "anjalia.college@gmail.com" },
-];
-
-
-function  ReportAnalysisSW({ onLogout, onViewChange }) {
-
+function ReportAnalysisSW({ onLogout, onViewChange }) {
+  useCoordinatorAuth(); // JWT authentication verification
   
   const navigate = useNavigate();
   
-  const [filteredData, setFilteredData] = useState(initialData);
-  const [companyFilter, setCompanyFilter] = useState('All Companies');
-  const [batchFilter, setBatchFilter] = useState('Year / Batch');
-  const [startDateFilter, setStartDateFilter] = useState(null); 
-  const [endDateFilter, setEndDateFilter] = useState(null); 
-  const [statusFilter, setStatusFilter] = useState('All'); 
-  const [showExportMenu, setShowExportMenu] = useState(false); 
+  const [allData, setAllData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [coordinatorBranch, setCoordinatorBranch] = useState('');
   
-  // States for the text input (updates immediately)
-  const [searchField, setSearchField] = useState('Mobile');
-  const [searchText, setSearchText] = useState('');
-
-  // States that store the values only after the 'Search' button is clicked
-  const [appliedSearchField, setAppliedSearchField] = useState('Mobile');
-  const [appliedSearchText, setAppliedSearchText] = useState('');
-
-  // NEW State for search error/feedback
+  const [searchType, setSearchType] = useState('Mobile number');
+  const [searchInput, setSearchInput] = useState('');
+  const [nameRegisterInput, setNameRegisterInput] = useState('');
+  const [branchFilter, setBranchFilter] = useState('All Branches');
+  const [availableBranches, setAvailableBranches] = useState(['All Branches']);
   const [searchError, setSearchError] = useState('');
-
-  // UPDATED HELPER: Date formatter
-  const getSortableDateString = (dateInput) => {
-    if (!dateInput) return null;
-    if (dateInput instanceof Date && !isNaN(dateInput)) {
-      const y = dateInput.getFullYear();
-      const m = String(dateInput.getMonth() + 1).padStart(2, '0');
-      const d = String(dateInput.getDate()).padStart(2, '0');
-      return `${y}${m}${d}`; // YYYYMMDD
-    }
-    if (typeof dateInput === 'string' && dateInput.includes('/')) {
-        const dateString = dateInput.trim();
-        const parts = dateString.split('/');
-        const day = parts[0].padStart(2, '0');
-        const month = parts[1].padStart(2, '0');
-        let year = parts[2];
-        year = (year.length === 2) ? '20' + year : year; 
-        return `${year}${month}${day}`; // YYYYMMDD
-    } 
-    return null;
-  };
-
-   // Popup states for export operations
-   const [exportPopupState, setExportPopupState] = useState({
-    isOpen: false,
-    type: null, // 'progress', 'success', 'failed'
-    operation: null, // 'excel', 'pdf'
-    progress: 0
-});
-  // Function to toggle the "View status" filter
-  const toggleStatusFilter = () => {
-      setStatusFilter(prevStatus => prevStatus === 'All' ? 'Passed' : 'All');
-  };
-
-  // Function to toggle the Print dropdown menu
-  const handlePrintClick = (event) => {
-    event.stopPropagation();
-    setShowExportMenu(prev => !prev);
-  }
+  const [showExportMenu, setShowExportMenu] = useState(false);
   
-  // Function to handle the Search button click (TRIGGER FOR SEARCH & VALIDATION)
-  const handleSearchClick = () => {
-      const currentSearchText = searchText.trim();
-      setSearchError(''); // Clear previous error
+  // Additional filter states
+  const [companyFilter, setCompanyFilter] = useState('Select Company');
+  const [jobRoleFilter, setJobRoleFilter] = useState('Job Role');
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
+  const [availableCompanies, setAvailableCompanies] = useState(['Select Company']);
+  const [availableJobRoles, setAvailableJobRoles] = useState(['Job Role']);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [isCompanyOpen, setIsCompanyOpen] = useState(false);
+  const [isJobRoleOpen, setIsJobRoleOpen] = useState(false);
+  const [isStartDateOpen, setIsStartDateOpen] = useState(false);
+  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
+  
+  // Export popup states
+  const [exportPopupState, setExportPopupState] = useState('none');
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportType, setExportType] = useState('Excel');
 
-      if (!currentSearchText) {
-          // Allow empty search to clear the filter, but don't show an error
-          setAppliedSearchText('');
-          setAppliedSearchField('Mobile');
-          return;
-      }
-      
-      let error = '';
-      
-      // 1. Check for field mismatch (Intimation logic)
-      if (searchField === 'Mobile') {
-          if (isEmail(currentSearchText)) {
-              error = "Please change the dropdown to 'Email' to search for an email address.";
-          } 
-      } else if (searchField === 'Email') {
-          if (isMobile(currentSearchText)) {
-              error = "Please change the dropdown to 'Mobile' to search for a 10-digit number.";
-          }
-      }
-
-      if (error) {
-          setSearchError(`❌ Search Error: ${error}`);
-          // Do NOT apply the filter if there's a validation error
-          setAppliedSearchText('INVALID'); // Use a placeholder that won't match any data
-      } else {
-          // Validation passed: apply the filter and clear any previous filter-related warnings
-          setAppliedSearchText(currentSearchText);
-          setAppliedSearchField(searchField);
-      }
+  // Helper function to calculate current year from batch as Roman numeral
+  const calculateYearRoman = (batch) => {
+    if (!batch) return 'I';
+    const currentYear = new Date().getFullYear();
+    const batchMatch = batch.match(/(\d{4})-(\d{4})/);
+    if (!batchMatch) return 'I';
+    
+    const startYear = parseInt(batchMatch[1]);
+    const yearDiff = currentYear - startYear;
+    
+    if (yearDiff < 1) return 'I';
+    if (yearDiff === 1) return 'II';
+    if (yearDiff === 2) return 'III';
+    if (yearDiff >= 3) return 'IV';
+    return 'I';
   };
 
-  const exportMenuRef = useRef(null);
+  // Fetch coordinator's branch and company data on mount
+  useEffect(() => {
+    const coordinatorData = readStoredCoordinatorData();
+    const branch = resolveCoordinatorDepartment(coordinatorData);
+    
+    if (branch) {
+      setCoordinatorBranch(branch);
+      console.log('[Coo_ReportAnalysisSW] Coordinator branch:', branch);
+    }
+    
+    // Fetch companies and job roles for dropdowns
+    const fetchCompanyData = async () => {
+      try {
+        const drivesData = await mongoDBService.getCompanyDrives();
+        if (drivesData && drivesData.length > 0) {
+          const companies = [...new Set(drivesData.map(d => d.companyName).filter(Boolean))];
+          const jobRoles = [...new Set(drivesData.map(d => d.jobRole).filter(Boolean))];
+          const dates = [...new Set(drivesData.map(d => d.startingDate || d.driveStartDate || d.companyDriveDate).filter(Boolean))]
+            .sort((a, b) => new Date(a) - new Date(b));
+          setAvailableCompanies(companies);
+          setAvailableJobRoles(jobRoles);
+          setAvailableDates(dates);
+        }
+      } catch (error) {
+        console.error('[Coo_ReportAnalysisSW] Error fetching company data:', error);
+      }
+    };
+    
+    fetchCompanyData();
+  }, []);
 
-  // Effect to handle clicks outside the menu to close it
+  // Real-time filtering effect that runs whenever search inputs change
+  useEffect(() => {
+    const filterStudents = async () => {
+      setSearchError('');
+      
+      const trimmedMobileEmail = searchInput.trim();
+      const trimmedNameRegister = nameRegisterInput.trim();
+      
+      // If both fields are empty, clear data
+      if (trimmedMobileEmail === '' && trimmedNameRegister === '') {
+        setAllData([]);
+        setFilteredData([]);
+        return;
+      }
+      
+      // Validate mobile/email input if provided
+      if (trimmedMobileEmail !== '') {
+        const isOnlyNumbers = /^\d+$/.test(trimmedMobileEmail);
+        
+        if (searchType === 'Email' && isOnlyNumbers) {
+          setSearchError('You should select mobile number');
+          return;
+        }
+        
+        if (searchType === 'Mobile number' && !isOnlyNumbers) {
+          setSearchError('You should select email');
+          return;
+        }
+      }
+      
+      try {
+        setIsLoading(true);
+        setAllData([]);
+        setFilteredData([]);
+        
+        // Fetch all reports from MongoDB
+        const response = await mongoDBService.getAllReports();
+      
+        console.log('[Coo_ReportAnalysisSW] Filter - Raw reports data:', response);
+        
+        if (response.success && response.data) {
+          // Show ALL students (passed and failed)
+          const allStudents = response.data;
+          
+          console.log(`[Coo_ReportAnalysisSW] Total reports: ${response.data.length}`);
+          
+          // Filter based on inputs
+          let matchingStudents = allStudents;
+          
+          // Filter by name or register number if provided
+          if (trimmedNameRegister !== '') {
+            const nameRegisterTerm = trimmedNameRegister.toLowerCase();
+            matchingStudents = matchingStudents.filter(item => {
+              const name = (item.name || item.studentName || '').toLowerCase();
+              const registerNo = (item.registerNo || item.regNo || '').toLowerCase();
+              return name.includes(nameRegisterTerm) || registerNo.includes(nameRegisterTerm);
+            });
+          }
+          
+          // Filter by coordinator's branch FIRST - critical for security
+          if (coordinatorBranch) {
+            console.log(`[Coo_ReportAnalysisSW] Filtering by coordinator branch: ${coordinatorBranch}`);
+            matchingStudents = matchingStudents.filter(item => {
+              const studentBranch = (item.department || item.branch || '').toUpperCase();
+              return studentBranch === coordinatorBranch;
+            });
+            console.log(`[Coo_ReportAnalysisSW] After coordinator branch filter: ${matchingStudents.length} students`);
+          }
+          
+          // Filter by branch dropdown if selected (and not "All Branches")
+          if (branchFilter !== 'All Branches') {
+            matchingStudents = matchingStudents.filter(item => {
+              const branch = (item.department || item.branch || '').toUpperCase();
+              return branch === branchFilter;
+            });
+          }
+          
+          // Filter by mobile or email if provided
+          if (trimmedMobileEmail !== '') {
+            const searchTerm = trimmedMobileEmail.toLowerCase();
+            matchingStudents = matchingStudents.filter(item => {
+              const fieldValue = searchType === 'Mobile number' 
+                ? (item.phone || item.mobile || '')
+                : (item.email || item.studentEmail || '');
+              return String(fieldValue).toLowerCase().includes(searchTerm);
+            });
+          }
+          
+          // Filter by company if selected
+          if (companyFilter !== 'Select Company' && companyFilter) {
+            matchingStudents = matchingStudents.filter(item => {
+              const company = (item.companyName || '').toLowerCase();
+              return company === companyFilter.toLowerCase();
+            });
+          }
+          
+          // Filter by job role if selected
+          if (jobRoleFilter !== 'Job Role' && jobRoleFilter) {
+            matchingStudents = matchingStudents.filter(item => {
+              const jobRole = (item.jobRole || '').toLowerCase();
+              return jobRole === jobRoleFilter.toLowerCase();
+            });
+          }
+          
+          // Filter by start date if provided
+          if (startDateFilter) {
+            matchingStudents = matchingStudents.filter(item => {
+              if (!item.date) return false;
+              const itemDate = new Date(item.date).setHours(0, 0, 0, 0);
+              const filterDate = new Date(startDateFilter).setHours(0, 0, 0, 0);
+              return itemDate >= filterDate;
+            });
+          }
+          
+          // Filter by end date if provided
+          if (endDateFilter) {
+            matchingStudents = matchingStudents.filter(item => {
+              if (!item.date) return false;
+              const itemDate = new Date(item.date).setHours(0, 0, 0, 0);
+              const filterDate = new Date(endDateFilter).setHours(0, 0, 0, 0);
+              return itemDate <= filterDate;
+            });
+          }
+        
+          console.log(`[Coo_ReportAnalysisSW] Matching students: ${matchingStudents.length}`);
+          
+          // Group students by register number and keep only their highest round
+          const studentMap = new Map();
+        
+          matchingStudents.forEach(student => {
+            const regNo = student.registerNo || student.regNo || '';
+            if (!regNo) return;
+            
+            const roundNumber = student.roundNumber || 0;
+            
+            // If student doesn't exist or this is a higher round, update the entry
+            if (!studentMap.has(regNo) || studentMap.get(regNo).roundNumber < roundNumber) {
+              studentMap.set(regNo, {
+                name: student.name || student.studentName || 'N/A',
+                regNo: regNo,
+                department: student.department || student.branch || 'N/A',
+                batch: student.batch || 'N/A',
+                section: student.yearSec?.split('-')[1] || 'N/A',
+                companyName: student.companyName || 'N/A',
+                jobRole: student.jobRole || 'N/A',
+                roundNumber: roundNumber,
+                email: student.email || student.studentEmail || 'N/A',
+                mobile: student.phone || student.mobile || 'N/A',
+                date: student.date,
+                status: student.status || 'N/A',
+                studentId: student.studentId || student._id
+              });
+            }
+          });
+          
+          const transformedData = Array.from(studentMap.values()).map((item, index) => ({
+            "So No": index + 1,
+            "Student Name": item.name,
+            "Register No.": item.regNo,
+            "Department": item.department,
+            "Batch": item.batch,
+            "Section": item.section,
+            "Company": item.companyName,
+            "Job Role": item.jobRole,
+            "Package": 'N/A',
+            "Rounds": `Round ${item.roundNumber}`,
+            "Status": item.status,
+            "Start Date": item.date ? new Date(item.date).toLocaleDateString('en-GB').replace(/\//g, '/') : '',
+            "End Date": '',
+            "Placement Date": item.date ? new Date(item.date).toLocaleDateString('en-GB').replace(/\//g, '/') : '',
+            "Email": item.email,
+            "Mobile No.": item.mobile,
+            "RoundNumber": item.roundNumber,
+            "studentId": item.studentId
+          }));
+          
+          console.log('[Coo_ReportAnalysisSW] Transformed data:', transformedData.length, 'records');
+          
+          setAllData(transformedData);
+          setFilteredData(transformedData);
+        } else {
+          console.error('[Coo_ReportAnalysisSW] No reports data found in response');
+          setAllData([]);
+          setFilteredData([]);
+          setAvailableBranches(['All Branches']);
+        }
+      } catch (error) {
+        console.error('[Coo_ReportAnalysisSW] Error filtering students:', error);
+        setAllData([]);
+        setFilteredData([]);
+        setAvailableBranches(['All Branches']);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Debounce the filtering to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      filterStudents();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchInput, nameRegisterInput, branchFilter, searchType, coordinatorBranch, companyFilter, jobRoleFilter, startDateFilter, endDateFilter]);
+
+  // Extract branches whenever allData changes (but only show coordinator's branch)
+  useEffect(() => {
+    if (allData.length > 0 && coordinatorBranch) {
+      // For coordinator, only show their branch (no multi-branch selection)
+      setAvailableBranches([coordinatorBranch]);
+      setBranchFilter(coordinatorBranch);
+    } else {
+      setAvailableBranches(['All Branches']);
+    }
+  }, [allData, coordinatorBranch]);
+
+  // Export to Excel function
+  const exportToExcel = async () => {
+    try {
+      setExportType('Excel');
+      setExportPopupState('progress');
+      setExportProgress(0);
+      setShowExportMenu(false);
+
+      const progressInterval = setInterval(() => {
+        setExportProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + 10;
+        });
+      }, 100);
+
+      // Prepare data for export
+      const dataToExport = filteredData.map((student, index) => ({
+        'S.No': index + 1,
+        'Name': student["Student Name"],
+        'Register': student["Register No."],
+        'Branch': student.Department,
+        'Year': `${calculateYearRoman(student.Batch)} - ${student.Section}`,
+        'Reached': student.Rounds,
+        'Mobile': student["Mobile No."],
+        'Email': student.Email
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Student wise Analysis');
+
+      clearInterval(progressInterval);
+      setExportProgress(100);
+
+      setTimeout(() => {
+        XLSX.writeFile(workbook, 'Coordinator_Student_wise_Analysis.xlsx');
+        setExportPopupState('success');
+      }, 500);
+    } catch (error) {
+      console.error('Export to Excel failed:', error);
+      setExportPopupState('failed');
+    }
+  };
+
+  // Export to PDF function
+  const exportToPDF = async () => {
+    try {
+      setExportType('PDF');
+      setExportPopupState('progress');
+      setExportProgress(0);
+      setShowExportMenu(false);
+
+      const progressInterval = setInterval(() => {
+        setExportProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + 10;
+        });
+      }, 100);
+
+      const doc = new jsPDF('l', 'mm', 'a4');
+      
+      doc.setFontSize(18);
+      doc.setTextColor(210, 59, 66);
+      doc.text('Student wise Analysis', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+
+      const tableData = filteredData.map((student, index) => [
+        index + 1,
+        student["Student Name"],
+        student["Register No."],
+        student.Department,
+        `${calculateYearRoman(student.Batch)} - ${student.Section}`,
+        student.Rounds,
+        student["Mobile No."],
+        student.Email
+      ]);
+
+      autoTable(doc, {
+        head: [['S.No', 'Name', 'Register', 'Branch', 'Year', 'Reached', 'Mobile', 'Email']],
+        body: tableData,
+        startY: 25,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [210, 59, 66],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 3
+        }
+      });
+
+      clearInterval(progressInterval);
+      setExportProgress(100);
+
+      setTimeout(() => {
+        doc.save('Coordinator_Student_wise_Analysis.pdf');
+        setExportPopupState('success');
+      }, 500);
+    } catch (error) {
+      console.error('Export to PDF failed:', error);
+      setExportPopupState('failed');
+    }
+  };
+
+  const navigateToRoundAnalysis = () => {
+    navigate('/coo-report-analysis');
+  };
+
+  const navigateToCompanyAnalysis = () => {
+    navigate('/coo-report-analysis-cw'); 
+  };
+  
+  // Format date for display
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = String(date.getFullYear());
+      return `${day}-${month}-${year}`;
+    } catch (error) {
+      return String(dateString);
+    }
+  };
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Effect to close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showExportMenu && exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      const target = event.target;
+      if (!target.closest('[data-dropdown]') && !target.closest('[data-export-menu]')) {
+        setIsCompanyOpen(false);
+        setIsJobRoleOpen(false);
+        setIsStartDateOpen(false);
+        setIsEndDateOpen(false);
         setShowExportMenu(false);
       }
     };
@@ -297,268 +498,11 @@ function  ReportAnalysisSW({ onLogout, onViewChange }) {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [showExportMenu]);
-
-  // Effect to run filtering whenever any filter state changes (UPDATED DEPENDENCIES)
-  useEffect(() => {
-    let currentFilteredData = initialData;
-
-    // 1. Apply all regular filters
-    
-    // Company Filter (Dropdown)
-    if (companyFilter !== 'All Companies') {
-      currentFilteredData = currentFilteredData.filter(student => student.Company.trim() === companyFilter.trim());
-    }
-
-    // Batch Filter (Dropdown)
-    if (batchFilter !== 'Year / Batch') {
-      currentFilteredData = currentFilteredData.filter(student => 
-        student.Batch.trim() === batchFilter.trim()
-      );
-    }
-
-    // Date Filters
-    if (startDateFilter) {
-      const filterStart = getSortableDateString(startDateFilter); 
-      if (filterStart) {
-        currentFilteredData = currentFilteredData.filter(student => {
-          const studentStart = getSortableDateString(student["Start Date"]); 
-          return studentStart && studentStart >= filterStart; 
-        });
-      }
-    }
-
-    if (endDateFilter) {
-      const filterEnd = getSortableDateString(endDateFilter); 
-      if (filterEnd) {
-        currentFilteredData = currentFilteredData.filter(student => {
-          const studentEnd = getSortableDateString(student["End Date"]); 
-          return studentEnd && studentEnd <= filterEnd;
-        });
-      }
-    }
-    
-    // Status Filter (Passed/All)
-    if (statusFilter === 'Passed') {
-        currentFilteredData = currentFilteredData.filter(student => student.Status === 'Passed');
-    }
-
-    // 2. Apply Text Search Filter (Uses the 'applied' state)
-    const lowerCaseSearchText = appliedSearchText.toLowerCase().trim();
-    if (lowerCaseSearchText) {
-        // Only run this filter if appliedSearchText is NOT the 'INVALID' placeholder
-        if (lowerCaseSearchText !== 'invalid') {
-            const preSearchCount = currentFilteredData.length;
-            const searchResults = currentFilteredData.filter(student => {
-                const fieldToSearch = student[appliedSearchField];
-                if (fieldToSearch) {
-                    return String(fieldToSearch).toLowerCase().includes(lowerCaseSearchText);
-                }
-                return false;
-            });
-            currentFilteredData = searchResults;
-
-            // 3. Intimate if no results found for the specific text search
-            if (currentFilteredData.length === 0 && preSearchCount > 0) {
-                setSearchError(` No matching record found for "${appliedSearchText}" in the selected column.`);
-            } else if (currentFilteredData.length > 0) {
-                setSearchError(''); // Clear no-match error if results are found
-            }
-        }
-    } else {
-        // Clear search-related errors if search text is empty (filter is off)
-        setSearchError('');
-    }
-
-
-    setFilteredData(currentFilteredData);
-
-    // Dependencies now include applied search states
-  }, [companyFilter, batchFilter, startDateFilter, endDateFilter, statusFilter, appliedSearchField, appliedSearchText]); 
-  
-
-  const navigateToCompanyAnalysis = () => {
-    navigate('/ReportanalysisCW'); 
-  };
-  
-  const simulateExport = async (operation, exportFunction) => {
-    setShowExportMenu(false);
-    
-    // Show progress popup
-    setExportPopupState({
-        isOpen: true,
-        type: 'progress',
-        operation: operation,
-        progress: 0
-    });
-
-    let progressInterval;
-    let progressTimeout;
-
-    try {
-        // Simulate progress from 0 to 100
-        progressInterval = setInterval(() => {
-            setExportPopupState(prev => {
-                if (prev.progress < 100 && prev.type === 'progress') {
-                    return { ...prev, progress: Math.min(prev.progress + 10, 100) };
-                }
-                return prev;
-            });
-        }, 200);
-
-        // Wait for progress animation to complete
-        await new Promise(resolve => {
-            progressTimeout = setTimeout(() => {
-                clearInterval(progressInterval);
-                resolve();
-            }, 2000);
-        });
-        
-        // Perform the actual export
-        exportFunction();
-        
-        // Show success popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'success',
-            operation: operation,
-            progress: 100
-        });
-    } catch (error) {
-        if (progressInterval) clearInterval(progressInterval);
-        if (progressTimeout) clearTimeout(progressTimeout);
-        
-        // Show failed popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'failed',
-            operation: operation,
-            progress: 0
-        });
-    }
-};
-
-  // Export functions (kept the 'Rounds' column for data consistency)
-  const exportToExcel = () => {
-    try{
-    const header = [
-        "So No", "Student Name", "Register No.", "Department", "Batch", "Section", 
-        "Company", "Job Role", "Package", "Rounds", "Status", "Start Date", "End Date", "Mobile", "Email"
-    ];
-    
-    const data = filteredData.map((item) => [
-        item["So No"],
-        item["Student Name"],
-        item["Register No."],
-        item.Department,
-        item.Batch,
-        item.Section,
-        item.Company,
-        item["Job Role"],
-        item.Package,
-        item.Rounds,
-        item.Status,
-        item["Start Date"],
-        item["End Date"],
-        item.Mobile,
-        item.Email
-    ]);
-    
-    const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Analysis Report");
-    XLSX.writeFile(wb, "ReportAnalysis.xlsx");
-
-    setShowExportMenu(false);
-  }catch (error){
-    throw error;
-  }
-  };
-  
-  const exportToPDF = () => {
-    try{
-    
-    const doc = new jsPDF('landscape'); 
-    
-    // UPDATED: Added Mobile and Email columns
-    const tableColumn = [
-        "S.No", "Student Name", "Reg No.", "Dept", "Batch", "Sec", 
-        "Company", "Job Role", "Package", "Rounds", "Status", "Start Date", "End Date", "Mobile", "Email" 
-    ];
-    
-    // UPDATED: Added Mobile and Email data
-    const tableRows = filteredData.map((item) => [
-        item["So No"],
-        item["Student Name"],
-        item["Register No."],
-        item.Department,
-        item.Batch,
-        item.Section,
-        item.Company,
-        item["Job Role"],
-        item.Package,
-        item.Rounds,
-        item.Status,
-        item["Start Date"],
-        item["End Date"],
-        item.Mobile,
-        item.Email
-    ]);
-    
-    doc.setFontSize(14);
-    doc.text("Analysis Report", 148, 15, null, null, "center");
-    
-    autoTable(doc,{
-        head: [tableColumn],
-        body: tableRows,
-        startY: 20,
-        styles: {
-            fontSize: 7, 
-            cellPadding: 1,
-            overflow: 'linebreak',
-            valign: 'middle',
-            halign: 'center',
-            minCellHeight: 6
-        },
-        headStyles: {
-            fillColor: [210, 59, 66], 
-            textColor: 255,
-            fontStyle: 'bold'
-        },
-        margin: { top: 20, left: 5, right: 5 },
-    });
-    
-    doc.save("ReportAnalysis.pdf");
-    setShowExportMenu(false);
-  }catch (error){
-    throw error;
-  }
-  };
-
-  const handleExportToPDF = () => {
-    simulateExport('pdf', exportToPDF);
-  };
-  
-  const handleExportToExcel = () => {
-    simulateExport('excel', exportToExcel);
-  };
-  
-  
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
-
-  const uniqueCompanies = ['All Companies', ...new Set(initialData.map(item => item.Company))];
-const handleCardClick = (view) => {
-    if (onViewChange) {
-      onViewChange(view);
-    }
-  };
+  }, []);
 
   return ( 
     <>
-      <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} /> 
+      <Navbar onToggleSidebar={toggleSidebar} /> 
       <div className={styles["co-layout"]}>
         <Sidebar
           isOpen={isSidebarOpen}
@@ -566,228 +510,299 @@ const handleCardClick = (view) => {
           currentView="report-analysis"
           onViewChange={onViewChange}
         />
-        <div className={styles["co-main-content"]}  >
+        <div className={styles["co-main-content"]}>
           <div className={styles["co-rat-filter-box"]}>
             <div className={styles["co-rat-tab-container"]}>
-              <div className={styles["co-rat-tab-inactive"]} onClick={() => handleCardClick('report-analysis-rw')}>Round wise Analysis</div>
-              <div className={styles["co-rat-tab-inactive"]} onClick={() => handleCardClick('report-analysis-cw')} >Company wise Analysis</div>
-              <div className={styles["co-rat-tab-active"]}>Student wise Analysis</div>
+              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToRoundAnalysis}>Round&nbsp;wise<br /> Analysis</div>
+              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToCompanyAnalysis}>Company&nbsp;wise<br /> Analysis</div>
+              <div className={styles["co-rat-tab-active"]}>Student&nbsp;wise<br /> Analysis</div>
             </div>
 
+            {/* First Search Row - Company, Job Role, Dates */}
             <div className={styles["co-rat-filter-inputs"]}>
-              {/* Company Filter */}
-              <select 
-                className={styles["co-rat-filter-select-1"]} 
-                value={companyFilter} 
-                onChange={(e) => setCompanyFilter(e.target.value)}
-              >
-                {uniqueCompanies.map(company => (
-                  <option key={company} value={company}>{company}</option>
-                ))}
-              </select>
-              {/* Batch Filter */}
-              <select 
-                className={styles["co-rat-filter-select-2"]}
-                value={batchFilter} 
-                onChange={(e) => setBatchFilter(e.target.value)}
-              >
-                <option value="Year / Batch">Year / Batch</option>
-                <option value="2023-2027">2023-2027</option>
-                <option value="2024-2028">2024-2028</option>
-                <option value="2025-2029">2025-2029</option>
-                <option value="2026-2030">2026-2030</option>
-                <option value="2027-2031">2027-2031</option>
-                <option value="2028-2032">2028-2032</option>
-                <option value="2029-2033">2029-2033</option>
-                <option value="2030-2034">2030-2034</option>
-              </select>
-              
-              {/* START DATE PICKER */}
-              <DatePicker
-                selected={startDateFilter}
-                onChange={(date) => setStartDateFilter(date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Start Date"
-                wrapperClassName={styles["co-rat-filter-date-input"]}
-                isClearable={true}
-              />
+              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="company">
+                <div 
+                  className={styles["co-rat-dropdown-header"]} 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('[Dropdown] Company clicked, current state:', isCompanyOpen);
+                    console.log('[Dropdown] Available companies:', availableCompanies);
+                    setIsCompanyOpen(!isCompanyOpen);
+                    setIsJobRoleOpen(false);
+                    setIsStartDateOpen(false);
+                    setIsEndDateOpen(false);
+                  }}
+                >
+                  <span>{companyFilter || 'Select Company'}</span>
+                  <span className={styles["co-rat-dropdown-arrow"]}>{isCompanyOpen ? '▲' : '▼'}</span>
+                </div>
+                {isCompanyOpen && (
+                  <div className={styles["co-rat-dropdown-menu"]}>
+                    <div
+                      className={styles["co-rat-dropdown-item"]}
+                      onClick={(e) => { e.stopPropagation(); setCompanyFilter('Select Company'); setIsCompanyOpen(false); }}
+                    >
+                      Select Company
+                    </div>
+                    {availableCompanies.map((company, index) => (
+                      <div
+                        key={index}
+                        className={styles["co-rat-dropdown-item"]}
+                        onClick={(e) => { e.stopPropagation(); setCompanyFilter(company); setIsCompanyOpen(false); }}
+                      >
+                        {company}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* END DATE PICKER */}
-              <DatePicker
-                selected={endDateFilter}
-                onChange={(date) => setEndDateFilter(date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="End Date"
-                wrapperClassName={styles["co-rat-filter-date-input"]}
-                isClearable={true}
-                minDate={startDateFilter} 
-              />
-              
+              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="jobrole">
+                <div 
+                  className={styles["co-rat-dropdown-header"]}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('[Dropdown] Job Role clicked, current state:', isJobRoleOpen);
+                    console.log('[Dropdown] Available job roles:', availableJobRoles);
+                    setIsJobRoleOpen(!isJobRoleOpen);
+                    setIsCompanyOpen(false);
+                    setIsStartDateOpen(false);
+                    setIsEndDateOpen(false);
+                  }}
+                >
+                  <span>{jobRoleFilter || 'Job Role'}</span>
+                  <span className={styles["co-rat-dropdown-arrow"]}>{isJobRoleOpen ? '▲' : '▼'}</span>
+                </div>
+                {isJobRoleOpen && (
+                  <div className={styles["co-rat-dropdown-menu"]}>
+                    <div
+                      className={styles["co-rat-dropdown-item"]}
+                      onClick={(e) => { e.stopPropagation(); setJobRoleFilter('Job Role'); setIsJobRoleOpen(false); }}
+                    >
+                      Job Role
+                    </div>
+                    {availableJobRoles.map((role, index) => (
+                      <div
+                        key={index}
+                        className={styles["co-rat-dropdown-item"]}
+                        onClick={(e) => { e.stopPropagation(); setJobRoleFilter(role); setIsJobRoleOpen(false); }}
+                      >
+                        {role}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="startdate">
+                <div 
+                  className={styles["co-rat-dropdown-header"]}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsStartDateOpen(!isStartDateOpen);
+                    setIsCompanyOpen(false);
+                    setIsJobRoleOpen(false);
+                    setIsEndDateOpen(false);
+                  }}
+                >
+                  <span>{startDateFilter ? formatDisplayDate(startDateFilter) : 'Start Date'}</span>
+                  <span className={styles["co-rat-dropdown-arrow"]}>{isStartDateOpen ? '▲' : '▼'}</span>
+                </div>
+                {isStartDateOpen && (
+                  <div className={styles["co-rat-dropdown-menu"]}>
+                    <div
+                      className={styles["co-rat-dropdown-item"]}
+                      onClick={(e) => { e.stopPropagation(); setStartDateFilter(''); setIsStartDateOpen(false); }}
+                    >
+                      Start Date
+                    </div>
+                    {availableDates.map((date, index) => (
+                      <div
+                        key={index}
+                        className={styles["co-rat-dropdown-item"]}
+                        onClick={(e) => { e.stopPropagation(); setStartDateFilter(date); setIsStartDateOpen(false); }}
+                      >
+                        {formatDisplayDate(date)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="enddate">
+                <div 
+                  className={styles["co-rat-dropdown-header"]}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEndDateOpen(!isEndDateOpen);
+                    setIsCompanyOpen(false);
+                    setIsJobRoleOpen(false);
+                    setIsStartDateOpen(false);
+                  }}
+                >
+                  <span>{endDateFilter ? formatDisplayDate(endDateFilter) : 'End Date'}</span>
+                  <span className={styles["co-rat-dropdown-arrow"]}>{isEndDateOpen ? '▲' : '▼'}</span>
+                </div>
+                {isEndDateOpen && (
+                  <div className={styles["co-rat-dropdown-menu"]}>
+                    <div
+                      className={styles["co-rat-dropdown-item"]}
+                      onClick={(e) => { e.stopPropagation(); setEndDateFilter(''); setIsEndDateOpen(false); }}
+                    >
+                      End Date
+                    </div>
+                    {availableDates.map((date, index) => (
+                      <div
+                        key={index}
+                        className={styles["co-rat-dropdown-item"]}
+                        onClick={(e) => { e.stopPropagation(); setEndDateFilter(date); setIsEndDateOpen(false); }}
+                      >
+                        {formatDisplayDate(date)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
-            {/* NEW SEARCH ROW CONTAINER */}
+            {/* Second Search Row - Name, Branch, Mobile/Email */}
             <div className={styles["co-rat-search-row"]}>
-                <span className={styles["co-rat-filter-label"]}>Select by text:</span>
-                <select 
-                    className={styles["co-rat-search-select"]} 
-                    value={searchField}
-                    onChange={(e) => setSearchField(e.target.value)}
-                >
-                    <option value="Mobile">Mobile</option>
-                    <option value="Email">Email</option>
-                </select>
-                <input 
-                    type="text" 
-                    className={cx(
-                      styles["co-rat-search-input"],
-                      searchError && styles["co-rat-search-input-error"]
-                    )}
-                    placeholder={`Enter ${searchField}...`}
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                          handleSearchClick();
-                      }
-                    }}
-                />
-                <button 
-                    className={styles["co-rat-search-btn"]}
-                    onClick={handleSearchClick} 
-                >
-                    Search
-                </button>
+              <input 
+                type="text" 
+                placeholder="Enter Name / Register Number" 
+                className={styles["co-rat-name-register-input"]} 
+                value={nameRegisterInput} 
+                onChange={(e) => { setNameRegisterInput(e.target.value); setSearchError(''); }}
+              />
+              <select 
+                className={styles["co-rat-branch-dropdown"]} 
+                value={branchFilter} 
+                onChange={(e) => { setBranchFilter(e.target.value); setSearchError(''); }}
+                disabled={availableBranches.length === 1}
+              >
+                {availableBranches.map(branch => (
+                  <option key={branch} value={branch}>{branch}</option>
+                ))}
+              </select>
+              <div className={styles["co-rat-select-label"]}>Select by:</div>
+              <select 
+                className={styles["co-rat-select-type-dropdown"]} 
+                value={searchType} 
+                onChange={(e) => { setSearchType(e.target.value); setSearchError(''); }}
+              >
+                <option value="Mobile number">Mobile number</option>
+                <option value="Email">Email</option>
+              </select>
+              <input 
+                type="text" 
+                placeholder={searchType === 'Mobile number' ? 'Enter Mobile Number' : 'Enter Email'} 
+                className={styles["co-rat-search-input-field"]} 
+                value={searchInput} 
+                onChange={(e) => { setSearchInput(e.target.value); setSearchError(''); }}
+              />
             </div>
-
-            {/* NEW: Error message display */}
-            {searchError && (
-                <div className={styles["co-rat-search-error"]}>
-                    {searchError}
-                </div>
-            )}
-`
-
+            {searchError && <div style={{ color: 'red', fontSize: '0.9rem', marginTop: '4px', paddingLeft: '95px' }}>{searchError}</div>}
           </div>
 
           <div className={styles["co-rat-table-section"]}>
             <div className={styles["co-rat-table-header-row"]}>
-              <div className={styles["co-rat-table-title"]}>STUDENT ANALYSIS REPORT</div>
+              <div className={styles["co-rat-table-title"]}>STUDENT WISE ANALYSIS</div>
               <div className={styles["co-rat-table-actions"]}>
-                <button 
-                  className={statusFilter === 'Passed' ? styles["co-rat-view-status-btn-filtered"] : styles["co-rat-view-status-btn-all"]}
-                  onClick={toggleStatusFilter}
-                >
-                  {statusFilter === 'Passed' ? 'View All Students' : 'View Passed Students'}
-                </button>
-                
-                <div ref={exportMenuRef} className={styles["co-rat-print-button-container"]}>
+                <div className={styles["co-rat-print-button-container"]} data-export-menu="true">
                   <button 
-                    className={styles["co-rat-print-btn"]} 
-                    onClick={handlePrintClick} 
+                    className={styles["co-rat-print-btn-green"]} 
+                    onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}
                   >
                     Print
                   </button>
-                  
                   {showExportMenu && (
-                    <div className={styles["co-rat-export-menu"]}>
-                      <button className={styles["co-rat-export-menu-button"]} onClick={handleExportToExcel}>Export to Excel</button>
-                      <button className={styles["co-rat-export-menu-button"]} onClick={handleExportToPDF}>Download as PDF</button>
+                    <div className={styles["co-rat-export-menu"]} data-export-menu="true">
+                      <button onClick={(e) => { e.stopPropagation(); exportToExcel(); }}>Export to Excel</button>
+                      <button onClick={(e) => { e.stopPropagation(); exportToPDF(); }}>Export to PDF</button>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <table className={styles["co-rat-data-table"]}>
-              <div className={styles["co-rat-table-body-scroll"]}>
-              <thead>
-                <tr>
-
-                  <th style={{width:"180px"}}>S.No</th>
-                  <th style={{width:"180px",padding:"7px 0px"}}>Student Name</th>
-                  <th style={{width:"190px",padding:"7px 0px 0px 40px"}}>Register No.</th>
-                  <th style={{width:"230px",padding:"7px 0px 0px 40px"}}>Department</th>
-                  <th style={{width:"180px"}}>Batch</th> 
-                  <th style={{width:"180px"}}>Section</th>
-                  <th style={{width:"180px"}}>Company</th>
-                  <th style={{width:"180px"}}>Job Role</th>
-                  <th style={{width:"180px"}}>Package</th>
-                  <th style={{width:"180px"}}>Rounds</th>
-                  <th style={{width:"180px"}}>Status</th>
-                  <th style={{width:"180px",padding:"7px 0px 0px 0px", position:"relative", left:"15px"}}>Start Date</th>
-                  <th style={{width:"180px",paddingRight:"10px", position:"relative", left:"20px"}}>End Date</th>
-                  <th style={{width:"180px", position:"relative", left:"30px"}}>Mobile</th>
-                  <th style={{width:"180px", position:"relative", left:"15px"}}>Email</th> 
-                </tr>
-              </thead>
-              
-              
+            <div className={styles["co-rat-table-body-scroll"]}>
+              <table className={styles["co-rat-data-table"]}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Register</th>
+                    <th>Branch</th>
+                    <th>Year</th>
+                    <th>Reached</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th>View</th>
+                  </tr>
+                </thead>
                 <tbody className={styles["co-rat-table-body"]}>
-                  {filteredData.map((student, index) => (
-                    <tr key={index}>
-                      <td>{student["So No"]}</td>
-
-                      <td>{student["Student Name"]}</td>
-                      <td>{student["Register No."]}</td>
-                      <td>{student.Department}</td>
-                      <td>{student.Batch}</td> 
-                      <td>{student.Section}</td>
-                      <td>{student.Company}</td>
-                      <td>{student["Job Role"]}</td>
-                      <td>{student.Package}</td>
-                      <td>{student.Rounds}</td>
-                      <td>
-                        <div className={student.Status === 'Passed' ? styles["co-rat-status-cell-passed"] : styles["co-rat-status-cell-rejected"]}>
-                          {student.Status}
+                  {isLoading ? (
+                    <tr className={styles["co-rat-loading-row"]}>
+                      <td colSpan="9" className={styles["co-rat-loading-cell"]}>
+                        <div className={styles["co-rat-loading-wrapper"]}>
+                          <div className={styles["co-rat-spinner"]}></div>
+                          <span className={styles["co-rat-loading-text"]}>Loading students…</span>
                         </div>
                       </td>
-
-                      <td>{student["Start Date"]}</td>
-                      <td>{student["End Date"]}</td>
-                      <td>{student.Mobile}</td>
-                      <td>{student.Email}</td> 
                     </tr>
-                  ))}
+                  ) : (
+                    filteredData.map((student, index) => (
+                      <tr key={index}>
+                        <td>{student["So No"]}</td>
+                        <td>{student["Student Name"]}</td>
+                        <td>{student["Register No."]}</td>
+                        <td>{student.Department}</td>
+                        <td>{calculateYearRoman(student.Batch)} - {student.Section}</td>
+                        <td>{student.Rounds}</td>
+                        <td>{student["Mobile No."]}</td>
+                        <td>{student.Email}</td>
+                        <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                          if (student.studentId) {
+                            navigate(`/coordinator-profile/${student.studentId}`);
+                          }
+                        }}>
+                          <EyeIcon />
+                        </td>
+                      </tr>
+                    ))
+                  )}
 
-                  {filteredData.length === 0 && (
+                  {!isLoading && filteredData.length === 0 && (
                     <tr>
-                      <td colSpan="15" style={{ textAlign: 'center', padding: '20px' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
                         No students found matching the current filters.
                       </td>
                     </tr>
                   )}
                 </tbody>
-              </div>
-            </table>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-        {/* Export Popups */}
-        {exportPopupState.isOpen && exportPopupState.type === 'progress' && (
-                <ExportProgressPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    progress={exportPopupState.progress}
-                    onClose={() => {}}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'success' && (
-                <ExportSuccessPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'failed' && (
-                <ExportFailedPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}     
-         
+
+      {/* Export Popup Alerts */}
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
+        progress={exportProgress}
+        exportType={exportType}
+      />
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+      />
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+      />
     </>
   );
 }

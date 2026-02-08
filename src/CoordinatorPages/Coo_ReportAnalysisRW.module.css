@@ -7,13 +7,12 @@
   border-radius: 16px;
   max-width: 1180px; 
   margin: 25px auto 0 15px; 
-  padding: 16px 26px 8px 26px;
+  padding: 16px 26px 16px 26px;
   box-shadow: 0 0 12px #e1e6ef32;
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-top: 90px;
-  overflow: hidden;
 }
 
 .co-ram-tab-container {
@@ -64,11 +63,87 @@
   margin-left: 0px;
 }
 
+/* Custom Dropdown Styles */
+.co-ram-dropdown-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 262px;
+}
+
+.co-ram-dropdown-header {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 51px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  padding: 0 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.co-ram-dropdown-header:hover {
+  border-color: #d23b42;
+}
+
+.co-ram-dropdown-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.co-ram-dropdown-disabled:hover {
+  border-color: #808080;
+}
+
+.co-ram-dropdown-arrow {
+  font-size: 0.8rem;
+  color: #808080;
+}
+
+.co-ram-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #808080;
+  border-radius: 7px;
+  margin-top: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.co-ram-dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #282828;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.co-ram-dropdown-item:hover {
+  background: #f0f0f0;
+}
+
+.co-ram-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid #e5e5e5;
+}
+
 .co-ram-filter-select, .co-ram-filter-date-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 262px;
   background: #f6f8fb;
-  border: 2px solid #808080; /* Default border is 2px solid */
+  border: 2px solid #808080;
   height: 51px;
-  width: 262px; 
   border-radius: 7px;
   font-size: 1rem;
   color: #282828;
@@ -80,170 +155,106 @@
   transition: border-color 0.2s; 
 }
 
-.co-ram-filter-select-1{
-  background: #f6f8fb;
-  border: 2px solid #808080; /* Default border is 2px solid */
-  height: 51px;
-  width: 950px; 
-  border-radius: 7px;
-  font-size: 1rem;
-  color: #282828;
-  font-weight: 600;
-  box-sizing: border-box;
-  padding: 10px 15px; 
-  line-height: normal;
-  text-align:center; 
-  transition: border-color 0.2s; 
+.co-ram-filter-date-input {
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
 }
 
-.co-ram-filter-select-2{
-  background: #f6f8fb;
-  border: 2px solid #808080; /* Default border is 2px solid */
-  height: 51px;
-  width: 950px; 
-  border-radius: 7px;
-  font-size: 1rem;
-  color: #282828;
-  font-weight: 600;
-  box-sizing: border-box;
-  padding: 10px 15px; 
-  line-height: normal;
-  text-align:center; 
-  transition: border-color 0.2s; 
-}
-
-
-.co-ram-filter-select-1:focus{
-  border-color: #d23b42;
-    outline: none !important;
-    box-shadow: none !important; 
-}
-.co-ram-filter-select-1:hover{
-  border-color: #d23b42; 
-}
-
-.co-ram-filter-select-2:focus{
-  border-color: #d23b42;
-    outline: none !important;
-    box-shadow: none !important; 
-}
-.co-ram-filter-select-2:hover{
-  border-color: #d23b42; 
-}
-
-.co-ram-filter-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+.co-ram-filter-select-1,
+.co-ram-filter-select-2 {
+  display: none; /* No longer needed */
 }
 
 .co-ram-filter-select:hover, .co-ram-filter-date-input:hover {
   border-color: #d23b42; 
 }
 
-/* --- FIX APPLIED HERE --- */
 .co-ram-filter-select:focus, .co-ram-filter-date-input:focus {
-  /* Explicitly setting the border ensures the 2px thickness is maintained, 
-     preventing size shift on focus. */
   border: 2px solid #d23b42; 
-  width: 262px !important; 
-  box-sizing: border-box !important;
   outline: none;
 }
 
 
-
-/* ------------------------ */
-
 .co-ram-round-buttons-container {
+  margin-bottom: 8px;
+  background: #f8f8f8;
+  padding: 10px 0;
   max-width: 1180px;
-  margin: 30px auto auto 10px;
+  margin: 10px auto 10px 15px;
+  border-radius: 16px;
+}
+
+.co-ram-round-buttons-scroll {
   display: flex;
-  gap: 14px;
-  overflow-x: auto; 
-  white-space: nowrap; 
-  padding-bottom: 10px;
-  scrollbar-width: thin; 
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  margin-left: 10px;
 }
 
-.co-ram-round-buttons-container::-webkit-scrollbar {
-  height: 8px; 
+.co-ram-round-buttons-scroll::-webkit-scrollbar {
+  height: 0px;
+  margin-top: 2px;
 }
 
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  background: #d23b42;
+.co-ram-round-buttons-scroll::-webkit-scrollbar-track {
+  background: #f8f8f8;
+}
+
+.co-ram-round-buttons-scroll::-webkit-scrollbar-thumb {
+  background: #808080;
   border-radius: 4px;
 }
 
-/* Desktop scrollbar - red styling to match theme */
-
-
-
-.co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover,
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-  background-color: #b32d34;
-}
-
-/* Specific override: make round-buttons container scrollbar thumb light and track invisible */
-.co-ram-round-buttons-container {
-  /* Firefox: thumb + track */
-  scrollbar-width: 12px;
-  scrollbar-color: #c7c9c9 transparent;
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-track {
-  background: transparent; /* make track invisible */
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  background-color: #bbb2b2; /* thumb light color */
-  border-radius: 20px;
-  border: none;
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
-  background-color: #c7c9cc; /* keep same on hover */
+.co-ram-round-buttons-scroll::-webkit-scrollbar-thumb:hover {
+  background: #606060;
 }
 
 .co-ram-round-button {
-  border: none;
+  padding: 8px 24px;
   border-radius: 8px;
-  padding: 14px 28px; 
-  font-size: 1.05rem;
+  border: 2px solid #808080;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
-  flex-shrink: 0; 
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.co-ram-round-button-inactive {
+  background: #f8f8f8;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+}
+
+.co-ram-round-button-inactive:hover {
+  background: #d23b42;
+  color: #fff;
 }
 
 .co-ram-round-button-active {
   background: #d23b42;
   color: #fff;
   font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-}
-
-.co-ram-round-button-inactive {
-  background: #f6f8fb;
-  color: #444;
-  font-weight: 600;
-  border: 1px solid #d4d6db;
-}
-
-.co-ram-round-button-inactive:hover {
-  background: #d23b42;
-  color: #fff;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px -6px #333;
 }
 
 .co-ram-table-section {
   background: #fff;
   border-radius: 16px;
   max-width: 1180px; 
-  margin: 30px auto 30px 15px;
+  margin: 10px 0px 0px 15px;
   padding: 26px 32px 0px 12px;
   box-shadow: 0 0 14px #e3e6ee2a;
   border: 2px solid #808080;
-  height:341px;
-  /* Horizontal scrolling handled by the outer section so the vertical scrollbar stays on the inner body */
+  width: auto;
+  height: 395px;
 }
 
 .co-ram-table-header-row {
@@ -256,7 +267,6 @@ body::-webkit-scrollbar-thumb:hover {
   font-size: 1.25rem;
   font-weight: bold;
   color: #191c2f;
-  margin-bottom:33px;
   margin-top:-16px;
   margin-left:10px;
 }
@@ -284,76 +294,68 @@ body::-webkit-scrollbar-thumb:hover {
   border-radius: 11px;
   height:36px;
 }
-.co-ram-view-status-btn-filtered {
-  background: #397639; 
-  color: #ffffff;
-  border-radius: 11px;
-  height:36px;
-}
-.co-ram-view-status-btn-all:hover{
-  background:#397639;
-}
 .co-ram-print-btn {
   background: #d23b42;
-  color: #ffffffff;
-  padding: 9px 45px;
-  border-radius: 11px;
-  z-index: 1001; 
+  color: #ffffff;
+  padding: 8px 30px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
-.co-ram-print-btn:hover{
-  background:#a72e33;
+
+.co-ram-print-btn:hover {
+  background: #a72e33;
 }
 
 .co-ram-print-button-container {
   position: relative;
+  display: inline-block;
+  z-index: 15;
 }
 
 .co-ram-export-menu {
   position: absolute; 
-  top: 33px;
+  top: 40px;
   right: 0;
-  margin-top: 5px;
+  z-index: 2000;
   background: #fff;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-.co-ram-export-menu-button {
-  display: block;
-  width: 180px;
+.co-ram-export-menu button {
   padding: 10px 15px;
   border: none;
   background: none;
   text-align: left;
   cursor: pointer;
   font-size: 0.95rem;
-  font-weight: 500;
   color: #333;
-  transition: background 0.1s;
+  transition: background-color 0.2s;
 }
 
-.co-ram-export-menu-button:hover {
-  background: #f0f0f0;
+.co-ram-export-menu button:hover { 
+  background: #f0f0f0; 
 }
 
 .co-ram-data-table {
-  min-width: 1290px;
   width: 100%;
+  border-collapse: separate;
   margin-top: -8px;
   font-size: 1.02rem;
-  table-layout: fixed;
-  
+  table-layout: fixed; 
 }
 
 .co-ram-data-table thead {
   display: block;
-  width: 1290px; 
+  width: 100%; 
 }
 
 .co-ram-data-table th {
@@ -361,143 +363,127 @@ body::-webkit-scrollbar-thumb:hover {
   font-size: 1rem;
   font-weight: 700;
   color:rgb(175, 175, 175);
-  /* Changed padding to be consistent and lower to give more space for content width */
- padding:0px 0px;
-  border-radius: 3px;
+  padding: 14px 12px;
   text-align: center;
   border-bottom: 2px solid #f2f0f2;
-  
+  white-space: normal;
+  line-height: 1.2;
 }
 
-
-  .co-ram-table-body-scroll {
-    /* vertical scrolling container (scrollbar will be on this element and stay at its right edge) */
-    width: 1160px;
-    max-height: 252px;
-    overflow-y: auto;
-    overflow-x: visible; /* allow the wide table to overflow so the outer .co-ram-table-section can horizontally scroll it */
-    scrollbar-gutter: stable; /* reserve gutter so content doesn't shift when scrollbar appears */
-  }
-/* table thead will scroll with the table body; no sticky positioning */
-
-.co-ram-table-body-scroll::-webkit-scrollbar-button {
-    display: none !important;
+.co-ram-table-body-scroll {
+  max-height: 300px;
+  min-height: 280px;
+  overflow-y: scroll;
+  overflow-x: hidden; 
+  width: 100%; 
+  padding-right: 0px;
+  position: relative;
 }
 
-/* --- VERTICAL SCROLLBAR (Y-axis) --- */
+/* Red scrollbars for coordinator theme */
 .co-ram-table-body-scroll::-webkit-scrollbar {
-    width: 15px;       /* vertical width */
-}
-
-.co-ram-table-body-scroll::-webkit-scrollbar-thumb {
-    background: #d23b24 !important;    /* vertical thumb color */
-    border-radius: 20px;
-    border: 3px solid #f0f2f5 !important;
+    width: 10px;
+    height: 8px;
 }
 
 .co-ram-table-body-scroll::-webkit-scrollbar-track {
-    background: #e3e5e7 !important;
+    background: #f1f1f1;
+    border-radius: 2px;
 }
 
-/* --- HORIZONTAL SCROLLBAR (X-axis) --- */
-.co-ram-table-body-scroll::-webkit-scrollbar:horizontal {
-    height: 10px !important;           /* horizontal height */
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb {
+    background: #d23b42;
+    border-radius: 4px;
 }
 
-.co-ram-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
-    background: #e3e5e7 !important;     /* horizontal thumb color */
-    border-radius: 20px;
-    border: 3px solid #ffffff00 !important;  /* transparent border */
+.co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a72e33;
 }
 
-.co-ram-table-body-scroll::-webkit-scrollbar-track:horizontal {
-    background: #ffffff !important;     /* cleaner look */
+.co-ram-table-body-scroll::-webkit-scrollbar-button {
+    display: none;
 }
-.co-ram-table-body-scroll thead{
-  position:sticky;
-  top:0px;
-}
-.co-ram-data-table tbody 
-{
+
+.co-ram-data-table tbody {
   display: block;
-  /* Must match thead width */
-  width: 1290px;
+  width: 100%;
 }
 
-
-.co-ram-data-table {
-  min-width: 1290px; /* force horizontal overflow inside the outer section */
-  width: auto;
-  border-collapse: separate;
-  margin-top: -8px;
-  font-size: 1.02rem;
-  table-layout: fixed; 
+.co-ram-data-table tr {
+  display: flex; 
+  width: 100%;
 }
+
+.co-ram-data-table th, .co-ram-data-table td {
+  min-width: 0;
+  text-align: center;
+}
+
 .co-ram-data-table td {
-  padding: 9px 5px;
+  padding: 14px 12px;
   color: #30334e;
-  min-width:148px;
   font-weight: 500;
   border-bottom: 1.5px solid #f2f0f2;
+  white-space: normal; 
+  overflow: visible; 
+  word-wrap: break-word;
 }
 
-.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 50px; }
-.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 140px; }
-.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 115px; }
-.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 85px; }
-.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 90px; }
-.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 60px; }
-.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 100px; }
-.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 120px; }
-.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 75px; }
-.co-ram-data-table th:nth-child(10), .co-ram-data-table td:nth-child(10) { width: 70px; }
-.co-ram-data-table th:nth-child(11), .co-ram-data-table td:nth-child(11) { width: 100px; }
-.co-ram-data-table th:nth-child(12), .co-ram-data-table td:nth-child(12) { width: 95px; }
-.co-ram-data-table th:nth-child(13), .co-ram-data-table td:nth-child(13) { width: 95px; }
+/* Column widths for the table (8 columns: S.No, Name, RegNo, Year-Sec, Sem, Mobile, Result, View) */
+.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 8%; flex-shrink: 0; }  /* S.No */
+.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 20%; flex-shrink: 0; } /* Name */
+.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 18%; flex-shrink: 0; } /* Register Number */
+.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 12%; flex-shrink: 0; } /* Year-Sec */
+.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 8%; flex-shrink: 0; }  /* Sem */
+.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 16%; flex-shrink: 0; } /* Mobile */
+.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 10%; flex-shrink: 0; } /* Result */
+.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 8%; flex-shrink: 0; }  /* View */
 
-.co-ram-status-cell-passed {
-  padding: 6px 22px;
-  background: #c2f6ea;
-  color: #16c098;
-  border-radius: 32px;
-  font-weight: 600;
-  display: inline-block; 
+/* Loading styles */
+.co-ram-loading-row, .co-ram-loading-cell {
+  text-align: center;
+  padding: 20px;
 }
 
-.co-ram-status-cell-rejected {
-  padding: 6px 18px;
-  background:rgb(250, 213, 215);
-  color: #d23b42;
-  border-radius: 32px;
-  font-weight: 600;
-  display: inline-block;
-}
-       .co-ram-table-section::-webkit-scrollbar {
-      width: 15px;
-    }
-        .co-ram-table-section::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-        .co-ram-table-section::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-        .co-ram-table-section::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
-    }
-     .co-ram-table-section::-webkit-scrollbar:horizontal {
-  height: 12px !important ;/* height of the horizontal scrollbar */
+.co-ram-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
- .co-ram-table-section::-webkit-scrollbar-thumb:horizontal {
-  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
+.co-ram-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #d23b42;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
 }
 
- .co-ram-table-section::-webkit-scrollbar-thumb:horizontal:hover {
-  background-color: #c1bfbf !important; /* darker grey on hover */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.co-ram-loading-text {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Adjust height when rounds are showing */
+.co-ram-table-section-with-rounds {
+  height: 395px;
+}
+
+.co-ram-rounds-container {
+  margin-bottom: 8px;
+  background: #f8f8f8;
+  padding: 10px 0;
+  max-width: 1180px;
+  margin: 10px auto 10px 15px;
+  border-radius: 16px;
 }
 /* ... (Existing styles up to the media query) ... */
 .co-ram-round-buttons-container::-webkit-scrollbar-thumb {
@@ -533,181 +519,6 @@ body::-webkit-scrollbar-thumb:hover {
 
 .co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
   background: #606060;
-}
-
-/* ============================================
-   Export Popup Styles
-   ============================================ */
-
-/* Popup Overlay */
-.co-ram-export-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  animation: co-ram-export-popup-fade-in 0.3s ease-out;
-}
-
-@keyframes co-ram-export-popup-fade-in {
-  from {
-      opacity: 0;
-  }
-  to {
-      opacity: 1;
-  }
-}
-
-/* Popup Container */
-.co-ram-export-popup-container {
-  background-color: #fff;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: co-ram-export-popup-scale-in 0.3s ease-out;
-}
-
-@keyframes co-ram-export-popup-scale-in {
-  from {
-      opacity: 0;
-      transform: scale(0.9);
-  }
-  to {
-      opacity: 1;
-      transform: scale(1);
-  }
-}
-
-/* Popup Header */
-.co-ram-export-popup-header {
-  background-color: #d23b42;
-  color: white;
-  padding: 15px 20px;
-  font-size: 1.25rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* Popup Body */
-.co-ram-export-popup-body {
-  padding: 30px 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-/* Progress Circle Container */
-.co-ram-export-progress-circle {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto;
-}
-
-.co-ram-export-progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #d23b42;
-}
-
-/* Success Icon */
-.co-ram-export-success-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: co-ram-fill 0.4s ease-in-out 0.4s forwards, co-ram-scale 0.3s ease-in-out 0.9s both;
-}
-
-.co-ram-success-icon--circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  stroke-width: 2;
-  stroke-miterlimit: 10;
-  stroke: #4caf50;
-  fill: #4caf50;
-  animation: co-ram-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.co-ram-success-icon--check {
-  transform-origin: 50% 50%;
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  stroke: #ffffff;
-  stroke-width: 3;
-  fill: none;
-  animation: co-ram-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
-/* Failed Icon */
-.co-ram-export-failed-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Popup Title */
-.co-ram-export-popup-title {
-  color: #2d2d2d;
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-/* Popup Message */
-.co-ram-export-popup-message {
-  color: #666;
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-/* Popup Footer */
-.co-ram-export-popup-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
-  text-align: center;
-  background-color: #ffffff;
-}
-
-/* Close Button */
-.co-ram-export-popup-close-btn {
-  background-color: #d23b42;
-  color: white;
-  border: none;
-  padding: 10px 30px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background-color 0.3s;
-  width: 100%;
-  max-width: 150px;
-}
-
-.co-ram-export-popup-close-btn:hover {
-  background-color: #b32d34;
-}
-
-.co-ram-export-popup-close-btn:active {
-  transform: scale(0.98);
 }
 
 /* Desktop scrollbar - red styling to match theme */

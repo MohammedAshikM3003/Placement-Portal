@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_ManageStudents.module.css';
@@ -325,6 +326,7 @@ const UnblockedPopup = ({ isOpen, onClose }) => {
 
 
 function Comanagestud({ onLogout, currentView, onViewChange  }) {
+    useCoordinatorAuth(); // JWT authentication verification
     const navigate = useNavigate();
     const [coordinatorData, setCoordinatorData] = useState(() => readStoredCoordinatorData());
     const coordinatorDepartment = useMemo(

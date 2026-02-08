@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"; // Import useEffect
+import { useNavigate } from "react-router-dom";
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import {
  FaUserCircle,  FaEye,
   FaUsers, FaBuilding, FaBriefcase, FaCertificate, FaUserCheck,
   FaCalendarAlt, FaUserGraduate, FaChartBar
 } from 'react-icons/fa';
 import { LuLayoutDashboard } from "react-icons/lu";
-import { useNavigate } from "react-router-dom";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -191,6 +192,7 @@ const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
 
 
 const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
+  useCoordinatorAuth(); // JWT authentication verification
   // Data for navigation links
   const navLinks = [
     { icon: <LuLayoutDashboard />, text: 'Dashboard' },

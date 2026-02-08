@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 // Assuming these paths are correct for your existing files
@@ -198,6 +200,8 @@ const UploadIconSVG = () => (
 
 
 function CoProfile({ onLogout, currentView, onViewChange }) {
+    useCoordinatorAuth(); // JWT authentication verification
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',

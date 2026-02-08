@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_Attendance.module.css';
@@ -31,6 +33,8 @@ const resolveCoordinatorDepartment = (data) => {
 };
 
 export default function Attendance({ onLogout, currentView, onViewChange }) {
+  useCoordinatorAuth(); // JWT authentication verification
+  const navigate = useNavigate();
 
   const [isDriveOpen, setIsDriveOpen] = useState(false);
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);

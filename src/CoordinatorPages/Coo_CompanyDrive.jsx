@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate, Link } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import * as XLSX from 'xlsx';
 import  jsPDF  from 'jspdf';
 import autoTable from'jspdf-autotable';
@@ -9,7 +11,6 @@ import searchcompany from '../assets/seachcompany.png';
 import searchbydept from '../assets/SearchbyDepartment.png';
 import searchdomain from '../assets/SearchDomain.png';
 import searchmode from '../assets/searchMode.png';
-import { useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
@@ -292,6 +293,7 @@ const sampleCompanyData = [
 ];
 
 export default function App({ onLogout, currentView, onViewChange }) {
+  useCoordinatorAuth(); // JWT authentication verification
   const [companiesDrives, setCompaniesDrives] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);

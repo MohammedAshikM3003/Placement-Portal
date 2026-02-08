@@ -23,8 +23,22 @@ export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
       return cachedImages;
     }
 
-    console.log('📡 Fetching college images from server...');
     const authToken = localStorage.getItem('authToken');
+    const authRole = localStorage.getItem('authRole');
+    
+    // Only fetch if user is admin with valid token
+    // For non-admin users or no token, return null (will use fallback images)
+    if (!authToken) {
+      console.log('ℹ️ No auth token, skipping college images fetch (will use fallbacks)');
+      return null;
+    }
+    
+    if (authRole !== 'admin') {
+      console.log('ℹ️ Non-admin user, skipping college images fetch (will use fallbacks)');
+      return null;
+    }
+
+    console.log('📡 Fetching college images from server...');
     const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,

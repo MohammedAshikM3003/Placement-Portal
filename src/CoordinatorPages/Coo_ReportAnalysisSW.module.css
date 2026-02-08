@@ -1,15 +1,10 @@
-.co-layout {
+ .co-layout {
   display: flex;
 }
 
 .co-main-content {
-      flex-grow: 1;
-    padding: 0 4px;
-    margin-left: 300px;
-    margin-top: 20px;
-    overflow: hidden;
-    /* max-width: 1400px; */
-    max-height: 700px;
+  margin-left:300px;
+  height:730px;
 }
 
 /* Desktop scrollbar - red styling to match theme */
@@ -20,12 +15,103 @@
   border-radius: 16px;
   max-width: 1180px; 
   margin: 25px auto 0 15px; 
-  padding: 16px 26px 8px 26px;
+  padding: 16px 26px 20px 26px;
   box-shadow: 0 0 12px #e1e6ef32;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 70px;
+  gap: 10px;
+  margin-top: 90px;
+}
+
+.co-rat-filter-inputs {
+  display: flex;
+  gap: 44px;
+  margin-left: 0px;
+  margin-bottom: 8px;
+}
+
+.co-rat-dropdown-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 262px;
+}
+
+.co-rat-dropdown-header {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 51px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  padding: 0 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.co-rat-dropdown-header:hover {
+  border-color: #d23b42;
+}
+
+.co-rat-dropdown-disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.co-rat-dropdown-arrow {
+  font-size: 0.9rem;
+  color: #808080;
+}
+
+.co-rat-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #808080;
+  border-radius: 7px;
+  margin-top: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.co-rat-dropdown-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.co-rat-dropdown-menu::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.co-rat-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #d23b42;
+  border-radius: 4px;
+}
+
+.co-rat-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #b32d34;
+}
+
+.co-rat-dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #282828;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.co-rat-dropdown-item:hover {
+  background: #f0f0f0;
 }
 
 .co-rat-tab-container {
@@ -73,6 +159,7 @@
 .co-rat-filter-inputs {
   display: flex;
   gap: 44px;
+  margin-left: 0px;
 }
   
 .co-rat-filter-select, .co-rat-filter-date-input {
@@ -183,11 +270,126 @@ border-color: #d23b42;
   border-color: #d23b42; 
 }
   
-.co-rat-search-row {
+/* --- NEW: Search Row Styles --- */
+.co-rat-search-row { 
   display: flex;
-  align-items: center;
-  gap: 15px; 
-  padding: 5px 0 10px 0;
+  gap: 8px;
+  align-items: center; 
+  margin-bottom: 8px;
+}
+
+.co-rat-name-register-input {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 320px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+}
+
+.co-rat-name-register-input:focus {
+  outline: none;
+  border-color: #d23b42;
+}
+
+.co-rat-branch-dropdown {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 165px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+.co-rat-branch-dropdown:focus {
+  outline: none;
+  border-color: #d23b42;
+}
+
+.co-rat-branch-dropdown:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+.co-rat-select-label {
+  font-weight: 600;
+  color: #282828;
+  font-size: 1rem;
+  padding: 0 5px;
+  flex-shrink: 0;
+}
+
+.co-rat-select-type-dropdown {
+  width: 170px;
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+.co-rat-select-type-dropdown:focus {
+  outline: none;
+  border-color: #d23b42;
+}
+
+.co-rat-search-input-field {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 400px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+}
+
+.co-rat-search-input-field:focus {
+  outline: none;
+  border-color: #d23b42;
 }
   
 .co-rat-filter-label {
@@ -249,165 +451,256 @@ border-color: #d23b42;
 /* --- TABLE STYLES REPLACED FROM ReportAnalysismain.css BELOW --- */
 
 .co-rat-table-section {
-background: #fff;
-border-radius: 16px;
-max-width: 1180px; 
-margin: 4px auto 30px 15px;
-padding: 26px 32px 0px 12px;
-box-shadow: 0 0 14px #e3e6ee2a;
-border: 2px solid #808080;
-height:380px;
+  background: #fff;
+  border-radius: 16px;
+  max-width: 1180px;
+  margin: 10px 0px 0px 15px;
+  padding: 26px 32px 0px 12px;
+  box-shadow: 0 0 14px #e3e6ee2a;
+  border: 2px solid #808080;
+  width: auto;
+  height: 395px;
 }
 
 .co-rat-table-header-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-position: sticky;
-left: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  left: 0px;
+  z-index: 10;
 }
 
 .co-rat-table-title {
-font-size: 1.25rem;
-font-weight: bold;
-color: #191c2f;
-margin-bottom:33px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #191c2f;
+  margin-top: -16px;
+  margin-left: 10px;
+  margin-bottom: 33px;
 }
 
 .co-rat-table-actions {
-display: flex;
-gap: 16px;
-align-items: center;
-margin-bottom:20px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+  z-index: 9998;
 }
 
-.co-rat-view-status-btn-all, .co-rat-view-status-btn-filtered, .co-rat-print-btn {
-border: none;
-border-radius: 6px;
-padding: 9px 22px;
-font-size: 1rem;
-font-weight: 600;
-cursor: pointer;
+.co-rat-print-btn-green {
+  background: #d23b42;
+  color: #ffffff;
+  padding: 8px 30px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.co-rat-view-status-btn-all {
-background: #4ea24e;
-color: #ffffff;
-border-radius: 11px;
-height:36px;
-}
-.co-rat-view-status-btn-filtered {
-background: #397639; 
-color: #ffffff;
-border-radius: 11px;
-height:36px;
-}
-.co-rat-view-status-btn-all:hover{
-background:#397639;
-}
-.co-rat-print-btn {
-background: #d23b42;
-color: #ffffffff;
-padding: 9px 45px;
-border-radius: 11px;
-z-index: 1001; 
-}
-.co-rat-print-btn:hover{
-background:#a72e33;
+.co-rat-print-btn-green:hover {
+  background: #a72e33;
 }
 
 .co-rat-print-button-container {
-position: relative;
+  position: relative;
+  display: inline-block;
+  z-index: 9999;
 }
 
 .co-rat-export-menu {
-position: absolute; 
-top: 33px;
-right: 0;
-margin-top: 5px;
-background: #fff;
-border: 1px solid #ccc;
-border-radius: 6px;
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-z-index: 1000; 
-min-width: 180px;
-overflow: hidden;
-display: flex;
-flex-direction: column;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 10000;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.co-rat-export-menu-button {
-  display: block;
-  width: 180px;
+.co-rat-export-menu button {
   padding: 10px 15px;
   border: none;
   background: none;
   text-align: left;
   cursor: pointer;
   font-size: 0.95rem;
-  font-weight: 500;
   color: #333;
-  transition: background 0.1s;
-}
-
-.co-rat-export-menu-button:hover {
-  background: #f0f0f0;
-}
-
-.co-rat-export-menu button {
-display: block;
-width: 180px;
-padding: 10px 15px;
-border: none;
-background: none;
-text-align: left;
-cursor: pointer;
-font-size: 0.95rem;
-font-weight: 500;
-color: #333;
-transition: background 0.1s;
+  transition: background-color 0.2s;
 }
 
 .co-rat-export-menu button:hover {
-background: #f0f0f0;
+  background: #f0f0f0;
 }
 
 .co-rat-data-table {
-min-width: 1290px;
-width: 100%;
-border-collapse: separate;
-margin-top: -8px;
-font-size: 1.02rem;
-table-layout: fixed; 
+  width: 100%;
+  border-collapse: separate;
+  margin-top: -8px;
+  font-size: 0.95rem;
+  table-layout: fixed;
+  min-width: 0px;
 }
 
 .co-rat-data-table thead {
-display: block;
-width: 1290px; 
+  display: block;
+  width: 100%;
+  min-width: 0px;
 }
 
 .co-rat-data-table th {
-background: #ffffff;
-font-size: 1rem;
-font-weight: 700;
-color:rgb(175, 175, 175);
-padding: 5px 37px; 
-border-radius: 3px;
-text-align: center;
-border-bottom: 2px solid #f2f0f2;
+  background: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(175, 175, 175);
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 2px solid #f2f0f2;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .co-rat-table-body-scroll {
-  /* vertical scrolling container (scrollbar will be on this element and stay at its right edge) */
-  width: 1160px; /* inner container width so vertical scrollbar stays at its edge */
-  max-height: 290px;
-  overflow-y: auto; /* vertical scroll handled here */
-  overflow-x: visible; /* allow the wide table to overflow so the outer .co-rat-table-section can horizontally scroll it */
-  scrollbar-gutter: stable; /* reserve gutter so content doesn't shift when scrollbar appears */
+  min-height: 294px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  min-width: 0px;
+  padding-right: 0px;
+  position: relative;
 }
-.co-rat-table-body-scroll thead{
-  position:sticky;
-  top:0px;
+
+/* --- RED SCROLLBARS for Coordinator --- */
+.co-rat-table-body-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb {
+  background: #d23b42;
+  border-radius: 4px;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a72e33;
+}
+
+.co-rat-table-body-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+.co-rat-data-table tbody {
+  display: block;
+  width: 100%;
+  min-width: 0px;
+}
+
+.co-rat-data-table tr {
+  display: flex;
+  width: 100%;
+  min-height: 45px;
+}
+
+.co-rat-data-table th,
+.co-rat-data-table td {
+  min-width: 0;
+  text-align: center;
+}
+
+.co-rat-data-table td {
+  padding: 13px 8px;
+  color: #30334e;
+  font-weight: 500;
+  border-bottom: 1.5px solid #f2f0f2;
+  white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+}
+
+/* === Percentage-based column widths (9 columns) === */
+.co-rat-data-table th:nth-child(1), .co-rat-data-table td:nth-child(1) { width: 5%; flex-shrink: 0; }   /* S.No */
+.co-rat-data-table th:nth-child(2), .co-rat-data-table td:nth-child(2) { width: 16%; flex-shrink: 0; }  /* Name */
+.co-rat-data-table th:nth-child(3), .co-rat-data-table td:nth-child(3) { width: 13%; flex-shrink: 0; }  /* Register */
+.co-rat-data-table th:nth-child(4), .co-rat-data-table td:nth-child(4) { width: 8%; flex-shrink: 0; }   /* Branch */
+.co-rat-data-table th:nth-child(5), .co-rat-data-table td:nth-child(5) { width: 10%; flex-shrink: 0; }  /* Year */
+.co-rat-data-table th:nth-child(6), .co-rat-data-table td:nth-child(6) { width: 10%; flex-shrink: 0; }  /* Reached */
+.co-rat-data-table th:nth-child(7), .co-rat-data-table td:nth-child(7) { width: 13%; flex-shrink: 0; }  /* Mobile */
+.co-rat-data-table th:nth-child(8), .co-rat-data-table td:nth-child(8) { width: 19%; flex-shrink: 0; }  /* Email */
+.co-rat-data-table th:nth-child(9), .co-rat-data-table td:nth-child(9) { width: 6%; flex-shrink: 0; }   /* View */
+
+/* Enable text wrapping specifically for the email column */
+.co-rat-data-table td:nth-child(8) {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  padding: 8px 4px;
+  text-align: left;
+}
+
+/* Loading spinner styles */
+.co-rat-loading-cell {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  min-height: 300px;
+  padding: 0;
+  border: none !important;
+}
+
+.co-rat-loading-row {
+  display: flex;
+  width: 100%;
+  border-bottom: none !important;
+}
+
+.co-rat-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 40px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  margin: 0 auto !important;
+  text-align: center;
+}
+
+.co-rat-spinner {
+  width: 34px;
+  margin-top: 0;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(210, 59, 66, 0.25);
+  border-top-color: #d23b42;
+  animation: coRatSpin 0.7s linear infinite;
+}
+
+@keyframes coRatSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.co-rat-loading-text {
+  color: #111827;
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
 }
 .co-rat-data-table tbody {
 display: block;

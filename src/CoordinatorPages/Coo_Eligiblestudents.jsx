@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Viewicon from "../assets/Viewicon.png";
 import Dashcompanydrive from '../assets/Dashcompanydrive.png';
 import PlacedStudentsCap from '../assets/PlacedStudentsCap.svg';
@@ -146,6 +147,7 @@ const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
 
 
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
+    useCoordinatorAuth(); // JWT authentication verification
     const navigate = useNavigate();
     
     // START: MODIFIED/NEW STATE FOR EXPORT POPUPS

@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
@@ -180,6 +182,8 @@ const CertificateTableLoader = ({ message }) => (
 );
 
 const Coo_Certificate = ({ onLogout, onViewChange }) => {
+    useCoordinatorAuth(); // JWT authentication verification
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [coordinatorData, setCoordinatorData] = useState(() => readStoredCoordinatorData());
     const coordinatorDepartment = useMemo(

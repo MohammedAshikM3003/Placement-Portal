@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from "./Coo_Dashboard.module.css";
@@ -65,6 +67,8 @@ const ModernAttendanceChart = ({ present, absent }) => {
 
 
 function CoordinatorDashboard({ onLogout, onViewChange }) {
+  useCoordinatorAuth(); // JWT authentication verification
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [collegeLogoUrl, setCollegeLogoUrl] = useState(ksrCollegeImage); // Default fallback
 

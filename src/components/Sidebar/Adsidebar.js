@@ -325,6 +325,11 @@ const Adsidebar = ({ isOpen, onLogout }) => {
               key={item.text}
               to={viewToPath(item.view)}
               className={({ isActive }) => {
+                // Special handling for Student Database - highlight when viewing student profile or certificates
+                if (item.view === 'admin-student-database') {
+                  const shouldHighlight = isActive || isAdminProfilePage || isCertificateViewPage;
+                  return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
+                }
                 // Special handling for Add Branch - highlight on main, form, and manage coordinators pages
                 if (item.view === 'admin-add-branch-main') {
                   const shouldHighlight = isActive || isAddBranchPage || isManageCoordinatorsPage;

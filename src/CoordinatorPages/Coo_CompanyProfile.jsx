@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import{ useState, useEffect, useCallback, useMemo } from "react";
@@ -286,6 +287,7 @@ const sampleCompanyData = [
 ];
 
 function CompanyProfile({ onLogout, currentView, onViewChange }) {
+  useCoordinatorAuth(); // JWT authentication verification
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
