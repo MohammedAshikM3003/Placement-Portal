@@ -153,23 +153,9 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         if (loginResult.role === 'admin') {
           console.log('⏳ Fetching admin profile from database...');
           
-          // Step 1: Attendance data ready (25%)
+          // Dispatch progress events immediately (no delays)
           window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
-            detail: { message: 'Attendance data ready', progress: 25, completed: true }
-          }));
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          // Step 2: Profile data loaded (50%)
-          window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
-            detail: { message: 'Profile data loaded', progress: 50, completed: true }
-          }));
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          // Step 3: Loading admin profile (75%)
-          window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
-            detail: { message: 'Loading admin profile...', progress: 75, completed: false }
+            detail: { message: 'Loading admin profile...', progress: 50, completed: false }
           }));
           
           try {
@@ -245,16 +231,16 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           }
         }
         
-        // For students, wait for essential data to load before navigating
+        // For students, navigate immediately - data loads in background
         if (loginResult.role === 'student') {
-          console.log('⏳ Waiting for student data to load...');
+          console.log('⏳ Waiting for essential student data...');
           
-          // Wait for the 'studentDataReady' event (max 8 seconds)
+          // Wait for the 'studentDataReady' event (max 3 seconds then navigate anyway)
           const dataReadyPromise = new Promise((resolve) => {
             const timeout = setTimeout(() => {
               console.log('⚠️ Timeout waiting for data, navigating anyway');
               resolve();
-            }, 8000); // 8 second timeout
+            }, 3000); // 3 second timeout (reduced from 8s)
             
             const handler = () => {
               clearTimeout(timeout);

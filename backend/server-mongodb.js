@@ -854,7 +854,10 @@ app.get('/api/company-drives', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected. Cannot fetch drives.' });
         }
 
-        const drives = await CompanyDrive.find({}).sort({ createdAt: -1 });
+        // Cache for 5 minutes for faster landing page loads
+        res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
+
+        const drives = await CompanyDrive.find({}).sort({ createdAt: -1 }).lean();
         res.status(200).json({ drives });
     } catch (error) {
         console.error('Fetch company drives error:', error);
@@ -2086,40 +2089,43 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
     }
 });
 
-// Get all placed students with filters
-// ============ PUBLIC ENDPOINT FOR LANDING PAGE ============
-// GET placed students (PUBLIC - no authentication required for landing page)
-app.get('/api/placed-students', async (req, res) => {
+// ============ PUBLIC ENDPOINT: College Images for Landing Page ============
+// GET college images (PUBLIC - no authentication required)
+// Returns only banner, NAAC, NBA images from admin profile for landing page
+app.get('/api/public/college-images', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ error: 'Database not connected' });
+            return res.status(503).json({ success: false, error: 'Database not connected' });
         }
 
-        const { dept, batch, company, status } = req.query;
-        const query = {};
+        // Cache header: allow browsers/CDN to cache images for 5 minutes
+        res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
 
-        if (dept && dept !== 'All Departments') query.dept = dept;
-        if (batch && batch !== 'All Batches') query.batch = batch;
-        if (company && company !== 'All Companies') query.company = company;
-        if (status && status !== 'All') query.status = status;
+        const AdminModel = require('./models/Admin');
+        const admin = await AdminModel.findOne({ adminLoginID: 'admin1000' })
+            .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
+            .lean();
 
-        const PlacedStudents = mongoose.connection.collection('placed_students');
-        const students = await PlacedStudents.find(query).toArray();
+        if (!admin) {
+            return res.json({ success: true, data: null });
+        }
 
         res.json({
             success: true,
-            data: students,
-            count: students.length
+            data: {
+                collegeBanner: admin.collegeBanner || null,
+                naacCertificate: admin.naacCertificate || null,
+                nbaCertificate: admin.nbaCertificate || null,
+                collegeLogo: admin.collegeLogo || null,
+            }
         });
     } catch (error) {
-        console.error('Error fetching placed students:', error);
-        res.status(500).json({
-            error: 'Failed to fetch placed students',
-            details: error.message
-        });
+        console.error('Error fetching college images:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch college images' });
     }
 });
 
+// Get all placed students with filters
 // ============ PUBLIC ENDPOINT FOR LANDING PAGE ============
 // GET placed students (PUBLIC - no authentication required for landing page)
 app.get('/api/placed-students', async (req, res) => {

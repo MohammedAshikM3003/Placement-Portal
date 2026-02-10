@@ -244,9 +244,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const warmupBackend = async () => {
       try {
-        await authService.apiCall('/health');
+        // Use landing page cache service for warm-up (shares the same backend ping)
+        const { warmUpBackend } = await import('../services/landingPageCacheService');
+        await warmUpBackend();
       } catch (error) {
-        console.error('AuthContext: Backend warm-up failed:', error);
+        // Non-critical - silently fail
       }
     };
 

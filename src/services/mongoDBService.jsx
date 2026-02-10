@@ -276,15 +276,7 @@ class MongoDBService {
   }
 
   async getCompanyDrives() {
-    // Add cache-busting timestamp to prevent browser caching
-    const timestamp = new Date().getTime();
-    const response = await this.apiCall(`/company-drives?_t=${timestamp}`, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    const response = await this.apiCall('/company-drives');
     return response.drives;
   }
 

@@ -5,56 +5,56 @@ import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner.js";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute, { RoleGuard } from "./components/ProtectedRoute.jsx";
 
-// --- LIGHTWEIGHT DIRECT IMPORTS ---
+// --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
 import PlacementPortalLogin from "./mainlogin.jsx";
 import MainSignUp from "./MainSingUp.jsx";
 import MainRegistration from "./MainRegistration.jsx";
 
-// --- ADMIN PAGE IMPORTS ---
-import AdminDashboard from "./AdminPages/Admin_Dashboard.jsx";
-import AdminstudDB from "./AdminPages/AdminstudDB.jsx"; 
-import AdminDBprofile from "./AdminPages/AdminDBprofile.jsx";
-import AdminCompanyprofile from "./AdminPages/AdminCompanyprofile.jsx";
-import AdminCompanyDrive from "./AdminPages/AdminCompanyDrive.jsx"; 
-import AdminCompanyDriveAD from "./AdminPages/AdminCompanyDriveAD.jsx";
-import AdminCompanyDrivedet from "./AdminPages/AdminCompanyDrivedet.jsx";
-import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
-import AdminAtt from "./AdminPages/AdminAttendance.jsx";
-import AdminPlacedStudents from "./AdminPages/AdminPlacedStudents.jsx";
-import AdminRARW from "./AdminPages/AdminRARW.jsx";
-import AdminRACW from "./AdminPages/AdminRACW.jsx";
-import AdminRADW from "./AdminPages/AdminRADW.jsx";
-import AdminRASW from "./AdminPages/AdminRASW.jsx";
-import AdminABM from "./AdminPages/AdAddBranchMainPage.jsx";
-import AdminABN from "./AdminPages/AdAddBranchPage.jsx";
-import Admainprofile from "./AdminPages/AdminmainProfile.jsx";
-import AdminStuProfile from "./AdminPages/AdminEsprofile.jsx"; 
-import AdminEsstudapp from "./AdminPages/AdminEsstudapp.jsx";
-import AdminCoDet from "./AdminPages/AdAddCoordinatorform.jsx";
-import AdExistingCoordinator from "./AdminPages/AdExistingCoordinator.jsx";
-import AdminABcoodet from "./AdminPages/AdminABviewcoo.jsx";
-import AdStuDBCertificateView from "./AdminPages/AdStuDBCertificateView.jsx";
+// --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
+const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
+const AdminstudDB = lazy(() => import("./AdminPages/AdminstudDB.jsx"));
+const AdminDBprofile = lazy(() => import("./AdminPages/AdminDBprofile.jsx"));
+const AdminCompanyprofile = lazy(() => import("./AdminPages/AdminCompanyprofile.jsx"));
+const AdminCompanyDrive = lazy(() => import("./AdminPages/AdminCompanyDrive.jsx"));
+const AdminCompanyDriveAD = lazy(() => import("./AdminPages/AdminCompanyDriveAD.jsx"));
+const AdminCompanyDrivedet = lazy(() => import("./AdminPages/AdminCompanyDrivedet.jsx"));
+const AdminEligiblestudents = lazy(() => import("./AdminPages/AdminEligiblestudents.jsx"));
+const AdminAtt = lazy(() => import("./AdminPages/AdminAttendance.jsx"));
+const AdminPlacedStudents = lazy(() => import("./AdminPages/AdminPlacedStudents.jsx"));
+const AdminRARW = lazy(() => import("./AdminPages/AdminRARW.jsx"));
+const AdminRACW = lazy(() => import("./AdminPages/AdminRACW.jsx"));
+const AdminRADW = lazy(() => import("./AdminPages/AdminRADW.jsx"));
+const AdminRASW = lazy(() => import("./AdminPages/AdminRASW.jsx"));
+const AdminABM = lazy(() => import("./AdminPages/AdAddBranchMainPage.jsx"));
+const AdminABN = lazy(() => import("./AdminPages/AdAddBranchPage.jsx"));
+const Admainprofile = lazy(() => import("./AdminPages/AdminmainProfile.jsx"));
+const AdminStuProfile = lazy(() => import("./AdminPages/AdminEsprofile.jsx"));
+const AdminEsstudapp = lazy(() => import("./AdminPages/AdminEsstudapp.jsx"));
+const AdminCoDet = lazy(() => import("./AdminPages/AdAddCoordinatorform.jsx"));
+const AdExistingCoordinator = lazy(() => import("./AdminPages/AdExistingCoordinator.jsx"));
+const AdminABcoodet = lazy(() => import("./AdminPages/AdminABviewcoo.jsx"));
+const AdStuDBCertificateView = lazy(() => import("./AdminPages/AdStuDBCertificateView.jsx"));
 
-// --- COORDINATOR PAGES ---
-import CoordinatorDashboard from "./CoordinatorPages/Coo_Dashboard.jsx";
-import CoordinatorManageStudents from "./CoordinatorPages/Coo_ManageStudents.jsx";
-import CoordinatorCompanyProfile from "./CoordinatorPages/Coo_CompanyProfile.jsx";
-import CoordinatorCompanyDrive from "./CoordinatorPages/Coo_CompanyDrive.jsx";
-import CoordinatorCertificateVerification from "./CoordinatorPages/Coo_CertificateVerification.jsx";
-import CoordinatorEligibleStudents from "./CoordinatorPages/Coo_Eligiblestudents.jsx";
-import CoordinatorAttendance from "./CoordinatorPages/Coo_Attendance.jsx";
-import CoordinatorPlacedStudents from "./CoordinatorPages/Coo_PlacedStudents.jsx";
-import CoordinatorReportAnalysisCW from "./CoordinatorPages/Coo_ReportAnalysisCW.jsx";
-import CoordinatorReportAnalysisRW from "./CoordinatorPages/Coo_ReportAnalysisRW.jsx";
-import CoordinatorReportAnalysisSW from "./CoordinatorPages/Coo_ReportAnalysisSW.jsx";
-import CoordinatorManageStudentsSemester from "./CoordinatorPages/Coo_ManageStudentsSemester.jsx";
-import CoordinatorProfile from "./CoordinatorPages/Coo_Profile.jsx";
-import CoordinatorManageStudentView from "./CoordinatorPages/Coo_ManageStuViewPage.jsx";
-import CoordinatorManageStudentEdit from "./CoordinatorPages/Coo_ManageStuEditPage.jsx";
-import CoordinatorEligibleStudentView from "./CoordinatorPages/Coo_EligibleStuViewpage.jsx";
-import CoordinatorPlacedStudentView from "./CoordinatorPages/Coo_PlacedStuViewPage.jsx";
-import CoordinatorStuDBCertificateView from "./CoordinatorPages/Coo_StuDBCertificateView.jsx";
+// --- LAZY LOAD COORDINATOR PAGES (only loaded when coordinator navigates to them) ---
+const CoordinatorDashboard = lazy(() => import("./CoordinatorPages/Coo_Dashboard.jsx"));
+const CoordinatorManageStudents = lazy(() => import("./CoordinatorPages/Coo_ManageStudents.jsx"));
+const CoordinatorCompanyProfile = lazy(() => import("./CoordinatorPages/Coo_CompanyProfile.jsx"));
+const CoordinatorCompanyDrive = lazy(() => import("./CoordinatorPages/Coo_CompanyDrive.jsx"));
+const CoordinatorCertificateVerification = lazy(() => import("./CoordinatorPages/Coo_CertificateVerification.jsx"));
+const CoordinatorEligibleStudents = lazy(() => import("./CoordinatorPages/Coo_Eligiblestudents.jsx"));
+const CoordinatorAttendance = lazy(() => import("./CoordinatorPages/Coo_Attendance.jsx"));
+const CoordinatorPlacedStudents = lazy(() => import("./CoordinatorPages/Coo_PlacedStudents.jsx"));
+const CoordinatorReportAnalysisCW = lazy(() => import("./CoordinatorPages/Coo_ReportAnalysisCW.jsx"));
+const CoordinatorReportAnalysisRW = lazy(() => import("./CoordinatorPages/Coo_ReportAnalysisRW.jsx"));
+const CoordinatorReportAnalysisSW = lazy(() => import("./CoordinatorPages/Coo_ReportAnalysisSW.jsx"));
+const CoordinatorManageStudentsSemester = lazy(() => import("./CoordinatorPages/Coo_ManageStudentsSemester.jsx"));
+const CoordinatorProfile = lazy(() => import("./CoordinatorPages/Coo_Profile.jsx"));
+const CoordinatorManageStudentView = lazy(() => import("./CoordinatorPages/Coo_ManageStuViewPage.jsx" /* webpackPrefetch: true */));
+const CoordinatorManageStudentEdit = lazy(() => import("./CoordinatorPages/Coo_ManageStuEditPage.jsx"));
+const CoordinatorEligibleStudentView = lazy(() => import("./CoordinatorPages/Coo_EligibleStuViewpage.jsx"));
+const CoordinatorPlacedStudentView = lazy(() => import("./CoordinatorPages/Coo_PlacedStuViewPage.jsx"));
+const CoordinatorStuDBCertificateView = lazy(() => import("./CoordinatorPages/Coo_StuDBCertificateView.jsx"));
 
 // --- LAZY LOAD STUDENT COMPONENTS ---
 const PlacementPortalDashboard = lazy(() => import("./StudentPages/dashboard.jsx"));
@@ -155,51 +155,51 @@ function AppContent() {
       <Route path="/profile" element={<RoleGuard allowedRoles={['student']}><Suspense fallback={<LoadingSpinner message="Loading Profile..." showAnimatedDots={true} />}><StuProfile onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RoleGuard>} />
 
       {/* COORDINATOR AUTHENTICATED ROUTES */}
-      <Route path="/coo-dashboard" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorDashboard onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-manage-students" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorManageStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-company-profile" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorCompanyProfile onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-company-drive" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorCompanyDrive onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-certificate-verification" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorCertificateVerification onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-eligible-students" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorEligibleStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-attendance" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorAttendance onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-placed-students" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorPlacedStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-report-analysis" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorReportAnalysisRW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-report-analysis-cw" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorReportAnalysisCW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-report-analysis-rw" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorReportAnalysisRW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-report-analysis-sw" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorReportAnalysisSW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-manage-students-semester" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorManageStudentsSemester onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-profile" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorProfile onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-profile/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorManageStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-manage-students/view" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorManageStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-manage-students/edit/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorManageStudentEdit onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-student-certificates/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorStuDBCertificateView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-eligible-students/view" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorEligibleStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
-      <Route path="/coo-placed-students/view" element={<RoleGuard allowedRoles={['coordinator']}><CoordinatorPlacedStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></RoleGuard>} />
+      <Route path="/coo-dashboard" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><CoordinatorDashboard onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-manage-students" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-company-profile" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorCompanyProfile onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-company-drive" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorCompanyDrive onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-certificate-verification" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorCertificateVerification onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-eligible-students" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorEligibleStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-attendance" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorAttendance onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-placed-students" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorPlacedStudents onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-report-analysis" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisRW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-report-analysis-cw" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisCW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-report-analysis-rw" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisRW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-report-analysis-sw" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisSW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-manage-students-semester" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentsSemester onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-profile" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorProfile onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-profile/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-manage-students/view" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-manage-students/edit/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentEdit onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-student-certificates/:studentId" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorStuDBCertificateView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-eligible-students/view" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorEligibleStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
+      <Route path="/coo-placed-students/view" element={<RoleGuard allowedRoles={['coordinator']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorPlacedStudentView onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RoleGuard>} />
 
       {/* ADMIN ROUTES */}
-      <Route path="/admin-dashboard" element={<RoleGuard allowedRoles={['admin']}><AdminDashboard onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-student-database" element={<RoleGuard allowedRoles={['admin']}><AdminstudDB onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-profile/:studentId" element={<RoleGuard allowedRoles={['admin']}><AdminDBprofile onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-student-certificates/:studentId" element={<RoleGuard allowedRoles={['admin']}><AdStuDBCertificateView onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-company-profile" element={<RoleGuard allowedRoles={['admin']}><AdminCompanyprofile onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-company-drive" element={<RoleGuard allowedRoles={['admin']}><AdminCompanyDrive onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin/company-drive/add" element={<RoleGuard allowedRoles={['admin']}><AdminCompanyDriveAD onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin/company-drive/details" element={<RoleGuard allowedRoles={['admin']}><AdminCompanyDrivedet onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-eligible-students" element={<RoleGuard allowedRoles={['admin']}><AdminEligiblestudents onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-attendance" element={<RoleGuard allowedRoles={['admin']}><AdminAtt onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-placed-students" element={<RoleGuard allowedRoles={['admin']}><AdminPlacedStudents onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-report-analysis-rarw" element={<RoleGuard allowedRoles={['admin']}><AdminRARW onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-report-analysis-company" element={<RoleGuard allowedRoles={['admin']}><AdminRACW onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-report-analysis-department" element={<RoleGuard allowedRoles={['admin']}><AdminRADW onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-report-analysis-student" element={<RoleGuard allowedRoles={['admin']}><AdminRASW onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-add-branch-main" element={<RoleGuard allowedRoles={['admin']}><AdminABM onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-add-branch" element={<RoleGuard allowedRoles={['admin']}><AdminABN onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-profile-main" element={<RoleGuard allowedRoles={['admin']}><Admainprofile onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/AdminEsprofile/:studentId" element={<RoleGuard allowedRoles={['admin']}><AdminStuProfile onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-student-application" element={<RoleGuard allowedRoles={['admin']}><AdminEsstudapp onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-coordinator-detail" element={<RoleGuard allowedRoles={['admin']}><AdminCoDet onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-manage-coordinators/:branchCode" element={<RoleGuard allowedRoles={['admin']}><AdExistingCoordinator onLogout={() => navigate('/')} /></RoleGuard>} />
-      <Route path="/admin-view-coordinator/:coordinatorId" element={<RoleGuard allowedRoles={['admin']}><AdminABcoodet onLogout={() => navigate('/')} /></RoleGuard>} />
+      <Route path="/admin-dashboard" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><AdminDashboard onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-student-database" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminstudDB onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-profile/:studentId" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminDBprofile onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-student-certificates/:studentId" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdStuDBCertificateView onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-company-profile" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyprofile onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-company-drive" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrive onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin/company-drive/add" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDriveAD onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin/company-drive/details" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrivedet onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-eligible-students" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminEligiblestudents onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-attendance" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAtt onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-placed-students" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPlacedStudents onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-report-analysis-rarw" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminRARW onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-report-analysis-company" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminRACW onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-report-analysis-department" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminRADW onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-report-analysis-student" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminRASW onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-add-branch-main" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminABM onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-add-branch" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminABN onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-profile-main" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><Admainprofile onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/AdminEsprofile/:studentId" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminStuProfile onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-student-application" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminEsstudapp onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-coordinator-detail" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCoDet onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-manage-coordinators/:branchCode" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdExistingCoordinator onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
+      <Route path="/admin-view-coordinator/:coordinatorId" element={<RoleGuard allowedRoles={['admin']}><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminABcoodet onLogout={() => navigate('/')} /></Suspense></RoleGuard>} />
 
       {/* FALLBACK */}
       <Route path="*" element={<LandingPage />} />

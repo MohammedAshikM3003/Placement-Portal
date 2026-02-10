@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
 import Navbar from "../src/components/Navbar/LandingNavbar.js";
-import mongoDBService from './services/mongoDBService.jsx';
-import { fetchCollegeImages } from './services/collegeImagesService';
+import { fetchAllLandingData } from './services/landingPageCacheService';
+import { PlacedStudentsSkeleton, DrivesSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 
 // --- Assets (Fallback images) ---
 import ksrLogo from './assets/LandingksrLogo.png';
@@ -80,60 +80,40 @@ const StudentCard = ({ name, branch, company, pkg, role, profilePhoto }) => (
     </div>
 );
 
-const PlacementPage = () => {
-    const [students, setStudents] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [stats, setStats] = useState({
-        highestPackage: '0 LPA',
-        averagePackage: '0 LPA'
-    });
+const PlacementPage = ({ placedStudentsData }) => {
+    // Derive state from pre-fetched data (no separate API call needed)
+    const { students, stats, isLoading } = useMemo(() => {
+        if (!placedStudentsData) {
+            return { students: [], stats: { highestPackage: '0 LPA', averagePackage: '0 LPA' }, isLoading: true };
+        }
 
-    useEffect(() => {
-        const fetchPlacedStudents = async () => {
-            try {
-                setIsLoading(true);
-                console.log('Fetching placed students...');
-                const response = await mongoDBService.getPlacedStudents();
-                console.log('Response:', response);
-                
-                if (response.success && response.data) {
-                    console.log('Number of students:', response.data.length);
-                    console.log('Full student data:', response.data);
-                    // Map data to the format expected by StudentCard
-                    const mappedStudents = response.data.map(student => ({
-                        name: student.name,
-                        branch: student.dept, // Branch abbreviation
-                        company: student.company,
-                        pkg: student.pkg,
-                        role: student.role,
-                        profilePhoto: student.profilePicURL || student.profilePhoto || null
-                    }));
-                    console.log('Mapped students:', mappedStudents);
-                    setStudents(mappedStudents);
+        const response = placedStudentsData;
+        if (response.success && response.data && response.data.length > 0) {
+            const mappedStudents = response.data.map(student => ({
+                name: student.name,
+                branch: student.dept,
+                company: student.company,
+                pkg: student.pkg,
+                role: student.role,
+                profilePhoto: student.profilePicURL || student.profilePhoto || null
+            }));
 
-                    // Calculate statistics
-                    if (mappedStudents.length > 0) {
-                        const packages = mappedStudents.map(s => parseFloat(s.pkg) || 0);
-                        const highest = Math.max(...packages);
-                        const average = packages.reduce((sum, pkg) => sum + pkg, 0) / packages.length;
-                        
-                        setStats({
-                            highestPackage: highest.toFixed(1) + ' LPA',
-                            averagePackage: average.toFixed(1) + ' LPA'
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch placed students:', error);
-                // Fallback to empty array
-                setStudents([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+            const packages = mappedStudents.map(s => parseFloat(s.pkg) || 0);
+            const highest = Math.max(...packages);
+            const average = packages.reduce((sum, pkg) => sum + pkg, 0) / packages.length;
 
-        fetchPlacedStudents();
-    }, []);
+            return {
+                students: mappedStudents,
+                stats: {
+                    highestPackage: highest.toFixed(1) + ' LPA',
+                    averagePackage: average.toFixed(1) + ' LPA'
+                },
+                isLoading: false
+            };
+        }
+
+        return { students: [], stats: { highestPackage: '0 LPA', averagePackage: '0 LPA' }, isLoading: false };
+    }, [placedStudentsData]);
 
     // Only duplicate students for scrolling if there are more than 4
     // Otherwise show them as-is without animation
@@ -161,8 +141,8 @@ const PlacementPage = () => {
        <div className={styles['placed-students-section']}>
         <h2 className={styles['placed-students-title']}>PLACED STUDENTS</h2>
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666', marginTop: '80px' }}>
-            <p>Loading placed students...</p>
+          <div style={{ marginTop: '80px' }}>
+            <PlacedStudentsSkeleton count={5} />
           </div>
         ) : students.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666', marginTop: '80px' }}>
@@ -191,65 +171,49 @@ const PlacementPage = () => {
     );
 };
 
-const PlacementSection = () => {
-    const [driveData, setDriveData] = useState([]);
+const PlacementSection = ({ companyDrivesData }) => {
+    // Derive formatted drives from pre-fetched data
+    const { driveData, isLoading } = useMemo(() => {
+        if (!companyDrivesData) {
+            return { driveData: [], isLoading: true };
+        }
 
-    useEffect(() => {
-        const fetchDrives = async () => {
-            try {
-                const drives = await mongoDBService.getCompanyDrives();
-                
-                // Sort drives by startingDate in ascending order (earliest first)
-                const sortedDrives = (drives || []).sort((a, b) => {
-                    const dateA = a.startingDate ? new Date(a.startingDate) : new Date('9999-12-31');
-                    const dateB = b.startingDate ? new Date(b.startingDate) : new Date('9999-12-31');
-                    return dateA - dateB;
-                });
-                
-                // Transform drives to display format
-                const formattedDrives = sortedDrives.map(drive => {
-                    // Format date to dd-mm-yyyy
-                    const formatDate = (dateString) => {
-                        if (!dateString) return 'TBA';
-                        const date = new Date(dateString);
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const year = date.getFullYear();
-                        return `${day}-${month}-${year}`;
-                    };
+        const drives = companyDrivesData.drives || [];
+        
+        // Sort drives by startingDate in ascending order (earliest first)
+        const sortedDrives = [...drives].sort((a, b) => {
+            const dateA = a.startingDate ? new Date(a.startingDate) : new Date('9999-12-31');
+            const dateB = b.startingDate ? new Date(b.startingDate) : new Date('9999-12-31');
+            return dateA - dateB;
+        });
 
-                    // Get first letter of company name for initial
-                    const initial = drive.companyName ? drive.companyName.charAt(0).toUpperCase() : '?';
-                    
-                    // Map company name to gradient class (simplified - use first letter based color)
-                    const gradientClass = `company-gradient-${initial.toLowerCase()}`;
-
-                    // Format package display
-                    let packageDisplay = 'Not Specified';
-                    if (drive.package) {
-                        packageDisplay = drive.package;
-                    } else if (drive.ctc) {
-                        packageDisplay = drive.ctc;
-                    }
-
-                    return {
-                        name: drive.companyName || 'Unknown Company',
-                        initial: initial,
-                        date: formatDate(drive.startingDate),
-                        package: packageDisplay,
-                        gradient: gradientClass
-                    };
-                });
-
-                setDriveData(formattedDrives);
-            } catch (error) {
-                console.error('Failed to fetch drives:', error);
-                setDriveData([]); // Set empty array on error
-            }
+        const formatDate = (dateString) => {
+            if (!dateString) return 'TBA';
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         };
 
-        fetchDrives();
-    }, []);
+        const formattedDrives = sortedDrives.map(drive => {
+            const initial = drive.companyName ? drive.companyName.charAt(0).toUpperCase() : '?';
+            const gradientClass = `company-gradient-${initial.toLowerCase()}`;
+            let packageDisplay = 'Not Specified';
+            if (drive.package) packageDisplay = drive.package;
+            else if (drive.ctc) packageDisplay = drive.ctc;
+
+            return {
+                name: drive.companyName || 'Unknown Company',
+                initial,
+                date: formatDate(drive.startingDate),
+                package: packageDisplay,
+                gradient: gradientClass
+            };
+        });
+
+        return { driveData: formattedDrives, isLoading: false };
+    }, [companyDrivesData]);
 
     return (
      <div className={styles['placement-section-container']}>
@@ -264,7 +228,11 @@ const PlacementSection = () => {
       </section>
       <section className={styles['upcoming-drives-section']} id="drive">
        <h2 className={styles['upcoming-drives-title']}>UPCOMING DRIVES</h2>
-       {driveData.length === 0 ? (
+       {isLoading ? (
+        <div style={{ padding: '20px 0' }}>
+         <DrivesSkeleton count={4} />
+        </div>
+       ) : driveData.length === 0 ? (
         <div className={styles['no-drives-message']}>
          <p>No upcoming drives scheduled at this time. Please check back later!</p>
         </div>
@@ -351,19 +319,24 @@ const KSRSection = ({ collegeImages }) => {
 
 const LandingPageContent = () => {
     const [collegeImages, setCollegeImages] = useState(null);
+    const [placedStudentsData, setPlacedStudentsData] = useState(null);
+    const [companyDrivesData, setCompanyDrivesData] = useState(null);
 
     useEffect(() => {
-        // Fetch college images from DB on component mount
-        const loadCollegeImages = async () => {
-            const images = await fetchCollegeImages();
-            if (images) {
-                setCollegeImages(images);
-                console.log('✅ College images loaded for landing page');
-            } else {
-                console.log('⚠️ Using fallback images for landing page');
+        // Fetch ALL landing page data in PARALLEL with caching
+        const loadAllData = async () => {
+            try {
+                const { placedStudents, companyDrives, collegeImages: images } = await fetchAllLandingData();
+                
+                // Set all state at once - React batches these updates
+                setPlacedStudentsData(placedStudents);
+                setCompanyDrivesData(companyDrives);
+                if (images) setCollegeImages(images);
+            } catch (error) {
+                console.error('Landing page data fetch error:', error);
             }
         };
-        loadCollegeImages();
+        loadAllData();
     }, []);
 
     return (
@@ -372,8 +345,8 @@ const LandingPageContent = () => {
             <Navbar />
             <main className={styles['main-content']}>
                 <HeroSection collegeImages={collegeImages} />
-                <PlacementPage />
-                <PlacementSection />
+                <PlacementPage placedStudentsData={placedStudentsData} />
+                <PlacementSection companyDrivesData={companyDrivesData} />
                 <KSRSection collegeImages={collegeImages} />
             </main>
         </div>

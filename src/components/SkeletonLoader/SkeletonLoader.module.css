@@ -1,0 +1,135 @@
+/* Skeleton Loader Shimmer Animations */
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 37%, #e8e8e8 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Student Card Skeleton */
+.studentCardSkeleton {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 15px;
+  text-align: center;
+  flex-shrink: 0;
+  width: 220px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.07);
+  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.skeletonPhotoContainer {
+  background-color: #f8f8f8;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 20px 10px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skeletonDetails {
+  text-align: left;
+  width: 100%;
+  padding: 0 5px;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.skeletonBlock {
+  border-radius: 8px;
+}
+
+/* Drive Card Skeleton */
+.driveCardSkeleton {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 25px;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  width: 220px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.skeletonCircle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 20px auto;
+}
+
+/* Highlight Card Skeleton */
+.highlightCardSkeleton {
+  background-color: #f0f4ff;
+  border-radius: 24px;
+  padding: 30px;
+  text-align: center;
+  width: 350px;
+  height: 300px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+}
+
+/* Banner Skeleton */
+.bannerSkeleton {
+  background-color: #ffffff;
+  padding: 20px 5%;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Row layout for multiple skeletons */
+.skeletonRow {
+  display: flex;
+  gap: 35px;
+  justify-content: center;
+  flex-wrap: nowrap;
+  padding: 0 40px;
+  overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .studentCardSkeleton,
+  .driveCardSkeleton {
+    width: 180px;
+  }
+
+  .highlightCardSkeleton {
+    width: 280px;
+    height: 200px;
+  }
+
+  .skeletonRow {
+    gap: 15px;
+    padding: 0 15px;
+  }
+
+  .bannerSkeleton {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+}
