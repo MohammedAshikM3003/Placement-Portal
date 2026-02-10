@@ -106,7 +106,7 @@ function Attendance({ onLogout, onViewChange }) {
                     currentView={'attendance'} 
                     studentData={studentData}
                 />
-                <div className={`${styles.attendanceArea} dashboard-area`}>
+                <div className={styles.attendanceArea}>
                     <div className={styles.attendanceCards}>
                         {/* Total Percentage Card */}
                         <div className={`${styles.attendanceCard} ${styles.percentageCard}`}>

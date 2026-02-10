@@ -595,7 +595,7 @@ const StudentDetailsPopup = ({
             onClick={handleSaveClick}
             disabled={isSaving}
           >
-            {isSaving ? 'Saving…' : 'Save'}
+            {isSaving ? 'Savingâ€¦' : 'Save'}
           </button>
         </div>
       </div>
@@ -1068,154 +1068,6 @@ function ManageStudentsSemester({ onLogout, currentView, onViewChange }) {
   return (
    
     <div className={styles['co-ms-sem-main-content']}>
-      <style>{`
-        .filter-header {
-            background: #dbdada;
-            border-radius: 20px;
-            padding: 30px 0px;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            margin-top: 40px;
-            width: 1062px;
-            margin-left: 330px;
-            height: 237px;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .semester-btn {
-            align-self: flex-end;
-            background: #c93544;
-            color: #fff;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 200px;
-            height: 70px;
-            font-size: 1.05rem;
-            margin-right: 428px;
-            margin-top: -10px;
-        }
-
-        .filters-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-            margin-left: 38px;
-            margin-top: 10px;
-        }
-
-        .dropdown, .dropdown-alt {
-            padding: 10px 18px;
-            border-radius: 12px;
-            background: #fff;
-            font-size: 16px;
-            height: 60px;
-            outline: none;
-            width: 315px;
-            border: none;
-            color: #8a8a8a;
-            cursor: pointer;
-        }
-
-        .dropdown-alt {
-            margin-left: 20px;
-        }
-
-        .floating-field {
-            position: relative;
-            width: 315px;
-        }
-
-        .floating-input {
-            width: 100%;
-            padding: 35px 14px 6px 14px;
-            border-radius: 12px;
-            border: none;
-            background: #fff;
-            font-size: 16px;
-            color: #4a4848;
-            box-sizing: border-box;
-        }
-
-        .floating-label {
-            position: absolute;
-            left: 14px;
-            top: 18px;
-            color: #8a8a8a;
-            font-size: 1.05rem;
-            pointer-events: none;
-            transition: transform 150ms ease, font-size 150ms ease, top 150ms ease, color 150ms ease;
-        }
-
-        .floating-field.filled .floating-label,
-        .floating-input:focus + .floating-label {
-            top: -17px;
-            font-size: 13px;
-            color: #c93544;
-        }
-
-        .filter-btn {
-            background: #fff;
-            border: 2px solid #c93544;
-            color: #c93544;
-            font-weight: 600;
-            border-radius: 8px;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-left: 20px;
-            transition: all 150ms ease;
-        }
-
-        .filter-btn:hover {
-            background: #c93544;
-            color: #fff;
-        }
-
-        .filter-btn-clear {
-            background: #e9e9e9;
-            border: 2px solid #4a4848;
-            color: #4a4848;
-            font-weight: 600;
-            border-radius: 8px;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: all 150ms ease;
-        }
-
-        .filter-btn-clear:hover {
-            background-color: #fff;
-            border: 2px solid #c93544;
-            color: #c93544;
-        }
-
-        @media (max-width: 768px) {
-            .filter-header {
-                width: 100%;
-                margin-left: 0;
-                height: auto;
-                padding: 16px;
-            }
-            .semester-btn {
-                margin-right: 0;
-                width: 100%;
-            }
-            .filters-row {
-                margin-left: 0;
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .floating-field, .dropdown, .dropdown-alt {
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-      `}</style>
       
       <Navbar  onToggleSidebar={toggleSidebar}  onHamburgerClick={() => setSidebarOpen(prev => !prev)} isMenuOpen={sidebarOpen} />
       <Sidebar 
@@ -1228,23 +1080,23 @@ function ManageStudentsSemester({ onLogout, currentView, onViewChange }) {
       />
 
       {/* Filter Card */}
-      <div className="filter-card-container" style={{padding: '10px 20px'}}>
-        <div className="filter-header">
-          <button className="semester-btn">Semester</button>
+      <div className={styles['co-ms-sem-filter-card-container']} style={{padding: '10px 20px'}}>
+        <div className={styles['co-ms-sem-filter-header']}>
+          <button className={styles['co-ms-sem-semester-btn']}>Semester</button>
 
-          <div className="filters-row">
-            <div className={`floating-field ${controlFilters.name ? 'filled' : ''}`}>
+          <div className={styles['co-ms-sem-filters-row']}>
+            <div className={styles['co-ms-sem-floating-field']}>
               <input
-                className="floating-input"
+                className={styles['co-ms-sem-floating-input']}
                 name="name"
                 value={controlFilters.name}
                 onChange={handleInputChange}
               />
-              <label className="floating-label">Search by Name</label>
+              <label className={styles['co-ms-sem-floating-label']}>Search by Name</label>
             </div>
 
             <select
-              className="dropdown"
+              className={styles['co-ms-sem-dropdown']}
               name="semester"
               value={controlFilters.semester || 'Search by Sem'}
               onChange={handleInputChange}
@@ -1256,7 +1108,7 @@ function ManageStudentsSemester({ onLogout, currentView, onViewChange }) {
             </select>
 
             <select
-              className="dropdown"
+              className={styles['co-ms-sem-dropdown']}
               name="year"
               value={controlFilters.year || 'Search by Year'}
               onChange={handleInputChange}
@@ -1267,27 +1119,27 @@ function ManageStudentsSemester({ onLogout, currentView, onViewChange }) {
               ))}
             </select>
 
-            <div className={`floating-field ${controlFilters.regNo ? 'filled' : ''}`}>
+            <div className={styles['co-ms-sem-floating-field']}>
               <input
-                className="floating-input"
+                className={styles['co-ms-sem-floating-input']}
                 name="regNo"
                 value={controlFilters.regNo}
                 onChange={handleInputChange}
               />
-              <label className="floating-label">Search by Reg.no</label>
+              <label className={styles['co-ms-sem-floating-label']}>Search by Reg.no</label>
             </div>
 
             
             
-            <button className="filter-btn" onClick={handleApplyFilters}>
+            <button className={styles['co-ms-sem-filter-btn']} onClick={handleApplyFilters}>
               Apply Filters
             </button>
             
-            <button className="filter-btn-clear" onClick={handleClearFilters}>
+            <button className={styles['co-ms-sem-filter-btn-clear']} onClick={handleClearFilters}>
               Clear Filters
             </button>
             <select
-              className="dropdown-alt"
+              className={styles['co-ms-sem-dropdown-alt']}
               name="section"
               value={controlFilters.section || 'Search by Section'}
               onChange={handleInputChange}
@@ -1339,7 +1191,7 @@ function ManageStudentsSemester({ onLogout, currentView, onViewChange }) {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td className={styles['co-ms-sem-loading']} colSpan="8">Loading students…</td>
+                  <td className={styles['co-ms-sem-loading']} colSpan="8">Loading studentsâ€¦</td>
                 </tr>
               )}
               {loadError && !isLoading && (

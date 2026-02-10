@@ -1083,7 +1083,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                         <tr className={styles["co-ms-loading-row"]}>
                                             <td colSpan="9" className={styles["co-ms-loading-cell"]}>
                                                 <div className={styles["co-ms-loading-wrapper"]}>
-                                                    <div className={achStyles['table-spinner']} style={{ width: 34, height: 34, borderWidth: 4 }}></div>
+                                                    <div className={styles['co-ms-spinner']}></div>
                                                     <span style={{ color: '#1f2937', fontWeight: 600, fontSize: '0.95rem' }}>Loading students…</span>
                                                 </div>
                                             </td>

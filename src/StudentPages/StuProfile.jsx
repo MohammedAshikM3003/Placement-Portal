@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
 import styles from './StuProfile.module.css'; // Module Import
+import achievementStyles from './Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/BlueAdminicon.png';
 import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
@@ -80,91 +81,12 @@ const SuccessPopup = ({ isOpen, onClose }) => {
     return (
         <div className={styles.popupOverlay}>
             {/* Reuse Achievements-style animated success card */}
-            <div className="Achievement-popup-container">
-                <style>{`
-                  .Achievement-popup-container {
-                      background-color: #fff;
-                      border-radius: 12px;
-                      width: 400px;
-                      max-width: 90vw;
-                      text-align: center;
-                      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                      overflow: hidden;
-                      font-family: 'Poppins', sans-serif;
-                  }
-                  .Achievement-popup-header {
-                      background-color: #197AFF;
-                      color: white;
-                      padding: 1rem;
-                      font-size: 1.75rem;
-                      font-weight: 700;
-                  }
-                  .Achievement-popup-body {
-                      padding: 2rem;
-                  }
-                  .Achievement-popup-footer {
-                      padding: 1.5rem;
-                      background-color: #f7f7f7;
-                  }
-                  .Achievement-popup-close-btn {
-                      background-color: #D23B42;
-                      color: white;
-                      border: none;
-                      padding: 0.8rem 1.5rem;
-                      border-radius: 8px;
-                      font-size: 1rem;
-                      font-weight: 600;
-                      cursor: pointer;
-                      transition: background-color 0.2s, box-shadow 0.2s;
-                      box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
-                  }
-                  .Achievement-popup-close-btn:hover {
-                      background-color: #b53138;
-                      box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
-                  }
-                  .Achievement-success-icon {
-                      width: 80px;
-                      height: 80px;
-                      border-radius: 50%;
-                      display: block;
-                      stroke-width: 2;
-                      stroke: #fff;
-                      stroke-miterlimit: 10;
-                      margin: 0 auto;
-                      box-shadow: inset 0 0 0 #22C55E;
-                      animation: Achievement-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
-                  }
-                  .Achievement-success-icon--circle {
-                      stroke-dasharray: 166;
-                      stroke-dashoffset: 166;
-                      stroke-width: 2;
-                      stroke-miterlimit: 10;
-                      stroke: #22C55E;
-                      fill: none;
-                      animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-                  }
-                  .Achievement-success-icon--check {
-                      transform-origin: 50% 50%;
-                      stroke-dasharray: 48;
-                      stroke-dashoffset: 48;
-                      animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-                  }
-                  @keyframes Achievement-stroke {
-                      100% { stroke-dashoffset: 0; }
-                  }
-                  @keyframes Achievement-scale {
-                      0%, 100% { transform: none; }
-                      50% { transform: scale3d(1.1, 1.1, 1); }
-                  }
-                  @keyframes Achievement-fill {
-                      100% { box-shadow: inset 0 0 0 40px #22C55E; }
-                  }
-                `}</style>
-                <div className="Achievement-popup-header">Saved!</div>
-                <div className="Achievement-popup-body">
-                    <svg className="Achievement-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className="Achievement-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-                        <path className="Achievement-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            <div className={achievementStyles['Achievement-popup-container']}>
+                <div className={achievementStyles['Achievement-popup-header']}>Saved!</div>
+                <div className={achievementStyles['Achievement-popup-body']}>
+                    <svg className={achievementStyles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle className={achievementStyles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+                        <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
                     </svg>
                     <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
                         Changes Saved ✓
@@ -176,8 +98,8 @@ const SuccessPopup = ({ isOpen, onClose }) => {
                         Successfully saved in the Portal
                     </p>
                 </div>
-                <div className="Achievement-popup-footer">
-                    <button onClick={onClose} className="Achievement-popup-close-btn">Close</button>
+                <div className={achievementStyles['Achievement-popup-footer']}>
+                    <button onClick={onClose} className={achievementStyles['Achievement-popup-close-btn']}>Close</button>
                 </div>
             </div>
         </div>

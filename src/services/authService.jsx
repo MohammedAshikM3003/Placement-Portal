@@ -17,6 +17,30 @@ class AuthService {
     
     this.baseURL = process.env.REACT_APP_API_URL || defaultBackendUrl;
     console.log('🔧 Backend URL:', this.baseURL);
+    
+    // Auth result cache for rapid repeated checks
+    this._authCache = { valid: null, ts: 0 };
+    this._studentCache = { data: null, ts: 0, raw: null };
+  }
+
+  // Decode JWT payload without verification (client-side expiry check)
+  _decodeTokenPayload(token) {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  // Check if JWT is expired client-side (no network call)
+  isTokenExpired(token) {
+    const payload = this._decodeTokenPayload(token);
+    if (!payload || !payload.exp) return true;
+    // Add 30-second buffer
+    return (payload.exp * 1000) < (Date.now() + 30000);
   }
 
   // Helper method for API calls
@@ -407,17 +431,35 @@ class AuthService {
     }
   }
 
-  // Check if user is logged in
+  // Check if user is logged in (cached — avoids repeated localStorage reads)
   isLoggedIn() {
+    const now = Date.now();
+    if (this._authCache.valid !== null && (now - this._authCache.ts < 2000)) {
+      return this._authCache.valid;
+    }
     const token = localStorage.getItem('authToken');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    return !!(token && isLoggedIn);
+    const result = !!(token && isLoggedIn && !this.isTokenExpired(token));
+    this._authCache = { valid: result, ts: now };
+    return result;
   }
 
-  // Get current student data
+  // Invalidate auth cache (call on login/logout)
+  _invalidateAuthCache() {
+    this._authCache = { valid: null, ts: 0 };
+    this._studentCache = { data: null, ts: 0, raw: null };
+  }
+
+  // Get current student data (cached — avoids repeated JSON.parse)
   getCurrentStudent() {
-    const studentData = localStorage.getItem('studentData');
-    return studentData ? JSON.parse(studentData) : null;
+    const now = Date.now();
+    const raw = localStorage.getItem('studentData');
+    if (this._studentCache.data && this._studentCache.raw === raw && (now - this._studentCache.ts < 5000)) {
+      return this._studentCache.data;
+    }
+    const data = raw ? JSON.parse(raw) : null;
+    this._studentCache = { data, ts: now, raw };
+    return data;
   }
 
   // Logout
@@ -460,6 +502,7 @@ class AuthService {
     localStorage.removeItem('userRole'); // Legacy
     
     console.log('🧹 All session data cleared');
+    this._invalidateAuthCache();
   }
 
   // Update student profile
@@ -496,7 +539,7 @@ class AuthService {
     return localStorage.getItem('authToken');
   }
 
-  // Verify token validity
+  // Verify token validity (fast client-side check, no network call unless expired)
   async verifyToken() {
     try {
       const token = this.getAuthToken();
@@ -504,14 +547,14 @@ class AuthService {
         return { valid: false, error: 'No token found' };
       }
 
-      // Make a simple API call to verify token
-      await this.apiCall('/health', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fast path: check expiry client-side (no server roundtrip)
+      if (!this.isTokenExpired(token)) {
+        return { valid: true };
+      }
 
-      return { valid: true };
+      // Token is expired or close to expiry
+      this._invalidateAuthCache();
+      return { valid: false, error: 'Token expired' };
     } catch (error) {
       console.error('Token verification error:', error);
       return { valid: false, error: error.message };

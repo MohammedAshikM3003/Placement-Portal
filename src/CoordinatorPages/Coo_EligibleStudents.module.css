@@ -1,3 +1,23 @@
+/* Layout wrapper classes */
+.coordinator-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.coordinator-main-layout {
+  display: flex;
+  flex: 1;
+  margin-top: 65px;
+}
+
+.coordinator-content-area {
+  flex: 1 1;
+  background: #fff;
+  margin-left: 270px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
 .co-es-container {
   font-family: 'Poppins', Arial, sans-serif;
   background: #f8f8fb;

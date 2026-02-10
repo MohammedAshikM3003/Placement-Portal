@@ -323,12 +323,12 @@ const normalizeInitialCertificateData = (rawData = {}) => {
 
 // ++ NEW: Success Popup Component for Edit ++
 const SuccessPopup = ({ onClose }) => (
-  <div className="Edit-popup-container">
-    <div className="Edit-popup-header">Edit !</div>
-    <div className="Edit-popup-body">
-      <svg className="Edit-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-        <circle className="Edit-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-        <path className="Edit-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+  <div className={styles['Edit-popup-container']}>
+    <div className={styles['Edit-popup-header']}>Edit !</div>
+    <div className={styles['Edit-popup-body']}>
+      <svg className={styles['Edit-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className={styles['Edit-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+        <path className={styles['Edit-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
       </svg>
       <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Updated ✓
@@ -337,8 +337,8 @@ const SuccessPopup = ({ onClose }) => (
         Changes are Updated
       </p>
     </div>
-    <div className="Edit-popup-footer">
-      <button onClick={onClose} className="Edit-popup-close-btn">
+    <div className={styles['Edit-popup-footer']}>
+      <button onClick={onClose} className={styles['Edit-popup-close-btn']}>
         Close
       </button>
     </div>
@@ -347,12 +347,12 @@ const SuccessPopup = ({ onClose }) => (
 
 // ++ NEW: Error Popup Component ++
 const ErrorPopup = ({ onClose, errorMessage }) => (
-  <div className="Edit-popup-container">
-    <div className="Edit-popup-header" style={{  }}>Update Failed!</div>
-    <div className="Edit-popup-body">
-      <svg className="Edit-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-        <circle className="Edit-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-        <path className="Edit-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
+  <div className={styles['Edit-popup-container']}>
+    <div className={styles['Edit-popup-header']} style={{  }}>Update Failed!</div>
+    <div className={styles['Edit-popup-body']}>
+      <svg className={styles['Edit-error-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className={styles['Edit-error-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+        <path className={styles['Edit-error-icon--cross']} fill="none" d="M16 16l20 20M36 16L16 36"/>
       </svg>
       <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Update Failed ✗
@@ -361,8 +361,8 @@ const ErrorPopup = ({ onClose, errorMessage }) => (
         {errorMessage || "Certificate update failed"}
       </p>
     </div>
-    <div className="Edit-popup-footer">
-      <button onClick={onClose} className="Edit-popup-close-btn">
+    <div className={styles['Edit-popup-footer']}>
+      <button onClick={onClose} className={styles['Edit-popup-close-btn']}>
         Close
       </button>
     </div>
@@ -659,115 +659,6 @@ Please compress your PDF or choose a smaller file.`);
 
   return (
     <>
-      <style>{`
-        /* --- Form Styles (No changes needed) --- */
-        .input-hover {
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          border: 1.5px solid #bddaed; border-radius: 10px; background: #f8faff;
-          color: #3A4957; font-family: "Poppins", sans-serif; font-weight: 500;
-          letter-spacing: .03em; font-size: 15.4px; padding: 12px 16px 12px 13px;
-          outline: none; width: 100%; box-sizing: border-box; min-width: 0;
-        }
-        .input-hover:hover {
-          border-color: #2276fc; box-shadow: 0 0 6px rgba(34, 118, 252, 0.5);
-        }
-        .input-hover:focus {
-          outline: none; border-color: #1a56db; box-shadow: 0 0 8px rgba(34, 118, 252, 0.8);
-        }
-        .react-datepicker-wrapper { width: 100%; }
-        .upload-button {
-          border-radius: 10px; border: 1px solid #bddaed; background: #fff;
-          color: #0C0C0D; font-family: "Poppins", sans-serif; font-weight: 500;
-          font-size: 16px; padding: 7px 18px; display: flex; align-items: center;
-          gap: 6px; cursor: pointer; min-width: 170px; justify-content: center;
-          box-shadow: 0 1.5px 6px rgba(0, 0, 0, 0.04);
-          transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .upload-button:hover, .upload-button:focus, .upload-button:active {
-          background-color: #e6f0ff; border-color: #2276fc; box-shadow: 0 0 10px rgba(34, 118, 252, 0.6); outline: none;
-        }
-        .submit-button {
-          width: 100%; background: #2276fc; color: #fff; font-weight: 600;
-          font-size: 19px; font-family: "Poppins", sans-serif; letter-spacing: 0.03em;
-          border: none; border-radius: 13px; padding: 11px 0; cursor: pointer;
-          box-shadow: 0 2.5px 12px 0 rgba(34,121,252,0.13);
-          transition: background-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .submit-button:hover {
-          background-color: #1a56db; box-shadow: 0 3px 15px 0 rgba(34,89,252,0.3);
-        }
-        .submit-button:focus, .submit-button:active {
-          background-color: #1541b0; box-shadow: 0 0 20px 0 rgba(34,70,252,0.5); outline: none;
-        }
-
-        /* ++ NEW: Styles for the animated success popup ++ */
-        .Edit-popup-container {
-            background-color: #fff; border-radius: 12px; width: 400px; max-width: 90vw;
-            text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); overflow: hidden;
-            font-family: 'Poppins', sans-serif;
-        }
-        .Edit-popup-header {
-            background-color: #2276fc; color: white; padding: 1rem; font-size: 1.75rem; font-weight: 700;
-        }
-        .Edit-popup-body { padding: 2rem; }
-        .Edit-popup-footer { padding: 1.5rem; background-color: #f7f7f7; }
-        .Edit-popup-close-btn {
-            background-color: #D23B42;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
-        }
-        .Edit-popup-close-btn:hover {
-            background-color: #b53138;
-            box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
-        }
-
-        /* Success icon animations */
-        .Edit-success-icon {
-            width: 80px; height: 80px; border-radius: 50%; display: block;
-            stroke-width: 2; stroke: #fff; stroke-miterlimit: 10; margin: 0 auto;
-            box-shadow: inset 0 0 0 #4bb71b;
-            animation: Edit-fill 0.4s ease-in-out 0.4s forwards, Edit-scale 0.3s ease-in-out 0.9s both;
-        }
-        .Edit-success-icon--circle {
-            stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2;
-            stroke-miterlimit: 10; stroke: #4bb71b; fill: none;
-            animation: Edit-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-        }
-        .Edit-success-icon--check {
-            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
-            animation: Edit-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
-        
-        /* Error icon animations */
-        .Edit-error-icon {
-            width: 80px; height: 80px; border-radius: 50%; display: block;
-            stroke-width: 2; stroke: #fff; stroke-miterlimit: 10; margin: 0 auto;
-            box-shadow: inset 0 0 0 #FF4444;
-            animation: Edit-error-fill 0.4s ease-in-out 0.4s forwards, Edit-scale 0.3s ease-in-out 0.9s both;
-        }
-        .Edit-error-icon--circle {
-            stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2;
-            stroke-miterlimit: 10; stroke: #FF4444; fill: none;
-            animation: Edit-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-        }
-        .Edit-error-icon--cross {
-            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
-            animation: Edit-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
-        
-        @keyframes Edit-stroke { 100% { stroke-dashoffset: 0; } }
-        @keyframes Edit-scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
-        @keyframes Edit-fill { 100% { box-shadow: inset 0 0 0 40px #4bb71b; } }
-        @keyframes Edit-error-fill { 100% { box-shadow: inset 0 0 0 40px #FF4444; } }
-      `}</style>
-
       <div
         style={{
           minHeight: "100vh", width: "100vw", position: "fixed", left: 0, top: 0,
@@ -818,16 +709,16 @@ Please compress your PDF or choose a smaller file.`);
               
               {/* Form fields */}
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
-                <input className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
+                <input className={styles['input-hover']} type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
+                <input className={styles['input-hover']} type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <select className="input-hover" name="year" value={formData.year} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
+                <select className={styles['input-hover']} name="year" value={formData.year} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
                   <option value="" disabled>Select Year</option>
                   <option value="I">I</option> <option value="II">II</option>
                   <option value="III">III</option> <option value="IV">IV</option>
                 </select>
-                <select className="input-hover" name="semester" value={formData.semester} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
+                <select className={styles['input-hover']} name="semester" value={formData.semester} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required>
                   <option value="" disabled>Select Semester</option>
                   {getAvailableSemesters(formData.year).map(sem => (
                     <option key={sem} value={sem}>
@@ -837,14 +728,14 @@ Please compress your PDF or choose a smaller file.`);
                 </select>
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
+                <input className={styles['input-hover']} type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required />
                 <div className={styles['Achievement-datepicker-wrapper']}>
                   <DatePicker 
                     selected={formData.date} 
                     onChange={isLoading ? undefined : handleDateChange} 
                     dateFormat="dd-MM-yyyy" 
                     placeholderText="Date" 
-                    className="input-hover" 
+                    className={styles['input-hover']} 
                     showPopperArrow={false}
                     showMonthDropdown
                     showYearDropdown
@@ -860,8 +751,8 @@ Please compress your PDF or choose a smaller file.`);
                 </div>
               </div>
               <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <input className="input-hover" type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
-                <input className="input-hover" type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
+                <input className={styles['input-hover']} type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
+                <input className={styles['input-hover']} type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={isLoading ? undefined : handleInputChange} disabled={isLoading} required />
               </div>
 
               {/* Upload row */}
@@ -869,7 +760,7 @@ Please compress your PDF or choose a smaller file.`);
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
                   <button 
                     type="button" 
-                    className="upload-button" 
+                    className={styles['upload-button']} 
                     onClick={isLoading ? undefined : handleUploadClick}
                     disabled={isLoading}
                     style={{
@@ -940,7 +831,7 @@ Please compress your PDF or choose a smaller file.`);
               <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 5 }}>
                 <button 
                   type="submit" 
-                  className="submit-button"
+                  className={styles['submit-button']}
                   disabled={isLoading}
                   style={{
                     opacity: isLoading ? 0.7 : 1,

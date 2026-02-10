@@ -6,12 +6,12 @@ import styles from "./Achievements.module.css";
 
 // ++ NEW: Success Popup Component with Animation ++
 const SuccessPopup = ({ onClose }) => (
-  <div className="Achievement-popup-container">
-    <div className="Achievement-popup-header">Uploaded!</div>
-    <div className="Achievement-popup-body">
-      <svg className="Achievement-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-        <circle className="Achievement-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-        <path className="Achievement-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+  <div className={styles['Achievement-popup-container']}>
+    <div className={styles['Achievement-popup-header']}>Uploaded!</div>
+    <div className={styles['Achievement-popup-body']}>
+      <svg className={styles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className={styles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+        <path className={styles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
       </svg>
       <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Submitted ✓
@@ -20,8 +20,8 @@ const SuccessPopup = ({ onClose }) => (
         Certificate is submitted
       </p>
     </div>
-    <div className="Achievement-popup-footer">
-      <button onClick={onClose} className="Achievement-popup-close-btn">
+    <div className={styles['Achievement-popup-footer']}>
+      <button onClick={onClose} className={styles['Achievement-popup-close-btn']}>
         Close
       </button>
     </div>
@@ -30,12 +30,12 @@ const SuccessPopup = ({ onClose }) => (
 
 // ++ NEW: Error Popup Component with Animation ++
 const ErrorPopup = ({ onClose, errorMessage }) => (
-  <div className="Achievement-popup-container">
-    <div className="Achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>Upload Failed!</div>
-    <div className="Achievement-popup-body">
-      <svg className="Achievement-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-        <circle className="Achievement-error-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-        <path className="Achievement-error-icon--cross" fill="none" d="M16 16l20 20M36 16L16 36"/>
+  <div className={styles['Achievement-popup-container']}>
+    <div className={styles['Achievement-popup-header']} style={{ backgroundColor: '#D23B42' }}>Upload Failed!</div>
+    <div className={styles['Achievement-popup-body']}>
+      <svg className={styles['Achievement-error-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle className={styles['Achievement-error-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+        <path className={styles['Achievement-error-icon--cross']} fill="none" d="M16 16l20 20M36 16L16 36"/>
       </svg>
       <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
         Upload Failed ✗
@@ -44,8 +44,8 @@ const ErrorPopup = ({ onClose, errorMessage }) => (
         {errorMessage || "Certificate upload failed"}
       </p>
     </div>
-    <div className="Achievement-popup-footer">
-      <button onClick={onClose} className="Achievement-popup-close-btn">
+    <div className={styles['Achievement-popup-footer']}>
+      <button onClick={onClose} className={styles['Achievement-popup-close-btn']}>
         Close
       </button>
     </div>
@@ -290,211 +290,6 @@ Please compress your PDF or choose a smaller file.`);
 
   return (
     <>
-      <style>{`
-        /* --- Styles for the form --- */
-        .input-hover {
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          border: 1.5px solid #bddaed;
-          border-radius: 10px;
-          background: #f8faff;
-          color: #3A4957;
-          font-family: "Poppins", sans-serif;
-          font-weight: 500;
-          letter-spacing: .03em;
-          font-size: 15.4px;
-          padding: 12px 16px 12px 13px;
-          outline: none;
-          width: 100%;
-          box-sizing: border-box;
-          min-width: 0;
-        }
-        select.input-hover {
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
-          background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23555%22/%3E%3C/svg%3E');
-          background-repeat: no-repeat;
-          background-position: right 10px top 50%;
-          background-size: 16px;
-        }
-        .input-hover:hover {
-          border-color: #2276fc;
-          box-shadow: 0 0 6px rgba(34, 118, 252, 0.5);
-        }
-        .input-hover:focus {
-          outline: none;
-          border-color: #1a56db;
-          box-shadow: 0 0 8px rgba(34, 118, 252, 0.8);
-        }
-        .react-datepicker-wrapper {
-          width: 100%;
-        }
-        .upload-button {
-          border-radius: 10px;
-          border: 1px solid #bddaed;
-          background: #fff;
-          color: #0C0C0D;
-          font-family: "Poppins", sans-serif;
-          font-weight: 500;
-          font-size: 16px;
-          padding: 7px 18px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          cursor: pointer;
-          min-width: 170px;
-          justify-content: center;
-          box-shadow: 0 1.5px 6px rgba(0, 0, 0, 0.04);
-          transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .upload-button:hover,
-        .upload-button:focus,
-        .upload-button:active {
-          background-color: #e6f0ff;
-          border-color: #2276fc;
-          box-shadow: 0 0 10px rgba(34, 118, 252, 0.6);
-          outline: none;
-        }
-        .submit-button {
-          width: 100%;
-          background: #2276fc;
-          color: #fff;
-          font-weight: 600;
-          font-size: 19px;
-          font-family: "Poppins", sans-serif;
-          letter-spacing: 0.03em;
-          border: none;
-          border-radius: 13px;
-          padding: 11px 0;
-          cursor: pointer;
-          box-shadow: 0 2.5px 12px 0 rgba(34,121,252,0.13);
-          transition: background-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .submit-button:hover {
-          background-color: #1a56db;
-          box-shadow: 0 3px 15px 0 rgba(34,89,252,0.3);
-        }
-        .submit-button:focus,
-        .submit-button:active {
-          background-color: #1541b0;
-          box-shadow: 0 0 20px 0 rgba(34,70,252,0.5);
-          outline: none;
-        }
-
-        /* ++ NEW: Styles for the animated success popup ++ */
-        .Achievement-popup-container {
-            background-color: #fff;
-            border-radius: 12px;
-            width: 400px;
-            max-width: 90vw;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            font-family: 'Poppins', sans-serif;
-        }
-        .Achievement-popup-header {
-            background-color: #197AFF;
-            color: white;
-            padding: 1rem;
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-        .Achievement-popup-body {
-            padding: 2rem;
-        }
-        .Achievement-popup-footer {
-            padding: 1.5rem;
-            background-color: #f7f7f7;
-        }
-        .Achievement-popup-close-btn {
-            background-color: #D23B42;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
-        }
-        .Achievement-popup-close-btn:hover {
-            background-color: #b53138;
-            box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
-        }
-
-        /* Success icon animations */
-        .Achievement-success-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: block;
-            stroke-width: 2;
-            stroke: #fff;
-            stroke-miterlimit: 10;
-            margin: 0 auto;
-            box-shadow: inset 0 0 0 #22C55E;
-            animation: Achievement-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
-        }
-        .Achievement-success-icon--circle {
-            stroke-dasharray: 166;
-            stroke-dashoffset: 166;
-            stroke-width: 2;
-            stroke-miterlimit: 10;
-            stroke: #22C55E;
-            fill: none;
-            animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-        }
-        .Achievement-success-icon--check {
-            transform-origin: 50% 50%;
-            stroke-dasharray: 48;
-            stroke-dashoffset: 48;
-            animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
-        
-        /* Error icon animations */
-        .Achievement-error-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: block;
-            stroke-width: 2;
-            stroke: #fff;
-            stroke-miterlimit: 10;
-            margin: 0 auto;
-            box-shadow: inset 0 0 0 #FF4444;
-            animation: Achievement-error-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
-        }
-        .Achievement-error-icon--circle {
-            stroke-dasharray: 166;
-            stroke-dashoffset: 166;
-            stroke-width: 2;
-            stroke-miterlimit: 10;
-            stroke: #FF4444;
-            fill: none;
-            animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-        }
-        .Achievement-error-icon--cross {
-            transform-origin: 50% 50%;
-            stroke-dasharray: 48;
-            stroke-dashoffset: 48;
-            animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
-        
-        @keyframes Achievement-stroke {
-            100% { stroke-dashoffset: 0; }
-        }
-        @keyframes Achievement-scale {
-            0%, 100% { transform: none; }
-            50% { transform: scale3d(1.1, 1.1, 1); }
-        }
-        @keyframes Achievement-fill {
-            100% { box-shadow: inset 0 0 0 40px #22C55E; }
-        }
-        @keyframes Achievement-error-fill {
-            100% { box-shadow: inset 0 0 0 40px #FF4444; }
-        }
-      `}</style>
       <div
         style={{
           minHeight: "100vh",
@@ -550,15 +345,15 @@ Please compress your PDF or choose a smaller file.`);
                 />
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input
-                    className="input-hover" type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
+                    className={styles['input-hover']} type="text" name="reg" placeholder="Register Number" value={formData.reg} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                   <input
-                    className="input-hover" type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
+                    className={styles['input-hover']} type="text" name="name" placeholder="Name" value={formData.name} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <select
-                    className="input-hover" name="year" value={formData.year} onChange={handleInputChange} required
+                    className={styles['input-hover']} name="year" value={formData.year} onChange={handleInputChange} required
                   >
                     <option value="" disabled>Year</option>
                     <option value="I">I</option>
@@ -567,7 +362,7 @@ Please compress your PDF or choose a smaller file.`);
                     <option value="IV">IV</option>
                   </select>
                   <select
-                    className="input-hover" name="semester" value={formData.semester} onChange={handleInputChange} required
+                    className={styles['input-hover']} name="semester" value={formData.semester} onChange={handleInputChange} required
                   >
                     <option value="" disabled>Semester</option>
                     {getAvailableSemesters(formData.year).map(sem => (
@@ -579,7 +374,7 @@ Please compress your PDF or choose a smaller file.`);
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input
-                    className="input-hover" type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
+                    className={styles['input-hover']} type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                   />
                   <div className={styles['Achievement-datepicker-wrapper']}>
                     <DatePicker
@@ -587,7 +382,7 @@ Please compress your PDF or choose a smaller file.`);
                       onChange={handleDateChange}
                       dateFormat="dd-MM-yyyy"
                       placeholderText="Date"
-                      className="input-hover"
+                      className={styles['input-hover']}
                       showPopperArrow={false}
                       showMonthDropdown
                       showYearDropdown
@@ -603,10 +398,10 @@ Please compress your PDF or choose a smaller file.`);
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input
-                    className="input-hover" type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={handleInputChange} required
+                    className={styles['input-hover']} type="text" name="comp" placeholder="Competition" value={formData.comp} onChange={handleInputChange} required
                   />
                   <input
-                    className="input-hover" type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={handleInputChange} required
+                    className={styles['input-hover']} type="text" name="prize" placeholder="Prize" value={formData.prize} onChange={handleInputChange} required
                   />
                 </div>
                 <div
@@ -621,7 +416,7 @@ Please compress your PDF or choose a smaller file.`);
                   >
                     <button
                       type="button"
-                      className="upload-button"
+                      className={styles['upload-button']}
                       onClick={handleUploadClick}
                     >
                       <img
@@ -695,7 +490,7 @@ Please compress your PDF or choose a smaller file.`);
                 >
                   <button 
                     type="submit" 
-                    className="submit-button"
+                    className={styles['submit-button']}
                     disabled={isLoading}
                     style={{
                       opacity: isLoading ? 0.7 : 1,

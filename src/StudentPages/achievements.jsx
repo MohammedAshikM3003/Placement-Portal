@@ -5,6 +5,7 @@ import CertificateUpload from "./PopupAchievements.jsx";
 import EditCertificate from "./popupEditAchievements.jsx";
 // FIX: Import the CSS Module into a 'styles' object
 import styles from './Achievements.module.css';
+import alertStyles from '../components/alerts/AlertStyles.module.css';
 import UploadCertificatecardicon from '../assets/UploadCertificatecardicon.svg';
 import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
 // REMOVED: Redundant static imports for mongoDBService, certificateService, and fastDataService
@@ -1862,12 +1863,12 @@ This record is locked and cannot be modified.
       {showUploadPopup && <CertificateUpload onClose={handleClosePopup} onUpload={handleUploadSuccess} />}
       {showEditPopup && editingRow && <EditCertificate onClose={() => setShowEditPopup(false)} onUpdate={handleUpdateAchievement} initialData={editingRow} />}
       {showRestrictionPopup && (
-        <div className={`alert-overlay ${styles['restriction-overlay']}`}>
-          <div className={`achievement-popup-container ${styles['restriction-container']}`}>
-            <div className={`achievement-popup-header ${styles['restriction-header']}`}>
+        <div className={`${alertStyles['alert-overlay']} ${styles['restriction-overlay']}`}>
+          <div className={`${alertStyles['achievement-popup-container']} ${styles['restriction-container']}`}>
+            <div className={`${alertStyles['achievement-popup-header']} ${styles['restriction-header']}`}>
               Edit Restriction
             </div>
-            <div className={`achievement-popup-body ${styles['restriction-body']}`}>
+            <div className={`${alertStyles['achievement-popup-body']} ${styles['restriction-body']}`}>
               <div className={styles['restriction-icon-wrapper']}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                   <circle cx="26" cy="26" r="23" fill="#EFF6FF" stroke="#2563EB" strokeWidth="2"></circle>
@@ -1882,8 +1883,8 @@ This record is locked and cannot be modified.
                 {restrictionMessage}
               </div>
             </div>
-            <div className={`achievement-popup-footer ${styles['restriction-footer']}`}>
-              <button onClick={handleCloseRestrictionPopup} className={`achievement-popup-close-btn ${styles['restriction-close-btn']}`}>
+            <div className={`${alertStyles['achievement-popup-footer']} ${styles['restriction-footer']}`}>
+              <button onClick={handleCloseRestrictionPopup} className={`${alertStyles['achievement-popup-close-btn']} ${styles['restriction-close-btn']}`}>
                 OK, I Understand
               </button>
             </div>
@@ -2062,9 +2063,8 @@ function TableRow({ id, no, year, semester, section, comp, date, prize, status, 
 }
 const TableLoader = ({ message }) => (
   <div style={{ display: 'flex', justifyContent: 'center' }}>
-    <style>{`@keyframes tableSpin{to{transform:rotate(360deg)}}`}</style>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
-      <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '5px solid #bfdbfe', borderTopColor: '#2563eb', animation: 'tableSpin 0.8s linear infinite' }} />
+      <div className={styles['table-spinner']} />
       <div style={{ marginTop: '12px', color: '#1e3a8a', fontWeight: 600, fontSize: '14px' }}>
         {message || 'Please wait Certificates are Fetching.'}
       </div>

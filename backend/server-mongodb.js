@@ -120,26 +120,85 @@ try {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// JWT Authentication Middleware
+// ========================================
+// JWT Token Decode Cache (Performance)
+// ========================================
+// Caches decoded JWT payloads in-memory to skip repeated jwt.verify() calls
+// for the same token within a short window. Dramatically speeds up burst API calls.
+const jwtCache = new Map();
+const JWT_CACHE_MAX_SIZE = 500;
+const JWT_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+// Periodic cleanup every 2 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of jwtCache) {
+        if (now - entry.cachedAt > JWT_CACHE_TTL_MS) {
+            jwtCache.delete(key);
+        }
+    }
+}, 120 * 1000);
+
+// ========================================
+// Login Document Cache (Performance)
+// ========================================
+// Caches admin/coordinator/student docs after first DB fetch to avoid
+// repeated slow queries on MongoDB Atlas free tier (3-10s cold start)
+const loginDocCache = new Map();
+const LOGIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const getLoginCache = (key) => {
+    const entry = loginDocCache.get(key);
+    if (entry && (Date.now() - entry.cachedAt < LOGIN_CACHE_TTL_MS)) {
+        return entry.doc;
+    }
+    loginDocCache.delete(key);
+    return null;
+};
+
+const setLoginCache = (key, doc) => {
+    if (loginDocCache.size >= 200) {
+        const firstKey = loginDocCache.keys().next().value;
+        loginDocCache.delete(firstKey);
+    }
+    loginDocCache.set(key, { doc, cachedAt: Date.now() });
+};
+
+const invalidateLoginCache = (key) => {
+    loginDocCache.delete(key);
+};
+
+// JWT Authentication Middleware (with cache)
 const authenticateToken = (req, res, next) => {
-    console.log(`🔐 JWT Check: ${req.method} ${req.path}`);
-    
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
-        console.log('❌ JWT: No token provided');
         return res.sendStatus(401);
     }
     
-    console.log('🔍 JWT: Token received, verifying...');
+    // Check cache first
+    const cached = jwtCache.get(token);
+    if (cached && (Date.now() - cached.cachedAt < JWT_CACHE_TTL_MS)) {
+        req.user = cached.user;
+        return next();
+    }
+    
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            console.log('❌ JWT: Token verification failed:', err.message);
+            // Remove from cache if it was there
+            jwtCache.delete(token);
             return res.sendStatus(403);
         }
         
-        console.log('✅ JWT: Token valid for user:', user.role, user.userId || user.regNo);
+        // Cache the decoded token
+        if (jwtCache.size >= JWT_CACHE_MAX_SIZE) {
+            // Evict oldest entry
+            const firstKey = jwtCache.keys().next().value;
+            jwtCache.delete(firstKey);
+        }
+        jwtCache.set(token, { user, cachedAt: Date.now() });
+        
         req.user = user;
         next();
     });
@@ -3835,7 +3894,13 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
 
     let coordinatorDoc = null;
 
-    if (isMongoConnected) {
+    // Check login cache first
+    const coordCacheKey = `coord:${identifier}`;
+    coordinatorDoc = getLoginCache(coordCacheKey);
+    
+    if (coordinatorDoc) {
+        console.log('⚡ Coordinator doc served from cache');
+    } else if (isMongoConnected) {
         try {
             const coordinatorQuery = {
                 $or: [
@@ -3852,6 +3917,9 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
             );
 
             coordinatorDoc = await Promise.race([findPromise, timeoutPromise]);
+            if (coordinatorDoc) {
+                setLoginCache(coordCacheKey, coordinatorDoc);
+            }
         } catch (mongoError) {
             console.error('Coordinator login MongoDB query failed:', mongoError.message);
         }
@@ -3973,7 +4041,13 @@ app.post('/api/auth/admin-login', async (req, res) => {
 
     let adminDoc = null;
 
-    if (isMongoConnected) {
+    // Check login cache first (avoids slow MongoDB Atlas queries)
+    const adminCacheKey = `admin:${trimmedLoginID}`;
+    adminDoc = getLoginCache(adminCacheKey);
+    
+    if (adminDoc) {
+        console.log('⚡ Admin doc served from cache');
+    } else if (isMongoConnected) {
         try {
             const Admin = require('./models/Admin');
             const findPromise = Admin.findOne({ adminLoginID: trimmedLoginID }).lean();
@@ -3982,6 +4056,9 @@ app.post('/api/auth/admin-login', async (req, res) => {
             );
 
             adminDoc = await Promise.race([findPromise, timeoutPromise]);
+            if (adminDoc) {
+                setLoginCache(adminCacheKey, adminDoc);
+            }
         } catch (mongoError) {
             console.error('Admin login MongoDB query failed:', mongoError.message);
             return res.status(500).json({ error: 'Database error occurred. Please try again.' });
@@ -4066,8 +4143,14 @@ app.post('/api/students/login', async (req, res) => {
         
         console.log('MongoDB connection state:', connectionState, 'Connected:', isMongoConnected);
 
-        // Try MongoDB first (with timeout)
-        if (isMongoConnected) {
+        // Check login cache first
+        const studentCacheKey = `student:${regNo}:${dob}`;
+        student = getLoginCache(studentCacheKey);
+        
+        if (student) {
+            console.log('⚡ Student doc served from cache');
+        } else if (isMongoConnected) {
+            // Try MongoDB (with timeout)
             try {
                 console.log('Searching for student in MongoDB...');
                 // CRITICAL: Explicitly select block fields to ensure they're retrieved
@@ -4076,6 +4159,9 @@ app.post('/api/students/login', async (req, res) => {
                     setTimeout(() => reject(new Error('Query timeout')), 10000)
                 );
                 student = await Promise.race([findPromise, timeoutPromise]);
+                if (student) {
+                    setLoginCache(studentCacheKey, student);
+                }
                 console.log('Student found:', student ? 'YES' : 'NO');
                 if (student) {
                     console.log('Retrieved block fields:', {

@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }) => {
         });
       };
 
-      startBlockStatusMonitor(handleStudentBlocked, 5000);
+      startBlockStatusMonitor(handleStudentBlocked, 30000);
 
       return () => {
         stopBlockStatusMonitor();

@@ -6,7 +6,7 @@ import CooGraduateCap from "../assets/VectorGC.svg"
 import CooBackbtn from "../assets/CooBackbtn.svg"
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
-import './Coo_PlacedStuViewPage.module.css'; // Renamed CSS file import
+import styles from './Coo_PlacedStuViewPage.module.css';
 import Adminicons from '../assets/Coordinatorcap.png';
 
 // All helper components (MdUpload, IoMdClose, GraduationCapIcon, etc.) remain unchanged.
@@ -67,37 +67,37 @@ function CooViewPS({ onLogout, onViewChange }) {
     const DISABLED = true;
 
     return (
-        <div className="co-sv-container container">
+        <div className={styles['co-sv-StuProfile-container']}>
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <div className="co-sv-main main">
+            <div className={styles['co-sv-StuProfile-main']}>
                 <Sidebar
                     isOpen={isSidebarOpen}
                     onLogout={onLogout}
                     currentView={'profile'} // Hardcode 'profile'
                     onViewChange={handleViewChange}
                 />
-                <div className="co-sv-StuProfile-dashboard-area StuViewProfile-dashboard-area dashboard-area">
+                <div className={styles['co-sv-StuProfile-dashboard-area']}>
                     {/* The form remains, but all inputs are disabled */}
                     <form onSubmit={handleSave}> 
                         {/* --- PERSONAL INFO --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Personal Information</h3>
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Personal Information</h3>
                             <button 
                                 type="button"
-                                className="co-sv-profile-backbtn" // Updated class
+                                className={styles['co-sv-profile-backbtn']} // Updated class
                                 style={{ position:"absolute",left:"1100px", top:"40px", width:"100px", height:"40px", backgroundColor:"#d23b42", borderRadius:"25px", fontSize:"1.03rem",color:"#fff", border:"none"}} 
                                 onClick={() => handleCardClick('placed-students')}
                             >
-                                Back<img className="co-sv-profile-backbtn-img" src={CooBackbtn}alt="back" style={{position:"relative", left:"10px"}}/> 
+                                Back<img className={styles['co-sv-profile-backbtn-img']} src={CooBackbtn}alt="back" style={{position:"relative", left:"10px"}}/> 
                             </button>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
-                                <div className="co-sv-StuProfile-personal-info-fields StuViewProfile-personal-info-fields">
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
+                                <div className={styles['co-sv-StuProfile-personal-info-fields']}>
                                     <input type="text" placeholder="First Name" defaultValue="John" disabled={DISABLED} />
                                     <input type="text" placeholder="Last Name" defaultValue="Doe" disabled={DISABLED} />
                                     <input type="text" placeholder="Register Number" defaultValue="1234567890" disabled={DISABLED} />
-                                    <div className="co-sv-StuProfile-datepicker-wrapper StuViewProfile-datepicker-wrapper">
+                                    <div className={styles['co-sv-StuProfile-datepicker-wrapper']}>
                                         {/* DatePicker is disabled and styled to look like a regular input */}
-                                        <DatePicker selected={dob} onChange={() => {}} dateFormat="dd/MM/yyyy" placeholderText="DOB" className="co-sv-StuProfile-datepicker-input StuViewProfile-datepicker-input" wrapperClassName="co-sv-StuProfile-datepicker-wrapper-inner StuViewProfile-datepicker-wrapper-inner" showPopperArrow={false} disabled={DISABLED} />
+                                        <DatePicker selected={dob} onChange={() => {}} dateFormat="dd/MM/yyyy" placeholderText="DOB" className={styles['co-sv-StuProfile-datepicker-input']} wrapperClassName={styles['co-sv-StuProfile-datepicker-wrapper-inner']} showPopperArrow={false} disabled={DISABLED} />
                                     </div>
                                     <select defaultValue="B.Tech" disabled={DISABLED}><option value="" disabled>Degree</option><option value="B.E">B.E</option><option value="B.Tech">B.Tech</option></select>
                                     <input type="text" placeholder="Branch" defaultValue="Information Technology" disabled={DISABLED} />
@@ -114,37 +114,37 @@ function CooViewPS({ onLogout, onViewChange }) {
                                     <input type="text" placeholder="Mother Occupation" defaultValue="Teacher" disabled={DISABLED} />
                                     <input type="text" placeholder="Mother Mobile No." defaultValue="9988776644" disabled={DISABLED} />
                                 </div>
-                                <div className="co-sv-StuProfile-profile-photo-wrapper StuViewProfile-profile-photo-wrapper">
-                                    <div className="co-sv-StuProfile-profile-photo-box StuViewProfile-profile-photo-box" style={{ height: '675px' }}>
-                                        <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Profile Photo</h3>
-                                        <div className="co-sv-StuProfile-profile-icon-container StuViewProfile-profile-icon-container">
-                                            {profileImage ? ( <img  alt="Profile Preview" className="co-sv-StuProfile-profile-preview-img StuViewProfile-profile-preview-img" style={{ cursor: 'default' }} /> ) : ( <GraduationCapIcon /> )}
+                                <div className={styles['co-sv-StuProfile-profile-photo-wrapper']}>
+                                    <div className={styles['co-sv-StuProfile-profile-photo-box']} style={{ height: '675px' }}>
+                                        <h3 className={styles['co-sv-StuProfile-section-header']}>Profile Photo</h3>
+                                        <div className={styles['co-sv-StuProfile-profile-icon-container']}>
+                                            {profileImage ? ( <img  alt="Profile Preview" className={styles['co-sv-StuProfile-profile-preview-img']} style={{ cursor: 'default' }} /> ) : ( <GraduationCapIcon /> )}
                                         </div>
                                         {profileImage && uploadInfo.name && (
-                                            <div className="co-sv-StuProfile-upload-info-container StuViewProfile-upload-info-container">
-                                                <div className="co-sv-StuProfile-upload-info-item StuViewProfile-upload-info-item"><FileIcon /><span>{uploadInfo.name}</span></div>
-                                                <div className="co-sv-StuProfile-upload-info-item StuViewProfile-upload-info-item"><CalendarIcon /><span>Uploaded on: {uploadInfo.date}</span></div>
+                                            <div className={styles['co-sv-StuProfile-upload-info-container']}>
+                                                <div className={styles['co-sv-StuProfile-upload-info-item']}><FileIcon /><span>{uploadInfo.name}</span></div>
+                                                <div className={styles['co-sv-StuProfile-upload-info-item']}><CalendarIcon /><span>Uploaded on: {uploadInfo.date}</span></div>
                                             </div>
                                         )}
                                         {/* Remove the upload action area */}
                                     </div>
                                 </div>
                             </div>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid" style={{ marginTop: '1.5rem' }}>
+                            <div className={styles['co-sv-StuProfile-form-grid']} style={{ marginTop: '1.5rem' }}>
                                 <select defaultValue="BC" disabled={DISABLED}><option value="" disabled>Community</option> <option value="OC">OC</option><option value="BC">BC</option><option value="BCM">BCM</option><option value="MBC">MBC</option><option value="SC">SC</option><option value="SCA">SCA</option><option value="ST">ST</option></select>
                                 <input type="text" placeholder="Blood Group" defaultValue="O+" disabled={DISABLED} />
                                 <input type="text" placeholder="Aadhaar Number" defaultValue="XXXX XXXX 1234" disabled={DISABLED} />
                                 <select defaultValue="English" disabled={DISABLED}><option value="" disabled>Medium of study</option><option value="English">English</option><option value="Tamil">Tamil</option><option value="Other">Others</option></select>
-                                <input type="text" placeholder="Garudian Name" className="co-sv-mr-input StuViewProfile-mr-input" defaultValue="No Guardian" disabled={DISABLED} /> 
-                                <input type="text" placeholder="Garudian Mobile No" className="co-sv-mr-input StuViewProfile-mr-input" defaultValue="N/A" disabled={DISABLED} /> 
+                                <input type="text" placeholder="Garudian Name" className={styles['co-sv-mr-input']} defaultValue="No Guardian" disabled={DISABLED} /> 
+                                <input type="text" placeholder="Garudian Mobile No" className={styles['co-sv-mr-input']} defaultValue="N/A" disabled={DISABLED} /> 
                             </div>
                         </div>
 
                         {/* --- ACADEMIC BACKGROUND --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                           <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Academic Background</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
-                                <div className="co-sv-StuProfile-study-category StuViewProfile-study-category" style={{ gridColumn: '1 / -1' }}>
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                           <h3 className={styles['co-sv-StuProfile-section-header']}>Academic Background</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
+                                <div className={styles['co-sv-StuProfile-study-category']} style={{ gridColumn: '1 / -1' }}>
                                     {/* Radio buttons for selection are now just visually indicating the selected category */}
                                     <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} disabled={DISABLED} onChange={() => {}} />
                                     <label htmlFor="12th">12th</label>
@@ -163,9 +163,9 @@ function CooViewPS({ onLogout, onViewChange }) {
                         </div>
                         
                         {/* --- SEMESTER --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Semester</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Semester</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
                                 <input type="text" placeholder="Semester 1 GPA" defaultValue="8.5" disabled={DISABLED} />
                                 <input type="text" placeholder="Semester 2 GPA" defaultValue="8.9" disabled={DISABLED} />
                                 <input type="text" placeholder="Semester 3 GPA" defaultValue="9.1" disabled={DISABLED} />
@@ -183,9 +183,9 @@ function CooViewPS({ onLogout, onViewChange }) {
                         </div>
 
                         {/* --- OTHER DETAILS --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Other Details</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Other Details</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
                                 <select defaultValue="Dayscholar" disabled={DISABLED}><option value="" disabled>Residential status</option><option value="Hosteller">Hosteller</option><option value="Dayscholar">Dayscholar</option></select>
                                 <select defaultValue="Counselling" disabled={DISABLED}><option value="" disabled>Quota</option><option value="Management">Management</option><option value="Counselling">Counselling</option></select>
                                 <input type="text" placeholder="Languages Known" defaultValue="Tamil, English, Hindi" disabled={DISABLED} />
@@ -207,7 +207,7 @@ function CooViewPS({ onLogout, onViewChange }) {
                         </div>
                         
                         {/* Action buttons are completely removed for a clean view-only profile */}
-                        <div className="co-sv-StuProfile-action-buttons StuViewProfile-action-buttons" style={{ display: 'none' }}>
+                        <div className={styles['co-sv-StuProfile-action-buttons']} style={{ display: 'none' }}>
                             {/* Buttons removed for view-only */}
                         </div>
                     </form>

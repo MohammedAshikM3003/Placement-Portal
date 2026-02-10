@@ -1,0 +1,25 @@
+/* Shared scrollbar styles for round-listing popups */
+.scroll-rounds::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-rounds::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.scroll-rounds::-webkit-scrollbar-thumb {
+  background-color: #2085f6;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.scroll-rounds::-webkit-scrollbar-thumb:hover {
+  background-color: #4338CA;
+}
+
+.scroll-rounds::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

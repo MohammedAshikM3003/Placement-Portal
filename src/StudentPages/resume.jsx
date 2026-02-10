@@ -4,7 +4,7 @@ import { Upload, Visibility, Download } from '@mui/icons-material';
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import styles from './Resume.module.css';
-import '../components/alerts/AlertStyles.css';
+import alertStyles from '../components/alerts/AlertStyles.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import resumeAnalysisService from '../services/resumeAnalysisService.jsx';
 import mongoDBService from '../services/mongoDBService.jsx';
@@ -914,19 +914,19 @@ function MainContent({ onViewChange }) {
         <PreviewProgressAlert isOpen={previewPopupState === 'progress'} progress={previewProgress} />
         <PreviewFailedAlert isOpen={previewPopupState === 'error'} onClose={() => setPreviewPopupState('none')} />
         
-        {/* Upload Progress Popup (Restored from Backup, using global alert classes) */}
+        {/* Upload Progress Popup (Restored from Backup, using alert module classes) */}
         {uploadPopupState === 'progress' && (
-          <div className="alert-overlay">
-            <div className="achievement-popup-container">
-              <div className="achievement-popup-header" style={{ backgroundColor: '#197AFF' }}>
+          <div className={alertStyles['alert-overlay']}>
+            <div className={alertStyles['achievement-popup-container']}>
+              <div className={alertStyles['achievement-popup-header']} style={{ backgroundColor: '#197AFF' }}>
                 Uploading...
               </div>
-              <div className="achievement-popup-body">
-                <div className="download-progress-icon-container">
-                  <svg className="download-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle className="download-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
+              <div className={alertStyles['achievement-popup-body']}>
+                <div className={alertStyles['download-progress-icon-container']}>
+                  <svg className={alertStyles['download-progress-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle className={alertStyles['download-progress-icon--bg']} cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
                     <circle 
-                      className="download-progress-icon--progress" 
+                      className={alertStyles['download-progress-icon--progress']} 
                       cx="26" 
                       cy="26" 
                       r="20" 
@@ -956,16 +956,16 @@ function MainContent({ onViewChange }) {
         )}
 
         {uploadPopupState === 'failed' && (
-          <div className="alert-overlay">
-            <div className="achievement-popup-container">
-              <div className="achievement-popup-header" style={{ backgroundColor: '#D23B42' }}>
+          <div className={alertStyles['alert-overlay']}>
+            <div className={alertStyles['achievement-popup-container']}>
+              <div className={alertStyles['achievement-popup-header']} style={{ backgroundColor: '#D23B42' }}>
                 Upload Failed !
               </div>
-              <div className="achievement-popup-body">
-                <div className="preview-error-icon-container">
-                  <svg className="preview-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle className="preview-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349"/>
-                    <path className="preview-error-icon--cross" fill="white" d="M16 16l20 20M36 16L16 36" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+              <div className={alertStyles['achievement-popup-body']}>
+                <div className={alertStyles['preview-error-icon-container']}>
+                  <svg className={alertStyles['preview-error-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle className={alertStyles['preview-error-icon--circle']} cx="26" cy="26" r="25" fill="#B84349"/>
+                    <path className={alertStyles['preview-error-icon--cross']} fill="white" d="M16 16l20 20M36 16L16 36" stroke="white" strokeWidth="3" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
@@ -975,8 +975,8 @@ function MainContent({ onViewChange }) {
                   Unable to upload the resume.
                 </p>
               </div>
-              <div className="achievement-popup-footer">
-                <button onClick={() => setUploadPopupState('none')} className="preview-close-btn">
+              <div className={alertStyles['achievement-popup-footer']}>
+                <button onClick={() => setUploadPopupState('none')} className={alertStyles['preview-close-btn']}>
                   Close
                 </button>
               </div>

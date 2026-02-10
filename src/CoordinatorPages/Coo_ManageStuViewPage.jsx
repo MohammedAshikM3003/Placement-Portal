@@ -160,16 +160,16 @@ function CooViewMS({ onLogout, onViewChange }) {
     const DISABLED = true;
 
     return (
-        <div className="co-sv-container container">
+        <div className={styles['co-sv-StuProfile-container']}>
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <div className="co-sv-main main">
+            <div className={styles['co-sv-StuProfile-main']}>
                 <Sidebar
                     isOpen={isSidebarOpen}
                     onLogout={onLogout}
                     currentView={'manage-students'}
                     onViewChange={handleViewChange}
                 />
-                <div className="co-sv-StuProfile-dashboard-area StuViewProfile-dashboard-area dashboard-area">
+                <div className={styles['co-sv-StuProfile-dashboard-area']}>
                     {isInitialLoading && (
                         <PreviewProgressAlert 
                             isOpen={true} 
@@ -187,28 +187,28 @@ function CooViewMS({ onLogout, onViewChange }) {
 
                     <form> 
                         {/* --- PERSONAL INFO --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Personal Information</h3>
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Personal Information</h3>
                             <button 
                                 type="button"
-                                className="co-sv-profile-backbtn"
+                                className={styles['co-sv-profile-backbtn']}
                                 onClick={() => handleCardClick('manage-students')}
                             >
-                                Back<img className="co-sv-profile-backbtn-img" src={CooBackbtn} alt="back" style={{position:"relative", left:"10px"}}/> 
+                                Back<img className={styles['co-sv-profile-backbtn-img']} src={CooBackbtn} alt="back" style={{position:"relative", left:"10px"}}/> 
                             </button>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
-                                <div className="co-sv-StuProfile-personal-info-fields StuViewProfile-personal-info-fields">
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
+                                <div className={styles['co-sv-StuProfile-personal-info-fields']}>
                                     <input type="text" placeholder="First Name" value={studentData?.firstName || ''} disabled={DISABLED} readOnly />
                                     <input type="text" placeholder="Last Name" value={studentData?.lastName || ''} disabled={DISABLED} readOnly />
                                     <input type="text" placeholder="Register Number" value={studentData?.regNo || ''} disabled={DISABLED} readOnly />
-                                    <div className="co-sv-StuProfile-datepicker-wrapper StuViewProfile-datepicker-wrapper">
+                                    <div className={styles['co-sv-StuProfile-datepicker-wrapper']}>
                                         <DatePicker 
                                             selected={dob} 
                                             onChange={() => {}} 
                                             dateFormat="dd/MM/yyyy" 
                                             placeholderText="DOB" 
-                                            className="co-sv-StuProfile-datepicker-input StuViewProfile-datepicker-input" 
-                                            wrapperClassName="co-sv-StuProfile-datepicker-wrapper-inner StuViewProfile-datepicker-wrapper-inner" 
+                                            className={styles['co-sv-StuProfile-datepicker-input']} 
+                                            wrapperClassName={styles['co-sv-StuProfile-datepicker-wrapper-inner']} 
                                             showPopperArrow={false} 
                                             disabled={DISABLED} 
                                         />
@@ -228,22 +228,22 @@ function CooViewMS({ onLogout, onViewChange }) {
                                     <input type="text" placeholder="Mother Occupation" value={studentData?.motherOccupation || ''} disabled={DISABLED} readOnly />
                                     <input type="text" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} disabled={DISABLED} readOnly />
                                 </div>
-                                <div className="co-sv-StuProfile-profile-photo-wrapper StuViewProfile-profile-photo-wrapper">
-                                    <div className="co-sv-StuProfile-profile-photo-box StuViewProfile-profile-photo-box" style={{ height: '675px' }}>
-                                        <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Profile Photo</h3>
-                                        <div className="co-sv-StuProfile-profile-icon-container StuViewProfile-profile-icon-container">
+                                <div className={styles['co-sv-StuProfile-profile-photo-wrapper']}>
+                                    <div className={styles['co-sv-StuProfile-profile-photo-box']} style={{ height: '675px' }}>
+                                        <h3 className={styles['co-sv-StuProfile-section-header']}>Profile Photo</h3>
+                                        <div className={styles['co-sv-StuProfile-profile-icon-container']}>
                                             {profileImage ? (
-                                                <img src={profileImage} alt="Profile Preview" className="co-sv-StuProfile-profile-preview-img StuViewProfile-profile-preview-img" style={{ cursor: 'default' }} />
+                                                <img src={profileImage} alt="Profile Preview" className={styles['co-sv-StuProfile-profile-preview-img']} style={{ cursor: 'default' }} />
                                             ) : (
                                                 <GraduationCapIcon />
                                             )}
                                         </div>
                                         {profileImage && uploadInfo.name && (
-                                            <div className="co-sv-StuProfile-upload-info-container StuViewProfile-upload-info-container">
-                                                <div className="co-sv-StuProfile-upload-info-item StuViewProfile-upload-info-item">
+                                            <div className={styles['co-sv-StuProfile-upload-info-container']}>
+                                                <div className={styles['co-sv-StuProfile-upload-info-item']}>
                                                     <FileIcon /><span>{uploadInfo.name}</span>
                                                 </div>
-                                                <div className="co-sv-StuProfile-upload-info-item StuViewProfile-upload-info-item">
+                                                <div className={styles['co-sv-StuProfile-upload-info-item']}>
                                                     <CalendarIcon /><span>Uploaded on: {uploadInfo.date}</span>
                                                 </div>
                                             </div>
@@ -251,7 +251,7 @@ function CooViewMS({ onLogout, onViewChange }) {
                                     </div>
                                 </div>
                             </div>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid" style={{ marginTop: '1.5rem' }}>
+                            <div className={styles['co-sv-StuProfile-form-grid']} style={{ marginTop: '1.5rem' }}>
                                 <input type="text" placeholder="Community" value={studentData?.community || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Blood Group" value={studentData?.bloodGroup || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} disabled={DISABLED} readOnly />
@@ -262,10 +262,10 @@ function CooViewMS({ onLogout, onViewChange }) {
                         </div>
 
                         {/* --- ACADEMIC BACKGROUND --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Academic Background</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
-                                <div className="co-sv-StuProfile-study-category StuViewProfile-study-category" style={{ gridColumn: '1 / -1' }}>
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Academic Background</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
+                                <div className={styles['co-sv-StuProfile-study-category']} style={{ gridColumn: '1 / -1' }}>
                                     <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} disabled={DISABLED} readOnly />
                                     <label htmlFor="12th">12th</label>
                                     <input type="radio" id="diploma" name="study_category" value="diploma" checked={studyCategory === 'diploma'} disabled={DISABLED} readOnly />
@@ -298,9 +298,9 @@ function CooViewMS({ onLogout, onViewChange }) {
                         </div>
                         
                         {/* --- SEMESTER --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Semester</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Semester</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
                                 <input type="text" placeholder="Semester 1 GPA" value={studentData?.semester1GPA || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Semester 2 GPA" value={studentData?.semester2GPA || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Semester 3 GPA" value={studentData?.semester3GPA || ''} disabled={DISABLED} readOnly />
@@ -318,9 +318,9 @@ function CooViewMS({ onLogout, onViewChange }) {
                         </div>
 
                         {/* --- OTHER DETAILS --- */}
-                        <div className="co-sv-StuProfile-profile-section-container StuViewProfile-profile-section-container">
-                            <h3 className="co-sv-StuProfile-section-header StuViewProfile-section-header">Other Details</h3>
-                            <div className="co-sv-StuProfile-form-grid StuViewProfile-form-grid">
+                        <div className={styles['co-sv-StuProfile-profile-section-container']}>
+                            <h3 className={styles['co-sv-StuProfile-section-header']}>Other Details</h3>
+                            <div className={styles['co-sv-StuProfile-form-grid']}>
                                 <input type="text" placeholder="Residential status" value={studentData?.residentialStatus || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Quota" value={studentData?.quota || ''} disabled={DISABLED} readOnly />
                                 <input type="text" placeholder="Languages Known" value={studentData?.languagesKnown || ''} disabled={DISABLED} readOnly />

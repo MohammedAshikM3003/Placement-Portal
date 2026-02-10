@@ -395,11 +395,11 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         }
     };
     return (
-        <div className="coordinator-main-wrapper">
+        <div className={styles['coordinator-main-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
-            <div className="coordinator-main-layout">
+            <div className={styles['coordinator-main-layout']}>
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="eligible-students" onViewChange={onViewChange} />
-                <div className="coordinator-content-area">
+                <div className={styles['coordinator-content-area']}>
                     <div className={styles['co-es-container']}>
                         <div className={styles['co-es-dashboard-area']}>
                             <div className={styles['co-es-summary-cards']}>
@@ -412,7 +412,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                 <div className={`${styles['co-es-search-filters']} ${styles['co-es-company-profile-search']}`}>
                                     <div className={styles['co-es-search-tab']}> CSE Students</div>
                                     <div className={styles['co-es-search-inputs']}>
-                                        <div className={`co-es-search-input ${filterData.batch ? 'filled' : ''}`}>
+                                        <div className={`${styles['co-es-search-input']} ${filterData.batch ? styles['filled'] : ''}`}>
                                             <input type="text" id="Batch" value={filterData.batch} onChange={(e) => handleFilterChange('batch', e.target.value)} list="batch-options" required />
                                             <label htmlFor="batch">Batch</label>
                                             <datalist id="batch-options">

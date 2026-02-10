@@ -1,5 +1,6 @@
 import React from "react";
 import { FaCheckCircle, FaExclamationCircle, FaTimes } from "react-icons/fa";
+import scrollStyles from './PopupScrollbar.module.css';
 
 // Helper to format dates from YYYY-MM-DD to DD-MM-YYYY
 const formatDate = (dateString) => {
@@ -165,7 +166,7 @@ export default function PopUpPending({ app, onBack }) {
                     <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>↩</span>
                 </button>
               </div>
-              <div style={{ marginTop: 28, overflowY: "auto", paddingRight: 4, flexGrow: 1 }} className="scroll-rounds">
+              <div style={{ marginTop: 28, overflowY: "auto", paddingRight: 4, flexGrow: 1 }} className={scrollStyles['scroll-rounds']}>
                 {rounds.length > 0 ? rounds.map((round, index) => (
                   <div key={index} style={{ display: "flex", alignItems: "center", background: "#f6f7fa", borderRadius: 16, marginBottom: 18, padding: "18px 30px" }}>
                     <div style={{ marginRight: 28 }}>{round.icon}</div>
