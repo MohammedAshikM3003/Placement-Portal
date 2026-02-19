@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Conavbar from '../components/Navbar/Adnavbar';
 import Cosidebar from '../components/Sidebar/Adsidebar';
-import styles from './AdminCompanyDrive.module.css'; 
-import Adminicon from "../assets/Adminicon.png";
+import styles from './AdminCompanyDrive.module.css';
+import Adminicon from '../assets/Adminicon.png';
+import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import AdminAddcompany from '../assets/companydriveADicon.svg';
-import AdEligiblestu from '../assets/Ad_CD_Eligiblestu.svg';
-import mongoDBService from '../services/mongoDBService';
-import popupStyles from '../StudentPages/Achievements.module.css';
+import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
@@ -148,7 +147,8 @@ const LoadingStudentsPopup = ({ isOpen }) => {
 function AdminCompanyDrive({ onLogout }) {
     const navigate = useNavigate();
     useAdminAuth(); // JWT authentication verification
-    
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     // Temporary filter states
     const [tempFilterCompany, setTempFilterCompany] = useState('');
     const [tempFilterDepartment, setTempFilterDepartment] = useState('');
@@ -181,6 +181,21 @@ function AdminCompanyDrive({ onLogout }) {
     
     // Company drives data
     const [companies, setCompanies] = useState([]);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    // Listen for sidebar close event from navigation links (mobile auto-close)
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
 
     const fetchDrives = useCallback(async () => {
         try {
@@ -661,9 +676,15 @@ function AdminCompanyDrive({ onLogout }) {
             {activePopup === 'deleteSuccess' && (
                 <DeleteSuccessPopup onClose={closePopup} />
             )}
-            <Conavbar Adminicon={Adminicon} onLogout={onLogout} />
+            {isSidebarOpen && (
+                <div
+                    className={styles['Admin-cd-overlay']}
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+            <Conavbar Adminicon={Adminicon} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
             <div className={styles['Admin-cd-layout']}>
-                <Cosidebar onLogout={onLogout} />
+                <Cosidebar isOpen={isSidebarOpen} onLogout={onLogout} />
                 <div className={styles['Admin-cd-main-content']}>
                     <div className={styles['Admin-cd-top-card']}>
                         
@@ -682,7 +703,7 @@ function AdminCompanyDrive({ onLogout }) {
                         <div className={styles['Admin-cd-filter-section']}>
                             <div className={styles['Admin-cd-filter-header-container']}>
                                 <div className={styles['Admin-cd-filter-header']}>Company Drive</div>
-                                <span className={styles['Admin-cd-filter-icon-container']}>☰</span>
+                                {/* <span className={styles['Admin-cd-filter-icon-container']}>☰</span> */}
                             </div>
                             <div className={styles['Admin-cd-filter-content']}>
                                 {/* Company Name Filter */}
@@ -939,13 +960,16 @@ function AdminCompanyDrive({ onLogout }) {
                                                                 );
                                                             }
 
-                                                            // If eligible students not created yet, show Eligible Students icon and navigate to selection page
+                                                            // If eligible students not created yet, show an icon and navigate to eligible students selection page
                                                             if (!eligibleCreated) {
                                                                 return (
-                                                                    <img
-                                                                        src={AdEligiblestu}
-                                                                        alt="Select Eligible Students"
-                                                                        style={{ width: 20, height: 20, cursor: 'pointer' }}
+                                                                    <svg
+                                                                        width="20"
+                                                                        height="20"
+                                                                        viewBox="0 0 24 24"
+                                                                        fill="none"
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        style={{ cursor: 'pointer' }}
                                                                         onClick={() => {
                                                                             // Format dates to YYYY-MM-DD format
                                                                             const formatDate = (dateString) => {
@@ -953,18 +977,34 @@ function AdminCompanyDrive({ onLogout }) {
                                                                                 const date = new Date(dateString);
                                                                                 return date.toISOString().split('T')[0];
                                                                             };
-                                                                            
-                                                                            navigate('/admin-student-application', { state: { filterData: {
-                                                                                companyName: company.companyName,
-                                                                                driveStartDate: formatDate(company.startingDate),
-                                                                                driveEndDate: formatDate(company.endingDate),
-                                                                                totalRound: company.rounds || company.numberOfRounds || '',
-                                                                                jobs: company.jobRole,
-                                                                                department: Array.isArray(company.eligibleBranches) && company.eligibleBranches.length > 0 ? company.eligibleBranches.join(', ') : company.department
-                                                                            } } });
+
+                                                                            navigate('/admin-student-application', {
+                                                                                state: {
+                                                                                    filterData: {
+                                                                                        companyName: company.companyName,
+                                                                                        driveStartDate: formatDate(company.startingDate),
+                                                                                        driveEndDate: formatDate(company.endingDate),
+                                                                                        totalRound: company.rounds || company.numberOfRounds || '',
+                                                                                        jobs: company.jobRole,
+                                                                                        department:
+                                                                                            Array.isArray(company.eligibleBranches) && company.eligibleBranches.length > 0
+                                                                                                ? company.eligibleBranches.join(', ')
+                                                                                                : company.department,
+                                                                                    },
+                                                                                },
+                                                                            });
                                                                         }}
                                                                         title="Select Eligible Students"
-                                                                    />
+                                                                    >
+                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E" />
+                                                                        <path
+                                                                            d="M9 12l2 2 4-4"
+                                                                            stroke="white"
+                                                                            strokeWidth="2"
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                        />
+                                                                    </svg>
                                                                 );
                                                             }
 

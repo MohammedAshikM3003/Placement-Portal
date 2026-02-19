@@ -38,6 +38,18 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  animation: fadeInSlideLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+@keyframes fadeInSlideLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .visualImage {
@@ -46,6 +58,7 @@
   height: auto;
   max-height: 100%;
   object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --- SignUp Box --- */
@@ -60,8 +73,21 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  transition: 0.3s ease;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  animation: slideInFromRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: center;
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(300px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .signupBox:hover {
@@ -72,6 +98,18 @@
 .logoContainer {
   text-align: center;
   margin-bottom: 30px;
+  animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .logoImage {
@@ -94,7 +132,27 @@
   align-items: center;
   gap: 12px;
   justify-content: center;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.signupButton:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.signupButton:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .signupButton:hover {
@@ -162,12 +220,24 @@
 .footerText {
   font-size: 16px;
   text-align: center;
+  margin-top: 24px;
+  color: #666;
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
 }
 
 .link {
   color: #5932ea;
   font-weight: bold;
   text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.link:hover {
+  color: #4318ba;
+  background: rgba(89, 50, 234, 0.1);
+  text-decoration: underline;
 }
 
 /* --- Responsive --- */

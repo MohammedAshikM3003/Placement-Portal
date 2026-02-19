@@ -496,7 +496,7 @@
     margin-top:-10px;
     font-size: 22px;
     padding-bottom: 5px;
-    margin-bottom: 8px; 
+    margin-bottom: 20px; 
     margin-left: 0px;/* Reduced margin */
     /* FIX 3: Make header relative to position its own ::after line */
     position: relative;
@@ -874,7 +874,7 @@
     font-size: 0.9em;
     font-weight: 600;
     position: relative;
-    top: -73px;
+    top: -37px;
     margin-bottom: -50px; 
     text-align: center;
     /* REMOVED: padding, border, and width properties */
@@ -897,8 +897,8 @@
     display: flex;
     justify-content: flex-end; 
     gap: 1rem;
-    padding-top: 0;
-    margin-right: 0px;
+    padding-top: 46px;
+    margin-right: 53px;
     margin-top: 2rem; 
     margin-bottom: 0;
 }
@@ -952,21 +952,35 @@
     z-index: 2000;
 } 
 
+ .co-profile-success-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: rgba(0, 0, 0, 0.2);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 10000;
+ }
+
 .CoProfile-popup-container {
     background-color: #fff;
     border-radius: 12px;
     width: 400px;
     text-align: center;
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .CoProfile-popup-header {
     background-color: #d23b42;
     color: white;
     padding: 1rem;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
 }
 
 .CoProfile-popup-body {
@@ -989,6 +1003,7 @@
 .CoProfile-popup-footer {
     padding: 1.5rem;
     background-color: #f7f7f7;
+    text-align: center;
 }
 
 .CoProfile-popup-close-btn {
@@ -1054,6 +1069,93 @@
 @keyframes CoProfile-fill {
     100% { box-shadow: inset 0 0 0 40px #4caf50; }
 }
+
+/* Saving state - not-allowed cursor on entire page */
+.co-profile-saving,
+.co-profile-saving * {
+    cursor: not-allowed !important;
+}
+
+.co-profile-saving-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    background: transparent;
+    cursor: not-allowed;
+    pointer-events: all;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+.co-profile-form-input:disabled,
+.co-profile-date-input:disabled,
+select:disabled,
+button:disabled,
+input:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Upload button disabled state */
+.co-profile-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+ .co-profile-success-overlay .CoProfile-popup-container {
+     width: 400px;
+     max-width: 90vw;
+     height: 443px;
+     text-align: center;
+     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+     border-radius: 12px;
+     overflow: hidden;
+     font-family: 'Poppins', sans-serif;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-header {
+     padding: 1.2rem;
+     font-size: 1.4rem;
+     font-weight: 700;
+     letter-spacing: 0.02em;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-body {
+     padding: 2rem;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-body h2 {
+     margin: 2rem 0 0.5rem 0;
+     font-size: 24px;
+     color: #000;
+     font-weight: 700;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-body p {
+     margin: 0;
+     color: #888;
+     font-size: 16px;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-footer {
+     padding: 1.5rem;
+     background-color: #f7f7f7;
+     display: flex;
+     gap: 32px;
+     justify-content: center;
+ }
+
+ .co-profile-success-overlay .CoProfile-success-icon {
+     width: 80px;
+     height: 80px;
+     margin: 0 auto 20px;
+ }
+
+ .co-profile-success-overlay .CoProfile-popup-close-btn {
+     padding: 0.8rem 1.5rem;
+     border-radius: 8px;
+     font-size: 1rem;
+     font-weight: 600;
+     box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+ }
 
 
 /* --- MOBILE RESPONSIVE ADJUSTMENTS (Max 768px) --- */
@@ -1255,7 +1357,7 @@
     width: 90%;
     max-width: 400px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     animation: StuProfile-popup-fade-in 0.3s ease-out;
 }
 
@@ -1267,11 +1369,10 @@
 .CoProfile-popup-header {
     background-color: #d23b42; /* Green for success */
     color: white;
-    padding: 15px 20px;
-    font-size: 2.25rem;
-    font-weight: 600;
+    padding: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
     text-align: center;
-    border-radius: 10px;
 }
 
 .CoProfile-popup-body {
@@ -1295,9 +1396,7 @@
 .CoProfile-popup-footer {
     padding: 15px 20px;
     border-top: 1px solid #eee;
-    text-align: right;
-    position: relative;
-    left: -140px;
+    text-align: center;
     background-color: #ffffff;
 }
 
@@ -1411,7 +1510,7 @@
     width: 90%;
     max-width: 400px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     animation: CoProfile-popup-fade-in 0.3s ease-out forwards;
 }
 
@@ -1423,11 +1522,10 @@
 .CoProfile-popup-header {
     background-color: #d23b42; /* Green for success */
     color: white;
-    padding: 15px 20px;
-    font-size: 2.25rem;
-    font-weight: 600;
+    padding: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
     text-align: center;
-    border-radius: 10px;
 }
 
 .CoProfile-popup-body {
@@ -1451,9 +1549,7 @@
 .CoProfile-popup-footer {
     padding: 15px 20px;
     border-top: 1px solid #eee;
-    text-align: right;
-    position: relative;
-    left: -140px;
+    text-align: center;
     background-color: #ffffff;
 }
 
@@ -1519,4 +1615,25 @@
 
 @keyframes CoProfile-fill {
     100% { box-shadow: inset 0 0 0 40px #4caf50; }
+}
+
+/* Saving state - not-allowed cursor on entire page */
+.co-profile-saving,
+.co-profile-saving * {
+    cursor: not-allowed !important;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+.co-profile-form-input:disabled,
+.co-profile-date-input:disabled,
+select:disabled,
+button:disabled,
+input:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Upload button disabled state */
+.co-profile-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6;
 }

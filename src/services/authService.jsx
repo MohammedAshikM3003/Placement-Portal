@@ -50,8 +50,9 @@ class AuthService {
       console.log('🔍 API Call:', fullUrl, options);
       
       // Add timeout to prevent hanging requests
+      // 90s to cover worst-case MongoDB Atlas cold-start (10s + 20s + 45s retries)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for slow MongoDB queries
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout for cold Atlas clusters
       
       const response = await fetch(fullUrl, {
         headers: {
@@ -133,7 +134,7 @@ class AuthService {
       });
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login timeout - please try again')), 15000)
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 90000) // 90s for cold Atlas cluster
       );
       
       let response;
@@ -277,29 +278,43 @@ class AuthService {
         // Store minimal admin identifier
         localStorage.setItem('adminLoginID', response.admin.adminLoginID);
 
-        // � Preload all admin data (profile photo, profile data, attendance)
-        try {
-          const { default: loginDataPreloader } = await import('./loginDataPreloader.jsx');
-          await loginDataPreloader.preloadAdminData(response.admin.adminLoginID, response.admin);
-          console.log('✅ All admin data preloaded and cached');
-        } catch (preloadError) {
-          console.warn('⚠️ Failed to preload admin data (non-critical):', preloadError);
-          
-          // Fallback: Still cache profile photo
-          if (response.admin.profilePhoto) {
-            await adminImageCacheService.cacheAdminProfilePhoto(
-              response.admin.adminLoginID, 
-              response.admin.profilePhoto
-            );
-          }
-          
-          const profileCache = {
-            name: response.admin.fullName,
-            profilePhoto: response.admin.profilePhoto || null
-          };
-          localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
-          localStorage.setItem('adminProfileCacheTime', Date.now().toString());
-        }
+        // 🚀 Preload all admin data in BACKGROUND (non-blocking for instant navigation)
+        // This fetches profile data, college images, and attendance while user navigates to dashboard
+        import('./loginDataPreloader.jsx').then(({ default: loginDataPreloader }) => {
+          loginDataPreloader.preloadAdminData(response.admin.adminLoginID, response.admin)
+            .then(() => {
+              console.log('✅ All admin data preloaded and cached in background');
+            })
+            .catch(preloadError => {
+              console.warn('⚠️ Failed to preload admin data (non-critical):', preloadError);
+              
+              // Fallback: Still cache basic profile data
+              try {
+                if (response.admin.profilePhoto) {
+                  adminImageCacheService.cacheAdminProfilePhoto(
+                    response.admin.adminLoginID, 
+                    response.admin.profilePhoto
+                  );
+                }
+                
+                const profileCache = {
+                  name: response.admin.fullName,
+                  profilePhoto: response.admin.profilePhoto || null,
+                  adminLoginID: response.admin.adminLoginID,
+                  firstName: response.admin.firstName || '',
+                  lastName: response.admin.lastName || '',
+                  emailId: response.admin.emailId || '',
+                  timestamp: Date.now()
+                };
+                localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+                localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+              } catch (e) {
+                console.error('❌ Failed to cache fallback profile:', e);
+              }
+            });
+        }).catch(err => {
+          console.error('❌ Failed to import loginDataPreloader:', err);
+        });
 
         return {
           success: true,

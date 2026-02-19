@@ -662,29 +662,178 @@
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 1400px) {
-    /* Reset margins for mobile/tablet */
-    .Admin-MC-main-content { margin-left: 0; margin-top: 0; padding-top: 80px; height: auto; overflow-y: auto; }
+    /* Allow page scroll and remove fixed sidebar offset on smaller screens */
+    .Admin-MC-layout {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    .Admin-MC-main-content {
+        margin-left: 0;
+        margin-top: 0;
+        padding-top: 80px;
+        height: auto;
+        overflow-y: visible;
+    }
+
     .Admin-MC-top-card { flex-wrap: wrap; }
     .Admin-MC-filter-section { flex: 0 0 100%; }
     .Admin-MC-action-cards-section { flex: 1 1 100%; margin-left: 0; }
-    .Admin-MC-bottom-card { margin-left: 0; }
+    .Admin-MC-bottom-card { margin-left: 0; width: 100%; }
+    .Admin-MC-table-container { overflow-x: auto; }
     .Admin-MC-students-table tbody { height: 300px; }
 }
+
 @media (max-width: 1200px) {
     .Admin-MC-action-card { flex: 1 1 calc(50% - 10px); }
     .Admin-MC-action-cards-row { flex-wrap: wrap; }
     .Admin-MC-branch-info-card { flex: 1 1 auto; }
 }
+
 @media (max-width: 768px) {
-    .Admin-MC-main-content { padding: 15px; padding-top: 90px; }
-    .Admin-MC-top-card { gap: 12px; flex-direction: column; }
-    .Admin-MC-action-card { flex: 1 1 100%; }
-    .Admin-MC-action-cards-row { flex-direction: column; }
-    .Admin-MC-filter-section { padding: 20px; }
-    .Admin-MC-button-group { flex-direction: column; gap: 15px; }
-    .Admin-MC-button { max-width: 100%; }
-    .Admin-MC-branch-info-top { flex-direction: column; align-items: stretch; }
-    .Admin-MC-back-btn { margin-left: 0; justify-content: center; }
+    .Admin-MC-layout {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .Admin-MC-main-content {
+        padding: 15px;
+        padding-top: 90px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .Admin-MC-top-card {
+        gap: 12px;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .Admin-MC-filter-section {
+        padding: 20px;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        top: 88px;
+    }
+
+    .Admin-MC-action-cards-section {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Two cards per row on mobile, like AdminstudDB */
+    .Admin-MC-action-cards-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 15px;
+        position: relative;
+        bottom:30px;
+    }
+
+    .Admin-MC-action-card {
+        flex: 1 1 calc(50% - 10px);
+        min-height: 236.5px;
+    }
+
+    /* Filter + Blocklist buttons: keep them side by side on mobile */
+    .Admin-MC-button-group {
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .Admin-MC-button {
+        max-width: 180px;
+        flex: 1 1 140px;
+    }
+
+    .Admin-MC-branch-info-top {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        position: relative;
+        bottom:280px;
+    }
+
+    .Admin-MC-back-btn {
+        margin-left: 0;
+        justify-content: center;
+        width: 100px;
+        position: relative;
+        left: 370px;
+        bottom: 60px;
+        
+    }
+
+    .Admin-MC-bottom-card {
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        top:-18px;
+    }
+
+    /* Table: use a single scrollable container on mobile so header and
+       rows move together horizontally and vertically */
+    .Admin-MC-table-container {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .Admin-MC-students-table {
+        display: table;
+        width: 100%;
+        min-width: 700px;
+    }
+
+    .Admin-MC-students-table thead {
+        display: table-header-group;
+        position: static;
+        padding-right: 0;
+    }
+
+    .Admin-MC-students-table tbody {
+        display: table-row-group;
+        height: auto;
+        overflow: visible;
+    }
+
+    .Admin-MC-table-head-row,
+    .Admin-MC-table-row {
+        display: table-row;
+        width: auto;
+    }
+
+    .Admin-MC-delete-branch-header-btn {
+       width: 133px;
+       position: relative;
+        left: 21px;
+        height: 52px;
+    }
+
+     .Admin-MC-branch-info-card { flex: 1 1 auto; width: 350px;}
+
+    /* If there is an odd card (Delete) on the last row, keep its width
+       same as others and center it horizontally */
+    .Admin-MC-action-cards-row .Admin-MC-action-card:last-child {
+        max-width: calc(50% - 10px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    /* On very small screens, stack coordinator action cards one per row */
+    .Admin-MC-action-card {
+        flex: 1 1 100%;
+    }
 }
 
 /* --- POPUP MODAL STYLES --- */

@@ -65,6 +65,11 @@ function CooStuDBCertificateView() {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
+    const handleViewChange = (view) => {
+        setIsSidebarOpen(false);
+        navigate(`/coo-${view}`);
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('coordinatorId');
@@ -389,7 +394,7 @@ function CooStuDBCertificateView() {
         <>
             <Conavbar Coordinatoricon={Coordinatoricon} onToggleSidebar={toggleSidebar} />
             <div className={styles['certificate-layout']}>
-                <Cosidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
+                <Cosidebar isOpen={isSidebarOpen} onLogout={handleLogout} currentView={'manage-students'} onViewChange={handleViewChange} />
                 <div className={styles['certificate-main-content']}>
                     
                     <div className={styles['certificate-stats-container']}>

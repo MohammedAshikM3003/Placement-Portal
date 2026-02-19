@@ -19,6 +19,10 @@ const GPA_REGEX = /^\d{1,2}(?:\.\d{0,2})?$/;
 const GPA_MIN = 0;
 const GPA_MAX = 10;
 
+// URL validation patterns for profile links
+const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
+const LINKEDIN_URL_REGEX = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]{3,100}\/?$/;
+
 const COMPANY_TYPE_OPTIONS = [
   "CORE",
   "IT",
@@ -333,6 +337,81 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
   );
 };
 
+const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
+  if (!isOpen) return null;
+
+  const examples = {
+    GitHub: 'https://github.com/username',
+    LinkedIn: 'https://linkedin.com/in/username'
+  };
+
+  const renderIcon = () => {
+    if (urlType === 'GitHub') {
+      return (
+        <div className={cx("mr-image-error-icon-container")}>
+          <svg
+            className={cx("mr-image-error-icon")}
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#fff"
+              d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"
+            />
+          </svg>
+        </div>
+      );
+    } else {
+      return (
+        <div className={cx("mr-image-error-icon-container")}>
+          <svg
+            className={cx("mr-image-error-icon")}
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#fff"
+              d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"
+            />
+          </svg>
+        </div>
+      );
+    }
+  };
+
+  return (
+    <div className={cx("mr-popup-overlay")}>
+      <div className={cx("mr-popup-container")}>
+        <div className={cx("mr-popup-header")} style={{ backgroundColor: "#1976d2" }}>
+          Invalid {urlType} URL!
+        </div>
+        <div className={cx("mr-popup-body")}>
+          {renderIcon()}
+          <h2 style={{ color: "#d32f2f" }}>Invalid {urlType} Link ✗</h2>
+          {invalidUrl && (
+            <p style={{ marginBottom: "16px", marginTop: "20px", wordBreak: "break-all" }}>
+              You entered: <strong>{invalidUrl}</strong>
+            </p>
+          )}
+          <p style={{ marginBottom: "16px" }}>
+            Correct format: <strong>{examples[urlType]}</strong>
+          </p>
+          <p style={{ fontSize: "14px", color: "#666", marginTop: "20px", marginBottom: "10px" }}>
+            Please enter a valid {urlType} profile URL or leave it empty.
+          </p>
+        </div>
+        <div className={cx("mr-popup-footer")}>
+          <button onClick={onClose} className={cx("mr-popup-close-btn-blue")}>OK</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function MainRegistration() {
   const sectionList = useMemo(
     () => [
@@ -385,6 +464,7 @@ function MainRegistration() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isRegisterEnabled, setIsRegisterEnabled] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [showAllErrors, setShowAllErrors] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -404,6 +484,9 @@ function MainRegistration() {
   const [firstGraduate, setFirstGraduate] = useState("");
   const [willingToSignBond, setWillingToSignBond] = useState("");
   const [preferredModeOfDrive, setPreferredModeOfDrive] = useState("");
+  const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
+  const [urlErrorType, setUrlErrorType] = useState("");
+  const [invalidUrl, setInvalidUrl] = useState("");
 
   const filteredBranches = useMemo(() => {
     if (!selectedDegree) return [];
@@ -484,8 +567,144 @@ function MainRegistration() {
     [sectionRefs, currentYear, currentSemester, studyCategory, getRequiredGPAFields]
   );
 
+  // Function to scroll to field and blink
+  const scrollToFieldAndBlink = useCallback((fieldName) => {
+    if (!formRef.current) return;
+    
+    // Handle special cases
+    let field = null;
+    let isSpecialField = false;
+    
+    if (fieldName === 'dob') {
+      // For Date of Birth DatePicker
+      const dobWrapper = formRef.current.querySelector('.StuProfile-datepicker-wrapper');
+      field = dobWrapper?.querySelector('input');
+      isSpecialField = true;
+    } else if (fieldName === 'companyTypes') {
+      // For company types checkboxes
+      field = formRef.current.querySelector(`input[name="companyTypes"]`);
+      isSpecialField = true;
+    } else if (fieldName === 'preferredJobLocation') {
+      // For preferred job location checkboxes
+      field = formRef.current.querySelector(`input[name="preferredJobLocation"]`);
+      isSpecialField = true;
+    } else {
+      // For all other fields (inputs, selects, textareas)
+      field = formRef.current.querySelector(`[name="${fieldName}"]`);
+    }
+    
+    if (field) {
+      // Scroll to field
+      const section = field.closest('[class*="mr-profile-section-container"]');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
+      // Add blink animation after scroll
+      setTimeout(() => {
+        if (fieldName === 'companyTypes' || fieldName === 'preferredJobLocation') {
+          // For checkbox groups, highlight the container
+          const container = field.closest('.mr-checkbox-group') || field.closest('[class*="checkbox"]') || field.parentElement;
+          if (container) {
+            container.classList.add('field-blink');
+            setTimeout(() => container.classList.remove('field-blink'), 3000);
+          }
+        } else if (field.tagName === 'SELECT') {
+          // For SELECT dropdowns, create a wrapper effect
+          const originalBorder = field.style.border;
+          const originalBoxShadow = field.style.boxShadow;
+          const originalBackground = field.style.backgroundColor;
+          
+          let blinkCount = 0;
+          const blinkInterval = setInterval(() => {
+            if (blinkCount % 2 === 0) {
+              field.style.border = '2px solid #ffc107';
+              field.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
+              field.style.backgroundColor = '#fff9e6';
+            } else {
+              field.style.border = originalBorder;
+              field.style.boxShadow = originalBoxShadow;
+              field.style.backgroundColor = originalBackground;
+            }
+            blinkCount++;
+            if (blinkCount >= 4) {
+              clearInterval(blinkInterval);
+              field.style.border = originalBorder;
+              field.style.boxShadow = originalBoxShadow;
+              field.style.backgroundColor = originalBackground;
+            }
+          }, 375);
+          
+          field.focus();
+        } else {
+          // For regular inputs, use CSS animation
+          field.classList.add('field-blink');
+          field.focus();
+          setTimeout(() => field.classList.remove('field-blink'), 3000);
+        }
+      }, 500);
+    } else {
+      // Fallback: scroll to section if field not found
+      const sectionMap = {
+        firstName: 'personal',
+        lastName: 'personal',
+        regNo: 'personal',
+        batch: 'personal',
+        dob: 'personal',
+        degree: 'personal',
+        branch: 'personal',
+        section: 'personal',
+        gender: 'personal',
+        primaryEmail: 'personal',
+        domainEmail: 'personal',
+        mobileNo: 'personal',
+        fatherName: 'personal',
+        motherName: 'personal',
+        community: 'personal',
+        aadhaarNo: 'other',
+        portfolioLink: 'other',
+        mediumOfStudy: 'other',
+        residentialStatus: 'other',
+        quota: 'other',
+        firstGraduate: 'other',
+        skillSet: 'other',
+        rationCardNo: 'other',
+        familyAnnualIncome: 'other',
+        panNo: 'other',
+        arrearStatus: 'other',
+        companyTypes: 'other',
+        preferredJobLocation: 'other',
+        twelfthInstitution: 'academic',
+        twelfthBoard: 'academic',
+        twelfthPercentage: 'academic',
+        twelfthYear: 'academic',
+        twelfthCutoff: 'academic',
+        diplomaInstitution: 'academic',
+        diplomaBranch: 'academic',
+        diplomaPercentage: 'academic',
+        diplomaYear: 'academic',
+        tenthInstitution: 'academic',
+        tenthBoard: 'academic',
+        tenthPercentage: 'academic',
+        tenthYear: 'academic',
+        currentYear: 'semester',
+        currentSemester: 'semester',
+        loginRegNo: 'login',
+        loginPassword: 'login',
+        confirmPassword: 'login'
+      };
+      
+      const sectionKey = sectionMap[fieldName];
+      if (sectionKey && sectionRefs[sectionKey]?.current) {
+        sectionRefs[sectionKey].current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [sectionRefs]);
+
   const validateAllFields = useCallback(() => {
-    if (!formRef.current) return { isValid: false, errors: ["Form not ready"] };
+    if (!formRef.current) return { isValid: false, errors: [] };
 
     const formData = new FormData(formRef.current);
     const errors = [];
@@ -506,6 +725,7 @@ function MainRegistration() {
       motherName: "Mother Name",
       community: "Community",
       aadhaarNo: "Aadhaar Number",
+      portfolioLink: "Portfolio Link",
       mediumOfStudy: "Medium of Study",
       residentialStatus: "Residential Status",
       quota: "Quota",
@@ -522,36 +742,36 @@ function MainRegistration() {
 
     Object.entries(requiredFields).forEach(([field, label]) => {
       const value = formData.get(field);
-      if (!value || value.trim() === "") errors.push(`${label} is required`);
+      if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
     });
 
-    if (!dob) errors.push("Date of Birth is required");
+    if (!dob) errors.push({ message: "Date of Birth is required", field: "dob" });
 
     const regNo = formData.get("regNo");
-    if (regNo && !/^\d{11}$/.test(regNo)) errors.push("Registration number must be exactly 11 digits");
+    if (regNo && !/^\d{11}$/.test(regNo)) errors.push({ message: "Registration number must be exactly 11 digits", field: "regNo" });
 
     const dobFormatted = dob ? dob.toLocaleDateString("en-GB").replace(/\//g, "") : "";
-    if (dob && !/^\d{8}$/.test(dobFormatted)) errors.push("Please select a valid date of birth");
+    if (dob && !/^\d{8}$/.test(dobFormatted)) errors.push({ message: "Please select a valid date of birth", field: "dob" });
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const primaryEmail = formData.get("primaryEmail");
     const domainEmail = formData.get("domainEmail");
-    if (primaryEmail && !emailRegex.test(primaryEmail)) errors.push("Primary email format is invalid");
-    if (domainEmail && !emailRegex.test(domainEmail)) errors.push("Domain email format is invalid");
+    if (primaryEmail && !emailRegex.test(primaryEmail)) errors.push({ message: "Primary email format is invalid", field: "primaryEmail" });
+    if (domainEmail && !emailRegex.test(domainEmail)) errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
 
     const mobileNo = formData.get("mobileNo");
-    if (mobileNo && !/^\d{10}$/.test(mobileNo)) errors.push("Mobile number must be exactly 10 digits");
+    if (mobileNo && !/^\d{10}$/.test(mobileNo)) errors.push({ message: "Mobile number must be exactly 10 digits", field: "mobileNo" });
 
     const motherMobile = formData.get("motherMobile");
-    if (motherMobile && !/^\d{10}$/.test(motherMobile)) errors.push("Mother mobile number must be exactly 10 digits");
+    if (motherMobile && !/^\d{10}$/.test(motherMobile)) errors.push({ message: "Mother mobile number must be exactly 10 digits", field: "motherMobile" });
 
     const loginRegNoValue = formData.get("loginRegNo");
     const loginPassword = formData.get("loginPassword");
     const confirmPassword = formData.get("confirmPassword");
 
-    if (loginRegNoValue !== regNo) errors.push("Login registration number must match the main registration number");
-    if (dobFormatted && loginPassword !== dobFormatted) errors.push("Login password must be your date of birth in DDMMYYYY format");
-    if (confirmPassword !== loginPassword) errors.push("Password confirmation does not match");
+    if (loginRegNoValue !== regNo) errors.push({ message: "Login registration number must match the main registration number", field: "loginRegNo" });
+    if (dobFormatted && loginPassword !== dobFormatted) errors.push({ message: "Login password must be your date of birth in DDMMYYYY format", field: "loginPassword" });
+    if (confirmPassword !== loginPassword) errors.push({ message: "Password confirmation does not match", field: "confirmPassword" });
 
     if (studyCategory === "12th" || studyCategory === "both") {
       const twelfthFields = {
@@ -563,7 +783,7 @@ function MainRegistration() {
       };
       Object.entries(twelfthFields).forEach(([field, label]) => {
         const value = formData.get(field);
-        if (!value || value.trim() === "") errors.push(`${label} is required`);
+        if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
       });
     }
 
@@ -576,7 +796,7 @@ function MainRegistration() {
       };
       Object.entries(diplomaFields).forEach(([field, label]) => {
         const value = formData.get(field);
-        if (!value || value.trim() === "") errors.push(`${label} is required`);
+        if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
       });
     }
 
@@ -588,13 +808,13 @@ function MainRegistration() {
     };
     Object.entries(tenthFields).forEach(([field, label]) => {
       const value = formData.get(field);
-      if (!value || value.trim() === "") errors.push(`${label} is required`);
+      if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
     });
 
     const currentYearValue = currentYear || formData.get("currentYear");
     const currentSemesterValue = currentSemester || formData.get("currentSemester");
-    if (!currentYearValue) errors.push("Current Year is required");
-    if (!currentSemesterValue) errors.push("Current Semester is required");
+    if (!currentYearValue) errors.push({ message: "Current Year is required", field: "currentYear" });
+    if (!currentSemesterValue) errors.push({ message: "Current Semester is required", field: "currentSemester" });
 
     if (formRef.current) {
       const requiredGpaFields = new Set(getRequiredGPAFields());
@@ -606,19 +826,45 @@ function MainRegistration() {
 
         if (!value) {
           if (requiredGpaFields.has(field.name)) {
-            errors.push(`Semester ${fieldLabel} GPA is required`);
+            errors.push({ message: `Semester ${fieldLabel} GPA is required`, field: field.name });
           }
           return;
         }
 
         if (!GPA_REGEX.test(value)) {
-          errors.push(`Semester ${fieldLabel} GPA must be a valid GPA`);
+          errors.push({ message: `Semester ${fieldLabel} GPA must be a valid GPA`, field: field.name });
         }
       });
     }
 
+    // Validate GitHub URL format (optional but must be valid if provided)
+    const githubLink = formData.get("githubLink");
+    if (githubLink && githubLink.trim()) {
+      if (!GITHUB_URL_REGEX.test(githubLink.trim())) {
+        errors.push({ message: "GitHub link must be a valid URL (e.g. https://github.com/username)", field: "githubLink" });
+      }
+    }
+
+    // Validate LinkedIn URL format (optional but must be valid if provided)
+    const linkedinLink = formData.get("linkedinLink");
+    if (linkedinLink && linkedinLink.trim()) {
+      if (!LINKEDIN_URL_REGEX.test(linkedinLink.trim())) {
+        errors.push({ message: "LinkedIn link must be a valid URL (e.g. https://linkedin.com/in/username)", field: "linkedinLink" });
+      }
+    }
+
+    // Check for Company Types (at least one should be selected)
+    if (!selectedCompanyTypes || selectedCompanyTypes.length === 0) {
+      errors.push({ message: "At least one Company Type must be selected", field: "companyTypes" });
+    }
+
+    // Check for Preferred Job Locations (at least one should be selected)
+    if (!selectedJobLocations || selectedJobLocations.length === 0) {
+      errors.push({ message: "At least one Preferred Job Location must be selected", field: "preferredJobLocation" });
+    }
+
     return { isValid: errors.length === 0, errors };
-  }, [currentYear, currentSemester, dob, studyCategory, getRequiredGPAFields]);
+  }, [currentYear, currentSemester, dob, studyCategory, getRequiredGPAFields, selectedCompanyTypes, selectedJobLocations]);
 
   const handleInputChange = useCallback(() => {
     const updated = {};
@@ -631,7 +877,12 @@ function MainRegistration() {
     const validation = validateAllFields();
     setIsRegisterEnabled(validation.isValid);
     setValidationErrors(validation.errors);
-  }, [sectionList, checkSectionComplete, validateAllFields]);
+    
+    // Reset show all errors when validation changes
+    if (validation.errors.length !== validationErrors.length) {
+      setShowAllErrors(false);
+    }
+  }, [sectionList, checkSectionComplete, validateAllFields, validationErrors.length]);
 
   const validateGpaInput = useCallback((inputElement) => {
     if (!inputElement) return;
@@ -720,6 +971,7 @@ function MainRegistration() {
   const closeExistingRegNoPopup = useCallback(() => setExistingRegNoPopupOpen(false), []);
   const closeMismatchedRegNoPopup = useCallback(() => setMismatchedRegNoPopupOpen(false), []);
   const closeFileSizeErrorPopup = useCallback(() => setIsFileSizeErrorOpen(false), []);
+  const closeURLErrorPopup = useCallback(() => setURLErrorPopupOpen(false), []);
 
   const handleDiscard = useCallback(() => {
     setIsDiscardPopupOpen(true);
@@ -1010,6 +1262,7 @@ function MainRegistration() {
           community: formData.get("community") || "",
           bloodGroup: formData.get("bloodGroup") || "",
           aadhaarNo: formData.get("aadhaarNo") || "",
+          portfolioLink: formData.get("portfolioLink") || "",
           mediumOfStudy: formData.get("mediumOfStudy") || "",
           studyCategory,
           tenthInstitution: formData.get("tenthInstitution") || "",
@@ -1268,6 +1521,7 @@ function MainRegistration() {
                     <input type="text" name="guardianName" placeholder="Guardian Name" />
                     <input type="tel" name="guardianMobile" placeholder="Guardian Number" maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" />
                     <input type="text" name="aadhaarNo" placeholder="Aadhaar Number *" required />
+                    <input type="url" name="portfolioLink" placeholder="Portfolio Link" />
                   </div>
                   <div className={cx("mr-profile-photo-wrapper")}>
                     <div className={cx("mr-profile-photo-box")} style={{ height: "675px" }}>
@@ -1554,8 +1808,44 @@ function MainRegistration() {
                     <option value="Hybrid">Hybrid</option>
                   </select>
 
-                  <input type="text" name="githubLink" placeholder="Github Link" />
-                  <input type="text" name="linkedinLink" placeholder="Linkedin Link" />
+                  <input
+                    type="url"
+                    name="githubLink"
+                    placeholder="Github Link (e.g. https://github.com/username)"
+                    onChange={handleInputChange}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val && !GITHUB_URL_REGEX.test(val)) {
+                        e.target.style.borderColor = '#dc3545';
+                        e.target.title = 'Must be: https://github.com/your-username';
+                        setUrlErrorType('GitHub');
+                        setInvalidUrl(val);
+                        setURLErrorPopupOpen(true);
+                      } else {
+                        e.target.style.borderColor = val ? '#28a745' : '';
+                        e.target.title = '';
+                      }
+                    }}
+                  />
+                  <input
+                    type="url"
+                    name="linkedinLink"
+                    placeholder="LinkedIn Link (e.g. https://linkedin.com/in/username)"
+                    onChange={handleInputChange}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                        e.target.style.borderColor = '#dc3545';
+                        e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                        setUrlErrorType('LinkedIn');
+                        setInvalidUrl(val);
+                        setURLErrorPopupOpen(true);
+                      } else {
+                        e.target.style.borderColor = val ? '#28a745' : '';
+                        e.target.title = '';
+                      }
+                    }}
+                  />
                   <div className={cx("mr-checkbox-group")}>
                     <span className={cx("mr-checkbox-group__label")}>Company Types *</span>
                     <div className={cx("mr-checkbox-group__options")}>
@@ -1664,7 +1954,8 @@ function MainRegistration() {
                   onClick={(event) => {
                     if (!isRegisterEnabled) {
                       event.preventDefault();
-                      alert(`Please complete required fields:\n${validationErrors.slice(0, 5).join("\n")}`);
+                      const errorMessages = validationErrors.map(e => e.message).slice(0, 5).join("\n");
+                      alert(`Please complete required fields:\n${errorMessages}`);
                     }
                   }}
                 >
@@ -1683,13 +1974,30 @@ function MainRegistration() {
                 <div className={styles.validationErrorBox}>
                   <h4>⚠️ Required Fields Missing:</h4>
                   <ul>
-                    {validationErrors.slice(0, 5).map((error, index) => (
-                      <li key={error + index}>{error}</li>
+                    {(showAllErrors ? validationErrors : validationErrors.slice(0, 10)).map((error, index) => (
+                      <li 
+                        key={index} 
+                        onClick={() => scrollToFieldAndBlink(error.field)}
+                        className={styles.validationErrorItem}
+                      >
+                        {error.message}
+                      </li>
                     ))}
-                    {validationErrors.length > 5 && (
-                      <li style={{ fontStyle: "italic" }}>...and {validationErrors.length - 5} more</li>
-                    )}
                   </ul>
+                  {validationErrors.length > 10 && (
+                    <div className={styles.validationErrorToggle}>
+                      <button 
+                        type="button"
+                        onClick={() => setShowAllErrors(!showAllErrors)}
+                        className={styles.showMoreButton}
+                      >
+                        {showAllErrors 
+                          ? `Show Less ▲` 
+                          : `Show More (${validationErrors.length - 10} more) ▼`
+                        }
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </form>
@@ -1719,6 +2027,12 @@ function MainRegistration() {
         isOpen={isFileSizeErrorOpen}
         onClose={closeFileSizeErrorPopup}
         fileSizeKB={fileSizeErrorKB}
+      />
+      <URLValidationErrorPopup
+        isOpen={isURLErrorPopupOpen}
+        onClose={closeURLErrorPopup}
+        urlType={urlErrorType}
+        invalidUrl={invalidUrl}
       />
       <ImagePreviewModal
         src={profileImage}

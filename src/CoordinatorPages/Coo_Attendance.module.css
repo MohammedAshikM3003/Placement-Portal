@@ -628,17 +628,8 @@
       width: calc(100% - 30px);
       margin-bottom: 0;
   }
-  .co-at-pie-chart-title {
-      margin-top: 493px;
-      margin-left:20px;
-  }
-  .co-at-pie-chart-date {
-      /* Resetting previous offsets */
-              position: relative;
-          margin-top: 488px;
-          /* margin-left: 47px; */
-          margin-right: 10px;
-  }
+ 
+ 
   
   .co-at-pie-chart-content {
       flex-direction: row; /* Chart and stats side by side */

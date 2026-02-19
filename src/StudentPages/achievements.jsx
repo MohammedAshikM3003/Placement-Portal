@@ -1469,18 +1469,22 @@ This record is locked and cannot be modified.
               formattedFileData = `data:application/pdf;base64,${cachedFileData}`;
             }
             
-            // Direct preview implementation
+            // Direct preview using blob URL for native PDF viewer with zoom
             requestAnimationFrame(() => {
-              const newWindow = window.open();
-              if (newWindow) {
-                newWindow.document.write(`
-                  <html>
-                    <head><title>Certificate Preview</title></head>
-                    <body style="margin:0;">
-                      <embed src="${formattedFileData}" width="100%" height="100%" type="application/pdf">
-                    </body>
-                  </html>
-                `);
+              try {
+                const base64 = formattedFileData.split(',')[1];
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+              } catch (blobError) {
+                console.error('Blob preview fallback:', blobError);
+                window.open(formattedFileData, '_blank');
               }
               setPreviewPopupState('none'); // Close popup after preview opens
             });
@@ -1551,18 +1555,22 @@ This record is locked and cannot be modified.
             formattedFileData = `data:application/pdf;base64,${formattedFileData}`;
           }
           
-          // INSTANT PREVIEW: Use requestAnimationFrame for immediate execution
+          // INSTANT PREVIEW: Use blob URL for native PDF viewer with zoom
           requestAnimationFrame(() => {
-            const newWindow = window.open();
-            if (newWindow) {
-              newWindow.document.write(`
-                <html>
-                  <head><title>Certificate Preview</title></head>
-                  <body style="margin:0;">
-                    <embed src="${formattedFileData}" width="100%" height="100%" type="application/pdf">
-                  </body>
-                </html>
-              `);
+            try {
+              const base64 = formattedFileData.split(',')[1];
+              const byteCharacters = atob(base64);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'application/pdf' });
+              const blobUrl = URL.createObjectURL(blob);
+              window.open(blobUrl, '_blank');
+            } catch (blobError) {
+              console.error('Blob preview fallback:', blobError);
+              window.open(formattedFileData, '_blank');
             }
             setPreviewPopupState('none');
           });

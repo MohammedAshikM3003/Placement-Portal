@@ -425,6 +425,7 @@
   .Admin-add-branch-btn {
     width: 100%;
     justify-content: center;
+    margin-left: 26px;
   }
 
   /* Custom Webkit Scrollbar for Mobile Form */

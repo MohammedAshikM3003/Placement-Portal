@@ -30,6 +30,10 @@ const JOB_LOCATION_OPTIONS = [
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
 
+// URL validation patterns for profile links
+const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
+const LINKEDIN_URL_REGEX = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]{3,100}\/?$/;
+
 const parseMultiValue = (value) => {
     if (Array.isArray(value)) {
         return value.map((item) => String(item).trim()).filter(Boolean);
@@ -167,6 +171,79 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
     );
 };
 
+const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
+    if (!isOpen) return null;
+
+    const examples = {
+        GitHub: 'https://github.com/username',
+        LinkedIn: 'https://linkedin.com/in/username'
+    };
+
+    const renderIcon = () => {
+        if (urlType === 'GitHub') {
+            return (
+                <div className={styles.imageSizePopupIconWrapper}>
+                    <svg
+                        className={styles.imageSizePopupIcon}
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="48"
+                        height="48"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            fill="#fff"
+                            d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"
+                        />
+                    </svg>
+                </div>
+            );
+        } else {
+            return (
+                <div className={styles.imageSizePopupIconWrapper}>
+                    <svg
+                        className={styles.imageSizePopupIcon}
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="48"
+                        height="48"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            fill="#fff"
+                            d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"
+                        />
+                    </svg>
+                </div>
+            );
+        }
+    };
+
+    return (
+        <div className={styles.popupOverlay}>
+            <div className={styles.imageSizePopup}>
+                <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
+                <div className={styles.imageSizePopupBody}>
+                    {renderIcon()}
+                    <h2>Invalid {urlType} Link ✗</h2>
+                    {invalidUrl && (
+                        <p className={styles.imageSizePopupLine} style={{ wordBreak: 'break-all' }}>
+                            You entered: <strong>{invalidUrl}</strong>
+                        </p>
+                    )}
+                    <p className={styles.imageSizePopupLine}>
+                        Correct format: <strong>{examples[urlType]}</strong>
+                    </p>
+                    <p className={styles.imageSizePopupHint}>
+                        Please enter a valid {urlType} profile URL or leave it empty.
+                    </p>
+                </div>
+                <div className={styles.imageSizePopupFooter}>
+                    <button onClick={onClose} className={styles.imageSizePopupButton}>OK</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 function StuProfile({ onLogout, onViewChange }) {
     const [studyCategory, setStudyCategory] = useState('12th');
     const [isPopupOpen, setPopupOpen] = useState(false);
@@ -188,6 +265,9 @@ function StuProfile({ onLogout, onViewChange }) {
     const [isSaving, setIsSaving] = useState(false);
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
+    const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
+    const [urlErrorType, setUrlErrorType] = useState('');
+    const [invalidUrl, setInvalidUrl] = useState('');
 
     const selectedCompanyTypes = useMemo(
         () => parseMultiValue(studentData?.companyTypes),
@@ -497,6 +577,23 @@ function StuProfile({ onLogout, onViewChange }) {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        
+        // Validate GitHub and LinkedIn URLs before saving
+        const githubVal = studentData?.githubLink?.trim() || '';
+        const linkedinVal = studentData?.linkedinLink?.trim() || '';
+        if (githubVal && !GITHUB_URL_REGEX.test(githubVal)) {
+            setUrlErrorType('GitHub');
+            setInvalidUrl(githubVal);
+            setURLErrorPopupOpen(true);
+            return;
+        }
+        if (linkedinVal && !LINKEDIN_URL_REGEX.test(linkedinVal)) {
+            setUrlErrorType('LinkedIn');
+            setInvalidUrl(linkedinVal);
+            setURLErrorPopupOpen(true);
+            return;
+        }
+
         setIsSaving(true);
         
         try {
@@ -530,7 +627,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 valueAddedCourses: formData.get('valueAddedCourses') || '', aboutSibling: formData.get('aboutSibling') || '', rationCardNo: formData.get('rationCardNo') || '',
                 familyAnnualIncome: formData.get('familyAnnualIncome') || '', willingToSignBond: formData.get('willingToSignBond') || '',
                 preferredModeOfDrive: formData.get('preferredModeOfDrive') || '', githubLink: formData.get('githubLink') || '',
-                linkedinLink: formData.get('linkedinLink') || '', companyTypes: formData.get('companyTypes') || '', preferredJobLocation: formData.get('preferredJobLocation') || '',
+                linkedinLink: formData.get('linkedinLink') || '', portfolioLink: formData.get('portfolioLink') || '', companyTypes: formData.get('companyTypes') || '', preferredJobLocation: formData.get('preferredJobLocation') || '',
                 profilePicURL: profileImage || '', profileUploadDate: uploadInfo.date || new Date().toLocaleDateString('en-GB')
             };
 
@@ -597,7 +694,8 @@ function StuProfile({ onLogout, onViewChange }) {
     }
 
     return (
-        <div className={styles.container}>
+        <div className={`${styles.container} ${isSaving ? styles['stu-profile-saving'] : ''}`}>
+            {isSaving && <div className={styles['stu-profile-saving-overlay']} />}
             {/* Profile Update Notification */}
             {showUpdateNotification && (
                 <div style={{
@@ -683,6 +781,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                             setCurrentSemester(firstSemester);
                                             setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
                                         }}
+                                        disabled={isSaving}
                                     >
                                         <option value="" disabled>Current Year</option>
                                         <option value="I">I</option>
@@ -699,7 +798,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                             setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
                                         }}
                                         required
-                                        disabled={!currentYear}
+                                        disabled={!currentYear || isSaving}
                                     >
                                         <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
                                         {getAvailableSemesters(currentYear).map((sem) => (
@@ -730,20 +829,21 @@ function StuProfile({ onLogout, onViewChange }) {
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                     </select>
-                                    <input type="text" name="address" placeholder="Address" defaultValue={studentData?.address || ''} />
-                                    <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} />
-                                    <input type="email" name="primaryEmail" placeholder="Primary Email" defaultValue={studentData?.primaryEmail || ''} />
+                                    <input type="text" name="address" placeholder="Address" defaultValue={studentData?.address || ''} disabled={isSaving} />
+                                    <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} disabled={isSaving} />
+                                    <input type="email" name="primaryEmail" placeholder="Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={isSaving} />
                                     <input type="email" name="domainEmail" placeholder="Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="tel" name="mobileNo" placeholder="Mobile No." defaultValue={studentData?.mobileNo || ''} />
+                                    <input type="tel" name="mobileNo" placeholder="Mobile No." defaultValue={studentData?.mobileNo || ''} disabled={isSaving} />
                                     <input type="text" name="fatherName" placeholder="Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} />
-                                    <input type="text" name="fatherMobile" placeholder="Father Mobile No." defaultValue={studentData?.fatherMobile || ''} />
+                                    <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={isSaving} />
+                                    <input type="text" name="fatherMobile" placeholder="Father Mobile No." defaultValue={studentData?.fatherMobile || ''} disabled={isSaving} />
                                     <input type="text" name="motherName" placeholder="Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} />
-                                    <input type="text" name="motherMobile" placeholder="Mother Mobile No." defaultValue={studentData?.motherMobile || ''} />
-                                    <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} />
-                                    <input type="text" name="guardianMobile" placeholder="Guardian Number" defaultValue={studentData?.guardianMobile || ''} />
+                                    <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={isSaving} />
+                                    <input type="text" name="motherMobile" placeholder="Mother Mobile No." defaultValue={studentData?.motherMobile || ''} disabled={isSaving} />
+                                    <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={isSaving} />
+                                    <input type="text" name="guardianMobile" placeholder="Guardian Number" defaultValue={studentData?.guardianMobile || ''} disabled={isSaving} />
                                     <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} readOnly className={styles.readOnlyInput} />
+                                    <input type="url" name="portfolioLink" placeholder="Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={isSaving} />
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
                                     <div className={styles.profilePhotoBox} style={{ height: '675px' }}>
@@ -780,7 +880,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                                     </div>
                                                 </label>
                                                 {profileImage && (
-                                                    <button onClick={handleImageRemove} className={styles.removeImageBtn} aria-label="Remove image">
+                                                    <button onClick={handleImageRemove} className={styles.removeImageBtn} aria-label="Remove image" disabled={isSaving}>
                                                         <IoMdClose />
                                                     </button>
                                                 )}
@@ -792,6 +892,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                                 style={{ display: 'none' }}
                                                 accept="image/jpeg"
                                                 onChange={handleImageUpload}
+                                                disabled={isSaving}
                                             />
                                             {uploadSuccess && <p className={styles.uploadSuccessMessage}>Profile Photo uploaded Successfully!</p>}
                                             <p className={styles.uploadHint}>*Only JPG format is allowed.</p>
@@ -822,7 +923,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         </select>
                                     </div>
                                     <div style={{ marginTop: '24px' }}>
-                                        <input type="text" name="bloodGroup" placeholder="Blood Group" defaultValue={studentData?.bloodGroup || ''} />
+                                        <input type="text" name="bloodGroup" placeholder="Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={isSaving} />
                                     </div>
                                 </div>
                             </div>
@@ -934,6 +1035,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         name="residentialStatus"
                                         value={studentData?.residentialStatus || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
+                                        disabled={isSaving}
                                     >
                                         <option value="" disabled>Residential status</option>
                                         <option value="Hosteller">Hosteller</option>
@@ -958,6 +1060,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="Languages Known"
                                         value={studentData?.languagesKnown || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <>
                                         <select
@@ -978,6 +1081,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="Passport No."
                                         value={studentData?.passportNo || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -985,6 +1089,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="Skill set"
                                         value={studentData?.skillSet || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -992,6 +1097,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="Value Added Courses"
                                         value={studentData?.valueAddedCourses || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -999,6 +1105,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="About sibling"
                                         value={studentData?.aboutSibling || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -1007,6 +1114,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         value={studentData?.rationCardNo || ''}
                                         readOnly
                                         className={styles.readOnlyInput}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -1014,6 +1122,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         placeholder="Family Annual Income"
                                         value={studentData?.familyAnnualIncome || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
+                                        disabled={isSaving}
                                     />
                                     <input
                                         type="text"
@@ -1051,18 +1160,46 @@ function StuProfile({ onLogout, onViewChange }) {
                                         <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
                                     </>
                                     <input
-                                        type="text"
+                                        type="url"
                                         name="githubLink"
-                                        placeholder="GitHub Link"
+                                        placeholder="GitHub Link (e.g. https://github.com/username)"
                                         value={studentData?.githubLink || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !GITHUB_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://github.com/your-username';
+                                                setUrlErrorType('GitHub');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving}
                                     />
                                     <input
-                                        type="text"
+                                        type="url"
                                         name="linkedinLink"
-                                        placeholder="LinkedIn Profile Link"
+                                        placeholder="LinkedIn Link (e.g. https://linkedin.com/in/username)"
                                         value={studentData?.linkedinLink || ''}
                                         onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                                                setUrlErrorType('LinkedIn');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving}
                                     />
                                     <div className={styles.checkboxGroup}>
                                         <span className={styles.checkboxGroupLabel}>Company Types</span>
@@ -1123,6 +1260,12 @@ function StuProfile({ onLogout, onViewChange }) {
                 isOpen={isFileSizeErrorOpen} 
                 onClose={() => setIsFileSizeErrorOpen(false)} 
                 fileSizeKB={fileSizeErrorKB} 
+            />
+            <URLValidationErrorPopup
+                isOpen={isURLErrorPopupOpen}
+                onClose={() => setURLErrorPopupOpen(false)}
+                urlType={urlErrorType}
+                invalidUrl={invalidUrl}
             />
             <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
         </div>

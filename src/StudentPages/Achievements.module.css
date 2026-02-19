@@ -65,16 +65,30 @@
 
 /* Success Icon (General) */
 .Achievement-success-icon {
-    width: 80px; height: 80px; margin: 0 auto 20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto 20px;
     box-shadow: inset 0 0 0 #22C55E;
     animation: Achievement-fill 0.4s ease-in-out 0.4s forwards, Achievement-scale 0.3s ease-in-out 0.9s both;
 }
 .Achievement-success-icon--circle {
-    stroke-dasharray: 166; stroke-dashoffset: 166; stroke: #22C55E; fill: none;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22C55E;
+    fill: none;
     animation: Achievement-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 .Achievement-success-icon--check {
-    transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
     animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
 

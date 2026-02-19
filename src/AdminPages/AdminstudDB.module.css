@@ -25,8 +25,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1001;
+    background-color: rgba(0, 0, 0, 0);
+    /* Keep overlay below the sidebar so links remain clickable on mobile */
+    z-index: 900;
     display: none;
 }
 
@@ -48,7 +49,7 @@
     flex: 0 0 500px;
     background-color: #e8e8e8;
     padding: 20px;
-    border-radius: 43px;
+    border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -588,13 +589,12 @@
 /* --- LOCALIZED SCROLLBAR STYLING --- */
 /* ---------------------------------------------------------------------- */
 .Admin-DB-layout ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
 }
 
 .Admin-DB-layout ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+    background: #f0f2f5;
 }
 
 .Admin-DB-layout ::-webkit-scrollbar-button {
@@ -603,40 +603,97 @@
 
 .Admin-DB-layout ::-webkit-scrollbar-thumb:vertical,
 .Admin-DB-layout ::-webkit-scrollbar-thumb:horizontal {
-    background: #4EA24E;
-    border-radius: 4px;
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
 }
 
 .Admin-DB-layout ::-webkit-scrollbar-thumb:hover {
-    background: #459645;
+    background-color: #3d8a3d;
 }
 
 /* ---------------------------------------------------------------------- */
 /* --- MOBILE RESPONSIVENESS --- */
 /* ---------------------------------------------------------------------- */
 @media (max-width: 1024px) {
-    .Admin-DB-top-card, .Admin-DB-bottom-card { margin-left: 0; }
-    .Admin-DB-top-card { flex-wrap: wrap; }
-    .Admin-DB-filter-section { flex: 1 1 100%; }
+.Admin-DB-top-card, .Admin-DB-bottom-card { margin-left: 0; }
+.Admin-DB-top-card { flex-wrap: wrap; }
+.Admin-DB-filter-section { flex: 1 1 100%; }
 }
 
 @media (max-width: 768px) {
-    .Admin-DB-layout { flex-direction: column; height: 100vh; overflow-y: auto; }
-    .Admin-DB-main-content { padding: 15px; padding-top: 90px; overflow: visible; }
-    .Admin-DB-overlay { display: block; }
-    .Admin-DB-top-card { margin-left: 0; margin-top: 0px; gap: 20px; flex-direction: column; }
-    .Admin-DB-filter-section { border-radius: 25px; flex: 1 1 auto; width: 100%; }
-    .Admin-DB-filter-content { grid-template-columns: 1fr; gap: 12px; }
-    .Admin-DB-button-group { flex-direction: column; gap: 10px; }
-    .Admin-DB-action-cards-section { flex-wrap: wrap; gap: 15px; }
-    .Admin-DB-action-card { flex: 1 1 calc(50% - 10px); min-width: 140px; }
-    .Admin-DB-bottom-card { margin-left: 0; padding: 15px; }
-    .Admin-DB-table-header-row { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .Admin-DB-table-container { max-height: 380px; overflow-y: auto; }
+.Admin-DB-layout { flex-direction: column; min-height: 100vh; overflow: visible; }
+.Admin-DB-main-content {
+	    padding: 15px;
+	    padding-top: 90px;
+	    padding-bottom: 80px;
+	    height: auto;
+	    overflow: visible;
+	}
+
+.Admin-DB-overlay { display: block; }
+.Admin-DB-top-card { margin-left: 0; margin-top: 0px; gap: 20px; flex-direction: column; }
+
+.Admin-DB-filter-section { border-radius: 25px; flex: 1 1 auto; width: 100%; }
+.Admin-DB-filter-content { grid-template-columns: 1fr; gap: 12px; }
+.Admin-DB-button-group { flex-direction: column; gap: 10px; }
+.Admin-DB-action-cards-section { flex-wrap: wrap; gap: 15px; }
+.Admin-DB-action-card { flex: 1 1 calc(50% - 10px); min-width: 140px; }
+.Admin-DB-bottom-card { margin-left: 0; padding: 15px; }
+.Admin-DB-table-header-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+.Admin-DB-table-container { max-height: 380px; overflow-y: auto; position:relative; bottom:50px;}
+}
+
+
+.Admin-DB-table-actions{
+    position: relative;
+    left: 325px;
+    top: -70px;
+}
+/* Match green table scrollbar style used in Company Profile */
+.Admin-DB-table-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.Admin-DB-table-container::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.Admin-DB-table-container::-webkit-scrollbar-thumb {
+    background-color: #4EA24E !important;
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    /* Style the real page scrollbar (Edge/Chromium) on both html and body */
+    :global(html::-webkit-scrollbar),
+    :global(body::-webkit-scrollbar) {
+        width: 10px;
+        height: 10px;
+    }
+
+    :global(html::-webkit-scrollbar-track),
+    :global(body::-webkit-scrollbar-track) {
+        background: #f0f2f5;
+    }
+
+    :global(html::-webkit-scrollbar-thumb),
+    :global(body::-webkit-scrollbar-thumb) {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    :global(html::-webkit-scrollbar-thumb:hover),
+    :global(body::-webkit-scrollbar-thumb:hover) {
+        background-color: #3d8a3d;
+    }
 }
 
 @media (max-width: 480px) {
-    .Admin-DB-action-card { flex: 1 1 100%; }
+.Admin-DB-action-card { flex: 1 1 100%; }
 }
 
 /* ---------------------------------------------------------------------- */

@@ -10,9 +10,11 @@
   margin-right: 5px;
   /* FIXED: Set margin-left to offset the sidebar on desktop */
   margin-left: 260px;
-  margin-top: 50px; /* Offset for navbar */
+  margin-top: 65px; /* Offset for navbar */
   height: calc(100vh - 65px);
+  overflow-y: auto; /* Allow content to scroll within the main area */
 }
+
 .Admin-radw-filter-box {
   background: #D3D1D1;
   border-radius: 16px;
@@ -132,6 +134,8 @@
       font-weight: 600;
       color: #282828;
       font-size: 1rem;
+      margin-right:221px;
+      margin-top: 5px;
       padding: 0 5px;
       align-self: center; 
       flex-shrink: 0; 
@@ -192,7 +196,7 @@
     border-radius: 16px;
     max-width: 1180px; 
     /* FIXED: Reset margins and adjust padding */
-    margin: 10px 0px 0px 15px;
+    margin: 10px 0px 0px 3px;
     padding: 26px 32px 0px 12px;
     box-shadow: 0 0 14px #e3e6ee2a;
     border: 2px solid #808080;
@@ -299,6 +303,9 @@
 .Admin-radw-data-table thead {
   display: block;
   width: 100%;
+  position: sticky; /* keep header visible when scrolling */
+  top: 0;
+  z-index: 1;
 }
 
 .Admin-radw-data-table th {
@@ -314,10 +321,11 @@
   }
   
   .Admin-radw-table-body-scroll {
-    min-height: 287px;
-  overflow-y: auto;
-  overflow-x: auto; 
-  width: 100%;
+    /* Constrain height so rows scroll inside the card instead of overflowing */
+    max-height: 283px;
+    overflow-y: auto;
+    overflow-x: auto; 
+    width: 100%;
   }
   
   /* --- GREEN SCROLLBARS --- */
@@ -446,6 +454,7 @@
   .Admin-radw-filter-inputs {
     flex-direction: column;
     gap: 10px;
+    margin-left: 65px;
   }
   .Admin-radw-department-search-row {
     flex-direction: column;
@@ -454,7 +463,10 @@
   .Admin-radw-department-select {
     flex: 1 1 100%;
     max-width: 100%;
+    margin-left: 110px;
+    margin-top: -40px;
   }
+  
   .Admin-radw-search-btn-blue {
     flex-basis: 100%;
   }
@@ -468,8 +480,16 @@
     justify-content: space-between;
     margin-bottom: 0;
   }
+.Admin-radw-table-body-scroll {
+    max-height: 283px;
+    overflow-y: auto;
+    overflow-x: auto;
+    width: 106%;
+}
+
   .Admin-radw-print-button-container {
     margin-top: 5px;
+    margin-left: 320px;
   }
   .Admin-radw-table-title {
     margin-bottom: 5px;

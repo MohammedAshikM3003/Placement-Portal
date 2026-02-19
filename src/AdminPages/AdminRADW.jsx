@@ -26,21 +26,8 @@ const EyeIcon = () => (
   </svg>
 );
 
-// REMOVED: Mock data - now fetching from MongoDB
-const initialData_REMOVED = [
-  { "So No": 1, "Student Name": "Arun Kumar S.", "Register No.": "7315X00001", "Department": "CSE", "Batch": "2023-2027", "Section": "A", "Company": "Infosys", "Job Role": "Software Engineer", "Package": "12.0 LPA", "Rounds": "Round 5", "Status": "Passed", "Start Date": "01/08/25", "End Date": "05/08/25", "Placement Date": "29/08/25", "Email": "arun.kumar.s@example.com", "Mobile No.": "9788657400" },
-  { "So No": 2, "Student Name": "Priya V.", "Register No.": "7315X00002", "Department": "IT", "Batch": "2023-2027", "Section": "B", "Company": "Wipro", "Job Role": "Data Analyst", "Package": "7.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "06/08/25", "End Date": "10/08/25", "Placement Date": "", "Email": "priya.v@example.com", "Mobile No.": "9788657401" },
-  { "So No": 3, "Student Name": "Gowtham M.", "Register No.": "7315X00003", "Department": "MECH", "Batch": "2023-2027", "Section": "A", "Company": "TCS", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 1", "Status": "Rejected", "Start Date": "11/08/25", "End Date": "15/08/25", "Placement Date": "", "Email": "gowtham.m@example.com", "Mobile No.": "9788657402" },
-  { "So No": 4, "Student Name": "Nithya R.", "Register No.": "7315X00004", "Department": "EEE", "Batch": "2023-2027", "Section": "A", "Company": "TCS", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Passed", "Start Date": "16/08/25", "End Date": "20/08/25", "Placement Date": "30/08/25", "Email": "nithya.r@example.com", "Mobile No.": "9788657403" },
-  { "So No": 5, "Student Name": "Vikram K.", "Register No.": "7315X00005", "Department": "ECE", "Batch": "2023-2027", "Section": "B", "Company": "Wipro", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Rejected", "Start Date": "21/08/25", "End Date": "25/08/25", "Placement Date": "", "Email": "vikram.k@example.com", "Mobile No.": "9788657404" },
-  { "So No": 6, "Student Name": "Deepika P.", "Register No.": "7315X00006", "Department": "CIVIL", "Batch": "2023-2027", "Section": "C", "Company": "Infosys", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Passed", "Start Date": "26/08/25", "End Date": "30/08/25", "Placement Date": "01/09/25", "Email": "deepika.p@example.com", "Mobile No.": "9788657405" },
-  { "So No": 7, "Student Name": "Sanjay R.", "Register No.": "7315X00007", "Department": "CSE", "Batch": "2024-2028", "Section": "A", "Company": "IBM", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Rejected", "Start Date": "01/09/25", "End Date": "05/09/25", "Placement Date": "", "Email": "sanjay.r@example.com", "Mobile No.": "9788657406" },
-  { "So No": 8, "Student Name": "Meena L.", "Register No.": "7315X00008", "Department": "IT", "Batch": "204-2028", "Section": "B", "Company": "TCS", "Job Role": "Software Engineer", "Package": "8.0 LPA", "Rounds": "Round 2", "Status": "Passed", "Start Date": "06/09/25", "End Date": "10/09/25", "Placement Date": "12/09/25", "Email": "meena.l@example.com", "Mobile No.": "9788657407" },
-  { "So No": 9, "Student Name": "Kavin S.", "Register No.": "7315X00009", "Department": "MECH", "Batch": "204-2028", "Section": "C", "Company": "Wipro", "Job Role": "Project Engineer", "Package": "10.0 LPA", "Rounds": "Round 3", "Status": "Rejected", "Start Date": "11/09/25", "End Date": "15/09/25", "Placement Date": "", "Email": "kavin.s@example.com", "Mobile No.": "9788657408" },
-  { "So No": 10, "Student Name": "Harini B.", "Register No.": "7315X00010", "Department": "CSE", "Batch": "2024-2028", "Section": "A", "Company": "Infosys", "Job Role": "Data Analyst", "Package": "6.0 LPA", "Rounds": "Round 1", "Status": "Passed", "Start Date": "16/09/25", "End Date": "20/09/25", "Placement Date": "22/09/25", "Email": "harini.b@example.com", "Mobile No.": "9788657409" },
-];
-
 function AdminRADW() {
+
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
   
@@ -69,6 +56,22 @@ function AdminRADW() {
   const [exportPopupState, setExportPopupState] = useState('none');
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links (mobile auto-close)
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
 
   // Load students for selected company and date
   const loadStudentsForDepartment = async (companyName, startDate, branch = null) => {
@@ -605,10 +608,10 @@ function AdminRADW() {
 
   return ( 
     <>
-      <Adnavbar Adminicon={Adminicon} /> 
+      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} /> 
       {/* UPDATED CLASS: Admin-radw-layout */}
       <div className={styles['Admin-radw-layout']}>
-        <Adsidebar />
+        <Adsidebar isOpen={isSidebarOpen} />
         {/* UPDATED CLASS: Admin-radw-main-content */}
         <div className={styles['Admin-radw-main-content']}>
           {/* UPDATED CLASS: Admin-radw-filter-box */}
@@ -802,6 +805,12 @@ function AdminRADW() {
             </div>
           </div>
         </div>
+        {isSidebarOpen && (
+          <div
+            className={styles['Admin-radw-overlay']}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
       </div>
 
       {/* Export Popup Alerts */}

@@ -9,13 +9,17 @@
     
 }
 
-.co-cd-search-filter-card__tab-button{margin-top:6px; margin-left:-18px;}
-/* Add vertical scroll for full page in mobile version */
+.co-cd-search-filter-card__tab-button
+{
+  margin-top:6px; 
+  margin-left:-18px;
+}
 
+/* Add vertical scroll for full page in mobile version */
 .co-cd-main-content::-webkit-scrollbar,
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  width: 15px;
+  width: 10px;
 }
 .co-cd-main-content::-webkit-scrollbar-track,
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
@@ -48,7 +52,7 @@ body::-webkit-scrollbar-thumb:horizontal {
   border-radius: 20px;
   border: 3px solid #f0f2f5;
 }
-#co-cd-search-department{
+#co-cd-search-start-date{
   margin-top:0px;
 }
 .co-cd-main-content::-webkit-scrollbar-thumb:horizontal:hover,
@@ -350,7 +354,7 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
         align-items: center;
         min-height: 253.2px;
         margin-left: 10px;
-        margin-top:60px;
+        margin-top:45px;
         
 }
 }
@@ -499,13 +503,14 @@ min-height: 245px;
   .co-cd-search-filter-card {
    width: 455px;
     height: auto;
-    min-height: unset;
+    min-height: 350px;
     margin-left: 10px;
     margin-right: 0;
     margin-top: 0;
     padding: 15px 10px; /* Adjusted padding */
     box-sizing: border-box;
     gap: 15px; /* Spacing between sections */
+    border-radius:25px;
   }
 }
 
@@ -544,6 +549,8 @@ min-height: 245px;
     max-width: 300px; /* Optional: cap max width in tablet view */
     height: auto;
     padding: 10px;
+    position:relative;
+    top:-52px;
   }
 }
 
@@ -570,22 +577,35 @@ min-height: 245px;
 /* MOBILE: Force fields to stack vertically (one per row) */
 @media (max-width: 768px) {
   .co-cd-search-filter-card__fields-row {
-    flex-direction: column;
-    gap: 15px;
-    padding: 0 15px;
-    margin-top:0px;
+   flex-direction: column;
+        gap: 15px;
+        padding: 0 15px;
+        margin-top: 0px;
+        position: relative;
+        top: -126px;
+        max-width: 397px;
+        margin-left: 23px;
   
   }
-  #co-cd-search-company{
+  .co-cd-stat-card {
+  border: 2px solid #808080;
+  min-height: 245px;
+  max-width: 200px;
+  min-width: 200px;
+  gap: 8px;
+  justify-content: center;
+  margin-left: 0;
+}
+  #co-cd-search-end-date{
     max-width:380px;
 }
-#co-cd-search-department{
+#co-cd-search-start-date{
     max-width:380px;
 }
-#co-cd-search-domain{
+#co-cd-search-job-role{
     max-width:380px;
 }
-#co-cd-search-mode{
+#co-cd-search-end-date{
     max-width:380px;
 }
 }
@@ -604,6 +624,16 @@ min-height: 245px;
   width: 280px;
   background: #fff;
 }
+
+.co-cd-search-filter-card__input-wrapper select.co-cd-search-filter-card__input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
 /* REMOVED: co-cd-search-filter-card__input1 styles as it's no longer needed */
 
 
@@ -614,7 +644,19 @@ min-height: 245px;
     box-sizing: border-box;
     max-width: 100%;
   }
-  #co-cd-search-mode{
+  .co-cd-search-filter-card__input-wrapper {
+    position: relative;
+    z-index: 50;
+  }
+  .co-cd-search-filter-card__input {
+    position: relative;
+    z-index: 51;
+  }
+  .co-cd-search-filter-card__label {
+    position: absolute;
+    z-index: 52;
+  }
+  #co-cd-search-end-date{
     max-width:380px;
 }
 }
@@ -654,7 +696,7 @@ min-height: 245px;
     padding: 0 15px;
     box-sizing: border-box;
   }
-  #co-cd-search-mode{
+  #co-cd-search-end-date{
     max-width:380px;
 }
 }
@@ -777,7 +819,7 @@ border: 2px solid #808080;
     box-sizing: border-box;
     margin-left: 8px;
     margin-right: 0;
-    margin-top: 15px; /* Add margin after the cards */
+    margin-top: -20px; /* Add margin after the cards */
     padding: 15px 10px;
     
     min-width: unset;
@@ -1075,34 +1117,35 @@ border: 2px solid #808080;
 
 .co-cd-drive-table-container__table-wrapper {
   border-radius: 8px;
-  overflow-x:auto; /* Allow horizontal scroll for table */
+  overflow-x: hidden;
   max-height:305px;
   overflow-y:auto; /* Keep vertical scroll for long data */
-  width:1179px;
+  width: 100%;
 }
 /* MOBILE: Table wrapper takes up available horizontal space and allows scrolling */
 @media (max-width: 768px) {
   .co-cd-drive-table-container__table-wrapper {
     width: 100%; /* Important: set to 100% of container */
     overflow-x: auto;
-    max-height: 40vh; /* Adjust max height for smaller screens */
-    margin-bottom: 5px;
+    max-height: 42vh; /* Adjust max height for smaller screens */
+margin-top:35px;
   }
 }
 .co-cd-drive-table-container__table-wrapper table {
   width: 100%;
   border-collapse: collapse;
-  min-width:1200px; /* Force minimum width to ensure all columns display */
+  table-layout: fixed;
 }
 /* MOBILE: Ensure table has a minimum width for horizontal scroll */
 @media (max-width: 768px) {
   .co-cd-drive-table-container__table-wrapper table {
-    min-width: 1000px; /* Adjusted min width to fit all data columns */
+    table-layout: fixed;
+    width:200%;
   }
   
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  width: 15px;
+  width: 12px;
 }
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
@@ -1159,16 +1202,18 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
  color: #808080;
   background:#fff;
   z-index: 2;
-  border-bottom: 2px solid #d0d0d0;
+  border-bottom: 2px solid #808080;
 }
 
 .co-cd-drive-table-container__table-wrapper th,
 .co-cd-drive-table-container__table-wrapper td {
-  padding: 12px 15px;
+  padding: 8px 8px;
   white-space: nowrap;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight:500;
-  border-bottom: 1px solid #e1e1e1;
+  border-bottom: 1px solid #f0f0f0;
 }
 /* MOBILE: Smaller padding and font size for table cells */
 @media (max-width: 768px) {
@@ -1178,7 +1223,7 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
     padding: 8px 10px;
     font-size: 0.85rem;
   }
-  #co-cd-search-mode{
+  #co-cd-search-end-date{
     max-width:380px;
 }
 }
@@ -1201,9 +1246,9 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
   .co-cd-search-filter-card__input-wrapper {
     position: relative;
     flex: 1 1;
-    margin-top:50px;
+    margin-top:65px;
 }
-#co-cd-search-mode{
+#co-cd-search-end-date{
     max-width:380px;
 }
   /* Red scrollbar on mobile */
@@ -1219,7 +1264,7 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
     outline: none; /* This removes the outline that appears on click */
 }
 .co-cd-drive-table-container__table-wrapper td {
-padding: 9px 15px;
+padding: 8px 8px;
     white-space: nowrap;
     text-align: center;
     border-bottom: 1px solid #e1e1e1;
@@ -1232,7 +1277,7 @@ padding: 9px 15px;
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  width: 15px;
+  width: 12px;
 }
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
@@ -1276,37 +1321,27 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
    LOADING SPINNER STYLES (Red Theme)
 ================================================================ */
 
-.co-cd-loading-cell {
-    text-align: center;
-    padding: 48px 0;
-    width: 100%;
-    min-height: calc(72px * 3);
-    position: relative;
-}
+.co-cd-drive-table-container__table-wrapper td.co-cd-loading-cell {
+     padding: 0 !important;
+     width: 100% !important;
+     height: 240px !important;
+     margin-bottom:100x !important;
+     margin-left: 500px!important;     
+     display: flex !important;
+     align-items: center !important;
+     justify-content: center !important;
+ }
 
-.co-cd-loading-row {
-    height: 100%;
-}
-
-.co-cd-loading-wrapper {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 18px 22px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    text-align: center;
-}
+ .co-cd-loading-wrapper {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 10px;
+ }
 
 .co-cd-spinner {
     width: 34px;
-    margin-top: 50px;
     height: 34px;
     border-radius: 50%;
     border: 4px solid rgba(210, 59, 66, 0.25);

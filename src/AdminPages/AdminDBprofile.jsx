@@ -422,6 +422,18 @@ function AdminAdProfile({ onLogout, onViewChange }) {
         validateGpaInput(inputElement);
     }, [validateGpaInput]);
 
+    // Handle mobile number input changes
+    const handleMobileChange = (e, fieldName) => {
+        let value = e.target.value;
+        // Remove leading zeros
+        value = value.replace(/^0+/, '');
+        // Only allow digits
+        value = value.replace(/\D/g, '');
+        // Limit to 10 digits
+        value = value.substring(0, 10);
+        setStudentData(prev => ({ ...prev, [fieldName]: value }));
+    };
+
     // Handle Company Type checkbox changes
     const handleCompanyTypeChange = (e) => {
         const value = e.target.value;
@@ -1057,19 +1069,32 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                     <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} disabled={!isEditable} />
                                     <input type="email" name="primaryEmail" placeholder="Primary Mail id" defaultValue={studentData?.primaryEmail || ''} disabled={!isEditable} />
                                     <input type="email" name="domainEmail" placeholder="Domain Mail id" defaultValue={studentData?.domainEmail || ''} disabled={!isEditable} />
-                                    <input type="tel" name="mobileNo" placeholder="Mobile No." defaultValue={studentData?.mobileNo || ''} disabled={!isEditable} />
+                                    <div className={styles['mobileInputWrapper']}>
+                                        <div className={styles['countryCode']}>+91</div>
+                                        <input type="tel" name="mobileNo" placeholder="Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    </div>
                                    
                                     <input type="text" name="fatherName" placeholder="Father Name" defaultValue={studentData?.fatherName || ''} disabled={!isEditable} />
                                     <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={!isEditable} />
-                                    <input type="text" name="fatherMobile" placeholder="Father Mobile No." defaultValue={studentData?.fatherMobile || ''} disabled={!isEditable} />
+                                    <div className={styles['mobileInputWrapper']}>
+                                        <div className={styles['countryCode']}>+91</div>
+                                        <input type="tel" name="fatherMobile" placeholder="Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    </div>
                                     
                                     <input type="text" name="motherName" placeholder="Mother Name" defaultValue={studentData?.motherName || ''} disabled={!isEditable} />
                                     <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={!isEditable} />
-                                    <input type="text" name="motherMobile" placeholder="Mother Mobile No." defaultValue={studentData?.motherMobile || ''} disabled={!isEditable} />
+                                    <div className={styles['mobileInputWrapper']}>
+                                        <div className={styles['countryCode']}>+91</div>
+                                        <input type="tel" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    </div>
                                     
                                     <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={!isEditable} />
-                                    <input type="tel" name="guardianNumber" placeholder="Guardian Number" defaultValue={studentData?.guardianNumber || ''} disabled={!isEditable} />
+                                    <div className={styles['mobileInputWrapper']}>
+                                        <div className={styles['countryCode']}>+91</div>
+                                        <input type="tel" name="guardianNumber" placeholder="Guardian Number" value={studentData?.guardianNumber || ''} onChange={(e) => handleMobileChange(e, 'guardianNumber')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    </div>
                                     <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" defaultValue={studentData?.aadhaarNo || ''} disabled={!isEditable} />
+                                    <input type="text" name="portfolioLink" placeholder="Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={!isEditable} />
                                      <button 
                                             type="button"
                                             className={styles['Admin-DB-AdProfile-certificate-btn']}

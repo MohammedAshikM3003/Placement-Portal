@@ -11,6 +11,7 @@ import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import mongoDBService from '../services/mongoDBService';
 // FIXED: Import CSS as a Module
 import styles from "./AdminPlacedStudents.module.css";
+import Adminicon from "../assets/Adminicon.png";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 // Component for the Bar Chart
@@ -40,6 +41,8 @@ const BarChartComponent = ({ data }) => {
 
 const PlacementDashboard = () => {
   useAdminAuth(); // JWT authentication verification
+  // Sidebar toggle state for mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // State for data from database
   const [allStudentsData, setAllStudentsData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +65,21 @@ const PlacementDashboard = () => {
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel'); // 'Excel' or 'PDF'
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
 
   // Function to generate bar chart data with filtered data
   const generateChartData = useCallback((data) => {
@@ -283,10 +301,14 @@ const PlacementDashboard = () => {
     }
   };
 
+  const onLogout = () => {
+    // Implement logout logic here
+  };
+
   return (
     <>
-      <AdNavbar />
-      <AdSidebar />
+      <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
+      <AdSidebar isOpen={isSidebarOpen} onLogout={onLogout} />
       {/* UPDATED CLASS: Admin-ps-portal-container */}
       <div className={styles['Admin-ps-portal-container']}>
         {/* UPDATED CLASS: Admin-ps-main-content */}
@@ -390,8 +412,8 @@ const PlacementDashboard = () => {
               <h3 className={styles['Admin-ps-table-title']}>DETAILED PLACED STUDENT RECORDS</h3>
               <div className={styles['Admin-ps-table-actions']}>
                 <div className={styles['Admin-ps-print-button-container']}>
-                  <button 
-                    className={styles['Admin-ps-print-btn']} 
+                  <button
+                    className={styles['Admin-ps-print-btn']}
                     onClick={() => setOpen(!open)}
                   >
                     Print
@@ -406,26 +428,23 @@ const PlacementDashboard = () => {
               </div>
             </div>
 
-            {/* Table with fixed header and scrollable body - similar to AdminAttendance */}
-            <table className={styles['Admin-ps-students-table-header']} style={{ width: '100%' }}>
-              <thead>
-                <tr>
-                  <th style={{ width: '5%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
-                  <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
-                  <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Reg No.</th>
-                  <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
-                  <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
-                  <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Company</th>
-                  <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Job Role</th>
-                  <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Package</th>
-                  <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Date</th>
-                  <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Offer</th>
-                  <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>Action</th>
-                </tr>
-              </thead>
-            </table>
-            <div className={styles['Admin-ps-table-body-scroll']}>
-              <table className={styles['Admin-ps-students-table-body']} style={{ width: '102%' }}>
+            <div className={styles['Admin-ps-table-scroll']}>
+              <table className={styles['Admin-ps-students-table']}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Reg No.</th>
+                    <th>Branch</th>
+                    <th>Batch</th>
+                    <th>Company</th>
+                    <th>Job Role</th>
+                    <th>Package</th>
+                    <th>Date</th>
+                    <th>Offer</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {isLoading ? (
                     <tr className={styles['Admin-ps-loading-row']}>
@@ -445,21 +464,21 @@ const PlacementDashboard = () => {
                   ) : (
                     displayedStudents.map((student) => (
                       <tr key={student.sno}>
-                        <td style={{ width: '5%', textAlign: 'center', verticalAlign: 'middle' }}>{student.sno}</td>
-                        <td style={{ width: '12%', fontWeight: '600', textAlign: 'center', verticalAlign: 'middle' }}>{student.name}</td>
-                        <td style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>{student.regNo}</td>
-                        <td style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>{student.branch}</td>
-                        <td style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>{student.batch}</td>
-                        <td style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>{student.company}</td>
-                        <td style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>{student.role}</td>
-                        <td style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>{student.pkg}</td>
-                        <td style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>{student.date}</td>
-                        <td style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <td>{student.sno}</td>
+                        <td style={{ fontWeight: '600' }}>{student.name}</td>
+                        <td>{student.regNo}</td>
+                        <td>{student.branch}</td>
+                        <td>{student.batch}</td>
+                        <td>{student.company}</td>
+                        <td>{student.role}</td>
+                        <td>{student.pkg}</td>
+                        <td>{student.date}</td>
+                        <td>
                           <span className={`${styles['Admin-ps-status-badge']} ${styles[`Admin-ps-status-${student.status.toLowerCase()}`]}`}>
                             {student.status}
                           </span>
                         </td>
-                        <td style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }} onClick={() => navigate(`/coo-view-Admin-ps`)}>
+                        <td onClick={() => navigate(`/coo-view-Admin-ps`)}>
                           <FaEye className={styles['Admin-ps-action-icon']} />
                         </td>
                       </tr>
@@ -469,29 +488,34 @@ const PlacementDashboard = () => {
               </table>
             </div>
           </div>
-        </main>
-      </div>
-      
-      <ExportProgressAlert 
-        isOpen={exportPopupState === 'progress'} 
-        onClose={() => {}} 
-        progress={exportProgress}
-        exportType={exportType}
+
+      </main>
+    </div>
+
+    {isSidebarOpen && (
+      <div
+        className={styles['Admin-ps-overlay']}
+        onClick={() => setIsSidebarOpen(false)}
       />
-      
-      <ExportSuccessAlert 
-        isOpen={exportPopupState === 'success'} 
-        onClose={() => setExportPopupState('none')}
-        exportType={exportType}
-      />
-      
-      <ExportFailedAlert 
-        isOpen={exportPopupState === 'failed'} 
-        onClose={() => setExportPopupState('none')}
-        exportType={exportType}
-      />
-    </>
-  );
+    )}
+    <ExportProgressAlert 
+      isOpen={exportPopupState === 'progress'} 
+      onClose={() => {}} 
+      progress={exportProgress}
+      exportType={exportType}
+    />
+    <ExportSuccessAlert 
+      isOpen={exportPopupState === 'success'} 
+      onClose={() => setExportPopupState('none')}
+      exportType={exportType}
+    />
+    <ExportFailedAlert 
+      isOpen={exportPopupState === 'failed'} 
+      onClose={() => setExportPopupState('none')}
+      exportType={exportType}
+    />
+  </>
+);
 };
 
 export default PlacementDashboard;

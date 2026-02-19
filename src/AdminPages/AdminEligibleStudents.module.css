@@ -16,6 +16,19 @@ body {
   overflow: hidden;
 }
 
+/* Full-screen overlay for mobile sidebar (click to close). Transparent so no dim effect. */
+.Admin-es-overlay {
+  position: fixed;
+  inset: 0;
+  /* Keep this under the sidebar so links remain clickable */
+  z-index: 999;
+  background: transparent;
+}
+
+/* Sidebar wrapper (inherited from Adsidebar layout) should appear above overlay.
+   We rely on Adsidebar's own z-index, so no extra rule is needed here; the
+   key is that the overlay stays below any sidebar with z-index > 1000. */
+
 /* Main Content */
 .Admin-es-main-content {
   flex-grow: 1;
@@ -686,6 +699,7 @@ body {
 @media (max-width: 1200px) {
   .Admin-es-summary-cards {
     flex-wrap: wrap;
+    height: auto;
   }
   .Admin-es-search-inputs {
     grid-template-columns: 1fr;
@@ -704,7 +718,7 @@ body {
 
   .Admin-es-layout {
     height: auto;
-    overflow: auto;
+    overflow-y: auto;
     flex-direction: column;
   }
 
@@ -719,13 +733,15 @@ body {
 
   /* Summary Cards - Fixed Spacing */
   .Admin-es-summary-cards {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
     margin-bottom: 20px;
     padding: 0;
     margin-left: 0;
     margin-right: 0;
     width: 100%;
+    height: auto;
     box-sizing: border-box;
   }
 
@@ -806,13 +822,14 @@ body {
 
   .Admin-es-company-profile-search .Admin-es-search-tab {
     position: absolute;
+    width:400px;
     top: 15px;
     left: 50%;
     transform: translateX(-50%);
     background: #4EA24E;
     color: #fff;
     border-radius: 80px;
-    padding: 8px 24px;
+    padding: 0px 45px;
     font-size: 1em;
     font-weight: 600;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
@@ -837,9 +854,9 @@ body {
 
   .Admin-es-company-profile-search .Admin-es-search-input input {
     width: 100%;
-    height: 45px;
+    height: 41px;
     padding: 10px 35px 10px 32px;
-    border: 1.5px solid #d1d5db;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 0.95em;
     background: #fff;
@@ -1038,7 +1055,9 @@ body {
   }
 
   .Admin-es-profile-table {
-    width: 100%;
+    width: 750px;
+    height: 1245px;
+  
     border-collapse: collapse;
     margin-top: 0;
     min-width: 100%;

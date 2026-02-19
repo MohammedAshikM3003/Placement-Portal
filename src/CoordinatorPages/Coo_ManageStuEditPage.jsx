@@ -277,6 +277,7 @@ function CooEditProfile({ onLogout, onViewChange }) {
                 guardianName: formData.get('guardianName'),
                 guardianNumber: formData.get('guardianNumber'),
                 aadhaarNo: formData.get('aadhaarNo'),
+                portfolioLink: formData.get('portfolioLink'),
                 community: studentData?.community,
                 bloodGroup: formData.get('bloodGroup'),
                 mediumOfStudy: studentData?.mediumOfStudy,
@@ -456,16 +457,23 @@ function CooEditProfile({ onLogout, onViewChange }) {
                                     <input type="text" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => updateField(setStudentData, 'motherMobile', e.target.value)} disabled={!isEditable} />
                                     <input type="text" name="guardianName" placeholder="Guardian Name" value={studentData?.guardianName || ''} onChange={(e) => updateField(setStudentData, 'guardianName', e.target.value)} disabled={!isEditable} />
                                     <input type="tel" name="guardianNumber" placeholder="Guardian Number" value={studentData?.guardianNumber || ''} onChange={(e) => updateField(setStudentData, 'guardianNumber', e.target.value)} disabled={!isEditable} />
-                                    <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} onChange={(e) => updateField(setStudentData, 'aadhaarNo', e.target.value)} disabled={!isEditable} />
-                                    <button 
-                                        type="button"
-                                        className={`${styles['co-ms-certificate-btn']} ${styles['certificate-btn']}`}
-                                        onClick={() => navigate(`/coo-student-certificates/${studentId}`, {
-                                            state: { studentData }
-                                        })}
-                                    >
-                                        Certificates
-                                    </button>
+                                    <div className={styles['co-ms-aadhaar-portfolio-grid']}>
+                                        <div className={styles['co-ms-aadhaar-column']}>
+                                            <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} onChange={(e) => updateField(setStudentData, 'aadhaarNo', e.target.value)} disabled={!isEditable} />
+                                            <button 
+                                                type="button"
+                                                className={`${styles['co-ms-certificate-btn']} ${styles['certificate-btn']}`}
+                                                onClick={() => navigate(`/coo-student-certificates/${studentId}`, {
+                                                    state: { studentData }
+                                                })}
+                                            >
+                                                Certificates
+                                            </button>
+                                        </div>
+                                        <div className={styles['co-ms-portfolio-column']}>
+                                            <input type="text" name="portfolioLink" placeholder="Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => updateField(setStudentData, 'portfolioLink', e.target.value)} disabled={!isEditable} />
+                                        </div>
+                                    </div>
                                     
                                 </div>
                                 <div className={`${styles['co-ms-StuProfile-profile-photo-wrapper']} ${styles['StuProfile-profile-photo-wrapper']}`}>
@@ -559,6 +567,16 @@ function CooEditProfile({ onLogout, onViewChange }) {
                                                 />
                                             </svg>
                                         )}
+                                    </button>
+
+                                    <button 
+                                        type="button"
+                                        className={`${styles['co-ms-certificate-btn-mobile']} ${styles['certificate-btn-mobile']}`}
+                                        onClick={() => navigate(`/coo-student-certificates/${studentId}`, {
+                                            state: { studentData }
+                                        })}
+                                    >
+                                        Certificates
                                     </button>
                                 </div>
                             </div>

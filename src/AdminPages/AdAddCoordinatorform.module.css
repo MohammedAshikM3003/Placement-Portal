@@ -48,7 +48,7 @@
     width: 100%;
     max-width: 1280px; 
     box-sizing: border-box;
-    height: auto; 
+    height: 632px; 
     background-color: #ffffff;
     border-radius: 12px;
     padding: 20px;
@@ -194,6 +194,7 @@
     grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 20px;
+    width:167%;
 }
 
 .Admin-cood-detail-login-buttons {
@@ -257,8 +258,8 @@
 
 /* --- DatePicker Styles --- */
 .Admin-cood-detail-datepicker-wrapper { width: 100%; }
-.Admin-cood-detail-datepicker-wrapper .react-datepicker-wrapper { width: 100%; }
-.Admin-cood-detail-datepicker-wrapper .react-datepicker__input-container { width: 100%; display: block; position: relative; }
+.Admin-cood-detail-datepicker-wrapper .react-datepicker-wrapper { width: 348px; }
+.Admin-cood-detail-datepicker-wrapper .react-datepicker__input-container { width: 348px; display: block; position: relative; }
 .Admin-cood-detail-datepicker-input {
     width: 100%;
     height: 48px;
@@ -482,6 +483,21 @@
 .Admin-cood-detail-confirm-save-btn:hover { background-color: #3d8a3d; box-shadow: none; }
 .Admin-cood-detail-confirm-save-btn:disabled { background-color: #a8d5a8; cursor: not-allowed; }
 
+/* Default (mobile-first): show buttons only in the mobile actions container */
+.Admin-cood-detail-login-buttons-desktop {
+    display: none;
+    position:relative;
+    top: -73px;
+    left: -135px;;
+}
+
+.Admin-cood-detail-mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
 /* --- Modals (Image Preview) --- */
 .co-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85);
@@ -501,12 +517,12 @@
     
     .Admin-cood-detail-main-content { 
         padding: 20px 20px 0px 20px; 
-        overflow-y: auto; 
+        overflow-y: hidden; 
         height: calc(100vh - 67px); 
     } 
 
     .Admin-cood-detail-main-content.sidebar-open { margin-left: 300px; max-width: calc(100% - 300px); }
-    .Admin-cood-detail-main-card { padding: 25px 30px 30px 30px; }
+    .Admin-cood-detail-main-card { padding: 25px 30px 30px 30px;  }
     .Admin-cood-detail-credentials-card { padding: 0; }
     .Admin-cood-detail-top-row { 
         grid-template-columns: 1fr 360px; 
@@ -515,7 +531,7 @@
     }
     .Admin-cood-detail-photo-wrapper {
         align-self: flex-start;
-        margin-top: -80px;
+        /* margin-top: -80px; */
     }
     .Admin-cood-detail-input-grid { grid-template-columns: 1fr 1fr; gap: 25px; }
     .Admin-cood-detail-input-grid-three-col { grid-template-columns: 1fr 1fr 1fr; gap: 25px; }
@@ -534,18 +550,32 @@
         gap: 15px;
         margin-bottom: 20px;
     }
-    .Admin-cood-detail-login-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+
+    /* Desktop: show buttons inside the login section, hide mobile actions */
+    .Admin-cood-detail-login-buttons-desktop {
+        display: flex;
         gap: 12px;
-        width: 100%;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid #e8e8e8;
+        justify-content: flex-end;
+        grid-column: 1 / -1;
+        margin-top: 10px;
     }
+
+    .Admin-cood-detail-mobile-actions {
+        display: none;
+    }
+
     .Admin-cood-detail-final-actions { flex-direction: row; justify-content: flex-end; gap: 12px; }
-    .Admin-cood-detail-discard-btn, .Admin-cood-detail-confirm-save-btn { padding: 10px 20px; min-width: 100px; width: 100%; }
-}
+
+    .Admin-cood-detail-discard-btn {
+        padding: 10px 20px;
+        min-width: 120px;
+    }
+
+    .Admin-cood-detail-confirm-save-btn {
+        padding: 10px 20px;
+        min-width: 150px;
+    }
+}       
 
 @media (min-width: 769px) and (max-width: 1200px) {
     .Admin-cood-detail-top-row { grid-template-columns: 1fr; }
@@ -668,6 +698,18 @@
         height: calc(100vh - 65px) !important;
         padding-bottom: 80px !important;
     }
+    .Admin-cood-detail-main-card { padding: 25px 30px 30px 30px; height:1482px ; }
+     .Admin-cood-detail-login-fields {
+        /* grid-template-columns: repeat(3, 1fr) 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px; */
+        width:405.68px;
+    }
+    .Admin-cood-detail-photo-wrapper{
+       position: relative;
+       left:48px;
+
+    }
 }
 /* --- Popup Styles (from MainRegistration) --- */
 .mr-popup-overlay {
@@ -758,3 +800,4 @@
 .mr-popup-close-btn-red:hover {
     background-color: #b71c1c;
 }
+

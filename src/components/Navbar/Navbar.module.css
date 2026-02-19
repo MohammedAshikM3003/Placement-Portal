@@ -1,9 +1,12 @@
+/* 1. Import Font from Landing Navbar */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
 .navbar {
   display: flex;
   align-items: center;
-  background: #2085f6;
+  background: #2085f6; /* Original color preserved */
   color: #fff;
-  padding: 15px 32px 15px 26px;
+  padding: 15px 5%; /* Updated to match LandingNavbar padding */
   justify-content: space-between;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: fixed;
@@ -13,29 +16,44 @@
   z-index: 1000;
   height: 65px;
   box-sizing: border-box;
+  /* 2. Apply Font from LandingNavbar */
+  font-family: 'Poppins', sans-serif;
 }
+
 .navbar-left {
   display: flex;
   align-items: center;
+  gap: 20px; /* Matching LandingNavbar logo gap */
+  position: relative;
+  left: -45px;
+  margin-top:4px;
+   /* Matching LandingNavbar offset */
 }
+
 .portal-logo {
-  height: 35px;
-  width: 35px;
-  margin-right: 18px;
-}
-.portal-logo img {
   height: 30px;
   width: 40px;
-  filter: brightness(0) invert(1);
 }
+
+.portal-logo img {
+  height: 30px;
+  width:40px;
+  
+  /* Removed brightness filter to match LandingNavbar's clean look */
+}
+
 .portal-name {
-  font-size: 1.48rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 700; /* Matching LandingNavbar's bold logo weight */
+  color: white;
+  margin-top: 4px;
 }
-.navbar .menu {
+
+.menu {
   display: flex;
   gap: 35px;
 }
+
 .hamburger-menu {
   display: none;
   background: none;
@@ -46,15 +64,16 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  z-index: 1003; /* Highest z-index to be on top of everything */
+  z-index: 1003;
 }
+
 .hamburger-menu svg {
   width: 28px;
   height: 28px;
 }
 
 @media (max-width: 992px) {
-  .navbar .menu {
+  .menu {
     display: none;
   }
   .hamburger-menu {
@@ -63,9 +82,10 @@
   .navbar {
     padding: 15px 20px;
   }
+  .navbar-left {
+    left: 0; /* Reset offset for mobile */
+  }
   .portal-name {
     font-size: 1.2rem;
   }
-}
-:global {
 }

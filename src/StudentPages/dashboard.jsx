@@ -97,6 +97,22 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
       }
     };
     loadCollegeLogo();
+    
+    // 🔄 Listen for college images updates
+    const handleCollegeImagesUpdate = async () => {
+      console.log('🔔 College images update event received - refreshing student dashboard...');
+      const images = await fetchCollegeImages();
+      if (images && images.collegeLogo) {
+        setCollegeLogoUrl(images.collegeLogo);
+        console.log('✅ College logo refreshed on student dashboard');
+      }
+    };
+    
+    window.addEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+    
+    return () => {
+      window.removeEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+    };
   }, []);
   
   // ⚡ INSTANT: Initialize with best available cached data immediately (synchronous)

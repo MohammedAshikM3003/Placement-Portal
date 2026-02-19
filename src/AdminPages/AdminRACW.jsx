@@ -47,7 +47,8 @@ function AdminRACW() {
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drives, setDrives] = useState([]);
-  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // Filter states - these will apply immediately when changed
   const [companyFilter, setCompanyFilter] = useState('All Companies');
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -66,6 +67,21 @@ function AdminRACW() {
   const [exportPopupState, setExportPopupState] = useState('none');
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links (mobile auto-close)
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
 
   // Format date for display
   const formatDisplayDate = (dateString) => {
@@ -338,7 +354,7 @@ function AdminRACW() {
       return;
     }
     
- setSelectedCompanyJob(group);
+    setSelectedCompanyJob(group);
     
     // Extract unique dates from drives in this group
     const dates = group.drives
@@ -574,10 +590,10 @@ function AdminRACW() {
 
   return ( 
     <>
-      <Adnavbar Adminicon={Adminicon} /> 
+      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} /> 
       {/* UPDATED CLASS: Admin-racw-layout */}
       <div className={styles['Admin-racw-layout']}>
-        <Adsidebar />
+        <Adsidebar isOpen={isSidebarOpen} />
         {/* UPDATED CLASS: Admin-racw-main-content */}
         <div className={styles['Admin-racw-main-content']}>
           {/* UPDATED CLASS: Admin-racw-filter-box */}
@@ -761,6 +777,12 @@ function AdminRACW() {
             </div>
           </div>
         </div>
+        {isSidebarOpen && (
+          <div
+            className={styles['Admin-racw-overlay']}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
       </div>
 
       {/* Export Popup Alerts */}

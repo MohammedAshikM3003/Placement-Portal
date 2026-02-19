@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+// const fs = require('fs'); // Unused - commented out
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -145,7 +145,7 @@ setInterval(() => {
 // Caches admin/coordinator/student docs after first DB fetch to avoid
 // repeated slow queries on MongoDB Atlas free tier (3-10s cold start)
 const loginDocCache = new Map();
-const LOGIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const LOGIN_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes (increased from 5min for better performance)
 
 const getLoginCache = (key) => {
     const entry = loginDocCache.get(key);
@@ -164,7 +164,9 @@ const setLoginCache = (key, doc) => {
     loginDocCache.set(key, { doc, cachedAt: Date.now() });
 };
 
-const invalidateLoginCache = (key) => {
+// Reserved for future use - clears cache for specific key
+// eslint-disable-next-line no-unused-vars
+const _invalidateLoginCache = (key) => {
     loginDocCache.delete(key);
 };
 
@@ -233,6 +235,7 @@ const checkRole = (...allowedRoles) => {
 // ========================================
 
 // Connection state management
+// eslint-disable-next-line no-unused-vars
 let connectionAttempts = 0;
 const MAX_RETRIES = 5;
 const RETRY_DELAYS = [1000, 2000, 5000, 10000, 15000]; // Exponential backoff
@@ -402,11 +405,28 @@ app.get('/api/coordinators', async (req, res) => {
 // -------------------------------------------------
 try {
     const adminProfileRoutes = require('./routes/adminProfile');
-    // Apply JWT authentication to all admin profile routes
+    
+    // PUBLIC ROUTE: College images (no authentication required)
+    // This must come BEFORE the authenticated routes to match first
+    app.use('/api/public', adminProfileRoutes);
+    console.log('✅ Public college images route loaded successfully');
+    
+    // Apply JWT authentication to all other admin profile routes
     app.use('/api/admin', authenticateToken, adminProfileRoutes);
     console.log('✅ Admin profile routes loaded successfully with JWT authentication');
 } catch (error) {
     console.error('❌ Failed to load admin profile routes:', error.message);
+}
+
+// -------------------------------------------------
+// Resume Builder APIs
+// -------------------------------------------------
+try {
+    const resumeBuilderRoutes = require('./routes/resumeBuilder');
+    app.use('/api/resume-builder', resumeBuilderRoutes);
+    console.log('✅ Resume builder routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load resume builder routes:', error.message);
 }
 
 // -------------------------------------------------
@@ -692,7 +712,9 @@ const ensureCompaniesFallbackInitialized = () => {
     }
 };
 
-const findCompanyInMemory = (id) => {
+// Reserved for future use
+// eslint-disable-next-line no-unused-vars
+const _findCompanyInMemory = (id) => {
     ensureCompaniesFallbackInitialized();
     return companyRecords.find((company) => String(company._id) === String(id));
 };
@@ -916,8 +938,20 @@ app.get('/api/company-drives', async (req, res) => {
         // Cache for 5 minutes for faster landing page loads
         res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
 
-        const drives = await CompanyDrive.find({}).sort({ createdAt: -1 }).lean();
-        res.status(200).json({ drives });
+        // OPTIMIZATION: Field selection - only return essential fields for landing page
+        // Landing page needs: companyName, logoUrl, startingDate, jobRoles, branches, eligibilityCriteria
+        const drives = await CompanyDrive.find({})
+            .select('companyName logoUrl startingDate jobRoles branches eligibilityCriteria createdAt')
+            .sort({ createdAt: -1 })
+            .limit(50) // Limit to 50 most recent drives for landing page
+            .maxTimeMS(5000) // 5s timeout protection
+            .lean()
+            .catch(err => {
+                console.log('⚠️ Company drives query timeout:', err.message);
+                return [];
+            });
+        
+        res.status(200).json({ drives: drives || [] });
     } catch (error) {
         console.error('Fetch company drives error:', error);
         res.status(500).json({ error: 'Failed to fetch company drives', details: error.message });
@@ -1570,7 +1604,7 @@ app.get('/api/round-results', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected' });
         }
 
-        const { companyName, jobRole, roundNumber, startingDate, driveId } = req.query;
+        const { roundNumber, driveId } = req.query;
         
         if (!driveId || !roundNumber) {
             return res.status(400).json({ error: 'Missing required query parameters (driveId, roundNumber)' });
@@ -1616,7 +1650,7 @@ app.get('/api/round-results/all', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected' });
         }
 
-        const { companyName, jobRole, startingDate, driveId } = req.query;
+        const { driveId } = req.query;
         
         if (!driveId) {
             return res.status(400).json({ error: 'Missing required query parameter: driveId' });
@@ -1631,8 +1665,8 @@ app.get('/api/round-results/all', async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    companyName,
-                    jobRole,
+                    companyName: '',
+                    jobRole: '',
                     rounds: [],
                     totalRounds: 0
                 }
@@ -1818,7 +1852,7 @@ app.get('/api/reports/company-wise-analysis', async (req, res) => {
         // If no company selected, return list of all companies with their drives and dates
         if (!companyName || companyName === 'All Companies') {
             const allDrives = await CompanyDrive.find({}).lean();
-            const allReports = await Reports.find({}).toArray();
+            // const allReports = await Reports.find({}).toArray(); // Unused - commented out
             
             // Group drives by company and job role
             const companyGroups = {};
@@ -2157,13 +2191,20 @@ app.get('/api/public/college-images', async (req, res) => {
             return res.status(503).json({ success: false, error: 'Database not connected' });
         }
 
-        // Cache header: allow browsers/CDN to cache images for 5 minutes
-        res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
+        // OPTIMIZATION: Aggressive cache - images rarely change (30 min)
+        res.set('Cache-Control', 'public, max-age=1800, s-maxage=3600');
 
         const AdminModel = require('./models/Admin');
+        
+        // OPTIMIZATION: Add timeout protection and error handling
         const admin = await AdminModel.findOne({ adminLoginID: 'admin1000' })
             .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
-            .lean();
+            .maxTimeMS(3000) // 3s timeout
+            .lean()
+            .catch(err => {
+                console.log('⚠️ College images query timeout:', err.message);
+                return null;
+            });
 
         if (!admin) {
             return res.json({ success: true, data: null });
@@ -2193,6 +2234,9 @@ app.get('/api/placed-students', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected' });
         }
 
+        // OPTIMIZATION: Cache headers for faster landing page loads
+        res.set('Cache-Control', 'public, max-age=300, s-maxage=600'); // 5 min cache
+
         const { dept, batch, company, status } = req.query;
         const query = {};
 
@@ -2202,7 +2246,33 @@ app.get('/api/placed-students', async (req, res) => {
         if (status && status !== 'All') query.status = status;
 
         const PlacedStudents = mongoose.connection.collection('placed_students');
-        const students = await PlacedStudents.find(query).toArray();
+        
+        // OPTIMIZATION: Field selection - only return essential fields (avoid large base64 images)
+        // Landing page only needs: name, dept, company, pkg, role, profilePicURL
+        const projection = {
+            name: 1,
+            dept: 1,
+            company: 1,
+            pkg: 1,
+            role: 1,
+            profilePicURL: 1,
+            profilePhoto: 1,
+            batch: 1,
+            status: 1
+        };
+
+        // OPTIMIZATION: Limit results to 100 for landing page performance
+        // Sort by package descending to show top placements first
+        const students = await PlacedStudents
+            .find(query, { projection })
+            .sort({ pkg: -1 }) // Highest packages first
+            .limit(100)
+            .maxTimeMS(5000) // 5s timeout protection
+            .toArray()
+            .catch(err => {
+                console.log('⚠️ Placed students query timeout:', err.message);
+                return [];
+            });
 
         res.json({
             success: true,
@@ -3352,11 +3422,49 @@ const upload = multer({
     }
 });
 
+// Warm up database indexes for instant login
+const warmupLoginIndexes = async () => {
+    try {
+        // Warm up admin index
+        const Admin = require('./models/Admin');
+        await Admin.findOne({ adminLoginID: 'admin1000' })
+            .select('adminLoginID')
+            .lean()
+            .maxTimeMS(2000)
+            .catch(() => null);
+        console.log('✅ Admin login index warmed up');
+        
+        // Warm up coordinator indexes
+        await Coordinator.findOne({})
+            .select('coordinatorId username')
+            .lean()
+            .maxTimeMS(2000)
+            .catch(() => null);
+        console.log('✅ Coordinator login index warmed up');
+        
+        // Warm up student indexes
+        await Student.findOne({})
+            .select('regNo dob')
+            .lean()
+            .maxTimeMS(2000)
+            .catch(() => null);
+        console.log('✅ Student login index warmed up');
+    } catch (error) {
+        console.log('⚠️ Index warmup skipped:', error.message);
+    }
+};
+
 // Start server function
 const startServer = async () => {
     try {
         const isMongoConnected = await ensureConnection();
         console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
+        
+        // Warm up login indexes for faster first login (admin, coordinator, student)
+        if (isMongoConnected) {
+            setTimeout(() => warmupLoginIndexes(), 2000); // Run after 2s delay
+        }
+        
         return isMongoConnected;
     } catch (error) {
         console.error('Database initialization error:', error.message);
@@ -3867,7 +3975,7 @@ app.post('/api/students', async (req, res) => {
     }
 });
 
-// Coordinator login endpoint
+// Coordinator login endpoint - OPTIMIZED FOR SPEED ⚡
 app.post('/api/auth/coordinator-login', async (req, res) => {
     const { coordinatorId, password } = req.body || {};
 
@@ -3893,13 +4001,14 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
     });
 
     let coordinatorDoc = null;
+    const startTime = Date.now();
 
     // Check login cache first
     const coordCacheKey = `coord:${identifier}`;
     coordinatorDoc = getLoginCache(coordCacheKey);
     
     if (coordinatorDoc) {
-        console.log('⚡ Coordinator doc served from cache');
+        console.log(`⚡ Coordinator doc served from cache (${Date.now() - startTime}ms)`);
     } else if (isMongoConnected) {
         try {
             const coordinatorQuery = {
@@ -3911,17 +4020,52 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
                 ]
             };
 
-            const findPromise = Coordinator.findOne(coordinatorQuery).lean();
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Coordinator lookup timeout')), 10000)
-            );
+            // OPTIMIZATION 1: Only select needed fields (reduces data transfer)
+            const essentialFields = 'coordinatorId firstName lastName fullName gender email domainEmail phone department staffId cabin username passwordHash password profilePhoto isBlocked';
+            
+            // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
+            const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
+                let findPromise = Coordinator.findOne(coordinatorQuery)
+                    .select(essentialFields)
+                    .lean();
+                if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
+                
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
+                );
 
-            coordinatorDoc = await Promise.race([findPromise, timeoutPromise]);
+                return Promise.race([findPromise, timeoutPromise]);
+            };
+
+            // Fast (10s) → Medium (20s) → Final (45s, no MongoDB server timeout)
+            try {
+                coordinatorDoc = await queryWithTimeout(10000);
+                console.log(`⚡ Coordinator found in ${Date.now() - startTime}ms (fast path)`);
+            } catch (fastError) {
+                console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
+                
+                try {
+                    coordinatorDoc = await queryWithTimeout(20000);
+                    console.log(`✅ Coordinator found in ${Date.now() - startTime}ms (medium path)`);
+                } catch (mediumError) {
+                    console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
+                    
+                    // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
+                    coordinatorDoc = await queryWithTimeout(45000, false);
+                    console.log(`✅ Coordinator found in ${Date.now() - startTime}ms (slow/cold-start path)`);
+                }
+            }
+            
             if (coordinatorDoc) {
+                // Cache for next time (30 min TTL)
                 setLoginCache(coordCacheKey, coordinatorDoc);
             }
         } catch (mongoError) {
-            console.error('Coordinator login MongoDB query failed:', mongoError.message);
+            console.error(`❌ Coordinator login MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
+            return res.status(500).json({ 
+                error: 'Database query timeout. Please try again.',
+                details: 'The database is responding slowly. Please wait a moment and retry.'
+            });
         }
     }
 
@@ -3982,14 +4126,18 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
         });
     }
 
+    // Update last login timestamp (non-blocking - fire and forget)
     if (isMongoConnected && coordinatorDoc._id) {
-        try {
-            await Coordinator.findByIdAndUpdate(coordinatorDoc._id, {
-                lastLogin: new Date()
-            });
-        } catch (updateError) {
-            console.error('Failed to update coordinator lastLogin:', updateError.message);
-        }
+        // Don't await - run in background to avoid slowing down response
+        Promise.resolve().then(async () => {
+            try {
+                await Coordinator.findByIdAndUpdate(coordinatorDoc._id, {
+                    lastLogin: new Date()
+                }, { maxTimeMS: 3000 });
+            } catch (updateError) {
+                console.error('Failed to update coordinator lastLogin:', updateError.message);
+            }
+        });
     }
 
     const coordinatorPayload = sanitizeCoordinator(coordinatorDoc) || {};
@@ -4015,7 +4163,154 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
     });
 });
 
-// Admin login endpoint
+// Initialize default admin account (for first-time setup) - PUBLIC ENDPOINT
+app.post('/api/init/admin', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+        
+        if (!isMongoConnected) {
+            return res.status(503).json({ 
+                error: 'Database not connected',
+                details: 'Cannot initialize admin without MongoDB connection'
+            });
+        }
+
+        // Import Admin model
+        const Admin = require('./models/Admin');
+        
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ adminLoginID: 'admin1000' });
+        
+        if (existingAdmin) {
+            return res.json({
+                message: 'Admin already exists',
+                existing: true,
+                admin: {
+                    adminLoginID: existingAdmin.adminLoginID,
+                    name: `${existingAdmin.firstName || ''} ${existingAdmin.lastName || ''}`.trim()
+                }
+            });
+        }
+
+        // Create new admin
+        const newAdmin = new Admin({
+            adminLoginID: 'admin1000',
+            adminPassword: 'admin1000',
+            firstName: 'Admin',
+            lastName: 'User',
+            emailId: 'admin@college.edu',
+            domainMailId: 'admin@college.edu',
+            phoneNumber: '1234567890',
+            department: 'Placement Cell',
+            gender: 'Male'
+        });
+
+        await newAdmin.save();
+
+        console.log('✅ Default admin account created successfully');
+
+        return res.json({
+            message: 'Admin account created successfully',
+            created: true,
+            admin: {
+                adminLoginID: 'admin1000',
+                name: 'Admin User'
+            },
+            credentials: {
+                username: 'admin1000',
+                password: 'admin1000'
+            }
+        });
+    } catch (error) {
+        console.error('Admin initialization error:', error);
+        return res.status(500).json({
+            error: 'Failed to initialize admin',
+            details: error.message
+        });
+    }
+});
+
+// Initialize default coordinator account (for first-time setup) - PUBLIC ENDPOINT
+app.post('/api/init/coordinator', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+        
+        if (!isMongoConnected) {
+            return res.status(503).json({ 
+                error: 'Database not connected',
+                details: 'Cannot initialize coordinator without MongoDB connection'
+            });
+        }
+
+        // Check if default coordinator already exists
+        const existingCoord = await Coordinator.findOne({ 
+            $or: [
+                { coordinatorId: 'coord_cse' },
+                { username: 'coord_cse' }
+            ]
+        });
+        
+        if (existingCoord) {
+            return res.json({
+                message: 'Coordinator already exists',
+                existing: true,
+                coordinator: {
+                    coordinatorId: existingCoord.coordinatorId,
+                    username: existingCoord.username,
+                    name: `${existingCoord.firstName || ''} ${existingCoord.lastName || ''}`.trim(),
+                    department: existingCoord.department
+                }
+            });
+        }
+
+        // Create new coordinator with hashed password
+        const hashedPassword = await bcrypt.hash('coord123', 10);
+        
+        const newCoordinator = new Coordinator({
+            coordinatorId: 'coord_cse',
+            firstName: 'CSE',
+            lastName: 'Coordinator',
+            fullName: 'CSE Coordinator',
+            gender: 'Male',
+            email: 'cse.coord@college.edu',
+            domainEmail: 'cse.coordinator@college.edu',
+            phone: '9876543210',
+            department: 'CSE',
+            cabin: 'A-101',
+            username: 'coord_cse',
+            passwordHash: hashedPassword,
+            isBlocked: false
+        });
+
+        await newCoordinator.save();
+
+        console.log('✅ Default coordinator account created successfully');
+
+        return res.json({
+            message: 'Coordinator account created successfully',
+            created: true,
+            coordinator: {
+                coordinatorId: 'coord_cse',
+                username: 'coord_cse',
+                name: 'CSE Coordinator',
+                department: 'CSE'
+            },
+            credentials: {
+                username: 'coord_cse',
+                coordinatorId: 'coord_cse',
+                password: 'coord123'
+            }
+        });
+    } catch (error) {
+        console.error('Coordinator initialization error:', error);
+        return res.status(500).json({
+            error: 'Failed to initialize coordinator',
+            details: error.message
+        });
+    }
+});
+
+// Admin login endpoint - OPTIMIZED FOR SPEED ⚡
 app.post('/api/auth/admin-login', async (req, res) => {
     const { adminLoginID, adminPassword } = req.body || {};
 
@@ -4040,28 +4335,64 @@ app.post('/api/auth/admin-login', async (req, res) => {
     });
 
     let adminDoc = null;
+    const startTime = Date.now();
 
     // Check login cache first (avoids slow MongoDB Atlas queries)
     const adminCacheKey = `admin:${trimmedLoginID}`;
     adminDoc = getLoginCache(adminCacheKey);
     
     if (adminDoc) {
-        console.log('⚡ Admin doc served from cache');
+        console.log(`⚡ Admin doc served from cache (${Date.now() - startTime}ms)`);
     } else if (isMongoConnected) {
         try {
             const Admin = require('./models/Admin');
-            const findPromise = Admin.findOne({ adminLoginID: trimmedLoginID }).lean();
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Admin lookup timeout')), 30000)
-            );
+            
+            // OPTIMIZATION 1: Only select needed fields (reduces data transfer by 80%+)
+            const essentialFields = 'adminLoginID adminPassword firstName lastName emailId domainMailId phoneNumber department dob gender profilePhoto';
+            
+            // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
+            const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
+                let findPromise = Admin.findOne({ adminLoginID: trimmedLoginID })
+                    .select(essentialFields)
+                    .lean();
+                if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
+                
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
+                );
 
-            adminDoc = await Promise.race([findPromise, timeoutPromise]);
+                return Promise.race([findPromise, timeoutPromise]);
+            };
+
+            // Fast (10s) → Medium (20s) → Final (45s, no MongoDB server timeout)
+            try {
+                adminDoc = await queryWithTimeout(10000);
+                console.log(`⚡ Admin found in ${Date.now() - startTime}ms (fast path)`);
+            } catch (fastError) {
+                console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
+                
+                try {
+                    adminDoc = await queryWithTimeout(20000);
+                    console.log(`✅ Admin found in ${Date.now() - startTime}ms (medium path)`);
+                } catch (mediumError) {
+                    console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
+                    
+                    // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
+                    adminDoc = await queryWithTimeout(45000, false);
+                    console.log(`✅ Admin found in ${Date.now() - startTime}ms (slow/cold-start path)`);
+                }
+            }
+            
             if (adminDoc) {
+                // Cache for next time (5 min TTL)
                 setLoginCache(adminCacheKey, adminDoc);
             }
         } catch (mongoError) {
-            console.error('Admin login MongoDB query failed:', mongoError.message);
-            return res.status(500).json({ error: 'Database error occurred. Please try again.' });
+            console.error(`❌ Admin login MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
+            return res.status(500).json({ 
+                error: 'Database query timeout. Please try again.',
+                details: 'The database is responding slowly. Please wait a moment and retry.'
+            });
         }
     }
 
@@ -4083,16 +4414,19 @@ app.post('/api/auth/admin-login', async (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    // Update last login timestamp
+    // Update last login timestamp (non-blocking - fire and forget)
     if (isMongoConnected && adminDoc._id) {
-        try {
-            const Admin = require('./models/Admin');
-            await Admin.findByIdAndUpdate(adminDoc._id, {
-                lastLogin: new Date()
-            });
-        } catch (updateError) {
-            console.error('Failed to update admin lastLogin:', updateError.message);
-        }
+        // Don't await - run in background to avoid slowing down response
+        Promise.resolve().then(async () => {
+            try {
+                const Admin = require('./models/Admin');
+                await Admin.findByIdAndUpdate(adminDoc._id, {
+                    lastLogin: new Date()
+                }, { maxTimeMS: 3000 });
+            } catch (updateError) {
+                console.error('Failed to update admin lastLogin:', updateError.message);
+            }
+        });
     }
 
     // Prepare admin payload (exclude sensitive data)
@@ -4102,6 +4436,8 @@ app.post('/api/auth/admin-login', async (req, res) => {
         firstName: adminDoc.firstName || '',
         lastName: adminDoc.lastName || '',
         fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
+        dob: adminDoc.dob || '',
+        gender: adminDoc.gender || '',
         emailId: adminDoc.emailId || '',
         domainMailId: adminDoc.domainMailId || '',
         phoneNumber: adminDoc.phoneNumber || '',
@@ -4128,7 +4464,7 @@ app.post('/api/auth/admin-login', async (req, res) => {
     });
 });
 
-// Student login with bulletproof connection handling (non-blocking)
+// Student login with bulletproof connection handling - OPTIMIZED FOR SPEED ⚡
 app.post('/api/students/login', async (req, res) => {
     const { regNo, dob } = req.body;
     let student;
@@ -4140,38 +4476,72 @@ app.post('/api/students/login', async (req, res) => {
         // Check MongoDB connection status (non-blocking)
         const connectionState = mongoose.connection.readyState;
         const isMongoConnected = connectionState === 1;
+        const startTime = Date.now();
         
-        console.log('MongoDB connection state:', connectionState, 'Connected:', isMongoConnected);
+        console.log('👤 Student login attempt:', {
+            regNo,
+            mongoState: connectionState,
+            source: isMongoConnected ? 'mongo' : 'in-memory'
+        });
 
         // Check login cache first
         const studentCacheKey = `student:${regNo}:${dob}`;
         student = getLoginCache(studentCacheKey);
         
         if (student) {
-            console.log('⚡ Student doc served from cache');
+            console.log(`⚡ Student doc served from cache (${Date.now() - startTime}ms)`);
         } else if (isMongoConnected) {
-            // Try MongoDB (with timeout)
+            // Try MongoDB with optimized query
             try {
                 console.log('Searching for student in MongoDB...');
-                // CRITICAL: Explicitly select block fields to ensure they're retrieved
-                const findPromise = Student.findOne({ regNo, dob }).select('+isBlocked +blocked +blockedBy +blockedByRole +blockedAt +blockedReason');
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Query timeout')), 10000)
-                );
-                student = await Promise.race([findPromise, timeoutPromise]);
-                if (student) {
-                    setLoginCache(studentCacheKey, student);
+                
+                // OPTIMIZATION 1: Only select needed fields (reduces data transfer)
+                const essentialFields = 'regNo dob firstName lastName primaryEmail email branch degree isBlocked blocked blockedBy blockedByRole blockedAt blockedReason';
+                
+                // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
+                const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
+                    let findPromise = Student.findOne({ regNo, dob })
+                        .select(essentialFields)
+                        .lean();
+                    if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
+                    
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
+                    );
+
+                    return Promise.race([findPromise, timeoutPromise]);
+                };
+
+                // Fast (10s) → Medium (20s) → Final (45s, no MongoDB server timeout)
+                try {
+                    student = await queryWithTimeout(10000);
+                    console.log(`⚡ Student found in ${Date.now() - startTime}ms (fast path)`);
+                } catch (fastError) {
+                    console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
+                    
+                    try {
+                        student = await queryWithTimeout(20000);
+                        console.log(`✅ Student found in ${Date.now() - startTime}ms (medium path)`);
+                    } catch (mediumError) {
+                        console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
+                        
+                        // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
+                        student = await queryWithTimeout(45000, false);
+                        console.log(`✅ Student found in ${Date.now() - startTime}ms (slow/cold-start path)`);
+                    }
                 }
-                console.log('Student found:', student ? 'YES' : 'NO');
+                
                 if (student) {
-                    console.log('Retrieved block fields:', {
+                    // Cache for next time (30 min TTL)
+                    setLoginCache(studentCacheKey, student);
+                    console.log('Student found with block status:', {
                         isBlocked: student.isBlocked,
                         blocked: student.blocked,
                         blockedBy: student.blockedBy
                     });
                 }
             } catch (mongoError) {
-                console.log('MongoDB query failed:', mongoError.message);
+                console.log(`❌ MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
                 // Fall through to in-memory
             }
         }
@@ -4207,17 +4577,20 @@ app.post('/api/students/login', async (req, res) => {
                 blockedBy: student.blockedBy || 'Placement Office'
             };
             
-            // Try to get more details from the blocker if available
+            // Try to get more details from the blocker if available (non-blocking)
             if (isMongoConnected && student.blockedBy) {
                 try {
-                    // Try to find coordinator by name
+                    // Try to find coordinator by name with timeout
                     const coordinator = await Coordinator.findOne({ 
                         $or: [
                             { fullName: student.blockedBy },
                             { coordinatorId: student.blockedBy },
                             { username: student.blockedBy }
                         ]
-                    });
+                    })
+                    .select('firstName lastName cabin')
+                    .lean()
+                    .maxTimeMS(2000);
                     
                     if (coordinator) {
                         coordinatorDetails = {
@@ -4238,7 +4611,7 @@ app.post('/api/students/login', async (req, res) => {
             });
         }
         
-        console.log('Login successful for:', regNo);
+        console.log(`✅ Student login successful in ${Date.now() - startTime}ms:`, regNo);
         
         // Generate token
         const token = jwt.sign({ 
@@ -4406,11 +4779,13 @@ app.get('/api/students/:id', authenticateToken, checkRole('student', 'admin', 'c
     const { id } = req.params;
 
     try {
+        console.log(`🔍 GET /api/students/${id} - MongoDB connected: ${isMongoConnected}`);
         if (isMongoConnected) {
             const student = await Student.findById(id);
             if (!student) {
-                return res.status(404).json({ error: 'Student not found' });
-            }
+                console.log(`❌ Student not found: ${id}`);
+                return res.status(404).json({ error: 'Student not found' });            }
+            console.log(`✅ Student found: ${student.regNo}`);
             res.json(student);
         } else {
             const student = students.find(s => s.id === id);
@@ -4420,8 +4795,8 @@ app.get('/api/students/:id', authenticateToken, checkRole('student', 'admin', 'c
             res.json(student);
         }
     } catch (error) {
-        console.error('Get student error:', error);
-        res.status(500).json({ error: 'Failed to get student' });
+        console.error('❌ Get student error:', error.message, error.stack);
+        res.status(500).json({ error: 'Failed to get student', details: error.message });
     }
 });
 
@@ -4577,6 +4952,7 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
     const { studentId } = req.params;
     
     try {
+        console.log(`🔍 GET /api/students/${studentId}/complete - MongoDB connected: ${isMongoConnected}`);
         let studentData = null;
         let resumeData = null;
         let certificatesData = [];
@@ -4593,6 +4969,7 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
             studentData = student;
             resumeData = resume;
             certificatesData = certificates || [];
+            console.log(`✅ Complete data fetched - Student: ${!!student}, Resume: ${!!resume}, Certs: ${certificates?.length || 0}`);
         } else {
             // In-memory fallback
             studentData = students.find(s => (s._id || s.id) === studentId);
@@ -4601,6 +4978,7 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
         }
         
         if (!studentData) {
+            console.log(`❌ Student not found: ${studentId}`);
             return res.status(404).json({ error: 'Student not found' });
         }
         
@@ -4648,16 +5026,19 @@ app.get('/api/students/:studentId/status', async (req, res) => {
     const { studentId } = req.params;
     
     try {
+        console.log(`🔍 GET /api/students/${studentId}/status - MongoDB connected: ${isMongoConnected}`);
         let studentData = null;
         
         if (isMongoConnected) {
             // Only fetch student data without certificates/resume
             studentData = await Student.findById(studentId).select('-__v').lean();
+            console.log(`✅ Student status fetched: ${!!studentData}`);
         } else {
             studentData = students.find(s => (s._id || s.id) === studentId);
         }
         
         if (!studentData) {
+            console.log(`❌ Student not found for status check: ${studentId}`);
             return res.status(404).json({ error: 'Student not found' });
         }
         

@@ -26,25 +26,21 @@ export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
     const authToken = localStorage.getItem('authToken');
     const authRole = localStorage.getItem('authRole');
     
-    // Only fetch if user is admin with valid token
-    // For non-admin users or no token, return null (will use fallback images)
-    if (!authToken) {
-      console.log('ℹ️ No auth token, skipping college images fetch (will use fallbacks)');
-      return null;
-    }
+    // Use public endpoint for college images (available to all users)
+    // This allows landing page and other public pages to display college images
+    let apiUrl = `${API_BASE_URL}/public/college-images/${adminLoginID}`;
+    let headers = { 'Content-Type': 'application/json' };
     
-    if (authRole !== 'admin') {
-      console.log('ℹ️ Non-admin user, skipping college images fetch (will use fallbacks)');
-      return null;
+    // If admin is logged in, optionally use authenticated endpoint (both work)
+    if (authToken && authRole === 'admin') {
+      console.log('📡 Fetching college images as authenticated admin...');
+      apiUrl = `${API_BASE_URL}/admin/profile/${adminLoginID}`;
+      headers['Authorization'] = `Bearer ${authToken}`;
+    } else {
+      console.log('📡 Fetching college images from public endpoint...');
     }
 
-    console.log('📡 Fetching college images from server...');
-    const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const response = await fetch(apiUrl, { headers });
 
     if (!response.ok) {
       console.warn('⚠️ Failed to fetch college images:', response.status);
@@ -54,11 +50,13 @@ export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
     const result = await response.json();
     
     if (result.success && result.data) {
+      // Handle both admin profile response and college images response
+      const data = result.data;
       const images = {
-        collegeBanner: result.data.collegeBanner || null,
-        naacCertificate: result.data.naacCertificate || null,
-        nbaCertificate: result.data.nbaCertificate || null,
-        collegeLogo: result.data.collegeLogo || null,
+        collegeBanner: data.collegeBanner || null,
+        naacCertificate: data.naacCertificate || null,
+        nbaCertificate: data.nbaCertificate || null,
+        collegeLogo: data.collegeLogo || null,
       };
 
       // Cache the images
@@ -105,15 +103,22 @@ const getCachedImages = () => {
 };
 
 /**
- * Cache college images
+ * Cache college images (Optimized to prevent Storage Quota errors)
  * @param {object} images - Images object to cache
  */
 const cacheImages = (images) => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(images));
+    // Only cache the small Logo; ignore large Banners and Certificates to prevent localStorage overflow
+    const minimalCache = {
+      collegeLogo: images.collegeLogo || null,
+    };
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
     localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    console.log('✅ College logo cached successfully');
   } catch (error) {
-    console.error('⚠️ Error caching images:', error);
+    // If even the logo is too big, just skip caching entirely to prevent crash
+    console.warn('⚠️ Storage full: Skipping image cache to prevent crash.');
   }
 };
 

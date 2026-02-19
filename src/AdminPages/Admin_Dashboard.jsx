@@ -21,6 +21,36 @@ import styles from "./Admin_Dashboard.module.css";
 const ModernAttendanceChart = ({ present, absent, isLoading }) => {
     const total = present + absent;
     const presentPerc = total > 0 ? Math.round((present / total) * 100) : 0;
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile viewport to slightly thicken the ring only on small screens
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 900px)');
+
+        const handleChange = (e) => {
+            setIsMobile(e.matches);
+        };
+
+        // Initial value
+        setIsMobile(mq.matches);
+
+        if (mq.addEventListener) {
+            mq.addEventListener('change', handleChange);
+        } else if (mq.addListener) {
+            mq.addListener(handleChange);
+        }
+
+        return () => {
+            if (mq.removeEventListener) {
+                mq.removeEventListener('change', handleChange);
+            } else if (mq.removeListener) {
+                mq.removeListener(handleChange);
+            }
+        };
+    }, []);
+
+    const innerRadius = isMobile ? 45 : 55; // thicker ring on mobile
+    const outerRadius = 75;                 // keep desktop outer radius
     
     // Prepare pie chart data
     const pieData = (present === 0 && absent === 0) 
@@ -46,8 +76,9 @@ const ModernAttendanceChart = ({ present, absent, isLoading }) => {
                                     data={pieData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={55}
-                                    outerRadius={75}
+                                    innerRadius={innerRadius}
+                                    outerRadius={outerRadius}
+
                                     // Full 360° donut (clockwise)
                                     startAngle={90}
                                     endAngle={-270}

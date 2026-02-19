@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from 'react-router-dom';
-import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_CertificateVerification.module.css';
 import manageStudentsIcon from "../assets/Coo_ManagestudentsCardicon.svg";
+import pendingCertificateIcon from "../assets/CoodCertificateVerifyPenCertificate.svg";
+import approvedCertificateIcon from "../assets/CoodCertificateVerifyApprovedCertificate.svg";
+
 import { FaRegEye, FaSearch, FaMapMarkerAlt, FaImage, FaWindowMaximize } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import certificateService from "../services/certificateService.jsx";
@@ -182,8 +183,6 @@ const CertificateTableLoader = ({ message }) => (
 );
 
 const Coo_Certificate = ({ onLogout, onViewChange }) => {
-    useCoordinatorAuth(); // JWT authentication verification
-    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [coordinatorData, setCoordinatorData] = useState(() => readStoredCoordinatorData());
     const coordinatorDepartment = useMemo(
@@ -337,6 +336,10 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         () => certData.filter((item) => item.rawStatus === "pending").length,
         [certData]
     );
+    const approvedCount = useMemo(
+        () => certData.filter((item) => item.rawStatus === "approved").length,
+        [certData]
+    );
 
     const filteredData = useMemo(() => {
         const normalize = (value) => (value ? value.toString().trim().toLowerCase() : "");
@@ -347,7 +350,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             const map = { '1': 'I', '2': 'II', '3': 'III', '4': 'IV' };
             if (map[trimmed]) return map[trimmed];
             const upper = trimmed.toUpperCase();
-            if (['I', 'II', 'III', 'IV'].includes(upper)) return upper;
+            if (["I", "II", "III", "IV"].includes(upper)) return upper;
             const num = parseInt(trimmed, 10);
             if (!Number.isNaN(num) && map[String(num)]) return map[String(num)];
             return upper;
@@ -394,51 +397,21 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         });
     }, [certData, activeFilters]);
 
-    const applyFilters = () => {
-        const normalizedStatus = filterInputs.status ? filterInputs.status.trim().toLowerCase() : '';
-        const isStatusFilter = normalizedStatus === 'pending' || normalizedStatus === 'approved' || normalizedStatus === 'rejected' || normalizedStatus === 'accepted';
-
-        setActiveFilters(filterInputs);
-
-        if (certData.length === 0 && coordinatorDepartment) {
-            refreshCertificates();
-        }
-
-        const fetchWithFilters = async () => {
-            if (!coordinatorDepartment) return;
-
-            setIsLoading(true);
-            setLoadError(null);
-
-            try {
-                const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
-                    status: 'pending'
-                });
-
-                const normalized = certificates
-                    .map(mapCertificateRecord)
-                    .filter(Boolean)
-                    .filter((item) => item.rawStatus === 'pending');
-                setCertData(normalized);
-            } catch (error) {
-                console.error('Failed to apply filters:', error);
-                setLoadError(error.message || 'Failed to filter certificates');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchWithFilters();
-    };
-
     const handleInputChange = (field) => (event) => {
         const { value } = event.target;
-        setFilterInputs((prev) => ({ ...prev, [field]: value }));
+        setFilterInputs((prev) => {
+            const next = { ...prev, [field]: value };
+            setActiveFilters(next);
+            return next;
+        });
     };
 
     const clearFilterField = (field) => {
-        setFilterInputs((prev) => ({ ...prev, [field]: "" }));
-        setActiveFilters((prev) => ({ ...prev, [field]: "" }));
+        setFilterInputs((prev) => {
+            const next = { ...prev, [field]: "" };
+            setActiveFilters(next);
+            return next;
+        });
     };
 
     const handlePendingCardClick = useCallback(() => {
@@ -506,8 +479,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             }
             try {
                 const updated = await certificateService.updateCertificateStatus(certificateId, payload);
-                const normalized = mapCertificateRecord(updated);
-
                 setCertData((prev) =>
                     prev.filter((item) => item.certificateId !== certificateId)
                 );
@@ -696,9 +667,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                     onViewChange={onViewChange}
                 />
                 <main className={styles["co-cert-main-content"]}>
-                    {/* TOP HEADER CARDS */}
                     <div className={styles["co-cert-top-row"]}>
-                        {/* Left Card: Manage Students */}
                         <div
                             className={cx(styles["co-cert-card"], styles["co-cert-manage-card"])}
                             role="button"
@@ -717,106 +686,157 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                             <h2>Manage Students</h2>
                             <p>Access and manage student information.</p>
                         </div>
-                        {/* Middle Card: Filter Card */}
                         <div className={styles["co-cert-filter-card"]}>
                             <div className={styles["co-cert-filter-badge"]}>Certificate Verification</div>
                             <div className={styles["co-cert-filter-grid"]}>
-                                <div className={styles["co-cert-input-group"]}>
-                                    <FaSearch className={styles["co-cert-input-icon"]} />
-                                    <input
-                                        type="text"
-                                        placeholder="Name/Reg.No"
-                                        value={filterInputs.searchTerm}
-                                        onChange={handleInputChange("searchTerm")}
-                                    />
-                                    {filterInputs.searchTerm && (
-                                        <IoClose
-                                            className={styles["co-cert-clear-icon"]}
-                                            onClick={() => clearFilterField("searchTerm")}
-                                        />
-                                    )}
+                                <div className={styles["co-cert-filter-row"]}>
+                                    <div className={styles["co-cert-input-group"]}>
+                                        <FaSearch className={styles["co-cert-input-icon"]} />
+                                        <div className={styles["co-cert-input-wrapper"]}>
+                                            <input
+                                                id="co-cert-search-term"
+                                                className={styles["co-cert-filter-input"]}
+                                                type="text"
+                                                value={filterInputs.searchTerm}
+                                                onChange={handleInputChange("searchTerm")}
+                                                required
+                                            />
+                                            <label
+                                                htmlFor="co-cert-search-term"
+                                                className={styles["co-cert-filter-label"]}
+                                            >
+                                                Name/Reg.No
+                                            </label>
+                                        </div>
+                                        {filterInputs.searchTerm && (
+                                            <IoClose
+                                                className={styles["co-cert-clear-icon"]}
+                                                onClick={() => clearFilterField("searchTerm")}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className={styles["co-cert-input-group"]}>
+                                        <FaImage className={styles["co-cert-input-icon"]} />
+                                        <div className={styles["co-cert-input-wrapper"]}>
+                                            <select
+                                                id="co-cert-filter-year"
+                                                className={styles["co-cert-filter-input"]}
+                                                value={filterInputs.year}
+                                                onChange={handleInputChange("year")}
+                                                required
+                                            >
+                                                <option value="" />
+                                                <option value="I">I</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                                <option value="IV">IV</option>
+                                            </select>
+                                            <label
+                                                htmlFor="co-cert-filter-year"
+                                                className={styles["co-cert-filter-label"]}
+                                            >
+                                                Year
+                                            </label>
+                                        </div>
+                                        {filterInputs.year && (
+                                            <IoClose
+                                                className={styles["co-cert-clear-icon"]}
+                                                onClick={() => clearFilterField("year")}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
-                                <div className={styles["co-cert-input-group"]}>
-                                    <FaImage className={styles["co-cert-input-icon"]} />
-                                    <select
-                                        value={filterInputs.year}
-                                        onChange={handleInputChange("year")}
-                                    >
-                                        <option value="">Year</option>
-                                        <option value="I">I</option>
-                                        <option value="II">II</option>
-                                        <option value="III">III</option>
-                                        <option value="IV">IV</option>
-                                    </select>
-                                    {filterInputs.year && (
-                                        <IoClose
-                                            className={styles["co-cert-clear-icon"]}
-                                            onClick={() => clearFilterField("year")}
-                                        />
-                                    )}
-                                </div>
-                                <div className={styles["co-cert-input-group"]}>
-                                    <FaMapMarkerAlt className={styles["co-cert-input-icon"]} />
-                                    <select
-                                        value={filterInputs.section}
-                                        onChange={handleInputChange("section")}
-                                    >
-                                        <option value="">Section</option>
-                                        <option value="A">A</option>
-                                        <option value="B">B</option>
-                                        <option value="C">C</option>
-                                        <option value="D">D</option>
-                                    </select>
-                                    {filterInputs.section && (
-                                        <IoClose
-                                            className={styles["co-cert-clear-icon"]}
-                                            onClick={() => clearFilterField("section")}
-                                        />
-                                    )}
-                                </div>
-                                <div className={styles["co-cert-input-group"]}>
-                                    <FaWindowMaximize className={styles["co-cert-input-icon"]} />
-                                    <input
-                                        type="text"
-                                        placeholder="Competition/Prize"
-                                        value={filterInputs.compPrize}
-                                        onChange={handleInputChange("compPrize")}
-                                    />
-                                    {filterInputs.compPrize && (
-                                        <IoClose
-                                            className={styles["co-cert-clear-icon"]}
-                                            onClick={() => clearFilterField("compPrize")}
-                                        />
-                                    )}
+                                <div className={styles["co-cert-filter-row"]}>
+                                    <div className={styles["co-cert-input-group"]}>
+                                        <FaMapMarkerAlt className={styles["co-cert-input-icon"]} />
+                                        <div className={styles["co-cert-input-wrapper"]}>
+                                            <select
+                                                id="co-cert-filter-section"
+                                                className={styles["co-cert-filter-input"]}
+                                                value={filterInputs.section}
+                                                onChange={handleInputChange("section")}
+                                                required
+                                            >
+                                                <option value="" />
+                                                <option value="A">A</option>
+                                                <option value="B">B</option>
+                                                <option value="C">C</option>
+                                                <option value="D">D</option>
+                                            </select>
+                                            <label
+                                                htmlFor="co-cert-filter-section"
+                                                className={styles["co-cert-filter-label"]}
+                                            >
+                                                Section
+                                            </label>
+                                        </div>
+                                        {filterInputs.section && (
+                                            <IoClose
+                                                className={styles["co-cert-clear-icon"]}
+                                                onClick={() => clearFilterField("section")}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className={styles["co-cert-input-group"]}>
+                                        <FaWindowMaximize className={styles["co-cert-input-icon"]} />
+                                        <div className={styles["co-cert-input-wrapper"]}>
+                                            <input
+                                                id="co-cert-filter-comp-prize"
+                                                className={styles["co-cert-filter-input"]}
+                                                type="text"
+                                                value={filterInputs.compPrize}
+                                                onChange={handleInputChange("compPrize")}
+                                                required
+                                            />
+                                            <label
+                                                htmlFor="co-cert-filter-comp-prize"
+                                                className={styles["co-cert-filter-label"]}
+                                            >
+                                                Competition/Prize
+                                            </label>
+                                        </div>
+                                        {filterInputs.compPrize && (
+                                            <IoClose
+                                                className={styles["co-cert-clear-icon"]}
+                                                onClick={() => clearFilterField("compPrize")}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <button
-                                className={styles["co-cert-apply-btn"]}
-                                type="button"
-                                onClick={applyFilters}
-                            >
-                                Apply Filters
-                            </button>
                         </div>
-                        {/* Right Card: Pending Count */}
-                        <div
-                            className={cx(styles["co-cert-card"], styles["co-cert-pending-card"])}
-                            role="button"
-                            tabIndex={0}
-                            onClick={handlePendingCardClick}
-                            onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    handlePendingCardClick();
-                                }
-                            }}
-                        >
-                            <h1>PENDING</h1>
-                            <span>CERTIFICATES</span>
-                            <div className={styles["co-cert-big-number"]}>{pendingCount}</div>
+                        <div className={styles["co-cert-status-cards"]}>
+                            <div
+                                className={styles["co-cert-status-card"]}
+                                role="button"
+                                tabIndex={0}
+                                onClick={handlePendingCardClick}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        handlePendingCardClick();
+                                    }
+                                }}
+                            >
+                                <div className={styles["co-cert-status-icon"]}>
+                                    <img src={pendingCertificateIcon} alt="Pending Certificates" />
+                                </div>
+                                <div className={styles["co-cert-status-title"]}>Pending
+                                    <span>Certificates</span>
+                                </div>
+                                <div className={styles["co-cert-status-count"]}>{pendingCount}</div>
+                            </div>
+                            <div className={styles["co-cert-status-card"]}>
+                                <div className={styles["co-cert-status-icon"]}>
+                                    <img src={approvedCertificateIcon} alt="Approved Certificates" />
+                                </div>
+                                <div className={styles["co-cert-status-title"]}>Approved
+                                    <span>Certificates</span>
+                                </div>
+                                <div className={styles["co-cert-status-count"]}>{approvedCount}</div>
+                            </div>
                         </div>
                     </div>
-                    {/* TABLE SECTION */}
                     <div className={styles["co-cert-table-container"]}>
                         <h3 className={styles["co-cert-table-title"]}>CERTIFICATE VERIFICATION</h3>
                         {loadError && (
@@ -854,7 +874,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                     {isLoading ? (
                                         <tr>
                                             <td colSpan={10}>
-
                                                 <CertificateTableLoader
                                                     message={certData.length > 0 ? 'Refreshing certificates...' : 'Loading certificates...'}
                                                 />
@@ -870,7 +889,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                         </tr>
                                     ) : (
                                         filteredData.map((item, index) => {
-
                                             const normalizedStatus = (item.rawStatus || item.status || '').toLowerCase();
                                             const isApproved = normalizedStatus === 'approved';
                                             const isRejected = normalizedStatus === 'rejected';
@@ -899,7 +917,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                                     <td data-label="Competition" className={styles["co-cert-bold"]}>{renderCell(item.comp)}</td>
                                                     <td data-label="Prize">{renderCell(item.prize)}</td>
                                                     <td data-label="Action">
-
                                                         {shouldShowButtons ? (
                                                             <div className={styles["co-cert-action-btns"]}>
                                                                 <button

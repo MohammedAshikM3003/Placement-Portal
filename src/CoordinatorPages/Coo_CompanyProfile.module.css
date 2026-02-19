@@ -208,7 +208,7 @@ ease;
 .co-cp-search-filter-card__fields-container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 3px;
   width: 570px;
   margin-bottom: 20px;
   margin-right: 10px;
@@ -221,6 +221,7 @@ ease;
   width: 570px;
   height: 46px;
   justify-content: space-evenly;
+  margin-top:15px;
 }
 
 .co-cp-search-filter-card__input-wrapper {
@@ -228,6 +229,7 @@ ease;
   flex: 1;
   height: 46px;
   width: 280px;
+  top:10px;
 }
 
 .co-cp-search-filter-card__input-wrapper1 {
@@ -236,6 +238,7 @@ ease;
   height: 46px;
   width: 280px;
   color:#999;
+  top:10px;
 }
 
 .co-cp-search-filter-card__input {
@@ -394,9 +397,9 @@ ease-in-out;
 }
 
 .co-cp-drive-table-container__print-button {
-  top: 25px;
+  top: -11px;
   bottom: 15px;
-  right: 32px;
+  right: 13px;
   background: #d73d3d;
   color: #fff;
   border: none;
@@ -406,7 +409,9 @@ ease-in-out;
   padding: 6px 24px;
   cursor: pointer;
   box-shadow: 0px 2px 7px #ececec;
-  z-index: 4;
+  z-index: 100;
+  position: relative;
+  white-space: nowrap;
 }
 
 .co-cp-drive-table-container__print-button:hover {
@@ -418,7 +423,7 @@ ease-in-out;
   position: absolute;
   top: 25px;
   right: 32px;
-  z-index: 10;
+  z-index: 101;
 }
 
 .co-cp-export-menu {
@@ -430,7 +435,7 @@ ease-in-out;
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 5px;
+  margin-top: -7px;
   overflow: hidden;
 }
 .co-cp-export-menu div {
@@ -794,11 +799,11 @@ ease-in-out;
 
   /* Card Ordering and Full Width Sizing */
   .co-cp-card {
-    width: 100%; /* Full width of the parent container */
-    max-width: 400px; /* Keep a maximum width for readability if container is very large */
-    margin: 0;
-    min-width: unset;
-    order: 1; /* Default order, will be overwritten by specific classes below */
+   width: 100%;
+        max-width: 454px;
+        margin-left: -31px;
+        min-width: unset;
+        order: 1;
   }
 
   /* Specific Card Ordering based on user request: */
@@ -810,27 +815,57 @@ ease-in-out;
 
   /* Filter Card (Assumed to be the next element in HTML) */
   .co-cp-search-filter-card {
-    order: 2; /* Filter Card */
+    order: 1; /* Filter Card */
    margin-left: -26px;
     width: 95%; /* Full width requested */
     height: auto;
     padding: 15px 10px;
     margin: 0 0 15px -30px; /* Adjust margin for proper spacing */
+    border-radius: 25px;
   }
-
+.co-cp-export-menu {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  overflow: hidden;
+}
   /* Placed Students Card (Assumed to be the third card in the HTML structure) */
   .co-cp-card:nth-child(3) {
     order: 3; /* Placed Students Card */
   }
-  
+  .co-cp-drive-table-container__print-button {
+  top: 9px;
+        bottom: 15px;
+        right: -5px;
+  background: #d73d3d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 24px;
+  cursor: pointer;
+  box-shadow: 0px 2px 7px #ececec;
+  z-index: 100;
+  position: relative;
+  white-space: nowrap;
+}
   /* Filter Card Input Layout FIX */
   .co-cp-search-filter-card__fields-row {
-    flex-direction: column;
-      width: 76%;
-      height: auto;
-      gap: 10px;
-      margin-left: 67px;
-      margin-right: 0;
+   flex-direction: column;
+        width: 50%;
+        height: auto;
+        gap: 10px;
+        margin-left: 150px;
+        /* margin-right: 15px; */
+        margin-top: 10px;
+        margin-left: 102px;
   }
   .co-cp-floating-select {
   width: 185%;
@@ -850,15 +885,17 @@ ease;
   .co-cp-search-filter-card__input-wrapper {
       width: 100%; /* Input wrapper should fill 100% of its column container */
       box-sizing: border-box;
+      margin-top:7px;
   }
   .co-cp-search-filter-card__input-wrapper1 {
     position: relative;
     flex: 1;
     height: 36px;
-    width: 430px;
+    width: 287px;
+    top:20px;
   }
   .co-cp-search-filter-card__input {
-      width: 100%; /* Input element should fill its wrapper */
+      width: 130%; /* Input element should fill its wrapper */
       box-sizing: border-box;
   }
 
@@ -883,7 +920,7 @@ ease;
     padding-right: 32px;
     position: relative;
     border: 2px solid #808080;
-    margin-left:3px;
+    margin-left:13px;
   }
 
   .co-cp-drive-table-container__table-wrapper {
@@ -995,7 +1032,7 @@ background-color: #c1bfbf !important; /* darker grey on hover */
 
 .co-cp-spinner {
     width: 34px;
-    margin-top: 50px;
+    margin-top: 200px;
     height: 34px;
     border-radius: 50%;
     border: 4px solid rgba(210, 59, 66, 0.25);

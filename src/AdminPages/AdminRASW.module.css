@@ -13,8 +13,9 @@
   margin-right: 5px;
   /* FIXED: Set margin-left to offset the sidebar on desktop */
   margin-left: 260px;
-  margin-top: 50px; /* Offset for navbar */
+  margin-top: 65px; /* Offset for navbar */
   height: calc(100vh - 65px);
+  overflow-y: auto; /* Allow content to scroll within the main area */
 }
 
 .Admin-rasw-filter-box {
@@ -445,6 +446,8 @@
   display: block;
   width: 100%;
   min-width: 0px;
+  position: sticky;
+  top: 0;
 }
 
 .Admin-rasw-data-table th {
@@ -460,9 +463,10 @@
 }
 
 .Admin-rasw-table-body-scroll {
-  min-height: 294px;
+  /* Constrain height so table data scrolls inside the card instead of overflowing */
+  max-height: 294px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   width: 100%;
   min-width: 0px;
   padding-right: 0px;
@@ -606,6 +610,22 @@
   .Admin-rasw-filter-inputs {
     flex-direction: column;
     gap: 10px;
+    margin-left: 65px; /* keep inputs fully inside the grey filter box */
+  }
+  /* Stack the "Select by" search row vertically on mobile */
+  .Admin-rasw-search-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .Admin-rasw-select-label {
+    align-self: flex-start;
+  }
+  .Admin-rasw-select-type-dropdown,
+  .Admin-rasw-search-input-field,
+  .Admin-rasw-name-register-input,
+  .Admin-rasw-branch-dropdown {
+    width: 100%;
   }
   .Admin-rasw-table-header-row {
     flex-direction: column;
@@ -619,6 +639,7 @@
   }
   .Admin-rasw-print-button-container {
     margin-top: 5px;
+    margin-left: 320px;
   }
   .Admin-rasw-table-title {
     margin-bottom: 5px;

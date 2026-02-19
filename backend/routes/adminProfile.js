@@ -3,6 +3,45 @@ const router = express.Router();
 const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
 
+// PUBLIC ENDPOINT - GET college images only (no authentication required)
+// This allows the landing page to display college images without login
+router.get('/college-images/:adminLoginID', async (req, res) => {
+  try {
+    const { adminLoginID } = req.params;
+    const loginID = adminLoginID || 'admin1000'; // Default admin
+    
+    const admin = await Admin.findOne({ adminLoginID: loginID });
+    
+    if (!admin) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'College images not found' 
+      });
+    }
+    
+    // Return only public college images (not personal admin data)
+    const collegeImages = {
+      collegeBanner: admin.collegeBanner || null,
+      naacCertificate: admin.naacCertificate || null,
+      nbaCertificate: admin.nbaCertificate || null,
+      collegeLogo: admin.collegeLogo || null
+    };
+    
+    res.json({ 
+      success: true, 
+      data: collegeImages 
+    });
+    
+  } catch (error) {
+    console.error('Error fetching college images:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching college images',
+      error: error.message 
+    });
+  }
+});
+
 // GET admin profile by adminLoginID
 router.get('/profile/:adminLoginID', async (req, res) => {
   try {

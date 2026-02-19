@@ -25,6 +25,7 @@ const EyeIcon = () => (
 );
 
 function AdminRASW() {
+
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
   
@@ -57,6 +58,22 @@ function AdminRASW() {
   const [availableBranches, setAvailableBranches] = useState(['All Branches']);
   const [filteredBySearch, setFilteredBySearch] = useState([]);
   const [searchError, setSearchError] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links (mobile auto-close)
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
 
   // Fetch data from MongoDB on mount
   useEffect(() => {
@@ -801,10 +818,10 @@ function AdminRASW() {
 
   return ( 
     <>
-      <Adnavbar Adminicon={Adminicon} /> 
+      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} /> 
       {/* UPDATED CLASS: Admin-rasw-layout */}
       <div className={styles['Admin-rasw-layout']}>
-        <Adsidebar />
+        <Adsidebar isOpen={isSidebarOpen} />
         {/* UPDATED CLASS: Admin-rasw-main-content */}
         <div className={styles['Admin-rasw-main-content']}>
           {/* UPDATED CLASS: Admin-rasw-filter-box */}
@@ -1020,6 +1037,12 @@ function AdminRASW() {
             </div>
           </div>
         </div>
+        {isSidebarOpen && (
+          <div
+            className={styles['Admin-rasw-overlay']}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
       </div>
 
       {/* Export Popup Alerts */}

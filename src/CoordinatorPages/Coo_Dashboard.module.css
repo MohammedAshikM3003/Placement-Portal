@@ -134,7 +134,7 @@
 /* This negative margin is for desktop only */
 .coordinator-dashboard-page .co-db-card-certificates .co-db-card-icon img { height: 100px; width: 110px; margin-left: -100px;}
 .coordinator-dashboard-page .co-db-account-card .co-db-card-icon img { height: 55px; }
-.coordinator-dashboard-page .co-db-drive-details { text-align: left; font-size: 0.8rem; margin-top: 6px; }
+.coordinator-dashboard-page .co-db-drive-details { text-align: left; font-size: 0.8rem; margin-top: 6px; margin-left:45px; }
 .coordinator-dashboard-page .co-db-drive-details p { margin: 3px 0; }
 .coordinator-dashboard-page .co-db-drive-details strong {
   font-weight: 600;
@@ -383,11 +383,17 @@
     text-align: left;
     padding: 0 10px;
   }
+  .coordinator-dashboard-page .co-db-drive-details {
+     text-align: left; 
+     font-size: 0.8rem; 
+     margin-top: 6px; 
+     margin-left:155px; 
+    }
   .coordinator-dashboard-page .co-db-attendance-chart-wrapper {
     order: -1;
     margin-left: 0;
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
   }
   .coordinator-dashboard-page .co-db-attendance-details-wrapper {
     text-align: left;
@@ -410,8 +416,8 @@
     padding: 0 5px;
   }
   .coordinator-dashboard-page .co-db-attendance-chart-wrapper {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
     margin-left: 0;
   }
   .coordinator-dashboard-page .co-db-attendance-details-wrapper {

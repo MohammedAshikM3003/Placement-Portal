@@ -161,6 +161,70 @@
     background-color: #f9fff9;
 }
 
+.Admin-DB-AdProfile-form-grid .mobileInputWrapper .mobileNumberInput,
+.AdProfile-form-grid .mobileInputWrapper .mobileNumberInput {
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0;
+}
+
+/* Mobile Input with Country Code - Green Theme */
+.mobileInputWrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9fff9;
+    box-sizing: border-box;
+}
+
+.countryCode {
+    width: 15%;
+    min-width: 50px;
+    background: linear-gradient(135deg, #4EA24E 0%, #2E7D32 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.mobileNumberInput {
+    width: 85%;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    line-height: normal;
+}
+
+.mobileNumberInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.mobileInputWrapper:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+}
+
+/* Disabled state for mobile input wrapper */
+.mobileInputWrapper:has(.mobileNumberInput:disabled) {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.mobileNumberInput:disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+    color: #666;
+}
+
 .Admin-DB-AdProfile-date-input {
     width: 100%;
     padding: 0.9rem;

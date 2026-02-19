@@ -990,6 +990,7 @@ body {
     margin-left: 0;
     padding: 15px;
     overflow-x: hidden;
+    max-width: 500px;
   }
 
   .Admin-cdd-top-section {

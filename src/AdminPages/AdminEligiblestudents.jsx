@@ -25,6 +25,7 @@ function AdminEsstudapp () {
   const navigate = useNavigate();
   useAdminAuth(); // JWT authentication verification
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -54,6 +55,21 @@ function AdminEsstudapp () {
   const handleLocalFilterChange = (field, value) => {
     setLocalFilter(prev => ({ ...prev, [field]: value }));
   };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
 
   const handleApplyLocalFilter = () => {
     // If only branch is selected, show all students from that branch
@@ -431,8 +447,9 @@ function AdminEsstudapp () {
   
   return (
     <div className={styles['Admin-es-layout']}>
-      <AdNavbar />
-      <AdSidebar />
+
+      <AdNavbar onToggleSidebar={toggleSidebar} />
+      <AdSidebar isOpen={isSidebarOpen} />
       <div className={styles['Admin-es-main-content']}>
             <div className={styles['Admin-es-summary-cards']}>
               <div 
@@ -619,6 +636,13 @@ function AdminEsstudapp () {
               </div>
             </div>
       </div>
+
+      {isSidebarOpen && (
+        <div
+          className={styles['Admin-es-overlay']}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Success Popup */}
       {showSuccessPopup && (

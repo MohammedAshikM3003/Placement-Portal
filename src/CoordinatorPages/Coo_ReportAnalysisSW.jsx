@@ -674,16 +674,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                 value={nameRegisterInput} 
                 onChange={(e) => { setNameRegisterInput(e.target.value); setSearchError(''); }}
               />
-              <select 
-                className={styles["co-rat-branch-dropdown"]} 
-                value={branchFilter} 
-                onChange={(e) => { setBranchFilter(e.target.value); setSearchError(''); }}
-                disabled={availableBranches.length === 1}
-              >
-                {availableBranches.map(branch => (
-                  <option key={branch} value={branch}>{branch}</option>
-                ))}
-              </select>
+             
               <div className={styles["co-rat-select-label"]}>Select by:</div>
               <select 
                 className={styles["co-rat-select-type-dropdown"]} 
@@ -787,22 +778,28 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
       </div>
 
       {/* Export Popup Alerts */}
-      <ExportProgressAlert
-        isOpen={exportPopupState === 'progress'}
-        onClose={() => {}}
-        progress={exportProgress}
-        exportType={exportType}
-      />
-      <ExportSuccessAlert
-        isOpen={exportPopupState === 'success'}
-        onClose={() => setExportPopupState('none')}
-        exportType={exportType}
-      />
-      <ExportFailedAlert
-        isOpen={exportPopupState === 'failed'}
-        onClose={() => setExportPopupState('none')}
-        exportType={exportType}
-      />
+       <ExportProgressAlert 
+              isOpen={exportPopupState === 'progress'} 
+              onClose={() => {}} 
+              progress={exportProgress}
+              exportType={exportType}
+              color='#d23b42'
+              progressColor='#d23b42'
+            />
+            
+            <ExportSuccessAlert 
+              isOpen={exportPopupState === 'success'} 
+              onClose={() => setExportPopupState('none')}
+              exportType={exportType}
+              color='#d23b42'
+            />
+            
+            <ExportFailedAlert 
+              isOpen={exportPopupState === 'failed'} 
+              onClose={() => setExportPopupState('none')}
+              exportType={exportType}
+              color='#d23b42'
+            />
     </>
   );
 }

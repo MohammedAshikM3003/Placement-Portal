@@ -6,10 +6,11 @@
 }
 
 :global(body.co-ms-hide-scroll) {
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE 10+ */
+   overflow-y: auto;
+    /* overflow-x: hidden; */
+    scrollbar-width: none;
+    height: 100vh;
+    width: 100%;
 }
 
 :global(body.co-ms-hide-scroll::-webkit-scrollbar) {
@@ -1307,15 +1308,17 @@ overflow: hidden  ;
         margin-top: 0; 
         padding: 0 15px; 
         width: 100%;
+        max-height: 490px;
     }
 
-    .co-ms-bottom-card {
-       margin: 20px 15px;
+    .co-ms-bottom-card 
+    {
+       margin: 20px 3px;
         padding: 15px;
         width: 100%; 
        max-width: 700px;
        position: relative;
-       top: -27px;
+       top: 735px;
     }
  .co-ms-table-container::-webkit-scrollbar {
       width: 10px;
@@ -1331,6 +1334,24 @@ overflow: hidden  ;
     .co-ms-table-container::-webkit-scrollbar-thumb:hover {
       background-color: #b32d34;
     }
+
+    .co-ms-students-table::-webkit-scrollbar:horizontal {
+      height: 12px !important;
+    }
+
+    .co-ms-students-table tbody::-webkit-scrollbar:horizontal {
+      height: 12px !important;
+    }
+
+    .co-ms-students-table tbody::-webkit-scrollbar-thumb:horizontal {
+      background-color: #c1bfc1;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+
+    .co-ms-students-table tbody::-webkit-scrollbar-thumb:horizontal:hover {
+      background-color: #c1bfbf;
+    }
     .co-ms-filter-section {
         flex: 1 1 100%; 
         width: 100%; 
@@ -1338,22 +1359,8 @@ overflow: hidden  ;
         margin-left: 0; 
         padding: 20px; 
         border-radius: 20px; 
-        margin-top: 32px;
+        margin-top: 0px;
     }
-    .co-ms-table-container::-webkit-scrollbar {
-    height:12px;
-  }
-.co-ms-table-container::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-  .co-ms-table-container::-webkit-scrollbar-thumb {
-    background-color: #c1bfbf;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-  .co-ms-table-container::-webkit-scrollbar-thumb:hover {
-    background-color: #c1bfbf;
-  }
     .co-ms-filter-content {
         display: flex;
         flex-direction: column;
@@ -1371,7 +1378,8 @@ overflow: hidden  ;
     .co-ms-floating-select-container,
     .co-ms-dropdown-container-dept,
     .co-ms-dropdown-container-batch {
-        width: 185%;
+        width: 100%;
+        max-width: 100%;
         left: 0 !important;
         top: 0 !important;
         margin-top: 0 !important;
@@ -1380,7 +1388,7 @@ overflow: hidden  ;
 
     /* Button Group */
     .co-ms-button-group {
-        flex-direction: row; 
+        flex-direction: column; 
         gap: 15px;
         margin-top: 10px;
         width: 100%;
@@ -1392,17 +1400,25 @@ overflow: hidden  ;
 
     /* Action Card Container */
     .co-ms-action-cards-section {
-        flex-wrap: wrap; 
-        justify-content: space-around; 
+                display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 15px;
         width: 100%;
-        margin-left: 0;
+        margin-left: -576px;
+        order: 1;
+        position: relative;
+        top: 510px;
     }
     
     .co-ms-action-card {
-        flex: 1 1 45%; 
-        min-width: 120px;
-        max-width: 180px;
+       min-width: 0;
+        max-width: 207px;
+        width: 100%;
+        margin-left: 50%;
+    }
+
+    .co-ms-delete-card {
+        grid-column: 1 / -1;
     }
 
 
@@ -1413,13 +1429,12 @@ overflow: hidden  ;
         width:100%;
     }
 
-    .co-ms-students-table {
-       
-      
+    .co-ms-students-table 
+    {
         height: auto; 
         flex-direction: column; 
         overflow-y: auto;
-        overflow-x: auto;
+        overflow-x: hidden;
     }
     
     /* Table Header: Fixed header on horizontal scroll */
@@ -1448,6 +1463,25 @@ overflow: hidden  ;
         font-size: 0.8rem;
         white-space: nowrap; 
     }
+    /* Desktop scrollbar - red styling to match theme */
+.co-ms-students-table thead::-webkit-scrollbar 
+{
+    width: 15px;
+}
+.co-ms-students-table thead::-webkit-scrollbar-track 
+{
+    background: #f0f2f5;
+}
+.co-ms-students-table thead::-webkit-scrollbar-thumb 
+{
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+.co-ms-students-table thead::-webkit-scrollbar-thumb:hover 
+{
+    background-color: #f0f2f5;
+}
     
     /* Explicit width definitions for column alignment (must match desktop) */
     .co-ms-select, .co-ms-sno { width: 50px; } 

@@ -16,6 +16,8 @@
     /* Desktop: Sidebar is just part of the flow */
     position: relative; 
     transform: none;
+    /* Ensure sidebar sits above the overlay so links remain clickable */
+    z-index: 3000;
 }
 
 /* Main Content */
@@ -27,6 +29,18 @@
     flex-direction: column;
     gap: 20px;
     overflow-x: hidden;
+}
+
+/* Sidebar overlay for mobile when sidebar is open */
+.Admin-cp-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    /* Keep below the sidebar wrapper so sidebar links remain clickable */
+    z-index: 2000;
 }
 
 /* Mobile Toggle Button (Hidden by default on Desktop) */
@@ -56,7 +70,7 @@
     flex: 1;
     background-color: #e8e8e8;
     padding: 20px;
-    border-radius: 43px;
+    border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -518,6 +532,73 @@ position: relative;
 .Admin-cp-package { width: 60px; text-align: center; }
 .Admin-cp-location { min-width: 80px; text-align: center; }
 
+/* ---------------------------------------------------------------------- */
+/* Responsive Layout Adjustments                                          */
+/* ---------------------------------------------------------------------- */
+
+/* Tablet and below: remove fixed left margin, allow vertical scrolling */
+@media (max-width: 1024px) {
+    .Admin-cp-layout {
+        flex-direction: column;
+       
+    }
+
+    .Admin-cp-main-content {
+        margin: 65px 10px 16px 10px;
+    }
+
+    .Admin-cp-top-card {
+        margin-left: 0;
+    }
+}
+
+/* Mobile: stack cards, constrain table height, enable sidebar overlay */
+@media (max-width: 768px) {
+    .Admin-cp-main-content {
+        margin: 80px 10px 16px 10px;
+    }
+
+    .Admin-cp-top-card {
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        margin-left: 0;
+    }
+
+    .Admin-cp-filter-section {
+        max-width: 100%;
+        border-radius: 25px;
+    }
+
+    .Admin-cp-filter-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .Admin-cp-action-cards-section {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .Admin-cp-action-card {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 140px;
+    }
+
+    .Admin-cp-bottom-card {
+        padding: 12px 12px 16px 12px;
+    }
+
+    .Admin-cp-table-container {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+
+    .Admin-cp-overlay {
+        display: block;
+    }
+}
+
 /* Status Tag Styles */
 .Admin-cp-status-tag { display: inline-block; padding: 4px 10px; border-radius: 5px; font-weight: 600; font-size: 0.8rem; text-transform: capitalize; text-align: center; min-width: 70px; }
 .Admin-cp-status-confirmed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 30px; }
@@ -575,7 +656,7 @@ position: relative;
     }
     
     /* 2. Sidebar Drawer Logic */
-    .Admin-cp-print-button-container { position: relative; display: inline-block; z-index: 15; margin-top: -80px; }
+    .Admin-cp-print-button-container { position: relative; display: inline-block; z-index: 15; margin-top: -90px; }
     .Admin-cp-sidebar-wrapper {
         position: fixed;
         top: 0;
@@ -583,9 +664,9 @@ position: relative;
         height: 100vh;
         width: auto;
         z-index: 3000;
-        pointer-events: none;
+        /* Allow clicks on sidebar content (navigation links) */
+        pointer-events: auto;
     }
-    .Admin-cp-sidebar-wrapper.open { pointer-events: auto; }
 
     /* Dark Overlay to dim content when sidebar is open */
     .Admin-cp-sidebar-overlay {
@@ -615,6 +696,7 @@ position: relative;
         overflow-y: auto;
         box-sizing: border-box;
         gap: 15px;
+        margin-top: 0px;
     }
 
     /* --- FIX: Green Scrollbar for Main Content --- */
@@ -658,7 +740,7 @@ position: relative;
     /* Add Card Adjustments */
     .Admin-cp-action-addcard {
         width: 100%;
-        height: auto;
+        height: 236.5px;
         padding: 20px;
         box-sizing: border-box;
     }
@@ -668,6 +750,7 @@ position: relative;
         width: 100%;
         flex-wrap: wrap;
         gap: 15px;
+        height: 236.19px;
         padding-bottom: 0;
         justify-content: flex-start;
     }
@@ -675,6 +758,7 @@ position: relative;
     .Admin-cp-action-card {
         flex: 1 1 calc(50% - 10px);
         min-width: 140px;
+        /* height: 235.5px; */
     }
 
     /* Table Section Adjustments */

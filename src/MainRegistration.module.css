@@ -582,6 +582,93 @@
     font-size: 14px;
 }
 
+.validationErrorItem {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    list-style-position: inside;
+}
+
+.validationErrorItem:hover {
+    background-color: #ffeaa7;
+    color: #664d03;
+    font-weight: 600;
+    transform: translateX(5px);
+}
+
+/* Field Blink Animation */
+@keyframes field-blink {
+    0%, 100% { 
+        background-color: transparent;
+        border-color: initial;
+    }
+    25% { 
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    50% { 
+        background-color: transparent;
+        border-color: initial;
+    }
+    75% { 
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+.field-blink {
+    animation: field-blink 1.5s ease-in-out 2;
+}
+
+/* Ensure the blink works for all input types */
+:global(.field-blink) {
+    animation: field-blink 1.5s ease-in-out 2 !important;
+}
+
+/* Blink for checkbox groups and containers */
+.mr-checkbox-group.field-blink,
+:global(.mr-checkbox-group.field-blink) {
+    animation: field-blink 1.5s ease-in-out 2 !important;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Validation Error Toggle Section */
+.validationErrorToggle {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ffeaa7;
+    text-align: center;
+}
+
+.showMoreButton {
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.showMoreButton:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.showMoreButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* React Datepicker Global Overrides */
 :global(.StuProfile-datepicker-wrapper) { width: 100%; }
 :global(.StuProfile-datepicker-wrapper .react-datepicker-wrapper) { width: 100%; }

@@ -140,10 +140,25 @@ function AdminEsprofile() {
         console.log('Loading profile for student:', studentId);
     }, [studentId]);
 
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    // Listen for sidebar close event from navigation links
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
+
     return (
         // UPDATED CLASS: Admin-ES-StuProfile-container
         <div className={styles['Admin-ES-StuProfile-container']}>
-            <AdNavbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <AdNavbar onToggleSidebar={toggleSidebar} />
             {/* UPDATED CLASS: Admin-ES-StuProfile-main */}
             <div className={styles['Admin-ES-StuProfile-main']}>
                 <AdSidebar

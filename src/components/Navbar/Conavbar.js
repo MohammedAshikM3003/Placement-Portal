@@ -1,13 +1,13 @@
 import React from 'react';
 import styles from './Conavbar.module.css';
-import Adminicon from '../../assets/Adminicon.png';
+import Coordinatoricon from '../../assets/updatedcoordAdminCapicon.svg';
 
 const Navbar = ({ onToggleSidebar }) => {
   return (
     <header className={styles.navbar}>
       <div className={styles.navbarLeft}>
         <span className={styles.portalLogo}>
-          <img src={Adminicon} alt="Placement Portal Logo" />
+          <img src={Coordinatoricon} alt="Placement Portal Logo" />
         </span>
         <span className={styles.portalName}>Placement Portal</span>
       </div>

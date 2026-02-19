@@ -382,7 +382,7 @@
     .Coo-cp-popup-overlay {
         align-items: flex-start;
         padding: 90px 10px;
-        overflow-y: auto; 
+        overflow-y:hidden; 
         box-sizing: border-box;
     }
 
@@ -397,7 +397,7 @@
     .Coo-cp-popup-container.is-form,
     .Coo-cp-popup-container.is-success {
         max-width: 95vw;
-        margin-top: 0;
+        margin-top: -52px;
     }
 
     .Coo-cp-popup-form-grid {

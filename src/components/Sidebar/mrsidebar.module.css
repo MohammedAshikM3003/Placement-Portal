@@ -87,6 +87,10 @@
   color: #197AFF;
 }
 
+.mr-sidebar-menu-row:hover:not(.active):not(.completed) .mr-sidebar-menu-icon {
+  filter: brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%);
+}
+
 .mr-sidebar-menu-row.active:hover {
   color: #197AFF;
 }

@@ -15,6 +15,7 @@
   margin-left: 260px;
   margin-top: 65px; /* Offset for navbar */
   height: calc(100vh - 65px);
+  overflow-y: auto;
 }
 
 .Admin-racw-filter-box {
@@ -252,6 +253,8 @@
 .Admin-racw-data-table thead {
   display: block;
   width: 100%;
+  position: sticky;
+  top: 0 ;
 }
 
 .Admin-racw-data-table th {
@@ -267,8 +270,9 @@
 }
 
 .Admin-racw-table-body-scroll {
-  min-height: 360px;
-  overflow-y: hidden;
+  /* Constrain height so body scrolls inside card on all devices */
+  max-height: 360px;
+  overflow-y: auto;
   overflow-x: auto; 
   width: 100%;
   padding-right: 0px;
@@ -394,6 +398,7 @@
   .Admin-racw-filter-inputs {
     flex-direction: column;
     gap: 10px;
+    margin-left:65px;
   }
   .Admin-racw-table-header-row {
     flex-direction: column;
@@ -407,6 +412,7 @@
   }
   .Admin-racw-print-button-container {
     margin-top: 5px;
+    margin-left:320px;
   }
   .Admin-racw-table-title {
     margin-bottom: 5px;

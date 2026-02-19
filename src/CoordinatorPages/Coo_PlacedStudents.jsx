@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // Import useEffect
+import { useState, useEffect, useCallback } from "react"; // Import useEffect and useCallback
 import { useNavigate } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import {
@@ -7,6 +7,7 @@ import {
   FaCalendarAlt, FaUserGraduate, FaChartBar
 } from 'react-icons/fa';
 import { LuLayoutDashboard } from "react-icons/lu";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -15,6 +16,7 @@ import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import mongoDBService from '../services/mongoDBService.jsx';
 import styles from "./Coo_PlacedStudents.module.css";  
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 // Helper function to read coordinator data from storage
 const readStoredCoordinatorData = () => {
@@ -40,159 +42,34 @@ const resolveCoordinatorDepartment = (data) => {
     data.assignedDepartment;
   return deptValue ? deptValue.toString().toUpperCase() : null;
 };  
-// Component for the Donut Chart
-const DonutChart = ({ placedPercentage }) => {
-  const notPlacedPercentage = 100 - placedPercentage;
+// Component for the Bar Chart
+const BarChartComponent = ({ data }) => {
   return (
-    <div className={styles['co-ps-chart-container']}>
-      <h3>Students Status</h3>
-      <div className={styles['co-ps-donut-chart-wrapper']}>
-        <div className={styles['co-ps-donut-chart']}>
-          <div className={styles['co-ps-donut-center']}>
-            <span>{notPlacedPercentage}%</span>
-          </div>
-        </div>
-      </div>
-      <div className={styles['co-ps-chart-legend']}>
-        <div className={styles['co-ps-legend-item']}>
-          <span className={`${styles['co-ps-legend-color-box']} ${styles['placed']}`}></span>
-          <span>{placedPercentage}% - Placed</span>
-        </div>
-        <div className={styles['co-ps-legend-item']}>
-          <span className={`${styles['co-ps-legend-color-box']} ${styles['not-placed']}`}></span>
-          <span>{notPlacedPercentage}% - Not Placed</span>
-        </div>
-      </div>
-    </div>
+    <ResponsiveContainer width="100%" height={250}>
+      <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 30 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis 
+          dataKey="jobRole" 
+          angle={0}
+          textAnchor="middle"
+          height={60}
+          tick={{ fontSize: 12 }}
+        />
+        <YAxis 
+          allowDecimals={false}
+          domain={[0, 'dataMax + 1']}
+          ticks={[0, 1, 2, 3, 4, 5]}
+        />
+        <Tooltip />
+        <Bar dataKey="students" fill="#7B68EE" radius={[8, 8, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
   );
 };
-
-const ExportProgressPopup = ({ isOpen, operation, progress, onClose }) => {
-  if (!isOpen) return null;
-  
-  const operationText = operation === 'excel' ? 'Exporting...' : 'Downloading...';
-  const progressText = operation === 'excel' ? 'Exported' : 'Downloaded';
-  
-  // Calculate the stroke-dasharray for circular progress
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-  
-  return (
-      <div className={styles['co-ps-export-popup-overlay']}>
-          <div className={styles['co-ps-export-popup-container']}>
-              <div className={styles['co-ps-export-popup-header']}>{operationText}</div>
-              <div className={styles['co-ps-export-popup-body']}>
-                  <div className={styles['co-ps-export-progress-circle']}>
-                      <svg width="100" height="100" viewBox="0 0 100 100">
-                          {/* Background circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#e0e0e0"
-                              strokeWidth="8"
-                          />
-                          {/* Progress circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#d23b42"
-                              strokeWidth="8"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={offset}
-                              strokeLinecap="round"
-                              transform="rotate(-90 50 50)"
-                              style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-                          />
-                      </svg>
-                      {/*<div className={styles['co-ps-export-progress-text']}>{progress}%</div>*/}
-                  </div>
-                  <h2 className={styles['co-ps-export-popup-title']}>{progressText} {progress}%</h2>
-                  <p className={styles['co-ps-export-popup-message']}>
-                      The Details have been {operation === 'excel' ? 'Exporting...' : 'Downloading...'}
-                  </p>
-                  <p className={styles['co-ps-export-popup-message']}>Please wait...</p>
-              </div>
-          </div>
-      </div>
-  );
-};
-
-const ExportSuccessPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported To Excel ✓' : 'PDF Downloaded ✓';
-  const message = operation === 'excel' 
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles['co-ps-export-popup-overlay']}>
-          <div className={styles['co-ps-export-popup-container']}>
-              <div className={styles['co-ps-export-popup-header']}>{headerText}</div>
-              <div className={styles['co-ps-export-popup-body']}>
-                  <div className={styles['co-ps-export-success-icon']}>
-                  <svg xmlns='http://www.w3.org/2000/svg' viewBox="0 0 52 52" fill="none">
-                        <circle className={styles['co-ps-success-icon--circle']} cx="26" cy="26" r="25"/>
-                        <path className={styles['co-ps-success-icon--check']} d="M14.1 27.2l7.1 7.2 16.7-16.8" fill="none"
-                            />
-                        </svg>
-                  </div>
-                  <h2 className={styles['co-ps-export-popup-title']}>{title}</h2>
-                  <p className={styles['co-ps-export-popup-message']}>{message}</p>
-              </div>
-              <div className={styles['co-ps-export-popup-footer']}>
-                  <button onClick={onClose} className={styles['co-ps-export-popup-close-btn']}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
-};
-
-const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported Failed!' : 'Downloaded Failed!';
-  const message = operation === 'excel'
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles['co-ps-export-popup-overlay']}>
-          <div className={styles['co-ps-export-popup-container']}>
-              <div className={styles['co-ps-export-popup-header']}>{headerText}</div>
-              <div className={styles['co-ps-export-popup-body']}>
-                  <div className={styles['co-ps-export-failed-icon']}>
-                      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                          <circle cx="40" cy="40" r="38" fill="#dc3545" />
-                          <path
-                              d="M30 30 L50 50 M50 30 L30 50"
-                              stroke="white"
-                              strokeWidth="4"
-                              strokeLinecap="round"
-                          />
-                      </svg>
-                  </div>
-                  <h2 className={styles['co-ps-export-popup-title']}>{title}</h2>
-                  <p className={styles['co-ps-export-popup-message']}>{message}</p>
-              </div>
-              <div className={styles['co-ps-export-popup-footer']}>
-                  <button onClick={onClose} className={styles['co-ps-export-popup-close-btn']}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
-};
-
 
 const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   useCoordinatorAuth(); // JWT authentication verification
+
   // Data for navigation links
   const navLinks = [
     { icon: <LuLayoutDashboard />, text: 'Dashboard' },
@@ -227,26 +104,81 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     placedPercentage: 25
   });
 
-  const [exportPopupState, setExportPopupState] = useState({
-    isOpen: false,
-    type: null, // 'progress', 'success', 'failed'
-    operation: null, // 'excel', 'pdf'
-    progress: 0
-});
-
-const EyeIcon = () => (
-    <svg className={styles['co-ps-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-);
+  const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportType, setExportType] = useState('Excel');
+  
+  const [companyChartData, setCompanyChartData] = useState([]);
   
   const [open, setOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("Placed Students");
   const navigate = useNavigate();
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  // Fetch coordinator branch and placed students data
+  const EyeIcon = () => (
+    <svg className={styles['co-ps-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  );
+
+  // Function to generate company job role chart data
+  const generateCompanyChartData = useCallback((data) => {
+    const companyJobRoleCounts = {};
+
+    // Group by company and count job roles within each company
+    data.forEach(student => {
+      const company = student.company;
+      const jobRole = student.role;
+      
+      if (company && jobRole) {
+        if (!companyJobRoleCounts[company]) {
+          companyJobRoleCounts[company] = {};
+        }
+        companyJobRoleCounts[company][jobRole] = (companyJobRoleCounts[company][jobRole] || 0) + 1;
+      }
+    });
+
+    // Get selected company and job role from filters
+    const selectedCompany = filters.company;
+    const selectedJobRole = filters.jobRole;
+
+    // If a specific company is selected
+    if (selectedCompany !== 'All Companies' && companyJobRoleCounts[selectedCompany]) {
+      let jobRolesData;
+      
+      // If a specific job role is also selected, show only that job role
+      if (selectedJobRole !== 'All Job Roles' && companyJobRoleCounts[selectedCompany][selectedJobRole]) {
+        jobRolesData = [{
+          jobRole: selectedJobRole,
+          students: companyJobRoleCounts[selectedCompany][selectedJobRole]
+        }];
+      } else {
+        // Show all job roles for the selected company
+        jobRolesData = Object.keys(companyJobRoleCounts[selectedCompany]).map(jobRole => ({
+          jobRole: jobRole,
+          students: companyJobRoleCounts[selectedCompany][jobRole],
+        })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
+      }
+      
+      setCompanyChartData(jobRolesData);
+    } else {
+      // If no specific company is selected, show first company's data
+      const companies = Object.keys(companyJobRoleCounts);
+      if (companies.length > 0) {
+        const firstCompany = companies[0];
+        const jobRolesData = Object.keys(companyJobRoleCounts[firstCompany]).map(jobRole => ({
+          jobRole: jobRole,
+          students: companyJobRoleCounts[firstCompany][jobRole],
+        })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
+        
+        setCompanyChartData(jobRolesData);
+      } else {
+        setCompanyChartData([]);
+      }
+    }
+  }, [filters]);
+
   useEffect(() => {
     const coordinatorData = readStoredCoordinatorData();
     const branch = resolveCoordinatorDepartment(coordinatorData);
@@ -285,6 +217,7 @@ const EyeIcon = () => (
         setAllStudentsData(mappedData);
         setDisplayedStudents(mappedData);
         calculateStats(mappedData);
+        generateCompanyChartData(mappedData);
       } else {
         setAllStudentsData([]);
         setDisplayedStudents([]);
@@ -351,6 +284,7 @@ const EyeIcon = () => (
     });
     setDisplayedStudents(filteredData);
     calculateStats(filteredData);
+    generateCompanyChartData(filteredData);
   }, [filters, allStudentsData]);
 
   // Get unique batches, companies, and job roles for dropdown options
@@ -360,75 +294,55 @@ const EyeIcon = () => (
 
   const simulateExport = async (operation, exportFunction) => {
     setShowExportMenu(false);
-    
-    // Show progress popup
-    setExportPopupState({
-        isOpen: true,
-        type: 'progress',
-        operation: operation,
-        progress: 0
-    });
+
+    setExportType(operation === 'excel' ? 'Excel' : 'PDF');
+    setExportPopupState('progress');
+    setExportProgress(0);
 
     let progressInterval;
     let progressTimeout;
 
     try {
-        // Simulate progress from 0 to 100
-        progressInterval = setInterval(() => {
-            setExportPopupState(prev => {
-                if (prev.progress < 100 && prev.type === 'progress') {
-                    return { ...prev, progress: Math.min(prev.progress + 10, 100) };
-                }
-                return prev;
-            });
-        }, 200);
+      // Simulate progress from 0 to 100
+      progressInterval = setInterval(() => {
+        setExportProgress(prev => Math.min(prev + 10, 100));
+      }, 200);
 
-        // Wait for progress animation to complete
-        await new Promise(resolve => {
-            progressTimeout = setTimeout(() => {
-                clearInterval(progressInterval);
-                resolve();
-            }, 2000);
-        });
-        
-        // Perform the actual export
-        exportFunction();
-        
-        // Show success popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'success',
-            operation: operation,
-            progress: 100
-        });
+      // Wait for progress animation to complete
+      await new Promise(resolve => {
+        progressTimeout = setTimeout(() => {
+          clearInterval(progressInterval);
+          resolve();
+        }, 2000);
+      });
+      
+      // Perform the actual export
+      exportFunction();
+
+      setExportProgress(100);
+      setExportPopupState('success');
     } catch (error) {
-        if (progressInterval) clearInterval(progressInterval);
-        if (progressTimeout) clearTimeout(progressTimeout);
-        
-        // Show failed popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'failed',
-            operation: operation,
-            progress: 0
-        });
+      if (progressInterval) clearInterval(progressInterval);
+      if (progressTimeout) clearTimeout(progressTimeout);
+
+      setExportPopupState('failed');
     }
-};
+  };
 
   // Export to Excel (now uses displayedStudents)
   const exportToExcel = () => {
     try {
       const data = displayedStudents.map(student => [
-          student.sno, 
-          student.name, 
-          student.regNo, 
-          student.dept, 
-          student.batch,
-          student.company, 
-          student.role, 
-          student.pkg, 
-          student.date,
-          student.status,
+        student.sno, 
+        student.name, 
+        student.regNo, 
+        student.dept, 
+        student.batch,
+        student.company, 
+        student.role, 
+        student.pkg, 
+        student.date,
+        student.status,
       ]);
       const header = ["S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Date", "Status"];
       const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
@@ -477,35 +391,30 @@ const EyeIcon = () => (
     }
   };
 
-// Wrapper for PDF export with popup
-const handleExportToPDF = () => {
-  simulateExport('pdf', exportToPDF);
-};
+  // Wrapper for PDF export with popup
+  const handleExportToPDF = () => {
+    simulateExport('pdf', exportToPDF);
+  };
 
-const handleExportToExcel = () => {
-  simulateExport('excel', exportToExcel);
-};
+  const handleExportToExcel = () => {
+    simulateExport('excel', exportToExcel);
+  };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
   };
 
-
   // This function will set the active item when a menu item is clicked
   const handleItemClick = (itemName) => {
     setActiveItem(itemName);
   };
 
-// --- inside PlacementDashboard ---
-
   return (
     <>
 
-      
-
-<Navbar onToggleSidebar={toggleSidebar} />                  
-<Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange} />
+      <Navbar onToggleSidebar={toggleSidebar} />                  
+      <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange} />
       <div className={styles['co-ps-portal-container']}>
     
        
@@ -578,33 +487,32 @@ const handleExportToExcel = () => {
               </div>
             </div>
             
-            <DonutChart placedPercentage={stats.placedPercentage} />
+            {/* Company Job Roles Bar Chart */}
+            <div className={styles['co-ps-chart-container']}>
+              <h3>{filters.company === 'All Companies' ? 'Company Name' : filters.company}</h3>
+              <BarChartComponent data={companyChartData} />
+            </div>
           </div>
           
           <div className={styles['co-ps-table-container']}>
             <h3>PLACED STUDENTS DETAILS</h3>
 
-           
-    
-    <div className={styles['co-ps-dropdown-container']}>
-<button className={styles['co-ps-print-btn']} onClick={() => setOpen(!open)} >
-Print
-</button>
-{open && (
-<div className={styles['co-ps-dropdown-menu']}>
-  <span onClick={handleExportToExcel}>Export to Excel</span>
-  <span onClick={handleExportToPDF}>Save as PDF</span>
-</div>
-)}
-</div>
+            <div className={styles['co-ps-dropdown-container']}>
+              <button className={styles['co-ps-print-btn']} onClick={() => setOpen(!open)} >
+                Print
+              </button>
+              {open && (
+                <div className={styles['co-ps-dropdown-menu']}>
+                  <span onClick={handleExportToExcel}>Export to Excel</span>
+                  <span onClick={handleExportToPDF}>Save as PDF</span>
+                </div>
+              )}
+            </div>
 
-    {/* The ps-table-scroll now wraps the single table element */}
-    
-    <div className={styles['co-ps-table-scroll']}>
-        <table className={styles['co-ps-students-table']}>
-            {/* The THEAD is now inside the scroll container, with the table */}
-            <thead>
-                <tr>
+            <div className={styles['co-ps-table-scroll']}>
+              <table className={styles['co-ps-students-table']}>
+                <thead>
+                  <tr>
                     <th>S.No</th>
                     <th> Name</th>
                     <th>Reg No.</th>
@@ -616,27 +524,27 @@ Print
                     <th>Date</th>
                     <th>Offer</th>
                     <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                        <div className={styles['co-ps-loading-spinner']}></div>
-                        <span>Loading placed students...</span>
-                      </div>
-                    </td>
                   </tr>
-                ) : displayedStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                      No placed students found
-                    </td>
-                  </tr>
-                ) : (
-                  displayedStudents.map((student) => (
-                    <tr key={student.sno}>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                          <div className={styles['co-ps-loading-spinner']}></div>
+                          <span>Loading placed students...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : displayedStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                        No placed students found
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedStudents.map((student) => (
+                      <tr key={student.sno}>
                         <td>{student.sno}</td>
                         <td>{student.name}</td>
                         <td>{student.regNo}</td>
@@ -647,49 +555,44 @@ Print
                         <td>{student.pkg}</td>
                         <td>{student.date}</td>
                         <td>
-                            <span className={`${styles['co-ps-status-badge']} ${styles['ps-status-' + student.status.toLowerCase()]}`}>
-                                {student.status}
-                            </span>
+                          <span className={`${styles['co-ps-status-badge']} ${styles['ps-status-' + student.status.toLowerCase()]}`}>
+                            {student.status}
+                          </span>
                         </td>
                         <td onClick={() => handleCardClick('placed-students-view')} ><EyeIcon /></td>
-                    </tr>
-                  ))
-                )}
-            </tbody>
-        </table>
-        
-    </div>
-  </div>
-</main>
-</div>
-  {/* Export Popups */}
-  {exportPopupState.isOpen && exportPopupState.type === 'progress' && (
-                <ExportProgressPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    progress={exportPopupState.progress}
-                    onClose={() => {}}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'success' && (
-                <ExportSuccessPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'failed' && (
-                <ExportFailedPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}     
-         
-</>
-// ... rest of the file
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
+        progress={exportProgress}
+        exportType={exportType}
+        color="#d23b42"
+        progressColor="#d23b42"
+      />
+
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
+
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
+    </>
   );
 };
 

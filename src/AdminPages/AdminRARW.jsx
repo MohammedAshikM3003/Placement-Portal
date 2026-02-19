@@ -30,6 +30,9 @@ function AdminRARW() {
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
   
+  // Sidebar toggle state for mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +59,33 @@ function AdminRARW() {
   const [exportPopupState, setExportPopupState] = useState('none');
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
+
+  // Toggle Sidebar Function
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Listen for sidebar close event from navigation links
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => {
+      window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
+
+  // Logout Handler
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('adminId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('authRole');
+    localStorage.removeItem('isLoggedIn');
+    sessionStorage.clear();
+    navigate('/admin-login');
+  };
 
   // Fetch data from MongoDB on mount
   useEffect(() => {
@@ -596,10 +626,10 @@ function AdminRARW() {
 
   return ( 
     <>
-      <Adnavbar Adminicon={Adminicon} /> 
+      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} /> 
       {/* UPDATED CLASS: Admin-rarw-layout */}
       <div className={styles['Admin-rarw-layout']}>
-        <Adsidebar />
+        <Adsidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
         {/* UPDATED CLASS: Admin-rarw-main-content */}
         <div className={styles['Admin-rarw-main-content']}>
           {/* UPDATED CLASS: Admin-rarw-filter-box */}
@@ -798,6 +828,12 @@ function AdminRARW() {
             </div>
           </div>
         </div>
+        {isSidebarOpen && (
+          <div
+            className={styles['Admin-rarw-overlay']}
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
       </div>
       
       <ExportProgressAlert 

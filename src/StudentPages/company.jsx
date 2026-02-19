@@ -30,11 +30,30 @@ export default function Company({ onLogout, onViewChange }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isFetching = false;
+    
     const handleProfileUpdate = () => {
+      // Prevent multiple simultaneous fetches
+      if (isFetching) {
+        console.log('Fetch already in progress, skipping...');
+        return;
+      }
+      
       try {
         const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (updatedStudentData) {
           setStudentData(updatedStudentData);
+          
+          // Only fetch if we don't already have data or if student ID changed
+          const shouldFetch = eligibleDrives.length === 0 || 
+                             studentData?._id !== updatedStudentData._id;
+          
+          if (!shouldFetch) {
+            console.log('Data already loaded, skipping fetch...');
+            return;
+          }
+          
+          isFetching = true;
           setIsLoading(true);
           
           // Fetch both eligible drives and student applications
@@ -49,11 +68,17 @@ export default function Company({ onLogout, onViewChange }) {
             setEligibleDrives(drives);
             setStudentApplications(appsResponse?.applications || []);
             setIsLoading(false);
+            isFetching = false;
+          }).catch((error) => {
+            console.error('Error fetching data:', error);
+            setIsLoading(false);
+            isFetching = false;
           });
         }
       } catch (error) {
         console.error('Error updating student data for sidebar:', error);
         setIsLoading(false);
+        isFetching = false;
       }
     };
     
@@ -83,10 +108,6 @@ export default function Company({ onLogout, onViewChange }) {
             setStudentData(instantData.student);
           }
         });
-      }
-      
-      if (storedStudentData.profilePicURL) {
-        window.dispatchEvent(new CustomEvent('profileUpdated', { detail: storedStudentData }));
       }
     } else {
       setIsLoading(false);

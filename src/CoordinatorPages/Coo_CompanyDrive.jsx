@@ -17,6 +17,7 @@ import Sidebar from "../components/Sidebar/Cosidebar.js";
 import CoordReportanalysis from "../assets/CoordReportanalysis.svg";
 import CoodCompanyDriveMonths from "../assets/coodCompanyDriveMonths.svg";
 import CoodcompanyDriveNOD from "../assets/CoodcompanyDriveNOD.svg";
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import styles from './Coo_CompanyDrive.module.css';
 
 // Helper function to read stored coordinator data
@@ -44,131 +45,6 @@ const resolveCoordinatorDepartment = (data) => {
   return deptValue ? deptValue.toString().toUpperCase() : null;
 };
 
-const ExportProgressPopup = ({ isOpen, operation, progress, onClose }) => {
-  if (!isOpen) return null;
-  
-  const operationText = operation === 'excel' ? 'Exporting...' : 'Downloading...';
-  const progressText = operation === 'excel' ? 'Exported' : 'Downloaded';
-  
-  // Calculate the stroke-dasharray for circular progress
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-  
-  return (
-      <div className={styles['co-cd-export-popup-overlay']}>
-          <div className={styles['co-cd-export-popup-container']}>
-              <div className={styles['co-cd-export-popup-header']}>{operationText}</div>
-              <div className={styles['co-cd-export-popup-body']}>
-                  <div className={styles['co-cd-export-progress-circle']}>
-                      <svg width="100" height="100" viewBox="0 0 100 100">
-                          {/* Background circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#e0e0e0"
-                              strokeWidth="8"
-                          />
-                          {/* Progress circle */}
-                          <circle
-                              cx="50"
-                              cy="50"
-                              r={radius}
-                              fill="none"
-                              stroke="#d23b42"
-                              strokeWidth="8"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={offset}
-                              strokeLinecap="round"
-                              transform="rotate(-90 50 50)"
-                              style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-                          />
-                      </svg>
-                     {/* <div className={styles['co-cd-export-progress-text']}>{progress}%</div> */}
-                  </div>
-                  <h2 className={styles['co-cd-export-popup-title']}>{progressText} {progress}%</h2>
-                  <p className={styles['co-cd-export-popup-message']}>
-                      The Details have been {operation === 'excel' ? 'Exporting...' : 'Downloading...'}
-                  </p>
-                  <p className={styles['co-cd-export-popup-message']}>Please wait...</p>
-              </div>
-          </div>
-      </div>
-  );
-};
-
-const ExportSuccessPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported To Excel ✓' : 'PDF Downloaded ✓';
-  const message = operation === 'excel' 
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles['co-cd-export-popup-overlay']}>
-          <div className={styles['co-cd-export-popup-container']}>
-              <div className={styles['co-cd-export-popup-header']}>{headerText}</div>
-              <div className={styles['co-cd-export-popup-body']}>
-                  <div className={styles['co-cd-export-success-icon']}>
-                  <svg xmlns='http://www.w3.org/2000/svg' viewBox="0 0 52 52" fill="none">
-                        <circle className={styles['co-cd-success-icon--circle']} cx="26" cy="26" r="25"/>
-                        <path className={styles['co-cd-success-icon--check']} d="M14.1 27.2l7.1 7.2 16.7-16.8" fill="none"
-                            />
-                        </svg>
-                  </div>
-                  <h2 className={styles['co-cd-export-popup-title']}>{title}</h2>
-                  <p className={styles['co-cd-export-popup-message']}>{message}</p>
-              </div>
-              <div className={styles['co-cd-export-popup-footer']}>
-                  <button onClick={onClose} className={styles['co-cd-export-popup-close-btn']}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
-};
-
-const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
-  if (!isOpen) return null;
-  
-  const title = operation === 'excel' ? 'Exported Failed!' : 'Downloaded Failed!';
-  const message = operation === 'excel'
-      ? 'The Details have been Successfully Exported to Excel in your device.'
-      : 'The Details have been Successfully Downloaded as PDF to your device.';
-  const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-  
-  return (
-      <div className={styles['co-cd-export-popup-overlay']}>
-          <div className={styles['co-cd-export-popup-container']}>
-              <div className={styles['co-cd-export-popup-header']}>{headerText}</div>
-              <div className={styles['co-cd-export-popup-body']}>
-                  <div className={styles['co-cd-export-failed-icon']}>
-                      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                          <circle cx="40" cy="40" r="38" fill="#dc3545" />
-                          <path
-                              d="M30 30 L50 50 M50 30 L30 50"
-                              stroke="white"
-                              strokeWidth="4"
-                              strokeLinecap="round"
-                          />
-                      </svg>
-                  </div>
-                  <h2 className={styles['co-cd-export-popup-title']}>{title}</h2>
-                  <p className={styles['co-cd-export-popup-message']}>{message}</p>
-              </div>
-              <div className={styles['co-cd-export-popup-footer']}>
-                  <button onClick={onClose} className={styles['co-cd-export-popup-close-btn']}>Close</button>
-              </div>
-          </div>
-      </div>
-  );
-};
-
-
-// === Example company data! Add/remove as needed ===
 const sampleCompanyData = [
   {
     id: 1,
@@ -302,13 +178,73 @@ export default function App({ onLogout, currentView, onViewChange }) {
   // State for search filters
   const [filters, setFilters] = useState({
     company: '',
-    domain: '',
-    department: '',
-    mode: ''
+    jobRole: '',
+    startDate: '',
+    endDate: ''
   });
   const [activeItem, setActiveItem] = useState("Company Drive");
   const navigate = useNavigate();
   const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const toISODate = useCallback((dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  }, []);
+
+  // Helper to format ISO date (yyyy-mm-dd) to display format (dd-mm-yyyy)
+  const formatISODateToDisplay = (isoDate) => {
+    if (!isoDate) return '';
+    const [year, month, day] = isoDate.split('-');
+    return `${day}-${month}-${year}`;
+  };
+
+  const uniqueStartDates = useMemo(() => {
+    const set = new Set();
+    companiesDrives.forEach(d => {
+      const iso = toISODate(d.startingDate || d.driveStartDate || d.companyDriveDate || d.visitDate);
+      if (iso) set.add(iso);
+    });
+    return Array.from(set).sort();
+  }, [companiesDrives, toISODate]);
+
+  const uniqueCompanies = useMemo(() => {
+    const set = new Set();
+    companiesDrives.forEach(d => {
+      const name = (d.companyName || d.company || '').toString().trim();
+      if (name) set.add(name);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [companiesDrives]);
+
+  const jobRolesForSelectedCompany = useMemo(() => {
+    const set = new Set();
+    companiesDrives
+      .filter(d => {
+        const name = (d.companyName || d.company || '').toString().trim();
+        if (!filters.company) return true;
+        return name === filters.company;
+      })
+      .forEach(d => {
+        const role = (d.jobRole || d.role || d.domain || '').toString().trim();
+        if (role) set.add(role);
+      });
+
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [companiesDrives, filters.company]);
+
+  const uniqueEndDatesForSelectedStart = useMemo(() => {
+    if (!filters.startDate) return [];
+    const set = new Set();
+    companiesDrives.forEach(d => {
+      const startIso = toISODate(d.startingDate || d.driveStartDate || d.companyDriveDate || d.visitDate);
+      if (startIso !== filters.startDate) return;
+      const endIso = toISODate(d.endDate || d.endingDate || d.driveEndDate);
+      if (endIso) set.add(endIso);
+    });
+    return Array.from(set).sort();
+  }, [companiesDrives, filters.startDate, toISODate]);
 
   // This function will set the active item when a menu item is clicked
   const handleItemClick = (itemName) => {
@@ -375,18 +311,18 @@ export default function App({ onLogout, currentView, onViewChange }) {
 
     return companiesDrives.filter(drive => {
       const companyName = (drive.companyName || drive.company || '').toLowerCase();
-      const domain = (drive.domain || '').toLowerCase();
-      const branch = (drive.branch || drive.department || '').toLowerCase();
-      const mode = (drive.mode || '').toLowerCase();
+      const jobRole = (drive.jobRole || drive.role || drive.domain || '').toLowerCase();
+      const startIso = toISODate(drive.startingDate || drive.driveStartDate || drive.companyDriveDate || drive.visitDate);
+      const endIso = toISODate(drive.endDate || drive.endingDate || drive.driveEndDate);
 
       return (
         companyName.includes((filters.company || '').toLowerCase()) &&
-        domain.includes((filters.domain || '').toLowerCase()) &&
-        branch.includes((filters.department || '').toLowerCase()) &&
-        mode.includes((filters.mode || '').toLowerCase())
+        jobRole.includes((filters.jobRole || '').toLowerCase()) &&
+        (!filters.startDate || startIso === filters.startDate) &&
+        (!filters.endDate || endIso === filters.endDate)
       );
     });
-  }, [companiesDrives, filters]);
+  }, [companiesDrives, filters, toISODate]);
 
   // Old filtering logic removed - now using useMemo above
   const __unused_old_filtering = () => {
@@ -410,6 +346,47 @@ export default function App({ onLogout, currentView, onViewChange }) {
     }));
   };
 
+  const handleStartDateChange = (value) => {
+    setFilters(prev => {
+      const next = { ...prev, startDate: value };
+      if (!value) {
+        next.endDate = '';
+        return next;
+      }
+
+      const matchingEndDates = companiesDrives
+        .filter(d => {
+          const startIso = toISODate(d.startingDate || d.driveStartDate || d.companyDriveDate || d.visitDate);
+          return startIso === value;
+        })
+        .map(d => toISODate(d.endDate || d.endingDate || d.driveEndDate))
+        .filter(Boolean)
+        .sort();
+
+      next.endDate = matchingEndDates[0] || '';
+      return next;
+    });
+  };
+
+  const handleCompanyChange = (value) => {
+    setFilters(prev => {
+      const next = { ...prev, company: value };
+
+      const rolesForCompany = companiesDrives
+        .filter(d => {
+          const name = (d.companyName || d.company || '').toString().trim();
+          if (!value) return true;
+          return name === value;
+        })
+        .map(d => (d.jobRole || d.role || d.domain || '').toString().trim())
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+
+      next.jobRole = rolesForCompany[0] || '';
+      return next;
+    });
+  };
+
   const EyeIcon = () => (
     <svg className={styles['co-cd-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -424,14 +401,10 @@ export default function App({ onLogout, currentView, onViewChange }) {
   // Function to simulate progress and handle export
   const simulateExport = async (operation, exportFunction) => {
     setShowExportMenu(false);
-  
-    // Show progress popup
-    setExportPopupState({
-        isOpen: true,
-        type: 'progress',
-        operation: operation,
-        progress: 0
-    });
+
+    setExportType(operation === 'excel' ? 'Excel' : 'PDF');
+    setExportPopupState('progress');
+    setExportProgress(0);
 
     let progressInterval;
     let progressTimeout;
@@ -439,12 +412,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
     try {
         // Simulate progress from 0 to 100
         progressInterval = setInterval(() => {
-            setExportPopupState(prev => {
-                if (prev.progress < 100 && prev.type === 'progress') {
-                    return { ...prev, progress: Math.min(prev.progress + 10, 100) };
-                }
-                return prev;
-            });
+            setExportProgress(prev => Math.min(prev + 10, 100));
         }, 200);
 
         // Wait for progress animation to complete
@@ -457,46 +425,34 @@ export default function App({ onLogout, currentView, onViewChange }) {
         
         // Perform the actual export
         exportFunction();
-        
-        // Show success popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'success',
-            operation: operation,
-            progress: 100
-        });
+
+        setExportProgress(100);
+        setExportPopupState('success');
     } catch (error) {
         if (progressInterval) clearInterval(progressInterval);
         if (progressTimeout) clearTimeout(progressTimeout);
-        
-        // Show failed popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'failed',
-            operation: operation,
-            progress: 0
-        });
+
+        setExportPopupState('failed');
     }
   };
 
   const exportToExcel = () => {
     try{
-    const header = ["S.No", "Company", "Domain", "Job Role", "Branch", "Mode", "Status", "Visit Date", "Package", "Location"];
+    const header = ["S.No", "Company", "Job Role", "Start Date", "End Date", "Package", "Rounds", "Mode"];
     const data = filteredData.map((item, index) => [
         index + 1,
-        item.company,
-        item.domain,
-        item.jobRole,
-        item.branch,
-        item.mode,
-        item.status,
-        item.visitDate,
-        item.package,
-        item.location
+        item.companyName || item.company || '—',
+        item.jobRole || item.role || '—',
+        item.startingDate || item.driveStartDate || item.companyDriveDate || item.visitDate || '—',
+        item.endDate || item.endingDate || item.driveEndDate || '—',
+        item.package || item.pkg || item.ctc || item.salaryPackage || '—',
+        item.rounds || '—',
+        item.mode || '—'
     ]);
     const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Company Drives");
+
     XLSX.writeFile(wb, "CompanyDrives.xlsx");
     setShowExportMenu(false);
   }catch (error){
@@ -509,20 +465,18 @@ export default function App({ onLogout, currentView, onViewChange }) {
     const doc = new jsPDF();
   
     // Define the table headers
-    const tableColumn = ["S.No", "Company", "Domain", "Job Role", "Branch", "Mode", "Status", "Visit Date", "Package", "Location"];
+    const tableColumn = ["S.No", "Company", "Job Role", "Start Date", "End Date", "Package", "Rounds", "Mode"];
   
     // Prepare the data rows from your filtered data
     const tableRows = filteredData.map((item, index) => [
         index + 1,
-        item.company,
-        item.domain,
-        item.jobRole,
-        item.branch,
-        item.mode,
-        item.status,
-        item.visitDate,
-        item.package,
-        item.location
+        item.companyName || item.company || '—',
+        item.jobRole || item.role || '—',
+        item.startingDate || item.driveStartDate || item.companyDriveDate || item.visitDate || '—',
+        item.endDate || item.endingDate || item.driveEndDate || '—',
+        item.package || item.pkg || item.ctc || item.salaryPackage || '—',
+        item.rounds || '—',
+        item.mode || '—'
     ]);
   
     // Add a title to the PDF
@@ -552,12 +506,10 @@ export default function App({ onLogout, currentView, onViewChange }) {
             1: { halign: 'left', cellWidth: 25 },
             2: { halign: 'left', cellWidth: 25 },
             3: { halign: 'left', cellWidth: 25 },
-            4: { halign: 'center', cellWidth: 20 },
-            5: { halign: 'center', cellWidth: 15 },
+            4: { halign: 'center', cellWidth: 25 },
+            5: { halign: 'center', cellWidth: 20 },
             6: { halign: 'center', cellWidth: 15 },
-            7: { halign: 'center', cellWidth: 20 },
-            8: { halign: 'center', cellWidth: 15 },
-            9: { halign: 'left', cellWidth: 'auto' }
+            7: { halign: 'center', cellWidth: 15 }
         },
         margin: { top: 20 },
     });
@@ -569,6 +521,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
     throw error;
   }
   };
+  
   const handleExportToPDF = () => {
     simulateExport('pdf', exportToPDF);
   };
@@ -587,12 +540,9 @@ export default function App({ onLogout, currentView, onViewChange }) {
     }
   };
 
-  const [exportPopupState, setExportPopupState] = useState({
-    isOpen: false,
-    type: null, // 'progress', 'success', 'failed'
-    operation: null, // 'excel', 'pdf'
-    progress: 0
-  });
+  const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportType, setExportType] = useState('Excel');
 
   return (
     <div>
@@ -628,65 +578,80 @@ export default function App({ onLogout, currentView, onViewChange }) {
 
                   {/* Company Search Input */}
                   <div className={styles['co-cd-search-filter-card__input-wrapper']}>
-                    <input
+                    <select
                       id="co-cd-search-company"
                       className={styles['co-cd-search-filter-card__input']}
                       value={filters.company}
-                      onChange={(e) => handleFilterChange('company', e.target.value)}
+                      onChange={(e) => handleCompanyChange(e.target.value)}
                       required
-                    />
+                    >
+                      <option value=""></option>
+                      {uniqueCompanies.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                     <label htmlFor="co-cd-search-company" className={styles['co-cd-search-filter-card__label']}>
                       Search Company
                     </label>
                   </div>
 
-                  {/* Domain Search Input */}
+                  {/* Job Role Search Input */}
                   <div className={styles['co-cd-search-filter-card__input-wrapper']}>
-                    <input
-                      id="co-cd-search-domain"
+                    <select
+                      id="co-cd-search-job-role"
                       className={styles['co-cd-search-filter-card__input']}
-                      value={filters.domain}
-                      onChange={(e) => handleFilterChange('domain', e.target.value)}
+                      value={filters.jobRole}
+                      onChange={(e) => handleFilterChange('jobRole', e.target.value)}
                       required
-                    />
-                    <label htmlFor="co-cd-search-domain" id="domain" className={styles['co-cd-search-filter-card__label']}>
-                      Search Domain
+                    >
+                      <option value=""></option>
+                      {jobRolesForSelectedCompany.map(r => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    <label htmlFor="co-cd-search-job-role" id="jobRole" className={styles['co-cd-search-filter-card__label']}>
+                      Search Job Role
                     </label>
                   </div>
                 </div>
                 <div className={styles['co-cd-search-filter-card__fields-row']}>
 
-                  {/* Department Search Input */}
+                  {/* Start Date Dropdown */}
                   <div className={styles['co-cd-search-filter-card__input-wrapper']}>
-                    <input
-                      id="co-cd-search-department"
+                    <select
+                      id="co-cd-search-start-date"
                       className={styles['co-cd-search-filter-card__input']}
-                      value={filters.department}
-                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                      value={filters.startDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
                       required
-                    />
-                    <label htmlFor="co-cd-search-department" className={styles['co-cd-search-filter-card__label']}>
-                      Search by Branch
+                    >
+                      <option value=""></option>
+                      {uniqueStartDates.map(d => (
+                        <option key={d} value={d}>{formatISODateToDisplay(d)}</option>
+                      ))}
+                    </select>
+                    <label htmlFor="co-cd-search-start-date" className={styles['co-cd-search-filter-card__label']}>
+                      Start Date
                     </label>
                   </div>
 
-                  {/* Mode Search Dropdown */}
+                  {/* End Date Dropdown */}
                   <div className={styles['co-cd-search-filter-card__input-wrapper']}>
                     <select
-                      id="co-cd-search-mode"
+                      id="co-cd-search-end-date"
                       className={styles['co-cd-search-filter-card__input']} 
-                      style={{ width: '280px' }}
-                      value={filters.mode}
-                      onChange={(e) => handleFilterChange('mode', e.target.value)}
+                      value={filters.endDate}
+                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                      disabled={!filters.startDate}
                       required
                     >
-                      <option  value=""></option>
-                      <option value="Online">Online</option>
-                      <option value="Offline">Offline</option>
-                      <option value="Hybrid">Hybrid</option>
+                      <option value=""></option>
+                      {uniqueEndDatesForSelectedStart.map(d => (
+                        <option key={d} value={d}>{formatISODateToDisplay(d)}</option>
+                      ))}
                     </select>
-                    <label htmlFor="co-cd-search-mode" className={styles['co-cd-search-filter-card__label']}>
-                     Search by Mode
+                    <label htmlFor="co-cd-search-end-date" className={styles['co-cd-search-filter-card__label']}>
+                     End Date
                     </label>
                   </div>
                 </div>
@@ -704,7 +669,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
                 <img src={CoodCompanyDriveMonths} alt="This Month's Drives" className={styles['co-cd-stat-card__image']} />
                 <span className={styles['co-cd-stat-card__label']}>This Month's<br />Drives</span>
                 <span className={styles['co-cd-stat-card__value']}>{companiesDrives.filter(d => {
-                  const driveDate = new Date(d.startingDate || d.visitDate);
+                  const driveDate = new Date(d.startingDate || d.driveStartDate || d.companyDriveDate || d.visitDate);
                   const now = new Date();
                   return driveDate.getMonth() === now.getMonth() && driveDate.getFullYear() === now.getFullYear();
                 }).length}</span>
@@ -739,7 +704,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
     <th>Job Role</th>
     <th>Start Date</th>
     <th>End Date</th>
-    <th>Other Branches</th>
+    <th>Package</th>
     <th>Rounds</th>
     <th>Mode</th>
     <th>View</th>
@@ -775,7 +740,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
             <td>{item.jobRole || '—'}</td>
             <td>{formatDate(item.startingDate || item.driveStartDate || item.companyDriveDate)}</td>
             <td>{formatDate(item.endDate || item.endingDate || item.driveEndDate)}</td>
-            <td>{Array.isArray(item.eligibleBranches) ? item.eligibleBranches.join(', ') : (item.branch || item.department || '—')}</td>
+            <td>{item.package || item.pkg || item.ctc || item.salaryPackage || '—'}</td>
             <td>{item.rounds || '—'}</td>
             <td>{item.mode || '—'}</td>
             <td>
@@ -798,31 +763,29 @@ export default function App({ onLogout, currentView, onViewChange }) {
         </div>
 
       </div>
-       {/* Export Popups */}
-       {exportPopupState.isOpen && exportPopupState.type === 'progress' && (
-                <ExportProgressPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    progress={exportPopupState.progress}
-                    onClose={() => {}}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'success' && (
-                <ExportSuccessPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'failed' && (
-                <ExportFailedPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}     
+
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
+        progress={exportProgress}
+        exportType={exportType}
+        color="#d23b42"
+        progressColor="#d23b42"
+      />
+
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
+
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
          
     </div>
   );

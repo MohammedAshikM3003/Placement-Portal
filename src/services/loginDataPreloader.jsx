@@ -66,7 +66,7 @@ class LoginDataPreloader {
         throw new Error('No auth token found');
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/profile/${adminLoginID}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -81,7 +81,17 @@ class LoginDataPreloader {
       const result = await response.json();
       
       if (result.success && result.data) {
-        console.log('🔍 Full admin profile fetched during login:', result.data);
+        console.log('🔍 Full admin profile fetched during login:', {
+          hasFirstName: !!result.data.firstName,
+          hasLastName: !!result.data.lastName,
+          hasDOB: !!result.data.dob,
+          hasGender: !!result.data.gender,
+          hasDomainMail: !!result.data.domainMailId,
+          hasCollegeBanner: !!result.data.collegeBanner,
+          hasNAAC: !!result.data.naacCertificate,
+          hasNBA: !!result.data.nbaCertificate,
+          hasLogo: !!result.data.collegeLogo
+        });
         return result.data;
       } else {
         console.warn('⚠️ Admin profile not found or empty');
@@ -124,6 +134,7 @@ class LoginDataPreloader {
       tasks.push(
         this.fetchAdminProfileFromAPI(adminLoginID)
           .then(fullProfile => {
+            // Build complete profile cache
             const profileCache = {
               adminLoginID: adminLoginID,
               name: adminData.fullName || 'Admin',
@@ -133,19 +144,50 @@ class LoginDataPreloader {
               emailId: fullProfile?.emailId || adminData.emailId || '',
               phoneNumber: fullProfile?.phoneNumber || adminData.phoneNumber || '',
               department: fullProfile?.department || adminData.department || '',
-              // NEW: Include DOB and College Details
+              // Include DOB and gender
               dob: fullProfile?.dob || '',
               gender: fullProfile?.gender || '',
               domainMailId: fullProfile?.domainMailId || '',
+              // Include college images
               collegeBanner: fullProfile?.collegeBanner || null,
               naacCertificate: fullProfile?.naacCertificate || null,
               nbaCertificate: fullProfile?.nbaCertificate || null,
-              collegeLogo: fullProfile?.collegeLogo || null
+              collegeLogo: fullProfile?.collegeLogo || null,
+              timestamp: Date.now()
             };
-            localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
-            localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+            
+            // Try to cache with college images first
+            try {
+              localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+              localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+              console.log('✅ Admin FULL profile cached (including DOB and College images)');
+            } catch (quotaError) {
+              console.warn('⚠️ Storage quota exceeded, caching without college images:', quotaError);
+              // Fallback: Cache without college images if quota exceeded
+              const minimalCache = {
+                adminLoginID: adminLoginID,
+                name: adminData.fullName || 'Admin',
+                profilePhoto: adminData.profilePhoto || null,
+                firstName: fullProfile?.firstName || adminData.firstName || '',
+                lastName: fullProfile?.lastName || adminData.lastName || '',
+                emailId: fullProfile?.emailId || adminData.emailId || '',
+                phoneNumber: fullProfile?.phoneNumber || adminData.phoneNumber || '',
+                department: fullProfile?.department || adminData.department || '',
+                dob: fullProfile?.dob || '',
+                gender: fullProfile?.gender || '',
+                domainMailId: fullProfile?.domainMailId || '',
+                timestamp: Date.now()
+              };
+              try {
+                localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache));
+                localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+                console.log('✅ Admin profile cached without college images (quota limit)');
+              } catch (fallbackError) {
+                console.error('❌ Failed to cache even minimal profile:', fallbackError);
+              }
+            }
+            
             this.updateProgress('profileData', true);
-            console.log('✅ Admin FULL profile data cached (including DOB and College Details)');
           })
           .catch(err => {
             console.warn('⚠️ Failed to fetch full admin profile, using basic data:', err);
@@ -158,10 +200,15 @@ class LoginDataPreloader {
               lastName: adminData.lastName || '',
               emailId: adminData.emailId || '',
               phoneNumber: adminData.phoneNumber || '',
-              department: adminData.department || ''
+              department: adminData.department || '',
+              timestamp: Date.now()
             };
-            localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
-            localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+            try {
+              localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+              localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+            } catch (e) {
+              console.error('❌ Failed to cache basic profile:', e);
+            }
             this.updateProgress('profileData', true);
           })
       );

@@ -835,7 +835,7 @@ function AdminCoDet() {
                                                 </>
                                             )}
                                             {!isViewMode && (
-                                                <>
+                                                <div className={styles['Admin-cood-detail-login-buttons-desktop']}>
                                                     <button
                                                         type="button"
                                                         className={styles['Admin-cood-detail-discard-btn']}
@@ -851,90 +851,99 @@ function AdminCoDet() {
                                                     >
                                                         {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
                                                     </button>
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                     </section>
                                 </div>
 
-                            <div className={`${styles['Admin-cood-detail-photo-wrapper']} ${errors.profilePhoto ? styles['Admin-cood-detail-input-error'] : ''}`}>
-                                <div className={styles['Admin-cood-detail-photo-box']}>
-                                    <h3 className={styles['Admin-cood-detail-photo-title']}>Profile Photo</h3>
-                                    <div className={styles['Admin-cood-detail-profile-icon-container']}>
-                                        {profilePhoto ? (
-                                            <img
-                                                src={profilePhoto}
-                                                alt="Profile Preview"
-                                                className={styles['Admin-cood-detail-profile-preview-img']}
-                                                onClick={handleImageClick}
-                                            />
-                                        ) : (
-                                            <img
-                                                src={ProfileGraduationcap}
-                                                alt="Graduation Cap"
-                                                className={styles['Admin-cood-detail-graduation-cap-icon']}
-                                            />
-                                        )}
-                                    </div>
-                                    {photoDetails.fileName && (
-                                        <div className={styles['Admin-cood-detail-upload-info-container']}>
-                                            <div className={styles['Admin-cood-detail-upload-info-item']}>
-                                                <FileIcon />
-                                                <span>{photoDetails.fileName}</span>
-                                            </div>
-                                            <div className={styles['Admin-cood-detail-upload-info-item']}>
-                                                <CalendarIcon />
-                                                <span>Uploaded on: {photoDetails.uploadDate}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className={styles['Admin-cood-detail-upload-action-area']}>
-                                        {!isViewMode && (
-                                        <div className={styles['Admin-cood-detail-upload-btn-wrapper']}>
-                                            <label htmlFor="file-upload" className={styles['Admin-cood-detail-profile-upload-btn']}>
-                                                <div className={styles['Admin-cood-detail-upload-btn-content']}>
-                                                    <MdUpload />
-                                                    <span>Upload</span>
-                                                </div>
-                                            </label>
-                                            {profilePhoto && (
-                                                <button
-                                                    onClick={handleRemovePhoto}
-                                                    className={styles['Admin-cood-detail-remove-image-btn']}
-                                                    aria-label="Remove image"
-                                                >
-                                                    <IoMdClose />
-                                                </button>
+                                <div className={`${styles['Admin-cood-detail-photo-wrapper']} ${errors.profilePhoto ? styles['Admin-cood-detail-input-error'] : ''}`}>
+                                    <div className={styles['Admin-cood-detail-photo-box']}>
+                                        <h3 className={styles['Admin-cood-detail-photo-title']}>Profile Photo</h3>
+                                        <div className={styles['Admin-cood-detail-profile-icon-container']}>
+                                            {profilePhoto ? (
+                                                <img
+                                                    src={profilePhoto}
+                                                    alt="Profile Preview"
+                                                    className={styles['Admin-cood-detail-profile-preview-img']}
+                                                    onClick={handleImageClick}
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={ProfileGraduationcap}
+                                                    alt="Graduation Cap"
+                                                    className={styles['Admin-cood-detail-graduation-cap-icon']}
+                                                />
                                             )}
                                         </div>
-                                        )}
-                                        {!isViewMode && (
-                                            <>
-                                                <input
-                                                    id="file-upload"
-                                                    type="file"
-                                                    accept="image/jpeg"
-                                                    className={styles['Admin-cood-detail-hidden-input']}
-                                                    onChange={handlePhotoUpload}
-                                                />
-                                                {popupMessage && typeof popupMessage === 'object' && (
-                                                    <p
-                                                        className={popupMessage.type === 'success' ? styles['Admin-cood-detail-upload-success-message'] : styles['Admin-cood-detail-status-error']}
-                                                        style={{ textAlign: 'center', fontSize: '0.85rem', fontWeight: '500', margin: '8px 0 0 0' }}
-                                                    >
-                                                        {popupMessage.text}
-                                                    </p>
-                                                )}
-                                                <p className={styles['Admin-cood-detail-upload-hint']}>*Only JPG format is allowed.</p>
-                                            </>
-                                        )}
+                                        <div className={styles['Admin-cood-detail-upload-action-area']}>
+                                            {!isViewMode && (
+                                                <div className={styles['Admin-cood-detail-upload-btn-wrapper']}>
+                                                    <label htmlFor="file-upload" className={styles['Admin-cood-detail-profile-upload-btn']}>
+                                                        <div className={styles['Admin-cood-detail-upload-btn-content']}>
+                                                            <MdUpload />
+                                                            <span>Upload</span>
+                                                        </div>
+                                                    </label>
+                                                    {profilePhoto && (
+                                                        <button
+                                                            onClick={handleRemovePhoto}
+                                                            className={styles['Admin-cood-detail-remove-image-btn']}
+                                                            aria-label="Remove image"
+                                                        >
+                                                            <IoMdClose />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {!isViewMode && (
+                                                <>
+                                                    <input
+                                                        id="file-upload"
+                                                        type="file"
+                                                        accept="image/jpeg"
+                                                        className={styles['Admin-cood-detail-hidden-input']}
+                                                        onChange={handlePhotoUpload}
+                                                    />
+                                                    {popupMessage && typeof popupMessage === 'object' && (
+                                                        <p
+                                                            className={popupMessage.type === 'success' ? styles['Admin-cood-detail-upload-success-message'] : styles['Admin-cood-detail-status-error']}
+                                                            style={{ textAlign: 'center', fontSize: '0.85rem', fontWeight: '500', margin: '8px 0 0 0' }}
+                                                        >
+                                                            {popupMessage.text}
+                                                        </p>
+                                                    )}
+                                                    <p className={styles['Admin-cood-detail-upload-hint']}>*Only JPG format is allowed.</p>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            {!isViewMode && (
+                                <div className={styles['Admin-cood-detail-mobile-actions']}>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cood-detail-discard-btn']}
+                                        onClick={handleDiscard}
+                                    >
+                                        Discard
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cood-detail-confirm-save-btn']}
+                                        onClick={handleConfirmSave}
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
                     </div>
                 </div>
-            </div>
 
             {isModalOpen && profilePhoto && (
                 <div className={styles['co-modal-overlay']} onClick={handleModalClose}>
@@ -955,7 +964,7 @@ function AdminCoDet() {
                             <div className={styles['success-modal-icon-wrapper']}>
                                 <img src={ProfileGraduationcap} alt="Success" className={styles['success-modal-icon']} />
                             </div>
-                            <h2>{isEditMode ? 'Co-ordinator Updated ✓' : 'Co-ordinator Added ✓'}</h2>
+                            <h2>{isEditMode ? 'Co-ordinator Updated ' : 'Co-ordinator Added '}</h2>
                             <p>{isEditMode ? 'Co-ordinator details have been' : 'New Co-ordinator have been'}<br />Successfully {isEditMode ? 'Updated' : 'Added in the Portal'}</p>
                             <button
                                 className={styles['success-modal-close-btn']}

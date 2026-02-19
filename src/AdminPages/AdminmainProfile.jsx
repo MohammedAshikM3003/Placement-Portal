@@ -92,6 +92,42 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     );
 };
 
+// College Image Loading Spinner Component (Similar to AdminCompanyDrive table loader)
+const CollegeImageLoader = () => (
+    <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10
+    }}>
+        <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #4EA24E',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>{`
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `}</style>
+        <p style={{ 
+            marginTop: '12px',
+            fontSize: '12px', 
+            color: '#888',
+            fontWeight: '500'
+        }}>Loading...</p>
+    </div>
+);
+
 // SuccessPopup Component
 const SuccessPopup = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
@@ -168,14 +204,87 @@ function Admainprofile() {
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
     const [showLoginDetails, setShowLoginDetails] = useState(false);
-    const [collegeBanner, setCollegeBanner] = useState(null);
-    const [collegeBannerBase64, setCollegeBannerBase64] = useState('');
-    const [naacCertificate, setNaacCertificate] = useState(null);
-    const [naacCertificateBase64, setNaacCertificateBase64] = useState('');
-    const [nbaCertificate, setNbaCertificate] = useState(null);
-    const [nbaCertificateBase64, setNbaCertificateBase64] = useState('');
-    const [collegeLogo, setCollegeLogo] = useState(null);
-    const [collegeLogoBase64, setCollegeLogoBase64] = useState('');
+    // Initialize college images from cache to prevent "No Banner" flash
+    const [collegeBanner, setCollegeBanner] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.collegeBanner || null;
+            }
+        } catch (e) {}
+        return null;
+    });
+    const [collegeBannerBase64, setCollegeBannerBase64] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.collegeBanner || '';
+            }
+        } catch (e) {}
+        return '';
+    });
+    const [naacCertificate, setNaacCertificate] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.naacCertificate || null;
+            }
+        } catch (e) {}
+        return null;
+    });
+    const [naacCertificateBase64, setNaacCertificateBase64] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.naacCertificate || '';
+            }
+        } catch (e) {}
+        return '';
+    });
+    const [nbaCertificate, setNbaCertificate] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.nbaCertificate || null;
+            }
+        } catch (e) {}
+        return null;
+    });
+    const [nbaCertificateBase64, setNbaCertificateBase64] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.nbaCertificate || '';
+            }
+        } catch (e) {}
+        return '';
+    });
+    const [collegeLogo, setCollegeLogo] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.collegeLogo || null;
+            }
+        } catch (e) {}
+        return null;
+    });
+    const [collegeLogoBase64, setCollegeLogoBase64] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return data.collegeLogo || '';
+            }
+        } catch (e) {}
+        return '';
+    });
     const [bannerUploadSuccess, setBannerUploadSuccess] = useState(false);
     const [naacUploadSuccess, setNaacUploadSuccess] = useState(false);
     const [nbaUploadSuccess, setNbaUploadSuccess] = useState(false);
@@ -183,7 +292,7 @@ function Admainprofile() {
     const [isSaving, setIsSaving] = useState(false);
     const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
     
-    // HYPER-FAST: Initialize loading state based on cache availability
+    // HYPER-FAST: Initialize loading states based on cache availability
     // If cache exists with valid data, start with isLoading=false to prevent flash
     const [isLoading, setIsLoading] = useState(() => {
         try {
@@ -199,6 +308,51 @@ function Admainprofile() {
             // Ignore parse errors
         }
         return true; // Show loading only if no valid cache
+    });
+    
+    // Initialize college image loading states based on cache availability
+    const [isBannerLoading, setIsBannerLoading] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return false; // Don't show loading if cache exists
+            }
+        } catch (e) {}
+        return true;
+    });
+    
+    const [isNaacLoading, setIsNaacLoading] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return false;
+            }
+        } catch (e) {}
+        return true;
+    });
+    
+    const [isNbaLoading, setIsNbaLoading] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return false;
+            }
+        } catch (e) {}
+        return true;
+    });
+    
+    const [isLogoLoading, setIsLogoLoading] = useState(() => {
+        try {
+            const cachedProfile = localStorage.getItem('adminProfileCache');
+            if (cachedProfile) {
+                const data = JSON.parse(cachedProfile);
+                return false;
+            }
+        } catch (e) {}
+        return true;
     });
     const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -241,43 +395,51 @@ function Admainprofile() {
                                 currentLoginId: profileData.adminLoginID || adminLoginID
                             }));
                             
-                            // Load all images from cache
+                            // Load profile photo from cache
                             if (profileData.profilePhoto) {
                                 setProfilePhoto(profileData.profilePhoto);
                                 setProfilePhotoBase64(profileData.profilePhoto);
                             }
+                            
+                            // Load college images from cache if available
                             if (profileData.collegeBanner) {
                                 setCollegeBanner(profileData.collegeBanner);
                                 setCollegeBannerBase64(profileData.collegeBanner);
+                                console.log('✅ College banner loaded from cache');
                             }
                             if (profileData.naacCertificate) {
                                 setNaacCertificate(profileData.naacCertificate);
                                 setNaacCertificateBase64(profileData.naacCertificate);
+                                console.log('✅ NAAC certificate loaded from cache');
                             }
                             if (profileData.nbaCertificate) {
                                 setNbaCertificate(profileData.nbaCertificate);
                                 setNbaCertificateBase64(profileData.nbaCertificate);
+                                console.log('✅ NBA certificate loaded from cache');
                             }
                             if (profileData.collegeLogo) {
                                 setCollegeLogo(profileData.collegeLogo);
                                 setCollegeLogoBase64(profileData.collegeLogo);
+                                console.log('✅ College logo loaded from cache');
                             }
                             
-                            console.log('✅ Profile loaded instantly from cache');
+                            // Set all loading states to false since we loaded from cache
+                            setIsBannerLoading(false);
+                            setIsNaacLoading(false);
+                            setIsNbaLoading(false);
+                            setIsLogoLoading(false);
+                            
+                            console.log('✅ Profile and images loaded instantly from cache');
                             setDataLoaded(true);
                             setIsLoading(false);
-                            return; // Don't fetch from server - cache is fresh
+                            // Continue to fetch from server for any updates (don't return early)
                         }
                     } catch (err) {
                         console.warn('Cache parse error:', err);
                     }
                 }
                 
-                // Only show loading state if we need to fetch from server
-                setIsLoading(true);
-                
-                // If no cache, fetch from server as fallback
-                console.log('⚠️ No cache found, fetching from server...');
+                // Fetch from server to get college images (even if profile was cached)
                 const authToken = localStorage.getItem('authToken');
                 const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
                     headers:{ 'Authorization': `Bearer ${authToken}`,
@@ -355,28 +517,71 @@ function Admainprofile() {
                         setCollegeBanner(data.collegeBanner);
                         setCollegeBannerBase64(data.collegeBanner);
                     }
+                    setIsBannerLoading(false);
+                    
                     if (data.naacCertificate) {
                         setNaacCertificate(data.naacCertificate);
                         setNaacCertificateBase64(data.naacCertificate);
                     }
+                    setIsNaacLoading(false);
+                    
                     if (data.nbaCertificate) {
                         setNbaCertificate(data.nbaCertificate);
                         setNbaCertificateBase64(data.nbaCertificate);
                     }
+                    setIsNbaLoading(false);
+                    
                     if (data.collegeLogo) {
                         setCollegeLogo(data.collegeLogo);
                         setCollegeLogoBase64(data.collegeLogo);
                     }
+                    setIsLogoLoading(false);
                     
-                    // 💾 Cache complete admin profile data to prevent repeated fetches
+                    // 💾 Cache profile data (including college images on first load)
                     const profileCacheData = {
-                        ...data,
+                        adminLoginID: data.adminLoginID,
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        dob: data.dob,
+                        gender: data.gender,
+                        emailId: data.emailId,
+                        domainMailId: data.domainMailId,
+                        phoneNumber: data.phoneNumber,
+                        department: data.department,
                         profilePhoto: profilePhotoUrl,
+                        collegeBanner: data.collegeBanner || null,
+                        naacCertificate: data.naacCertificate || null,
+                        nbaCertificate: data.nbaCertificate || null,
+                        collegeLogo: data.collegeLogo || null,
                         timestamp: Date.now()
                     };
-                    localStorage.setItem('adminProfileCache', JSON.stringify(profileCacheData));
-                    localStorage.setItem('adminProfileCacheTime', Date.now().toString());
-                    console.log('✅ Admin profile cached successfully');
+                    try {
+                        localStorage.setItem('adminProfileCache', JSON.stringify(profileCacheData));
+                        localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+                        console.log('✅ Admin profile cached successfully (including college images)');
+                    } catch (quotaError) {
+                        console.warn('⚠️ Could not cache profile due to storage quota - trying without images:', quotaError);
+                        // Fallback: Cache without college images if quota exceeded
+                        try {
+                            const minimalCache = {
+                                adminLoginID: data.adminLoginID,
+                                firstName: data.firstName,
+                                lastName: data.lastName,
+                                dob: data.dob,
+                                gender: data.gender,
+                                emailId: data.emailId,
+                                domainMailId: data.domainMailId,
+                                phoneNumber: data.phoneNumber,
+                                department: data.department,
+                                profilePhoto: profilePhotoUrl,
+                                timestamp: Date.now()
+                            };
+                            localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache));
+                            console.log('✅ Admin profile cached without college images (quota limit)');
+                        } catch (fallbackError) {
+                            console.warn('⚠️ Could not cache even minimal profile:', fallbackError);
+                        }
+                    }
                     
                     setDataLoaded(true);
                     setIsLoading(false);
@@ -385,6 +590,11 @@ function Admainprofile() {
             } catch (error) {
                 console.error('Error loading admin data:', error);
                 setIsLoading(false);
+                // Set all image loading states to false on error
+                setIsBannerLoading(false);
+                setIsNaacLoading(false);
+                setIsNbaLoading(false);
+                setIsLogoLoading(false);
             }
         };
         
@@ -394,6 +604,18 @@ function Admainprofile() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Handle mobile number input changes
+    const handleMobileChange = (e) => {
+        let value = e.target.value;
+        // Remove leading zeros
+        value = value.replace(/^0+/, '');
+        // Only allow digits
+        value = value.replace(/\D/g, '');
+        // Limit to 10 digits
+        value = value.substring(0, 10);
+        setFormData(prev => ({ ...prev, phoneNumber: value }));
     };
 
     const handleDobChange = (date) => {
@@ -602,7 +824,7 @@ function Admainprofile() {
             if (result.success) {
                 setSaveStatus('saved');
                 
-                // � Update complete cache after successful save
+                // 💾 Update cache immediately after successful save (including college images)
                 const adminLoginID = loginData.currentLoginId || getAdminLoginID();
                 const fullCacheData = {
                     adminLoginID: adminLoginID,
@@ -621,9 +843,40 @@ function Admainprofile() {
                     collegeLogo: collegeLogoBase64,
                     timestamp: Date.now()
                 };
-                localStorage.setItem('adminProfileCache', JSON.stringify(fullCacheData));
-                localStorage.setItem('adminProfileCacheTime', Date.now().toString());
-                console.log('✅ Admin profile cache updated after save');
+                try {
+                    localStorage.setItem('adminProfileCache', JSON.stringify(fullCacheData));
+                    localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+                    console.log('✅ Admin profile cache updated after save (including college images)');
+                } catch (quotaError) {
+                    console.warn('⚠️ Could not cache full profile due to quota - trying without college images:', quotaError);
+                    // Fallback: Cache without college images if quota exceeded
+                    try {
+                        const minimalCache = {
+                            adminLoginID: adminLoginID,
+                            firstName: formData.firstName,
+                            lastName: formData.lastName,
+                            dob: formData.dob,
+                            gender: formData.gender,
+                            emailId: formData.emailId,
+                            domainMailId: formData.domainMailId,
+                            phoneNumber: formData.phoneNumber,
+                            department: formData.department,
+                            profilePhoto: profilePhotoBase64,
+                            timestamp: Date.now()
+                        };
+                        localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache));
+                        console.log('✅ Admin profile cache updated without college images (quota limit)');
+                    } catch (fallbackError) {
+                        console.warn('⚠️ Could not cache even minimal profile:', fallbackError);
+                        // Clear old cache if completely failed
+                        try {
+                            localStorage.removeItem('adminProfileCache');
+                            localStorage.removeItem('adminProfileCacheTime');
+                        } catch (e) {
+                            // Ignore cleanup errors
+                        }
+                    }
+                }
                 
                 // 🖼️ Update cached profile photo if changed
                 if (profilePhotoBase64) {
@@ -641,6 +894,12 @@ function Admainprofile() {
                     const { clearCache } = await import('../services/collegeImagesService');
                     clearCache();
                     console.log('✅ College images cache cleared - pages will fetch fresh images');
+                    
+                    // 🔔 Notify all pages to refresh college images
+                    window.dispatchEvent(new CustomEvent('collegeImagesUpdated', { 
+                        detail: { timestamp: Date.now() } 
+                    }));
+                    console.log('🔔 College images update event dispatched');
                 } catch (cacheError) {
                     console.warn('⚠️ Failed to clear college images cache:', cacheError);
                 }
@@ -683,7 +942,15 @@ function Admainprofile() {
         } catch (error) {
             console.error('Error saving profile:', error);
             setSaveStatus('error');
-            alert('Error saving profile. Please check your connection and try again.');
+            
+            // Provide specific error messages
+            if (error.name === 'QuotaExceededError') {
+                alert('Storage quota exceeded. Your profile has been saved to the server successfully, but some data could not be cached locally. This will not affect functionality.');
+            } else if (error.message && error.message.includes('network')) {
+                alert('Network error. Please check your internet connection and try again.');
+            } else {
+                alert('Error saving profile. Please try again.');
+            }
         } finally {
             setIsSaving(false);
         }
@@ -706,7 +973,7 @@ function Admainprofile() {
             return;
         }
         const fileSizeKB = (file.size / 1024).toFixed(2);
-        if (file.size > 500 * 1024) {
+        if (file.size > 5 * 1024 * 1024) {
             setFileSizeErrorKB(fileSizeKB);
             setIsFileSizeErrorOpen(true);
             e.target.value = '';
@@ -849,7 +1116,8 @@ function Admainprofile() {
         <>
             <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
             {/* UPDATED CLASS: Admin-main-profile-layout */}
-            <div className={styles['Admin-main-profile-layout']}>
+            {isSaving && <div className={styles['admin-profile-saving-overlay']} />}
+            <div className={`${styles['Admin-main-profile-layout']} ${isSaving ? styles['admin-profile-saving'] : ''}`}>
                 <AdSidebar isOpen={isSidebarOpen} onLogout={() => console.log('Logout Clicked')} />
                 {/* UPDATED CLASS: Admin-main-profile-main-content */}
                 <div className={styles['Admin-main-profile-main-content']}>
@@ -883,8 +1151,8 @@ function Admainprofile() {
                                     <h3 className={styles['Admin-main-profile-section-header']}>Personal Information</h3>
                                     <div className={styles['Admin-main-profile-input-grid']}>
                                         {/* UPDATED CLASSES for form inputs */}
-                                        <input type="text" name="firstName" placeholder="First Name" className={styles['Admin-main-profile-form-input']} value={formData.firstName} onChange={handleInputChange} />
-                                        <input type="text" name="lastName" placeholder="Last Name" className={styles['Admin-main-profile-form-input']} value={formData.lastName} onChange={handleInputChange} />
+                                        <input type="text" name="firstName" placeholder="First Name" className={styles['Admin-main-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
+                                        <input type="text" name="lastName" placeholder="Last Name" className={styles['Admin-main-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
                                         
                                         <div className={styles['Admin-main-profile-date-wrapper']}>
                                             <DatePicker
@@ -903,6 +1171,7 @@ function Admainprofile() {
                                                 maxDate={new Date()}
                                                 isClearable
                                                 autoComplete="off"
+                                                disabled={isSaving}
                                                 renderCustomHeader={({
                                                     date,
                                                     changeYear,
@@ -947,18 +1216,21 @@ function Admainprofile() {
                                                 )}
                                             />
                                         </div>
-                                        <select name="gender" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.gender} onChange={handleInputChange}>
+                                        <select name="gender" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
                                             <option value="" disabled hidden>Gender</option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                             <option value="Other">Other</option>
                                         </select>
                                         
-                                        <input type="email" name="emailId" placeholder="Email id" className={styles['Admin-main-profile-form-input']} value={formData.emailId} onChange={handleInputChange} />
-                                        <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['Admin-main-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} />
+                                        <input type="email" name="emailId" placeholder="Email id" className={styles['Admin-main-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
+                                        <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['Admin-main-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
                                         
-                                        <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['Admin-main-profile-form-input']} value={formData.phoneNumber} onChange={handleInputChange} />
-                                        <input type="text" name="department" placeholder="Department" className={styles['Admin-main-profile-form-input']} value={formData.department} onChange={handleInputChange} />
+                                        <div className={styles['mobileInputWrapper']}>
+                                            <div className={styles['countryCode']}>+91</div>
+                                            <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['mobileNumberInput']} value={formData.phoneNumber} onChange={handleMobileChange} disabled={isSaving} />
+                                        </div>
+                                        <input type="text" name="department" placeholder="Department" className={styles['Admin-main-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
                                     </div>
                                 </section>
 
@@ -970,6 +1242,7 @@ function Admainprofile() {
                                     type="button"
                                     className={styles['Admin-main-profile-change-login-btn']}
                                     onClick={toggleLoginDetails}
+                                    disabled={isSaving}
                                 >
                                     <KeyIcon />
                                     <span>Change Login Details</span>
@@ -1020,7 +1293,7 @@ function Admainprofile() {
                                             </div>
                                         </label>
                                         {profilePhoto && (
-                                            <button onClick={handleRemovePhoto} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove image">
+                                            <button onClick={handleRemovePhoto} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove image" disabled={isSaving}>
                                                 <IoMdClose />
                                             </button>
                                         )}
@@ -1031,6 +1304,7 @@ function Admainprofile() {
                                         accept="image/jpeg"
                                         className={styles['Admin-main-profile-hidden-input']}
                                         onChange={handlePhotoUpload}
+                                        disabled={isSaving}
                                     />
                                     {uploadSuccess && (
                                         <p className={styles['Admin-main-profile-upload-success-message']}>Profile Photo uploaded Successfully!</p>
@@ -1052,14 +1326,14 @@ function Admainprofile() {
                         <section className={`${styles['Admin-main-profile-section']} ${styles['Admin-main-profile-login-details']}`}>
                             <h3 className={styles['Admin-main-profile-section-header']}>Change Login Details</h3>
                             <div className={styles['Admin-main-profile-input-grid-three-col']}>
-                                <input type="text" name="currentLoginId" placeholder="Current Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentLoginId} onChange={handleLoginInputChange} />
-                                <input type="text" name="newLoginId" placeholder="New Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.newLoginId} onChange={handleLoginInputChange} />
-                                <input type="text" name="confirmLoginId" placeholder="Confirm Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.confirmLoginId} onChange={handleLoginInputChange} />
+                                <input type="text" name="currentLoginId" placeholder="Current Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentLoginId} onChange={handleLoginInputChange} disabled={isSaving} />
+                                <input type="text" name="newLoginId" placeholder="New Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.newLoginId} onChange={handleLoginInputChange} disabled={isSaving} />
+                                <input type="text" name="confirmLoginId" placeholder="Confirm Login ID" className={styles['Admin-main-profile-form-input-login']} value={loginData.confirmLoginId} onChange={handleLoginInputChange} disabled={isSaving} />
                             </div>
                             <div className={styles['Admin-main-profile-input-grid-three-col']}>
-                                <input type="password" name="currentPassword" placeholder="Current Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentPassword} onChange={handleLoginInputChange} />
-                                <input type="password" name="newPassword" placeholder="New Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.newPassword} onChange={handleLoginInputChange} />
-                                <input type="password" name="confirmPassword" placeholder="Confirm Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.confirmPassword} onChange={handleLoginInputChange} />
+                                <input type="password" name="currentPassword" placeholder="Current Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentPassword} onChange={handleLoginInputChange} disabled={isSaving} />
+                                <input type="password" name="newPassword" placeholder="New Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.newPassword} onChange={handleLoginInputChange} disabled={isSaving} />
+                                <input type="password" name="confirmPassword" placeholder="Confirm Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.confirmPassword} onChange={handleLoginInputChange} disabled={isSaving} />
                             </div>
                         </section>
                         )}
@@ -1071,8 +1345,10 @@ function Admainprofile() {
                                 {/* College Banner Card */}
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>College Banner</h4>
-                                    <div className={styles['Admin-main-profile-college-preview']}>
-                                        {collegeBanner ? (
+                                    <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
+                                        {isBannerLoading ? (
+                                            <CollegeImageLoader />
+                                        ) : collegeBanner ? (
                                             <img src={collegeBanner} alt="College Banner" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Banner</div>
@@ -1082,16 +1358,16 @@ function Admainprofile() {
                                         <label htmlFor="banner-upload" className={styles['Admin-main-profile-profile-upload-btn']}>
                                             <div className={styles['Admin-main-profile-upload-btn-content']}>
                                                 <MdUpload />
-                                                <span>Upload (Max 500 KB)</span>
+                                                <span>Upload (Max 5 MB)</span>
                                             </div>
                                         </label>
                                         {collegeBanner && (
-                                            <button onClick={handleRemoveCollegeBanner} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove banner">
+                                            <button onClick={handleRemoveCollegeBanner} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove banner" disabled={isSaving}>
                                                 <IoMdClose />
                                             </button>
                                         )}
                                     </div>
-                                    <input id="banner-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleCollegeBannerUpload} />
+                                    <input id="banner-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleCollegeBannerUpload} disabled={isSaving} />
                                     {bannerUploadSuccess && <p className={styles['Admin-main-profile-upload-success-message']}>Banner uploaded!</p>}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG, JPEG, PNG, SVG formats allowed.</p>
                                 </div>
@@ -1099,8 +1375,10 @@ function Admainprofile() {
                                 {/* NAAC Card */}
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>NAAC Certificate</h4>
-                                    <div className={styles['Admin-main-profile-college-preview']}>
-                                        {naacCertificate ? (
+                                    <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
+                                        {isNaacLoading ? (
+                                            <CollegeImageLoader />
+                                        ) : naacCertificate ? (
                                             <img src={naacCertificate} alt="NAAC Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
@@ -1114,12 +1392,12 @@ function Admainprofile() {
                                             </div>
                                         </label>
                                         {naacCertificate && (
-                                            <button onClick={handleRemoveNaac} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove NAAC">
+                                            <button onClick={handleRemoveNaac} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove NAAC" disabled={isSaving}>
                                                 <IoMdClose />
                                             </button>
                                         )}
                                     </div>
-                                    <input id="naac-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleNaacUpload} />
+                                    <input id="naac-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleNaacUpload} disabled={isSaving} />
                                     {naacUploadSuccess && <p className={styles['Admin-main-profile-upload-success-message']}>NAAC uploaded!</p>}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG, JPEG, PNG, SVG formats allowed.</p>
                                 </div>
@@ -1127,8 +1405,10 @@ function Admainprofile() {
                                 {/* NBA Card */}
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>NBA Certificate</h4>
-                                    <div className={styles['Admin-main-profile-college-preview']}>
-                                        {nbaCertificate ? (
+                                    <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
+                                        {isNbaLoading ? (
+                                            <CollegeImageLoader />
+                                        ) : nbaCertificate ? (
                                             <img src={nbaCertificate} alt="NBA Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
@@ -1142,12 +1422,12 @@ function Admainprofile() {
                                             </div>
                                         </label>
                                         {nbaCertificate && (
-                                            <button onClick={handleRemoveNba} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove NBA">
+                                            <button onClick={handleRemoveNba} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove NBA" disabled={isSaving}>
                                                 <IoMdClose />
                                             </button>
                                         )}
                                     </div>
-                                    <input id="nba-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleNbaUpload} />
+                                    <input id="nba-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleNbaUpload} disabled={isSaving} />
                                     {nbaUploadSuccess && <p className={styles['Admin-main-profile-upload-success-message']}>NBA uploaded!</p>}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG, JPEG, PNG, SVG formats allowed.</p>
                                 </div>
@@ -1155,8 +1435,10 @@ function Admainprofile() {
                                 {/* College Logo Card */}
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>College Logo</h4>
-                                    <div className={styles['Admin-main-profile-college-preview']}>
-                                        {collegeLogo ? (
+                                    <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
+                                        {isLogoLoading ? (
+                                            <CollegeImageLoader />
+                                        ) : collegeLogo ? (
                                             <img src={collegeLogo} alt="College Logo" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Logo</div>
@@ -1170,12 +1452,12 @@ function Admainprofile() {
                                             </div>
                                         </label>
                                         {collegeLogo && (
-                                            <button onClick={handleRemoveCollegeLogo} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove Logo">
+                                            <button onClick={handleRemoveCollegeLogo} className={styles['Admin-main-profile-remove-image-btn']} aria-label="Remove Logo" disabled={isSaving}>
                                                 <IoMdClose />
                                             </button>
                                         )}
                                     </div>
-                                    <input id="logo-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleCollegeLogoUpload} />
+                                    <input id="logo-upload" type="file" accept="image/jpeg,image/jpg,image/png,image/svg+xml" className={styles['Admin-main-profile-hidden-input']} onChange={handleCollegeLogoUpload} disabled={isSaving} />
                                     {logoUploadSuccess && <p className={styles['Admin-main-profile-upload-success-message']}>Logo uploaded!</p>}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG, JPEG, PNG, SVG formats allowed.</p>
                                 </div>

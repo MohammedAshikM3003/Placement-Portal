@@ -5,11 +5,14 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import styles from './AdminCompanyprofile.module.css';
+
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
+import Adminicon from '../assets/Adminicon.png';
+
 import AdminCompanyprofilePopup from './AdminCompanyprofilepopup';
 import popupStyles from '../StudentPages/Achievements.module.css';
 import mongoDBService from '../services/mongoDBService';
@@ -44,6 +47,8 @@ const EXPORT_HEADERS = [
 function Admincompanyprofile({ onLogout }) {
     useAdminAuth(); // JWT authentication verification
     const location = useLocation();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [companies, setCompanies] = useState([]);
     const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
     const [showAddCompanyPopup, setShowAddCompanyPopup] = useState(false);
@@ -71,6 +76,20 @@ function Admincompanyprofile({ onLogout }) {
     const [hrNameFocused, setHrNameFocused] = useState(false);
     const [modeFocused, setModeFocused] = useState(false);
     const [visitDateFocused, setVisitDateFocused] = useState(false);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen((prev) => !prev);
+    };
+
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
 
     const fetchCompanies = useCallback(async () => {
         setIsLoading(true);
@@ -406,9 +425,17 @@ function Admincompanyprofile({ onLogout }) {
 
     return (
         <div className={styles['Admin-cp-layout']}>
-            <Adsidebar onLogout={onLogout} />
+            <div className={`${styles['Admin-cp-sidebar-wrapper']} ${isSidebarOpen ? 'open' : ''}`}>
+                <Adsidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+            </div>
+            {isSidebarOpen && (
+                <div
+                    className={styles['Admin-cp-mobile-overlay']}
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
             <div className={styles['Admin-cp-main-content']}>
-                <Adnavbar onLogout={onLogout} />
+                <Adnavbar onToggleSidebar={toggleSidebar} onLogout={onLogout} Adminicon={Adminicon} />
 
                 {showDeleteWarning && (
                     <div className={popupStyles.overlay} onClick={() => setShowDeleteWarning(false)}>
@@ -509,7 +536,7 @@ function Admincompanyprofile({ onLogout }) {
                     <div className={styles['Admin-cp-filter-section']}>
                         <div className={styles['Admin-cp-filter-header-container']}>
                             <div className={styles['Admin-cp-filter-header']}>Company Profile</div>
-                            <span className={styles['Admin-cp-filter-icon-container']}>☰</span>
+                            {/* <span className={styles['Admin-cp-filter-icon-container']}>☰</span> */}
                         </div>
                         <div className={styles['Admin-cp-filter-content']}>
                             <div
@@ -731,7 +758,7 @@ function Admincompanyprofile({ onLogout }) {
                     viewingCompany={viewingCompany}
                 />
             </div>
-            
+
             {/* Export Alerts */}
             <ExportProgressAlert 
                 isOpen={exportPopupState === 'progress'} 

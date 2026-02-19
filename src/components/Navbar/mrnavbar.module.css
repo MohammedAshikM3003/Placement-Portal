@@ -1,76 +1,92 @@
-/* 1. Import the Font */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+/* 1. Import Font to match navbar.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 .mr-navbar {
-    display: flex;
-    align-items: center;
-    background: #2085f6;
-    color: #fff;
-    padding: 15px 32px 15px 26px;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    /* 2. Apply the Font */
-    font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
+  background: #2085f6; /* Original color preserved */
+  color: #fff;
+  padding: 15px 5%; /* Aligned with navbar.module.css padding */
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 65px; /* Aligned height */
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 
 .mr-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Aligned with navbar-left gap */
+  position: relative;
+  left: -45px; /* Aligned with navbar-left offset */
+  margin-top: 4px; /* Aligned with navbar-left margin */
 }
 
 .mr-portal-logo {
-    height: 35px;
-    width: 35px;
-    margin-right: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  height: 30px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mr-portal-logo img {
-    height: 30px;
-    width: 40px;
-    filter: brightness(0) invert(1);
+  height: 30px;
+  width: 40px;
+  /* Removed filter to match the clean look of the main navbar */
 }
 
 .mr-portal-name {
-    font-size: 1.48rem;
-    /* 3. Make it Bold */
-    font-weight: 700;
-    letter-spacing: 0.5px;
+  font-size: 1.5rem; /* Aligned font size */
+  font-weight: 700; /* Aligned bold weight */
+  color: white;
+  margin-top: 4px; /* Aligned margin */
 }
 
 /* Hamburger button styles */
 .mr-hamburger-btn {
-    display: none; /* Hidden by default on desktop */
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    position: relative;
-    z-index: 1001;
+  display: none;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1003;
 }
 
 .mr-hamburger-line {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background-color: #fff;
-    margin: 5px 0;
-    transition: all 0.3s ease-in-out;
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: #fff;
+  margin: 5px 0;
+  transition: all 0.3s ease-in-out;
 }
 
-@media (max-width: 900px) {
-    .mr-navbar .mr-menu {
-        display: none; /* Hide desktop menu on mobile */
-    }
+/* Responsive Adjustments to match navbar.module.css */
+@media (max-width: 992px) {
+  .mr-hamburger-btn {
+    display: block;
+  }
+  
+  .mr-navbar {
+    padding: 15px 20px;
+  }
 
-    .mr-hamburger-btn {
-        display: block; /* Show hamburger button on mobile */
-    }
+  .mr-left {
+    left: 0; /* Reset offset for mobile */
+  }
+
+  .mr-portal-name {
+    font-size: 1.2rem;
+  }
 }

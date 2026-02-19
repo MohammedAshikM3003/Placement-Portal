@@ -152,6 +152,29 @@ function AdminMcood() {
     const navigate = useNavigate();
     const { branchCode } = useParams(); 
 
+    // Sidebar state (same pattern as AdminstudDB/AdminCompanyDrive)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        navigate('/');
+    };
+
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
+
     const [tempFilterName, setTempFilterName] = useState('');
     const [tempFilterRegno, setTempFilterRegno] = useState('');
     const [nameFocused, setNameFocused] = useState(false);
@@ -489,10 +512,11 @@ function AdminMcood() {
 
     return (
         <>
-            <Adnavbar Adminicon={Adminicon} />
+            <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} />
             {/* UPDATED CLASS: Admin-MC-layout */}
             <div className={styles['Admin-MC-layout']}>
-                <Adsidebar />
+                <Adsidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
+
                 {/* UPDATED CLASS: Admin-MC-main-content */}
                 <div className={styles['Admin-MC-main-content']}>
                     

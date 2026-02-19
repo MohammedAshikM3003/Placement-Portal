@@ -7,6 +7,7 @@ import styles from './Coo_ManageStudents.module.css';
 import achStyles from '../StudentPages/Achievements.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from "../services/mongoDBService.jsx";
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 // IMPORTS for Export Functionality
 import * as XLSX from 'xlsx';
@@ -90,129 +91,6 @@ const EyeIcon = () => (
     </svg>
 );
 
-// Export Popup Components
-const ExportProgressPopup = ({ isOpen, operation, progress, onClose }) => {
-    if (!isOpen) return null;
-    
-    const operationText = operation === 'excel' ? 'Exporting...' : 'Downloading...';
-    const progressText = operation === 'excel' ? 'Exported' : 'Downloaded';
-    
-    // Calculate the stroke-dasharray for circular progress
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (progress / 100) * circumference;
-    
-    return (
-        <div className={styles["co-ms-export-popup-overlay"]}>
-            <div className={styles["co-ms-export-popup-container"]}>
-                <div className={styles["co-ms-export-popup-header"]}>{operationText}</div>
-                <div className={styles["co-ms-export-popup-body"]}>
-                    <div className={styles["co-ms-export-progress-circle"]}>
-                        <svg width="100" height="100" viewBox="0 0 100 100">
-                            {/* Background circle */}
-                            <circle
-                                cx="50"
-                                cy="50"
-                                r={radius}
-                                fill="none"
-                                stroke="#e0e0e0"
-                                strokeWidth="8"
-                            />
-                            {/* Progress circle */}
-                            <circle
-                                cx="50"
-                                cy="50"
-                                r={radius}
-                                fill="none"
-                                stroke="#d23b42"
-                                strokeWidth="8"
-                                strokeDasharray={circumference}
-                                strokeDashoffset={offset}
-                                strokeLinecap="round"
-                                transform="rotate(-90 50 50)"
-                                style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-                            />
-                        </svg>
-                      
-                    </div>
-                    <h2 className={styles["co-ms-export-popup-title"]}>{progressText} {progress}%</h2>
-                    <p className={styles["co-ms-export-popup-message"]}>
-                        The Details have been {operation === 'excel' ? 'Exporting...' : 'Downloading...'}
-                    </p>
-                    <p className={styles["co-ms-export-popup-message"]}>Please wait...</p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ExportSuccessPopup = ({ isOpen, operation, onClose }) => {
-    if (!isOpen) return null;
-    
-    const title = operation === 'excel' ? 'Exported To Excel ✓' : 'PDF Downloaded ✓';
-    const message = operation === 'excel' 
-        ? 'The Details have been Successfully Exported to Excel in your device.'
-        : 'The Details have been Successfully Downloaded as PDF to your device.';
-    const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-    
-    return (
-        <div className={styles["co-ms-export-popup-overlay"]}>
-            <div className={styles["co-ms-export-popup-container"]}>
-                <div className={styles["co-ms-export-popup-header"]}>{headerText}</div>
-                <div className={styles["co-ms-export-popup-body"]}>
-                    <div className={styles["co-ms-export-success-icon"]}>
-                    <svg xmlns='http://www.w3.org/2000/svg' viewBox="0 0 52 52" fill="none">
-                        <circle className={styles["co-ms-success-icon--circle"]} cx="26" cy="26" r="25"/>
-                        <path className={styles["co-ms-success-icon--check"]} d="M14.1 27.2l7.1 7.2 16.7-16.8" fill="none"
-                            />
-                        </svg>
-                    </div>
-                    <h2 className={styles["co-ms-export-popup-title"]}>{title}</h2>
-                    <p className={styles["co-ms-export-popup-message"]}>{message}</p>
-                </div>
-                <div className={styles["co-ms-export-popup-footer"]}>
-                    <button onClick={onClose} className={styles["co-ms-export-popup-close-btn"]}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
-    if (!isOpen) return null;
-    
-    const title = operation === 'excel' ? 'Exported Failed!' : 'Downloaded Failed!';
-    const message = operation === 'excel'
-        ? 'The Details have been Successfully Exported to Excel in your device.'
-        : 'The Details have been Successfully Downloaded as PDF to your device.';
-    const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-    
-    return (
-        <div className={styles["co-ms-export-popup-overlay"]}>
-            <div className={styles["co-ms-export-popup-container"]}>
-                <div className={styles["co-ms-export-popup-header"]}>{headerText}</div>
-                <div className={styles["co-ms-export-popup-body"]}>
-                    <div className={styles["co-ms-export-failed-icon"]}>
-                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                            <circle cx="40" cy="40" r="38" fill="#dc3545" />
-                            <path
-                                d="M30 30 L50 50 M50 30 L30 50"
-                                stroke="white"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                    </div>
-                    <h2 className={styles["co-ms-export-popup-title"]}>{title}</h2>
-                    <p className={styles["co-ms-export-popup-message"]}>{message}</p>
-                </div>
-                <div className={styles["co-ms-export-popup-footer"]}>
-                    <button onClick={onClose} className={styles["co-ms-export-popup-close-btn"]}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
 const DeleteWarningPopup = ({ isOpen, onBack, onConfirm, isProcessing, selectedCount = 0 }) => {
     if (!isOpen) return null;
     return (
@@ -456,14 +334,10 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     
     // 2. Add state to track export menu visibility
     const [showExportMenu, setShowExportMenu] = useState(false);
-    
-    // Popup states for export operations
-    const [exportPopupState, setExportPopupState] = useState({
-        isOpen: false,
-        type: null, // 'progress', 'success', 'failed'
-        operation: null, // 'excel', 'pdf'
-        progress: 0
-    });
+
+    const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
+    const [exportProgress, setExportProgress] = useState(0);
+    const [exportType, setExportType] = useState('Excel');
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState(null);
@@ -732,14 +606,10 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     // Function to simulate progress and handle export
     const simulateExport = async (operation, exportFunction) => {
         setShowExportMenu(false);
-        
-        // Show progress popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'progress',
-            operation: operation,
-            progress: 0
-        });
+
+        setExportType(operation === 'excel' ? 'Excel' : 'PDF');
+        setExportPopupState('progress');
+        setExportProgress(0);
 
         let progressInterval;
         let progressTimeout;
@@ -747,12 +617,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         try {
             // Simulate progress from 0 to 100
             progressInterval = setInterval(() => {
-                setExportPopupState(prev => {
-                    if (prev.progress < 100 && prev.type === 'progress') {
-                        return { ...prev, progress: Math.min(prev.progress + 10, 100) };
-                    }
-                    return prev;
-                });
+                setExportProgress(prev => Math.min(prev + 10, 100));
             }, 200);
 
             // Wait for progress animation to complete
@@ -765,25 +630,14 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             
             // Perform the actual export
             exportFunction();
-            
-            // Show success popup
-            setExportPopupState({
-                isOpen: true,
-                type: 'success',
-                operation: operation,
-                progress: 100
-            });
+
+            setExportProgress(100);
+            setExportPopupState('success');
         } catch (error) {
             if (progressInterval) clearInterval(progressInterval);
             if (progressTimeout) clearTimeout(progressTimeout);
-            
-            // Show failed popup
-            setExportPopupState({
-                isOpen: true,
-                type: 'failed',
-                operation: operation,
-                progress: 0
-            });
+
+            setExportPopupState('failed');
         }
     };
 
@@ -1020,7 +874,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                 </button>
                             </div>
                             
-                            <div className={styles["co-ms-action-card"]}>
+                            <div className={cx(styles["co-ms-action-card"], styles["co-ms-delete-card"]) }>
                                 <h4 className={styles["co-ms-action-header"]}>Deleting</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Select <br/> Student <br/> Record <br/> Before <br/>Deleting
@@ -1147,32 +1001,28 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                     </div>
                 </div>
             </div>
-          {/* Export Popups */}
-            {exportPopupState.isOpen && exportPopupState.type === 'progress' && (
-                <ExportProgressPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    progress={exportPopupState.progress}
-                    onClose={() => {}}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'success' && (
-                <ExportSuccessPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
-            
-            {exportPopupState.isOpen && exportPopupState.type === 'failed' && (
-                <ExportFailedPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                    
-                />
-            )}  
+          <ExportProgressAlert
+            isOpen={exportPopupState === 'progress'}
+            onClose={() => {}}
+            progress={exportProgress}
+            exportType={exportType}
+            color="#d23b42"
+            progressColor="#d23b42"
+          />
+
+          <ExportSuccessAlert
+            isOpen={exportPopupState === 'success'}
+            onClose={() => setExportPopupState('none')}
+            exportType={exportType}
+            color="#d23b42"
+          />
+
+          <ExportFailedAlert
+            isOpen={exportPopupState === 'failed'}
+            onClose={() => setExportPopupState('none')}
+            exportType={exportType}
+            color="#d23b42"
+          />  
              {/* 8. Render Block/Unblock/Delete Popups */}
             <BlockedPopup
                 isOpen={isBlockedPopupOpen}

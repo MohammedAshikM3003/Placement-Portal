@@ -6,6 +6,15 @@
   min-height: 100vh;
 }
 
+/* Transparent overlay for mobile sidebar toggle.
+   Keep z-index below the sidebar so sidebar links remain clickable on mobile. */
+.Admin-rarw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: transparent;
+}
+
 .Admin-rarw-main-content {
   flex-grow: 1;
   padding: 20px 14px 10px 40px;
@@ -346,6 +355,9 @@
 .Admin-rarw-data-table thead {
   display: block;
   width: 100%; 
+  position: sticky;
+  top: 0;
+  
 }
 
 .Admin-rarw-data-table th {
@@ -361,7 +373,8 @@
 }
 
 .Admin-rarw-table-body-scroll {
-  min-height: 360px;
+  /* Constrain table height so data scrolls inside the card instead of overflowing */
+  max-height: 360px;
   overflow-y: auto;
   overflow-x: auto; 
   width: 100%; 
@@ -371,7 +384,7 @@
 
 /* Adjust body scroll height when round buttons are visible */
 .Admin-rarw-table-section-with-rounds .Admin-rarw-table-body-scroll {
-  min-height: 290px;
+  max-height: 290px;
 }
 
 /* --- GREEN SCROLLBARS --- */
@@ -499,6 +512,7 @@
   .Admin-rarw-filter-inputs {
     flex-direction: column;
     gap: 10px;
+    margin-left:65px;
   }
   .Admin-rarw-table-header-row {
     flex-direction: column;
@@ -512,6 +526,7 @@
   }
   .Admin-rarw-print-button-container {
     margin-top: 5px;
+    margin-left:320px;
   }
   .Admin-rarw-table-title {
     margin-bottom: 5px;

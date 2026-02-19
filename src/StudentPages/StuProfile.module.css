@@ -440,6 +440,36 @@
 .imagePreviewCloseBtn { position: absolute; top: -15px; right: -15px; background: white; border: 2px solid #333; border-radius: 50%; width: 40px; height: 40px; font-size: 2rem; cursor: pointer; }
 
 
+/* Saving state - not-allowed cursor on entire page */
+.stu-profile-saving,
+.stu-profile-saving * {
+    cursor: not-allowed !important;
+}
+
+.stu-profile-saving-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    background: transparent;
+    cursor: not-allowed;
+    pointer-events: all;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+.formGrid input:disabled,
+.formGrid select:disabled,
+.datepickerInput:disabled,
+button:disabled,
+input:disabled,
+select:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Prevent pointer events on disabled labels during saving */
+.stu-profile-saving label {
+    pointer-events: none !important;
+}
+
 /* --- GLOBAL OVERRIDES (for Datepicker library) --- */
 :global(.react-datepicker-wrapper) { width: 100%; }
 :global(.StuProfile-datepicker-wrapper-inner) { width: 100%; }

@@ -349,6 +349,11 @@ const studentSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  resumeData: {
+    url: String,
+    name: String,
+    createdAt: Date
+  },
   resumeAnalysis: {
     fileName: String,
     fileSize: Number,

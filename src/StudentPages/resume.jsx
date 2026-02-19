@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Typography, Button, Box, Paper } from '@mui/material';
-import { Upload, Visibility, Download } from '@mui/icons-material';
+import { Visibility, Download } from '@mui/icons-material';
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import styles from './Resume.module.css';
@@ -47,10 +47,10 @@ const ValidationPopup = ({ onClose, action }) => (
         </svg>
       </div>
       <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#333", fontWeight: "600" }}>
-        Please Select a file to upload
+        Please Build a Resume First
       </h2>
       <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-        You need to upload a resume file.
+        You need to build a resume first using the Resume Builder.
       </p>
     </div>
     <div className={styles['Resume-popup-footer']}>
@@ -170,30 +170,8 @@ function ResumeScore({ analysisResult }) {
 
 // Main content component for resume page
 function MainContent({ onViewChange }) {
-  const [selectedFile, setSelectedFile] = React.useState(null);
-  const [uploadedFile, setUploadedFile] = React.useState(null);
   const [success, setSuccess] = useState(false);
-  const [uploadDate, setUploadDate] = useState(null);
-  const [isLoadingDate, setIsLoadingDate] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  
-  // Format date to DD-M-YYYY format
-  const formatUploadDate = (date) => {
-    if (!date || date === 'Unknown' || date === 'Loading...' || date === 'No resume uploaded' || date === 'Error loading resume') {
-      return date;
-    }
-    try {
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) return date;
-      const day = dateObj.getDate();
-      const month = dateObj.getMonth() + 1;
-      const year = dateObj.getFullYear();
-      return `${day}-${month}-${year}`;
-    } catch (error) {
-      return date;
-    }
-  };
   
   // Import fastDataService with .jsx extension
   useEffect(() => {
@@ -207,504 +185,397 @@ function MainContent({ onViewChange }) {
   // Popup states
   const [downloadPopupState, setDownloadPopupState] = React.useState('none');
   const [previewPopupState, setPreviewPopupState] = React.useState('none');
-  const [uploadPopupState, setUploadPopupState] = React.useState('none');
   
   const [downloadProgress, setDownloadProgress] = React.useState(0);
   const [previewProgress, setPreviewProgress] = React.useState(0);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
 
   const [studentData, setStudentData] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('studentData') || 'null'); } catch (error) { return null; }
   });
   const [analysisResult, setAnalysisResult] = React.useState(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  
+  // Resume data fetched from MongoDB
+  const [resumeFromDB, setResumeFromDB] = React.useState(null);
 
   // --- RESTORED ROBUST DATA LOADING (From Backup) ---
+  // Load resume analysis data from localStorage on mount
   useEffect(() => {
-    const startTime = performance.now();
-    let isMounted = true; 
+    let isMounted = true;
     
     const loadResumeData = async () => {
       try {
-        const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (!studentData || !isMounted) {
-          console.log('⚠️ No student data found');
+        console.log('🔄 Loading resume data...');
+        const latestData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (!latestData || !isMounted) {
+          console.log('⚠️ No student data found in localStorage');
           return;
         }
 
-        // Prefer cached resume info from studentData or standalone resumeData cache
-        let hasExistingResume = false;
+        console.log('✅ Student data loaded:', latestData.firstName, latestData.lastName);
+        setStudentData(latestData);
+        
+        // Load resume analysis if available (from Resume Builder)
+        if (latestData.resumeAnalysis) {
+          setAnalysisResult(latestData.resumeAnalysis);
+          console.log('✅ Resume analysis loaded from localStorage');
+        }
 
-        if (studentData.resumeData && studentData.resumeUploadDate) {
-          hasExistingResume = true;
-          setStudentData(studentData);
-          setUploadedFile({ name: studentData.resumeData.name, url: studentData.resumeData.url });
-          setUploadDate(studentData.resumeUploadDate || 'Unknown');
-          setAnalysisResult(studentData.resumeAnalysis);
-        } else {
-          // Try dedicated resume cache first (filled by fastDataService.preloadResumeData)
+        // Fetch resume PDF from MongoDB backend via resume-builder route
+        const studentId = latestData._id || latestData.id;
+        console.log('🔍 Student ID for resume fetch:', studentId);
+        
+        if (studentId) {
           try {
-            const resumeCacheRaw = localStorage.getItem('resumeData');
-            if (resumeCacheRaw) {
-              const resumeCache = JSON.parse(resumeCacheRaw);
-              if (resumeCache?.resume && resumeCache.resume.fileData) {
-                hasExistingResume = true;
-                const cached = {
-                  ...studentData,
-                  resumeData: {
-                    name: resumeCache.resume.fileName,
-                    url: `data:${resumeCache.resume.fileType};base64,${resumeCache.resume.fileData}`,
-                    type: resumeCache.resume.fileType,
-                    size: resumeCache.resume.fileSize
-                  },
-                  resumeUploadDate: new Date(resumeCache.resume.uploadedAt),
-                  resumeAnalysis: resumeCache.resume.analysisResult
-                };
-
-                setStudentData(cached);
-                setUploadedFile({ name: cached.resumeData.name, url: cached.resumeData.url });
-                setUploadDate(cached.resumeUploadDate);
-                setAnalysisResult(cached.resumeAnalysis);
+            const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+            const authToken = localStorage.getItem('authToken');
+            console.log('📡 Fetching resume from:', `${API_BASE}/api/resume-builder/pdf/${studentId}`);
+            
+            const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+              headers: {
+                'Content-Type': 'application/json',
+                ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
               }
+            });
+            
+            console.log('📡 Resume fetch response status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('📡 Resume fetch result:', result.success ? '✅ Success' : '❌ Failed');
+              
+              if (result.success && result.resume && isMounted) {
+                setResumeFromDB(result.resume);
+                console.log('✅ Resume fetched from MongoDB - URL length:', result.resume.url?.length || 0);
+              } else {
+                console.log('⚠️ No resume data in response');
+              }
+            } else {
+              console.log('❌ Resume fetch failed with status:', response.status);
             }
-          } catch (cacheError) {
-            console.log('⚠️ Resume cache parse failed, will refetch fresh:', cacheError);
+          } catch (fetchErr) {
+            console.error('❌ Could not fetch resume from DB:', fetchErr);
           }
+        } else {
+          console.log('⚠️ No student ID found for resume fetch');
         }
-
-        // If we already have a resume (from cache), just refresh in background
-        if (hasExistingResume) {
-          setTimeout(() => {
-            fetchFreshResume(studentData, startTime, true);
-          }, 100);
-          return;
-        }
-
-        // No known resume yet: perform full fetch and show Loading... while we wait
-        await fetchFreshResume(studentData, startTime, false);
       } catch (error) {
         if (!isMounted) return;
         console.error('❌ Load error:', error);
       }
     };
 
-    const fetchFreshResume = async (studentData, startTime, hasExistingResume = false) => {
-      try {
-        // Only show explicit Loading... when we don't already have a resume to display.
-        if (!hasExistingResume) {
-          setUploadedFile({ name: 'Loading...', url: null });
-          setUploadDate('Loading...');
-        }
-
-        const fastDataService = (await import('../services/fastDataService.jsx')).default;
-        
-        let studentId = null;
-        let freshStudentData = null;
-        let completeData = null;
-        
-        try {
-          completeData = await Promise.race([
-            fastDataService.getCompleteStudentData(studentData._id || studentData.id),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-          ]);
-          freshStudentData = completeData?.student;
-          studentId = freshStudentData?._id || freshStudentData?.id;
-        } catch (error) {
-          console.warn('⚠️ fastDataService.getCompleteStudentData failed, falling back to direct resume fetch:', error?.message || error);
-
-          // Fallback: try to fetch resume directly from MongoDB so preview/download still work
-          try {
-            const directStudentId = studentData._id || studentData.id;
-            if (!directStudentId) throw new Error('No studentId for resume fallback');
-
-            const mongoDB = (await import('../services/mongoDBService.jsx')).default;
-            const resumeData = await mongoDB.getResume(directStudentId);
-
-            if (resumeData && resumeData.resume && resumeData.resume.fileData) {
-              const updatedData = {
-                ...studentData,
-                resumeData: {
-                  name: resumeData.resume.fileName,
-                  url: `data:${resumeData.resume.fileType};base64,${resumeData.resume.fileData}`,
-                  type: resumeData.resume.fileType,
-                  size: resumeData.resume.fileSize
-                },
-                resumeUploadDate: new Date(resumeData.resume.uploadedAt),
-                resumeAnalysis: resumeData.resume.analysisResult
-              };
-
-              setStudentData(updatedData);
-              setUploadedFile({ name: updatedData.resumeData.name, url: updatedData.resumeData.url });
-              setUploadDate(updatedData.resumeUploadDate);
-              setAnalysisResult(updatedData.resumeAnalysis);
-              localStorage.setItem('studentData', JSON.stringify(updatedData));
-              return; // ✅ Exit early - fallback succeeded, no need to continue
-            } else if (studentData.resumeData) {
-              // Fall back to whatever is cached, even if analysis missing
-              setUploadedFile({ name: studentData.resumeData.name, url: studentData.resumeData.url });
-              setUploadDate(studentData.resumeUploadDate || 'Unknown');
-              setAnalysisResult(studentData.resumeAnalysis);
-              return; // ✅ Exit early - using cached data
-            } else {
-              setUploadedFile({ name: 'No resume uploaded', url: null });
-              setUploadDate('No resume uploaded');
-              setAnalysisResult(null);
-              return; // ✅ Exit early - no resume found
-            }
-          } catch (fallbackError) {
-            console.error('❌ Resume fallback load failed:', fallbackError);
-            if (studentData.resumeData) {
-              setUploadedFile({ name: studentData.resumeData.name, url: studentData.resumeData.url });
-              setUploadDate(studentData.resumeUploadDate || 'Unknown');
-              setAnalysisResult(studentData.resumeAnalysis);
-              return; // ✅ Exit early - using cached data after fallback failure
-            } else {
-              setUploadedFile({ name: 'Error loading resume', url: null });
-              setUploadDate('Error loading resume');
-              setAnalysisResult(null);
-              return; // ✅ Exit early - error state set
-            }
-          }
-        }
-
-        if (!isMounted) return;
-
-        if (!studentId) {
-          setUploadedFile({ name: 'No resume uploaded', url: null });
-          setUploadDate('No resume uploaded');
-          setAnalysisResult(null);
-          return;
-        }
-
-        const resumeFromComplete = completeData?.resume;
-
-        if (resumeFromComplete && resumeFromComplete.fileData) {
-          const updatedData = {
-            ...freshStudentData,
-            resumeData: {
-              name: resumeFromComplete.fileName,
-              url: `data:${resumeFromComplete.fileType};base64,${resumeFromComplete.fileData}`,
-              type: resumeFromComplete.fileType,
-              size: resumeFromComplete.fileSize
-            },
-            resumeUploadDate: new Date(resumeFromComplete.uploadedAt),
-            resumeAnalysis: resumeFromComplete.analysisResult
-          };
-
-          setStudentData(updatedData);
-          setUploadedFile({ name: updatedData.resumeData.name, url: updatedData.resumeData.url });
-          setUploadDate(updatedData.resumeUploadDate);
-          setAnalysisResult(updatedData.resumeAnalysis);
-          localStorage.setItem('studentData', JSON.stringify(updatedData));
-          return;
-        }
-
-        const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
-        const resumeData = await mongoDBService.getResume(studentId);
-        
-        if (!isMounted) return;
-        
-        if (resumeData && resumeData.resume && resumeData.resume.fileData) {
-          const updatedData = {
-            ...freshStudentData,
-            resumeData: {
-              name: resumeData.resume.fileName,
-              url: `data:${resumeData.resume.fileType};base64,${resumeData.resume.fileData}`,
-              type: resumeData.resume.fileType,
-              size: resumeData.resume.fileSize
-            },
-            resumeUploadDate: new Date(resumeData.resume.uploadedAt).toLocaleDateString(),
-            resumeAnalysis: resumeData.resume.analysisResult
-          };
-          
-          setStudentData(updatedData);
-          setUploadedFile({ name: updatedData.resumeData.name, url: updatedData.resumeData.url });
-          setUploadDate(updatedData.resumeUploadDate);
-          setAnalysisResult(updatedData.resumeAnalysis);
-          localStorage.setItem('studentData', JSON.stringify(updatedData));
-        } else {
-          setUploadedFile({ name: 'No resume uploaded', url: null });
-          setUploadDate('No resume uploaded');
-          setAnalysisResult(null);
-        }
-      } catch (error) {
-        setUploadedFile({ name: 'No resume uploaded', url: null });
-        setUploadDate('No resume uploaded');
-        setAnalysisResult(null);
-      }
-    };
-
     loadResumeData();
-    return () => { isMounted = false; };
+    
+    // Listen for storage updates (e.g. when redirected from resume builder)
+    const handleStorageUpdate = () => { loadResumeData(); };
+    window.addEventListener('storage', handleStorageUpdate);
+    window.addEventListener('profileUpdated', handleStorageUpdate);
+    
+    return () => { 
+      isMounted = false;
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('profileUpdated', handleStorageUpdate);
+    };
   }, []);
 
 
-  // --- RESTORED FILE UPLOAD LOGIC (From Backup) ---
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      setUploadError('Only PDF files are allowed.');
-      setSelectedFile(null);
+  const handlePreview = async () => {
+    // Prevent multiple previews
+    if (previewPopupState !== 'none') {
+      console.log('⚠️ Preview already in progress, ignoring click');
       return;
     }
-    if (file.size > 1 * 1024 * 1024) {
-      setUploadError('File size limit exceeded (Max 1 MB).');
-      setSelectedFile(null);
-      return;
-    }
-    setUploadError('');
-    setSelectedFile(file);
-  };
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) {
-      setValidationAction('upload');
-      setShowValidationPopup(true);
-      return;
-    }
+    console.log('🔍 Starting resume preview...');
+    
+    // Show progress popup immediately
+    setPreviewPopupState('progress');
+    setPreviewProgress(0);
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => (prev >= 85 ? prev : prev + 12));
+    }, 150);
 
     try {
-      setIsAnalyzing(true);
-      setUploadError('');
-      setUploadPopupState('progress');
-      setUploadProgress(10); // started
+      // Priority: fetch from MongoDB, then fallback to localStorage
+      let resumeUrl = resumeFromDB?.url || studentData?.resumeData?.url || studentData?.resumeURL;
+      
+      console.log('🔍 Resume URL source:', resumeFromDB ? 'MongoDB' : (studentData?.resumeData?.url ? 'localStorage resumeData' : 'localStorage resumeURL'));
+      console.log('🔍 Resume URL length:', resumeUrl?.length);
+      
+      // If no resume data, try fetching from MongoDB
+      if (!resumeUrl) {
+        console.log('⚠️ No cached resume, fetching from MongoDB...');
+        const latestData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        const studentId = latestData?._id || latestData?.id;
+        
+        if (!studentId) {
+          clearInterval(progressInterval);
+          setValidationAction('preview');
+          setShowValidationPopup(true);
+          setPreviewPopupState('none');
+          return;
+        }
 
-      const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-      if (!studentData) {
-        setUploadError('User not authenticated');
-        setUploadPopupState('failed');
-        setUploadProgress(100);
+        try {
+          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          const authToken = localStorage.getItem('authToken');
+          
+          const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+            }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.resume?.url) {
+              resumeUrl = result.resume.url;
+              setResumeFromDB(result.resume);
+              console.log('✅ Resume fetched from MongoDB');
+            }
+          }
+        } catch (fetchErr) {
+          console.error('❌ Failed to fetch resume:', fetchErr);
+        }
+      }
+
+      if (!resumeUrl) {
+        clearInterval(progressInterval);
+        setValidationAction('preview');
+        setShowValidationPopup(true);
+        setPreviewPopupState('none');
         return;
       }
 
-      // 1. Upload to MongoDB
-      const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
-      const uploadPromise = mongoDBService.uploadResumeFile(selectedFile, studentData.id || studentData._id);
-      const uploadTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Upload Timeout: Server is taking too long to respond')), 15000)
-      );
-      const uploadResponse = await Promise.race([uploadPromise, uploadTimeout]);
-      setUploadProgress(30); // file successfully uploaded
-      
-      // 2. Convert to Base64 for Analysis
-      const fileReader = new FileReader();
-      const base64FileData = await new Promise((resolve) => {
-        fileReader.onload = (e) => resolve(e.target.result.split(',')[1]);
-        fileReader.readAsDataURL(selectedFile);
-      });
-      setUploadProgress(60); // file prepared for analysis
+      // Wait for progress animation
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        setPreviewProgress(100);
 
-      // 3. Dynamic Analysis with Fallback
-      let analysis;
-      try {
-        const analysisPromise = mongoDBService.analyzeResumeWithFile(
-          studentData.id || studentData._id, 
-          base64FileData, 
-          selectedFile.name
-        );
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('AI Timeout')), 5000));
-        const analysisResponse = await Promise.race([analysisPromise, timeoutPromise]);
-        analysis = analysisResponse.analysisResult;
-
-        if (!analysis || !analysis.checklistResults) throw new Error('Invalid analysis');
-      } catch (analysisError) {
-        console.warn('Using Fallback Analysis:', analysisError.message);
-        analysis = await getUltraFastFallbackAnalysis(selectedFile, base64FileData, studentData);
-      }
-      setUploadProgress(80); // analysis ready
-
-      // 4. Update UI & LocalStorage
-      const updatedStudentData = {
-        ...studentData,
-        resumeData: {
-          name: selectedFile.name,
-          url: `data:${selectedFile.type};base64,${uploadResponse.resume.fileData}`,
-          type: selectedFile.type,
-          size: selectedFile.size
-        },
-        resumeUploadDate: new Date().toLocaleDateString(),
-        resumeAnalysis: analysis
-      };
-
-      localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
-      setUploadedFile({ name: selectedFile.name, url: updatedStudentData.resumeData.url });
-      setUploadDate(new Date().toLocaleDateString());
-      setAnalysisResult(analysis);
-      setStudentData(updatedStudentData);
-      setSelectedFile(null);
-      setUploadProgress(100); // all done
-      setUploadProgress(100);
-      setUploadPopupState('none');
-      setShowSuccess(true);
-
-      // 5. Background Sync
-      setTimeout(async () => {
-         try { await mongoDBService.saveResumeAnalysis(studentData.id || studentData._id, analysis); } catch (e) {}
-      }, 100);
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError(error.message || 'Failed to upload.');
-      setUploadProgress(100);
-      setUploadPopupState('failed');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // --- RESTORED FALLBACK ANALYSIS (From Backup) ---
-  const getUltraFastFallbackAnalysis = async (file, base64Data, studentData) => {
-    try {
-      let extractedText = '';
-      try {
-        const base64String = base64Data.replace(/^data:[^;]+;base64,/, '');
-        const binaryString = atob(base64String);
-        
-        extractedText = binaryString
-          .replace(/[^\x20-\x7E\s]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .replace(/[^\w\s@.+()-]/g, ' ')
-          .trim();
+        try {
+          // Ensure proper format
+          let formattedData = resumeUrl;
           
-        if (!extractedText || extractedText.length < 50) {
-             const commonWords = ['name', 'email', 'mobile', 'experience', 'education', 'skills', 'project', 'java', 'python', 'react'];
-             const foundWords = commonWords.filter(word => binaryString.toLowerCase().includes(word.toLowerCase()));
-             extractedText = foundWords.join(' ') + ' ' + file.name;
+          console.log('🔍 Resume URL starts with:', resumeUrl.substring(0, 100));
+          console.log('🔍 Resume URL type:', typeof resumeUrl);
+          
+          if (!resumeUrl.startsWith('data:')) {
+            formattedData = `data:application/pdf;base64,${resumeUrl}`;
+            console.log('✅ Added data URL prefix');
+          } else {
+            console.log('✅ URL already has data prefix');
+          }
+
+          // Convert base64 to blob for proper browser PDF viewing
+          if (formattedData.startsWith('data:application/pdf;base64,')) {
+            console.log('✅ Converting to blob for preview...');
+            
+            // Find the comma that separates the prefix from the data
+            const commaIndex = formattedData.indexOf(',');
+            console.log('🔍 Comma found at index:', commaIndex);
+            
+            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
+            
+            if (!dataAfterPrefix || dataAfterPrefix.length === 0) {
+              throw new Error('Empty data');
+            }
+            
+            console.log('🔍 Data length:', dataAfterPrefix.length);
+            console.log('🔍 First 50 chars:', dataAfterPrefix.substring(0, 50));
+            
+            let byteArray;
+            
+            // Check if data is comma-separated bytes (e.g., "37,80,68,70...")
+            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
+              console.log('🔧 Detected comma-separated byte format, converting...');
+              const byteStrings = dataAfterPrefix.split(',');
+              byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
+              console.log('✅ Converted from comma-separated bytes, size:', byteArray.length);
+            } else {
+              console.log('🔧 Detected base64 format, decoding...');
+              const byteCharacters = atob(dataAfterPrefix);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              byteArray = new Uint8Array(byteNumbers);
+              console.log('✅ Decoded from base64, size:', byteArray.length);
+            }
+            
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            console.log('✅ Blob created, size:', blob.size, 'bytes');
+            
+            const blobUrl = URL.createObjectURL(blob);
+            console.log('✅ Blob URL created:', blobUrl);
+            
+            // Open blob URL directly — browser's native PDF viewer handles it
+            const win = window.open(blobUrl, '_blank');
+            if (!win) {
+              console.log('⚠️ Popup blocked, using fallback');
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.target = '_blank';
+              link.click();
+            }
+            // Set title after a short delay
+            setTimeout(() => {
+              try { if (win) win.document.title = `Resume - ${studentData?.firstName || 'Preview'}`; } catch(e) {}
+            }, 1000);
+          } else {
+            console.log('🔗 Opening regular URL');
+            window.open(formattedData, '_blank');
+          }
+          
+          setPreviewPopupState('none');
+        } catch (err) {
+          console.error('❌ Preview error:', err);
+          setPreviewPopupState('error');
+          setTimeout(() => setPreviewPopupState('none'), 2000);
+          alert('Failed to preview PDF: ' + err.message);
         }
-      } catch (e) {
-         extractedText = `${studentData?.firstName} ${studentData?.primaryEmail} education experience projects`;
-      }
-
-      // Perform Checks
-      const check = (regex) => regex.test(extractedText);
-      const fullName = `${studentData?.firstName || ''} ${studentData?.lastName || ''}`.trim();
+      }, 500);
       
-      const hasPersonalIdentification = fullName && extractedText.toLowerCase().includes(fullName.toLowerCase());
-      const hasEmail = check(new RegExp(studentData?.primaryEmail || 'email', 'i'));
-      const hasLinkedIn = check(/linkedin\.com/i);
-      const hasGitHub = check(/github\.com/i);
-      const hasMobile = check(/\d{10}/);
-      const hasCareerObjective = check(/(objective|summary|goal|motivated)/i);
-      const hasWorkExperience = check(/(experience|internship|employment|work)/i);
-      const hasProjects = check(/(project|portfolio|built|developed)/i);
-      const hasAchievements = check(/(achievement|award|honor|certificate)/i);
-      const hasEducation = check(/(education|college|university|bachelor|degree)/i);
-
-      const completedItems = [
-        hasPersonalIdentification, hasEmail, hasLinkedIn, hasGitHub, hasMobile,
-        hasCareerObjective, hasWorkExperience, hasProjects, hasAchievements, hasEducation
-      ].filter(Boolean).length;
-      
-      const percentage = Math.round((completedItems / 10) * 100);
-      
-      const getGrade = (p) => {
-        if (p >= 90) return 'A';
-        if (p >= 75) return 'B';
-        if (p >= 60) return 'C';
-        if (p >= 40) return 'D';
-        return 'F';
-      };
-
-      const suggestions = [];
-      if (!hasLinkedIn) suggestions.push('Add LinkedIn profile link');
-      if (!hasGitHub) suggestions.push('Add GitHub profile link');
-      if (!hasProjects) suggestions.push('Add detailed Projects section');
-      if (percentage < 60) suggestions.push('Improve overall resume completeness');
-
-      return {
-        percentage,
-        totalScore: completedItems,
-        maxScore: 10,
-        grade: getGrade(percentage),
-        description: `Fallback analysis - ${percentage}% completeness`,
-        suggestions,
-        checklistResults: [
-          { id: 'personal_identification', isCompleted: hasPersonalIdentification },
-          { id: 'email_match', isCompleted: hasEmail },
-          { id: 'linkedin_match', isCompleted: hasLinkedIn },
-          { id: 'github_match', isCompleted: hasGitHub },
-          { id: 'mobile_match', isCompleted: hasMobile },
-          { id: 'career_objective', isCompleted: hasCareerObjective },
-          { id: 'work_experience', isCompleted: hasWorkExperience },
-          { id: 'projects', isCompleted: hasProjects },
-          { id: 'achievements', isCompleted: hasAchievements },
-          { id: 'education', isCompleted: hasEducation }
-        ]
-      };
-    } catch (e) {
-      return { percentage: 0, maxScore: 10, suggestions: ['Analysis Failed'], checklistResults: [] };
+    } catch (error) {
+      clearInterval(progressInterval);
+      console.error('❌ Preview failed:', error);
+      setPreviewPopupState('error');
+      setTimeout(() => setPreviewPopupState('none'), 2000);
+      alert('Failed to preview resume: ' + error.message);
     }
   };
 
-  const handlePreview = () => {
-    if (!uploadedFile?.url) {
-      setValidationAction('preview');
-      setShowValidationPopup(true);
+  const handleDownload = async () => {
+    // Prevent multiple downloads
+    if (downloadPopupState !== 'none') {
+      console.log('⚠️ Download already in progress, ignoring click');
       return;
     }
-    setPreviewPopupState('progress');
-    setPreviewProgress(0);
-    const interval = setInterval(() => setPreviewProgress(p => (p >= 90 ? p : p + 25)), 80);
 
-    setTimeout(() => {
-      clearInterval(interval);
-      setPreviewProgress(100);
-
-      const win = window.open('', '_blank');
-      if (win && win.document) {
-        win.document.write(`<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Resume Preview</title>
-    <style>
-      html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
-      iframe { width: 100%; height: 100%; border: none; display: block; }
-    </style>
-  </head>
-  <body>
-    <iframe src="${uploadedFile.url}"></iframe>
-  </body>
-</html>`);
-        win.document.close();
-      }
-
-      setPreviewPopupState('none');
-    }, 500);
-  };
-
-  const handleDownload = () => {
-    if (!uploadedFile?.url) {
-      setValidationAction('download');
-      setShowValidationPopup(true);
-      return;
-    }
+    console.log('📥 Starting resume download...');
+    
     setDownloadPopupState('progress');
     setDownloadProgress(0);
-    const interval = setInterval(() => setDownloadProgress(p => (p >= 85 ? p : p + 10)), 150);
-    
-    setTimeout(() => {
-      clearInterval(interval);
-      setDownloadProgress(100);
-      const link = document.createElement('a');
-      link.href = uploadedFile.url;
-      link.download = uploadedFile.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setDownloadPopupState('success');
-    }, 1500);
-  };
+    const progressInterval = setInterval(() => {
+      setDownloadProgress(prev => (prev >= 85 ? prev : prev + 10));
+    }, 150);
 
-  const handleReAnalyze = async () => {
-      // Call handleFileUpload logic again basically, or similar logic
-      // Simplified for brevity, calling file upload if file exists
-      if(uploadedFile && !selectedFile) {
-         // Logic to re-analyze from URL would go here, 
-         // but sticking to core backup restoration:
-         handleFileUpload(); 
+    try {
+      // Priority: fetch from MongoDB, then fallback to localStorage
+      let resumeUrl = resumeFromDB?.url || studentData?.resumeData?.url || studentData?.resumeURL;
+      const resumeName = resumeFromDB?.name || studentData?.resumeData?.name || `${studentData?.firstName}_${studentData?.lastName}_Resume.pdf` || 'resume.pdf';
+      
+      console.log('📥 Resume URL source:', resumeFromDB ? 'MongoDB' : (studentData?.resumeData?.url ? 'localStorage resumeData' : 'localStorage resumeURL'));
+      console.log('📥 File name:', resumeName);
+      
+      // If no resume data, try fetching from MongoDB
+      if (!resumeUrl) {
+        console.log('⚠️ No cached resume, fetching from MongoDB...');
+        const latestData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        const studentId = latestData?._id || latestData?.id;
+        
+        if (!studentId) {
+          clearInterval(progressInterval);
+          setValidationAction('download');
+          setShowValidationPopup(true);
+          setDownloadPopupState('none');
+          return;
+        }
+
+        try {
+          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          const authToken = localStorage.getItem('authToken');
+          
+          const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+            }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.resume?.url) {
+              resumeUrl = result.resume.url;
+              setResumeFromDB(result.resume);
+              console.log('✅ Resume fetched from MongoDB');
+            }
+          }
+        } catch (fetchErr) {
+          console.error('❌ Failed to fetch resume:', fetchErr);
+        }
       }
+
+      if (!resumeUrl) {
+        clearInterval(progressInterval);
+        setValidationAction('download');
+        setShowValidationPopup(true);
+        setDownloadPopupState('none');
+        return;
+      }
+      
+      // Wait for progress animation
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        
+        try {
+          // Ensure proper format
+          let formattedData = resumeUrl;
+          
+          console.log('📥 Resume URL type:', typeof resumeUrl);
+          console.log('📥 Resume URL length:', resumeUrl.length);
+          
+          if (!resumeUrl.startsWith('data:')) {
+            formattedData = `data:application/pdf;base64,${resumeUrl}`;
+            console.log('✅ Added data URL prefix');
+          } else {
+            console.log('✅ URL already has data prefix');
+          }
+          
+          // Check if data is comma-separated bytes and convert to proper data URL
+          if (formattedData.startsWith('data:application/pdf;base64,')) {
+            const commaIndex = formattedData.indexOf(',');
+            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
+            
+            // Check if it's comma-separated bytes
+            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
+              console.log('🔧 Converting comma-separated bytes for download...');
+              const byteStrings = dataAfterPrefix.split(',');
+              const byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
+              const blob = new Blob([byteArray], { type: 'application/pdf' });
+              formattedData = URL.createObjectURL(blob);
+              console.log('✅ Converted to blob URL for download');
+            }
+          }
+          
+          // Direct download
+          const link = document.createElement('a');
+          link.href = formattedData;
+          link.download = resumeName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log('✅ Download triggered');
+          setDownloadPopupState('success');
+        } catch (err) {
+          console.error('❌ Download error:', err);
+          setDownloadPopupState('error');
+          setTimeout(() => setDownloadPopupState('none'), 2000);
+        }
+      }, 1500);
+      
+    } catch (error) {
+      clearInterval(progressInterval);
+      console.error('❌ Download failed:', error);
+      setDownloadPopupState('error');
+      setTimeout(() => setDownloadPopupState('none'), 2000);
+    }
   };
 
   const handleViewProfile = () => { if (onViewChange) onViewChange('profile'); };
@@ -847,46 +718,70 @@ function MainContent({ onViewChange }) {
           
           {/* Right Column */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: { xs: '100%', md: '70%' }, height: { xs: 'auto', md: '100%' } }}>
-            {/* Upload Card */}
+            {/* Build Resume Card */}
             <Box sx={{ display: 'flex', flexDirection: 'column', flex: '0 0 auto', minHeight: '300px' }}>
-            <Paper elevation={3} sx={{ width: '100%', height: '100%', p: 3, background: '#fff', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', border: '2px solid #c8c8c8', transition: 'border-color 0.3s ease', '&:hover': { borderColor: '#2085f6' } }}>
-               <Typography variant="h6" fontWeight={700} color="#1976d2" mb={2.5} fontSize="26px" align="center">Upload Your Resume</Typography>
-               <Box display="flex" flexDirection="column" alignItems="center" gap={2} sx={{ flex: 1, justifyContent: 'space-evenly' }}>
-                 <Button variant="outlined" component="label" startIcon={<Upload />} sx={{ borderColor: '#9e9e9e', color: '#9e9e9e', px: 4, py: 2, borderRadius: '12px', fontWeight: 600, fontSize: '16px', textTransform: 'none', borderWidth: '2px', '&:hover': { borderColor: '#757575', backgroundColor: '#f8f9fa', borderWidth: '2px' } }}>
-                    {selectedFile ? selectedFile.name : 'Select (Max 1 MB)'}
-                    <input type="file" hidden accept=".pdf" onChange={handleFileSelect} />
-                 </Button>
-                 <Box sx={{ textAlign: 'center', color: '#9e9e9e', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                    {uploadedFile?.name === 'Loading...' ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #bfdbfe', borderTopColor: '#2563eb', animation: 'spin 0.8s linear infinite' }} />
-                        <Typography fontSize={14} color="#1976d2" fontWeight={600}>Loading...</Typography>
-                      </Box>
-                    ) : (
-                      <>
-                        <Typography fontSize={19} mb={0.5} sx={{ lineHeight: 1.4 }}>*Only PDF files allowed</Typography>
-                        <Typography fontSize={15} mb={0.5} sx={{ lineHeight: 1.4 }}>*Click Select and Upload a file</Typography>
-                        {uploadedFile && (
-                          <Typography fontSize={15} mb={0.5} sx={{ lineHeight: 1.4, color: '#1976d2' }}>
-                            Last uploaded: {uploadedFile.name}
-                          </Typography>
-                        )}
-                        {uploadDate && uploadDate !== 'Loading...' && (
-                      <Typography fontSize={13} sx={{ lineHeight: 1.4, color: '#555' }}>
-                        Last uploaded on: {formatUploadDate(uploadDate)}
-                      </Typography>
-                    )}
-                        {uploadError && <Typography fontSize={16} mb={0.5} sx={{ lineHeight: 1.4, color: '#d32f2f' }}>{uploadError}</Typography>}
-                      </>
-                    )}
-                 </Box>
-                 <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center">
-                    <Button variant="contained" size="small" startIcon={<Visibility />} onClick={handlePreview} sx={{ backgroundColor: '#6c49e0', borderRadius: '8px', fontWeight: 600, fontSize: '14px', textTransform: 'none', px: 3, py: 1, boxShadow: '0 4px 12px rgba(108, 73, 224, 0.3)', '&:hover': { backgroundColor: '#5a35d1', boxShadow: '0 6px 16px rgba(108, 73, 224, 0.4)' } }}>Preview</Button>
-                    <Button variant="outlined" size="small" onClick={handleFileUpload} disabled={isAnalyzing} sx={{ borderColor: '#1976d2', color: '#1976d2', borderRadius: '8px', fontWeight: 600, fontSize: '14px', textTransform: 'none', px: 3, py: 1, '&:hover': { borderColor: '#1565c0', backgroundColor: '#f5f5f5' } }}>{isAnalyzing ? 'Analyzing...' : 'Upload'}</Button>
-                    <Button variant="contained" size="small" startIcon={<Download />} onClick={handleDownload} sx={{ backgroundColor: '#4caf50', borderRadius: '8px', fontWeight: 600, fontSize: '14px', textTransform: 'none', px: 3, py: 1, boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)', '&:hover': { backgroundColor: '#388e3c', boxShadow: '0 6px 16px rgba(76, 175, 80, 0.4)' } }}>Download</Button>
-                    <Button variant="contained" size="small" onClick={handleReAnalyze} disabled={isAnalyzing} sx={{ backgroundColor: '#ff9800', borderRadius: '8px', fontWeight: 600, fontSize: '14px', textTransform: 'none', px: 3, py: 1, boxShadow: '0 4px 12px rgba(255, 152, 0, 0.3)', '&:hover': { backgroundColor: '#f57c00', boxShadow: '0 6px 16px rgba(255, 152, 0, 0.4)' } }}>{isAnalyzing ? 'Re-analyzing...' : 'Re-analyze'}</Button>
-                 </Box>
+            <Paper elevation={3} sx={{ 
+              width: '100%', height: '100%', p: 4, 
+              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', 
+              borderRadius: '16px', 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)', 
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              border: '3px solid #60a5fa', 
+              position: 'relative', overflow: 'hidden',
+              transition: 'border-color 0.3s ease, box-shadow 0.3s ease', 
+              '&:hover': { borderColor: '#2563eb', boxShadow: '0 8px 24px rgba(37, 99, 235, 0.2)' },
+              '&::before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: '8px', background: '#2563eb', borderRadius: '16px 0 0 16px' }
+            }}>
+               <Typography variant="h4" fontWeight={800} color="#1e3a5f" mb={1.5} fontSize="32px" align="center">Build Your Professional Resume</Typography>
+               <Typography fontSize="15px" color="#475569" mb={2} align="center" sx={{ lineHeight: 1.5 }}>
+                 Build a recruiter-ready, ATS-optimized<br />
+                 resume in minutes to showcase your top skills<br />
+                 and achievements.
+               </Typography>
+               <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={2.5}>
+                 <Box sx={{ background: '#fef3c7', color: '#92400e', px: 1.5, py: 0.5, borderRadius: '6px', fontSize: '13px', fontWeight: 600 }}>*Powered by</Box>
+                 <Box sx={{ background: '#fff', color: '#4a7c59', px: 1.75, py: 0.5, borderRadius: '6px', fontSize: '14px', fontWeight: 700, border: '1px solid #4a7c59' }}>Overleaf</Box>
                </Box>
+               <Button
+                 variant="contained"
+                 size="large"
+                 onClick={() => onViewChange('resume-builder')}
+                 sx={{
+                   background: '#1e3a5f',
+                   borderRadius: '30px',
+                   fontWeight: 700,
+                   fontSize: '18px',
+                   textTransform: 'none',
+                   px: 5,
+                   py: 1.75,
+                   boxShadow: '0 4px 15px rgba(30, 58, 95, 0.3)',
+                   mb: 2.5,
+                   '&:hover': { background: '#2563eb', transform: 'translateY(-2px)', boxShadow: '0 6px 20px rgba(37, 99, 235, 0.4)' }
+                 }}
+               >
+                 🔨 Click to Build Resume →
+               </Button>
+               <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center" mb={2}>
+                 <Button variant="contained" size="small" startIcon={<Visibility />} onClick={handlePreview} sx={{ backgroundColor: '#8b5cf6', borderRadius: '25px', fontWeight: 600, fontSize: '15px', textTransform: 'none', px: 3.5, py: 1, boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)', '&:hover': { backgroundColor: '#7c3aed' } }}>Preview</Button>
+                 <Button variant="contained" size="small" startIcon={<Download />} onClick={handleDownload} sx={{ backgroundColor: '#22c55e', borderRadius: '25px', fontWeight: 600, fontSize: '15px', textTransform: 'none', px: 3.5, py: 1, boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)', '&:hover': { backgroundColor: '#16a34a' } }}>Download</Button>
+               </Box>
+               <Button
+                 variant="contained"
+                 onClick={() => onViewChange('ats-checker')}
+                 sx={{
+                   background: 'linear-gradient(135deg, #2DBE7F 0%, #1a9e62 100%)',
+                   borderRadius: '30px',
+                   fontWeight: 700,
+                   fontSize: '15px',
+                   textTransform: 'none',
+                   px: 4,
+                   py: 1.3,
+                   boxShadow: '0 4px 15px rgba(45, 190, 127, 0.3)',
+                   '&:hover': { background: 'linear-gradient(135deg, #1a9e62 0%, #158f55 100%)', transform: 'translateY(-2px)', boxShadow: '0 6px 20px rgba(45, 190, 127, 0.4)' }
+                 }}
+               >
+                 🔍 Check ATS Score →
+               </Button>
             </Paper>
             </Box>
             
@@ -913,76 +808,6 @@ function MainContent({ onViewChange }) {
 
         <PreviewProgressAlert isOpen={previewPopupState === 'progress'} progress={previewProgress} />
         <PreviewFailedAlert isOpen={previewPopupState === 'error'} onClose={() => setPreviewPopupState('none')} />
-        
-        {/* Upload Progress Popup (Restored from Backup, using alert module classes) */}
-        {uploadPopupState === 'progress' && (
-          <div className={alertStyles['alert-overlay']}>
-            <div className={alertStyles['achievement-popup-container']}>
-              <div className={alertStyles['achievement-popup-header']} style={{ backgroundColor: '#197AFF' }}>
-                Uploading...
-              </div>
-              <div className={alertStyles['achievement-popup-body']}>
-                <div className={alertStyles['download-progress-icon-container']}>
-                  <svg className={alertStyles['download-progress-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle className={alertStyles['download-progress-icon--bg']} cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
-                    <circle 
-                      className={alertStyles['download-progress-icon--progress']} 
-                      cx="26" 
-                      cy="26" 
-                      r="20" 
-                      fill="none" 
-                      stroke="#197AFF" 
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeDasharray={`${uploadProgress * 1.256} 125.6`}
-                      transform="rotate(-90 26 26)"
-                    />
-                  </svg>
-                </div>
-                <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-                  Uploading {Math.round(uploadProgress)}%
-                </h2>
-                <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                  {uploadProgress < 85 ? 'Uploading file to database...' : 
-                   uploadProgress < 100 ? 'Finalizing upload...' : 
-                   'Completing...'}
-                </p>
-                <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
-                  {uploadProgress >= 100 ? 'Almost ready!' : 'Please wait...'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {uploadPopupState === 'failed' && (
-          <div className={alertStyles['alert-overlay']}>
-            <div className={alertStyles['achievement-popup-container']}>
-              <div className={alertStyles['achievement-popup-header']} style={{ backgroundColor: '#D23B42' }}>
-                Upload Failed !
-              </div>
-              <div className={alertStyles['achievement-popup-body']}>
-                <div className={alertStyles['preview-error-icon-container']}>
-                  <svg className={alertStyles['preview-error-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle className={alertStyles['preview-error-icon--circle']} cx="26" cy="26" r="25" fill="#B84349"/>
-                    <path className={alertStyles['preview-error-icon--cross']} fill="white" d="M16 16l20 20M36 16L16 36" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-                  Upload Failed !
-                </h2>
-                <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                  Unable to upload the resume.
-                </p>
-              </div>
-              <div className={alertStyles['achievement-popup-footer']}>
-                <button onClick={() => setUploadPopupState('none')} className={alertStyles['preview-close-btn']}>
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
       </Box>
   );

@@ -15,6 +15,18 @@
     overflow-x: hidden;
 }
 
+/* Mobile sidebar overlay (used when isSidebarOpen is true) */
+.Admin-cd-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    /* Keep this below the sidebar z-index so links stay clickable */
+    z-index: 900;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Top Card (Filter and Actions) */
 .Admin-cd-top-card {
@@ -32,7 +44,7 @@
     flex: 1; /* Changed from flex: 0 0 500px to flex: 1 to fill available space */
     background-color: #e8e8e8;
     padding: 20px;
-    border-radius: 43px;
+    border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -925,9 +937,10 @@
         box-sizing: border-box;
     }
 
-    /* Action Cards Section - Stack vertically */
+    /* Action Cards Section - Keep Edit/Delete side-by-side */
     .Admin-cd-action-cards-section {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 15px;
         margin-left: 0;
         margin-right: 0;
@@ -940,12 +953,14 @@
         max-width: 100%;
         padding: 20px 15px;
         box-sizing: border-box;
+        max-height: 236.5px;
     }
 
     .Admin-cd-action-card {
         flex: 1 1 auto;
         width: 100%;
-        max-width: 100%;
+        max-width: none;
+        height: 236.19px;
         padding: 20px 15px;
         box-sizing: border-box;
     }
@@ -973,7 +988,13 @@
         border-radius: 12px;
         box-sizing: border-box;
     }
-
+    .Admin-cd-print-button-container {
+    position: relative;
+    display: inline-block;
+    z-index: 15;
+    left:305px;
+    top:-65px;
+}
     .Admin-cd-table-header-row {
         flex-direction: column;
         align-items: flex-start;
@@ -997,10 +1018,12 @@
     }
 
     .Admin-cd-table-container {
-        height: 400px;
+        height: 330px;
         overflow-x: auto;
         width: 100%;
         box-sizing: border-box;
+        position: relative;
+        bottom:40px;
     }
 
     .Admin-cd-students-table {
@@ -1012,6 +1035,12 @@
     .Admin-cd-td {
         padding: 10px 8px;
         font-size: 0.8rem;
+    }
+}
+
+@media screen and (max-width: 420px) {
+    .Admin-cd-action-cards-section {
+        grid-template-columns: 1fr;
     }
 }
 

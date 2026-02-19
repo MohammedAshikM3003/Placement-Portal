@@ -370,7 +370,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 />
               </div>
               
-              <form onSubmit={handleSubmit} className={styles.form}>
+              <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>
                     Register Number
@@ -384,6 +384,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       className={styles.inputField}
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -401,6 +402,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       className={styles.inputField}
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"

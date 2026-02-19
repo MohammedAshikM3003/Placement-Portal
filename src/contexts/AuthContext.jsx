@@ -13,6 +13,7 @@ const initialState = {
   role: null,
   isAuthenticated: false,
   isLoading: true, // CRITICAL: Start with loading true
+  isPreloading: false, // New: Shows unified loading screen while fetching profile data
   error: null
 };
 
@@ -23,7 +24,8 @@ const AUTH_ACTIONS = {
   LOGIN_FAIL: 'LOGIN_FAIL',
   LOGOUT: 'LOGOUT',
   CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_LOADING: 'SET_LOADING'
+  SET_LOADING: 'SET_LOADING',
+  SET_PRELOADING: 'SET_PRELOADING'
 };
 
 // Reducer function
@@ -44,6 +46,7 @@ const authReducer = (state, action) => {
         role: action.payload.role || null,
         isAuthenticated: true,
         isLoading: false, // CRITICAL: Set loading to false only after we have all data
+        isPreloading: false, // Always reset - SET_PRELOADING enables it after this action
         error: null
       };
     
@@ -55,6 +58,7 @@ const authReducer = (state, action) => {
         role: null,
         isAuthenticated: false,
         isLoading: false,
+        isPreloading: false, // Always reset on failure
         error: action.payload.error
       };
     
@@ -73,6 +77,12 @@ const authReducer = (state, action) => {
       return {
         ...state,
         isLoading: action.payload
+      };
+    
+    case AUTH_ACTIONS.SET_PRELOADING:
+      return {
+        ...state,
+        isPreloading: action.payload
       };
     
     case AUTH_ACTIONS.CLEAR_ERROR:
@@ -104,30 +114,21 @@ export const AuthProvider = ({ children }) => {
         // Check for admin session
         if (storedRole === 'admin') {
           const isAdminLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-          const adminToken = localStorage.getItem('authToken'); // Use authToken consistently
+          const adminToken = localStorage.getItem('authToken');
           const adminLoginID = localStorage.getItem('adminLoginID');
 
           if (isAdminLoggedIn && adminToken && adminLoginID) {
-            console.log('✅ AuthContext: Restoring admin session:', {
-              adminLoginID: adminLoginID
-            });
-
+            console.log('✅ AuthContext: Restoring admin session:', { adminLoginID });
             dispatch({
               type: AUTH_ACTIONS.LOGIN_SUCCESS,
-              payload: {
-                token: adminToken,
-                user: { adminLoginID },
-                role: 'admin'
-              }
+              payload: { token: adminToken, user: { adminLoginID }, role: 'admin' }
             });
             return;
           }
-        }
-
         // Check for coordinator session
-        if (storedRole === 'coordinator') {
+        } else if (storedRole === 'coordinator') {
           const isCoordinatorLoggedIn = localStorage.getItem('isCoordinatorLoggedIn') === 'true';
-          const coordinatorToken = localStorage.getItem('authToken'); // Use authToken consistently
+          const coordinatorToken = localStorage.getItem('authToken');
           const coordinatorData = localStorage.getItem('coordinatorData');
 
           if (isCoordinatorLoggedIn && coordinatorToken && coordinatorData) {
@@ -136,18 +137,14 @@ export const AuthProvider = ({ children }) => {
               coordinatorId: parsedCoordinator.coordinatorId,
               username: parsedCoordinator.username
             });
-
             dispatch({
               type: AUTH_ACTIONS.LOGIN_SUCCESS,
-              payload: {
-                token: coordinatorToken,
-                user: parsedCoordinator,
-                role: 'coordinator'
-              }
+              payload: { token: coordinatorToken, user: parsedCoordinator, role: 'coordinator' }
             });
             return;
           }
         } else {
+          // Student session
           const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
           const storedToken = localStorage.getItem('authToken');
           const storedUserData = localStorage.getItem('studentData');
@@ -167,15 +164,9 @@ export const AuthProvider = ({ children }) => {
               hasProfilePic: !!userData.profilePicURL,
               name: `${userData.firstName} ${userData.lastName}`
             });
-
-            // Restore authentication state
             dispatch({
               type: AUTH_ACTIONS.LOGIN_SUCCESS,
-              payload: {
-                token: storedToken,
-                user: userData,
-                role: 'student'
-              }
+              payload: { token: storedToken, user: userData, role: 'student' }
             });
             return;
           }
@@ -280,21 +271,47 @@ export const AuthProvider = ({ children }) => {
         if (loginResult.success) {
           console.log('✅ AuthContext: Admin authentication successful!');
 
-          // 1. Dispatch success immediately to unlock route guards
+          // 1. Show loading screen while preloading data
+          dispatch({ type: AUTH_ACTIONS.SET_PRELOADING, payload: true });
+
+          // 2. Store admin profile data for instant sidebar access
+          const adminData = {
+            ...loginResult.admin,
+            adminLoginID: loginResult.admin.adminLoginID || trimmedIdentifier,
+            profilePhoto: loginResult.admin.profilePhoto || null,
+            _loginTimestamp: Date.now()
+          };
+          
+          localStorage.setItem('adminData', JSON.stringify(adminData));
+          localStorage.setItem('adminLoginID', adminData.adminLoginID);
+          
+          // Store profile photo in cache for instant sidebar load
+          if (adminData.profilePhoto) {
+            localStorage.setItem('adminProfileCache', JSON.stringify({
+              ...adminData,
+              hasProfilePhoto: true
+            }));
+            localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+          }
+
+          // 3. Dispatch success to unlock route guards
           dispatch({
             type: AUTH_ACTIONS.LOGIN_SUCCESS,
             payload: {
               token: loginResult.token,
               user: {
-                ...loginResult.admin,
+                ...adminData,
                 role: 'admin'
               },
               role: 'admin'
             }
           });
 
-          // 2. Return immediately - don't wait for anything
-          console.log('🎉 AuthContext: Admin login complete - instant transition');
+          // 4. Hide loading screen after brief delay (simulate data ready)
+          setTimeout(() => {
+            dispatch({ type: AUTH_ACTIONS.SET_PRELOADING, payload: false });
+            console.log('🎉 AuthContext: Admin data ready - navigating to dashboard');
+          }, 800); // Short delay for smooth transition
 
           return { success: true, role: 'admin', admin: loginResult.admin };
         }
@@ -315,33 +332,56 @@ export const AuthProvider = ({ children }) => {
         if (loginResult.success) {
           console.log('✅ AuthContext: Coordinator authentication successful!');
           
-          // 🆕 Ensure coordinatorData is stored for instant profile loading
+          // 1. Show loading screen while preloading data
+          dispatch({ type: AUTH_ACTIONS.SET_PRELOADING, payload: true });
+
+          // 2. Store coordinator data with profile photo for instant sidebar access
           const coordinatorData = {
             ...loginResult.coordinator,
             coordinatorId: loginResult.coordinator.coordinatorId || trimmedIdentifier,
             username: loginResult.coordinator.username || trimmedIdentifier,
-            timestamp: Date.now()
+            profilePhoto: loginResult.coordinator.profilePhoto || null,
+            profilePicURL: loginResult.coordinator.profilePicURL || loginResult.coordinator.profilePhoto || null,
+            _loginTimestamp: Date.now()
           };
+          
           localStorage.setItem('coordinatorData', JSON.stringify(coordinatorData));
+          localStorage.setItem('coordinatorUsername', coordinatorData.username);
+          
+          // Store profile photo in cache
+          if (coordinatorData.profilePhoto || coordinatorData.profilePicURL) {
+            localStorage.setItem('coordinatorProfileCache', JSON.stringify({
+              ...coordinatorData,
+              hasProfilePhoto: true
+            }));
+            localStorage.setItem('coordinatorProfileCacheTime', Date.now().toString());
+          }
+          
           console.log('📦 AuthContext: Coordinator data cached:', {
             firstName: coordinatorData.firstName,
             lastName: coordinatorData.lastName,
-            coordinatorId: coordinatorData.coordinatorId
+            coordinatorId: coordinatorData.coordinatorId,
+            hasProfilePhoto: !!(coordinatorData.profilePhoto || coordinatorData.profilePicURL)
           });
 
+          // 3. Dispatch success to unlock route guards
           dispatch({
             type: AUTH_ACTIONS.LOGIN_SUCCESS,
             payload: {
               token: loginResult.token,
               user: {
-                ...loginResult.coordinator,
+                ...coordinatorData,
                 role: 'coordinator'
               },
               role: 'coordinator'
             }
           });
 
-          console.log('🎉 AuthContext: Coordinator login complete - redirect to coordinator dashboard');
+          // 4. Hide loading screen after brief delay
+          setTimeout(() => {
+            dispatch({ type: AUTH_ACTIONS.SET_PRELOADING, payload: false });
+            console.log('🎉 AuthContext: Coordinator data ready - navigating to dashboard');
+          }, 800);
 
           return { success: true, role: 'coordinator', coordinator: loginResult.coordinator };
         }
@@ -495,13 +535,28 @@ export const AuthProvider = ({ children }) => {
       ];
       adminKeysToRemove.forEach(key => localStorage.removeItem(key));
       
+      // Clear Coordinator-specific storage keys
+      const coordinatorKeysToRemove = [
+        'coordinatorData', 'coordinatorProfileCache', 'coordinatorProfileCacheTime',
+        'coordinatorUsername', 'coordinatorToken', 'coordinatorId',
+        'isCoordinatorLoggedIn'
+      ];
+      coordinatorKeysToRemove.forEach(key => localStorage.removeItem(key));
+      
       // Clear Student localStorage keys
       const studentKeysToRemove = [
         'authToken', 'studentData', 'isLoggedIn', 'studentRegNo', 
         'studentDob', 'completeStudentData', 'resumeData', 
-        'certificatesData', 'attendanceData'
+        'certificatesData', 'attendanceData', 'resumeBuilderData'
       ];
       studentKeysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Clear user-specific resumeBuilderData keys (resumeBuilderData_<id>)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('resumeBuilderData_')) {
+          localStorage.removeItem(key);
+        }
+      });
       
       // Clear common auth keys
       localStorage.removeItem('authRole');

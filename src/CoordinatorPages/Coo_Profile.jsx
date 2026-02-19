@@ -152,18 +152,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 const SuccessPopup = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     return (
-        <div style={{
-            minHeight: '100vh',
-            width: '100vw',
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(18,18,34,0.11)',
-            zIndex: 1000,
-        }}>
+        <div className={styles['co-profile-success-overlay']}>
             <div className={styles['CoProfile-popup-container']}>
                 <div className={styles['CoProfile-popup-header']}>Saved !</div>
                 <div className={styles['CoProfile-popup-body']}>
@@ -609,7 +598,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
     return (
         <>
             <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
-            <div className={styles['co-profile-layout']}>
+            {isSaving && <div className={styles['co-profile-saving-overlay']} />}
+            <div className={`${styles['co-profile-layout']} ${isSaving ? styles['co-profile-saving'] : ''}`}>
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={onViewChange} />
                 <div className={styles['co-profile-main-content']}>
                     <div className={styles['co-profile-master-card']}>
@@ -621,8 +611,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 <section className={`${styles['co-profile-section']} ${styles['co-profile-personal-info']}`}>
                                     <h3 className={styles['co-profile-section-header']}>Personal Information</h3>
                                     <div className={styles['co-profile-input-grid']}>
-                                        <input type="text" name="firstName" placeholder="First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} />
-                                        <input type="text" name="lastName" placeholder="Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} />
+                                        <input type="text" name="firstName" placeholder="First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
+                                        <input type="text" name="lastName" placeholder="Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
                                         
                                         <div className={styles['co-profile-date-wrapper']}>
                                             <DatePicker
@@ -643,20 +633,21 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                                 yearDropdownItemNumber={7}
                                                 scrollableYearDropdown
                                                 popperClassName={styles['co-profile-date-popper']}
+                                                disabled={isSaving}
                                             />
                                         </div>
-                                        <select name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange}>
+                                        <select name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
                                             <option value="" disabled hidden>Gender</option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                             <option value="Other">Other</option>
                                         </select>
                                         
-                                        <input type="email" name="emailId" placeholder="Email id" className={styles['co-profile-form-input']} value={formData.emailId} onChange={handleInputChange} />
-                                        <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['co-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} />
+                                        <input type="email" name="emailId" placeholder="Email id" className={styles['co-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
+                                        <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['co-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
                                         
-                                        <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['co-profile-form-input']} value={formData.phoneNumber} onChange={handleInputChange} />
-                                        <input type="text" name="department" placeholder="Department" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} />
+                                        <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['co-profile-form-input']} value={formData.phoneNumber} onChange={handleInputChange} disabled={isSaving} />
+                                        <input type="text" name="department" placeholder="Department" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
                                     </div>
                                 </section>
 
@@ -665,7 +656,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                         <h3 className={styles['co-profile-section-header']}>Office Details</h3>
                                         <div className={`${styles['co-profile-input-grid']} ${styles['co-profile-input-grid-two-col']}`}>
                                             <input type="text" name="staffId" placeholder="Staff ID" className={styles['co-profile-form-input']} value={formData.staffId} onChange={handleInputChange} disabled />
-                                            <input type="text" name="cabin" placeholder="Cabin" className={styles['co-profile-form-input']} value={formData.cabin} onChange={handleInputChange} />
+                                            <input type="text" name="cabin" placeholder="Cabin" className={styles['co-profile-form-input']} value={formData.cabin} onChange={handleInputChange} disabled={isSaving} />
                                         </div>
                                     </div>
                                 </section>
@@ -689,11 +680,11 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 </div>
                                 <div className={styles['co-profile-upload-action-area']}>
                                     <div className={styles['co-profile-upload-btn-wrapper']}>
-                                        <label htmlFor="file-upload" className={styles['co-profile-profile-upload-btn']}>
+                                        <label htmlFor="file-upload" className={`${styles['co-profile-profile-upload-btn']} ${isSaving ? styles['co-profile-disabled'] : ''}`}>
                                             <div className={styles['co-profile-upload-btn-content']}><MdUpload /><span>Upload (Max 500 KB)</span></div>
                                         </label>
                                         {profilePhoto && (
-                                            <button onClick={handleRemovePhoto} className={styles['co-profile-remove-image-btn']} aria-label="Remove image"><IoMdClose /></button>
+                                            <button onClick={handleRemovePhoto} className={styles['co-profile-remove-image-btn']} aria-label="Remove image" disabled={isSaving}><IoMdClose /></button>
                                         )}
                                     </div>
                                     <input
@@ -702,18 +693,13 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                         accept="image/jpeg,image/png"
                                         className={styles['co-profile-hidden-input']}
                                         onChange={handlePhotoUpload}
+                                        disabled={isSaving}
                                     />
                                     {uploadSuccess && (
                                         <p className={styles['co-profile-upload-success-message']}>Profile Photo uploaded Successfully!</p>
                                     )}
                                     <p className={styles['co-profile-upload-hint']}>*Only JPG format is allowed.</p>
                                 </div>
-                                
-                                {saveStatus && (
-                                    <p className={`${styles['co-profile-status-message']} ${saveStatus === 'saved' ? styles['co-profile-status-success'] : styles['co-profile-status-error']}`}>
-                                        {saveStatus === 'saved' ? 'Successfully Saved' : saveStatus === 'discarded' ? 'Changes Discarded' : 'Not Saved'}
-                                    </p>
-                                )}
                             </aside>
 
                         </div>

@@ -259,8 +259,19 @@ function AdminstudDB() {
 
     // Toggle Sidebar Function (No Change)
     const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
+        setIsSidebarOpen(prev => !prev);
     };
+
+    // Listen for sidebar close event from navigation links
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
 
     // Logout Handler
     const handleLogout = () => {
@@ -633,7 +644,7 @@ function AdminstudDB() {
                         <div className={styles['Admin-DB-filter-section']}>
                             <div className={styles['Admin-DB-filter-header-container']}>
                                 <div className={styles['Admin-DB-filter-header']}>Filter & Sort</div>
-                                <span className={styles['Admin-DB-filter-icon-container']}>☰</span>
+                                {/* <span className={styles['Admin-DB-filter-icon-container']}>☰</span> */}
                             </div>
                             <div className={styles['Admin-DB-filter-content']}>
                                 {/* Dynamic Class Name Update */}

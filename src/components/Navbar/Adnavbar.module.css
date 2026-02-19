@@ -14,15 +14,21 @@
   z-index: 1003; 
   height: 65px;
   box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 .ad-navbar-left {
   display: flex;
   align-items: center;
+  margin-left: 5px
 }
 .ad-portal-logo {
-  height: 35px;
-  width: 35px;
-  margin-right: 18px;
+  height: 30px;
+  width: 40px;
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
 }
 .ad-portal-logo img {
   height: 30px;
@@ -30,9 +36,10 @@
   filter: brightness(0) invert(1);
 }
 .ad-portal-name {
-  font-size: 1.48rem;
-  font-weight: bold !important;
-  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-top: 8px;
 }
 .ad-navbar .ad-menu {
   display: flex;

@@ -263,7 +263,7 @@ Achievements
       // Convert file to base64
       const base64 = await this.fileToBase64(file);
       
-      const response = await fetch(`${this.providers.gemini.baseUrl}/models/gemini-1.5-flash:generateContent?key=${this.providers.gemini.apiKey}`, {
+      const response = await fetch(`${this.providers.gemini.baseUrl}/models/gemini-3-flash-preview:generateContent?key=${this.providers.gemini.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -599,7 +599,7 @@ Achievements
     try {
       console.log('🔮 Using Gemini for analysis...');
       
-      const response = await fetch(`${this.providers.gemini.baseUrl}/models/gemini-1.5-flash:generateContent?key=${this.providers.gemini.apiKey}`, {
+      const response = await fetch(`${this.providers.gemini.baseUrl}/models/gemini-3-flash-preview:generateContent?key=${this.providers.gemini.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
