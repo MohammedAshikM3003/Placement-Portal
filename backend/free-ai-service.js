@@ -1,165 +1,73 @@
-// Free AI Resume Analysis Service using Hugging Face (no API key required)
+// Free AI Resume Analysis Service using Ollama (local AI, no API key required)
 class FreeResumeAnalysisService {
   constructor() {
-    this.hfApiUrl = 'https://api-inference.huggingface.co/models';
-    this.models = {
-      textExtraction: 'microsoft/layoutlm-base-uncased',
-      textAnalysis: 'microsoft/DialoGPT-medium',
-      sentiment: 'cardiffnlp/twitter-roberta-base-sentiment-latest'
-    };
+    // Ollama replaces Hugging Face — runs fully locally
+    this.ollamaService = null;
+    try {
+      this.ollamaService = require('./ollamaService');
+    } catch (e) {
+      console.warn('⚠️ ollamaService not available, using local analysis only');
+    }
   }
 
   async analyzeResume(fileData, fileName) {
     try {
-      console.log('🤖 Starting free AI analysis for:', fileName);
+      console.log('🤖 Starting AI analysis for:', fileName);
       
       // Step 1: Extract text from PDF/image
       const extractedText = await this.extractTextFromFile(fileData, fileName);
       console.log('📄 Extracted text length:', extractedText.length);
       
-      // Step 2: Try Hugging Face API first (free tier)
+      // Step 2: Try Ollama AI first (local, free, no rate limits)
       let analysis;
-      try {
-        analysis = await this.analyzeWithHuggingFace(extractedText);
-        console.log('✅ Hugging Face analysis completed');
-      } catch (hfError) {
-        console.warn('⚠️ Hugging Face failed, using enhanced local analysis:', hfError.message);
-        // Step 3: Fallback to enhanced local analysis
+      if (this.ollamaService) {
+        try {
+          const status = await this.ollamaService.checkOllamaStatus();
+          if (status.running) {
+            analysis = await this.analyzeWithOllama(extractedText);
+            console.log('✅ Ollama AI analysis completed');
+          } else {
+            console.warn('⚠️ Ollama not running, using local pattern analysis');
+            analysis = await this.analyzeTextContent(extractedText);
+          }
+        } catch (ollamaError) {
+          console.warn('⚠️ Ollama failed, using local pattern analysis:', ollamaError.message);
+          analysis = await this.analyzeTextContent(extractedText);
+          console.log('✅ Local pattern analysis completed');
+        }
+      } else {
         analysis = await this.analyzeTextContent(extractedText);
-        console.log('✅ Enhanced Local AI analysis completed');
+        console.log('✅ Local pattern analysis completed');
       }
       
       return analysis;
       
     } catch (error) {
-      console.error('❌ Free AI analysis failed:', error);
-      // Return enhanced fallback analysis
+      console.error('❌ AI analysis failed:', error);
       return this.getEnhancedFallbackAnalysis(fileData, fileName);
     }
   }
 
-  async analyzeWithHuggingFace(text) {
-    try {
-      // Use Hugging Face's free inference API with proper authentication
-      const hfToken = process.env.HUGGINGFACE_API_KEY;
-      
-      // Try multiple models for better compatibility
-      const models = [
-        'microsoft/layoutlm-base-uncased',
-        'dbmdz/bert-large-cased-finetuned-conll03-english',
-        'dslim/bert-base-NER'
-      ];
-      
-      let response;
-      let lastError;
-      
-      for (const model of models) {
-        try {
-          console.log(`🔄 Trying Hugging Face model: ${model}`);
-          response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${hfToken}`
-            },
-            body: JSON.stringify({
-              inputs: text.substring(0, 1000) // Limit to 1000 chars for free tier
-            })
-          });
-
-          if (response.ok) {
-            console.log(`✅ Success with model: ${model}`);
-            break; // Success, exit loop
-          } else {
-            lastError = new Error(`Hugging Face API error: ${response.status} for model ${model}`);
-            console.warn(`⚠️ Model ${model} failed: ${response.status}`);
-          }
-        } catch (error) {
-          lastError = error;
-          console.warn(`⚠️ Model ${model} error:`, error.message);
-        }
-      }
-      
-      if (!response || !response.ok) {
-        throw lastError || new Error('All Hugging Face models failed');
-      }
-
-      const hfResult = await response.json();
-      console.log('🔍 Hugging Face response:', hfResult);
-
-      // Process Hugging Face result and convert to our format
-      return this.processHuggingFaceResult(hfResult, text);
-      
-    } catch (error) {
-      console.error('Hugging Face API failed:', error);
-      throw error;
+  async analyzeWithOllama(text) {
+    const { analyzeResume: ollamaAnalyze } = this.ollamaService;
+    const result = await ollamaAnalyze(text);
+    
+    if (result) {
+      // Convert Ollama result to our standard format
+      return {
+        percentage: result.ats_score || 50,
+        totalScore: Math.round((result.ats_score || 50) / 100 * 13),
+        maxScore: 13,
+        grade: this.getGrade(result.ats_score || 50),
+        description: `Ollama AI analysis completed - ATS Score: ${result.ats_score || 50}%`,
+        suggestions: result.suggestions || [],
+        missing_keywords: result.missing_keywords || [],
+        checklistResults: this.buildChecklistFromText(text)
+      };
     }
-  }
-
-  processHuggingFaceResult(hfResult, originalText) {
-    // Convert Hugging Face result to our analysis format
-    // This is a simplified conversion - you'd want more sophisticated processing
     
-    // Extract entities from HF result
-    const entities = hfResult || [];
-    
-    // Map HF entities to our checklist
-    const hasName = this.detectName(originalText) || entities.some(e => e.label === 'PER');
-    const hasPhone = this.detectPhone(originalText) || entities.some(e => e.label === 'PHONE');
-    const hasEmail = this.detectEmail(originalText) || entities.some(e => e.label === 'EMAIL');
-    
-    // Continue with other detections
-    const hasLinkedIn = this.detectLinkedIn(originalText);
-    const hasGitHub = this.detectGitHub(originalText);
-    const hasSummary = this.detectSummary(originalText);
-    const hasSkills = this.detectSkills(originalText);
-    const hasExperience = this.detectExperience(originalText);
-    const hasProjects = this.detectProjects(originalText);
-    const hasEducation = this.detectEducation(originalText);
-    const hasCertifications = this.detectCertifications(originalText);
-    const hasAchievements = this.detectAchievements(originalText);
-    const hasPageLimit = this.detectPageLimit(originalText);
-
-    // Calculate score
-    const completedItems = [
-      hasName, hasPhone, hasEmail, hasLinkedIn, hasGitHub,
-      hasSummary, hasSkills, hasExperience, hasProjects,
-      hasEducation, hasCertifications, hasAchievements, hasPageLimit
-    ].filter(Boolean).length;
-
-    const percentage = Math.round((completedItems / 13) * 100);
-    const grade = this.getGrade(percentage);
-
-    // Generate suggestions
-    const suggestions = this.generateSuggestions({
-      hasName, hasPhone, hasEmail, hasLinkedIn, hasGitHub,
-      hasSummary, hasSkills, hasExperience, hasProjects,
-      hasEducation, hasCertifications, hasAchievements, hasPageLimit
-    }, percentage);
-
-    return {
-      percentage: percentage,
-      totalScore: completedItems,
-      maxScore: 13,
-      grade: grade,
-      description: `Hugging Face AI analysis completed - ${percentage}% of checklist items found`,
-      suggestions: suggestions,
-      checklistResults: [
-        { id: 'name', isCompleted: hasName },
-        { id: 'phone_no', isCompleted: hasPhone },
-        { id: 'email', isCompleted: hasEmail },
-        { id: 'linkedin', isCompleted: hasLinkedIn },
-        { id: 'github', isCompleted: hasGitHub },
-        { id: 'summary', isCompleted: hasSummary },
-        { id: 'skills', isCompleted: hasSkills },
-        { id: 'experience', isCompleted: hasExperience },
-        { id: 'projects', isCompleted: hasProjects },
-        { id: 'education', isCompleted: hasEducation },
-        { id: 'certifications', isCompleted: hasCertifications },
-        { id: 'achievements', isCompleted: hasAchievements },
-        { id: 'page_limit', isCompleted: hasPageLimit }
-      ]
-    };
+    // Fallback to local analysis
+    return this.analyzeTextContent(text);
   }
 
   async extractTextFromFile(fileData, fileName) {
@@ -401,6 +309,25 @@ class FreeResumeAnalysisService {
       console.error('Text analysis failed:', error);
       throw error;
     }
+  }
+
+  // Build checklist results from text pattern matching
+  buildChecklistFromText(text) {
+    return [
+      { id: 'name', isCompleted: this.detectName(text) },
+      { id: 'phone_no', isCompleted: this.detectPhone(text) },
+      { id: 'email', isCompleted: this.detectEmail(text) },
+      { id: 'linkedin', isCompleted: this.detectLinkedIn(text) },
+      { id: 'github', isCompleted: this.detectGitHub(text) },
+      { id: 'summary', isCompleted: this.detectSummary(text) },
+      { id: 'skills', isCompleted: this.detectSkills(text) },
+      { id: 'experience', isCompleted: this.detectExperience(text) },
+      { id: 'projects', isCompleted: this.detectProjects(text) },
+      { id: 'education', isCompleted: this.detectEducation(text) },
+      { id: 'certifications', isCompleted: this.detectCertifications(text) },
+      { id: 'achievements', isCompleted: this.detectAchievements(text) },
+      { id: 'page_limit', isCompleted: this.detectPageLimit(text) }
+    ];
   }
 
   // Enhanced detection methods

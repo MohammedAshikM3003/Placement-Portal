@@ -344,9 +344,9 @@ router.post('/score', optionalAuth, async (req, res) => {
   }
 });
 
-// ===== AI GENERATE DESCRIPTION (via OpenAI) =====
+// ===== AI GENERATE DESCRIPTION (via Ollama local AI) =====
 router.post('/ai-generate', optionalAuth, async (req, res) => {
-  // Extend Express timeout for batch AI requests (default is often 120s)
+  // Extend Express timeout for batch AI requests
   req.setTimeout(120000); // 120s
   res.setTimeout(120000); // 120s
   
@@ -356,53 +356,19 @@ router.post('/ai-generate', optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing prompt' });
     }
 
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.REACT_APP_OPENAI_API_KEY;
-    if (!OPENAI_API_KEY) {
-      return res.status(503).json({ error: 'AI service not configured (no OpenAI API key)' });
+    const { callOllama, checkOllamaStatus } = require('../ollamaService');
+
+    // Check if Ollama is running
+    const status = await checkOllamaStatus();
+    if (!status.running) {
+      return res.status(503).json({ 
+        error: 'Ollama is not running. Please start Ollama on your machine.',
+        details: 'Run: ollama serve'
+      });
     }
 
     const MIN_WORDS = 30;
     const MAX_RETRIES = 2;
-
-    // Helper: call OpenAI API
-    async function callOpenAI(promptText, apiKey, isJson = false) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout for batch
-
-      const payload = {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert Technical Recruiter and Professional Resume Writer specializing in the software engineering industry. Use strong action verbs and a confident, professional tone. Emphasize technical implementation and project impact. Ensure all output is ATS-friendly with industry-specific keywords.'
-          },
-          {
-            role: 'user',
-            content: promptText
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      };
-
-      // Enable JSON mode for structured responses
-      if (isJson) {
-        payload.response_format = { type: 'json_object' };
-      }
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        signal: controller.signal,
-        body: JSON.stringify(payload)
-      });
-
-      clearTimeout(timeout);
-      return response;
-    }
 
     // Helper: clean AI response text
     function cleanText(raw) {
@@ -425,99 +391,59 @@ router.post('/ai-generate', optionalAuth, async (req, res) => {
       return text + '.';
     }
 
-    // Try with retry logic
     let lastError = null;
     let bestResponse = null;
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        // On retry, enhance prompt to demand longer output
         let currentPrompt = prompt;
         if (attempt > 0) {
           currentPrompt = `IMPORTANT: Your previous response was too short. You MUST write AT LEAST 60 words. Do NOT write less than 50 words under any circumstances.\n\n${prompt}\n\nREMINDER: The response MUST be 60-80 words long. Count your words before responding.`;
         }
 
-        console.log(`🤖 Backend: OpenAI GPT-3.5-turbo attempt ${attempt + 1}...`);
-        const response = await callOpenAI(currentPrompt, OPENAI_API_KEY, type === 'json');
+        const systemPrompt = 'You are an expert Technical Recruiter and Professional Resume Writer specializing in the software engineering industry. Use strong action verbs and a confident, professional tone. Emphasize technical implementation and project impact. Ensure all output is ATS-friendly with industry-specific keywords.';
+        const fullPrompt = `${systemPrompt}\n\n${currentPrompt}${type === 'json' ? '\n\nIMPORTANT: Return ONLY valid JSON, no markdown code blocks, no extra text.' : ''}`;
 
-        // Handle rate limits
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('retry-after') || '60';
-          const retryMs = parseInt(retryAfter) * 1000;
-          console.warn(`⏳ OpenAI rate limited. Retry after ${retryAfter}s`);
-          return res.status(429).json({ 
-            error: 'RATE_LIMITED', 
-            message: `OpenAI API rate limit reached. Please wait ${retryAfter} seconds and try again.`,
-            retryAfterMs: retryMs
-          });
-        }
+        console.log(`🤖 Backend: Ollama attempt ${attempt + 1}...`);
+        const text_raw = await callOllama(fullPrompt, {
+          temperature: 0.7,
+          max_tokens: type === 'json' ? 4096 : 1024,
+        });
 
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          console.error(`❌ OpenAI error ${response.status}:`, errData.error?.message || '');
-          
-          // Auth error - don't retry
-          if (response.status === 401 || response.status === 403) {
-            return res.status(response.status).json({ 
-              error: 'Invalid or expired OpenAI API key', 
-              message: errData.error?.message 
-            });
-          }
-          
-          lastError = new Error(`OpenAI API error: ${response.status}`);
-          
-          // Retry on server errors
-          if (response.status >= 500 && attempt < MAX_RETRIES - 1) {
-            await new Promise(r => setTimeout(r, 2000));
-            continue;
-          }
+        if (!text_raw) {
+          lastError = new Error('Empty response from Ollama');
           break;
         }
 
-        const data = await response.json();
-        let text = data.choices?.[0]?.message?.content || '';
+        let text = text_raw.trim();
 
-        if (!text) {
-          lastError = new Error('Empty response from OpenAI');
-          break;
-        }
-
-        text = text.trim();
-        
         // Special handling for JSON batch requests
         if (type && type === 'json') {
-          // Remove markdown code blocks if present
           text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
-          console.log(`✅ Backend: JSON generated via OpenAI (length=${text.length})`);
-          return res.json({ success: true, text, model: 'gpt-3.5-turbo', wordCount: text.length });
+          console.log(`✅ Backend: JSON generated via Ollama (length=${text.length})`);
+          return res.json({ success: true, text, model: 'ollama', wordCount: text.length });
         }
 
         text = cleanText(text);
         const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-        console.log(`📊 OpenAI: cleaned wordCount=${wordCount}`);
+        console.log(`📊 Ollama: cleaned wordCount=${wordCount}`);
 
-        // Track best response
         if (!bestResponse || wordCount > bestResponse.wordCount) {
-          bestResponse = { text, wordCount };
+          bestResponse = { text, wordCount, model: 'ollama' };
         }
 
         if (wordCount >= MIN_WORDS) {
           text = fixPunctuation(text);
-          console.log(`✅ Backend: Content generated via OpenAI (${wordCount} words)`);
-          return res.json({ success: true, text, model: 'gpt-3.5-turbo', wordCount });
+          console.log(`✅ Backend: Content generated via Ollama (${wordCount} words)`);
+          return res.json({ success: true, text, model: 'ollama', wordCount });
         }
 
-        console.warn(`⚠️ OpenAI: Only ${wordCount} words (need ${MIN_WORDS}+), ${attempt === 0 ? 'retrying with enhanced prompt...' : 'using best response...'}`);
+        console.warn(`⚠️ Ollama: Only ${wordCount} words (need ${MIN_WORDS}+), ${attempt === 0 ? 'retrying with enhanced prompt...' : 'using best response...'}`);
         lastError = new Error(`Response too short: ${wordCount} words`);
         
       } catch (err) {
-        if (err.name === 'AbortError') {
-          console.error(`⏳ OpenAI request timed out`);
-          lastError = new Error('Request timed out');
-        } else {
-          console.error(`❌ OpenAI failed:`, err.message);
-          lastError = err;
-        }
+        console.error(`❌ Ollama failed:`, err.message);
+        lastError = err;
         break;
       }
     }
@@ -526,10 +452,16 @@ router.post('/ai-generate', optionalAuth, async (req, res) => {
     if (bestResponse && bestResponse.wordCount >= 10) {
       const text = fixPunctuation(bestResponse.text);
       console.warn(`⚠️ Using best available response (${bestResponse.wordCount} words)`);
-      return res.json({ success: true, text, model: 'gpt-3.5-turbo', wordCount: bestResponse.wordCount, partial: true });
+      return res.json({ 
+        success: true, 
+        text, 
+        model: 'ollama', 
+        wordCount: bestResponse.wordCount, 
+        partial: true 
+      });
     }
 
-    throw lastError || new Error('OpenAI generation failed');
+    throw lastError || new Error('AI generation failed');
   } catch (error) {
     console.error('AI generate error:', error);
     res.status(500).json({ error: 'AI generation failed: ' + error.message });
@@ -866,100 +798,48 @@ router.post('/ats-check', optionalAuth, async (req, res) => {
 
     const analysis = performATSAnalysis(resumeData);
 
-    // Try AI-enhanced analysis with Gemini
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY;
-    if (GEMINI_API_KEY) {
-      try {
-        const resumeText = buildPlainText(resumeData);
-        const prompt = `You are an expert ATS (Applicant Tracking System) resume analyzer. Analyze this resume and return a JSON object with EXACTLY this structure (no markdown, no code blocks, pure JSON only):
-{
-  "atsParseRate": <number 0-100>,
-  "quantifyingImpact": <number 0-100>,
-  "repetition": <number 0-100>,
-  "spellingGrammar": <number 0-100>,
-  "contentIssues": ["issue1", "issue2"],
-  "formatIssues": ["issue1", "issue2"],
-  "styleIssues": ["issue1", "issue2"],
-  "sectionIssues": ["issue1", "issue2"],
-  "skillsIssues": ["issue1", "issue2"],
-  "strengths": ["strength1", "strength2"],
-  "criticalFixes": ["fix1", "fix2"],
-  "overallTips": ["tip1", "tip2"]
-}
-
-Evaluate:
-- ATS Parse Rate: Can ATS software correctly parse all sections? Are there special characters, tables, or formatting that break parsers?
-- Quantifying Impact: Does the resume use numbers, percentages, metrics to quantify achievements?
-- Repetition: Are there repeated phrases, words, or redundant information?
-- Spelling & Grammar: Any errors in spelling or grammar?
-- Content: Quality and relevance of descriptions, bullet points, action verbs
-- Format & Brevity: Appropriate length, concise bullet points, clean formatting
-- Style: Consistent tense, professional tone, active voice
-- Sections: Are standard sections present (Contact, Education, Experience, Skills, Projects)?
-- Skills: Are skills relevant, properly categorized, and adequate in number?
-
-Resume:
-${resumeText}`;
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.3, maxOutputTokens: 2000 },
-            }),
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          // Strip markdown code blocks if present
-          aiText = aiText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-          try {
-            const aiAnalysis = JSON.parse(aiText);
-            // Merge AI insights into our analysis
-            if (aiAnalysis.atsParseRate !== undefined) {
-              analysis.categories.content.checks[0].score = Math.min(100, aiAnalysis.atsParseRate);
-              analysis.categories.content.checks[0].status = aiAnalysis.atsParseRate >= 70 ? 'pass' : 'fail';
-            }
-            if (aiAnalysis.quantifyingImpact !== undefined) {
-              analysis.categories.content.checks[1].score = Math.min(100, aiAnalysis.quantifyingImpact);
-              analysis.categories.content.checks[1].status = aiAnalysis.quantifyingImpact >= 60 ? 'pass' : 'fail';
-            }
-            if (aiAnalysis.repetition !== undefined) {
-              analysis.categories.content.checks[2].score = Math.min(100, aiAnalysis.repetition);
-              analysis.categories.content.checks[2].status = aiAnalysis.repetition >= 70 ? 'pass' : 'fail';
-            }
-            if (aiAnalysis.spellingGrammar !== undefined) {
-              analysis.categories.content.checks[3].score = Math.min(100, aiAnalysis.spellingGrammar);
-              analysis.categories.content.checks[3].status = aiAnalysis.spellingGrammar >= 80 ? 'pass' : 'fail';
-            }
-            // Add AI issues
-            if (aiAnalysis.contentIssues?.length) analysis.categories.content.issues = aiAnalysis.contentIssues;
-            if (aiAnalysis.formatIssues?.length) analysis.categories.formatBrevity.issues = aiAnalysis.formatIssues;
-            if (aiAnalysis.styleIssues?.length) analysis.categories.style.issues = aiAnalysis.styleIssues;
-            if (aiAnalysis.sectionIssues?.length) analysis.categories.sections.issues = aiAnalysis.sectionIssues;
-            if (aiAnalysis.skillsIssues?.length) analysis.categories.skills.issues = aiAnalysis.skillsIssues;
-            if (aiAnalysis.strengths?.length) analysis.strengths = aiAnalysis.strengths;
-            if (aiAnalysis.criticalFixes?.length) analysis.criticalFixes = aiAnalysis.criticalFixes;
-            if (aiAnalysis.overallTips?.length) analysis.overallTips = aiAnalysis.overallTips;
-
-            // Recalculate overall score with AI data
-            recalculateOverallScore(analysis);
-            analysis.aiEnhanced = true;
-          } catch (parseErr) {
-            console.warn('AI JSON parse failed, using rule-based analysis:', parseErr.message);
-            analysis.aiEnhanced = false;
-          }
+    // Try AI-enhanced analysis with Ollama (local)
+    try {
+      const { analyzeATS } = require('../ollamaService');
+      const resumeText = buildPlainText(resumeData);
+      const aiAnalysis = await analyzeATS(resumeText);
+      
+      if (aiAnalysis) {
+        // Merge AI insights into our analysis
+        if (aiAnalysis.atsParseRate !== undefined) {
+          analysis.categories.content.checks[0].score = Math.min(100, aiAnalysis.atsParseRate);
+          analysis.categories.content.checks[0].status = aiAnalysis.atsParseRate >= 70 ? 'pass' : 'fail';
         }
-      } catch (aiErr) {
-        console.warn('AI analysis failed, using rule-based:', aiErr.message);
+        if (aiAnalysis.quantifyingImpact !== undefined) {
+          analysis.categories.content.checks[1].score = Math.min(100, aiAnalysis.quantifyingImpact);
+          analysis.categories.content.checks[1].status = aiAnalysis.quantifyingImpact >= 60 ? 'pass' : 'fail';
+        }
+        if (aiAnalysis.repetition !== undefined) {
+          analysis.categories.content.checks[2].score = Math.min(100, aiAnalysis.repetition);
+          analysis.categories.content.checks[2].status = aiAnalysis.repetition >= 70 ? 'pass' : 'fail';
+        }
+        if (aiAnalysis.spellingGrammar !== undefined) {
+          analysis.categories.content.checks[3].score = Math.min(100, aiAnalysis.spellingGrammar);
+          analysis.categories.content.checks[3].status = aiAnalysis.spellingGrammar >= 80 ? 'pass' : 'fail';
+        }
+        // Add AI issues
+        if (aiAnalysis.contentIssues?.length) analysis.categories.content.issues = aiAnalysis.contentIssues;
+        if (aiAnalysis.formatIssues?.length) analysis.categories.formatBrevity.issues = aiAnalysis.formatIssues;
+        if (aiAnalysis.styleIssues?.length) analysis.categories.style.issues = aiAnalysis.styleIssues;
+        if (aiAnalysis.sectionIssues?.length) analysis.categories.sections.issues = aiAnalysis.sectionIssues;
+        if (aiAnalysis.skillsIssues?.length) analysis.categories.skills.issues = aiAnalysis.skillsIssues;
+        if (aiAnalysis.strengths?.length) analysis.strengths = aiAnalysis.strengths;
+        if (aiAnalysis.criticalFixes?.length) analysis.criticalFixes = aiAnalysis.criticalFixes;
+        if (aiAnalysis.overallTips?.length) analysis.overallTips = aiAnalysis.overallTips;
+
+        // Recalculate overall score with AI data
+        recalculateOverallScore(analysis);
+        analysis.aiEnhanced = true;
+      } else {
         analysis.aiEnhanced = false;
       }
-    } else {
+    } catch (aiErr) {
+      console.warn('AI analysis failed, using rule-based:', aiErr.message);
       analysis.aiEnhanced = false;
     }
 
@@ -1025,7 +905,7 @@ ${resumeText}`;
             fileName: 'Resume Builder',
             fileType: 'builder',
             extractedText: buildPlainText(resumeData),
-            apiProvider: analysis.aiEnhanced ? 'gemini' : 'rule-based',
+            apiProvider: analysis.aiEnhanced ? 'ollama' : 'rule-based',
             processingTime,
             isResumeFile: false,
             updatedAt: new Date()

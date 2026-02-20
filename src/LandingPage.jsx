@@ -126,22 +126,24 @@ const PlacementPage = ({ placedStudentsData }) => {
   return (
     <div className={styles['placement-container-wrapper']} id="about">
       <div className={styles['placement-container']}>
-        <h2 className={styles['section-title']}>PLACEMENT HIGHLIGHTS</h2>
-        {!isLoading && (
-          <div className={styles['highlights-wrapper']}>
-            <div className={styles['highlight-card']}>
-              <p className={styles['value']}>100%</p>
-              <p className={styles['label']}>Placement rate</p>
+        {!isLoading && students.length > 0 && (
+          <>
+            <h2 className={styles['section-title']}>PLACEMENT HIGHLIGHTS</h2>
+            <div className={styles['highlights-wrapper']}>
+              <div className={styles['highlight-card']}>
+                <p className={styles['value']}>100%</p>
+                <p className={styles['label']}>Placement rate</p>
+              </div>
+              <div className={`${styles['highlight-card']} ${styles['special']}`}>
+                <p className={styles['value']}>{stats.highestPackage}</p>
+                <p className={styles['label']}>Highest Package</p>
+              </div>
+              <div className={styles['highlight-card']}>
+                <p className={styles['value']}>{stats.averagePackage}</p>
+                <p className={styles['label']}>Average Package</p>
+              </div>
             </div>
-            <div className={`${styles['highlight-card']} ${styles['special']}`}>
-              <p className={styles['value']}>{stats.highestPackage}</p>
-              <p className={styles['label']}>Highest Package</p>
-            </div>
-            <div className={styles['highlight-card']}>
-              <p className={styles['value']}>{stats.averagePackage}</p>
-              <p className={styles['label']}>Average Package</p>
-            </div>
-          </div>
+          </>
         )}
         <div className={styles['placed-students-section']}>
           <h2 className={styles['placed-students-title']}>PLACED STUDENTS</h2>

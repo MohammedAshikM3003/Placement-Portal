@@ -89,7 +89,7 @@ const setCache = (key, data) => {
 /**
  * Fast fetch with timeout and abort controller
  */
-const fastFetch = async (url, options = {}, timeoutMs = 15000) => {
+const fastFetch = async (url, options = {}, timeoutMs = 45000) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 

@@ -16,4 +16,8 @@ services:
         value: your-super-secret-jwt-key-change-this-in-production-12345
       - key: CORS_ORIGINS
         value: https://placement-portal.vercel.app,https://placement--portal.vercel.app
+      - key: OLLAMA_URL
+        value: https://unsyllabled-summer-proscience.ngrok-free.dev
+      - key: OLLAMA_MODEL
+        value: llama3:8b
     healthCheckPath: /api/health

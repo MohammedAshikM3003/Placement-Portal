@@ -151,6 +151,82 @@ class FastDataService {
     }
   }
 
+  // ⚡ NEW: Lightweight profile-only fetch (for authentication & sidebar)
+  async getProfileDataOnly(studentId, useCache = true) {
+    const cacheKey = `profile_${studentId}`;
+    
+    // Check cache first for instant loading
+    if (useCache && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        console.log('⚡ INSTANT: Using cached profile data');
+        return cached.data;
+      }
+    }
+
+    try {
+      console.log('🚀 FAST: Fetching profile data only...');
+      const startTime = Date.now();
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for profile only
+      
+      const authToken = localStorage.getItem('authToken');
+      const response = await fetch(`${this.baseURL}/students/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const student = await response.json();
+      const fetchTime = Date.now() - startTime;
+      console.log(`✅ PROFILE DATA FETCHED in ${fetchTime}ms:`, {
+        regNo: student.regNo,
+        hasProfilePic: !!student.profilePicURL
+      });
+
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: student,
+        timestamp: Date.now()
+      });
+
+      // Update localStorage
+      localStorage.setItem('studentData', JSON.stringify(student));
+
+      // Trigger update events
+      window.dispatchEvent(new CustomEvent('profileUpdated', { detail: student }));
+      window.dispatchEvent(new CustomEvent('studentDataUpdated', { detail: { student } }));
+
+      return student;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.error('❌ Profile fetch timeout');
+        error.message = 'Profile fetch timeout - please check your connection.';
+      } else {
+        console.error('❌ Profile fetch error:', error);
+      }
+      
+      // Fallback to localStorage if available
+      const cachedData = localStorage.getItem('studentData');
+      if (cachedData) {
+        console.log('⚠️ Using localStorage fallback for profile');
+        return JSON.parse(cachedData);
+      }
+      
+      throw error;
+    }
+  }
+
   // ⚡ INSTANT: Update profile with immediate cache update
   async updateProfile(studentId, profileData) {
     try {
@@ -179,6 +255,14 @@ class FastDataService {
       if (this.cache.has(cacheKey)) {
         const cached = this.cache.get(cacheKey);
         cached.data.student = { ...cached.data.student, ...result.student };
+        cached.timestamp = Date.now();
+      }
+
+      // Update profile-only cache too
+      const profileCacheKey = `profile_${studentId}`;
+      if (this.cache.has(profileCacheKey)) {
+        const cached = this.cache.get(profileCacheKey);
+        cached.data = { ...cached.data, ...result.student };
         cached.timestamp = Date.now();
       }
 

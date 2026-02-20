@@ -430,6 +430,19 @@ try {
 }
 
 // -------------------------------------------------
+// Ollama AI Status API
+// -------------------------------------------------
+app.get('/api/ai/status', async (req, res) => {
+    try {
+        const { checkOllamaStatus } = require('./ollamaService');
+        const status = await checkOllamaStatus();
+        res.json({ success: true, ...status });
+    } catch (error) {
+        res.json({ success: false, running: false, error: error.message });
+    }
+});
+
+// -------------------------------------------------
 // Branches and Degrees APIs
 // -------------------------------------------------
 

@@ -75,25 +75,27 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         
         if (storedData?._id) {
           const { default: fastDataService } = await import('../../services/fastDataService.jsx');
-          const completeData = await fastDataService.getCompleteStudentData(storedData._id);
           
-          if (completeData?.student) {
-            cachedStudentData = completeData.student;
+          // ⚡ OPTIMIZED: Fetch ONLY profile data (not complete data with resume/certificates)
+          const profileData = await fastDataService.getProfileDataOnly(storedData._id);
+          
+          if (profileData) {
+            cachedStudentData = profileData;
             cacheTimestamp = Date.now();
-            setCurrentStudentData(completeData.student);
+            setCurrentStudentData(profileData);
             setImageError(false);
             setImageKey(Date.now());
             
-            if (completeData.student.profilePicURL) {
+            if (profileData.profilePicURL) {
               const img = new Image();
               img.onload = () => setImageKey(Date.now());
               img.onerror = () => setImageError(true);
-              img.src = completeData.student.profilePicURL;
+              img.src = profileData.profilePicURL;
             }
           }
         }
       } catch (error) {
-        console.error('❌ Sidebar: Error fetching from MongoDB:', error);
+        console.error('❌ Sidebar: Error fetching profile from MongoDB:', error);
       } finally {
         setIsLoading(false);
       }

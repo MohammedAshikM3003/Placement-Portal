@@ -11,7 +11,7 @@
 // - Achievements
 // - Page Limit (1-2 pages)
 
-import multiProviderService from './multiProviderService.js';
+import multiProviderService from './multiProviderService.jsx';
 
 class ResumeAnalysisService {
   constructor() {

@@ -432,17 +432,17 @@ export const AuthProvider = ({ children }) => {
           _loginTimestamp: Date.now()
         };
         
-        // 4. Run ESSENTIAL data preloading (profile + attendance) BEFORE navigation
-        // This ensures dashboard is fully ready when user arrives
+        // 4. ⚡ OPTIMIZED: Only fetch ESSENTIAL data (profile + attendance) during login
+        // All other data (resume, certificates, achievements) will be fetched when user navigates to those pages
         setTimeout(async () => {
           try {
-            console.log('📥 AuthContext: Fetching essential data (profile + attendance)...');
+            console.log('📥 AuthContext: Fetching ESSENTIAL data ONLY (profile + attendance)...');
             const fastDataService = (await import('../services/fastDataService.jsx')).default;
             
-            // Fetch complete student data (includes profile pic)
-            await fastDataService.getCompleteStudentData(completeStudentData._id, false);
+            // ⚡ Fetch ONLY profile data (lightweight, no resume/certificates)
+            await fastDataService.getProfileDataOnly(completeStudentData._id, false);
             
-            // Fetch and cache attendance data
+            // ⚡ Fetch and cache attendance data
             const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
             try {
               const attendanceResponse = await mongoDBService.getStudentAttendanceByRegNo(loginResult.student.regNo);
@@ -463,35 +463,17 @@ export const AuthProvider = ({ children }) => {
             
             // Signal that essential data is ready
             window.dispatchEvent(new CustomEvent('studentDataReady'));
-            console.log('✅ Essential data ready, signaling navigation');
-            
-            // Notify listeners about profile update (but don't trigger refetch)
-            window.dispatchEvent(new CustomEvent('profileUpdated', {
-              detail: completeStudentData
-            }));
+            console.log('✅ Essential data ready (profile + attendance only), navigation enabled');
             
           } catch (err) {
-            console.warn('⚠️ Data preload failed, allowing navigation anyway:', err);
+            console.warn('⚠️ Essential data fetch failed, allowing navigation anyway:', err);
             // Still signal ready so navigation isn't blocked
             window.dispatchEvent(new CustomEvent('studentDataReady'));
           }
         }, 0);
         
-        // Continue OPTIONAL background fetch (resume, certificates) after navigation
-        setTimeout(async () => {
-          try {
-            const fastDataService = (await import('../services/fastDataService.jsx')).default;
-
-            // Preload optional data (resume, certificates) in background
-            // This happens AFTER the user is already on the dashboard
-            await fastDataService.preloadResumeData(completeStudentData._id);
-            await fastDataService.preloadCertificatesData(completeStudentData._id);
-
-            console.log('✅ AuthContext: Optional data preloaded (resume, certificates)');
-          } catch (bgError) {
-            console.warn('⚠️ AuthContext: Optional data fetch error (non-critical):', bgError);
-          }
-        }, 2000); // Delay 2 seconds after navigation
+        // ⚡ NO background fetching of resume/certificates during login
+        // These will be fetched lazily when user navigates to Resume/Achievements pages
 
         return { success: true, role: 'student' };
       } else {

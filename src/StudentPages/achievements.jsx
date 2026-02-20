@@ -217,10 +217,10 @@ function AchievementsContent() {
     title: 'Select a Certificate',
     message: 'Please choose a certificate row to continue.'
   });
-  const [sortBy, setSortBy] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [yearSemesterFilter, setYearSemesterFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("");
 
   // NEW: Download/Preview popup states
   const [downloadPopupState, setDownloadPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
@@ -228,9 +228,6 @@ function AchievementsContent() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [previewProgress, setPreviewProgress] = useState(0);
   const [isFetchingCertificate, setIsFetchingCertificate] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({
-    searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "",
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [, setStudentData] = useState(null);
@@ -1415,14 +1412,14 @@ This record is locked and cannot be modified.
     
     setSelectedRows(newSelectedRows);
   };
-  const handleSortChange = (e) => setSortBy(e.target.value);
   const handleStatusFilterChange = (e) => setStatusFilter(e.target.value);
-  // FIX: Renamed function from handleYearSemesterFilterChange to handleYearSemesterChange for consistency, 
-  // then removed handleYearSemesterFilterChange to resolve the "assigned but never used" warning.
-  const handleYearSemesterChange = (e) => setYearSemesterFilter(e.target.value); 
+  const handleYearChange = (e) => {
+    const nextYear = e.target.value;
+    setYearFilter(nextYear);
+    setSemesterFilter("");
+  };
+  const handleSemesterChange = (e) => setSemesterFilter(e.target.value);
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handleApplyFilters = () => { setAppliedFilters({ searchQuery, yearSemesterFilter, statusFilter, sortBy }); };
-  const handleClearFilters = () => { setSearchQuery(""); setYearSemesterFilter(""); setSortBy(""); setStatusFilter("all"); setAppliedFilters({ searchQuery: "", yearSemesterFilter: "", statusFilter: "all", sortBy: "" }); };
   
   
 
@@ -1710,25 +1707,23 @@ This record is locked and cannot be modified.
       .filter(Boolean);
 
     let filtered = [...normalized];
-    const { searchQuery, yearSemesterFilter, statusFilter, sortBy } = appliedFilters;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(a => (a.comp || '').toLowerCase().includes(query));
+      filtered = filtered.filter(a => {
+        const competition = (a.comp || '').toLowerCase();
+        const prize = (a.prize || '').toLowerCase();
+        return competition.includes(query) || prize.includes(query);
+      });
     }
-    if (yearSemesterFilter) {
-      const [year, semester] = yearSemesterFilter.split('/');
-      filtered = filtered.filter(a => a.year === year && a.semester === semester);
+    if (yearFilter) {
+      filtered = filtered.filter(a => a.year === yearFilter);
+    }
+    if (semesterFilter) {
+      filtered = filtered.filter(a => a.semester === semesterFilter);
     }
     if (statusFilter !== 'all') {
       const normalizedStatus = statusFilter.toLowerCase();
       filtered = filtered.filter(a => a.status === normalizedStatus);
-    }
-    if (sortBy) {
-      return [...filtered].sort((a, b) => {
-        if (sortBy === 'date') return new Date(b.date || 0) - new Date(a.date || 0);
-        if (sortBy === 'prize') return (a.prize || '').localeCompare(b.prize || '');
-        return 0;
-      });
     }
     return filtered;
   };
@@ -1755,24 +1750,43 @@ This record is locked and cannot be modified.
                 <div className={styles['achievements-input-container']}>
                     {/* FIX: Combined local styles object with CSS module class names */}
                     <input type="text" id="competitionName" value={searchQuery} onChange={handleSearchChange} className={`${styles['achievements-filter-input']} ${searchQuery ? styles['achievements-has-value'] : ''}`} />
-                    <label htmlFor="competitionName" className={styles['achievements-floating-label']}>Enter Competition Name</label>
+                    <label htmlFor="competitionName" className={styles['achievements-floating-label']}>Competition Name / Prize</label>
                 </div>
-                {/* FIX: Changed onChange handler from handleYearSemesterChange to the defined function name */}
-                <select value={yearSemesterFilter} onChange={handleYearSemesterChange} className={styles['achievements-filter-input']}>
-                    <option value="">Year/Semester</option><option value="I/1">I/1</option><option value="I/2">I/2</option><option value="II/3">II/3</option><option value="II/4">II/4</option><option value="III/5">III/5</option><option value="III/6">III/6</option><option value="IV/7">IV/7</option><option value="IV/8">IV/8</option>
+                <select value={yearFilter} onChange={handleYearChange} className={styles['achievements-filter-input']}>
+                    <option value="">Year</option><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option>
                 </select>
-                <select value={sortBy} onChange={handleSortChange} className={styles['achievements-filter-input']}>
-                    <option value="" disabled>Sort by</option><option value="date">Date</option><option value="prize">Prize</option>
+                <select value={semesterFilter} onChange={handleSemesterChange} className={styles['achievements-filter-input']} disabled={!yearFilter}>
+                    <option value="">Sem (Choose Year first)</option>
+                    {yearFilter === 'I' && (
+                      <>
+                        <option value="1">I</option>
+                        <option value="2">II</option>
+                      </>
+                    )}
+                    {yearFilter === 'II' && (
+                      <>
+                        <option value="3">III</option>
+                        <option value="4">IV</option>
+                      </>
+                    )}
+                    {yearFilter === 'III' && (
+                      <>
+                        <option value="5">V</option>
+                        <option value="6">VI</option>
+                      </>
+                    )}
+                    {yearFilter === 'IV' && (
+                      <>
+                        <option value="7">VII</option>
+                        <option value="8">VIII</option>
+                      </>
+                    )}
                 </select>
                 <select value={statusFilter} onChange={handleStatusFilterChange} className={styles['achievements-filter-input']}>
                     <option value="all">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option>
                 </select>
             </div>
-            {/* FIX: Converted className to styles.className */}
-            <div className={styles['filter-actions']}>
-                <button className={styles['achievements-apply-sort-btn']} onClick={handleApplyFilters}>Apply</button>
-                <button className={styles['achievements-clear-filter-btn']} onClick={handleClearFilters}>Clear</button>
-            </div>
+            <div className={styles['filter-actions-spacer']}></div>
         </div>
         {/* FIX: Converted className to styles.className */}
         <div className={styles['achievements-action-card']} onClick={handleEditClick}>

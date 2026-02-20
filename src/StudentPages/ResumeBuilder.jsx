@@ -406,7 +406,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
     const projWordLimit = pageLimit === '1' ? '20-35' : pageLimit === '2' ? '35-55' : '45-70';
     
     try {
-      const { default: aiService } = await import('../services/openaiService.jsx');
+      const { default: aiService } = await import('../services/ollamaService.jsx');
       
       // 1. BATCH AI GENERATION (Replaces individual loops)
       
@@ -871,7 +871,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         setCreateProgress(0);
         setTimeout(() => {
           setIsCreating(false);
-          alert('Gemini AI rate limit reached. Please wait 1-2 minutes and click Create again. Your data is saved.');
+          alert('AI generation failed. Please make sure Ollama is running and try again. Your data is saved.');
         }, 500);
         return;
       }
