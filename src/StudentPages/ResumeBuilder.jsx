@@ -406,7 +406,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
     const projWordLimit = pageLimit === '1' ? '20-35' : pageLimit === '2' ? '35-55' : '45-70';
     
     try {
-      const { default: geminiService } = await import('../services/geminiService.jsx');
+      const { default: aiService } = await import('../services/openaiService.jsx');
       
       // 1. BATCH AI GENERATION (Replaces individual loops)
       
@@ -459,10 +459,10 @@ Rules:
         try {
           console.log('🤖 Sending Batch AI Request...');
           // Call AI Service (Single Request)
-          const resultText = await geminiService.generateContent(batchPrompt, 'json');
+          const resultText = await aiService.generateContent(batchPrompt, 'json');
           
           // Parse Response
-          const result = geminiService.cleanJson(resultText);
+          const result = aiService.cleanJson(resultText);
           
           if (result) {
             // Apply Summary
