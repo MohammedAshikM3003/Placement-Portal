@@ -12,6 +12,7 @@ import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import mongoDBService from "../services/mongoDBService";
 import { fetchCollegeImages } from '../services/collegeImagesService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // IMPORT THE MODULE CSS
 import styles from "./Admin_Dashboard.module.css";
 
@@ -130,6 +131,11 @@ function AdminDashboard({ onLogout, currentView, onViewChange }) {
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0 });
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
   const [collegeLogoUrl, setCollegeLogoUrl] = useState(ksrCollegeImage); // Default fallback
+
+  // Change favicon to admin (green flipped) for admin dashboard
+  useEffect(() => {
+    changeFavicon(FAVICON_TYPES.ADMIN);
+  }, []);
 
   // Fetch college logo from DB
   useEffect(() => {

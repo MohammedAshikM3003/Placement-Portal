@@ -16,6 +16,7 @@ import BlockedPopup from './components/BlockedPopup/BlockedPopup.jsx';
 import { BLOCKED_INFO_STORAGE_KEY } from './constants/storageKeys';
 import { API_BASE_URL } from './utils/apiConfig';
 import styles from './mainlogin.module.css';
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 // Internal Popup Component using Module Styles
 const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
@@ -77,6 +78,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       sessionStorage.removeItem(BLOCKED_INFO_STORAGE_KEY);
     }
   };
+
+  // Change favicon to default (purple) for login page
+  useEffect(() => {
+    changeFavicon(FAVICON_TYPES.DEFAULT);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

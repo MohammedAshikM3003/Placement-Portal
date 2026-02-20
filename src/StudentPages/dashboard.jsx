@@ -9,6 +9,7 @@ import certificateuploadicon from "../assets/UploadCertificatecardicon.svg";
 import mongoDBService from '../services/mongoDBService';
 import { fetchCollegeImages } from '../services/collegeImagesService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // Import CSS Module
 import styles from "./dashboard.module.css";
 
@@ -86,6 +87,11 @@ const AttendanceChart = ({ present, absent, isLoading }) => {
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(ksrCollegeImage); // Default fallback
+
+  // Change favicon to student (blue) for student dashboard
+  React.useEffect(() => {
+    changeFavicon(FAVICON_TYPES.STUDENT);
+  }, []);
 
   // Fetch college logo from DB
   React.useEffect(() => {

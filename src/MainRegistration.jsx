@@ -14,6 +14,7 @@ import otherDetailsIcon from "./assets/otherdetails.svg";
 import logindetailsIcon from "./assets/logindetails.svg";
 import styles from "./MainRegistration.module.css";
 import mongoDBService from './services/mongoDBService';
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 const GPA_REGEX = /^\d{1,2}(?:\.\d{0,2})?$/;
 const GPA_MIN = 0;
@@ -984,6 +985,11 @@ function MainRegistration() {
 
   const handleCancelDiscard = useCallback(() => {
     setIsDiscardPopupOpen(false);
+  }, []);
+
+  // Change favicon to blue for registration page
+  useEffect(() => {
+    changeFavicon(FAVICON_TYPES.STUDENT);
   }, []);
 
   useEffect(() => {

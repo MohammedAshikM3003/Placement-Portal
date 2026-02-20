@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from "./Coo_Dashboard.module.css";
 import mongoDBService from '../services/mongoDBService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 
 import Coordmyacc from "../assets/Coordmyacc.svg";
 import UpcomingDriveIcon from "../assets/UpcomingDriveIcon.svg";
@@ -102,6 +103,11 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
   const [upcomingDrive, setUpcomingDrive] = useState(null);
   const [isLoadingUpcomingDrive, setIsLoadingUpcomingDrive] = useState(true);
+
+  // Change favicon to coordinator (red flipped) for coordinator dashboard
+  React.useEffect(() => {
+    changeFavicon(FAVICON_TYPES.COORDINATOR);
+  }, []);
 
   // Fetch college logo from DB
   React.useEffect(() => {

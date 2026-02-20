@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainRegistration from "./MainRegistration.jsx";
 import MainRegistrationPopUp from "./MainRegistrationPopUp.jsx";
@@ -7,11 +7,17 @@ import loginImage from "./assets/student1.png";
 import mainloginicon from "./assets/mainloginicon.png";
 import Navbar from "./components/Navbar/LandingNavbar.js";
 import styles from "./MainSingUp.module.css"; // Import the CSS Module
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 const MainSignUp = ({ onNavigateToLogin, onNavigateToCoordinator }) => {
   const navigate = useNavigate();
   const [showUgRegistration, setShowUgRegistration] = useState(false);
   const [showRegistrationPopup, setShowRegistrationPopup] = useState(false);
+
+  // Change favicon to default (purple) for signup page
+  useEffect(() => {
+    changeFavicon(FAVICON_TYPES.DEFAULT);
+  }, []);
 
   const handleUgClick = () => { setShowRegistrationPopup(true); };
   const handlePopupContinue = () => { setShowRegistrationPopup(false); setShowUgRegistration(true); };

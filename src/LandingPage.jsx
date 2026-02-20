@@ -5,6 +5,7 @@ import styles from './LandingPage.module.css';
 import Navbar from "../src/components/Navbar/LandingNavbar.js";
 import { fetchAllLandingData } from './services/landingPageCacheService';
 import { PlacedStudentsSkeleton, DrivesSkeleton } from './components/SkeletonLoader/SkeletonLoader';
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 // --- Assets (Fallback images) ---
 import StudentIcon from './assets/LandingStudentIcon.png';
@@ -381,6 +382,9 @@ const LandingPageContent = () => {
   const [companyDrivesData, setCompanyDrivesData] = useState(null);
 
   useEffect(() => {
+    // Change favicon to default (purple) for landing page
+    changeFavicon(FAVICON_TYPES.DEFAULT);
+
     // Fetch ALL landing page data in PARALLEL with caching
     const loadAllData = async () => {
       try {
