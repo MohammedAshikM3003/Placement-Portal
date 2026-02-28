@@ -32,6 +32,15 @@ const isCacheFresh = (key, duration) => {
   // Check memory first
   if (memoryCache.has(key)) {
     const entry = memoryCache.get(key);
+    // Invalidate if cached data contains localhost URLs (stale from dev)
+    if (entry.data && typeof entry.data === 'object') {
+      const vals = Object.values(entry.data);
+      if (vals.some(v => typeof v === 'string' && v.includes('localhost'))) {
+        memoryCache.delete(key);
+        try { sessionStorage.removeItem(key); sessionStorage.removeItem(key + '_time'); } catch(e) {}
+        return false;
+      }
+    }
     if (Date.now() - entry.timestamp < duration) {
       return true;
     }
@@ -41,6 +50,13 @@ const isCacheFresh = (key, duration) => {
   try {
     const timestamp = sessionStorage.getItem(key + '_time');
     if (timestamp && Date.now() - parseInt(timestamp, 10) < duration) {
+      // Also check for stale localhost URLs in sessionStorage
+      const data = sessionStorage.getItem(key);
+      if (data && data.includes('localhost')) {
+        sessionStorage.removeItem(key);
+        sessionStorage.removeItem(key + '_time');
+        return false;
+      }
       return true;
     }
   } catch (e) { /* ignore */ }
