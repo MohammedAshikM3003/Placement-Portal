@@ -144,15 +144,23 @@ class AdminImageCacheService {
           await this.cacheAdminProfilePhoto(adminLoginID, result.data.profilePhoto);
           
           // Preload the actual image to browser cache
-          if (result.data.profilePhoto.startsWith('data:image/')) {
+          if (result.data.profilePhoto.startsWith('data:image/') || 
+              result.data.profilePhoto.startsWith('/api/file/') ||
+              result.data.profilePhoto.includes('/api/file/')) {
             const img = new Image();
             img.onload = () => {
-              console.log('✅ Admin profile photo preloaded to browser cache');
+              console.log('\u2705 Admin profile photo preloaded to browser cache');
             };
             img.onerror = () => {
-              console.warn('⚠️ Admin profile photo failed to preload to browser');
+              console.warn('\u26A0\uFE0F Admin profile photo failed to preload to browser');
             };
-            img.src = result.data.profilePhoto;
+            // For GridFS URLs, resolve to full URL
+            let imgSrc = result.data.profilePhoto;
+            if (imgSrc.startsWith('/api/file/')) {
+              const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+              imgSrc = `${API_BASE}${imgSrc}`;
+            }
+            img.src = imgSrc;
           }
 
           console.log('✅ Admin profile photo cached and preloaded');

@@ -19,7 +19,7 @@ const CACHE_KEYS = {
 const CACHE_DURATION = {
   PLACED_STUDENTS: 10 * 60 * 1000,  // 10 minutes
   COMPANY_DRIVES: 10 * 60 * 1000,   // 10 minutes
-  COLLEGE_IMAGES: 30 * 60 * 1000,   // 30 minutes (images change rarely)
+  COLLEGE_IMAGES: 5 * 60 * 1000,    // 5 minutes (reduced for faster updates)
 };
 
 // In-memory cache for instant access (even faster than sessionStorage)
@@ -145,6 +145,17 @@ const fetchCompanyDrives = async () => {
 
   try {
     const data = await fastFetch(`${API_BASE_URL}/company-drives`);
+    
+    // Validate that essential fields exist for landing page
+    if (data?.drives?.length > 0) {
+      const landingPageFields = ['companyName', 'startingDate', 'package'];
+      const sample = data.drives[0];
+      const missingFields = landingPageFields.filter(field => !(field in sample));
+      if (missingFields.length > 0) {
+        console.warn('⚠️ Landing page: Company drives missing fields:', missingFields);
+      }
+    }
+    
     setCache(key, data);
     return data;
   } catch (error) {
@@ -156,42 +167,82 @@ const fetchCompanyDrives = async () => {
 };
 
 /**
+ * Clear college images cache (used when admin updates images)
+ */
+export const clearCollegeImagesCache = () => {
+  try {
+    const hadCache = memoryCache.has(CACHE_KEYS.COLLEGE_IMAGES) || sessionStorage.getItem(CACHE_KEYS.COLLEGE_IMAGES);
+    sessionStorage.removeItem(CACHE_KEYS.COLLEGE_IMAGES);
+    sessionStorage.removeItem(CACHE_KEYS.COLLEGE_IMAGES_TIME);
+    memoryCache.delete(CACHE_KEYS.COLLEGE_IMAGES);
+    console.log(hadCache 
+      ? '✅ Landing page college images cache cleared (had stale data)' 
+      : '✅ Landing page college images cache cleared (was already empty)');
+  } catch (e) {
+    console.warn('⚠️ Failed to clear college images cache:', e);
+  }
+};
+
+/**
  * Fetch college images from public endpoint
  */
-const fetchCollegeImagesPublic = async () => {
+export const fetchCollegeImagesPublic = async () => {
   const key = CACHE_KEYS.COLLEGE_IMAGES;
 
   if (isCacheFresh(key, CACHE_DURATION.COLLEGE_IMAGES)) {
     return getCached(key);
   }
 
+  // Helper: resolve GridFS paths (/api/file/xxx) to full backend URLs
+  // Empty string is explicitly treated as null so Landing Page never renders a broken <img>
+  const resolveUrl = (val) => {
+    if (!val || val === '' || typeof val !== 'string') return null;
+    if (val.startsWith('data:') || val.startsWith('http')) return val;
+    if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
+    if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
+    return val;
+  };
+
+  const resolveImages = (data) => ({
+    collegeBanner: resolveUrl(data.collegeBanner) || null,
+    naacCertificate: resolveUrl(data.naacCertificate) || null,
+    nbaCertificate: resolveUrl(data.nbaCertificate) || null,
+    collegeLogo: resolveUrl(data.collegeLogo) || null,
+  });
+
   try {
-    const data = await fastFetch(`${API_BASE_URL}/public/college-images`, {}, 10000);
+    // Public endpoint requires adminLoginID param
+    const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
+    const data = await fastFetch(`${API_BASE_URL}/public/college-images/${adminLoginID}`, {}, 10000);
     if (data.success && data.data) {
-      setCache(key, data.data);
-      return data.data;
+      const resolved = resolveImages(data.data);
+      setCache(key, resolved);
+      console.log('📥 College images fetched from MongoDB:', {
+        hasBanner: !!resolved.collegeBanner,
+        hasNAAC: !!resolved.naacCertificate,
+        hasNBA: !!resolved.nbaCertificate,
+        hasLogo: !!resolved.collegeLogo
+      });
+      return resolved;
     }
+    console.log('⚠️ No college images data returned from backend');
     return null;
   } catch (error) {
     // Fallback: try admin profile endpoint if user has token
     try {
       const authToken = localStorage.getItem('authToken');
       const authRole = localStorage.getItem('authRole');
+      const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
       if (authToken && authRole === 'admin') {
         const adminData = await fastFetch(
-          `${API_BASE_URL}/admin/profile/admin1000`,
+          `${API_BASE_URL}/admin/profile/${adminLoginID}`,
           { headers: { Authorization: `Bearer ${authToken}` } },
           10000
         );
         if (adminData.success && adminData.data) {
-          const images = {
-            collegeBanner: adminData.data.collegeBanner || null,
-            naacCertificate: adminData.data.naacCertificate || null,
-            nbaCertificate: adminData.data.nbaCertificate || null,
-            collegeLogo: adminData.data.collegeLogo || null,
-          };
-          setCache(key, images);
-          return images;
+          const resolved = resolveImages(adminData.data);
+          setCache(key, resolved);
+          return resolved;
         }
       }
     } catch (fallbackErr) {
@@ -267,6 +318,7 @@ const landingPageCacheService = {
   fetchCollegeImagesPublic,
   warmUpBackend,
   clearLandingCache,
+  clearCollegeImagesCache,
 };
 
 export default landingPageCacheService;

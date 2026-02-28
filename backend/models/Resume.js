@@ -15,17 +15,80 @@ const resumeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Legacy Base64 fields (deprecated - use GridFS instead)
   pdfData: {
-    type: String, // Base64 encoded PDF
-    required: true
+    type: String,
+    required: false,
+    default: ''
   },
   url: {
-    type: String, // Data URL for easy access
-    required: true
+    type: String,
+    required: false,
+    default: ''
+  },
+  // GridFS fields (preferred)
+  gridfsFileId: {
+    type: String,
+    index: true
+  },
+  gridfsFileUrl: {
+    type: String
+  },
+  fileName: {
+    type: String
+  },
+  fileSize: {
+    type: Number
+  },
+  fileType: {
+    type: String,
+    default: 'application/pdf'
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
   },
   resumeData: {
     type: mongoose.Schema.Types.Mixed, // Store the form data
     default: null
+  },
+  atsAnalysis: {
+    overallScore: {
+      type: Number,
+      default: null
+    },
+    totalIssues: {
+      type: Number,
+      default: 0
+    },
+    categories: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    },
+    suggestions: {
+      type: [String],
+      default: []
+    },
+    strengths: {
+      type: [String],
+      default: []
+    },
+    criticalFixes: {
+      type: [String],
+      default: []
+    },
+    overallTips: {
+      type: [String],
+      default: []
+    },
+    aiEnhanced: {
+      type: Boolean,
+      default: false
+    },
+    analyzedAt: {
+      type: Date,
+      default: null
+    }
   },
   createdAt: {
     type: Date,

@@ -34,6 +34,27 @@
     background-color: #4338CA;
 }
 
+/* Mobile Scrollbar */
+@media (max-width: 900px) {
+    .mr-dashboard-area::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-thumb {
+        background-color: #2085f6;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .mr-dashboard-area::-webkit-scrollbar-thumb:hover {
+        background-color: #4338CA;
+    }
+}
+
 /* Hide default password icons */
 .mr-page-wrapper input[type="password"]::-ms-reveal,
 .mr-page-wrapper input[type="password"]::-webkit-credentials-auto-fill-button { 
@@ -133,6 +154,10 @@
     font-family: 'Poppins', sans-serif;
 }
 
+.mr-form-grid .mr-mobile-input-wrapper {
+    width: 100%;
+}
+
 .mr-form-grid input::placeholder,
 .mr-form-grid textarea::placeholder {
     color: #9aa7c2;
@@ -149,6 +174,70 @@
     outline: none;
     border-color: #2085f6;
     box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.mr-form-grid .mr-mobile-input-wrapper .mr-mobile-input {
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+    background-color: transparent !important;
+}
+
+/* Mobile Input with Prefix Styles */
+.mr-mobile-input-wrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    background-color: #f9fbff;
+    overflow: hidden;
+    box-sizing: border-box;
+    align-items: stretch;
+    min-height: unset;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mr-mobile-input-wrapper:hover {
+    border-color: #2085f6;
+}
+
+.mr-mobile-input-wrapper:focus-within {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.mr-mobile-prefix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 0.75rem;
+    background-color: #2085f6;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+    min-width: 60px;
+    border-radius: 8px 0 0 8px;
+    box-sizing: border-box;
+}
+
+.mr-mobile-input {
+    flex: 1;
+    padding: 0.9rem;
+    border: none;
+    font-size: 0.95rem;
+    background-color: transparent;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.mr-mobile-input::placeholder {
+    color: #9aa7c2;
+    opacity: 1;
 }
 
 .mr-field {
@@ -783,18 +872,82 @@
 
 /* Mobile Responsive */
 @media (max-width: 900px) {
-    .mr-container { overflow: auto; }
+    .mr-container { overflow: hidden; }
     .mr-main { margin-top: 50px; height: auto; }
-    .mr-dashboard-area { margin-left: 0; padding: 15px; height: auto; overflow-y: visible !important; padding-bottom: 120px; }
+    .mr-dashboard-area { 
+        margin-left: 0; 
+        padding: 15px; 
+        height: calc(100vh - 50px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 120px;
+        box-sizing: border-box;
+        width: 100%;
+    }
 
-    .mr-form-grid { display: block; }
-    .mr-personal-info-fields { display: block; grid-column: auto; }
-    .mr-profile-photo-wrapper { margin-top: 1.5rem; }
-    .mr-form-grid input, .mr-form-grid select { margin-bottom: 1rem; }
-    .mr-checkbox-group { padding: 0.85rem; margin-bottom: 1rem; }
-    .mr-checkbox-group__options { gap: 0.5rem; }
-    .mr-checkbox-option { font-size: 0.88rem; }
-    .mr-checkbox-option input[type="checkbox"] { width: 16px; height: 16px; }
+    .mr-form-grid { 
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+    .mr-personal-info-fields { 
+        grid-column: auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .mr-profile-photo-wrapper { 
+        grid-column: auto;
+        margin-top: 1.5rem; 
+    }
+    .mr-form-grid input, 
+    .mr-form-grid select,
+    .mr-form-grid .mr-mobile-input-wrapper { 
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #dde6f4;
+        border-radius: 8px;
+        background-color: #f9fbff;
+        font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .mr-form-grid input,
+    .mr-form-grid select { 
+        padding: 0.9rem;
+    }
+    
+    /* Mobile-specific styles for mobile input wrapper */
+    .mr-form-grid .mr-mobile-input-wrapper {
+        width: 100%;
+        padding: 0;
+        min-height: 44px;
+        align-items: stretch;
+        box-sizing: border-box;
+        display: flex;
+    }
+    
+    .mr-form-grid .mr-mobile-prefix {
+        padding: 0.9rem 0.75rem;
+        font-size: 0.95rem;
+        min-width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .mr-form-grid .mr-mobile-input {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+        flex: 1;
+    }
+    
+    .mr-checkbox-group { padding: 1rem 1.1rem 1.2rem; margin-bottom: 1rem; }
+    .mr-checkbox-group__options { gap: 0.65rem; }
+    .mr-checkbox-option { font-size: 0.9rem; }
+    .mr-checkbox-option input[type="checkbox"] { width: 18px; height: 18px; }
 
     .mr-action-buttons { flex-direction: column; padding-bottom: 2rem; }
     .mr-action-buttons button { width: 100%; padding: 1.2rem; }

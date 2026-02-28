@@ -195,12 +195,8 @@ Please compress your PDF or choose a smaller file.`);
     }
 
     try {
-      // Convert file to base64 directly
-      const fileData = await certificateService.fileToBase64(file);
-
-      // Remove data URL prefix for cleaner storage in MongoDB
-      const base64Data = fileData.split(',')[1] || fileData;
-      setFileContent(base64Data);
+      // Store raw file for GridFS upload on submit
+      setFileContent(file); // Store File object instead of base64
       setError("");
       setFileName(file.name);
       setLastUploaded(formatDate(new Date()));
@@ -265,7 +261,8 @@ Please compress your PDF or choose a smaller file.`);
       prize: formData.prize,
       status: "pending",
       fileName: fileName,
-      fileData: fileContent, // This is now the base64 data
+      fileData: '', // No longer sending base64, using GridFS
+      rawFile: fileContent, // Pass File object for GridFS upload by parent
       fileType,
       fileSize,
       uploadDate: formatDate(new Date()),

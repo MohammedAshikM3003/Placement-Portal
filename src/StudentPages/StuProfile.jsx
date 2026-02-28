@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { API_BASE_URL } from '../utils/apiConfig';
@@ -8,8 +9,11 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import styles from './StuProfile.module.css'; // Module Import
 import achievementStyles from './Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/BlueAdminicon.png';
+import StuEyeIcon from '../assets/StuEyeicon.svg';
+import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
+import gridfsService from '../services/gridfsService';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -248,6 +252,7 @@ function StuProfile({ onLogout, onViewChange }) {
     const [studyCategory, setStudyCategory] = useState('12th');
     const [isPopupOpen, setPopupOpen] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
+    const [profilePhotoFile, setProfilePhotoFile] = useState(null); // Raw File for GridFS upload on Save
     const [uploadInfo, setUploadInfo] = useState({ name: '', date: '' });
     const formRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -255,7 +260,15 @@ function StuProfile({ onLogout, onViewChange }) {
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [dob, setDob] = useState(null);
-    const [studentData, setStudentData] = useState(null);
+    const [studentData, setStudentData] = useState(() => {
+        // Initialize from cache to prevent layout shifts
+        try {
+            const cached = JSON.parse(localStorage.getItem('studentData') || 'null');
+            return cached || null;
+        } catch {
+            return null;
+        }
+    });
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -354,7 +367,9 @@ function StuProfile({ onLogout, onViewChange }) {
         }
         
         if (merged.profilePicURL) {
-            setProfileImage(merged.profilePicURL);
+            // Resolve GridFS URLs to full backend URL for display
+            const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
+            setProfileImage(resolvedUrl);
             setUploadInfo({
                 name: 'profile.jpg',
                 date: merged.profileUploadDate || new Date().toLocaleDateString('en-GB')
@@ -413,7 +428,7 @@ function StuProfile({ onLogout, onViewChange }) {
         };
     }, [loadStudentData]);
 
-    // Auto-sync mechanism: Check for profile updates every 10 seconds
+    // Auto-sync mechanism: Check for profile updates every 30 seconds
     useEffect(() => {
         const checkForUpdates = async () => {
             try {
@@ -422,9 +437,9 @@ function StuProfile({ onLogout, onViewChange }) {
                 
                 const studentId = storedStudentData._id || storedStudentData.id;
                 
-                // Fetch latest data from server with JWT token
+                // Use the lightweight status endpoint instead of full student fetch
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
+                const response = await fetch(`${API_BASE_URL}/students/${studentId}/status`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
@@ -432,144 +447,94 @@ function StuProfile({ onLogout, onViewChange }) {
                 });
                 if (!response.ok) return;
                 
-                const latestData = await response.json();
-                const serverUpdatedAt = latestData.updatedAt;
+                const statusData = await response.json();
+                if (!statusData.success) return;
                 
-                // Compare timestamps - if server data is newer, refresh profile
-                if (serverUpdatedAt && lastSyncTime) {
-                    const serverTime = new Date(serverUpdatedAt).getTime();
-                    const localTime = new Date(lastSyncTime).getTime();
-                    
-                    if (serverTime > localTime) {
-                        console.log('Profile updated by admin - Auto-syncing...');
-                        
-                        // Update localStorage with fresh data
-                        localStorage.setItem('studentData', JSON.stringify(latestData));
-                        
-                        // Refresh the form fields with latest data
-                        populateFormFields(latestData);
-                        
-                        // Update sync time
-                        setLastSyncTime(serverUpdatedAt);
-                        
-                        // Show notification
-                        setShowUpdateNotification(true);
-                        setTimeout(() => setShowUpdateNotification(false), 5000);
-                        
-                        // Dispatch event for other components
-                        window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                            detail: { profilePicURL: latestData.profilePicURL, studentData: latestData } 
-                        }));
-                    }
+                // If blocked status changed, handle it
+                if (statusData.student?.blocked) {
+                    console.warn('Account blocked by admin');
                 }
             } catch (error) {
-                console.error('Auto-sync check failed:', error);
+                // Silently ignore sync errors to avoid console spam
             }
         };
         
-        // Check for updates every 10 seconds
-        const syncInterval = setInterval(checkForUpdates, 10000);
+        // Check for updates every 30 seconds (reduced from 10s)
+        const syncInterval = setInterval(checkForUpdates, 30000);
         
         // Cleanup interval on unmount
         return () => clearInterval(syncInterval);
-    }, [lastSyncTime]);
-
-    // Auto-sync mechanism: Check for profile updates every 10 seconds
-    useEffect(() => {
-        const checkForUpdates = async () => {
-            try {
-                const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-                if (!storedStudentData || !storedStudentData._id) return;
-                
-                const studentId = storedStudentData._id || storedStudentData.id;
-                
-                // Fetch latest data from server with JWT token
-                const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) return;
-                
-                const latestData = await response.json();
-                const serverUpdatedAt = latestData.updatedAt;
-                
-                // Compare timestamps - if server data is newer, refresh profile
-                if (serverUpdatedAt && lastSyncTime) {
-                    const serverTime = new Date(serverUpdatedAt).getTime();
-                    const localTime = new Date(lastSyncTime).getTime();
-                    
-                    if (serverTime > localTime) {
-                        console.log('Profile updated by admin - Auto-syncing...');
-                        
-                        // Update localStorage with fresh data
-                        localStorage.setItem('studentData', JSON.stringify(latestData));
-                        
-                        // Refresh the form fields with latest data
-                        populateFormFields(latestData);
-                        
-                        // Update sync time
-                        setLastSyncTime(serverUpdatedAt);
-                        
-                        // Show notification
-                        setShowUpdateNotification(true);
-                        setTimeout(() => setShowUpdateNotification(false), 5000);
-                        
-                        // Dispatch event for other components
-                        window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                            detail: { profilePicURL: latestData.profilePicURL, studentData: latestData } 
-                        }));
-                    }
-                }
-            } catch (error) {
-                console.error('Auto-sync check failed:', error);
-            }
-        };
-        
-        // Check for updates every 10 seconds
-        const syncInterval = setInterval(checkForUpdates, 10000);
-        
-        // Cleanup interval on unmount
-        return () => clearInterval(syncInterval);
-    }, [lastSyncTime]);
+    }, []); // Fixed: Removed lastSyncTime dependency to prevent interval recreation
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
-        if (file && file.type === "image/jpeg") {
-            const maxSize = 500 * 1024;
-            const fileSizeKB = (file.size / 1024).toFixed(1);
-            
-            if (file.size > maxSize) {
-                setFileSizeErrorKB(fileSizeKB);
-                setIsFileSizeErrorOpen(true);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                }
-                return;
+        if (!file) return;
+
+        const fileName = file.name.toLowerCase();
+        
+        // Robust file type detection using both MIME type and extension
+        const getFileType = (file, fileName) => {
+            // Check MIME type first (most reliable)
+            if (file.type) {
+                if (file.type === "image/jpeg" || file.type === "image/jpg") return "jpg";
+                if (file.type === "image/webp") return "webp";
             }
             
-            try {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    setProfileImage(event.target.result);
-                    setUploadInfo({ name: file.name, date: new Date().toLocaleDateString('en-GB') });
-                    setUploadSuccess(true);
-                    setTimeout(() => setUploadSuccess(false), 5000);
-                };
-                reader.readAsDataURL(file);
-            } catch (error) {
-                alert("Error processing image. Please try again.");
+            // Fallback to extension check
+            if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return "jpg";
+            if (fileName.endsWith('.webp')) return "webp";
+            
+            return null;
+        };
+
+        const fileType = getFileType(file, fileName);
+        
+        if (!fileType) {
+            setInvalidUrl(file.name);
+            setUrlErrorType('File Format');
+            setURLErrorPopupOpen(true);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
             }
-        } else {
-            alert("Invalid file type. Please upload a JPG file.");
+            return;
         }
+        
+        const maxSize = 500 * 1024;
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+        
+        if (file.size > maxSize) {
+            setFileSizeErrorKB(fileSizeKB);
+            setIsFileSizeErrorOpen(true);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+            return;
+        }
+        
+        // Store raw File for GridFS upload on Save
+        setProfilePhotoFile(file);
+        setProfileImage(URL.createObjectURL(file));
+        setUploadInfo({ 
+            name: file.name, 
+            date: new Date().toLocaleDateString('en-GB'),
+            size: fileSizeKB,
+            type: fileType
+        });
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 5000);
+        
+        console.log('✅ File selected:', {
+            name: file.name,
+            mimeType: file.type || 'unknown',
+            size: `${fileSizeKB}KB`,
+            detectedType: fileType
+        });
     };
 
     const handleImageRemove = (e) => {
         e.preventDefault();
         setProfileImage(null);
+        setProfilePhotoFile(null);
         setUploadInfo({ name: '', date: '' });
         setUploadSuccess(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -605,44 +570,196 @@ function StuProfile({ onLogout, onViewChange }) {
 
             // Always prefer MongoDB _id so updates and complete-data fetch use the same document
             const studentId = storedStudentData._id || storedStudentData.id;
+
+            // Upload profile photo to GridFS FIRST if a new file was selected
+            let profilePhotoUrl = studentData?.profilePicURL || '';
+            // Initialize finalResolvedUrl with existing profile URL (in case no new photo uploaded)
+            let finalResolvedUrl = studentData?.profilePicURL ? gridfsService.getFileUrl(studentData.profilePicURL) : '';
+            
+            if (profilePhotoFile) {
+                try {
+                    console.log('🔄 Uploading profile photo to GridFS...');
+                    const result = await gridfsService.uploadProfileImage(profilePhotoFile, studentId, 'student');
+                    if (result && result.url) {
+                        profilePhotoUrl = result.url; // relative GridFS path e.g. /api/file/xxx
+                        finalResolvedUrl = gridfsService.getFileUrl(result.url); // full URL
+                        
+                        // Don't update UI yet - keep old image visible until save completes
+                        // This prevents sidebar flicker (old → placeholder → new)
+                        setProfilePhotoFile(null);
+                        
+                        console.log('✅ Profile photo uploaded to GridFS:', profilePhotoUrl);
+                    }
+                } catch (uploadErr) {
+                    console.error('Failed to upload profile photo:', uploadErr);
+                    alert('Failed to upload profile photo. Please try again.');
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
             const formData = new FormData(e.target);
             
             const updateData = {
-                address: formData.get('address') || '', city: formData.get('city') || '',
-                primaryEmail: formData.get('primaryEmail') || '', mobileNo: formData.get('mobileNo') || '',
-                fatherOccupation: formData.get('fatherOccupation') || '', fatherMobile: formData.get('fatherMobile') || '',
-                motherOccupation: formData.get('motherOccupation') || '', motherMobile: formData.get('motherMobile') || '',
-                section: formData.get('section') || '',
-                guardianName: formData.get('guardianName') || '', guardianMobile: formData.get('guardianMobile') || '',
-                bloodGroup: formData.get('bloodGroup') || '', studyCategory: studyCategory,
-                currentYear: formData.get('currentYear') || '', currentSemester: formData.get('currentSemester') || '',
-                semester1GPA: formData.get('semester1GPA') || '', semester2GPA: formData.get('semester2GPA') || '',
-                semester3GPA: formData.get('semester3GPA') || '', semester4GPA: formData.get('semester4GPA') || '',
-                semester5GPA: formData.get('semester5GPA') || '', semester6GPA: formData.get('semester6GPA') || '',
-                semester7GPA: formData.get('semester7GPA') || '', semester8GPA: formData.get('semester8GPA') || '',
-                overallCGPA: formData.get('overallCGPA') || '', clearedBacklogs: formData.get('clearedBacklogs') || '',
-                currentBacklogs: formData.get('currentBacklogs') || '', yearOfGap: formData.get('yearOfGap') || '', gapReason: formData.get('gapReason') || '',
-                residentialStatus: formData.get('residentialStatus') || '', quota: formData.get('quota') || '', languagesKnown: formData.get('languagesKnown') || '',
-                firstGraduate: formData.get('firstGraduate') || '', passportNo: formData.get('passportNo') || '', skillSet: formData.get('skillSet') || '',
-                valueAddedCourses: formData.get('valueAddedCourses') || '', aboutSibling: formData.get('aboutSibling') || '', rationCardNo: formData.get('rationCardNo') || '',
-                familyAnnualIncome: formData.get('familyAnnualIncome') || '', willingToSignBond: formData.get('willingToSignBond') || '',
-                preferredModeOfDrive: formData.get('preferredModeOfDrive') || '', githubLink: formData.get('githubLink') || '',
-                linkedinLink: formData.get('linkedinLink') || '', portfolioLink: formData.get('portfolioLink') || '', companyTypes: formData.get('companyTypes') || '', preferredJobLocation: formData.get('preferredJobLocation') || '',
-                profilePicURL: profileImage || '', profileUploadDate: uploadInfo.date || new Date().toLocaleDateString('en-GB')
+                // Include all readonly fields to preserve complete profile data
+                firstName: formData.get('firstName') || studentData?.firstName || '',
+                lastName: formData.get('lastName') || studentData?.lastName || '',
+                regNo: formData.get('regNo') || studentData?.regNo || '',
+                dob: formData.get('dob') || studentData?.dob || '',
+                gender: formData.get('gender') || studentData?.gender || '',
+                department: formData.get('department') || studentData?.department || '',
+                degree: formData.get('degree') || studentData?.degree || '',
+                branch: formData.get('branch') || studentData?.branch || '',
+                batch: formData.get('batch') || studentData?.batch || '',
+                fatherName: formData.get('fatherName') || studentData?.fatherName || '',
+                motherName: formData.get('motherName') || studentData?.motherName || '',
+                domainEmail: formData.get('domainEmail') || studentData?.domainEmail || '',
+                aadhaarNo: formData.get('aadhaarNo') || studentData?.aadhaarNo || '',
+                community: formData.get('community') || studentData?.community || '',
+                mediumOfStudy: formData.get('mediumOfStudy') || studentData?.mediumOfStudy || '',
+                
+                // Academic background (readonly)
+                tenthBoard: formData.get('tenthBoard') || studentData?.tenthBoard || '',
+                tenthInstitution: formData.get('tenthInstitution') || studentData?.tenthInstitution || '',
+                tenthPercentage: formData.get('tenthPercentage') || studentData?.tenthPercentage || '',
+                tenthYear: formData.get('tenthYear') || studentData?.tenthYear || '',
+                twelfthBoard: formData.get('twelfthBoard') || studentData?.twelfthBoard || '',
+                twelfthInstitution: formData.get('twelfthInstitution') || studentData?.twelfthInstitution || '',
+                twelfthPercentage: formData.get('twelfthPercentage') || studentData?.twelfthPercentage || '',
+                twelfthYear: formData.get('twelfthYear') || studentData?.twelfthYear || '',
+                twelfthCutoff: formData.get('twelfthCutoff') || studentData?.twelfthCutoff || '',
+                diplomaBoard: formData.get('diplomaBoard') || studentData?.diplomaBoard || '',
+                diplomaInstitution: formData.get('diplomaInstitution') || studentData?.diplomaInstitution || '',
+                diplomaPercentage: formData.get('diplomaPercentage') || studentData?.diplomaPercentage || '',
+                diplomaYear: formData.get('diplomaYear') || studentData?.diplomaYear || '',
+                
+                // Editable fields - preserve existing data if field not on current form view
+                address: formData.get('address') || studentData?.address || '', 
+                city: formData.get('city') || studentData?.city || '',
+                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '', 
+                mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
+                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '', 
+                fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
+                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '', 
+                motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
+                section: formData.get('section') || studentData?.section || '',
+                guardianName: formData.get('guardianName') || studentData?.guardianName || '', 
+                guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
+                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '', 
+                studyCategory: studyCategory || studentData?.studyCategory || '',
+                currentYear: formData.get('currentYear') || studentData?.currentYear || '', 
+                currentSemester: formData.get('currentSemester') || studentData?.currentSemester || '',
+                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '', 
+                semester2GPA: formData.get('semester2GPA') || studentData?.semester2GPA || '',
+                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '', 
+                semester4GPA: formData.get('semester4GPA') || studentData?.semester4GPA || '',
+                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '', 
+                semester6GPA: formData.get('semester6GPA') || studentData?.semester6GPA || '',
+                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '', 
+                semester8GPA: formData.get('semester8GPA') || studentData?.semester8GPA || '',
+                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '', 
+                clearedBacklogs: formData.get('clearedBacklogs') || studentData?.clearedBacklogs || '',
+                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '', 
+                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '', 
+                gapReason: formData.get('gapReason') || studentData?.gapReason || '',
+                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '', 
+                quota: formData.get('quota') || studentData?.quota || '', 
+                languagesKnown: formData.get('languagesKnown') || studentData?.languagesKnown || '',
+                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
+                passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
+                skillSet: formData.get('skillSet') || studentData?.skillSet || '',
+                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
+                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
+                rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
+                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '', 
+                willingToSignBond: formData.get('willingToSignBond') || studentData?.willingToSignBond || '',
+                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '', 
+                githubLink: formData.get('githubLink') || studentData?.githubLink || '',
+                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '', 
+                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '', 
+                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '', 
+                preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
+                profilePicURL: (() => {
+                    // Store relative GridFS path in DB, not full URL or Base64
+                    const pic = profilePhotoUrl || studentData?.profilePicURL || '';
+                    if (pic.startsWith('blob:')) return studentData?.profilePicURL || ''; // Don't save blob URLs
+                    if (pic.includes('/file/')) {
+                        // Extract relative /api/file/xxx path from full URL
+                        const match = pic.match(/\/api\/file\/[a-f0-9]+/) || pic.match(/\/file\/([a-f0-9]+)/);
+                        if (match) return match[0].startsWith('/api') ? match[0] : `/api${match[0]}`;
+                    }
+                    if (pic.startsWith('data:')) return studentData?.profilePicURL || ''; // Don't store Base64 anymore
+                    if (pic.startsWith('http://') || pic.startsWith('https://')) {
+                        // Extract path from full URL
+                        const match = pic.match(/\/api\/file\/[a-f0-9]+/);
+                        if (match) return match[0];
+                    }
+                    return pic;
+                })(),
+                profileUploadDate: uploadInfo.date || new Date().toLocaleDateString('en-GB')
             };
 
             const result = await fastDataService.updateProfile(studentId, updateData);
             console.log('StuProfile handleSave result.student:', result?.student);
 
-            const updatedStudentData = { ...(studentData || {}), ...(result?.student || {}), ...updateData };
+            const updatedStudentData = { 
+                ...(studentData || {}), 
+                ...(result?.student || {}), 
+                ...updateData,
+                // Ensure we use the resolved GridFS URL for display
+                profilePicURL: finalResolvedUrl || updateData.profilePicURL || studentData?.profilePicURL
+            };
+            
+            // If we have a new profile image, preload it before updating UI (prevents placeholder flash)
+            if (finalResolvedUrl && finalResolvedUrl !== studentData?.profilePicURL) {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        const timeout = setTimeout(() => {
+                            console.log('⚠️ Image preload timeout, continuing anyway');
+                            resolve();
+                        }, 3000); // 3 second max wait
+                        
+                        img.onload = () => {
+                            clearTimeout(timeout);
+                            console.log('✅ New profile image preloaded successfully');
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            clearTimeout(timeout);
+                            console.log('⚠️ Image preload failed, continuing anyway');
+                            resolve(); // Don't reject, just continue
+                        };
+                        img.src = finalResolvedUrl;
+                    });
+                } catch (preloadErr) {
+                    console.warn('Image preload error:', preloadErr);
+                }
+            }
+            
+            // Clean up blob URLs to prevent memory leaks (after preload completes)
+            if (profileImage && profileImage.startsWith('blob:')) {
+                URL.revokeObjectURL(profileImage);
+            }
+            
+            // Update local state with new data including new profile pic
             setStudentData(updatedStudentData);
             setCurrentYear(String(updatedStudentData.currentYear || ''));
             setCurrentSemester(String(updatedStudentData.currentSemester || ''));
             setSelectedSection(String(updatedStudentData.section || ''));
+            
+            // Update profile image preview to new image (seamless transition - image already preloaded)
+            if (finalResolvedUrl) {
+                setProfileImage(finalResolvedUrl);
+            }
+            
+            // Update localStorage and sidebar ONCE with complete data (image already loaded)
             localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
             window.dispatchEvent(new CustomEvent('profileUpdated', { detail: updatedStudentData }));
             
-            setTimeout(() => { setPopupOpen(true); setIsSaving(false); }, 1000);
+            // Show success popup immediately after everything is ready
+            setIsSaving(false);
+            setPopupOpen(true);
         } catch (error) {
             if (error.message.includes('permission')) { alert('Permission denied.'); }
             else if (error.message.includes('not-found')) { alert('Student record not found.'); }
@@ -659,6 +776,17 @@ function StuProfile({ onLogout, onViewChange }) {
             setStudyCategory('12th'); setDob(null);
             loadStudentData();
         }
+    };
+
+    const handleMobileChange = (e, fieldName) => {
+        let value = e.target.value;
+        // Remove leading zeros
+        value = value.replace(/^0+/, '');
+        // Only allow digits
+        value = value.replace(/\D/g, '');
+        // Limit to 10 digits
+        value = value.substring(0, 10);
+        setStudentData(prev => ({ ...prev, [fieldName]: value }));
     };
 
     const closePopup = () => setPopupOpen(false);
@@ -833,15 +961,27 @@ function StuProfile({ onLogout, onViewChange }) {
                                     <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} disabled={isSaving} />
                                     <input type="email" name="primaryEmail" placeholder="Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={isSaving} />
                                     <input type="email" name="domainEmail" placeholder="Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="tel" name="mobileNo" placeholder="Mobile No." defaultValue={studentData?.mobileNo || ''} disabled={isSaving} />
+                                    <div className={styles.mobileInputWrapper}>
+                                        <div className={styles.countryCode}>+91</div>
+                                        <input type="tel" name="mobileNo" placeholder="Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    </div>
                                     <input type="text" name="fatherName" placeholder="Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
                                     <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={isSaving} />
-                                    <input type="text" name="fatherMobile" placeholder="Father Mobile No." defaultValue={studentData?.fatherMobile || ''} disabled={isSaving} />
+                                    <div className={styles.mobileInputWrapper}>
+                                        <div className={styles.countryCode}>+91</div>
+                                        <input type="tel" name="fatherMobile" placeholder="Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    </div>
                                     <input type="text" name="motherName" placeholder="Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
                                     <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={isSaving} />
-                                    <input type="text" name="motherMobile" placeholder="Mother Mobile No." defaultValue={studentData?.motherMobile || ''} disabled={isSaving} />
+                                    <div className={styles.mobileInputWrapper}>
+                                        <div className={styles.countryCode}>+91</div>
+                                        <input type="tel" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    </div>
                                     <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={isSaving} />
-                                    <input type="text" name="guardianMobile" placeholder="Guardian Number" defaultValue={studentData?.guardianMobile || ''} disabled={isSaving} />
+                                    <div className={styles.mobileInputWrapper}>
+                                        <div className={styles.countryCode}>+91</div>
+                                        <input type="tel" name="guardianMobile" placeholder="Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    </div>
                                     <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} readOnly className={styles.readOnlyInput} />
                                     <input type="url" name="portfolioLink" placeholder="Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={isSaving} />
                                 </div>
@@ -890,12 +1030,12 @@ function StuProfile({ onLogout, onViewChange }) {
                                                 id="photo-upload-input"
                                                 ref={fileInputRef}
                                                 style={{ display: 'none' }}
-                                                accept="image/jpeg"
+                                                accept=".jpg,.jpeg,.webp,image/jpeg,image/webp"
                                                 onChange={handleImageUpload}
                                                 disabled={isSaving}
                                             />
                                             {uploadSuccess && <p className={styles.uploadSuccessMessage}>Profile Photo uploaded Successfully!</p>}
-                                            <p className={styles.uploadHint}>*Only JPG format is allowed.</p>
+                                            <p className={styles.uploadHint}>*JPG, JPEG, and WebP formats allowed (WebP recommended).</p>
                                         </div>
                                     </div>
                                     <div style={{ marginTop: '24px' }}>
@@ -953,27 +1093,45 @@ function StuProfile({ onLogout, onViewChange }) {
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Semester</h3>
-                            <div className={`${styles.formGrid} ${styles.semesterGrid}`}>
-                                {getAllGPAFields().map((field) => {
-                                    const semesterNumber = field.replace('semester', '').replace('GPA', '');
-                                    const isRequired = getRequiredGPAFields().includes(field);
+                            <div className={styles.marksheetGrid}>
+                                {/* Show semesters 1 to current semester only */}
+                                {(() => {
+                                    const currentSem = parseInt(currentSemester) || 1;
+                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
+                                    return semestersToShow.map((semesterNumber) => (
+                                        <div key={semesterNumber} className={styles.semesterBox}>
+                                            <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
+                                            <button type="button" className={styles.viewMarksheetBtn}>
+                                                <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
+                                            </button>
+                                        </div>
+                                    ));
+                                })()}
+                                
+                                {/* Upload button for current semester */}
+                                {(() => {
+                                    const currentSem = parseInt(currentSemester) || 1;
                                     return (
-                                        <input
-                                            key={field}
-                                            type="text"
-                                            name={field}
-                                            placeholder={`Semester ${semesterNumber} GPA ${isRequired ? '(e.g., 9.08)' : ''}`.trim()}
-                                            value={studentData?.[field] ?? ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
-                                        />
+                                        <button 
+                                            type="button" 
+                                            className={styles.uploadMarksheetBtnFull}
+                                            onClick={() => onViewChange('semester-marksheet-upload')}
+                                        >
+                                            <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
+                                            <span>Upload Sem {currentSem} Marksheet</span>
+                                        </button>
                                     );
-                                })}
-
+                                })()}
+                            </div>
+                            
+                            {/* Separator line */}
+                            <div className={styles.semesterSeparator}></div>
+                            
+                            <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <input
                                     type="text"
                                     name="overallCGPA"
-                                    placeholder="Overall CGPA (e.g., 9.08)"
+                                    placeholder="CGPA"
                                     value={studentData?.overallCGPA ?? ''}
                                     readOnly
                                     className={styles.readOnlyInput}
@@ -981,7 +1139,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                 <input
                                     type="text"
                                     name="clearedBacklogs"
-                                    placeholder="No. of Backlogs (Cleared)"
+                                    placeholder="No. of Backlog (Arrear Cleared)"
                                     value={studentData?.clearedBacklogs ?? ''}
                                     readOnly
                                     className={styles.readOnlyInput}
@@ -989,25 +1147,11 @@ function StuProfile({ onLogout, onViewChange }) {
                                 <input
                                     type="text"
                                     name="currentBacklogs"
-                                    placeholder="No. of Current Backlogs"
+                                    placeholder="No. of Current Backlog"
                                     value={studentData?.currentBacklogs ?? ''}
                                     readOnly
                                     className={styles.readOnlyInput}
                                 />
-                                <select
-                                    name="arrearStatusDisplay"
-                                    value={studentData?.arrearStatus || ''}
-                                    disabled
-                                    className={styles.readOnlyInput}
-                                >
-                                    <option value="" disabled>Arrear Status</option>
-                                    {ARREAR_STATUS_OPTIONS.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input type="hidden" name="arrearStatus" value={studentData?.arrearStatus || ''} />
                                 <input
                                     type="text"
                                     name="yearOfGap"
@@ -1019,7 +1163,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                 <input
                                     type="text"
                                     name="gapReason"
-                                    placeholder="Reason for Gap"
+                                    placeholder="Reason for year of Gap"
                                     value={studentData?.gapReason ?? ''}
                                     readOnly
                                     className={`${styles.readOnlyInput} ${styles.fullWidth}`}

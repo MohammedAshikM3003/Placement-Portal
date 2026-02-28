@@ -6,11 +6,10 @@ import Adminaddnewcompany from "../assets/Adminaddnewcompany.svg";
 import AdminAddBranch from "../assets/AdminAddBranchIcon.svg";
 import Adminschedulenewdrive from "../assets/Adminschedulenewdrive.svg";
 import Adminbrowsestudents from "../assets/Adminbrowsestudents.svg";
-import ksrCollegeImage from "../assets/ksrCollegeImage.jpg";
 import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import mongoDBService from "../services/mongoDBService";
-import { fetchCollegeImages } from '../services/collegeImagesService';
+import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // IMPORT THE MODULE CSS
@@ -130,7 +129,7 @@ function AdminDashboard({ onLogout, currentView, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0 });
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
-  const [collegeLogoUrl, setCollegeLogoUrl] = useState(ksrCollegeImage); // Default fallback
+  const [collegeLogoUrl, setCollegeLogoUrl] = useState(() => getCachedCollegeLogo());
 
   // Change favicon to admin (green flipped) for admin dashboard
   useEffect(() => {

@@ -5,16 +5,25 @@ import styles from './ResumeBuilder.module.css';
  * Professional Experience / Internship Popup
  * Matches design: Company Details, Date, Technologies Used, Project, Description
  */
+// Safely extract a string from a description that might be stored as an object
+const safeDescription = (desc) => {
+  if (!desc) return '';
+  if (typeof desc === 'string') return desc;
+  if (typeof desc === 'object') return desc.input || desc.description || desc.text || desc.value || '';
+  return String(desc);
+};
+
 export default function PopupExperience({ title = 'Software Engineer', data, onSave, onDiscard, enableAI = true }) {
   const [formData, setFormData] = useState({
-    title: data?.title || title,
+    title: data?.title || data?.label || title,
     companyName: data?.companyName || '',
     location: data?.location || '',
+    mode: data?.mode || 'in-person',
     fromDate: data?.fromDate || '',
     toDate: data?.toDate || '',
     technologies: Array.isArray(data?.technologies) ? [...data.technologies] : [],
     projects: Array.isArray(data?.projects) ? [...data.projects] : [],
-    description: data?.description || '',
+    description: safeDescription(data?.description),
   });
 
   const [techInput, setTechInput] = useState('');
@@ -82,7 +91,7 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
   };
 
   return (
-    <div className={styles.overlay} onClick={onDiscard}>
+    <div className={styles.overlay}>
       <div className={styles.popupContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>{formData.title || 'Professional Experience'}</div>
         <div className={styles.popupBody}>
@@ -134,6 +143,21 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
             </div>
           </div>
 
+          {/* Mode */}
+          <div className={styles.popupFieldGroup}>
+            <p className={styles.popupLabel}>Mode:</p>
+            <select
+              className={styles.popupInput}
+              value={formData.mode}
+              onChange={e => handleChange('mode', e.target.value)}
+              style={{ cursor: 'pointer' }}
+            >
+              <option value="remote">Remote (Virtual)</option>
+              <option value="in-person">In-Person (On-Site)</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+
           {/* Technologies Used */}
           <div className={styles.popupFieldGroup}>
             <p className={styles.popupLabel}>Technologies Used:</p>
@@ -161,33 +185,6 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
             </div>
           </div>
 
-          {/* Project */}
-          <div className={styles.popupFieldGroup}>
-            <p className={styles.popupLabel}>Project</p>
-            <div className={styles.chipsContainer}>
-              {formData.projects.map((proj, i) => (
-                <span key={i} className={styles.chip}>
-                  {proj}
-                  <button type="button" className={styles.chipRemove} onClick={() => removeProject(i)}>×</button>
-                </span>
-              ))}
-              <div className={styles.popupInputWithRemove}>
-                <input
-                  className={styles.chipInput}
-                  placeholder="Enter Project"
-                  value={projectInput}
-                  onChange={e => setProjectInput(e.target.value)}
-                  onKeyDown={e => handleKeyDown(e, addProject)}
-                />
-                {projectInput && <button type="button" className={styles.popupInputRemoveBtn} onClick={() => setProjectInput('')}>×</button>}
-              </div>
-              <button type="button" className={styles.addChipBtn} onClick={addProject}>
-                <span className={styles.addChipBtnIcon}>+</span>
-                Click to Add Project
-              </button>
-            </div>
-          </div>
-
           {/* Internship Description */}
           <div className={styles.popupFieldGroup}>
             <p className={styles.popupLabel}>Internship Description:</p>
@@ -202,16 +199,16 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
               onChange={e => handleChange('description', e.target.value)}
             />
             <div className={styles.textareaActions}>
-              <button className={styles.clearBtn} onClick={() => handleChange('description', '')}>Clear</button>
               {enableAI && (
                 <span style={{ fontSize: '12px', color: '#2085f6', fontStyle: 'italic' }}>✨ AI will auto-polish during Create</span>
               )}
+              <button className={styles.clearBtn} onClick={() => handleChange('description', '')}>Clear</button>
             </div>
           </div>
         </div>
 
         <div className={styles.popupFooter}>
-          <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Discard</button>
+          <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
           <button type="button" className={styles.popupSaveBtn} onClick={handleSave}>Save</button>
         </div>
       </div>

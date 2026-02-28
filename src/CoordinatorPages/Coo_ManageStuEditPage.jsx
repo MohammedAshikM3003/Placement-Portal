@@ -180,20 +180,47 @@ function CooEditProfile({ onLogout, onViewChange }) {
                         setLoginPwdValue(normalizedData.loginPassword);
                         setConfirmPwdValue(normalizedData.loginPassword);
                     }
-                    // Load resume data
+                    // Load resume data (try uploaded resume first, then resume-builder PDF)
                     try {
                         const resumeResponse = await mongoDBService.getResume(studentId);
                         if (resumeResponse?.resume?.fileData) {
                             setHasResume(true);
                             setResumeData(resumeResponse.resume);
                         } else {
+                            throw new Error('No uploaded resume');
+                        }
+                    } catch (resumeError) {
+                        console.warn('Uploaded resume not found, trying resume-builder PDF...', resumeError);
+                        // Fallback: try resume-builder generated PDF
+                        try {
+                            const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+                            const authToken = localStorage.getItem('authToken');
+                            const pdfResponse = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                                }
+                            });
+                            if (pdfResponse.ok) {
+                                const pdfResult = await pdfResponse.json();
+                                console.log('📄 Resume-builder response:', pdfResult);
+                                if (pdfResult.success && pdfResult.resume?.url) {
+                                    console.log('📄 Resume URL format:', pdfResult.resume.url.substring(0, 100));
+                                    setHasResume(true);
+                                    setResumeData({ ...pdfResult.resume, isBuilderResume: true });
+                                } else {
+                                    setHasResume(false);
+                                    setResumeData(null);
+                                }
+                            } else {
+                                setHasResume(false);
+                                setResumeData(null);
+                            }
+                        } catch (builderError) {
+                            console.warn('Resume-builder PDF also not found:', builderError);
                             setHasResume(false);
                             setResumeData(null);
                         }
-                    } catch (resumeError) {
-                        console.warn('Resume not found or error loading resume:', resumeError);
-                        setHasResume(false);
-                        setResumeData(null);
                     }
                 }
                 setLoadingProgress(100);
@@ -213,7 +240,7 @@ function CooEditProfile({ onLogout, onViewChange }) {
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.type === "image/jpeg") {
+        if (file && (file.type === "image/jpeg" || file.type === "image/webp")) {
             if (profileImage && profileImage.startsWith('blob:')) URL.revokeObjectURL(profileImage);
             setProfileImage(URL.createObjectURL(file));
             setUploadInfo({ name: file.name, date: new Date().toLocaleDateString('en-GB') });
@@ -330,13 +357,10 @@ function CooEditProfile({ onLogout, onViewChange }) {
             };
             if (fileInputRef.current && fileInputRef.current.files[0]) {
                 const file = fileInputRef.current.files[0];
-                const reader = new FileReader();
-                const profilePicData = await new Promise((resolve, reject) => {
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-                payload.profilePicURL = profilePicData;
+                // GridFS upload: send raw file, no Base64
+                const gridfsService = (await import('../services/gridfsService')).default;
+                const result = await gridfsService.uploadProfileImage(file, studentId, 'student');
+                payload.profilePicURL = result.url; // e.g. /api/file/abc123
             }
             await mongoDBService.updateStudent(studentId, payload);
             setPopupOpen(true);
@@ -491,9 +515,9 @@ function CooEditProfile({ onLogout, onViewChange }) {
                                         {isEditable && (
                                             <div className={`${styles['co-ms-StuProfile-upload-action-area']} ${styles['StuProfile-upload-action-area']}`}>
                                                 {uploadSuccess && (<p className={`${styles['co-ms-StuProfile-upload-success-message']} ${styles['StuProfile-upload-success-message']}`}>✓ Image uploaded successfully!</p>)}
-                                                <p className={`${styles['co-ms-StuProfile-upload-hint']} ${styles['StuProfile-upload-hint']}`}>*Only JPG format is allowed (Max 500 KB)</p>
+                                                <p className={`${styles['co-ms-StuProfile-upload-hint']} ${styles['StuProfile-upload-hint']}`}>*JPG and WebP formats allowed (Max 500 KB)</p>
                                                 <div className={`${styles['co-ms-StuProfile-upload-btn-wrapper']} ${styles['StuProfile-upload-btn-wrapper']}`}>
-                                                    <input type="file" ref={fileInputRef} accept="image/jpeg" onChange={handleImageUpload} style={{ display: 'none' }} id="profile-upload" />
+                                                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} style={{ display: 'none' }} id="profile-upload" />
                                                     <label htmlFor="profile-upload" className={`${styles['co-ms-StuProfile-profile-upload-btn']} ${styles['StuProfile-profile-upload-btn']}`}><MdUpload /> Upload (Max 500 KB)</label>
                                                     {profileImage && (<button type="button" onClick={handleImageRemove} className={`${styles['co-ms-StuProfile-remove-image-btn']} ${styles['StuProfile-remove-image-btn']}`}><IoMdClose /></button>)}
                                                 </div>
@@ -522,13 +546,55 @@ function CooEditProfile({ onLogout, onViewChange }) {
                                         type="button"
                                         className={`${styles['co-ms-resume-btn']} ${styles['resume-btn']}`} style={{marginTop:'0px'}}
                                         onClick={() => {
-                                            if (hasResume && resumeData?.fileData) {
-                                                const link = document.createElement('a');
-                                                link.href = resumeData.fileData;
-                                                link.download = `Resume_${studentData?.regNo || 'student'}.pdf`;
-                                                document.body.appendChild(link);
-                                                link.click();
-                                                document.body.removeChild(link);
+                                            if (hasResume && resumeData) {
+                                                try {
+                                                    let blobUrl;
+                                                    // Check for GridFS URL first (new system)
+                                                    const gridfsUrl = resumeData.gridfsFileUrl || resumeData.url || '';
+                                                    if (gridfsUrl.startsWith('/api/file/') || gridfsUrl.includes('/api/file/')) {
+                                                        blobUrl = gridfsUrl.startsWith('http') ? gridfsUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${gridfsUrl}`;
+                                                    } else if (resumeData.isBuilderResume && resumeData.url) {
+                                                        // Resume-builder generated PDF - convert data URL to Blob
+                                                        const dataUrl = resumeData.url;
+                                                        console.log('📄 Opening builder resume, URL length:', dataUrl.length);
+                                                        console.log('📄 URL start:', dataUrl.substring(0, 100));
+                                                        
+                                                        // Validate URL format
+                                                        if (!dataUrl.startsWith('data:application/pdf;base64,')) {
+                                                            alert('Resume data is corrupted. Please regenerate your resume from the Resume Builder page.');
+                                                            console.error('❌ Invalid resume URL format:', dataUrl.substring(0, 200));
+                                                            return;
+                                                        }
+                                                        
+                                                        // Check if base64 part contains only valid characters (not comma-separated numbers)
+                                                        const base64Part = dataUrl.split(',')[1];
+                                                        if (!base64Part || /^[\d,\s]+$/.test(base64Part.substring(0, 100))) {
+                                                            alert('Resume data is corrupted (byte array format detected). Please regenerate your resume from the Resume Builder page.');
+                                                            console.error('❌ Corrupted base64 (appears to be byte array):', base64Part.substring(0, 200));
+                                                            return;
+                                                        }
+                                                        
+                                                        const byteString = atob(base64Part);
+                                                        const mimeType = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                                                        const ab = new ArrayBuffer(byteString.length);
+                                                        const ia = new Uint8Array(ab);
+                                                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                                                        const blob = new Blob([ab], { type: mimeType || 'application/pdf' });
+                                                        blobUrl = URL.createObjectURL(blob);
+                                                    } else if (resumeData.fileData) {
+                                                        // Uploaded resume - convert base64 to Blob for preview
+                                                        const byteString = atob(resumeData.fileData);
+                                                        const ab = new ArrayBuffer(byteString.length);
+                                                        const ia = new Uint8Array(ab);
+                                                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                                                        const blob = new Blob([ab], { type: resumeData.fileType || 'application/pdf' });
+                                                        blobUrl = URL.createObjectURL(blob);
+                                                    }
+                                                    if (blobUrl) window.open(blobUrl, '_blank');
+                                                } catch (err) {
+                                                    console.error('Error opening resume:', err);
+                                                    alert('Failed to open resume. The file may be corrupted. Please regenerate your resume from the Resume Builder page.');
+                                                }
                                             }
                                         }}
                                     >

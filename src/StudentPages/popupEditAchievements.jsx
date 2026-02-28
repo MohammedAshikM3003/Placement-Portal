@@ -532,14 +532,12 @@ Please compress your PDF or choose a smaller file.`);
       setFileName(file.name);
       setError("");
       
-      // Convert file to base64 directly
-      const fileDataUrl = await certificateService.fileToBase64(file);
-      const base64Data = extractBase64Content(fileDataUrl);
+      // Store raw File for GridFS upload on submit
       const resolvedType = file.type || "application/pdf";
       
       // Instant state updates
-      setFileContent(base64Data);
-      setFilePreviewData(ensureDataUrl(fileDataUrl, resolvedType));
+      setFileContent(file); // Store File object instead of base64
+      setFilePreviewData(URL.createObjectURL(file));
       setFileType(resolvedType);
       setFileSize(file.size || 0);
       setHasNewFile(true);
@@ -603,13 +601,14 @@ Please compress your PDF or choose a smaller file.`);
     const formattedDate = formatDate(formData.date);
 
     // Fast file replacement logic
-    const finalFileData = hasNewFile ? fileContent : (normalizedInitial.fileContent || "");
+    const finalFileData = hasNewFile ? '' : (normalizedInitial.fileContent || ""); // no base64 for new files
+    const rawFile = hasNewFile ? fileContent : null; // File object for GridFS upload
     const finalFileName = hasNewFile ? fileName : (normalizedInitial.fileName || fileName);
     const finalUploadDate = formatDate(hasNewFile ? lastUploaded : normalizedInitial.uploadDate);
     const finalFileType = hasNewFile ? (fileType || "application/pdf") : (normalizedInitial.fileType || "application/pdf");
     const finalFileSize = hasNewFile ? (fileSize || 0) : (normalizedInitial.fileSize || 0);
     const finalFilePreviewData = hasNewFile
-      ? (filePreviewData || ensureDataUrl(fileContent, finalFileType))
+      ? (filePreviewData || '')
       : fallbackPreviewData;
 
     const normalizedId = normalizedInitial.id || initialData?.id || `${Date.now()}`;
@@ -631,7 +630,8 @@ Please compress your PDF or choose a smaller file.`);
       status: initialData?.status || "pending",
       approved: initialData?.approved || false,
       fileName: finalFileName,
-      fileData: finalFileData, // Preserve existing file data if no new file uploaded
+      fileData: finalFileData, // Empty for new files (using GridFS)
+      rawFile: rawFile, // File object for GridFS upload by parent
       fileType: finalFileType,
       fileSize: finalFileSize,
       filePreviewData: finalFilePreviewData,

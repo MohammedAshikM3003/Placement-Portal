@@ -371,9 +371,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert('Invalid file type. Please upload a JPG or PNG file.');
+            alert('Invalid file type. Please upload a JPG, PNG, or WebP file.');
             return;
         }
         
@@ -386,13 +386,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         }
         
         try {
-            // Auto-compress if image is larger than 400KB
-            const base64 = await fileToBase64WithCompression(file, 400);
-            const compressedSizeKB = getBase64SizeKB(base64);
-            console.log(`Profile photo compressed to ${compressedSizeKB.toFixed(2)}KB`);
-            
+            // Store file for GridFS upload on save
             setProfilePhoto(URL.createObjectURL(file));
-            setProfilePhotoBase64(base64);
+            setProfilePhotoBase64(file); // Store raw File object instead of Base64
             setPhotoDetails({
                 fileName: file.name,
                 uploadDate: new Date().toLocaleDateString('en-GB'),
@@ -400,7 +396,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             setUploadSuccess(true);
             setTimeout(() => setUploadSuccess(false), 5000);
         } catch (error) {
-            console.error('Error converting image:', error);
+            console.error('Error processing image:', error);
             alert('Failed to upload image. Please try again.');
         }
     };
@@ -502,8 +498,15 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 phone: formData.phoneNumber,
                 department: formData.department,
                 cabin: formData.cabin,
-                profilePhoto: profilePhotoBase64 || null,
             };
+
+            // Upload profile photo to GridFS if a new file was selected
+            if (profilePhotoBase64 instanceof File) {
+                const gridfsService = (await import('../services/gridfsService')).default;
+                const result = await gridfsService.uploadProfileImage(profilePhotoBase64, coordinatorId, 'coordinator');
+                dataToSave.profilePhoto = result.url;
+                dataToSave.profilePicURL = result.url;
+            }
             
             console.log('📤 Saving coordinator profile:', coordinatorId);
             
@@ -519,7 +522,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     ...existingData,
                     ...dataToSave,
                     coordinatorId: coordinatorId,
-                    profilePicURL: profilePhotoBase64 || null,
+                    profilePicURL: dataToSave.profilePhoto || existingData.profilePicURL || null,
                     timestamp: Date.now()
                 };
                 localStorage.setItem('coordinatorData', JSON.stringify(updatedCacheData));
@@ -530,8 +533,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     coordinatorId: coordinatorId,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                    profilePhoto: profilePhotoBase64,
-                    profilePicURL: profilePhotoBase64,
+                    profilePhoto: dataToSave.profilePhoto || dataToSave.profilePicURL,
+                    profilePicURL: dataToSave.profilePicURL || dataToSave.profilePhoto,
                     email: formData.emailId
                 };
                 
@@ -690,7 +693,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                     <input
                                         id="file-upload"
                                         type="file"
-                                        accept="image/jpeg,image/png"
+
                                         className={styles['co-profile-hidden-input']}
                                         onChange={handlePhotoUpload}
                                         disabled={isSaving}
@@ -698,7 +701,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                     {uploadSuccess && (
                                         <p className={styles['co-profile-upload-success-message']}>Profile Photo uploaded Successfully!</p>
                                     )}
-                                    <p className={styles['co-profile-upload-hint']}>*Only JPG format is allowed.</p>
+                                    <p className={styles['co-profile-upload-hint']}>*JPG, PNG, and WebP formats allowed.</p>
                                 </div>
                             </aside>
 

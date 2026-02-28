@@ -1,3 +1,12 @@
+/**
+ * MainRegistration.jsx - Student Self-Registration Form
+ * 
+ * Image handling: GridFS storage (raw File upload, NOT base64)
+ * Supported formats: JPG, JPEG, WebP
+ * File picker: No accept attribute - all files visible, validation done in JS
+ * 
+ * Rebuilt fresh to avoid browser cache issues.
+ */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 
 import DatePicker from "react-datepicker";
@@ -5,20 +14,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import BlueAdminicon from './assets/BlueAdminicon.png'
 import Navbar from "./components/Navbar/mrnavbar";
-import achievementStyles from './StudentPages/Achievements.module.css'; // Import for blue datepicker styles
+import achievementStyles from './StudentPages/Achievements.module.css';
 import Sidebar from "./components/Sidebar/mrsidebar";
 import personalinfo from "./assets/personal information icon.svg";
 import academicIcon from "./assets/academic.svg";
-import semesterIcon from "./assets/semester.svg";
 import otherDetailsIcon from "./assets/otherdetails.svg";
 import logindetailsIcon from "./assets/logindetails.svg";
 import styles from "./MainRegistration.module.css";
 import mongoDBService from './services/mongoDBService';
-import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
-
-const GPA_REGEX = /^\d{1,2}(?:\.\d{0,2})?$/;
-const GPA_MIN = 0;
-const GPA_MAX = 10;
+import gridfsService from './services/gridfsService';
 
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
@@ -41,11 +45,60 @@ const JOB_LOCATION_OPTIONS = [
   "Others"
 ];
 
+/**
+ * Robust file type detection - checks MIME type first, falls back to extension.
+ * Returns "jpg" | "webp" | null
+ */
+const getFileType = (file) => {
+  const fileName = file.name.toLowerCase();
+  // Check MIME type first (most reliable)
+  if (file.type) {
+    if (file.type === "image/jpeg" || file.type === "image/jpg") return "jpg";
+    if (file.type === "image/webp") return "webp";
+  }
+  // Fallback to extension check (for browsers with incomplete MIME detection)
+  if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return "jpg";
+  if (fileName.endsWith('.webp')) return "webp";
+  return null;
+};
+
 const cx = (...classNames) =>
   classNames
     .filter(Boolean)
     .map((name) => styles[name] || name)
     .join(" ");
+
+// Custom Mobile Input Component with +91 Prefix
+const MobileInputWithPrefix = ({ name, placeholder, value, onChange, maxLength = 10, ...props }) => {
+  const handleInputChange = (e) => {
+    let inputValue = e.target.value;
+    inputValue = inputValue.replace(/\D/g, '');
+    inputValue = inputValue.replace(/^0+/, '');
+    if (inputValue.length > maxLength) {
+      inputValue = inputValue.slice(0, maxLength);
+    }
+    e.target.value = inputValue;
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  return (
+    <div className={cx("mr-mobile-input-wrapper")}>
+      <div className={cx("mr-mobile-prefix")}>+91</div>
+      <input
+        type="text"
+        name={name}
+        placeholder={placeholder}
+        onChange={handleInputChange}
+        maxLength={maxLength}
+        inputMode="numeric"
+        className={cx("mr-mobile-input")}
+        {...props}
+      />
+    </div>
+  );
+};
 
 const MdUpload = () => (
   <svg
@@ -121,28 +174,26 @@ const CalendarIcon = () => (
   </svg>
 );
 
+/* ─── Popup Components ─── */
+
 const SuccessPopup = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
-
   return (
-    <div className={cx("mr-popup-overlay")}> 
+    <div className={cx("mr-popup-overlay")}>
       <div className={cx("mr-popup-container")}>
         <div className={cx("mr-popup-header")}>Registered !</div>
         <div className={cx("mr-popup-body")}>
-          <svg className={cx("mr-success-icon") } xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle className={cx("mr-success-icon--circle") } cx="26" cy="26" r="25" fill="none" />
-            <path className={cx("mr-success-icon--check") } fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+          <svg className={cx("mr-success-icon")} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle className={cx("mr-success-icon--circle")} cx="26" cy="26" r="25" fill="none" />
+            <path className={cx("mr-success-icon--check")} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
           </svg>
           <h2>Login Created 🎉</h2>
           <p>Student ID Created!</p>
           <p>Click Login button to Redirect</p>
         </div>
-        <div className={cx("mr-popup-footer")}> 
+        <div className={cx("mr-popup-footer")}>
           <button
-            onClick={() => {
-              onClose();
-              window.location.href = "/";
-            }}
+            onClick={() => { onClose(); window.location.href = "/mainlogin"; }}
             className={cx("mr-popup-login-btn", "mr-popup-login-btn--primary")}
           >
             <span className={cx("mr-popup-login-btn__label")}>Login</span>
@@ -155,7 +206,6 @@ const SuccessPopup = ({ isOpen, onClose }) => {
 
 const ExistingRegNoPopup = ({ isOpen, onClose, regNo }) => {
   if (!isOpen) return null;
-
   return (
     <div className={cx("mr-popup-overlay")}>
       <div className={cx("mr-popup-container")}>
@@ -163,9 +213,9 @@ const ExistingRegNoPopup = ({ isOpen, onClose, regNo }) => {
           Already Exists!
         </div>
         <div className={cx("mr-popup-body")}>
-          <svg className={cx("mr-error-icon") } xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle className={cx("mr-error-icon--circle") } cx="26" cy="26" r="25" fill="none" />
-            <path className={cx("mr-error-icon--cross") } fill="none" d="M16 16l20 20M36 16l-20 20" />
+          <svg className={cx("mr-error-icon")} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle className={cx("mr-error-icon--circle")} cx="26" cy="26" r="25" fill="none" />
+            <path className={cx("mr-error-icon--cross")} fill="none" d="M16 16l20 20M36 16l-20 20" />
           </svg>
           <h2 style={{ color: "#000" }}>Registration Number Already Exists</h2>
           <p style={{ marginBottom: "8px" }}>
@@ -188,7 +238,6 @@ const ExistingRegNoPopup = ({ isOpen, onClose, regNo }) => {
 
 const MismatchedRegNoPopup = ({ isOpen, onClose, personalRegNo, loginRegNo }) => {
   if (!isOpen) return null;
-
   return (
     <div className={cx("mr-popup-overlay")}>
       <div className={cx("mr-popup-container")}>
@@ -196,9 +245,9 @@ const MismatchedRegNoPopup = ({ isOpen, onClose, personalRegNo, loginRegNo }) =>
           Registration Numbers Don't Match!
         </div>
         <div className={cx("mr-popup-body")}>
-          <svg className={cx("mr-error-icon") } xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle className={cx("mr-error-icon--circle") } cx="26" cy="26" r="25" fill="none" />
-            <path className={cx("mr-error-icon--cross") } fill="none" d="M16 16l20 20M36 16l-20 20" />
+          <svg className={cx("mr-error-icon")} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle className={cx("mr-error-icon--circle")} cx="26" cy="26" r="25" fill="none" />
+            <path className={cx("mr-error-icon--cross")} fill="none" d="M16 16l20 20M36 16l-20 20" />
           </svg>
           <h2 style={{ color: "#000" }}>Registration Numbers Don't Match ✗</h2>
           <p style={{ marginBottom: "8px" }}>
@@ -222,7 +271,6 @@ const MismatchedRegNoPopup = ({ isOpen, onClose, personalRegNo, loginRegNo }) =>
 
 const ConfirmDiscardPopup = ({ isOpen, onConfirm, onCancel }) => {
   if (!isOpen) return null;
-
   return (
     <div className={cx("mr-popup-overlay")}>
       <div className={cx("mr-popup-container")}>
@@ -230,24 +278,13 @@ const ConfirmDiscardPopup = ({ isOpen, onConfirm, onCancel }) => {
           Discard Changes?
         </div>
         <div className={cx("mr-popup-body")}>
-          <svg 
-            className={cx("mr-warning-icon")} 
-            xmlns="http://www.w3.org/2000/svg" 
+          <svg
+            className={cx("mr-warning-icon")}
+            xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 52 52"
-            style={{ 
-              width: "80px", 
-              height: "80px", 
-              margin: "0 auto 20px",
-              display: "block"
-            }}
+            style={{ width: "80px", height: "80px", margin: "0 auto 20px", display: "block" }}
           >
-            <circle 
-              className={cx("mr-warning-icon--circle")}
-              cx="26" 
-              cy="26" 
-              r="25" 
-              fill="none"
-            />
+            <circle className={cx("mr-warning-icon--circle")} cx="26" cy="26" r="25" fill="none" />
             <g className={cx("mr-warning-icon--exclamation")}>
               <line x1="26" y1="18" x2="26" y2="30" />
               <line x1="26" y1="34" x2="26" y2="38" />
@@ -262,18 +299,10 @@ const ConfirmDiscardPopup = ({ isOpen, onConfirm, onCancel }) => {
           </p>
         </div>
         <div className={cx("mr-popup-footer")} style={{ gap: "20px", display: "flex" }}>
-          <button 
-            onClick={onCancel} 
-            className={cx("mr-popup-login-btn")}
-            style={{ backgroundColor: "#6c757d" }}
-          >
+          <button onClick={onCancel} className={cx("mr-popup-login-btn")} style={{ backgroundColor: "#6c757d" }}>
             <span className={cx("mr-popup-login-btn__label")}>Cancel</span>
           </button>
-          <button 
-            onClick={onConfirm} 
-            className={cx("mr-popup-login-btn")}
-            style={{ backgroundColor: "#dc3545" }}
-          >
+          <button onClick={onConfirm} className={cx("mr-popup-login-btn")} style={{ backgroundColor: "#dc3545" }}>
             <span className={cx("mr-popup-login-btn__label")}>Discard</span>
           </button>
         </div>
@@ -282,9 +311,41 @@ const ConfirmDiscardPopup = ({ isOpen, onConfirm, onCancel }) => {
   );
 };
 
+const ValidationErrorPopup = ({ isOpen, onClose, message, title = "Validation Error" }) => {
+  if (!isOpen) return null;
+  return (
+    <div className={cx("mr-popup-overlay")}>
+      <div className={cx("mr-popup-container")}>
+        <div className={cx("mr-popup-header")} style={{ backgroundColor: "#dc3545" }}>
+          {title}
+        </div>
+        <div className={cx("mr-popup-body")}>
+          <svg
+            className={cx("mr-error-icon")}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 52 52"
+            style={{ width: "80px", height: "80px", margin: "0 auto 20px", display: "block" }}
+          >
+            <circle className={cx("mr-error-icon--circle")} cx="26" cy="26" r="25" fill="none" />
+            <path className={cx("mr-error-icon--cross")} fill="none" d="M16 16l20 20M36 16l-20 20" />
+          </svg>
+          <h2 style={{ color: "#000", marginBottom: "15px" }}>{title}</h2>
+          <div style={{ textAlign: "left", marginTop: "20px" }}>
+            {message.split('\n').map((line, i) => (
+              <p key={i} style={{ marginBottom: "8px", fontSize: "15px" }}>{line}</p>
+            ))}
+          </div>
+        </div>
+        <div className={cx("mr-popup-footer")}>
+          <button onClick={onClose} className={cx("mr-popup-close-btn-blue")}>OK</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
   if (!isOpen) return null;
-
   return (
     <div className={cx("mr-popup-overlay")}>
       <div className={cx("mr-popup-container")}>
@@ -325,9 +386,52 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
   );
 };
 
+const FileFormatErrorPopup = ({ isOpen, onClose, fileName }) => {
+  if (!isOpen) return null;
+  return (
+    <div className={cx("mr-popup-overlay")}>
+      <div className={cx("mr-popup-container")}>
+        <div className={cx("mr-popup-header")} style={{ backgroundColor: "#1976d2" }}>
+          Invalid File Format!
+        </div>
+        <div className={cx("mr-popup-body")}>
+          <div className={cx("mr-image-error-icon-container")}>
+            <svg
+              className={cx("mr-image-error-icon")}
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+            >
+              <g fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                <path d="M15 8h.01M12.5 21H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6.5" />
+                <path d="m3 16 5-5c.928-.893 2.072-.893 3 0l3 3m0 0 1-1c.616-.593 1.328-.792 2.008-.598M16 19a3 3 0 1 0 6 0a3 3 0 1 0-6 0m1 2 4-4" />
+              </g>
+            </svg>
+          </div>
+          <h2 style={{ color: "#d32f2f" }}>Invalid File Format ✗</h2>
+          {fileName && (
+            <p style={{ marginBottom: "16px", marginTop: "20px", wordBreak: "break-all" }}>
+              File: <strong>{fileName}</strong>
+            </p>
+          )}
+          <p style={{ marginBottom: "16px", marginTop: "20px" }}>
+            Allowed formats: <strong>JPG, JPEG, WebP</strong>
+          </p>
+          <p style={{ fontSize: "14px", color: "#666", marginTop: "20px", marginBottom: "10px" }}>
+            Please upload an image in JPG, JPEG, or WebP format.
+          </p>
+        </div>
+        <div className={cx("mr-popup-footer")}>
+          <button onClick={onClose} className={cx("mr-popup-close-btn-blue")}>OK</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
   if (!isOpen) return null;
-
   return (
     <div className={cx("mr-image-preview-overlay")} onClick={onClose}>
       <div className={cx("mr-image-preview-container")} onClick={(e) => e.stopPropagation()}>
@@ -350,38 +454,19 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
     if (urlType === 'GitHub') {
       return (
         <div className={cx("mr-image-error-icon-container")}>
-          <svg
-            className={cx("mr-image-error-icon")}
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="#fff"
-              d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"
-            />
-          </svg>
-        </div>
-      );
-    } else {
-      return (
-        <div className={cx("mr-image-error-icon-container")}>
-          <svg
-            className={cx("mr-image-error-icon")}
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="#fff"
-              d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"
-            />
+          <svg className={cx("mr-image-error-icon")} xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+            <path fill="#fff" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z" />
           </svg>
         </div>
       );
     }
+    return (
+      <div className={cx("mr-image-error-icon-container")}>
+        <svg className={cx("mr-image-error-icon")} xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="#fff" d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z" />
+        </svg>
+      </div>
+    );
   };
 
   return (
@@ -413,12 +498,13 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
   );
 };
 
+/* ─── Main Component ─── */
+
 function MainRegistration() {
   const sectionList = useMemo(
     () => [
       { key: "personal", label: "Personal Information", icon: personalinfo },
       { key: "academic", label: "Academic Background", icon: academicIcon },
-      { key: "semester", label: "Semester", icon: semesterIcon },
       { key: "other", label: "Other Details", icon: otherDetailsIcon },
       { key: "login", label: "Login Details", icon: logindetailsIcon },
     ],
@@ -428,7 +514,6 @@ function MainRegistration() {
   const formRef = useRef(null);
   const personalSectionRef = useRef(null);
   const academicSectionRef = useRef(null);
-  const semesterSectionRef = useRef(null);
   const otherSectionRef = useRef(null);
   const loginSectionRef = useRef(null);
 
@@ -436,7 +521,6 @@ function MainRegistration() {
     () => ({
       personal: personalSectionRef,
       academic: academicSectionRef,
-      semester: semesterSectionRef,
       other: otherSectionRef,
       login: loginSectionRef,
     }),
@@ -446,7 +530,9 @@ function MainRegistration() {
   const fileInputRef = useRef(null);
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef(null);
+  const prevErrorCountRef = useRef(0);
 
+  /* ── State ── */
   const [branches, setBranches] = useState([]);
   const [degrees, setDegrees] = useState([]);
   const [selectedDegree, setSelectedDegree] = useState("");
@@ -460,6 +546,7 @@ function MainRegistration() {
   const [currentSemester, setCurrentSemester] = useState("");
   const [isPopupOpen, setPopupOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [uploadInfo, setUploadInfo] = useState({ name: "", date: "" });
   const [isImagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -477,6 +564,8 @@ function MainRegistration() {
   const [loginRegNo, setLoginRegNo] = useState("");
   const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
   const [fileSizeErrorKB, setFileSizeErrorKB] = useState("");
+  const [isFileFormatErrorOpen, setIsFileFormatErrorOpen] = useState(false);
+  const [invalidFileName, setInvalidFileName] = useState("");
   const [selectedCompanyTypes, setSelectedCompanyTypes] = useState([]);
   const [selectedJobLocations, setSelectedJobLocations] = useState([]);
   const [residentialStatus, setResidentialStatus] = useState("");
@@ -488,11 +577,16 @@ function MainRegistration() {
   const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
   const [urlErrorType, setUrlErrorType] = useState("");
   const [invalidUrl, setInvalidUrl] = useState("");
+  const [batchStartYear, setBatchStartYear] = useState("");
+  const [batchEndYear, setBatchEndYear] = useState("");
+  const [isValidationErrorPopupOpen, setValidationErrorPopupOpen] = useState(false);
+  const [validationErrorMessage, setValidationErrorMessage] = useState("");
+
+  /* ── Derived / Memoized ── */
 
   const filteredBranches = useMemo(() => {
     if (!selectedDegree) return [];
     const normalized = selectedDegree.toLowerCase();
-
     return branches.filter((branch) => {
       const degree = branch?.degree?.toLowerCase?.() || "";
       const abbreviation = branch?.degreeAbbreviation?.toLowerCase?.() || "";
@@ -505,33 +599,15 @@ function MainRegistration() {
     return branch.branchAbbreviation || branch.branchFullName || branch.branchName || branch.branch;
   }, []);
 
-  const getRequiredGPAFields = useCallback(() => {
-    if (!currentYear || !currentSemester) return [];
-
-    if (currentYear === "IV" && currentSemester === "8") {
-      return Array.from({ length: 7 }, (_, index) => `semester${index + 1}GPA`);
-    }
-
-    const semesterNum = parseInt(currentSemester, 10);
-    return Array.from({ length: semesterNum - 1 }, (_, index) => `semester${index + 1}GPA`);
-  }, [currentYear, currentSemester]);
+  /* ── Section Completion ── */
 
   const checkSectionComplete = useCallback(
     (key) => {
       const sectionRef = sectionRefs[key]?.current;
       if (!sectionRef) return false;
 
-      if (key === "semester") {
-        if (!currentYear || !currentSemester) return false;
-        return getRequiredGPAFields().every((fieldName) => {
-          const input = sectionRef.querySelector(`input[name="${fieldName}"]`);
-          return input && input.value.trim() !== "";
-        });
-      }
-
       if (key === "academic") {
         if (!studyCategory) return false;
-
         const alwaysRequired = ["tenthInstitution", "tenthBoard", "tenthPercentage", "tenthYear"];
         const twelfthRequired = studyCategory === "12th" || studyCategory === "both"
           ? ["twelfthInstitution", "twelfthBoard", "twelfthPercentage", "twelfthYear", "twelfthCutoff"]
@@ -539,7 +615,6 @@ function MainRegistration() {
         const diplomaRequired = studyCategory === "diploma" || studyCategory === "both"
           ? ["diplomaInstitution", "diplomaBranch", "diplomaPercentage", "diplomaYear"]
           : [];
-
         const requiredSelectors = [...alwaysRequired, ...twelfthRequired, ...diplomaRequired];
         return requiredSelectors.every((fieldName) => {
           const input = sectionRef.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"]`);
@@ -562,141 +637,125 @@ function MainRegistration() {
           return false;
         }
       }
-
       return true;
     },
-    [sectionRefs, currentYear, currentSemester, studyCategory, getRequiredGPAFields]
+    [sectionRefs, studyCategory]
   );
 
-  // Function to scroll to field and blink
+  /* ── Scroll to Field & Blink ── */
+
   const scrollToFieldAndBlink = useCallback((fieldName) => {
     if (!formRef.current) return;
-    
-    // Handle special cases
+
     let field = null;
-    let isSpecialField = false;
-    
+
     if (fieldName === 'dob') {
-      // For Date of Birth DatePicker
       const dobWrapper = formRef.current.querySelector('.StuProfile-datepicker-wrapper');
       field = dobWrapper?.querySelector('input');
-      isSpecialField = true;
     } else if (fieldName === 'companyTypes') {
-      // For company types checkboxes
-      field = formRef.current.querySelector(`input[name="companyTypes"]`);
-      isSpecialField = true;
+      field = formRef.current.querySelector('input[name="companyTypes"]');
     } else if (fieldName === 'preferredJobLocation') {
-      // For preferred job location checkboxes
-      field = formRef.current.querySelector(`input[name="preferredJobLocation"]`);
-      isSpecialField = true;
+      field = formRef.current.querySelector('input[name="preferredJobLocation"]');
     } else {
-      // For all other fields (inputs, selects, textareas)
       field = formRef.current.querySelector(`[name="${fieldName}"]`);
     }
-    
+
     if (field) {
-      // Scroll to field
       const section = field.closest('[class*="mr-profile-section-container"]');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
         field.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      
-      // Add blink animation after scroll
+
       setTimeout(() => {
         if (fieldName === 'companyTypes' || fieldName === 'preferredJobLocation') {
-          // For checkbox groups, highlight the container
           const container = field.closest('.mr-checkbox-group') || field.closest('[class*="checkbox"]') || field.parentElement;
           if (container) {
             container.classList.add('field-blink');
             setTimeout(() => container.classList.remove('field-blink'), 3000);
           }
-        } else if (field.tagName === 'SELECT') {
-          // For SELECT dropdowns, create a wrapper effect
-          const originalBorder = field.style.border;
-          const originalBoxShadow = field.style.boxShadow;
-          const originalBackground = field.style.backgroundColor;
-          
-          let blinkCount = 0;
-          const blinkInterval = setInterval(() => {
-            if (blinkCount % 2 === 0) {
-              field.style.border = '2px solid #ffc107';
-              field.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
-              field.style.backgroundColor = '#fff9e6';
-            } else {
-              field.style.border = originalBorder;
-              field.style.boxShadow = originalBoxShadow;
-              field.style.backgroundColor = originalBackground;
-            }
-            blinkCount++;
-            if (blinkCount >= 4) {
-              clearInterval(blinkInterval);
-              field.style.border = originalBorder;
-              field.style.boxShadow = originalBoxShadow;
-              field.style.backgroundColor = originalBackground;
-            }
-          }, 375);
-          
-          field.focus();
         } else {
-          // For regular inputs, use CSS animation
-          field.classList.add('field-blink');
-          field.focus();
-          setTimeout(() => field.classList.remove('field-blink'), 3000);
+          // Check if this is a mobile input field (inside mobile-input-wrapper)
+          const mobileWrapper = field.closest('[class*="mr-mobile-input-wrapper"]');
+          if (mobileWrapper) {
+            // Handle mobile input wrapper highlighting
+            const originalBorder = mobileWrapper.style.border;
+            const originalBoxShadow = mobileWrapper.style.boxShadow;
+            const originalBackground = mobileWrapper.style.backgroundColor;
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+              if (blinkCount % 2 === 0) {
+                mobileWrapper.style.border = '2px solid #ffc107';
+                mobileWrapper.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
+                mobileWrapper.style.backgroundColor = '#fff9e6';
+              } else {
+                mobileWrapper.style.border = originalBorder;
+                mobileWrapper.style.boxShadow = originalBoxShadow;
+                mobileWrapper.style.backgroundColor = originalBackground;
+              }
+              blinkCount++;
+              if (blinkCount >= 4) {
+                clearInterval(blinkInterval);
+                mobileWrapper.style.border = originalBorder;
+                mobileWrapper.style.boxShadow = originalBoxShadow;
+                mobileWrapper.style.backgroundColor = originalBackground;
+              }
+            }, 375);
+            field.focus();
+          } else if (field.tagName === 'SELECT') {
+            const originalBorder = field.style.border;
+            const originalBoxShadow = field.style.boxShadow;
+            const originalBackground = field.style.backgroundColor;
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+              if (blinkCount % 2 === 0) {
+                field.style.border = '2px solid #ffc107';
+                field.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
+                field.style.backgroundColor = '#fff9e6';
+              } else {
+                field.style.border = originalBorder;
+                field.style.boxShadow = originalBoxShadow;
+                field.style.backgroundColor = originalBackground;
+              }
+              blinkCount++;
+              if (blinkCount >= 4) {
+                clearInterval(blinkInterval);
+                field.style.border = originalBorder;
+                field.style.boxShadow = originalBoxShadow;
+                field.style.backgroundColor = originalBackground;
+              }
+            }, 375);
+            field.focus();
+          } else {
+            field.classList.add('field-blink');
+            field.focus();
+            setTimeout(() => field.classList.remove('field-blink'), 3000);
+          }
         }
       }, 500);
     } else {
-      // Fallback: scroll to section if field not found
       const sectionMap = {
-        firstName: 'personal',
-        lastName: 'personal',
-        regNo: 'personal',
-        batch: 'personal',
-        dob: 'personal',
-        degree: 'personal',
-        branch: 'personal',
-        section: 'personal',
-        gender: 'personal',
-        primaryEmail: 'personal',
-        domainEmail: 'personal',
-        mobileNo: 'personal',
-        fatherName: 'personal',
-        motherName: 'personal',
-        community: 'personal',
-        aadhaarNo: 'other',
-        portfolioLink: 'other',
-        mediumOfStudy: 'other',
-        residentialStatus: 'other',
-        quota: 'other',
-        firstGraduate: 'other',
-        skillSet: 'other',
-        rationCardNo: 'other',
-        familyAnnualIncome: 'other',
-        panNo: 'other',
-        arrearStatus: 'other',
-        companyTypes: 'other',
-        preferredJobLocation: 'other',
-        twelfthInstitution: 'academic',
-        twelfthBoard: 'academic',
-        twelfthPercentage: 'academic',
-        twelfthYear: 'academic',
-        twelfthCutoff: 'academic',
-        diplomaInstitution: 'academic',
-        diplomaBranch: 'academic',
-        diplomaPercentage: 'academic',
-        diplomaYear: 'academic',
-        tenthInstitution: 'academic',
-        tenthBoard: 'academic',
-        tenthPercentage: 'academic',
-        tenthYear: 'academic',
-        currentYear: 'semester',
-        currentSemester: 'semester',
-        loginRegNo: 'login',
-        loginPassword: 'login',
-        confirmPassword: 'login'
+        firstName: 'personal', lastName: 'personal', regNo: 'personal',
+        batch: 'personal', dob: 'personal', degree: 'personal', branch: 'personal',
+        section: 'personal', gender: 'personal', primaryEmail: 'personal',
+        domainEmail: 'personal', mobileNo: 'personal', fatherName: 'personal',
+        fatherMobile: 'personal', motherName: 'personal', motherMobile: 'personal',
+        community: 'personal', aadhaarNo: 'other',
+        portfolioLink: 'other', mediumOfStudy: 'other', residentialStatus: 'other',
+        quota: 'other', firstGraduate: 'other', skillSet: 'other',
+        rationCardNo: 'other', familyAnnualIncome: 'other', panNo: 'other',
+        willingToSignBond: 'other', preferredModeOfDrive: 'other',
+        companyTypes: 'other', preferredJobLocation: 'other',
+        twelfthInstitution: 'academic', twelfthBoard: 'academic',
+        twelfthPercentage: 'academic', twelfthYear: 'academic', twelfthCutoff: 'academic',
+        diplomaInstitution: 'academic', diplomaBranch: 'academic',
+        diplomaPercentage: 'academic', diplomaYear: 'academic',
+        tenthInstitution: 'academic', tenthBoard: 'academic',
+        tenthPercentage: 'academic', tenthYear: 'academic',
+        currentYear: 'personal', currentSemester: 'personal',
+        loginRegNo: 'login', loginPassword: 'login', confirmPassword: 'login'
       };
-      
       const sectionKey = sectionMap[fieldName];
       if (sectionKey && sectionRefs[sectionKey]?.current) {
         sectionRefs[sectionKey].current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -704,41 +763,26 @@ function MainRegistration() {
     }
   }, [sectionRefs]);
 
+  /* ── Validation ── */
+
   const validateAllFields = useCallback(() => {
     if (!formRef.current) return { isValid: false, errors: [] };
-
     const formData = new FormData(formRef.current);
     const errors = [];
 
     const requiredFields = {
-      firstName: "First Name",
-      lastName: "Last Name",
-      regNo: "Registration Number",
-      batch: "Batch",
-      degree: "Degree",
-      branch: "Branch",
-      section: "Section",
-      gender: "Gender",
-      primaryEmail: "Primary Email",
-      domainEmail: "Domain Email",
-      mobileNo: "Mobile Number",
-      fatherName: "Father Name",
-      motherName: "Mother Name",
-      community: "Community",
-      aadhaarNo: "Aadhaar Number",
-      portfolioLink: "Portfolio Link",
-      mediumOfStudy: "Medium of Study",
-      residentialStatus: "Residential Status",
-      quota: "Quota",
-      firstGraduate: "First Graduate",
-      skillSet: "Skill Set",
-      rationCardNo: "Ration Card Number",
-      familyAnnualIncome: "Family Annual Income",
-      panNo: "PAN Number",
-      loginRegNo: "Login Registration Number",
-      loginPassword: "Login Password",
-      confirmPassword: "Confirm Password",
-      arrearStatus: "Arrear Status",
+      firstName: "First Name", lastName: "Last Name", regNo: "Registration Number",
+      batch: "Batch", degree: "Degree", branch: "Branch", section: "Section",
+      gender: "Gender", primaryEmail: "Primary Email", domainEmail: "Domain Email",
+      mobileNo: "Mobile Number", fatherName: "Father Name", fatherMobile: "Father's Mobile Number",
+      motherName: "Mother Name", motherMobile: "Mother's Mobile Number", community: "Community",
+      aadhaarNo: "Aadhaar Number", portfolioLink: "Portfolio Link",
+      mediumOfStudy: "Medium of Study", residentialStatus: "Residential Status",
+      quota: "Quota", firstGraduate: "First Graduate", skillSet: "Skill Set",
+      rationCardNo: "Ration Card Number", familyAnnualIncome: "Family Annual Income",
+      panNo: "PAN Number", willingToSignBond: "Willing to Sign Bond",
+      preferredModeOfDrive: "Preferred Mode of Drive", loginRegNo: "Login Registration Number",
+      loginPassword: "Login Password", confirmPassword: "Confirm Password",
     };
 
     Object.entries(requiredFields).forEach(([field, label]) => {
@@ -776,10 +820,8 @@ function MainRegistration() {
 
     if (studyCategory === "12th" || studyCategory === "both") {
       const twelfthFields = {
-        twelfthInstitution: "12th Institution Name",
-        twelfthBoard: "12th Board/University",
-        twelfthPercentage: "12th Percentage",
-        twelfthYear: "12th Year of Passing",
+        twelfthInstitution: "12th Institution Name", twelfthBoard: "12th Board/University",
+        twelfthPercentage: "12th Percentage", twelfthYear: "12th Year of Passing",
         twelfthCutoff: "12th Cut-off Marks",
       };
       Object.entries(twelfthFields).forEach(([field, label]) => {
@@ -790,10 +832,8 @@ function MainRegistration() {
 
     if (studyCategory === "diploma" || studyCategory === "both") {
       const diplomaFields = {
-        diplomaInstitution: "Diploma Institution",
-        diplomaBranch: "Diploma Branch",
-        diplomaPercentage: "Diploma Percentage",
-        diplomaYear: "Diploma Year of Passing",
+        diplomaInstitution: "Diploma Institution", diplomaBranch: "Diploma Branch",
+        diplomaPercentage: "Diploma Percentage", diplomaYear: "Diploma Year of Passing",
       };
       Object.entries(diplomaFields).forEach(([field, label]) => {
         const value = formData.get(field);
@@ -802,10 +842,8 @@ function MainRegistration() {
     }
 
     const tenthFields = {
-      tenthInstitution: "10th Institution Name",
-      tenthBoard: "10th Board/University",
-      tenthPercentage: "10th Percentage",
-      tenthYear: "10th Year of Passing",
+      tenthInstitution: "10th Institution Name", tenthBoard: "10th Board/University",
+      tenthPercentage: "10th Percentage", tenthYear: "10th Year of Passing",
     };
     Object.entries(tenthFields).forEach(([field, label]) => {
       const value = formData.get(field);
@@ -817,28 +855,6 @@ function MainRegistration() {
     if (!currentYearValue) errors.push({ message: "Current Year is required", field: "currentYear" });
     if (!currentSemesterValue) errors.push({ message: "Current Semester is required", field: "currentSemester" });
 
-    if (formRef.current) {
-      const requiredGpaFields = new Set(getRequiredGPAFields());
-      const gpaFields = formRef.current.querySelectorAll("input[name^='semester']");
-
-      gpaFields.forEach((field) => {
-        const value = field.value.trim();
-        const fieldLabel = field.name.replace("semester", "").replace("GPA", "");
-
-        if (!value) {
-          if (requiredGpaFields.has(field.name)) {
-            errors.push({ message: `Semester ${fieldLabel} GPA is required`, field: field.name });
-          }
-          return;
-        }
-
-        if (!GPA_REGEX.test(value)) {
-          errors.push({ message: `Semester ${fieldLabel} GPA must be a valid GPA`, field: field.name });
-        }
-      });
-    }
-
-    // Validate GitHub URL format (optional but must be valid if provided)
     const githubLink = formData.get("githubLink");
     if (githubLink && githubLink.trim()) {
       if (!GITHUB_URL_REGEX.test(githubLink.trim())) {
@@ -846,7 +862,6 @@ function MainRegistration() {
       }
     }
 
-    // Validate LinkedIn URL format (optional but must be valid if provided)
     const linkedinLink = formData.get("linkedinLink");
     if (linkedinLink && linkedinLink.trim()) {
       if (!LINKEDIN_URL_REGEX.test(linkedinLink.trim())) {
@@ -854,95 +869,35 @@ function MainRegistration() {
       }
     }
 
-    // Check for Company Types (at least one should be selected)
     if (!selectedCompanyTypes || selectedCompanyTypes.length === 0) {
       errors.push({ message: "At least one Company Type must be selected", field: "companyTypes" });
     }
 
-    // Check for Preferred Job Locations (at least one should be selected)
     if (!selectedJobLocations || selectedJobLocations.length === 0) {
       errors.push({ message: "At least one Preferred Job Location must be selected", field: "preferredJobLocation" });
     }
 
     return { isValid: errors.length === 0, errors };
-  }, [currentYear, currentSemester, dob, studyCategory, getRequiredGPAFields, selectedCompanyTypes, selectedJobLocations]);
+  }, [currentYear, currentSemester, dob, studyCategory, selectedCompanyTypes, selectedJobLocations]);
+
+  /* ── Input/Form Handlers ── */
 
   const handleInputChange = useCallback(() => {
     const updated = {};
     sectionList.forEach(({ key }) => {
       updated[key] = checkSectionComplete(key);
     });
-
     setCompletedSections(updated);
 
     const validation = validateAllFields();
     setIsRegisterEnabled(validation.isValid);
     setValidationErrors(validation.errors);
-    
-    // Reset show all errors when validation changes
-    if (validation.errors.length !== validationErrors.length) {
+
+    if (validation.errors.length !== prevErrorCountRef.current) {
       setShowAllErrors(false);
     }
-  }, [sectionList, checkSectionComplete, validateAllFields, validationErrors.length]);
-
-  const validateGpaInput = useCallback((inputElement) => {
-    if (!inputElement) return;
-    const rawValue = inputElement.value.trim();
-
-    if (!rawValue) {
-      inputElement.setCustomValidity("");
-      return;
-    }
-
-    if (!GPA_REGEX.test(rawValue)) {
-      inputElement.setCustomValidity("Enter GPA with up to two decimal places (e.g., 9.08)");
-      return;
-    }
-
-    const numericValue = Number(rawValue);
-    if (Number.isNaN(numericValue) || numericValue < GPA_MIN || numericValue > GPA_MAX) {
-      inputElement.setCustomValidity(`Enter a GPA between ${GPA_MIN} and ${GPA_MAX} (e.g., 9.08)`);
-      return;
-    }
-
-    inputElement.setCustomValidity("");
-  }, []);
-
-  const handleGpaInput = useCallback(
-    (event) => {
-      validateGpaInput(event.target);
-    },
-    [validateGpaInput]
-  );
-
-  const handleGpaBlur = useCallback(
-    (event) => {
-      const inputElement = event.target;
-      validateGpaInput(inputElement);
-
-      const rawValue = inputElement.value.trim();
-      if (!rawValue) {
-        handleInputChange();
-        return;
-      }
-
-      if (!GPA_REGEX.test(rawValue)) {
-        handleInputChange();
-        return;
-      }
-
-      const numericValue = Number(rawValue);
-      if (Number.isNaN(numericValue)) {
-        handleInputChange();
-        return;
-      }
-
-      inputElement.value = numericValue.toFixed(2);
-      validateGpaInput(inputElement);
-      handleInputChange();
-    },
-    [handleInputChange, validateGpaInput]
-  );
+    prevErrorCountRef.current = validation.errors.length;
+  }, [sectionList, checkSectionComplete, validateAllFields]);
 
   const handleCompanyTypeChange = useCallback(
     (event) => {
@@ -968,104 +923,83 @@ function MainRegistration() {
     [handleInputChange]
   );
 
+  /* ── Popup Close Handlers ── */
   const closePopup = useCallback(() => setPopupOpen(false), []);
   const closeExistingRegNoPopup = useCallback(() => setExistingRegNoPopupOpen(false), []);
   const closeMismatchedRegNoPopup = useCallback(() => setMismatchedRegNoPopupOpen(false), []);
   const closeFileSizeErrorPopup = useCallback(() => setIsFileSizeErrorOpen(false), []);
+  const closeFileFormatErrorPopup = useCallback(() => setIsFileFormatErrorOpen(false), []);
   const closeURLErrorPopup = useCallback(() => setURLErrorPopupOpen(false), []);
 
-  const handleDiscard = useCallback(() => {
-    setIsDiscardPopupOpen(true);
-  }, []);
+  /* ── Discard Handlers ── */
+  const handleDiscard = useCallback(() => setIsDiscardPopupOpen(true), []);
+  const handleConfirmDiscard = useCallback(() => { setIsDiscardPopupOpen(false); window.location.href = "/"; }, []);
+  const handleCancelDiscard = useCallback(() => setIsDiscardPopupOpen(false), []);
 
-  const handleConfirmDiscard = useCallback(() => {
-    setIsDiscardPopupOpen(false);
-    window.location.href = "/";
-  }, []);
-
-  const handleCancelDiscard = useCallback(() => {
-    setIsDiscardPopupOpen(false);
-  }, []);
-
-  // Change favicon to blue for registration page
-  useEffect(() => {
-    changeFavicon(FAVICON_TYPES.STUDENT);
-  }, []);
+  /* ── Effects ── */
 
   useEffect(() => {
     handleInputChange();
-  }, [handleInputChange, profileImage, currentYear, currentSemester, studyCategory]);
+  }, [handleInputChange, profileImage, currentYear, currentSemester, studyCategory, batchStartYear, batchEndYear]);
 
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (profileImage && profileImage.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImage);
+      }
+    };
+  }, [profileImage]);
+
+  // Fetch degrees and branches
   useEffect(() => {
     let isSubscribed = true;
-
     const fetchDegreeAndBranchData = async () => {
       try {
         const [degreeList, branchList] = await Promise.all([
           mongoDBService.getDegrees(),
           mongoDBService.getBranches(),
         ]);
-
         if (!isSubscribed) return;
 
         const sanitizedDegrees = Array.isArray(degreeList)
           ? degreeList.map((degree) => ({
               ...degree,
-              degreeAbbreviation:
-                degree.degreeAbbreviation || degree.abbreviation || degree.shortName || "",
+              degreeAbbreviation: degree.degreeAbbreviation || degree.abbreviation || degree.shortName || "",
               degreeFullName: degree.degreeFullName || degree.fullName || degree.name || "",
             }))
           : [];
-
         const sanitizedBranches = Array.isArray(branchList) ? branchList : [];
-
         setDegrees(sanitizedDegrees);
         setBranches(sanitizedBranches);
       } catch (error) {
         console.error("Failed to fetch degree/branch data:", error);
       }
     };
-
     fetchDegreeAndBranchData();
-
-    return () => {
-      isSubscribed = false;
-    };
+    return () => { isSubscribed = false; };
   }, []);
 
+  /* ── Year/Semester Helpers ── */
+
   const getAvailableSemesters = useCallback((year) => {
-    const semesterMap = {
-      I: ["1", "2"],
-      II: ["3", "4"],
-      III: ["5", "6"],
-      IV: ["7", "8"],
-    };
+    const semesterMap = { I: ["1", "2"], II: ["3", "4"], III: ["5", "6"], IV: ["7", "8"] };
     return semesterMap[year] || [];
   }, []);
 
-  const generateBatchOptions = useCallback(() => {
-    const currentYearValue = new Date().getFullYear();
-    const startYear = currentYearValue - 5;
-    const endYear = currentYearValue + 5;
-    const batches = [];
-
-    for (let year = startYear; year <= endYear; year += 1) {
-      const batchEnd = year + 4;
-      batches.push({ value: `${year}-${batchEnd}`, label: `${year}-${batchEnd}` });
+  const handleBatchStartYearChange = useCallback((e) => {
+    const value = e.target.value;
+    if (value.length <= 4 && /^\d*$/.test(value)) {
+      setBatchStartYear(value);
+      if (value.length === 4) {
+        setBatchEndYear(String(parseInt(value, 10) + 4));
+      } else {
+        setBatchEndYear("");
+      }
     }
-
-    return batches;
   }, []);
 
-  const getAllGPAFields = useCallback(() => {
-    if (!currentYear || !currentSemester) return [];
-    if (currentYear === "IV" && currentSemester === "8") {
-      return Array.from({ length: 8 }, (_, index) => `semester${index + 1}GPA`);
-    }
-
-    const semesterNum = parseInt(currentSemester, 10);
-    return Array.from({ length: semesterNum }, (_, index) => `semester${index + 1}GPA`);
-  }, [currentYear, currentSemester]);
+  /* ── Sidebar Click ── */
 
   const handleSidebarClick = useCallback(
     (key) => {
@@ -1077,7 +1011,6 @@ function MainRegistration() {
         const scrollToSection = () => {
           const sectionElement = ref.current;
           sectionElement.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-
           setTimeout(() => {
             const rect = sectionElement.getBoundingClientRect();
             const headerHeight = 65;
@@ -1085,7 +1018,6 @@ function MainRegistration() {
             window.scrollTo({ top: targetPosition, behavior: "smooth" });
           }, 200);
         };
-
         setTimeout(scrollToSection, 100);
 
         if (window.innerWidth <= 992) {
@@ -1093,9 +1025,7 @@ function MainRegistration() {
         }
 
         if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 600);
+        scrollTimeoutRef.current = setTimeout(() => { isScrollingRef.current = false; }, 600);
       } else if (window.innerWidth <= 992) {
         setIsSidebarOpen(false);
       }
@@ -1103,18 +1033,32 @@ function MainRegistration() {
     [sectionRefs]
   );
 
+  /* ── Image Upload Handler ── */
+  /* NO accept attribute on file input = Windows shows ALL files.
+     Validation is done here in JS using getFileType(). */
+
   const handleImageUpload = useCallback(
     (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      if (file.type !== "image/jpeg") {
-        alert("Invalid file type. Please upload a JPG file.");
+      console.log('[MainRegistration] File selected:', file.name, 'MIME:', file.type, 'Size:', file.size);
+
+      const fileType = getFileType(file);
+
+      if (!fileType) {
+        // Invalid format — show popup (NO alert)
+        console.warn('[MainRegistration] Invalid format for:', file.name, '| MIME:', file.type);
+        setInvalidFileName(file.name);
+        setIsFileFormatErrorOpen(true);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
 
+      // Check file size: Maximum 500KB
       const maxSize = 500 * 1024;
       const sizeKB = (file.size / 1024).toFixed(1);
+
       if (file.size > maxSize) {
         setFileSizeErrorKB(sizeKB);
         setIsFileSizeErrorOpen(true);
@@ -1122,33 +1066,51 @@ function MainRegistration() {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (loadEvent) => {
-        const base64String = loadEvent.target?.result;
-        if (typeof base64String === "string") {
-          setProfileImage(base64String);
-          setUploadInfo({ name: file.name, date: new Date().toLocaleDateString("en-GB") });
-          setUploadSuccess(true);
-          setTimeout(() => setUploadSuccess(false), 5000);
-          setTimeout(handleInputChange, 0);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Store raw File object for GridFS upload (NOT base64)
+      setProfilePhotoFile(file);
+
+      // Create object URL for preview
+      const objectUrl = URL.createObjectURL(file);
+      setProfileImage(objectUrl);
+
+      setUploadInfo({
+        name: file.name,
+        date: new Date().toLocaleDateString("en-GB"),
+        size: sizeKB,
+        type: fileType
+      });
+
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 5000);
+
+      console.log('[MainRegistration] Image accepted:', {
+        name: file.name,
+        mimeType: file.type || 'unknown',
+        size: sizeKB + 'KB',
+        detectedType: fileType
+      });
     },
-    [handleInputChange]
+    []
   );
+
+  /* ── Image Remove Handler ── */
 
   const handleImageRemove = useCallback(
     (event) => {
       if (event?.preventDefault) event.preventDefault();
+      if (profileImage && profileImage.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImage);
+      }
       setProfileImage(null);
+      setProfilePhotoFile(null);
       setUploadInfo({ name: "", date: "" });
       setUploadSuccess(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setTimeout(handleInputChange, 0);
     },
-    [handleInputChange]
+    [profileImage]
   );
+
+  /* ── Registration Number Checks ── */
 
   const checkRegistrationNumberExists = useCallback(
     async (regNo) => {
@@ -1203,6 +1165,8 @@ function MainRegistration() {
     []
   );
 
+  /* ── Save / Submit ── */
+
   const handleSave = useCallback(
     async (event) => {
       event.preventDefault();
@@ -1224,7 +1188,8 @@ function MainRegistration() {
         if (confirmPassword !== loginPassword) invalidMessages.push("Password confirmation does not match");
 
         if (invalidMessages.length) {
-          alert(invalidMessages.join("\n"));
+          setValidationErrorMessage(invalidMessages.join("\n"));
+          setValidationErrorPopupOpen(true);
           return;
         }
 
@@ -1236,10 +1201,13 @@ function MainRegistration() {
           });
 
         if (existingStudent) {
-          alert(`Registration number already exists. Please use a different registration number.\n\nFound student ID: ${existingStudent.id}`);
+          setValidationErrorMessage(`Registration number already exists. Please use a different registration number.\n\nFound student ID: ${existingStudent.id}`);
+          setValidationErrorPopupOpen(true);
+          setIsRegistering(false);
           return;
         }
 
+        // Build student data — profilePicURL will be set after GridFS upload
         const studentData = {
           regNo: regNoValue,
           dob: dobFormatted,
@@ -1248,29 +1216,29 @@ function MainRegistration() {
           batch: formData.get("batch") || "",
           degree: formData.get("degree") || "",
           branch: formData.get("branch") || "",
-          currentYear: currentYear || formData.get("currentYear") || "",
-          currentSemester: currentSemester || formData.get("currentSemester") || "",
+          currentYear: formData.get("currentYear") || currentYear || "",
+          currentSemester: formData.get("currentSemester") || currentSemester || "",
+          studyCategory: formData.get("studyCategory") || studyCategory || "",
           section: formData.get("section") || "",
           gender: formData.get("gender") || "",
           address: formData.get("address") || "",
           city: formData.get("city") || "",
           primaryEmail: formData.get("primaryEmail") || "",
           domainEmail: formData.get("domainEmail") || "",
-          mobileNo: formData.get("mobileNo") || "",
+          mobileNo: "+91" + (formData.get("mobileNo") || ""),
           fatherName: formData.get("fatherName") || "",
           fatherOccupation: formData.get("fatherOccupation") || "",
-          fatherMobile: formData.get("fatherMobile") || "",
+          fatherMobile: formData.get("fatherMobile") ? "+91" + formData.get("fatherMobile") : "",
           motherName: formData.get("motherName") || "",
           motherOccupation: formData.get("motherOccupation") || "",
-          motherMobile: formData.get("motherMobile") || "",
+          motherMobile: formData.get("motherMobile") ? "+91" + formData.get("motherMobile") : "",
           guardianName: formData.get("guardianName") || "",
-          guardianMobile: formData.get("guardianMobile") || "",
+          guardianMobile: formData.get("guardianMobile") ? "+91" + formData.get("guardianMobile") : "",
           community: formData.get("community") || "",
           bloodGroup: formData.get("bloodGroup") || "",
           aadhaarNo: formData.get("aadhaarNo") || "",
           portfolioLink: formData.get("portfolioLink") || "",
           mediumOfStudy: formData.get("mediumOfStudy") || "",
-          studyCategory,
           tenthInstitution: formData.get("tenthInstitution") || "",
           tenthBoard: formData.get("tenthBoard") || "",
           tenthPercentage: formData.get("tenthPercentage") || "",
@@ -1284,24 +1252,10 @@ function MainRegistration() {
           diplomaBranch: formData.get("diplomaBranch") || "",
           diplomaPercentage: formData.get("diplomaPercentage") || "",
           diplomaYear: formData.get("diplomaYear") || "",
-          semester1GPA: formData.get("semester1GPA") || "",
-          semester2GPA: formData.get("semester2GPA") || "",
-          semester3GPA: formData.get("semester3GPA") || "",
-          semester4GPA: formData.get("semester4GPA") || "",
-          semester5GPA: formData.get("semester5GPA") || "",
-          semester6GPA: formData.get("semester6GPA") || "",
-          semester7GPA: formData.get("semester7GPA") || "",
-          semester8GPA: formData.get("semester8GPA") || "",
-          overallCGPA: formData.get("overallCGPA") || "",
-          clearedBacklogs: formData.get("clearedBacklogs") || "",
-          currentBacklogs: formData.get("currentBacklogs") || "",
-          arrearStatus: formData.get("arrearStatus") || "",
-          yearOfGap: formData.get("yearOfGap") || "",
-          gapReason: formData.get("gapReason") || "",
-          residentialStatus: formData.get("residentialStatus") || "",
-          quota: formData.get("quota") || "",
+          residentialStatus: formData.get("residentialStatus") || residentialStatus || "",
+          quota: formData.get("quota") || quota || "",
           languagesKnown: formData.get("languagesKnown") || "",
-          firstGraduate: formData.get("firstGraduate") || "",
+          firstGraduate: formData.get("firstGraduate") || firstGraduate || "",
           passportNo: formData.get("passportNo") || "",
           skillSet: formData.get("skillSet") || "",
           valueAddedCourses: formData.get("valueAddedCourses") || "",
@@ -1309,19 +1263,66 @@ function MainRegistration() {
           rationCardNo: formData.get("rationCardNo") || "",
           familyAnnualIncome: formData.get("familyAnnualIncome") || "",
           panNo: formData.get("panNo") || "",
-          willingToSignBond: formData.get("willingToSignBond") || "",
-          preferredModeOfDrive: formData.get("preferredModeOfDrive") || "",
+          willingToSignBond: formData.get("willingToSignBond") || willingToSignBond || "",
+          preferredModeOfDrive: formData.get("preferredModeOfDrive") || preferredModeOfDrive || "",
           githubLink: formData.get("githubLink") || "",
           linkedinLink: formData.get("linkedinLink") || "",
-          companyTypes: selectedCompanyTypes.join(", "),
-          preferredJobLocation: selectedJobLocations.join(", "),
-          profilePicURL: profileImage || "",
+          companyTypes: formData.get("companyTypes") || selectedCompanyTypes.join(", ") || "",
+          preferredJobLocation: formData.get("preferredJobLocation") || selectedJobLocations.join(", ") || "",
+          profilePicURL: "",
           profileUploadDate: uploadInfo.date || new Date().toLocaleDateString("en-GB"),
           loginRegNo: loginRegNoValue,
           loginPassword,
         };
 
-        await mongoDBService.createStudent(studentData);
+        // Create student first
+        const createResponse = await mongoDBService.createStudent(studentData);
+        console.log('[MainRegistration] Create student response:', createResponse);
+
+        // Backend returns { message, student: { _id, ... } }
+        const createdStudent = createResponse?.student || createResponse;
+        const studentId = createdStudent?._id || createdStudent?.id;
+
+        if (!studentId) {
+          throw new Error("Failed to create student record — no ID returned");
+        }
+
+        // Upload profile photo to GridFS (raw File, NOT base64)
+        if (profilePhotoFile) {
+          try {
+            console.log('[MainRegistration] Uploading to GridFS:', {
+              name: profilePhotoFile.name,
+              mimeType: profilePhotoFile.type || 'application/octet-stream',
+              size: (profilePhotoFile.size / 1024).toFixed(1) + 'KB',
+              studentId: studentId,
+              userType: 'student'
+            });
+
+            const result = await gridfsService.uploadProfileImage(
+              profilePhotoFile,
+              studentId,
+              'student'
+            );
+
+            console.log('[MainRegistration] GridFS upload result:', result);
+
+            if (result && result.url) {
+              await mongoDBService.updateStudent(studentId, {
+                profilePicURL: result.url,
+                profileUploadDate: uploadInfo.date || new Date().toLocaleDateString("en-GB")
+              });
+              console.log('[MainRegistration] Profile photo stored in GridFS:', result.url);
+            }
+          } catch (uploadErr) {
+            console.error('[MainRegistration] Failed to upload profile photo:', uploadErr);
+            // Don't fail registration — just log
+          }
+        }
+
+        // Clean up object URL
+        if (profileImage && profileImage.startsWith('blob:')) {
+          URL.revokeObjectURL(profileImage);
+        }
 
         setTimeout(() => {
           setPopupOpen(true);
@@ -1329,7 +1330,8 @@ function MainRegistration() {
         }, 1000);
       } catch (error) {
         console.error("Error saving student data:", error);
-        alert(`Error saving data: ${error.message}. Check console for details.`);
+        setValidationErrorMessage(`Error saving data: ${error.message}. Check console for details.`);
+        setValidationErrorPopupOpen(true);
       } finally {
         setIsRegistering(false);
       }
@@ -1338,13 +1340,21 @@ function MainRegistration() {
       currentSemester,
       currentYear,
       dob,
+      profilePhotoFile,
       profileImage,
       selectedCompanyTypes,
       selectedJobLocations,
       studyCategory,
       uploadInfo,
+      willingToSignBond,
+      preferredModeOfDrive,
+      residentialStatus,
+      quota,
+      firstGraduate,
     ]
   );
+
+  /* ─── Render ─── */
 
   return (
     <div className={cx("mr-page-wrapper")}>
@@ -1359,178 +1369,251 @@ function MainRegistration() {
           />
           <div className={cx("mr-dashboard-area")} id="mr-dashboard-area">
             <form ref={formRef} onSubmit={handleSave} onChange={handleInputChange}>
+
+              {/* ── Personal Information ── */}
               <div className={cx("mr-profile-section-container")} ref={sectionRefs.personal}>
                 <h3 className={cx("mr-section-header")}>Personal Information</h3>
-                <div className={cx("mr-form-grid")}> 
+                <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-personal-info-fields")}>
-                    <input type="text" name="firstName" placeholder="First Name *" required />
-                    <input type="text" name="lastName" placeholder="Last Name *" required />
-                    <div style={{ position: "relative" }}>
+                    <div className={cx("mr-field")}>
+                      <label>First Name *</label>
+                      <input type="text" name="firstName" placeholder="Enter First Name" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Last Name *</label>
+                      <input type="text" name="lastName" placeholder="Enter Last Name" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Register Number *</label>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          name="regNo"
+                          placeholder="Enter Register Number (11 digits)"
+                          maxLength="11"
+                          onBlur={handleRegNoBlur}
+                          required
+                        />
+                        {isCheckingRegNo && <div className={cx("mr-regno-checking-spinner")} />}
+                      </div>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Batch *</label>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <input
+                          type="text"
+                          value={batchStartYear}
+                          onChange={handleBatchStartYearChange}
+                          placeholder="Start"
+                          maxLength="4"
+                          style={{ flex: 1 }}
+                          required
+                        />
+                        <span style={{ fontWeight: "600", color: "#333" }}>-</span>
+                        <input
+                          type="text"
+                          value={batchEndYear}
+                          placeholder="End"
+                          maxLength="4"
+                          style={{ flex: 1 }}
+                          readOnly
+                          disabled
+                        />
+                      </div>
                       <input
-                        type="text"
-                        name="regNo"
-                        placeholder="Register Number (11 digits) *"
-                        maxLength="11"
-                        onBlur={handleRegNoBlur}
-                        required
-                      />
-                      {isCheckingRegNo && <div className={cx("mr-regno-checking-spinner")} />}
-                    </div>
-                    <select name="batch" defaultValue="" required>
-                      <option value="" disabled>
-                        Batch *
-                      </option>
-                      {generateBatchOptions().map((batch) => (
-                        <option key={batch.value} value={batch.value}>
-                          {batch.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className={achievementStyles['Achievement-datepicker-wrapper']}>
-                      <DatePicker
-                        selected={dob}
-                        onChange={(date) => setDob(date)}
-                        dateFormat="dd-MM-yyyy"
-                        placeholderText="DOB*"
-                        className="input-hover"
-                        showPopperArrow={false}
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        yearDropdownItemNumber={7}
-                        scrollableYearDropdown
-                        minDate={new Date(new Date().getFullYear() - 50, 0, 1)}
-                        maxDate={new Date()}
-                        required
-                        autoComplete="off"
+                        type="hidden"
+                        name="batch"
+                        value={batchStartYear && batchEndYear ? `${batchStartYear}-${batchEndYear}` : ""}
                       />
                     </div>
-                    <select
-                      name="degree"
-                      value={selectedDegree}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setSelectedDegree(value);
-                        setSelectedBranch('');
-                      }}
-                      required
-                    >
-                      <option value="" disabled>
-                        Degree *
-                      </option>
-                      {degrees.map((degree) => {
-                        const value = degree.degreeAbbreviation || degree.degreeFullName;
-                        const label = degree.degreeFullName
-                          ? degree.degreeAbbreviation
-                            ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                            : degree.degreeFullName
-                          : value;
-                        return (
-                          <option key={degree.id || degree._id || value} value={value}>
-                            {label}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <select
-                      name="branch"
-                      value={selectedBranch}
-                      onChange={(event) => {
-                        setSelectedBranch(event.target.value);
-                      }}
-                      required
-                      disabled={!selectedDegree}
-                    >
-                      <option value="" disabled>
-                        {selectedDegree ? 'Branch *' : 'Select Degree First'}
-                      </option>
-                      {filteredBranches.map((branch) => {
-                        const value = getBranchOptionValue(branch);
-                        const label = branch.branchFullName
-                          ? branch.branchAbbreviation
-                            ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                            : branch.branchFullName
-                          : value;
-                        return (
-                          <option key={branch.id || branch._id || value} value={value}>
-                            {label}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <select
-                      name="currentYear"
-                      value={currentYear}
-                      onChange={(event) => {
-                        const newYear = event.target.value;
-                        setCurrentYear(newYear);
-                        const semesters = getAvailableSemesters(newYear);
-                        setCurrentSemester(semesters[0] || "");
-                        setTimeout(handleInputChange, 100);
-                      }}
-                      required
-                    >
-                      <option value="" disabled>
-                        Current Year *
-                      </option>
-                      <option value="I">I</option>
-                      <option value="II">II</option>
-                      <option value="III">III</option>
-                      <option value="IV">IV</option>
-                    </select>
-                    <select
-                      name="currentSemester"
-                      value={currentSemester}
-                      onChange={(event) => {
-                        setCurrentSemester(event.target.value);
-                        setTimeout(handleInputChange, 100);
-                      }}
-                      required
-                      disabled={!currentYear}
-                    >
-                      <option value="" disabled>
-                        {currentYear ? "Current Semester *" : "Select Year First"}
-                      </option>
-                      {getAvailableSemesters(currentYear).map((semesterOption) => (
-                        <option key={semesterOption} value={semesterOption}>
-                          {semesterOption}
+                    <div className={cx("mr-field")}>
+                      <label>DOB *</label>
+                      <div className={achievementStyles['Achievement-datepicker-wrapper']}>
+                        <DatePicker
+                          selected={dob}
+                          onChange={(date) => setDob(date)}
+                          dateFormat="dd-MM-yyyy"
+                          placeholderText="Enter DOB"
+                          className="input-hover"
+                          showPopperArrow={false}
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          yearDropdownItemNumber={7}
+                          scrollableYearDropdown
+                          minDate={new Date(new Date().getFullYear() - 50, 0, 1)}
+                          maxDate={new Date()}
+                          required
+                          autoComplete="off"
+                        />
+                      </div>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Degree *</label>
+                      <select
+                        name="degree"
+                        value={selectedDegree}
+                        onChange={(event) => {
+                          setSelectedDegree(event.target.value);
+                          setSelectedBranch('');
+                        }}
+                        required
+                      >
+                        <option value="" disabled>Select Degree</option>
+                        {degrees.map((degree) => {
+                          const value = degree.degreeAbbreviation || degree.degreeFullName;
+                          const label = degree.degreeFullName
+                            ? degree.degreeAbbreviation
+                              ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                              : degree.degreeFullName
+                            : value;
+                          return (
+                            <option key={degree.id || degree._id || value} value={value}>{label}</option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Branch *</label>
+                      <select
+                        name="branch"
+                        value={selectedBranch}
+                        onChange={(event) => setSelectedBranch(event.target.value)}
+                        required
+                        disabled={!selectedDegree}
+                      >
+                        <option value="" disabled>
+                          {selectedDegree ? 'Select Branch' : 'Select Degree First'}
                         </option>
-                      ))}
-                    </select>
-                    <select name="section" defaultValue="" required>
-                      <option value="" disabled>
-                        Section *
-                      </option>
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                      <option value="D">D</option>
-                    </select>
-                    <select name="gender" defaultValue="" required>
-                      <option value="" disabled>
-                        Gender *
-                      </option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                    </select>
-                    <input type="text" name="address" placeholder="Address" />
-                    <input type="text" name="city" placeholder="City" />
-                    <input type="email" name="primaryEmail" placeholder="Primary Email *" required />
-                    <input type="email" name="domainEmail" placeholder="Domain Email *" required />
-                    <input type="tel" name="mobileNo" placeholder="Mobile No. *" required />
-                    <input type="text" name="fatherName" placeholder="Father Name *" required />
-                    <input type="text" name="fatherOccupation" placeholder="Father Occupation" />
-                    <input type="tel" name="fatherMobile" placeholder="Father Mobile No." maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" />
-                    <input type="text" name="motherName" placeholder="Mother Name *" required />
-                    <input type="text" name="motherOccupation" placeholder="Mother Occupation" />
-                    <input type="tel" name="motherMobile" placeholder="Mother Mobile No." maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" />
-                    <input type="text" name="guardianName" placeholder="Guardian Name" />
-                    <input type="tel" name="guardianMobile" placeholder="Guardian Number" maxLength="10" pattern="[0-9]{10}" title="Please enter exactly 10 digits" />
-                    <input type="text" name="aadhaarNo" placeholder="Aadhaar Number *" required />
-                    <input type="url" name="portfolioLink" placeholder="Portfolio Link" />
+                        {filteredBranches.map((branch) => {
+                          const value = getBranchOptionValue(branch);
+                          const label = branch.branchFullName
+                            ? branch.branchAbbreviation
+                              ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                              : branch.branchFullName
+                            : value;
+                          return (
+                            <option key={branch.id || branch._id || value} value={value}>{label}</option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Current Year *</label>
+                      <select
+                        name="currentYear"
+                        value={currentYear}
+                        onChange={(event) => {
+                          const newYear = event.target.value;
+                          setCurrentYear(newYear);
+                          const semesters = getAvailableSemesters(newYear);
+                          setCurrentSemester(semesters[0] || "");
+                          setTimeout(handleInputChange, 100);
+                        }}
+                        required
+                      >
+                        <option value="" disabled>Select Current Year</option>
+                        <option value="I">I</option>
+                        <option value="II">II</option>
+                        <option value="III">III</option>
+                        <option value="IV">IV</option>
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Current Semester *</label>
+                      <select
+                        name="currentSemester"
+                        value={currentSemester}
+                        onChange={(event) => {
+                          setCurrentSemester(event.target.value);
+                          setTimeout(handleInputChange, 100);
+                        }}
+                        required
+                        disabled={!currentYear}
+                      >
+                        <option value="" disabled>
+                          {currentYear ? "Select Current Semester" : "Select Year First"}
+                        </option>
+                        {getAvailableSemesters(currentYear).map((semesterOption) => (
+                          <option key={semesterOption} value={semesterOption}>{semesterOption}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Section *</label>
+                      <select name="section" defaultValue="" required>
+                        <option value="" disabled>Select Section</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Gender *</label>
+                      <select name="gender" defaultValue="" required>
+                        <option value="" disabled>Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Address</label>
+                      <input type="text" name="address" placeholder="Enter Address" />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>City</label>
+                      <input type="text" name="city" placeholder="Enter City" />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Primary Email *</label>
+                      <input type="email" name="primaryEmail" placeholder="Enter Primary Email" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Domain Email *</label>
+                      <input type="email" name="domainEmail" placeholder="Enter Domain Email" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Mobile No. *</label>
+                      <MobileInputWithPrefix name="mobileNo" placeholder="Enter Mobile No." onChange={handleInputChange} />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Father Name *</label>
+                      <input type="text" name="fatherName" placeholder="Enter Father Name" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Father Occupation</label>
+                      <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Father's Mobile No. *</label>
+                      <MobileInputWithPrefix name="fatherMobile" placeholder="Enter Father's Mobile No." onChange={handleInputChange} />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Mother Name *</label>
+                      <input type="text" name="motherName" placeholder="Enter Mother Name" required />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Mother Occupation</label>
+                      <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Mother's Mobile No. *</label>
+                      <MobileInputWithPrefix name="motherMobile" placeholder="Enter Mother's Mobile No." onChange={handleInputChange} />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Guardian Name</label>
+                      <input type="text" name="guardianName" placeholder="Enter Guardian Name" />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Guardian's Mobile No.</label>
+                      <MobileInputWithPrefix name="guardianMobile" placeholder="Enter Guardian's Mobile No." onChange={handleInputChange} />
+                    </div>
                   </div>
+
+                  {/* ── Profile Photo ── */}
                   <div className={cx("mr-profile-photo-wrapper")}>
-                    <div className={cx("mr-profile-photo-box")} style={{ height: "675px" }}>
+                    <div className={cx("mr-profile-photo-box")} style={{ height: "732px" }}>
                       <h3 className={cx("mr-section-header")}>Profile Photo</h3>
                       <div className={cx("mr-profile-icon-container")}>
                         {profileImage ? (
@@ -1539,6 +1622,8 @@ function MainRegistration() {
                             alt="Profile Preview"
                             className={cx("mr-profile-preview-img")}
                             onClick={() => setImagePreviewOpen(true)}
+                            onLoad={() => console.log('[MainRegistration] Image preview loaded')}
+                            onError={(e) => console.error('[MainRegistration] Image preview failed:', e)}
                           />
                         ) : (
                           <GraduationCapIcon />
@@ -1546,18 +1631,18 @@ function MainRegistration() {
                       </div>
                       {profileImage && uploadInfo.name && (
                         <div className={cx("mr-upload-info-container")}>
-                          <div className={cx("mr-upload-info-item")}> 
+                          <div className={cx("mr-upload-info-item")}>
                             <FileIcon />
                             <span>{uploadInfo.name}</span>
                           </div>
-                          <div className={cx("mr-upload-info-item")}> 
+                          <div className={cx("mr-upload-info-item")}>
                             <CalendarIcon />
                             <span>Uploaded on: {uploadInfo.date}</span>
                           </div>
                         </div>
                       )}
                       <div className={cx("mr-upload-action-area")}>
-                        <div className={cx("mr-upload-btn-wrapper")}> 
+                        <div className={cx("mr-upload-btn-wrapper")}>
                           <label htmlFor="photo-upload-input" className={cx("mr-profile-upload-btn")}>
                             <div className={cx("mr-upload-btn-content")}>
                               <MdUpload /> <span>Upload (Max 500 KB)</span>
@@ -1573,12 +1658,15 @@ function MainRegistration() {
                             </button>
                           )}
                         </div>
+                        {/*
+                          NO accept attribute here — Windows file picker will show ALL files.
+                          File format validation is handled by getFileType() in handleImageUpload.
+                        */}
                         <input
                           type="file"
                           id="photo-upload-input"
                           ref={fileInputRef}
                           style={{ display: "none" }}
-                          accept="image/jpeg"
                           onChange={handleImageUpload}
                         />
                         {uploadSuccess && (
@@ -1586,14 +1674,13 @@ function MainRegistration() {
                             Profile Photo uploaded Successfully!
                           </p>
                         )}
-                        <p className={cx("mr-upload-hint")}>*Only JPG allowed.</p>
+                        <p className={cx("mr-upload-hint")}>*Supported formats: JPG, JPEG, WebP (max 500KB)</p>
                       </div>
                     </div>
-                    <div style={{ marginTop: "24px" }}>
+                    <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
+                      <label>Community *</label>
                       <select name="community" defaultValue="" required>
-                        <option value="" disabled>
-                          Community *
-                        </option>
+                        <option value="" disabled>Select Community</option>
                         <option value="OC">OC</option>
                         <option value="BC">BC</option>
                         <option value="BCM">BCM</option>
@@ -1603,255 +1690,243 @@ function MainRegistration() {
                         <option value="ST">ST</option>
                       </select>
                     </div>
-                    <div style={{ marginTop: "24px" }}>
+                    <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
+                      <label>Medium *</label>
                       <select name="mediumOfStudy" defaultValue="" required>
-                        <option value="" disabled>
-                          Medium *
-                        </option>
+                        <option value="" disabled>Select Medium</option>
                         <option value="English">English</option>
                         <option value="Tamil">Tamil</option>
                         <option value="Other">Others</option>
                       </select>
                     </div>
-                    <div style={{ marginTop: "24px" }}>
-                      <input type="text" name="bloodGroup" placeholder="Blood Group" />
+                    <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
+                      <label>Blood Group</label>
+                      <input type="text" name="bloodGroup" placeholder="Enter Blood Group" />
+                    </div>
+                    <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
+                      <label>Aadhaar Number *</label>
+                      <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number" required />
+                    </div>
+                    <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
+                      <label>Portfolio Link</label>
+                      <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" />
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* ── Academic Background ── */}
               <div className={cx("mr-profile-section-container")} ref={sectionRefs.academic}>
                 <h3 className={cx("mr-section-header")}>Academic Background</h3>
-                <div className={cx("mr-form-grid")}> 
+                <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-study-category")} style={{ gridColumn: "1 / -1" }}>
-                    <input
-                      type="radio"
-                      id="12th"
-                      name="study_category"
-                      value="12th"
-                      checked={studyCategory === "12th"}
-                      onChange={(event) => setStudyCategory(event.target.value)}
-                    />
+                    <input type="radio" id="12th" name="studyCategory" value="12th" checked={studyCategory === "12th"} onChange={(e) => setStudyCategory(e.target.value)} />
                     <label htmlFor="12th">12th</label>
-                    <input
-                      type="radio"
-                      id="diploma"
-                      name="study_category"
-                      value="diploma"
-                      checked={studyCategory === "diploma"}
-                      onChange={(event) => setStudyCategory(event.target.value)}
-                    />
+                    <input type="radio" id="diploma" name="studyCategory" value="diploma" checked={studyCategory === "diploma"} onChange={(e) => setStudyCategory(e.target.value)} />
                     <label htmlFor="diploma">Diploma</label>
-                    <input
-                      type="radio"
-                      id="both"
-                      name="study_category"
-                      value="both"
-                      checked={studyCategory === "both"}
-                      onChange={(event) => setStudyCategory(event.target.value)}
-                    />
+                    <input type="radio" id="both" name="studyCategory" value="both" checked={studyCategory === "both"} onChange={(e) => setStudyCategory(e.target.value)} />
                     <label htmlFor="both">Both</label>
                   </div>
-                  <input type="text" name="tenthInstitution" placeholder="10th Institution Name *" required />
-                  <select name="tenthBoard" defaultValue="" required>
-                    <option value="" disabled>
-                      10th Board *
-                    </option>
-                    <option value="State Board">State Board</option>
-                    <option value="CBSE">CBSE</option>
-                    <option value="ICSE">ICSE</option>
-                    <option value="Other State Board">Other State Board</option>
-                  </select>
-                  <input type="text" name="tenthPercentage" placeholder="10th Percentage *" required />
-                  <input type="text" name="tenthYear" placeholder="10th Year of Passing *" required />
+                  <div className={cx("mr-field")}>
+                    <label>10th Institution Name *</label>
+                    <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>10th Board *</label>
+                    <select name="tenthBoard" defaultValue="" required>
+                      <option value="" disabled>Select 10th Board</option>
+                      <option value="State Board">State Board</option>
+                      <option value="CBSE">CBSE</option>
+                      <option value="ICSE">ICSE</option>
+                      <option value="Other State Board">Other State Board</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>10th Percentage *</label>
+                    <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>10th Year of Passing *</label>
+                    <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" required />
+                  </div>
                   {(studyCategory === "12th" || studyCategory === "both") && (
                     <>
-                      <input type="text" name="twelfthInstitution" placeholder="12th Institution Name *" required />
-                      <select name="twelfthBoard" defaultValue="" required>
-                        <option value="" disabled>
-                          12th Board *
-                        </option>
-                        <option value="State Board">State Board</option>
-                        <option value="CBSE">CBSE</option>
-                        <option value="ICSE">ICSE</option>
-                        <option value="Other State Board">Other State Board</option>
-                      </select>
-                      <input type="text" name="twelfthPercentage" placeholder="12th Percentage *" required />
-                      <input type="text" name="twelfthYear" placeholder="12th Year *" required />
-                      <input type="text" name="twelfthCutoff" placeholder="12th Cut-off *" required />
+                      <div className={cx("mr-field")}>
+                        <label>12th Institution Name *</label>
+                        <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>12th Board *</label>
+                        <select name="twelfthBoard" defaultValue="" required>
+                          <option value="" disabled>Select 12th Board</option>
+                          <option value="State Board">State Board</option>
+                          <option value="CBSE">CBSE</option>
+                          <option value="ICSE">ICSE</option>
+                          <option value="Other State Board">Other State Board</option>
+                        </select>
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>12th Percentage *</label>
+                        <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>12th Year *</label>
+                        <input type="text" name="twelfthYear" placeholder="Enter 12th Year" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>12th Cut-off *</label>
+                        <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off" required />
+                      </div>
                     </>
                   )}
                   {(studyCategory === "diploma" || studyCategory === "both") && (
                     <>
-                      <input type="text" name="diplomaInstitution" placeholder="Diploma Institution *" required />
-                      <input type="text" name="diplomaBranch" placeholder="Diploma Branch *" required />
-                      <input type="text" name="diplomaPercentage" placeholder="Diploma Percentage *" required />
-                      <input type="text" name="diplomaYear" placeholder="Diploma Year *" required />
+                      <div className={cx("mr-field")}>
+                        <label>Diploma Institution *</label>
+                        <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>Diploma Branch *</label>
+                        <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>Diploma Percentage *</label>
+                        <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" required />
+                      </div>
+                      <div className={cx("mr-field")}>
+                        <label>Diploma Year *</label>
+                        <input type="text" name="diplomaYear" placeholder="Enter Diploma Year" required />
+                      </div>
                     </>
                   )}
                 </div>
               </div>
 
-              <div className={cx("mr-profile-section-container")} ref={sectionRefs.semester}>
-                <h3 className={cx("mr-section-header")}>Semester</h3>
-                <div className={cx("mr-form-grid")}> 
-                  {getAllGPAFields().map((field) => {
-                    const isRequired = getRequiredGPAFields().includes(field);
-                    const semesterLabel = field.replace(/\D/g, "");
-                    return (
-                      <input
-                        key={field}
-                        type="text"
-                        name={field}
-                        placeholder={`Semester ${semesterLabel} GPA ${isRequired ? "*" : ""} (e.g., 9.08)`}
-                        inputMode="decimal"
-                        onInput={handleGpaInput}
-                        onBlur={handleGpaBlur}
-                        required={isRequired}
-                      />
-                    );
-                  })}
-                  <input
-                    type="text"
-                    name="overallCGPA"
-                    placeholder="Overall CGPA (e.g., 9.08)"
-                    inputMode="decimal"
-                    onInput={handleGpaInput}
-                    onBlur={handleGpaBlur}
-                  />
-
-                  <input type="text" name="clearedBacklogs" placeholder="No. of Backlogs (Cleared)" />
-                  <input type="text" name="currentBacklogs" placeholder="No. of Current Backlogs" />
-                  <select name="arrearStatus" defaultValue="" required>
-                    <option value="" disabled>
-                      Arrear Status *
-                    </option>
-                    <option value="NHA">NHA</option>
-                    <option value="NSA">NSA</option>
-                    <option value="SA">SA</option>
-                  </select>
-                  <input type="text" name="yearOfGap" placeholder="Year of Gap" />
-                  <input type="text" name="gapReason" placeholder="Reason for Gap" />
-                </div>
-              </div>
-
+              {/* ── Other Details ── */}
               <div className={cx("mr-profile-section-container")} ref={sectionRefs.other}>
                 <h3 className={cx("mr-section-header")}>Other Details</h3>
-                <div className={cx("mr-form-grid")}> 
-                  <select
-                    name="residentialStatus"
-                    value={residentialStatus}
-                    onChange={(event) => setResidentialStatus(event.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      Residential Status *
-                    </option>
-                    <option value="Hosteller">Hosteller</option>
-                    <option value="Dayscholar">Dayscholar</option>
-                  </select>
-                  <select
-                    name="quota"
-                    value={quota}
-                    onChange={(event) => setQuota(event.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      Quota *
-                    </option>
-                    <option value="Management">Management</option>
-                    <option value="Counselling">Counselling</option>
-                  </select>
-
-                  <input
-                    type="text"
-                    name="languagesKnown"
-                    placeholder="Languages Known (exclude Tamil & English)"
-                  />
-                  <select
-                    name="firstGraduate"
-                    value={firstGraduate}
-                    onChange={(event) => setFirstGraduate(event.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      First Graduate *
-                    </option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-
-                  <input type="text" name="passportNo" placeholder="Passport No." />
-                  <input type="text" name="skillSet" placeholder="Skill set *" required />
-                  <input type="text" name="valueAddedCourses" placeholder="Value Added Courses" />
-                  <input type="text" name="aboutSibling" placeholder="About Sibling" />
-                  <input type="text" name="rationCardNo" placeholder="Ration card No. *" required />
-                  <input type="text" name="familyAnnualIncome" placeholder="Family Annual Income *" required />
-                  <input type="text" name="panNo" placeholder="PAN No. *" required />
-                  <select
-                    name="willingToSignBond"
-                    value={willingToSignBond}
-                    onChange={(event) => setWillingToSignBond(event.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      Willing to Sign Bond *
-                    </option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                  <select
-                    name="preferredModeOfDrive"
-                    value={preferredModeOfDrive}
-                    onChange={(event) => setPreferredModeOfDrive(event.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      Preferred Mode of Drive *
-                    </option>
-                    <option value="Online">Online</option>
-                    <option value="Offline">Offline</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-
-                  <input
-                    type="url"
-                    name="githubLink"
-                    placeholder="Github Link (e.g. https://github.com/username)"
-                    onChange={handleInputChange}
-                    onBlur={(e) => {
-                      const val = e.target.value.trim();
-                      if (val && !GITHUB_URL_REGEX.test(val)) {
-                        e.target.style.borderColor = '#dc3545';
-                        e.target.title = 'Must be: https://github.com/your-username';
-                        setUrlErrorType('GitHub');
-                        setInvalidUrl(val);
-                        setURLErrorPopupOpen(true);
-                      } else {
-                        e.target.style.borderColor = val ? '#28a745' : '';
-                        e.target.title = '';
-                      }
-                    }}
-                  />
-                  <input
-                    type="url"
-                    name="linkedinLink"
-                    placeholder="LinkedIn Link (e.g. https://linkedin.com/in/username)"
-                    onChange={handleInputChange}
-                    onBlur={(e) => {
-                      const val = e.target.value.trim();
-                      if (val && !LINKEDIN_URL_REGEX.test(val)) {
-                        e.target.style.borderColor = '#dc3545';
-                        e.target.title = 'Must be: https://linkedin.com/in/your-username';
-                        setUrlErrorType('LinkedIn');
-                        setInvalidUrl(val);
-                        setURLErrorPopupOpen(true);
-                      } else {
-                        e.target.style.borderColor = val ? '#28a745' : '';
-                        e.target.title = '';
-                      }
-                    }}
-                  />
+                <div className={cx("mr-form-grid")}>
+                  <div className={cx("mr-field")}>
+                    <label>Residential Status *</label>
+                    <select name="residentialStatus" value={residentialStatus} onChange={(e) => setResidentialStatus(e.target.value)} required>
+                      <option value="" disabled>Select Residential Status</option>
+                      <option value="Hosteller">Hosteller</option>
+                      <option value="Dayscholar">Dayscholar</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Quota *</label>
+                    <select name="quota" value={quota} onChange={(e) => setQuota(e.target.value)} required>
+                      <option value="" disabled>Select Quota</option>
+                      <option value="Management">Management</option>
+                      <option value="Counselling">Counselling</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Languages Known</label>
+                    <input type="text" name="languagesKnown" placeholder="Enter Languages Known (exclude Tamil & English)" />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>First Graduate *</label>
+                    <select name="firstGraduate" value={firstGraduate} onChange={(e) => setFirstGraduate(e.target.value)} required>
+                      <option value="" disabled>Select First Graduate</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Passport No.</label>
+                    <input type="text" name="passportNo" placeholder="Enter Passport No." />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Skill set *</label>
+                    <input type="text" name="skillSet" placeholder="Enter Skill set" required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Value Added Courses</label>
+                    <input type="text" name="valueAddedCourses" placeholder="Enter Value Added Courses" />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>About Sibling</label>
+                    <input type="text" name="aboutSibling" placeholder="Enter About Sibling" />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Ration card No. *</label>
+                    <input type="text" name="rationCardNo" placeholder="Enter Ration card No." required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Family Annual Income *</label>
+                    <input type="text" name="familyAnnualIncome" placeholder="Enter Family Annual Income" required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>PAN No. *</label>
+                    <input type="text" name="panNo" placeholder="Enter PAN No." required />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Willing to Sign Bond *</label>
+                    <select name="willingToSignBond" value={willingToSignBond} onChange={(e) => setWillingToSignBond(e.target.value)} required>
+                      <option value="" disabled>Select Willing to Sign Bond</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Preferred Mode of Drive *</label>
+                    <select name="preferredModeOfDrive" value={preferredModeOfDrive} onChange={(e) => setPreferredModeOfDrive(e.target.value)} required>
+                      <option value="" disabled>Select Preferred Mode of Drive</option>
+                      <option value="Online">Online</option>
+                      <option value="Offline">Offline</option>
+                      <option value="Hybrid">Hybrid</option>
+                    </select>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Github Link</label>
+                    <input
+                      type="url"
+                      name="githubLink"
+                      placeholder="Enter Github Link (e.g. https://github.com/username)"
+                      onChange={handleInputChange}
+                      onBlur={(e) => {
+                        const val = e.target.value.trim();
+                        if (val && !GITHUB_URL_REGEX.test(val)) {
+                          e.target.style.borderColor = '#dc3545';
+                          e.target.title = 'Must be: https://github.com/your-username';
+                          setUrlErrorType('GitHub');
+                          setInvalidUrl(val);
+                          setURLErrorPopupOpen(true);
+                        } else {
+                          e.target.style.borderColor = val ? '#28a745' : '';
+                          e.target.title = '';
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>LinkedIn Link</label>
+                    <input
+                      type="url"
+                      name="linkedinLink"
+                      placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
+                      onChange={handleInputChange}
+                      onBlur={(e) => {
+                        const val = e.target.value.trim();
+                        if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                          e.target.style.borderColor = '#dc3545';
+                          e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                          setUrlErrorType('LinkedIn');
+                          setInvalidUrl(val);
+                          setURLErrorPopupOpen(true);
+                        } else {
+                          e.target.style.borderColor = val ? '#28a745' : '';
+                          e.target.title = '';
+                        }
+                      }}
+                    />
+                  </div>
+                  {/* Hidden inputs for state-managed fields */}
+                  <input type="hidden" name="companyTypes" value={selectedCompanyTypes.join(", ")} />
+                  <input type="hidden" name="preferredJobLocation" value={selectedJobLocations.join(", ")} />
+                  
                   <div className={cx("mr-checkbox-group")}>
                     <span className={cx("mr-checkbox-group__label")}>Company Types *</span>
                     <div className={cx("mr-checkbox-group__options")}>
@@ -1894,56 +1969,58 @@ function MainRegistration() {
                       })}
                     </div>
                   </div>
-
                 </div>
               </div>
 
+              {/* ── Login Details ── */}
               <div className={cx("mr-profile-section-container")} ref={sectionRefs.login}>
                 <h3 className={cx("mr-section-header")}>Login Details</h3>
-                <div className={cx("mr-form-grid")}> 
-                  <input
-                    type="text"
-                    name="loginRegNo"
-                    placeholder="Register No (11 digits) *"
-                    maxLength="11"
-                    onBlur={handleLoginRegNoBlur}
-                    required
-                  />
-                  <div style={{ position: "relative" }}>
+                <div className={cx("mr-form-grid")}>
+                  <div className={cx("mr-field")}>
+                    <label>Register No *</label>
                     <input
-                      type={showLoginPassword ? "text" : "password"}
-                      name="loginPassword"
-                      placeholder="Password (DDMMYYYY) *"
+                      type="text"
+                      name="loginRegNo"
+                      placeholder="Enter Register No (11 digits)"
+                      maxLength="11"
+                      onBlur={handleLoginRegNoBlur}
                       required
-                      style={{ paddingRight: "40px" }}
                     />
-                    <button
-                      type="button"
-                      className={cx("password-toggle-btn")}
-                      onClick={() => setShowLoginPassword((prev) => !prev)}
-                    >
-                      {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
                   </div>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      placeholder="Confirm Password *"
-                      required
-                      style={{ paddingRight: "40px" }}
-                    />
-                    <button
-                      type="button"
-                      className={cx("password-toggle-btn")}
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    >
-                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
+                  <div className={cx("mr-field")}>
+                    <label>Password *</label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showLoginPassword ? "text" : "password"}
+                        name="loginPassword"
+                        placeholder="Enter Password (DDMMYYYY)"
+                        required
+                        style={{ paddingRight: "40px" }}
+                      />
+                      <button type="button" className={cx("password-toggle-btn")} onClick={() => setShowLoginPassword((prev) => !prev)}>
+                        {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className={cx("mr-field")}>
+                    <label>Confirm Password *</label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Enter Confirm Password"
+                        required
+                        style={{ paddingRight: "40px" }}
+                      />
+                      <button type="button" className={cx("password-toggle-btn")} onClick={() => setShowConfirmPassword((prev) => !prev)}>
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* ── Action Buttons ── */}
               <div className={cx("mr-action-buttons")}>
                 <button
                   type="button"
@@ -1961,7 +2038,8 @@ function MainRegistration() {
                     if (!isRegisterEnabled) {
                       event.preventDefault();
                       const errorMessages = validationErrors.map(e => e.message).slice(0, 5).join("\n");
-                      alert(`Please complete required fields:\n${errorMessages}`);
+                      setValidationErrorMessage(`Please complete required fields:\n${errorMessages}`);
+                      setValidationErrorPopupOpen(true);
                     }
                   }}
                 >
@@ -1976,13 +2054,14 @@ function MainRegistration() {
                 </button>
               </div>
 
+              {/* ── Validation Error List ── */}
               {validationErrors.length > 0 && (
                 <div className={styles.validationErrorBox}>
                   <h4>⚠️ Required Fields Missing:</h4>
                   <ul>
                     {(showAllErrors ? validationErrors : validationErrors.slice(0, 10)).map((error, index) => (
-                      <li 
-                        key={index} 
+                      <li
+                        key={index}
                         onClick={() => scrollToFieldAndBlink(error.field)}
                         className={styles.validationErrorItem}
                       >
@@ -1992,13 +2071,13 @@ function MainRegistration() {
                   </ul>
                   {validationErrors.length > 10 && (
                     <div className={styles.validationErrorToggle}>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setShowAllErrors(!showAllErrors)}
                         className={styles.showMoreButton}
                       >
-                        {showAllErrors 
-                          ? `Show Less ▲` 
+                        {showAllErrors
+                          ? 'Show Less ▲'
                           : `Show More (${validationErrors.length - 10} more) ▼`
                         }
                       </button>
@@ -2011,40 +2090,18 @@ function MainRegistration() {
         </div>
       </div>
 
+      {/* ── Overlays & Popups ── */}
       {isSidebarOpen && <div className={cx("mr-overlay")} onClick={() => setIsSidebarOpen(false)} />}
+
       <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
-      <ConfirmDiscardPopup
-        isOpen={isDiscardPopupOpen}
-        onConfirm={handleConfirmDiscard}
-        onCancel={handleCancelDiscard}
-      />
-      <ExistingRegNoPopup
-        isOpen={isExistingRegNoPopupOpen}
-        onClose={closeExistingRegNoPopup}
-        regNo={existingRegNo}
-      />
-      <MismatchedRegNoPopup
-        isOpen={isMismatchedRegNoPopupOpen}
-        onClose={closeMismatchedRegNoPopup}
-        personalRegNo={personalRegNo}
-        loginRegNo={loginRegNo}
-      />
-      <FileSizeErrorPopup
-        isOpen={isFileSizeErrorOpen}
-        onClose={closeFileSizeErrorPopup}
-        fileSizeKB={fileSizeErrorKB}
-      />
-      <URLValidationErrorPopup
-        isOpen={isURLErrorPopupOpen}
-        onClose={closeURLErrorPopup}
-        urlType={urlErrorType}
-        invalidUrl={invalidUrl}
-      />
-      <ImagePreviewModal
-        src={profileImage}
-        isOpen={isImagePreviewOpen}
-        onClose={() => setImagePreviewOpen(false)}
-      />
+      <ConfirmDiscardPopup isOpen={isDiscardPopupOpen} onConfirm={handleConfirmDiscard} onCancel={handleCancelDiscard} />
+      <ExistingRegNoPopup isOpen={isExistingRegNoPopupOpen} onClose={closeExistingRegNoPopup} regNo={existingRegNo} />
+      <MismatchedRegNoPopup isOpen={isMismatchedRegNoPopupOpen} onClose={closeMismatchedRegNoPopup} personalRegNo={personalRegNo} loginRegNo={loginRegNo} />
+      <FileSizeErrorPopup isOpen={isFileSizeErrorOpen} onClose={closeFileSizeErrorPopup} fileSizeKB={fileSizeErrorKB} />
+      <FileFormatErrorPopup isOpen={isFileFormatErrorOpen} onClose={closeFileFormatErrorPopup} fileName={invalidFileName} />
+      <URLValidationErrorPopup isOpen={isURLErrorPopupOpen} onClose={closeURLErrorPopup} urlType={urlErrorType} invalidUrl={invalidUrl} />
+      <ValidationErrorPopup isOpen={isValidationErrorPopupOpen} onClose={() => setValidationErrorPopupOpen(false)} message={validationErrorMessage} />
+      <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
     </div>
   );
 }

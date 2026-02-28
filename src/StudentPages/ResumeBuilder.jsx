@@ -87,7 +87,10 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
     customJobRole: '',
     fontStyle: 'Arial',
     pages: '1',
-    enableAI: true
+    enableAI: true,
+    linkType: 'HyperLink',
+    profilePhoto: false,
+    photoPosition: 'Left'
   });
 
   // Popup state
@@ -100,6 +103,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   const [createStatus, setCreateStatus] = useState(''); // Dynamic status message
   const [showCreated, setShowCreated] = useState(false);
   const [hasCreatedOnce, setHasCreatedOnce] = useState(false); // Prevent multiple clicks
+  const [isPreviewing, setIsPreviewing] = useState(false); // Track preview button state
 
   // ===== USER-SPECIFIC LOCALSTORAGE KEY =====
   // Prevents resume data from leaking between different student sessions
@@ -122,6 +126,33 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
 
   // Resume PDF URL (after generation)
   const [resumePdfUrl, setResumePdfUrl] = useState(null);
+
+  // ===== AUTO-SYNC to MongoDB when popup data changes =====
+  const syncToMongoDB = useCallback(async (updatedFields) => {
+    const studentId = studentData?._id || studentData?.id;
+    if (!studentId) return;
+
+    const token = localStorage.getItem('token');
+    const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+    try {
+      const storageKey = getStorageKey();
+      const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      const resumeData = { ...currentData, ...updatedFields };
+
+      await fetch(`${API_BASE}/api/resume-builder/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ studentId, resumeData }),
+      });
+      console.log('✅ Auto-synced to MongoDB');
+    } catch (err) {
+      console.warn('⚠️ Auto-sync to MongoDB failed:', err);
+    }
+  }, [studentData, getStorageKey]);
 
   // ===== AUTO-EXPAND SUMMARY TEXTAREA =====
   useEffect(() => {
@@ -264,6 +295,9 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
         ...currentStorage,
         experiences: newExperiences
       }));
+
+      // Auto-sync to MongoDB so technologies/projects persist
+      syncToMongoDB({ experiences: newExperiences });
       
       return newExperiences;
     });
@@ -293,6 +327,9 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
         ...currentStorage,
         projects: newProjects
       }));
+
+      // Auto-sync to MongoDB so technologies persist
+      syncToMongoDB({ projects: newProjects });
       
       return newProjects;
     });
@@ -301,7 +338,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   };
 
   const saveCertification = (data) => {
-    const label = data.certificateName ? `${data.certificateName}${data.issuedBy ? ', ' + data.issuedBy : ''}` : 'Certification';
+    const label = data.certificateName || 'Certification';
     if (editIndex !== null) {
       setCertifications(prev => {
         const copy = [...prev];
@@ -419,6 +456,8 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
         summary_input: resumeData.summary || '',
         experiences: resumeData.experiences?.map((exp) => exp.description || '').filter(d => d.trim().length > 0) || [],
         projects: resumeData.projects?.map((proj) => ({ title: proj.name, tech: proj.technologies?.join(', '), input: proj.description || '' })).filter(p => p.input.trim().length > 0) || [],
+        certifications: resumeData.certifications?.map((cert) => ({ name: cert.certificateName, input: cert.description || '' })).filter(c => c.input.trim().length > 0) || [],
+        achievements: resumeData.achievements?.map((ach) => ach.details || '').filter(d => d.trim().length > 0) || [],
         ats_keywords: atsKeywords.slice(0, 10)
       };
 
@@ -426,8 +465,10 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
       const hasSummary = !!inputData.summary_input;
       const hasExperiences = inputData.experiences.length > 0;
       const hasProjects = inputData.projects.length > 0;
+      const hasCertifications = inputData.certifications.length > 0;
+      const hasAchievements = inputData.achievements.length > 0;
 
-      if (hasSummary || hasExperiences || hasProjects) {
+      if (hasSummary || hasExperiences || hasProjects || hasCertifications || hasAchievements) {
         const batchPrompt = `
 You are an expert Technical Recruiter and Resume Writer.
 
@@ -441,18 +482,24 @@ INSTRUCTIONS:
 1. Professional Summary: Rewrite into a strong ${summaryWordLimit} word paragraph (Third person, no "I", no headers).
 2. Experiences: Optimize each description provided in the 'experiences' array (${expWordLimit} words each). Use strong action verbs.
 3. Projects: Optimize each project description provided in the 'projects' array (${projWordLimit} words each). Highlight technical impact.
+4. Certifications: Polish each certification description into exactly ONE short sentence (8-15 words MAX). Keep it concise — do NOT exceed 15 words.
+5. Achievements: Polish each achievement into exactly ONE short sentence (8-15 words MAX). Keep it concise — do NOT exceed 15 words.
 
 OUTPUT FORMAT:
 Return strictly minimal valid JSON with this structure:
 {
   "summary": "polished summary text",
   "experiences": ["polished description 1", "polished description 2", ...], 
-  "projects": ["polished description 1", "polished description 2", ...]
+  "projects": ["polished description 1", "polished description 2", ...],
+  "certifications": ["polished description 1", "polished description 2", ...],
+  "achievements": ["polished achievement 1", "polished achievement 2", ...]
 }
 
 Rules:
 - The "experiences" array must match the input order exactly.
 - The "projects" array must match the input order exactly.
+- The "certifications" array must match the input order exactly.
+- The "achievements" array must match the input order exactly.
 - Do NOT include any markdown formatting or extra text. Just the raw JSON object.
 `;
 
@@ -476,7 +523,10 @@ Rules:
               for (let i = 0; i < (resumeData.experiences?.length || 0); i++) {
                 if (resumeData.experiences[i].description && resumeData.experiences[i].description.trim()) {
                   if (result.experiences[resultIdx]) {
-                    resumeData.experiences[i].description = result.experiences[resultIdx];
+                    // Ensure we store a string, not an object
+                    const expVal = result.experiences[resultIdx];
+                    const expStr = typeof expVal === 'string' ? expVal : (expVal?.input || expVal?.description || expVal?.text || JSON.stringify(expVal));
+                    resumeData.experiences[i].description = expStr.trim();
                   }
                   resultIdx++;
                 }
@@ -489,7 +539,40 @@ Rules:
               for (let i = 0; i < (resumeData.projects?.length || 0); i++) {
                 if (resumeData.projects[i].description && resumeData.projects[i].description.trim()) {
                   if (result.projects[resultIdx]) {
-                    resumeData.projects[i].description = result.projects[resultIdx];
+                    // Ensure we store a string, not an object
+                    const projVal = result.projects[resultIdx];
+                    const projStr = typeof projVal === 'string' ? projVal : (projVal?.input || projVal?.description || projVal?.text || JSON.stringify(projVal));
+                    resumeData.projects[i].description = projStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+
+            // Apply Certifications
+            if (Array.isArray(result.certifications)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.certifications?.length || 0); i++) {
+                if (resumeData.certifications[i].description && resumeData.certifications[i].description.trim()) {
+                  if (result.certifications[resultIdx]) {
+                    const certVal = result.certifications[resultIdx];
+                    const certStr = typeof certVal === 'string' ? certVal : (certVal?.input || certVal?.description || certVal?.text || JSON.stringify(certVal));
+                    resumeData.certifications[i].description = certStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+
+            // Apply Achievements
+            if (Array.isArray(result.achievements)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.achievements?.length || 0); i++) {
+                if (resumeData.achievements[i].details && resumeData.achievements[i].details.trim()) {
+                  if (result.achievements[resultIdx]) {
+                    const achVal = result.achievements[resultIdx];
+                    const achStr = typeof achVal === 'string' ? achVal : (achVal?.input || achVal?.details || achVal?.text || JSON.stringify(achVal));
+                    resumeData.achievements[i].details = achStr.trim();
                   }
                   resultIdx++;
                 }
@@ -573,13 +656,15 @@ Rules:
 <link href="https://fonts.googleapis.com/css2?family=${googleFontImport}&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: ${fontStack} !important; }
-  body { font-family: ${fontStack} !important; font-size: 11pt; line-height: 1.4; color: #333; padding: 0.5in 0.6in; max-width: 8.5in; }
+  body { font-family: ${fontStack} !important; font-size: 11pt; line-height: 1.4; color: #333; padding: 0.5in 0.7in; max-width: 8.5in; }
   h1 { font-family: ${fontStack} !important; font-size: 20pt; color: #1a1a1a; text-align: center; margin-bottom: 4px; }
-  .contact { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; word-break: break-all; }
-  .contact a { color: #2563eb; text-decoration: none; }
+  .contact { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; }
+  .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
+  .contact a:hover { text-decoration: underline; }
   .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 2px; margin: 14px 0 6px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
   .entry { margin-bottom: 8px; }
-  .entry-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 10.5pt; }
+  .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 10.5pt; gap: 15px; width: 100%; }
+  .entry-header > span:last-child { white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
   .entry-sub { font-style: italic; font-size: 10pt; color: #555; margin-bottom: 2px; }
   .entry-desc { font-size: 10pt; margin-left: 12px; }
   ul { margin-left: 16px; }
@@ -591,25 +676,34 @@ Rules:
 </style></head><body>
 <h1>${personalInfo.name || 'Your Name'}</h1>
 <div class="contact">
-  ${[personalInfo.mobile, personalInfo.email, personalInfo.linkedin, personalInfo.github, personalInfo.portfolio].filter(Boolean).join(' | ')}
+  ${[
+    personalInfo.mobile || '',
+    personalInfo.email || '',
+    personalInfo.linkedin ? `<a href="${personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin}" target="_blank">LinkedIn</a>` : '',
+    personalInfo.github ? `<a href="${personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github}" target="_blank">GitHub</a>` : '',
+    personalInfo.portfolio ? `<a href="${personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio}" target="_blank">Portfolio</a>` : ''
+  ].filter(item => item !== '').join(' | ')}
+  ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => `<a href="${p.url.startsWith('http') ? p.url : 'https://' + p.url}" target="_blank">${p.name}</a>`).join(' | ') : ''}
 </div>
 
 ${summary ? `<div class="section-title">Professional Summary</div><p style="font-size:10pt;">${summary}</p>` : ''}
 
-${education.college || education.school12 || education.school10 ? `<div class="section-title">Education</div>
-${education.college ? `<div class="entry"><div class="entry-header"><span>${education.degree || 'B.E.'} in ${education.branch || 'Engineering'} - ${education.college}</span><span>${education.graduationYear || ''}</span></div><div class="entry-sub">CGPA: ${education.cgpa || 'N/A'}</div></div>` : ''}
-${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th - ${education.school12}</span><span>${education.batch12 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile12 || 'N/A'}</div></div>` : ''}
-${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th - ${education.school10}</span><span>${education.batch10 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile10 || 'N/A'}</div></div>` : ''}` : ''}
-
 ${skills.some(c => c.items?.length > 0) ? `<div class="section-title">Skills</div><ul class="skills-list">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${c.category}:</strong> ${c.items.join(', ')}</li>`).join('')}</ul>` : ''}
 
-${experiences.length > 0 ? `<div class="section-title">Professional Experience</div>
-${experiences.map(e => `<div class="entry">
-  <div class="entry-header"><span>${e.title || e.label}</span><span>${e.fromDate || ''} - ${e.toDate || 'Present'}</span></div>
-  <div class="entry-sub">${e.companyName || ''}${e.location ? ', ' + e.location : ''}</div>
-  ${e.description ? `<div class="entry-desc">${e.description}</div>` : ''}
+${experiences.length > 0 ? `<div class="section-title">Internship</div>
+${experiences.map(e => {
+  const fmtDate = (d) => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : d; };
+  const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
+  const titleParts = [];
+  if (e.companyName) titleParts.push(e.companyName);
+  if (e.location) titleParts.push(e.location);
+  const titleStr = titleParts.join(', ') + (modeLabel ? ' (' + modeLabel + ')' : '');
+  return `<div class="entry">
+  <div class="entry-header"><span>${titleStr}</span><span>${fmtDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${fmtDate(e.toDate) || 'Present'}</span></div>
+  ${e.description ? `<div class="entry-desc">${(typeof e.description === 'string' ? e.description : e.description).trim()}</div>` : ''}
   ${e.technologies?.length ? `<div class="entry-desc" style="margin-top:2px;"><strong>Tech:</strong> ${e.technologies.join(', ')}</div>` : ''}
-</div>`).join('')}` : ''}
+</div>`;
+}).join('')}` : ''}
 
 ${projects.length > 0 ? `<div class="section-title">Projects</div>
 ${projects.map(p => {
@@ -617,29 +711,31 @@ ${projects.map(p => {
   const desc = typeof p === 'string' ? '' : p.description;
   const tech = typeof p === 'string' ? [] : (p.technologies || []);
   const github = typeof p === 'string' ? '' : p.githubRepo;
+  const hosting = typeof p === 'string' ? '' : (p.hostingLink || '');
   return `<div class="entry">
-    <div class="entry-header"><span>${name}</span></div>
+    <div class="entry-header"><span>${name}</span><span style="font-size:9.5pt;">${github ? `<a href="${github}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${github && hosting ? ' | ' : ''}${hosting ? `<a href="${hosting}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
     ${desc ? `<div class="entry-desc">${desc}</div>` : ''}
     ${tech.length ? `<div class="entry-desc"><strong>Tech:</strong> ${tech.join(', ')}</div>` : ''}
-    ${github ? `<div class="entry-desc"><a href="${github}">GitHub</a></div>` : ''}
   </div>`;
 }).join('')}` : ''}
 
-${certifications.length > 0 ? `<div class="section-title">Certifications</div><ul>
+${certifications.length > 0 ? `<div class="section-title">Certifications</div>
 ${certifications.map(c => {
   const name = typeof c === 'string' ? c : c.certificateName;
-  const issuedBy = typeof c === 'string' ? '' : c.issuedBy;
-  return `<li>${name}${issuedBy ? ' - ' + issuedBy : ''}</li>`;
-}).join('')}</ul>` : ''}
+  const desc = typeof c === 'string' ? '' : (c.description || '');
+  return `<div style="margin-bottom:6px;"><strong>${name}</strong>${desc ? `<br/><span style="font-size:10pt;color:#444;">${desc}</span>` : ''}</div>`;
+}).join('')}` : ''}
 
 ${achievements.length > 0 ? `<div class="section-title">Achievements</div><ul>
 ${achievements.map(a => `<li>${typeof a === 'string' ? a : a.details}</li>`).join('')}</ul>` : ''}
 
-${platforms.filter(p => p.url).length > 0 ? `<div class="section-title">Coding Profiles</div><ul>
-${platforms.filter(p => p.url).map(p => `<li><strong>${p.name}:</strong> <a href="${p.url}">${p.url}</a></li>`).join('')}</ul>` : ''}
-
 ${additionalInfo.length > 0 ? `<div class="section-title">Additional Information</div><ul>
 ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join('')}</ul>` : ''}
+
+${education.college || education.school12 || education.school10 ? `<div class="section-title">Education</div>
+${education.college ? `<div class="entry"><div class="entry-header"><span>${education.degree || 'B.E.'} in ${education.branch || 'Engineering'} - ${education.college}</span><span>${education.graduationYear || ''}</span></div><div class="entry-sub">CGPA: ${education.cgpa || 'N/A'}</div></div>` : ''}
+${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th - ${education.school12}</span><span>${education.batch12 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile12 || 'N/A'}</div></div>` : ''}
+${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th - ${education.school10}</span><span>${education.batch10 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile10 || 'N/A'}</div></div>` : ''}` : ''}
 
 </body></html>`;
   };
@@ -699,8 +795,20 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
       // Step 1: Save data
       setCreateStatus('Saving your data...');
       setCreateProgress(5);
+      
+      // Add student's profile photo to personal info
+      const photoUrl = studentData?.profilePicURL || studentData?.profilePic || '';
+      console.log('📷 Adding profile photo to resume:', photoUrl);
+      console.log('📷 studentData.profilePicURL:', studentData?.profilePicURL);
+      console.log('📷 studentData.profilePic:', studentData?.profilePic);
+      
+      const personalInfoWithPhoto = {
+        ...personalInfo,
+        photo: photoUrl
+      };
+      
       const resumeData = {
-        personalInfo, education, platforms, skills,
+        personalInfo: personalInfoWithPhoto, education, platforms, skills,
         experiences, projects, certifications, achievements, additionalInfo,
         resumeSettings,
       };
@@ -741,18 +849,25 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         summary,
         experiences: experiences.map(e => ({
           title: e.title || e.label,
+          label: e.label || e.title || e.companyName || 'Experience',
           companyName: e.companyName,
           location: e.location,
+          mode: e.mode || 'in-person',
           fromDate: e.fromDate,
           toDate: e.toDate,
-          technologies: e.technologies,
-          projects: e.projects,
-          description: e.description,
+          technologies: e.technologies || [],
+          projects: e.projects || [],
+          description: typeof e.description === 'object' && e.description !== null
+            ? (e.description.input || e.description.description || e.description.text || '')
+            : (e.description || ''),
         })),
         projects: projects.map(p => typeof p === 'string' ? { name: p } : {
           name: p.name || p.label,
-          technologies: p.technologies,
-          description: p.description,
+          label: p.label || p.name || 'Project',
+          technologies: p.technologies || [],
+          description: typeof p.description === 'object' && p.description !== null
+            ? (p.description.input || p.description.description || p.description.text || '')
+            : (p.description || ''),
           githubRepo: p.githubRepo,
           hostingLink: p.hostingLink,
         }),
@@ -762,7 +877,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
       // Step 4: AI batch generation (single request)
       if (resumeSettings.enableAI) {
         console.log('🤖 AI enabled — auto-generating content...');
-        setCreateStatus('🤖 AI is polishing your content...');
+        setCreateStatus('AI is polishing your content...');
         
         // Animated progress during AI wait (20% → 55% over ~30s)
         const aiProgressInterval = setInterval(() => {
@@ -774,13 +889,13 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
 
         // Dynamic status messages while AI works
         const aiStatusMessages = [
-          '🤖 AI is polishing your content...',
-          '✍️ Crafting professional summary...',
-          '📝 Optimizing experience descriptions...',
-          '🚀 Enhancing project highlights...',
-          '🎯 Weaving in ATS keywords...',
-          '🔍 Fine-tuning word count & tone...',
-          '⏳ Almost there, reviewing quality...',
+          'AI is polishing your content...',
+          'Crafting professional summary...',
+          'Optimizing experience descriptions...',
+          'Enhancing project highlights...',
+          'Weaving in ATS keywords...',
+          'Fine-tuning word count & tone...',
+          'Almost there, reviewing quality...',
         ];
         let statusIdx = 0;
         const aiStatusInterval = setInterval(() => {
@@ -793,14 +908,36 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         clearInterval(aiProgressInterval);
         clearInterval(aiStatusInterval);
         setCreateProgress(55);
-        setCreateStatus('✅ AI content polished!');
+        setCreateStatus('AI content polished!');
         console.log('✅ AI content generation complete');
         // Brief pause to show success
         await new Promise(r => setTimeout(r, 600));
+
+        // Step 4b: Save AI-polished data back to MongoDB
+        if (studentId) {
+          try {
+            setCreateStatus('Saving AI-polished data...');
+            const polishedSaveResponse = await fetch(`${API_BASE}/api/resume-builder/save`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ studentId, resumeData: fullResumeData }),
+            });
+            if (polishedSaveResponse.ok) {
+              console.log('✅ AI-polished resume data saved to MongoDB');
+            } else {
+              console.warn('⚠️ AI-polished data MongoDB save failed:', await polishedSaveResponse.text());
+            }
+          } catch (polishedSaveErr) {
+            console.warn('⚠️ AI-polished data save error:', polishedSaveErr);
+          }
+        }
       }
 
       // Step 5: Generate PDF on server
-      setCreateStatus('📄 Generating PDF...');
+      setCreateStatus('Generating PDF...');
       setCreateProgress(60);
 
       const pdfProgressInterval = setInterval(() => {
@@ -824,42 +961,67 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
       setCreateProgress(88);
-      setCreateStatus('📥 Downloading PDF...');
+      setCreateStatus('Downloading PDF...');
 
       const blob = await response.blob();
       const pdfUrl = URL.createObjectURL(blob);
       setResumePdfUrl(pdfUrl);
 
-      // Step 6: Save & finalize
+      // Step 6: Upload to GridFS & save
       setCreateProgress(92);
-      setCreateStatus('💾 Saving to your profile...');
+      setCreateStatus('Saving to your profile...');
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const pdfDataUrl = reader.result;
-        const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || '{}');
-        updatedStudentData.resumeData = {
-          url: pdfDataUrl,
+      // Upload the PDF blob to GridFS
+      const pdfFile = new File([blob], `${personalInfo.name || 'Resume'}_Resume.pdf`, { type: 'application/pdf' });
+      let gridfsUrl = '';
+      try {
+        const gridfsService = (await import('../services/gridfsService')).default;
+        const uploadResult = await gridfsService.uploadResume(pdfFile, studentId);
+        gridfsUrl = uploadResult.gridfsFileUrl;
+        console.log('✅ Resume uploaded to GridFS:', gridfsUrl);
+      } catch (gridfsErr) {
+        console.error('⚠️ GridFS upload failed, continuing with blob URL:', gridfsErr);
+      }
+
+      const resumeUrl = gridfsUrl || pdfUrl;
+      const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || '{}');
+      updatedStudentData.resumeData = {
+        url: resumeUrl,
+        name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
+        createdAt: new Date().toISOString()
+      };
+      updatedStudentData.resumeURL = resumeUrl;
+      localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
+      
+      // Update resume cache so the Resume page shows buttons immediately
+      localStorage.setItem('studentResumeStatus', JSON.stringify({
+        hasResume: true,
+        checkedAt: Date.now()
+      }));
+      localStorage.setItem('studentResumeData', JSON.stringify({
+        resume: {
+          url: resumeUrl,
           name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
           createdAt: new Date().toISOString()
-        };
-        updatedStudentData.resumeURL = pdfDataUrl;
-        localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new Event('profileUpdated'));
-        console.log('✅ Resume PDF saved to localStorage for resume page');
-      };
-      reader.readAsDataURL(blob);
+        },
+        cachedAt: Date.now()
+      }));
+      
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('profileUpdated'));
+      window.dispatchEvent(new Event('resumeBuilt'));
+      console.log('✅ Resume saved with GridFS URL for resume page');
 
-      // Open in new tab
-      window.open(pdfUrl, '_blank');
-      console.log('✅ Resume opened in new tab for preview');
+      // Don't auto-open, let user click Preview button
+      // window.open(pdfUrl, '_blank');
+      console.log('✅ Resume ready for preview');
 
       setCreateProgress(100);
-      setCreateStatus('✅ Resume ready!');
+      setCreateStatus('Resume ready!');
 
       setTimeout(() => {
         setIsCreating(false);
+        setIsPreviewing(false);
         setShowCreated(true);
       }, 800);
     } catch (err) {
@@ -867,7 +1029,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
       
       // Rate-limited: show clear message, don't try fallback
       if (err.message?.includes('RATE_LIMITED')) {
-        setCreateStatus('⏳ API rate limit reached');
+        setCreateStatus('API rate limit reached');
         setCreateProgress(0);
         setTimeout(() => {
           setIsCreating(false);
@@ -876,15 +1038,16 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         return;
       }
 
-      setCreateStatus('⚠️ Trying fallback...');
+      setCreateStatus('Trying fallback...');
 
       // Fallback: client-side PDF
       try {
         await generateClientSidePdf();
         setCreateProgress(100);
-        setCreateStatus('✅ Resume ready!');
+        setCreateStatus('Resume ready!');
         setTimeout(() => {
           setIsCreating(false);
+          setIsPreviewing(false);
           setShowCreated(true);
         }, 600);
       } catch (fallbackErr) {
@@ -905,8 +1068,22 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
 
         let saved = null;
 
-        // 1. Try to fetch from MongoDB first
-        if (studentId) {
+        // 1. Check if data was pre-fetched from the Resume page (within last 30 seconds)
+        const preFetchedAt = parseInt(localStorage.getItem('resumeDataPreFetched') || '0', 10);
+        const isPreFetched = (Date.now() - preFetchedAt) < 30000;
+
+        if (isPreFetched) {
+          // Data was just pre-fetched and cached in localStorage — skip MongoDB call
+          localStorage.removeItem('resumeDataPreFetched');
+          const storageKey = getStorageKey();
+          saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+          if (saved) {
+            console.log('⚡ Resume data loaded instantly from pre-fetch cache');
+          }
+        }
+
+        // 2. If not pre-fetched, fetch from MongoDB
+        if (!saved && studentId) {
           try {
             const response = await fetch(`${API_BASE}/api/resume-builder/load/${studentId}`, {
               method: 'GET',
@@ -958,7 +1135,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         // 3. Populate form fields with loaded data
         if (saved) {
           if (saved.personalInfo) setPersonalInfo(prev => ({ ...prev, ...saved.personalInfo }));
-          // Professional summary is intentionally NOT loaded from cache - must be generated fresh each time
+          if (saved.summary) setSummary(saved.summary);
           if (saved.education) setEducation(prev => ({ ...prev, ...saved.education }));
           if (saved.platforms?.length) setPlatforms(saved.platforms);
           // Important: saved.skills can be [] (empty array) which means user wants no skills
@@ -974,8 +1151,18 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
               setSkills(saved.skills.length > 0 ? saved.skills : DEFAULT_SKILL_CATEGORIES.map(c => ({ ...c, items: [...c.items] })));
             }
           }
-          if (saved.experiences?.length) setExperiences(saved.experiences);
-          if (saved.projects?.length) setProjects(saved.projects);
+          if (saved.experiences?.length) setExperiences(saved.experiences.map(e => ({
+            ...e,
+            description: typeof e.description === 'object' && e.description !== null
+              ? (e.description.input || e.description.description || e.description.text || '')
+              : (e.description || ''),
+          })));
+          if (saved.projects?.length) setProjects(saved.projects.map(p => ({
+            ...p,
+            description: typeof p.description === 'object' && p.description !== null
+              ? (p.description.input || p.description.description || p.description.text || '')
+              : (p.description || ''),
+          })));
           if (saved.certifications?.length) setCertifications(saved.certifications);
           if (saved.achievements?.length) setAchievements(saved.achievements);
           if (saved.additionalInfo?.length) setAdditionalInfo(saved.additionalInfo);
@@ -1082,6 +1269,29 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
             </div>
           </div>
 
+          {/* Link Type */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Link Type</label>
+            <div className={styles.aiToggleButtons}>
+              <input
+                type="radio"
+                id="linkType-hyperlink"
+                name="linkType"
+                checked={resumeSettings.linkType === 'HyperLink'}
+                onChange={() => setResumeSettings(prev => ({ ...prev, linkType: 'HyperLink' }))}
+              />
+              <label htmlFor="linkType-hyperlink">HyperLink</label>
+              <input
+                type="radio"
+                id="linkType-url"
+                name="linkType"
+                checked={resumeSettings.linkType === 'URL'}
+                onChange={() => setResumeSettings(prev => ({ ...prev, linkType: 'URL' }))}
+              />
+              <label htmlFor="linkType-url">URL</label>
+            </div>
+          </div>
+
           {/* Pages (only enabled when AI is on) */}
           <div className={styles.settingsField}>
             <label className={styles.settingsLabel} style={!resumeSettings.enableAI ? { color: '#999' } : {}}>Pages</label>
@@ -1097,6 +1307,54 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
               <option value="no-limit">No Limit</option>
             </select>
           </div>
+
+          {/* Profile Photo */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Profile Photo</label>
+            <div className={styles.aiToggleButtons}>
+              <input
+                type="radio"
+                id="profilePhoto-yes"
+                name="profilePhoto"
+                checked={resumeSettings.profilePhoto === true}
+                onChange={() => setResumeSettings(prev => ({ ...prev, profilePhoto: true }))}
+              />
+              <label htmlFor="profilePhoto-yes">On</label>
+              <input
+                type="radio"
+                id="profilePhoto-no"
+                name="profilePhoto"
+                checked={resumeSettings.profilePhoto === false}
+                onChange={() => setResumeSettings(prev => ({ ...prev, profilePhoto: false }))}
+              />
+              <label htmlFor="profilePhoto-no">Off</label>
+            </div>
+          </div>
+
+          {/* Photo Position (only enabled when Profile Photo is On) */}
+          {resumeSettings.profilePhoto && (
+            <div className={styles.settingsField}>
+              <label className={styles.settingsLabel}>Photo Placing</label>
+              <div className={styles.aiToggleButtons}>
+                <input
+                  type="radio"
+                  id="photoPosition-left"
+                  name="photoPosition"
+                  checked={resumeSettings.photoPosition === 'Left'}
+                  onChange={() => setResumeSettings(prev => ({ ...prev, photoPosition: 'Left' }))}
+                />
+                <label htmlFor="photoPosition-left">Left</label>
+                <input
+                  type="radio"
+                  id="photoPosition-right"
+                  name="photoPosition"
+                  checked={resumeSettings.photoPosition === 'Right'}
+                  onChange={() => setResumeSettings(prev => ({ ...prev, photoPosition: 'Right' }))}
+                />
+                <label htmlFor="photoPosition-right">Right</label>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1301,9 +1559,9 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         </div>
       </div>
 
-      {/* ===== PROFESSIONAL EXPERIENCE ===== */}
+      {/* ===== INTERNSHIP ===== */}
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>Professional Experience</h3>
+        <h3 className={styles.sectionTitle}>Internship</h3>
         <div className={styles.chipsContainer}>
           {experiences.map((exp, i) => (
             <span key={i} className={styles.chip} onClick={() => openExperiencePopup(i)} style={{ cursor: 'pointer' }}>
@@ -1383,7 +1641,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
             cursor: (hasCreatedOnce || isCreating) ? 'not-allowed' : 'pointer' 
           }}
         >
-          {hasCreatedOnce ? '✓ Created' : isCreating ? 'Creating...' : 'Create'}
+          {hasCreatedOnce ? 'Create' : isCreating ? 'Creating...' : 'Create'}
         </button>
       </div>
 
@@ -1415,6 +1673,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
             data={editIndex !== null ? certifications[editIndex] : null}
             onSave={saveCertification}
             onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
           />
         )}
         {activePopup === 'achievement' && (
@@ -1423,6 +1682,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
             data={editIndex !== null ? achievements[editIndex] : null}
             onSave={saveAchievement}
             onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
           />
         )}
         {activePopup === 'additionalInfo' && (
@@ -1440,7 +1700,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
         <div className="alert-overlay">
           <div className="achievement-popup-container">
             <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6' }}>
-              {createProgress >= 100 ? 'Done!' : 'Creating Resume'}
+              Resume Creating
             </div>
             <div className="achievement-popup-body">
               <div className="download-progress-icon-container">
@@ -1452,7 +1712,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
                     cy="26"
                     r="20"
                     fill="none"
-                    stroke={createProgress >= 100 ? '#22c55e' : '#2085f6'}
+                    stroke="#2085f6"
                     strokeWidth="4"
                     strokeLinecap="round"
                     strokeDasharray={`${createProgress * 1.256} 125.6`}
@@ -1462,14 +1722,14 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
                 </svg>
               </div>
               <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
-                {createProgress >= 100 ? '✅ Resume Ready!' : `Creating ${Math.round(createProgress)}%`}
+                Creating... {Math.round(createProgress)}%
               </h2>
               <p style={{ margin: 0, color: '#555', fontSize: '15px', fontWeight: '500', minHeight: '22px', transition: 'opacity 0.3s ease' }}>
                 {createStatus}
               </p>
-              {resumeSettings.enableAI && createProgress > 15 && createProgress < 56 && (
+              {createProgress > 0 && createProgress < 100 && (
                 <p style={{ margin: '8px 0 0 0', color: '#2085f6', fontSize: '12px', fontWeight: '400' }}>
-                  This may take 20–30 seconds (single AI request)
+                  This may take 20–30 seconds
                 </p>
               )}
             </div>
@@ -1481,7 +1741,7 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
       {showCreated && (
         <div className="alert-overlay">
           <div className="achievement-popup-container">
-            <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6' }}>Created !</div>
+            <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6' }}>Created!</div>
             <div className="achievement-popup-body">
               <svg className="download-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                 <circle className="download-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
@@ -1489,41 +1749,48 @@ ${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join
               </svg>
               <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>Resume Created ✓</h2>
               <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
-                Your resume has been successfully<br />
-                created and opened for preview.
+                Your resume has been successfully created.
               </p>
             </div>
-            <div className="achievement-popup-footer">
-              <button onClick={() => {
-                setShowCreated(false);
-                // Reload student data to get updated resumeURL
-                const reloadStudentData = async () => {
-                  try {
-                    const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-                    const token = localStorage.getItem('token');
-                    const studentId = studentData?._id || studentData?.id;
-                    
-                    if (studentId && token) {
-                      const response = await fetch(`${API_BASE}/api/students/${studentId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                      });
-                      
-                      if (response.ok) {
-                        const updatedStudent = await response.json();
-                        localStorage.setItem('studentData', JSON.stringify(updatedStudent));
-                        window.dispatchEvent(new Event('storage'));
-                      }
-                    }
-                  } catch (err) {
-                    console.warn('Failed to reload student data:', err);
-                  }
-                };
-                
-                reloadStudentData();
-                // Redirect to resume page
-                setTimeout(() => onViewChange('resume'), 300);
-              }} className="achievement-popup-close-btn">
+            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => {
+                  setShowCreated(false);
+                  setIsPreviewing(false);
+                }} 
+                className="achievement-popup-close-btn"
+                disabled={isPreviewing}
+                style={{ 
+                  opacity: isPreviewing ? 0.5 : 1, 
+                  cursor: isPreviewing ? 'not-allowed' : 'pointer',
+                  flex: 1,
+                  maxWidth: '150px'
+                }}
+              >
                 Close
+              </button>
+              <button 
+                onClick={() => {
+                  if (!resumePdfUrl || isPreviewing) return;
+                  setIsPreviewing(true);
+                  window.open(resumePdfUrl, '_blank');
+                  // Reset after a delay
+                  setTimeout(() => {
+                    setIsPreviewing(false);
+                  }, 2000);
+                }} 
+                className="achievement-popup-close-btn"
+                disabled={isPreviewing || !resumePdfUrl}
+                style={{ 
+                  backgroundColor: isPreviewing ? '#6c757d' : '#28a745',
+                  borderColor: isPreviewing ? '#6c757d' : '#28a745',
+                  opacity: (isPreviewing || !resumePdfUrl) ? 0.7 : 1,
+                  cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
+                  flex: 1,
+                  maxWidth: '150px'
+                }}
+              >
+                {isPreviewing ? 'Previewing...' : 'Preview'}
               </button>
             </div>
           </div>

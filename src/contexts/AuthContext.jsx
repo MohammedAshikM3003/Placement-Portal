@@ -2,9 +2,20 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
 import { startBlockStatusMonitor, stopBlockStatusMonitor } from '../utils/blockStatusChecker';
 import { BLOCKED_INFO_STORAGE_KEY } from '../constants/storageKeys';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 // Import the clearSidebarCache function
 import { clearSidebarCache } from '../components/Sidebar/Sidebar';
+
+// Utility to resolve GridFS profile URLs to full backend URLs
+const resolveProfileUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('http') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/api/file/')) return `${API_BASE_URL}${url.replace('/api', '')}`;
+  if (url.startsWith('/file/')) return `${API_BASE_URL}${url}`;
+  if (/^[a-f0-9]{24}$/.test(url)) return `${API_BASE_URL}/file/${url}`;
+  return url;
+};
 
 // Initial state with loading flag
 const initialState = {
@@ -432,6 +443,15 @@ export const AuthProvider = ({ children }) => {
           _loginTimestamp: Date.now()
         };
         
+        // 📸 Resolve and cache the profile pic URL immediately
+        if (completeStudentData.profilePicURL) {
+          const resolvedProfileUrl = resolveProfileUrl(completeStudentData.profilePicURL);
+          completeStudentData.profilePicURL = resolvedProfileUrl;
+          // Cache the resolved URL for immediate sidebar access
+          localStorage.setItem('cachedProfilePicUrl', resolvedProfileUrl);
+          console.log('📸 AuthContext: Profile pic URL resolved and cached:', resolvedProfileUrl);
+        }
+        
         // 4. ⚡ OPTIMIZED: Only fetch ESSENTIAL data (profile + attendance) during login
         // All other data (resume, certificates, achievements) will be fetched when user navigates to those pages
         setTimeout(async () => {
@@ -461,9 +481,119 @@ export const AuthProvider = ({ children }) => {
               console.warn('⚠️ Attendance fetch failed (non-critical):', attErr);
             }
             
+            // Fetch resume status (non-blocking)
+            try {
+              console.log('📄 Fetching resume status...');
+              const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+              const resumeResponse = await fetch(`${API_BASE}/api/resume-builder/pdf/${completeStudentData._id}`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(loginResult.token ? { 'Authorization': `Bearer ${loginResult.token}` } : {})
+                }
+              });
+              
+              if (resumeResponse.ok) {
+                const resumeResult = await resumeResponse.json();
+                const hasResume = !!(resumeResult.success && resumeResult.resume);
+                
+                // Cache resume status AND data if available
+                localStorage.setItem('studentResumeStatus', JSON.stringify({
+                  hasResume,
+                  checkedAt: Date.now()
+                }));
+                
+                // Also cache the actual resume data for instant resume page load
+                if (hasResume && resumeResult.resume) {
+                  localStorage.setItem('studentResumeData', JSON.stringify({
+                    resume: resumeResult.resume,
+                    cachedAt: Date.now()
+                  }));
+                  console.log('✅ Resume data cached for instant load');
+                }
+                
+                console.log('✅ Resume status cached:', hasResume ? 'Has resume' : 'No resume');
+              } else {
+                // No resume found
+                localStorage.setItem('studentResumeStatus', JSON.stringify({
+                  hasResume: false,
+                  checkedAt: Date.now()
+                }));
+                localStorage.removeItem('studentResumeData'); // Clear any old data
+                console.log('✅ Resume status cached: No resume');
+              }
+            } catch (resumeErr) {
+              console.warn('⚠️ Resume status fetch failed (non-critical):', resumeErr);
+              // Cache as no resume on error
+              localStorage.setItem('studentResumeStatus', JSON.stringify({
+                hasResume: false,
+                checkedAt: Date.now()
+              }));
+              localStorage.removeItem('studentResumeData');
+            }
+            
+            // ⚡ Fetch ATS analysis and cache it
+            try {
+              const ATS_API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+              console.log('📊 Fetching ATS analysis...');
+              const atsResponse = await fetch(`${ATS_API_BASE}/api/resume-builder/ats-analysis/${completeStudentData._id}`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(loginResult.token ? { 'Authorization': `Bearer ${loginResult.token}` } : {})
+                }
+              });
+              if (atsResponse.ok) {
+                const atsResult = await atsResponse.json();
+                if (atsResult.success && atsResult.hasAnalysis && atsResult.atsAnalysis) {
+                  localStorage.setItem('studentATSAnalysis', JSON.stringify({
+                    analysis: atsResult.atsAnalysis,
+                    cachedAt: Date.now()
+                  }));
+                  console.log('✅ ATS analysis cached, score:', atsResult.atsAnalysis.overallScore);
+                } else {
+                  localStorage.setItem('studentATSAnalysis', JSON.stringify({
+                    analysis: null,
+                    cachedAt: Date.now()
+                  }));
+                  console.log('ℹ️ No ATS analysis available yet');
+                }
+              }
+            } catch (atsErr) {
+              console.warn('⚠️ ATS analysis fetch failed (non-critical):', atsErr);
+            }
+
+            // ⚡ Preload the profile image before signaling ready
+            const studentDataForPic = JSON.parse(localStorage.getItem('studentData') || 'null');
+            const profilePicURL = studentDataForPic?.profilePicURL || completeStudentData.profilePicURL;
+            
+            if (profilePicURL) {
+              console.log('🖼️ Preloading profile picture...');
+              try {
+                await new Promise((resolve) => {
+                  const img = new window.Image();
+                  const imgTimeout = setTimeout(() => {
+                    console.log('⚠️ Profile pic preload timeout, continuing...');
+                    resolve();
+                  }, 5000); // 5 second max wait for image
+                  img.onload = () => {
+                    clearTimeout(imgTimeout);
+                    console.log('✅ Profile picture preloaded');
+                    resolve();
+                  };
+                  img.onerror = () => {
+                    clearTimeout(imgTimeout);
+                    console.log('⚠️ Profile pic failed to preload, continuing...');
+                    resolve();
+                  };
+                  img.src = profilePicURL;
+                });
+              } catch (imgErr) {
+                console.warn('⚠️ Profile pic preload error:', imgErr);
+              }
+            }
+            
             // Signal that essential data is ready
             window.dispatchEvent(new CustomEvent('studentDataReady'));
-            console.log('✅ Essential data ready (profile + attendance only), navigation enabled');
+            console.log('✅ Essential data ready (profile + attendance + resume status + profile pic), navigation enabled');
             
           } catch (err) {
             console.warn('⚠️ Essential data fetch failed, allowing navigation anyway:', err);
@@ -529,7 +659,9 @@ export const AuthProvider = ({ children }) => {
       const studentKeysToRemove = [
         'authToken', 'studentData', 'isLoggedIn', 'studentRegNo', 
         'studentDob', 'completeStudentData', 'resumeData', 
-        'certificatesData', 'attendanceData', 'resumeBuilderData'
+        'certificatesData', 'attendanceData', 'resumeBuilderData',
+        'studentResumeStatus', 'studentResumeData', 'studentAttendanceCache', 'studentAttendanceCacheTime',
+        'studentATSAnalysis'
       ];
       studentKeysToRemove.forEach(key => localStorage.removeItem(key));
       

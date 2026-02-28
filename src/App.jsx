@@ -1,11 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import RegistrationDebug from "./components/RegistrationDebug.jsx";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner.js";
 import UnifiedLoadingScreen from "./components/UnifiedLoadingScreen/UnifiedLoadingScreen.jsx";
 import RouteErrorBoundary from "./components/RouteErrorBoundary/RouteErrorBoundary.jsx";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute, { RoleGuard } from "./components/ProtectedRoute.jsx";
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -73,6 +74,7 @@ function AppContent() {
   const [userDepartment, setUserDepartment] = useState("");
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     user: authUser,
     role: authRole,
@@ -101,6 +103,35 @@ function AppContent() {
       setInitialCheckDone(true);
     }
   }, [authLoading]);
+
+  // Centralized favicon management — set favicon based on current route + role
+  // Public routes always get purple; role routes get their role color
+  useEffect(() => {
+    if (!authLoading) {
+      const path = location.pathname;
+      const isPublicRoute = path === '/' || path === '/mainlogin' || path === '/signup' || path === '/registration' || path === '/registration-debug';
+
+      if (isPublicRoute) {
+        changeFavicon(FAVICON_TYPES.DEFAULT);
+      } else if (isAuthenticated && authRole) {
+        switch (authRole) {
+          case 'admin':
+            changeFavicon(FAVICON_TYPES.ADMIN);
+            break;
+          case 'coordinator':
+            changeFavicon(FAVICON_TYPES.COORDINATOR);
+            break;
+          case 'student':
+            changeFavicon(FAVICON_TYPES.STUDENT);
+            break;
+          default:
+            changeFavicon(FAVICON_TYPES.DEFAULT);
+        }
+      } else {
+        changeFavicon(FAVICON_TYPES.DEFAULT);
+      }
+    }
+  }, [authLoading, isAuthenticated, authRole, location.pathname]);
 
   const handleStudentLogin = () => {
     if (authUser) {

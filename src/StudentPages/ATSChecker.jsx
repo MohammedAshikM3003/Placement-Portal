@@ -126,27 +126,62 @@ function ATSCheckerContent({ onViewChange }) {
     try { return JSON.parse(localStorage.getItem('studentData') || 'null'); } catch { return null; }
   });
 
-  const [analysis, setAnalysis] = useState(null);
+  // Read prefetched data synchronously during initialization to prevent flicker
+  const [prefetchConsumed] = useState(() => {
+    const result = { data: null, analysis: null };
+    try {
+      const prefetched = sessionStorage.getItem('atsCheckerPrefetchedData');
+      if (prefetched) {
+        result.data = JSON.parse(prefetched);
+        sessionStorage.removeItem('atsCheckerPrefetchedData');
+      }
+      const prefetchedAnalysis = sessionStorage.getItem('atsCheckerPrefetchedAnalysis');
+      if (prefetchedAnalysis) {
+        result.analysis = JSON.parse(prefetchedAnalysis);
+        sessionStorage.removeItem('atsCheckerPrefetchedAnalysis');
+      }
+    } catch { /* ignore */ }
+    return result;
+  });
+
+  const [analysis, setAnalysis] = useState(prefetchConsumed.analysis);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // overview, details, suggestions
-  const [resumeData, setResumeData] = useState(null);
-  const [isLoadingResume, setIsLoadingResume] = useState(true);
+  const [resumeData, setResumeData] = useState(prefetchConsumed.data);
+  const [isLoadingResume, setIsLoadingResume] = useState(!prefetchConsumed.data);
 
-  // Fetch resume data from MongoDB on mount
+  // Redirect to resume page if accessed directly without coming from "Check ATS Score" button
   useEffect(() => {
+    if (!prefetchConsumed.data && !prefetchConsumed.analysis) {
+      console.warn('⚠️ ATSChecker accessed without prefetched data. Redirecting to resume page...');
+      onViewChange('resume');
+    }
+  }, [prefetchConsumed, onViewChange]);
+
+  // Fetch resume data from MongoDB on mount (only if not prefetched)
+  useEffect(() => {
+    // Skip fetch if we already have prefetched data
+    if (prefetchConsumed.data) {
+      console.log('✅ Using prefetched resume data from resume page');
+      if (prefetchConsumed.analysis) {
+        console.log('✅ Using prefetched ATS analysis from resume page');
+      }
+      return;
+    }
+
     const fetchResumeDataFromDB = async () => {
       setIsLoadingResume(true);
 
       const studentId = studentData?._id || studentData?.id;
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
       if (!studentId) {
         // Fallback to localStorage
         try {
-          const storageKey = studentId ? `resumeBuilderData_${studentId}` : 'resumeBuilderData';
+          const storageKey = 'resumeBuilderData';
           const stored = JSON.parse(localStorage.getItem(storageKey) || 'null');
           if (stored) {
             setResumeData(stored);
@@ -157,14 +192,20 @@ function ATSCheckerContent({ onViewChange }) {
       }
 
       try {
-        // Fetch from MongoDB via new endpoint
+        // Fetch from MongoDB via new endpoint with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
         const response = await fetch(`${API_BASE}/api/resume-builder/ats-data/${studentId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
@@ -199,12 +240,87 @@ function ATSCheckerContent({ onViewChange }) {
     };
 
     fetchResumeDataFromDB();
-  }, [studentData]);
+  }, [studentData, prefetchConsumed]);
 
   // Load resume data helper
   const getResumeData = useCallback(() => {
     return resumeData;
   }, [resumeData]);
+
+  // Save ATS analysis to MongoDB
+  const saveATSAnalysis = useCallback(async (analysisData) => {
+    if (!analysisData || !studentData) {
+      console.warn('⚠️ Cannot save ATS analysis: missing data');
+      console.warn('   Has analysisData:', !!analysisData);
+      console.warn('   Has studentData:', !!studentData);
+      return;
+    }
+
+    const studentId = studentData._id || studentData.id;
+    if (!studentId) {
+      console.warn('⚠️ Cannot save ATS analysis: no studentId');
+      console.warn('   studentData:', studentData);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      
+      console.log('💾 ========================================');
+      console.log('💾 CALLING SAVE ATS ANALYSIS API');
+      console.log('💾 API URL:', `${API_BASE}/api/resume-builder/save-ats-analysis`);
+      console.log('💾 Student ID:', studentId);
+      console.log('💾 Overall Score:', analysisData.overallScore);
+      console.log('💾 Suggestions:', analysisData.suggestions?.length || 0);
+      console.log('💾 ========================================');
+      
+      const response = await fetch(`${API_BASE}/api/resume-builder/save-ats-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ 
+          studentId,
+          atsAnalysis: analysisData
+        }),
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ ========================================');
+        console.log('✅ ATS ANALYSIS SAVED SUCCESSFULLY!');
+        console.log('✅', result.message);
+        console.log('✅ Check MongoDB: resume collection');
+        console.log('✅ ========================================');
+        
+        // Update localStorage cache so resume page reads from cache
+        localStorage.setItem('studentATSAnalysis', JSON.stringify({
+          analysis: analysisData,
+          cachedAt: Date.now()
+        }));
+        console.log('✅ ATS analysis cache updated in localStorage');
+        
+        // Dispatch event to notify other pages
+        window.dispatchEvent(new CustomEvent('atsAnalysisUpdated', { detail: analysisData }));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ ========================================');
+        console.error('❌ FAILED TO SAVE ATS ANALYSIS');
+        console.error('❌ Status:', response.status);
+        console.error('❌ Error:', errorData.error || 'Unknown error');
+        console.error('❌ ========================================');
+      }
+    } catch (error) {
+      console.error('❌ ========================================');
+      console.error('❌ ERROR SAVING ATS ANALYSIS');
+      console.error('❌', error);
+      console.error('❌ ========================================');
+    }
+  }, [studentData]);
 
   // Run ATS Analysis
   const runAnalysis = useCallback(async () => {
@@ -227,7 +343,7 @@ function ATSCheckerContent({ onViewChange }) {
     }, 200);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const studentId = studentData?._id || studentData?.id;
       const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
       const response = await fetch(`${API_BASE}/api/resume-builder/ats-check`, {
@@ -248,6 +364,9 @@ function ATSCheckerContent({ onViewChange }) {
       setTimeout(() => {
         setAnalysis(result.analysis);
         setIsAnalyzing(false);
+        
+        // Save analysis results to MongoDB
+        saveATSAnalysis(result.analysis);
       }, 500);
     } catch (err) {
       console.error('ATS analysis error:', err);
@@ -258,15 +377,19 @@ function ATSCheckerContent({ onViewChange }) {
       if (resumeData2) {
         setAnalyzeProgress(100);
         setTimeout(() => {
-          setAnalysis(performClientSideAnalysis(resumeData2));
+          const clientAnalysis = performClientSideAnalysis(resumeData2);
+          setAnalysis(clientAnalysis);
           setIsAnalyzing(false);
+          
+          // Save client-side analysis to MongoDB
+          saveATSAnalysis(clientAnalysis);
         }, 500);
       } else {
         setIsAnalyzing(false);
         alert('Analysis failed. Please try again.');
       }
     }
-  }, [getResumeData, studentData]);
+  }, [getResumeData, studentData, saveATSAnalysis]);
 
   // Auto-run analysis when resume data is loaded from MongoDB
   // First try to load previous analysis result, if not found, run fresh analysis
@@ -274,24 +397,33 @@ function ATSCheckerContent({ onViewChange }) {
     if (resumeData && !analysis && !isAnalyzing && !isLoadingResume) {
       const loadOrRunAnalysis = async () => {
         const studentId = studentData?._id || studentData?.id;
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
         // Try to load previous analysis from MongoDB
         if (studentId) {
           try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
             const response = await fetch(`${API_BASE}/api/resume-builder/ats-result/${studentId}`, {
               headers: {
                 'Content-Type': 'application/json',
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
               },
+              signal: controller.signal,
             });
+            clearTimeout(timeoutId);
 
             if (response.ok) {
               const data = await response.json();
               if (data.success && data.analysis) {
                 console.log('✅ Loaded previous ATS analysis from MongoDB');
                 setAnalysis(data.analysis);
+                
+                // Also save to resume collection so it shows on the Resume page
+                console.log('💾 Syncing ATS analysis to resume collection...');
+                saveATSAnalysis(data.analysis);
+                
                 return; // Don't re-run analysis
               }
             }
@@ -307,7 +439,7 @@ function ATSCheckerContent({ onViewChange }) {
       loadOrRunAnalysis();
     }
     // eslint-disable-next-line
-  }, [resumeData, isLoadingResume]);
+  }, [resumeData, isLoadingResume, runAnalysis]);
 
   const toggleCategory = (key) => {
     setExpandedCategory(prev => prev === key ? null : key);
@@ -321,28 +453,6 @@ function ATSCheckerContent({ onViewChange }) {
     if (score >= 40) return { label: 'Needs Work', color: '#E67E22' };
     return { label: 'Poor', color: '#E74C3C' };
   };
-
-  // ===== RENDER: LOADING =====
-  if (isLoadingResume) {
-    return (
-      <div className={styles.analyzingState}>
-        <div className={styles.analyzingCard}>
-          <div className={styles.analyzingIcon}>
-            <svg width="64" height="64" viewBox="0 0 64 64" className={styles.analyzingSpinner}>
-              <circle cx="32" cy="32" r="28" fill="none" stroke="#e8e8e8" strokeWidth="4"/>
-              <circle cx="32" cy="32" r="28" fill="none" stroke="#2DBE7F" strokeWidth="4"
-                strokeDasharray={`${2 * Math.PI * 28}`}
-                strokeDashoffset={`${2 * Math.PI * 28 * 0.7}`}
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <h3 className={styles.analyzingTitle}>Loading Resume Data...</h3>
-          <p className={styles.analyzingSubtitle}>Fetching your resume from database</p>
-        </div>
-      </div>
-    );
-  }
 
   // ===== RENDER: NO DATA =====
   if (!resumeData) {
@@ -408,7 +518,7 @@ function ATSCheckerContent({ onViewChange }) {
 
   return (
     <div className={styles.atsCheckerContent}>
-      {/* Header */}
+      {/* Header with Tab Navigation */}
       <div className={styles.checkerHeader}>
         <div className={styles.checkerHeaderLeft}>
           <h1 className={styles.checkerTitle}>Resume ATS Checker</h1>
@@ -416,17 +526,17 @@ function ATSCheckerContent({ onViewChange }) {
             Is your resume good enough? {analysis.aiEnhanced && <span className={styles.aiBadge}>AI Enhanced</span>}
           </p>
         </div>
-        <button className={styles.reanalyzeBtn} onClick={runAnalysis}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.65 2.35A8 8 0 1 0 15.93 8.5h-2.02A6 6 0 1 1 12.24 3.76L10 6h6V0l-2.35 2.35z" fill="currentColor"/></svg>
-          Re-Analyze
-        </button>
-      </div>
+        
+        {/* Tab Navigation in Center */}
+        <div className={styles.tabNav}>
+          <button className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.tabActive : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
+          <button className={`${styles.tabBtn} ${activeTab === 'details' ? styles.tabActive : ''}`} onClick={() => setActiveTab('details')}>Detailed Analysis</button>
+          <button className={`${styles.tabBtn} ${activeTab === 'suggestions' ? styles.tabActive : ''}`} onClick={() => setActiveTab('suggestions')}>Suggestions</button>
+        </div>
 
-      {/* Tab Navigation */}
-      <div className={styles.tabNav}>
-        <button className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.tabActive : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'details' ? styles.tabActive : ''}`} onClick={() => setActiveTab('details')}>Detailed Analysis</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'suggestions' ? styles.tabActive : ''}`} onClick={() => setActiveTab('suggestions')}>Suggestions</button>
+        <button className={styles.backBtn} onClick={() => onViewChange('resume')}>
+          <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>↩</span>
+        </button>
       </div>
 
       {/* ===== OVERVIEW TAB ===== */}
@@ -604,18 +714,6 @@ function ATSCheckerContent({ onViewChange }) {
               </ul>
             </div>
           )}
-
-          {/* Quick Action Buttons */}
-          <div className={styles.quickActions}>
-            <button className={styles.quickActionBtn} onClick={() => onViewChange('resume-builder')}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.85 2.85a1.2 1.2 0 011.7 1.7L5.7 15.4l-3.2.9.9-3.2L14.85 2.85z" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
-              Edit Resume
-            </button>
-            <button className={styles.quickActionBtn} onClick={runAnalysis}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M16.65 3.35A10 10 0 1019.93 10.5h-2.02A8 8 0 1115.24 4.76L12 8h8V0l-3.35 3.35z" fill="currentColor"/></svg>
-              Re-Check Score
-            </button>
-          </div>
         </div>
       )}
     </div>

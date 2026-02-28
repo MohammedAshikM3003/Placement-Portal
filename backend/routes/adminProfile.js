@@ -113,6 +113,9 @@ router.post('/profile', async (req, res) => {
     // Find existing admin
     let admin = await Admin.findOne({ adminLoginID });
     
+    // Explicitly define the mapping.
+    // If the frontend sends null or "", we store NULL in MongoDB.
+    // This ensures $set FORCES null values to be written, killing ghost data.
     const updateData = {
       firstName,
       lastName,
@@ -122,43 +125,35 @@ router.post('/profile', async (req, res) => {
       domainMailId,
       phoneNumber,
       department,
+      // Always explicitly set image fields — null for empty values
+      collegeBanner: collegeBanner || null,
+      collegeBannerName: collegeBanner ? (collegeBannerName || 'banner.jpg') : null,
+      collegeBannerUploadDate: collegeBanner ? new Date() : undefined,
+      naacCertificate: naacCertificate || null,
+      naacCertificateName: naacCertificate ? (naacCertificateName || 'naac.jpg') : null,
+      naacCertificateUploadDate: naacCertificate ? new Date() : undefined,
+      nbaCertificate: nbaCertificate || null,
+      nbaCertificateName: nbaCertificate ? (nbaCertificateName || 'nba.jpg') : null,
+      nbaCertificateUploadDate: nbaCertificate ? new Date() : undefined,
+      collegeLogo: collegeLogo || null,
+      collegeLogoName: collegeLogo ? (collegeLogoName || 'logo.jpg') : null,
+      collegeLogoUploadDate: collegeLogo ? new Date() : undefined,
       updatedAt: new Date()
     };
     
-    // Handle profile photo
-    if (profilePhoto) {
-      updateData.profilePhoto = profilePhoto;
-      updateData.profilePhotoName = profilePhotoName || 'profile.jpg';
-      updateData.profilePhotoUploadDate = new Date();
+    // Handle profile photo (conditional — only update if explicitly sent)
+    if (profilePhoto !== undefined) {
+      updateData.profilePhoto = profilePhoto || null;
+      updateData.profilePhotoName = profilePhoto ? (profilePhotoName || 'profile.jpg') : null;
+      if (profilePhoto) {
+        updateData.profilePhotoUploadDate = new Date();
+      }
     }
-    
-    // Handle college banner
-    if (collegeBanner) {
-      updateData.collegeBanner = collegeBanner;
-      updateData.collegeBannerName = collegeBannerName || 'banner.jpg';
-      updateData.collegeBannerUploadDate = new Date();
-    }
-    
-    // Handle NAAC certificate
-    if (naacCertificate) {
-      updateData.naacCertificate = naacCertificate;
-      updateData.naacCertificateName = naacCertificateName || 'naac.jpg';
-      updateData.naacCertificateUploadDate = new Date();
-    }
-    
-    // Handle NBA certificate
-    if (nbaCertificate) {
-      updateData.nbaCertificate = nbaCertificate;
-      updateData.nbaCertificateName = nbaCertificateName || 'nba.jpg';
-      updateData.nbaCertificateUploadDate = new Date();
-    }
-    
-    // Handle college logo
-    if (collegeLogo) {
-      updateData.collegeLogo = collegeLogo;
-      updateData.collegeLogoName = collegeLogoName || 'logo.jpg';
-      updateData.collegeLogoUploadDate = new Date();
-    }
+
+    // Remove undefined keys so Mongoose doesn't try to $set them
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) delete updateData[key];
+    });
 
     // Handle password change
     if (newPassword && confirmPassword) {
@@ -186,11 +181,25 @@ router.post('/profile', async (req, res) => {
     }
 
     if (admin) {
-      // Update existing admin
-      Object.assign(admin, updateData);
-      await admin.save();
+      // Use $set with findOneAndUpdate to guarantee null fields are written to MongoDB.
+      // Object.assign + save can silently skip null values in some Mongoose versions.
+      const updatedAdmin = await Admin.findOneAndUpdate(
+        { adminLoginID },
+        { $set: updateData },
+        { new: true, runValidators: false }
+      );
       
-      const responseData = admin.toObject();
+      // Log cleared images for debugging
+      const clearedImages = [];
+      if (updateData.collegeBanner === null) clearedImages.push('collegeBanner');
+      if (updateData.naacCertificate === null) clearedImages.push('naacCertificate');
+      if (updateData.nbaCertificate === null) clearedImages.push('nbaCertificate');
+      if (updateData.collegeLogo === null) clearedImages.push('collegeLogo');
+      if (clearedImages.length > 0) {
+        console.log(`✅ Cleared images from MongoDB: ${clearedImages.join(', ')}`);
+      }
+
+      const responseData = updatedAdmin.toObject();
       delete responseData.adminPassword;
       
       res.json({ 

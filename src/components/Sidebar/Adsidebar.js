@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '../../utils/apiConfig';
+import gridfsService from '../../services/gridfsService';
 import styles from './Adsidebar.module.css';
 import AdDashboard from "../../assets/addashboardicon.svg";
 import ManageStudents from "../../assets/adstuddbicon.svg";
@@ -46,11 +47,14 @@ const Adsidebar = ({ isOpen, onLogout }) => {
           const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Admin';
           return {
             name: fullName,
-            profilePhoto: data.profilePhoto || null
+            profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
           };
         } else if (data.name) {
           // Already in sidebar format
-          return data;
+          return {
+            ...data,
+            profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
+          };
         }
       } catch (error) {
         console.error('Error parsing cached profile:', error);
@@ -109,7 +113,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
           
           const profileData = {
             name: fullName,
-            profilePhoto: profilePhotoUrl || null
+            profilePhoto: gridfsService.resolveImageUrl(profilePhotoUrl) || null
           };
           
           // Force complete state refresh with new object
@@ -117,10 +121,10 @@ const Adsidebar = ({ isOpen, onLogout }) => {
           setImageError(false);
           setImageKey(Date.now()); // Force image re-render
           
-          // NOTE: Don't overwrite the full adminProfileCache here
-          // The profile page manages the complete cache with all fields
-          // We only update our local sidebar state
-          localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+          // NOTE: Don't update adminProfileCacheTime here to avoid infinite loops
+          // The storage event listener in this same component would trigger
+          // fetchAdminProfile() again, causing continuous updates
+          // Only the profile page should update the cache timestamp
           
           console.log('✅ Admin sidebar profile updated:', fullName);
           
@@ -136,7 +140,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
               console.warn('⚠️ Failed to load admin profile image');
               setImageError(true);
             };
-            img.src = profilePhotoUrl;
+            img.src = gridfsService.resolveImageUrl(profilePhotoUrl);
           }
         }
       }
@@ -167,7 +171,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
         setAdminProfile({
           name: fullName,
-          profilePhoto: data.profilePhoto || null
+          profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
         });
         
         setImageError(false);
@@ -204,7 +208,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
         setAdminProfile({
           name: fullName,
-          profilePhoto: data.profilePhoto || null
+          profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
         });
         
         setImageError(false);
@@ -303,7 +307,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
           {adminProfile.profilePhoto && !imageError ? (
             <img 
               key={imageKey}
-              src={adminProfile.profilePhoto} 
+              src={gridfsService.resolveImageUrl(adminProfile.profilePhoto)} 
               alt="Profile" 
               onError={() => setImageError(true)}
             />

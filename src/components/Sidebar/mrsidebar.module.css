@@ -66,10 +66,18 @@
 
 /* Active State (Selected Menu Item) */
 .mr-sidebar-menu-row.active {
-  background: #eef3ff; /* Soft blue like signup page */
+  background: #f8f8f8;
   border-left: 4px solid #197AFF;
   color: #197AFF;
   font-weight: 600;
+}
+
+.mr-sidebar-menu-row:focus-visible {
+  background: #f8f8f8;
+  border-left: 4px solid #197AFF;
+  color: #197AFF;
+  font-weight: 600;
+  outline: none;
 }
 
 /* Completed State Styles */

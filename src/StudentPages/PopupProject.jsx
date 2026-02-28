@@ -5,11 +5,20 @@ import styles from './ResumeBuilder.module.css';
  * Project Popup
  * Matches design: Technologies Used, Project Description, Project Details (GitHub, Hosting)
  */
+// Safely extract a string from a description that might be stored as an object
+const safeDescription = (desc) => {
+  if (!desc) return '';
+  if (typeof desc === 'string') return desc;
+  // Handle AI input format: {title, tech, input}
+  if (typeof desc === 'object') return desc.input || desc.description || desc.text || desc.value || '';
+  return String(desc);
+};
+
 export default function PopupProject({ title = '', data, onSave, onDiscard, enableAI = true }) {
   const [formData, setFormData] = useState({
     name: data?.name || title,
     technologies: Array.isArray(data?.technologies) ? [...data.technologies] : [],
-    description: data?.description || '',
+    description: safeDescription(data?.description),
     githubRepo: data?.githubRepo || '',
     hostingLink: data?.hostingLink || '',
   });
@@ -45,7 +54,7 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
   };
 
   return (
-    <div className={styles.overlay} onClick={onDiscard}>
+    <div className={styles.overlay}>
       <div className={styles.popupContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>{formData.name || 'Project'}</div>
         <div className={styles.popupBody}>
@@ -105,10 +114,10 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
               onChange={e => handleChange('description', e.target.value)}
             />
             <div className={styles.textareaActions}>
-              <button className={styles.clearBtn} onClick={() => handleChange('description', '')}>Clear</button>
               {enableAI && (
                 <span style={{ fontSize: '12px', color: '#2085f6', fontStyle: 'italic' }}>✨ AI will auto-polish during Create</span>
               )}
+              <button className={styles.clearBtn} onClick={() => handleChange('description', '')}>Clear</button>
             </div>
           </div>
 
@@ -143,7 +152,7 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
         </div>
 
         <div className={styles.popupFooter}>
-          <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Discard</button>
+          <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
           <button type="button" className={styles.popupSaveBtn} onClick={() => {
             console.log('PopupProject - Saving data:', formData);
             onSave(formData);

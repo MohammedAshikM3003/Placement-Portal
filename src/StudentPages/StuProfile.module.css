@@ -110,6 +110,13 @@
     font-size: 0.95rem;
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.formGrid .mobileInputWrapper .mobileNumberInput {
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0;
 }
 
 .formGrid input:focus,
@@ -126,9 +133,81 @@
     cursor: not-allowed !important;
 }
 
-/* Datepicker Wrapper (for input sizing) */
-.datepickerWrapper { width: 100%; }
+/* Mobile Input with Country Code */
+.mobileInputWrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9fbff;
+    box-sizing: border-box;
+    height: 53.6px;
+}
 
+.countryCode {
+    width: 15%;
+    min-width: 50px;
+    background: linear-gradient(135deg, #2085f6 0%, #1a6fd1 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+}
+
+.mobileNumberInput {
+    width: 85%;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    padding: 0 0.9rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    height: 100%;
+    line-height: 48px;
+}
+
+.mobileNumberInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.mobileInputWrapper:focus-within {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+/* Disabled state for mobile input wrapper */
+.mobileInputWrapper:has(.mobileNumberInput:disabled) {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.mobileNumberInput:disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+    color: #666;
+}
+
+/* Responsive for mobile */
+@media (max-width: 900px) {
+    .mobileInputWrapper {
+        margin-bottom: 1.5rem;
+    }
+    .countryCode {
+        font-size: 0.85rem;
+        width: 18%;
+    }
+    .mobileNumberInput {
+        padding: 0.9rem 0.8rem;
+        width: 82%;
+    }
+}
 
 /* Profile Photo Box */
 .profilePhotoBox {
@@ -180,6 +259,157 @@
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 1.5rem;
     align-items: start;
+}
+
+/* Marksheet Grid - 3 columns for 9 items (8 semesters + 1 upload) */
+.marksheetGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+    .marksheetGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .marksheetGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Semester Box - Matching CGPA card styling */
+.semesterBox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem;
+    background: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+}
+
+.semesterBox:hover {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.semesterLabel {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+}
+
+/* View Marksheet Button */
+.viewMarksheetBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.viewMarksheetBtn:hover {
+    transform: scale(1.1);
+}
+
+.eyeIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Upload Marksheet Button - Matching semester card styling but blue */
+.uploadMarksheetBtnFull {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem;
+    background: #2085f6;
+    border: 1px solid #2085f6;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.uploadMarksheetBtnFull:hover {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+    background: #1a6fd1;
+}
+
+.uploadIcon {
+    width: 30px;
+    height: 30px;
+    margin-left: 0.8rem;
+    flex-shrink: 0;
+}
+
+/* Semester Section Separator */
+.semesterSeparator {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #dde6f4, transparent);
+    margin: 1.5rem 0;
+}
+
+/* Old upload button style - kept for compatibility */
+.uploadMarksheetBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: #2085f6;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(32, 133, 246, 0.3);
+}
+
+.uploadMarksheetBtn:hover {
+    background: #1a6fd1;
+    box-shadow: 0 4px 12px rgba(32, 133, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Academic Grid for CGPA and other fields */
+.academicGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .academicGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .academicGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .semesterInput {

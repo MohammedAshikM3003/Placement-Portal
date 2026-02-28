@@ -15,6 +15,7 @@ import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner.js';
 import BlockedPopup from './components/BlockedPopup/BlockedPopup.jsx';
 import { BLOCKED_INFO_STORAGE_KEY } from './constants/storageKeys';
 import { API_BASE_URL } from './utils/apiConfig';
+import { fetchCollegeImages } from './services/collegeImagesService';
 import styles from './mainlogin.module.css';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
@@ -203,6 +204,29 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 localStorage.setItem('adminProfileCacheTime', Date.now().toString());
                 console.log('✅ Admin profile cached with', Object.keys(profileCacheData).length, 'fields');
                 
+                // 🖼️ Pre-cache college images for instant dashboard loading
+                // Resolve GridFS URLs and store via collegeImagesService
+                try {
+                  const resolveUrl = (val) => {
+                    if (!val || typeof val !== 'string') return null;
+                    if (val.startsWith('data:') || val.startsWith('http')) return val;
+                    if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
+                    if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
+                    return val;
+                  };
+                  const resolvedImages = {
+                    collegeLogo: resolveUrl(data.collegeLogo),
+                    collegeBanner: resolveUrl(data.collegeBanner),
+                    naacCertificate: resolveUrl(data.naacCertificate),
+                    nbaCertificate: resolveUrl(data.nbaCertificate),
+                  };
+                  localStorage.setItem('collegeImagesCache', JSON.stringify(resolvedImages));
+                  localStorage.setItem('collegeImagesCacheTimestamp', Date.now().toString());
+                  console.log('✅ College images pre-cached at login with resolved URLs');
+                } catch (imgCacheErr) {
+                  console.warn('⚠️ Failed to pre-cache college images:', imgCacheErr);
+                }
+                
                 // Step 4: Admin profile ready (100%)
                 window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
                   detail: { message: 'Admin profile ready', progress: 100, completed: true }
@@ -239,14 +263,16 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         
         // For students, navigate immediately - data loads in background
         if (loginResult.role === 'student') {
-          console.log('⏳ Waiting for essential student data...');
+          // Pre-fetch college images in background for student dashboard
+          fetchCollegeImages().catch(() => {});
+          console.log('⭐ Waiting for essential student data...');
           
-          // Wait for the 'studentDataReady' event (max 3 seconds then navigate anyway)
+          // Wait for the 'studentDataReady' event (max 8 seconds then navigate anyway)
           const dataReadyPromise = new Promise((resolve) => {
             const timeout = setTimeout(() => {
               console.log('⚠️ Timeout waiting for data, navigating anyway');
               resolve();
-            }, 3000); // 3 second timeout (reduced from 8s)
+            }, 8000); // 8 second timeout to allow profile pic + resume status to load
             
             const handler = () => {
               clearTimeout(timeout);
@@ -259,6 +285,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           });
           
           await dataReadyPromise;
+        }
+        
+        // For coordinator, pre-fetch college images in background
+        if (loginResult.role === 'coordinator') {
+          fetchCollegeImages().catch(() => {});
         }
         
         // Navigate to target page

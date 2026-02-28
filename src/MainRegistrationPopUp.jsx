@@ -30,7 +30,7 @@ const MainRegistrationPopup = ({ onContinue, onBack }) => {
                         <li>Mandatory fields are marked with an asterisk [<span className={styles['required']}>Required</span>]</li>
                         <li>
                             Photo size: (100-500 KB)<br />
-                            Photo Format: (JPEG)
+                            Photo Format: (JPEG, WebP)
                         </li>
                     </ol>
                     <div className={styles['checkbox-container']}>

@@ -684,22 +684,59 @@
   color: #ffffff;
 }
 
-/* Updated Social Icons - No Circles */
+/* Social Icons - White backgrounds with black icons by default, brand colors on hover */
 .footer-social-icons {
   display: flex;
   align-items: center;
   gap: 25px;
 }
 
-.social-icon-img {
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
   width: 36px;
   height: 36px;
-  object-fit: contain;
-  transition: transform 0.2s;
 }
 
-.social-icon-img:hover {
-  transform: scale(1.1);
+.social-icon-img {
+  width: 30px;
+  height: 36px;
+  object-fit: contain;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Default icons visible by default, hover icons hidden */
+.icon-default {
+  opacity: 1;
+  visibility: visible;
+}
+
+.icon-hover {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* On hover - show brand color icons, hide default icons */
+.social-link:hover .icon-default {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.social-link:hover .icon-hover {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Scale animation on hover */
+.social-link:hover .social-icon-img {
+  transform: scale(1.15);
 }
 
 /* Responsive Footer */

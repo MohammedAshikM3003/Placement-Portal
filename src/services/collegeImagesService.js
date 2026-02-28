@@ -5,9 +5,53 @@
 
 import { API_BASE_URL } from '../utils/apiConfig';
 
+// Resolve GridFS paths (/api/file/xxx) to full backend URLs
+// Returns null for empty/non-string values so the UI never renders broken <img> tags
+const resolveUrl = (val) => {
+  if (!val || val === '' || typeof val !== 'string') return null;
+  if (val.startsWith('data:') || val.startsWith('http')) return val;
+  if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
+  if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
+  return val;
+};
+
 const CACHE_KEY = 'collegeImagesCache';
 const CACHE_TIMESTAMP_KEY = 'collegeImagesCacheTimestamp';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (reduced for faster updates)
+
+/**
+ * Get cached college logo URL synchronously (instant, no async)
+ * Used by dashboards to initialize state without any loading delay.
+ * @returns {string|null}
+ */
+export const getCachedCollegeLogo = () => {
+  try {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const parsed = JSON.parse(cachedData);
+      return parsed.collegeLogo || null;
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+};
+
+/**
+ * Get all cached college images synchronously (instant, no async)
+ * @returns {object|null}
+ */
+export const getCachedCollegeImages = () => {
+  try {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    if (cachedData && timestamp) {
+      const age = Date.now() - parseInt(timestamp, 10);
+      if (age < CACHE_DURATION) {
+        return JSON.parse(cachedData);
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+};
 
 /**
  * Fetch college images from the admin profile
@@ -53,10 +97,10 @@ export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
       // Handle both admin profile response and college images response
       const data = result.data;
       const images = {
-        collegeBanner: data.collegeBanner || null,
-        naacCertificate: data.naacCertificate || null,
-        nbaCertificate: data.nbaCertificate || null,
-        collegeLogo: data.collegeLogo || null,
+        collegeBanner: resolveUrl(data.collegeBanner) || null,
+        naacCertificate: resolveUrl(data.naacCertificate) || null,
+        nbaCertificate: resolveUrl(data.nbaCertificate) || null,
+        collegeLogo: resolveUrl(data.collegeLogo) || null,
       };
 
       // Cache the images
@@ -104,21 +148,31 @@ const getCachedImages = () => {
 
 /**
  * Cache college images (Optimized to prevent Storage Quota errors)
+ * Now stores all 4 resolved URLs (small strings) instead of just the logo
  * @param {object} images - Images object to cache
  */
 const cacheImages = (images) => {
   try {
-    // Only cache the small Logo; ignore large Banners and Certificates to prevent localStorage overflow
-    const minimalCache = {
+    const cacheData = {
       collegeLogo: images.collegeLogo || null,
+      collegeBanner: images.collegeBanner || null,
+      naacCertificate: images.naacCertificate || null,
+      nbaCertificate: images.nbaCertificate || null,
     };
 
-    localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
     localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-    console.log('✅ College logo cached successfully');
+    console.log('✅ College images cached successfully');
   } catch (error) {
-    // If even the logo is too big, just skip caching entirely to prevent crash
-    console.warn('⚠️ Storage full: Skipping image cache to prevent crash.');
+    // If full cache is too big, try just the logo
+    try {
+      const minimalCache = { collegeLogo: images.collegeLogo || null };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      console.log('✅ College logo cached (minimal)');
+    } catch (e2) {
+      console.warn('⚠️ Storage full: Skipping image cache to prevent crash.');
+    }
   }
 };
 

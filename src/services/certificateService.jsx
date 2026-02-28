@@ -22,20 +22,19 @@ class CertificateService {
       console.log('🚀 FAST: Uploading certificate to MongoDB...');
       const startTime = Date.now();
 
-      // Guard against empty or missing file data to avoid broken certificates
-      if (!fileData || (typeof fileData === 'string' && fileData.trim() === '')) {
-        throw new Error('Certificate file data is empty. Please re-upload the file.');
-      }
-
       // Prepare certificate data for MongoDB
       const certificatePayload = {
         studentId: studentId,
-        achievementId: Date.now().toString(),
+        achievementId: certificateData.achievementId || Date.now().toString(),
         fileName: certificateData.fileName,
-        fileData: fileData, // Base64 encoded file
+        fileData: fileData || '', // Legacy base64 or empty for GridFS
         fileType: certificateData.fileType || 'application/pdf',
         fileSize: certificateData.fileSize || 0,
         uploadDate: new Date().toLocaleDateString('en-GB'),
+        
+        // GridFS fields (new system)
+        gridfsFileId: certificateData.gridfsFileId || null,
+        gridfsFileUrl: certificateData.gridfsFileUrl || null,
         
         // Certificate details
         name: certificateData.name || '',

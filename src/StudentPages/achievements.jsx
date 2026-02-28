@@ -505,8 +505,25 @@ function AchievementsContent() {
       if (!studentData || !studentData._id) {
         throw new Error('Student not authenticated');
       }
+
+      // Upload new file to GridFS if provided
+      let achievementToSave = { ...updatedAchievement };
+      if (updatedAchievement.rawFile) {
+        const gridfsService = (await import('../services/gridfsService')).default;
+        const uploadResult = await gridfsService.uploadCertificate(updatedAchievement.rawFile, {
+          studentId: studentData._id,
+          achievementId: updatedAchievement.achievementId,
+          fileName: updatedAchievement.fileName,
+        });
+        achievementToSave.gridfsFileId = uploadResult.gridfsFileId;
+        achievementToSave.gridfsFileUrl = uploadResult.gridfsFileUrl;
+        achievementToSave.fileData = ''; // No base64
+        delete achievementToSave.rawFile;
+        console.log('✅ Updated certificate file uploaded to GridFS:', uploadResult.gridfsFileUrl);
+      }
+
       const certificateService = (await import('../services/certificateService.jsx')).default;
-      await certificateService.updateCertificate(studentData._id, updatedAchievement.achievementId, updatedAchievement);
+      await certificateService.updateCertificate(studentData._id, achievementToSave.achievementId, achievementToSave);
       const fastDataService = (await import('../services/fastDataService.jsx')).default;
       fastDataService.clearCache(studentData._id);
       await refreshAchievements(true);
@@ -952,13 +969,35 @@ function AchievementsContent() {
         comp: newAchievement.comp
       });
 
-      // ⚡ SUPER FAST: Upload directly to MongoDB
+      // ⚡ Upload certificate file to GridFS, then save metadata
+      let gridfsFileId = null;
+      let gridfsFileUrl = null;
+      if (newAchievement.rawFile) {
+        const gridfsService = (await import('../services/gridfsService')).default;
+        const uploadResult = await gridfsService.uploadCertificate(newAchievement.rawFile, {
+          studentId,
+          achievementId: newAchievement.achievementId,
+          fileName: newAchievement.fileName,
+        });
+        gridfsFileId = uploadResult.gridfsFileId;
+        gridfsFileUrl = uploadResult.gridfsFileUrl;
+        console.log('✅ Certificate file uploaded to GridFS:', gridfsFileUrl);
+      }
+
       const certificateService = (await import('../services/certificateService.jsx')).default;
+
+      const achievementWithGridFS = {
+        ...newAchievement,
+        fileData: '', // No base64
+        gridfsFileId,
+        gridfsFileUrl,
+      };
+      delete achievementWithGridFS.rawFile;
 
       const result = await certificateService.uploadCertificate(
         studentId,
-        newAchievement,
-        newAchievement.fileData
+        achievementWithGridFS,
+        '' // No base64 fileData
       );
 
       console.log('✅ Certificate uploaded successfully:', result.certificate._id);

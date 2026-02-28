@@ -951,18 +951,31 @@ app.get('/api/company-drives', async (req, res) => {
         // Cache for 5 minutes for faster landing page loads
         res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
 
-        // OPTIMIZATION: Field selection - only return essential fields for landing page
-        // Landing page needs: companyName, logoUrl, startingDate, jobRoles, branches, eligibilityCriteria
+        // ⚠️ CRITICAL: DO NOT use .select() to limit fields!
+        // This endpoint serves multiple clients that need different fields:
+        // - Landing Page: companyName, startingDate, package
+        // - Admin Pages: jobRole, endingDate, rounds, mode, department, eligibleBranches
+        // - Coordinator Pages: jobRole, endingDate, rounds, mode, department
+        // Return ALL fields to ensure no client breaks
         const drives = await CompanyDrive.find({})
-            .select('companyName logoUrl startingDate jobRoles branches eligibilityCriteria createdAt')
             .sort({ createdAt: -1 })
-            .limit(50) // Limit to 50 most recent drives for landing page
             .maxTimeMS(5000) // 5s timeout protection
             .lean()
             .catch(err => {
                 console.log('⚠️ Company drives query timeout:', err.message);
                 return [];
             });
+        
+        // Validate that critical fields exist to prevent future issues
+        if (drives && drives.length > 0) {
+            const requiredFields = ['companyName', 'jobRole', 'startingDate', 'endingDate', 'rounds', 'mode', 'department', 'eligibleBranches'];
+            const sample = drives[0];
+            const missingFields = requiredFields.filter(field => !(field in sample));
+            if (missingFields.length > 0) {
+                console.warn('⚠️ Missing critical fields in company drives:', missingFields);
+                console.warn('⚠️ This may cause issues in admin/coordinator pages');
+            }
+        }
         
         res.status(200).json({ drives: drives || [] });
     } catch (error) {
@@ -3065,7 +3078,9 @@ const ResumeAnalysis = mongoose.model('ResumeAnalysis', resumeAnalysisSchema, 'r
 const resumeSchema = new mongoose.Schema({
     studentId: { type: String, required: true },
     fileName: { type: String, required: true },
-    fileData: { type: String, required: true }, // Base64 encoded file data
+    fileData: { type: String }, // Legacy Base64 (empty for GridFS uploads)
+    gridfsFileId: { type: String }, // GridFS file ID
+    gridfsFileUrl: { type: String }, // GridFS URL e.g. /api/file/<id>
     fileType: { type: String, required: true },
     fileSize: { type: Number, required: true },
     uploadedAt: { type: Date, default: Date.now },
@@ -3426,8 +3441,7 @@ const IN_MEMORY_FALLBACK_ENABLED = process.env.ENABLE_IN_MEMORY_FALLBACK === 'tr
 // Database initialization flag (for serverless lazy initialization)
 let dbInitialized = false;
 
-// File upload configuration (Multer)
-// Use memory storage for resume uploads to get file buffer for base64 conversion
+// File upload configuration (Multer - memory storage for legacy routes)
 const upload = multer({ 
     storage: multer.memoryStorage(),
     limits: {
@@ -5204,7 +5218,12 @@ app.get('/api/resume/:studentId', authenticateToken, checkRole('student', 'admin
             if (!resume) {
                 return res.status(404).json({ error: 'Resume not found' });
             }
-            res.json({ resume });
+            // Add gridfs URL if file ID exists
+            const resumeObj = resume.toObject();
+            if (resumeObj.gridfsFileId && !resumeObj.gridfsFileUrl) {
+                resumeObj.gridfsFileUrl = `/api/file/${resumeObj.gridfsFileId}`;
+            }
+            res.json({ resume: resumeObj });
         } else {
             const resume = resumes.find(r => r.studentId === studentId);
             if (!resume) {
@@ -5337,7 +5356,9 @@ const certificateSchema = new mongoose.Schema({
     studentId: { type: String, required: true },
     achievementId: { type: String, required: true },
     fileName: { type: String, required: true },
-    fileData: { type: String, required: true }, // Base64 encoded file
+    fileData: { type: String }, // Legacy Base64 (empty for GridFS uploads)
+    gridfsFileId: { type: String }, // GridFS file ID
+    gridfsFileUrl: { type: String }, // GridFS URL e.g. /api/file/<id>
     fileType: { type: String, required: true },
     fileSize: { type: Number, required: true },
     uploadDate: { type: String, required: true },
@@ -5477,7 +5498,9 @@ const toCertificateResponse = (certificateDoc) => {
         studentId: plain.studentId,
         achievementId: plain.achievementId,
         fileName: plain.fileName,
-        fileData: plain.fileData, // ✅ CRITICAL: Include base64 file data for preview/download
+        fileData: plain.fileData, // Legacy base64 (empty for new uploads)
+        gridfsFileId: plain.gridfsFileId || null,
+        gridfsFileUrl: plain.gridfsFileUrl || (plain.gridfsFileId ? `/api/file/${plain.gridfsFileId}` : null),
         fileSize: plain.fileSize,
         fileType: plain.fileType,
         uploadDate: plain.uploadDate,
@@ -5963,6 +5986,13 @@ app.put('/api/certificates/student/:studentId/achievement/:achievementId', async
 });
 
 // ... (rest of the code remains the same)
+
+// =====================================================
+// GRIDFS FILE ROUTES (Upload, Fetch, Stream)
+// =====================================================
+const gridfsRoutes = require('./routes/gridfsRoutes');
+app.use('/api', gridfsRoutes);
+
 // --- Server Startup Logic ---
 // (startServer is already defined above in the middleware section)
 

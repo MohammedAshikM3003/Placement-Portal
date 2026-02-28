@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
 import Navbar from "../src/components/Navbar/LandingNavbar.js";
-import { fetchAllLandingData } from './services/landingPageCacheService';
-import { PlacedStudentsSkeleton, DrivesSkeleton } from './components/SkeletonLoader/SkeletonLoader';
+import { fetchAllLandingData, clearCollegeImagesCache, fetchCollegeImagesPublic } from './services/landingPageCacheService';
+import { PlacedStudentsSkeleton, DrivesSkeleton, BannerSkeleton, FooterBannerSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
 // --- Assets (Fallback images) ---
@@ -18,30 +18,47 @@ import TCS from './assets/LandingTcs.svg';
 import PhoneIcon from './assets/Phoneicon.svg';
 import LandlineIcon from './assets/Landlineicon.svg';
 import MailIcon from './assets/Mailicon.svg';
-import Instagram from './assets/Instagramicon.svg'; 
+import Instagram from './assets/Instagramicon.svg';
+import InstagramHover from './assets/Instagramicon-hover.svg';
 import LinkedIn from './assets/Linkedinicon.svg';
+import LinkedInHover from './assets/Linkedinicon-hover.svg';
 import Twitter from './assets/Twittericon.svg';
+import TwitterHover from './assets/Twittericon-hover.svg';
 
-// --- Large SVG files moved to public folder for better performance (no bundling) ---
-const ksrLogo = '/assets/KSRCollegebanner.svg';
-const naccLogo = '/assets/LandingNaccA++.svg';
-const nbaLogo = '/assets/LandingNba.svg';
-const KSRCollegeBanner = '/assets/KSRCollegebanner.svg';
+// --- College images are now loaded from the database (GridFS) ---
 
-const HeroSection = ({ collegeImages }) => {
-  // Use dynamic images from DB or fallback to static assets
-  const bannerLogo = collegeImages?.collegeBanner || ksrLogo;
-  const naacCert = collegeImages?.naacCertificate || naccLogo;
-  const nbaCert = collegeImages?.nbaCertificate || nbaLogo;
+const HeroSection = ({ collegeImages, imagesLoading }) => {
+  // College images loaded from database (GridFS) - no static fallbacks
+  const bannerLogo = collegeImages?.collegeBanner || null;
+  const naacCert = collegeImages?.naacCertificate || null;
+  const nbaCert = collegeImages?.nbaCertificate || null;
+  
+  // Check if certificates are missing to make banner full-width
+  const hasCertificates = naacCert || nbaCert;
 
   return (
     <>
       <div className={styles['hero-container']} id="home">
-        <div className={styles['college-info-bar']}>
-          <img src={bannerLogo} alt="K.S.R College of Engineering Logo" className={styles['ksr-logo']} />
-          <img src={naacCert} alt="NAAC A++ Accreditation" className={styles['accreditation-logo']} />
-          <img src={nbaCert} alt="NBA Accreditation" className={styles['accreditation-nba-logo']} />
-        </div>
+        {imagesLoading ? (
+          <div className={styles['college-info-bar']}>
+            <BannerSkeleton />
+          </div>
+        ) : (
+          (bannerLogo || naacCert || nbaCert) && (
+            <div className={styles['college-info-bar']}>
+              {bannerLogo && (
+                <img 
+                  src={bannerLogo} 
+                  alt="College Logo" 
+                  className={styles['ksr-logo']}
+                  style={!hasCertificates ? { maxWidth: '100%' } : {}}
+                />
+              )}
+              {naacCert && <img src={naacCert} alt="NAAC Accreditation" className={styles['accreditation-logo']} />}
+              {nbaCert && <img src={nbaCert} alt="NBA Accreditation" className={styles['accreditation-nba-logo']} />}
+            </div>
+          )
+        )}
         <section className={styles['hero-content-section']}>
           <h1 className={styles['hero-headline']}>Connect with Top Talent, Effortlessly</h1>
           <p className={styles['hero-subheadline']}>
@@ -271,8 +288,8 @@ const PlacementSection = ({ companyDrivesData }) => {
   );
 };
 
-const KSRSection = ({ collegeImages }) => {
-  const footerBanner = collegeImages?.collegeBanner || KSRCollegeBanner;
+const KSRSection = ({ collegeImages, imagesLoading }) => {
+  const footerBanner = collegeImages?.collegeBanner || null;
 
   return (
     <div className={styles['page-wrapper']}>
@@ -280,13 +297,21 @@ const KSRSection = ({ collegeImages }) => {
         <div className={styles['footer-content']}>
           {/* Left section: logo + address */}
           <div className={styles['footer-left-section']}>
-            <div className={styles['footer-info-box']}>
-              <img
-                src={footerBanner}
-                alt="K.S.R College of Engineering"
-                className={styles['footer-logo-img']}
-              />
-            </div>
+            {imagesLoading ? (
+              <div className={styles['footer-info-box']}>
+                <FooterBannerSkeleton />
+              </div>
+            ) : (
+              footerBanner && (
+              <div className={styles['footer-info-box']}>
+                <img
+                  src={footerBanner}
+                  alt="College Logo"
+                  className={styles['footer-logo-img']}
+                />
+              </div>
+              )
+            )}
             <div className={styles['address-text']}>
               <p>K.S.R College of Engineering, K.S.R. Kalvi Nagar</p>
               <p>Tiruchengode - 637215 Namakkal (D.t)</p>
@@ -354,22 +379,28 @@ const KSRSection = ({ collegeImages }) => {
               href="https://www.instagram.com/ksrce_official?igsh=NGFsbXJvdVdzaEMTQW"
               target="_blank"
               rel="noopener noreferrer"
+              className={styles['social-link']}
             >
-              <img src={Instagram} alt="Instagram" className={styles['social-icon-img']} />
+              <img src={Instagram} alt="Instagram" className={`${styles['social-icon-img']} ${styles['instagram-icon']} ${styles['icon-default']}`} />
+              <img src={InstagramHover} alt="Instagram" className={`${styles['social-icon-img']} ${styles['instagram-icon']} ${styles['icon-hover']}`} />
             </a>
             <a
               href="https://www.linkedin.com/school/ksrce-official/"
               target="_blank"
               rel="noopener noreferrer"
+              className={styles['social-link']}
             >
-              <img src={LinkedIn} alt="LinkedIn" className={styles['social-icon-img']} />
+              <img src={LinkedIn} alt="LinkedIn" className={`${styles['social-icon-img']} ${styles['linkedin-icon']} ${styles['icon-default']}`} />
+              <img src={LinkedInHover} alt="LinkedIn" className={`${styles['social-icon-img']} ${styles['linkedin-icon']} ${styles['icon-hover']}`} />
             </a>
             <a
               href="https://x.com/ksrceofficial?t=xeX8YvmxJSOZBMQILjGSuQ&s=09"
               target="_blank"
               rel="noopener noreferrer"
+              className={styles['social-link']}
             >
-              <img src={Twitter} alt="Twitter" className={styles['social-icon-img']} />
+              <img src={Twitter} alt="Twitter" className={`${styles['social-icon-img']} ${styles['twitter-icon']} ${styles['icon-default']}`} />
+              <img src={TwitterHover} alt="Twitter" className={`${styles['social-icon-img']} ${styles['twitter-icon']} ${styles['icon-hover']}`} />
             </a>
           </div>
         </div>
@@ -382,6 +413,7 @@ const LandingPageContent = () => {
   const [collegeImages, setCollegeImages] = useState(null);
   const [placedStudentsData, setPlacedStudentsData] = useState(null);
   const [companyDrivesData, setCompanyDrivesData] = useState(null);
+  const [imagesLoading, setImagesLoading] = useState(true);
 
   useEffect(() => {
     // Change favicon to default (purple) for landing page
@@ -390,6 +422,7 @@ const LandingPageContent = () => {
     // Fetch ALL landing page data in PARALLEL with caching
     const loadAllData = async () => {
       try {
+        setImagesLoading(true);
         const { placedStudents, companyDrives, collegeImages: images } = await fetchAllLandingData();
         
         // Set all state at once - React batches these updates
@@ -398,9 +431,56 @@ const LandingPageContent = () => {
         if (images) setCollegeImages(images);
       } catch (error) {
         console.error('Landing page data fetch error:', error);
+      } finally {
+        setImagesLoading(false);
       }
     };
     loadAllData();
+    
+    // Listen for college images updates from admin profile (same tab)
+    const handleCollegeImagesUpdate = async () => {
+      console.log('🔔 College images updated event received - refreshing...');
+      try {
+        // CRITICAL: Clear cache BEFORE fetching to ensure fresh data from MongoDB
+        clearCollegeImagesCache();
+        console.log('🗑️ Landing page cache forcefully cleared before refetch');
+        
+        // Show skeleton while reloading (only images, not the whole page)
+        setImagesLoading(true);
+        
+        // Fetch ONLY college images (not students/drives) for speed
+        const images = await fetchCollegeImagesPublic();
+        if (images) {
+          setCollegeImages(images);
+          console.log('✅ College images refreshed on landing page with fresh data');
+        } else {
+          // If images are null/empty, clear the display
+          setCollegeImages(null);
+          console.log('✅ College images cleared (admin removed certificates)');
+        }
+      } catch (error) {
+        console.error('Failed to refresh college images:', error);
+      } finally {
+        setImagesLoading(false);
+      }
+    };
+    
+    // Cross-tab sync: listen for localStorage changes from admin profile (different tab)
+    const handleStorageChange = (e) => {
+      // Admin profile writes this signal key after saving college details
+      if (e.key === 'collegeImagesUpdatedSignal') {
+        console.log('🔔 Cross-tab college images update detected');
+        handleCollegeImagesUpdate();
+      }
+    };
+    
+    window.addEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return (
@@ -408,10 +488,10 @@ const LandingPageContent = () => {
     <div className={styles['landing-page-container']}>
       <Navbar />
       <main className={styles['main-content']}>
-        <HeroSection collegeImages={collegeImages} />
+        <HeroSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
         <PlacementPage placedStudentsData={placedStudentsData} />
         <PlacementSection companyDrivesData={companyDrivesData} />
-        <KSRSection collegeImages={collegeImages} />
+        <KSRSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
       </main>
     </div>
   );

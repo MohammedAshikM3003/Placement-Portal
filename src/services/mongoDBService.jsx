@@ -277,7 +277,21 @@ class MongoDBService {
 
   async getCompanyDrives() {
     const response = await this.apiCall('/company-drives');
-    return response.drives;
+    const drives = response.drives || [];
+    
+    // Validate that critical fields exist to prevent future display issues
+    if (drives.length > 0) {
+      const requiredFields = ['companyName', 'jobRole', 'startingDate', 'endingDate', 'rounds', 'mode', 'department'];
+      const sample = drives[0];
+      const missingFields = requiredFields.filter(field => !(field in sample));
+      if (missingFields.length > 0) {
+        console.error('🚨 CRITICAL: Company drives API missing required fields:', missingFields);
+        console.error('🚨 This will cause display issues in Admin/Coordinator pages');
+        console.error('🚨 Check backend /api/company-drives endpoint for .select() limitations');
+      }
+    }
+    
+    return drives;
   }
 
   async deleteCompanyDrive(driveId) {

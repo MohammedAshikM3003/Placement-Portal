@@ -1,14 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Sidebar.module.css';
 import Adminicon from '../../assets/Adminicon.png';
 import { getStudentData } from '../../services/fastDataService.jsx';
+import { API_BASE_URL } from '../../utils/apiConfig';
+
+// Resolve GridFS profile URLs to full backend URLs
+const resolveProfileUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('http') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/api/file/')) return `${API_BASE_URL}${url.replace('/api', '')}`;
+  if (url.startsWith('/file/')) return `${API_BASE_URL}${url}`;
+  if (/^[a-f0-9]{24}$/.test(url)) return `${API_BASE_URL}/file/${url}`;
+  return url;
+};
 
 const sidebarItems = [
   { icon: require('../../assets/DashboardSideBarIcon.png'), text: 'Dashboard', view: 'dashboard' },
   { icon: require('../../assets/ResumeSideBarIcon.png'), text: 'Resume', view: 'resume' },
-  { icon: require('../../assets/AttendanceSideBarIcon.png'), text: 'Attendance', view: 'attendance' },
+  { icon: require('../../assets/StuTrainingicon.svg').default, text: 'Training', view: 'training' },
   { icon: require('../../assets/AchievementsSideBarIcon.png'), text: 'Achievements', view: 'achievements' },
   { icon: require('../../assets/CompanySideBarIcon.svg').default, text: 'Company', view: 'company' },
 ];
@@ -16,86 +27,195 @@ const sidebarItems = [
 // Cache for student data to prevent refetching
 let cachedStudentData = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+let cachedProfilePicUrl = null; // Separate cache for profile pic URL
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour - longer cache since profile updates are event-driven
 
 export const clearSidebarCache = () => {
   cachedStudentData = null;
   cacheTimestamp = null;
+  cachedProfilePicUrl = null;
+  localStorage.removeItem('cachedProfilePicUrl');
   console.log('🗑️ Sidebar cache cleared');
+};
+
+export const updateCachedProfilePic = (url) => {
+  cachedProfilePicUrl = url;
+  localStorage.setItem('cachedProfilePicUrl', url);
+  if (cachedStudentData) {
+    cachedStudentData.profilePicURL = url;
+  }
+  console.log('📸 Sidebar: Profile pic cache updated', url);
 };
 
 const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) => {
   const { logout: authLogout } = useAuth();
   const navigate = useNavigate();
+  const hasFetchedRef = useRef(false);
   
   const [currentStudentData, setCurrentStudentData] = useState(() => {
+    // Initialize from cache immediately on mount
     if (cachedStudentData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
+      console.log('⚡ Sidebar: Loaded from cache on mount');
       return cachedStudentData;
+    }
+    // Fallback to localStorage if cache is expired
+    try {
+      const stored = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (stored) {
+        console.log('⚡ Sidebar: Loaded from localStorage on mount');
+        return stored;
+      }
+    } catch (e) {
+      console.error('❌ Sidebar: Error loading from localStorage', e);
     }
     return null;
   });
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
   const [isLoading, setIsLoading] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState(() => {
+    // PRIORITY 1: Check module-level cache (fastest)
+    if (cachedProfilePicUrl) {
+      console.log('⚡ Sidebar: Profile pic URL from memory cache');
+      return cachedProfilePicUrl;
+    }
+    
+    // PRIORITY 2: Check localStorage for pre-resolved profile pic URL (set during auth)
+    try {
+      const cachedUrl = localStorage.getItem('cachedProfilePicUrl');
+      if (cachedUrl) {
+        cachedProfilePicUrl = cachedUrl;
+        console.log('⚡ Sidebar: Profile pic URL from auth cache');
+        return cachedUrl;
+      }
+    } catch (e) {
+      console.error('❌ Sidebar: Error loading cached profile pic URL', e);
+    }
+    
+    // PRIORITY 3: Try to get from cached student data
+    if (cachedStudentData?.profilePicURL) {
+      const resolvedUrl = resolveProfileUrl(cachedStudentData.profilePicURL);
+      cachedProfilePicUrl = resolvedUrl;
+      console.log('⚡ Sidebar: Profile pic URL from cached student data');
+      return resolvedUrl;
+    }
+    
+    // PRIORITY 4: Try to get from localStorage studentData
+    try {
+      const stored = JSON.parse(localStorage.getItem('studentData') || 'null');
+      if (stored?.profilePicURL) {
+        const resolvedUrl = resolveProfileUrl(stored.profilePicURL);
+        cachedProfilePicUrl = resolvedUrl;
+        localStorage.setItem('cachedProfilePicUrl', resolvedUrl); // Cache for next time
+        console.log('⚡ Sidebar: Profile pic URL from localStorage');
+        return resolvedUrl;
+      }
+    } catch (e) {
+      console.error('❌ Sidebar: Error loading profile pic from localStorage', e);
+    }
+    return '';
+  });
+
+  // Memoize the profile picture URL to prevent flickering
+  // Only use profilePicUrl state to ensure stability
+  const stableProfilePicUrl = useMemo(() => {
+    return profilePicUrl;
+  }, [profilePicUrl]);
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      // If fresh studentData is passed from parent (Auth/Pages), use it immediately
-      if (studentData) {
+      console.log('🔵 Sidebar: useEffect triggered', {
+        hasStudentDataProp: !!studentData,
+        hasCachedData: !!cachedStudentData,
+        cacheValid: cachedStudentData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION),
+        hasFetched: hasFetchedRef.current,
+        currentStateId: currentStudentData?._id,
+        cachedId: cachedStudentData?._id
+      });
+      
+      // PRIORITY 1: Check if we already have valid cached data and have fetched
+      // If so, skip all processing to prevent unnecessary re-renders
+      if (
+        hasFetchedRef.current &&
+        cachedStudentData &&
+        cacheTimestamp &&
+        (Date.now() - cacheTimestamp < CACHE_DURATION)
+      ) {
+        console.log('✅ Sidebar: Already initialized with valid cache, ignoring trigger');
+        return;
+      }
+      
+      // PRIORITY 2: If fresh studentData is passed from parent on initial mount, use it
+      if (studentData && !hasFetchedRef.current) {
         setCurrentStudentData(studentData);
         setImageError(false);
-        setImageKey(Date.now());
         cachedStudentData = studentData;
         cacheTimestamp = Date.now();
-        // If this studentData already has a profile picture, we don't need a DB fetch
+        hasFetchedRef.current = true;
+        // Update profile pic URL if available
         if (studentData.profilePicURL) {
-          return;
+          const resolvedUrl = resolveProfileUrl(studentData.profilePicURL);
+          setProfilePicUrl(resolvedUrl);
+          cachedProfilePicUrl = resolvedUrl;
+          localStorage.setItem('cachedProfilePicUrl', resolvedUrl);
+          console.log('📸 Sidebar: Profile pic URL updated from prop');
         }
-        // Otherwise, fall through and try to hydrate from MongoDB so dashboard can
-        // load the latest profilePicURL just like other pages.
+        return;
       }
 
-      // Otherwise, fall back to cached/local data and a single fast fetch.
-      // IMPORTANT: Only short-circuit if the cache already has a profilePicURL.
-      // If the cache is missing the picture, allow the MongoDB fetch to run so
-      // pages like the dashboard can hydrate the sidebar image from DB.
+      // PRIORITY 3: Check if cache is valid - if so, use it without fetching
       if (
         cachedStudentData &&
         cacheTimestamp &&
-        (Date.now() - cacheTimestamp < CACHE_DURATION) &&
-        cachedStudentData.profilePicURL
+        (Date.now() - cacheTimestamp < CACHE_DURATION)
       ) {
-        setCurrentStudentData(cachedStudentData);
+        console.log('✅ Sidebar: Using valid cache, skipping fetch');
+        hasFetchedRef.current = true;
+        // Only update state if it's actually different to prevent unnecessary renders
+        if (currentStudentData?._id !== cachedStudentData._id) {
+          setCurrentStudentData(cachedStudentData);
+        }
+        // Ensure profilePicUrl is in sync with cached data
+        if (cachedProfilePicUrl && profilePicUrl !== cachedProfilePicUrl) {
+          setProfilePicUrl(cachedProfilePicUrl);
+          localStorage.setItem('cachedProfilePicUrl', cachedProfilePicUrl);
+        }
+        return;
+      }
+
+      // Only fetch if we haven't fetched yet in this component lifecycle
+      if (hasFetchedRef.current) {
+        console.log('⏭️ Sidebar: Already fetched in this lifecycle, skipping');
         return;
       }
 
       try {
+        console.log('🔄 Sidebar: Fetching from MongoDB...');
         setIsLoading(true);
         const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
         
         if (storedData?._id) {
           const { default: fastDataService } = await import('../../services/fastDataService.jsx');
+          const completeData = await fastDataService.getCompleteStudentData(storedData._id);
           
-          // ⚡ OPTIMIZED: Fetch ONLY profile data (not complete data with resume/certificates)
-          const profileData = await fastDataService.getProfileDataOnly(storedData._id);
-          
-          if (profileData) {
-            cachedStudentData = profileData;
+          if (completeData?.student) {
+            cachedStudentData = completeData.student;
             cacheTimestamp = Date.now();
-            setCurrentStudentData(profileData);
+            setCurrentStudentData(completeData.student);
             setImageError(false);
-            setImageKey(Date.now());
+            hasFetchedRef.current = true;
             
-            if (profileData.profilePicURL) {
-              const img = new Image();
-              img.onload = () => setImageKey(Date.now());
-              img.onerror = () => setImageError(true);
-              img.src = profileData.profilePicURL;
+            if (completeData.student.profilePicURL) {
+              const resolvedUrl = resolveProfileUrl(completeData.student.profilePicURL);
+              setProfilePicUrl(resolvedUrl);
+              cachedProfilePicUrl = resolvedUrl;
+              localStorage.setItem('cachedProfilePicUrl', resolvedUrl);
+              console.log('📸 Sidebar: Profile pic URL updated from fetched data');
             }
           }
         }
       } catch (error) {
-        console.error('❌ Sidebar: Error fetching profile from MongoDB:', error);
+        console.error('❌ Sidebar: Error fetching from MongoDB:', error);
       } finally {
         setIsLoading(false);
       }
@@ -104,24 +224,43 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   }, [studentData]);
 
   useEffect(() => {
-    if (studentData) {
-      setCurrentStudentData(studentData);
-      setImageError(false);
-      setImageKey(Date.now());
-      cachedStudentData = studentData;
-      cacheTimestamp = Date.now();
-    }
-  }, [studentData]);
-
-  useEffect(() => {
     const handleProfileUpdate = (event) => {
       try {
         if (event?.detail) {
-          setCurrentStudentData(event.detail);
-          setImageError(false);
-          setImageKey(Date.now());
-          cachedStudentData = event.detail;
-          cacheTimestamp = Date.now();
+          const updatedData = event.detail;
+          
+          // Check if profile pic URL has actually changed
+          const newProfileUrl = updatedData.profilePicURL ? resolveProfileUrl(updatedData.profilePicURL) : '';
+          const profileChanged = newProfileUrl && newProfileUrl !== cachedProfilePicUrl;
+          const studentIdChanged = updatedData._id !== cachedStudentData?._id;
+          
+          // Only update if something actually changed
+          if (!profileChanged && !studentIdChanged) {
+            console.log('⏭️ Sidebar: Profile update ignored - no changes detected');
+            return;
+          }
+          
+          console.log('🔄 Sidebar: Profile update received', {
+            hasProfilePic: !!updatedData.profilePicURL,
+            url: updatedData.profilePicURL,
+            changed: profileChanged
+          });
+          
+          // INSTANT SYNC: Update profile pic URL only if it changed
+          if (profileChanged) {
+            setProfilePicUrl(newProfileUrl);
+            cachedProfilePicUrl = newProfileUrl;
+            localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
+            console.log('📸 Sidebar: Profile pic URL updated instantly to', newProfileUrl);
+          }
+          
+          // Update state only if student data changed
+          if (studentIdChanged) {
+            setCurrentStudentData(updatedData);
+            setImageError(false);
+            cachedStudentData = updatedData;
+            cacheTimestamp = Date.now();
+          }
         }
       } catch (error) {
         console.error('❌ Error in handleProfileUpdate:', error);
@@ -131,11 +270,29 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     const handleForceRefresh = (event) => {
       try {
         if (event?.detail) {
-          setCurrentStudentData(event.detail);
+          const updatedData = event.detail;
+          
+          // Check if profile pic URL has actually changed
+          const newProfileUrl = updatedData.profilePicURL ? resolveProfileUrl(updatedData.profilePicURL) : '';
+          const profileChanged = newProfileUrl && newProfileUrl !== cachedProfilePicUrl;
+          
+          // Only update if something changed
+          if (!profileChanged && updatedData._id === cachedStudentData?._id) {
+            console.log('⏭️ Sidebar: Force refresh ignored - no changes detected');
+            return;
+          }
+          
+          // INSTANT SYNC: Update profile pic URL if present and changed
+          if (profileChanged) {
+            setProfilePicUrl(newProfileUrl);
+            cachedProfilePicUrl = newProfileUrl;
+            localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
+          }
+          
+          setCurrentStudentData(updatedData);
           setImageError(false);
-          cachedStudentData = event.detail;
+          cachedStudentData = updatedData;
           cacheTimestamp = Date.now();
-          setTimeout(() => setImageError(false), 10);
         }
       } catch (error) {
         console.error('❌ Error in handleForceRefresh:', error);
@@ -144,9 +301,28 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
 
     const handleStudentDataUpdate = (event) => {
       if (event?.detail?.student) {
-        setCurrentStudentData(event.detail.student);
+        const updatedData = event.detail.student;
+        
+        // Check if profile pic URL has actually changed
+        const newProfileUrl = updatedData.profilePicURL ? resolveProfileUrl(updatedData.profilePicURL) : '';
+        const profileChanged = newProfileUrl && newProfileUrl !== cachedProfilePicUrl;
+        
+        // Only update if something changed
+        if (!profileChanged && updatedData._id === cachedStudentData?._id) {
+          console.log('⏭️ Sidebar: Student data update ignored - no changes detected');
+          return;
+        }
+        
+        // INSTANT SYNC: Update profile pic URL if present and changed
+        if (profileChanged) {
+          setProfilePicUrl(newProfileUrl);
+          cachedProfilePicUrl = newProfileUrl;
+          localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
+        }
+        
+        setCurrentStudentData(updatedData);
         setImageError(false);
-        cachedStudentData = event.detail.student;
+        cachedStudentData = updatedData;
         cacheTimestamp = Date.now();
       }
     };
@@ -167,12 +343,14 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
       <div className={styles['user-info']}>
         <div className={styles['user-details']}>
-          {currentStudentData?.profilePicURL && !imageError ? (
+          {stableProfilePicUrl && !imageError ? (
             <img 
-              key={`${currentStudentData.profilePicURL}_${currentStudentData._id}_${imageKey}`}
-              src={currentStudentData.profilePicURL} 
+              src={stableProfilePicUrl} 
               alt="Profile" 
-              onError={() => setImageError(true)}
+              onError={() => {
+                console.warn('❌ Sidebar: Image load error');
+                setImageError(true);
+              }}
               style={{ 
                 width: '60px', 
                 height: '60px', 

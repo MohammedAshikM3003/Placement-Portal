@@ -2,6 +2,43 @@ const express = require('express');
 const router = express.Router();
 const puppeteer = require('puppeteer');
 const mongoose = require('mongoose');
+const { GridFSBucket, ObjectId } = require('mongodb');
+const { Readable } = require('stream');
+const http = require('http');
+const https = require('https');
+
+// GridFS bucket
+let gridFSBucket;
+function getBucket() {
+  if (!gridFSBucket && mongoose.connection.readyState === 1) {
+    gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+  }
+  return gridFSBucket;
+}
+
+// Initialize bucket
+mongoose.connection.once('open', () => {
+  gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+});
+
+// Upload buffer to GridFS
+function uploadToGridFS(buffer, filename, contentType, metadata = {}) {
+  return new Promise((resolve, reject) => {
+    const bucket = getBucket();
+    if (!bucket) return reject(new Error('GridFS bucket not initialized'));
+    
+    // Create a proper readable stream from buffer
+    const readableStream = new Readable();
+    readableStream.push(buffer);
+    readableStream.push(null); // Signal end of stream
+    
+    const uploadStream = bucket.openUploadStream(filename, { contentType, metadata });
+    
+    uploadStream.on('finish', () => resolve({ id: uploadStream.id.toString(), filename }));
+    uploadStream.on('error', reject);
+    readableStream.pipe(uploadStream);
+  });
+}
 
 // Lazy model getters - resolve at call time to avoid "Cannot overwrite model" errors
 function getResumeModel() {
@@ -108,7 +145,7 @@ router.post('/generate', optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing resumeData' });
     }
 
-    const html = buildResumeHTML(resumeData);
+    const html = await buildResumeHTML(resumeData, req);
 
     // Try Puppeteer PDF generation
     let pdfBuffer;
@@ -127,7 +164,7 @@ router.post('/generate', optionalAuth, async (req, res) => {
       await page.setContent(html, { waitUntil: 'networkidle0' });
       pdfBuffer = await page.pdf({
         format: 'A4',
-        margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+        margin: { top: '0.4in', right: '0.3in', bottom: '0.4in', left: '0.3in' },
         printBackground: true,
       });
       await browser.close();
@@ -144,14 +181,7 @@ router.post('/generate', optionalAuth, async (req, res) => {
           const Resume = getResumeModel();
           const Student = getStudentModel();
 
-          // Convert PDF to base64 data URL
-          const pdfBase64 = pdfBuffer.toString('base64');
-          const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`;
-
           console.log(`📝 Saving resume to MongoDB for studentId: ${studentId}`);
-          console.log(`📝 PDF Base64 length: ${pdfBase64.length}`);
-          console.log(`📝 PDF Data URL length: ${pdfDataUrl.length}`);
-          console.log(`📝 First 100 chars of base64:`, pdfBase64.substring(0, 100));
 
           // Get student info - try findById first, fall back to string query
           let student = null;
@@ -178,35 +208,69 @@ router.post('/generate', optionalAuth, async (req, res) => {
 
           console.log(`📝 Student found: ${!!student}, name: ${studentName}, regNo: ${regNo}`);
 
-          // Save or update resume in Resume collection
+          // Upload PDF to GridFS
+          const filename = `resume_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+          const metadata = { category: 'resume', studentId: String(studentId), originalName: `${studentName}_Resume.pdf` };
+          
+          let gridfsFileId = null;
+          let gridfsFileUrl = null;
+          
+          try {
+            const uploaded = await uploadToGridFS(pdfBuffer, filename, 'application/pdf', metadata);
+            gridfsFileId = uploaded.id;
+            gridfsFileUrl = `/api/file/${gridfsFileId}`;
+            console.log(`✅ PDF uploaded to GridFS: ${gridfsFileId}`);
+          } catch (gridfsErr) {
+            console.error('❌ GridFS upload failed:', gridfsErr.message);
+            // Continue without GridFS if it fails
+          }
+
+          // Find existing resume and delete old GridFS file if it exists
+          const existingResume = await Resume.findOne({ studentId: String(studentId) });
+          if (existingResume && existingResume.gridfsFileId && gridfsFileId) {
+            try {
+              const bucket = getBucket();
+              if (bucket) {
+                await bucket.delete(new ObjectId(existingResume.gridfsFileId));
+                console.log(`🗑️ Deleted old GridFS file: ${existingResume.gridfsFileId}`);
+              }
+            } catch (e) {
+              console.warn('⚠️ Could not delete old GridFS file:', e.message);
+            }
+          }
+
+          // Save or update resume in Resume collection (NO BASE64 DATA)
           const savedResume = await Resume.findOneAndUpdate(
             { studentId: String(studentId) },
             {
               studentId: String(studentId),
               regNo: regNo,
               name: studentName,
-              pdfData: pdfBase64,
-              url: pdfDataUrl,
+              fileName: `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume.pdf`,
+              fileSize: pdfBuffer.length,
+              fileType: 'application/pdf',
+              gridfsFileId: gridfsFileId,
+              gridfsFileUrl: gridfsFileUrl,
               resumeData: resumeData,
-              updatedAt: new Date()
+              updatedAt: new Date(),
+              uploadedAt: existingResume ? existingResume.uploadedAt : new Date()
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
           );
 
           console.log(`✅ Resume saved to 'resume' collection, _id: ${savedResume._id}`);
-          console.log(`✅ Saved URL length: ${savedResume.url?.length}`);
-          console.log(`✅ Saved URL first 100 chars:`, savedResume.url?.substring(0, 100));
+          console.log(`✅ GridFS URL: ${gridfsFileUrl}`);
 
-          // Update Student model with resume URL and resumeData for compatibility
-          if (student) {
-            student.resumeURL = pdfDataUrl;
+          // Update Student model with GridFS URL for compatibility
+          if (student && gridfsFileUrl) {
+            student.resumeURL = gridfsFileUrl;
             student.resumeData = {
-              url: pdfDataUrl,
+              url: gridfsFileUrl,
               name: `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume.pdf`,
-              createdAt: new Date()
+              createdAt: existingResume ? existingResume.uploadedAt : new Date()
             };
             await student.save();
-            console.log(`✅ Student model updated with resumeData`);
+            console.log(`✅ Student model updated with GridFS URL`);
           }
 
           console.log(`✅ Resume fully saved for student: ${studentName} (${regNo})`);
@@ -254,19 +318,22 @@ router.get('/pdf/:studentId', optionalAuth, async (req, res) => {
       return res.status(404).json({ error: 'Resume not found' });
     }
 
-    console.log(`✅ Resume found: ${resume.name}, URL length: ${resume.url?.length || 0}`);
-    console.log(`🔍 URL starts with:`, resume.url?.substring(0, 100));
-    console.log(`🔍 URL format check - has 'data:':`, resume.url?.startsWith('data:'));
-    console.log(`🔍 URL format check - has 'base64,':`, resume.url?.includes('base64,'));
+    // Prefer GridFS URL over legacy Base64 URL
+    const resumeUrl = resume.gridfsFileUrl || resume.url;
+    
+    console.log(`✅ Resume found: ${resume.name}`);
+    console.log(`🔍 Using URL: ${resumeUrl}`);
+    console.log(`🔍 GridFS File ID: ${resume.gridfsFileId || 'none'}`);
     
     res.json({ 
       success: true, 
       resume: {
         name: resume.name,
-        url: resume.url,
+        url: resumeUrl,
         regNo: resume.regNo,
         createdAt: resume.createdAt,
-        updatedAt: resume.updatedAt
+        updatedAt: resume.updatedAt,
+        atsAnalysis: (resume.atsAnalysis && resume.atsAnalysis.overallScore) ? resume.atsAnalysis : null
       }
     });
   } catch (error) {
@@ -312,11 +379,11 @@ router.post('/generate-latex', optionalAuth, async (req, res) => {
     }
 
     // Fallback to Puppeteer HTML
-    const html = buildResumeHTML(resumeData);
+    const html = await buildResumeHTML(resumeData);
     const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({ format: 'A4', margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' }, printBackground: true });
+    const pdfBuffer = await page.pdf({ format: 'A4', margin: { top: '0.4in', right: '0.3in', bottom: '0.4in', left: '0.3in' }, printBackground: true });
     await browser.close();
 
     res.set({ 'Content-Type': 'application/pdf' });
@@ -472,7 +539,7 @@ router.post('/ai-generate', optionalAuth, async (req, res) => {
 // HELPER FUNCTIONS
 // ========================================
 
-function buildResumeHTML(data) {
+async function buildResumeHTML(data, req = null) {
   const { personalInfo = {}, summary = '', education = {}, platforms = [], skills = [], experiences = [], projects = [], certifications = [], achievements = [], additionalInfo = [], resumeSettings = {} } = data;
   
   // Get font style from settings, default to Arial
@@ -496,7 +563,110 @@ function buildResumeHTML(data) {
   const googleFontImport = fontConfig.import;
   console.log('🎨 Applied font stack:', fontStack, '| Google Font:', googleFontImport);
 
-  const contactParts = [personalInfo.mobile, personalInfo.email, personalInfo.linkedin, personalInfo.github, personalInfo.address].filter(Boolean);
+  // Ensure mobile has +91 prefix
+  const rawMobile = personalInfo.mobile || '';
+  const formattedMobile = rawMobile && !rawMobile.startsWith('+') ? `+91 ${rawMobile.replace(/^0+/, '')}` : rawMobile;
+
+  // Get link type preference (HyperLink or URL)
+  const linkType = resumeSettings.linkType || 'HyperLink';
+  const useFullURL = linkType === 'URL';
+  console.log('🔗 Link type:', linkType, '| Using full URLs:', useFullURL);
+
+  // Build contact parts: plain text for mobile, mailto for email, labeled links for LinkedIn/GitHub/Portfolio
+  const contactItems = [];
+  if (formattedMobile) contactItems.push(escapeHtml(formattedMobile));
+  if (personalInfo.email) contactItems.push(`<a href="mailto:${escapeHtml(personalInfo.email)}">${escapeHtml(personalInfo.email)}</a>`);
+  if (personalInfo.linkedin) {
+    const linkedinUrl = personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin;
+    const displayText = useFullURL ? escapeHtml(linkedinUrl) : 'LinkedIn';
+    contactItems.push(`<a href="${escapeHtml(linkedinUrl)}" target="_blank">${displayText}</a>`);
+  }
+  if (personalInfo.github) {
+    const githubUrl = personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github;
+    const displayText = useFullURL ? escapeHtml(githubUrl) : 'GitHub';
+    contactItems.push(`<a href="${escapeHtml(githubUrl)}" target="_blank">${displayText}</a>`);
+  }
+  if (personalInfo.portfolio) {
+    const portfolioUrl = personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio;
+    const displayText = useFullURL ? escapeHtml(portfolioUrl) : 'Portfolio';
+    contactItems.push(`<a href="${escapeHtml(portfolioUrl)}" target="_blank">${displayText}</a>`);
+  }
+  if (personalInfo.address) contactItems.push(escapeHtml(personalInfo.address));
+
+  // Build coding profile links for second contact line
+  const codingProfileItems = platforms.filter(p => p.url && p.name).map(p => {
+    const url = p.url.startsWith('http') ? p.url : 'https://' + p.url;
+    const displayText = useFullURL ? escapeHtml(url) : escapeHtml(p.name);
+    return `<a href="${escapeHtml(url)}" target="_blank">${displayText}</a>`;
+  });
+
+  // Profile photo settings
+  const showProfilePhoto = resumeSettings.profilePhoto === true;
+  const photoPosition = resumeSettings.photoPosition || 'Left';
+  let profilePhotoUrl = personalInfo.photo || personalInfo.profilePhotoUrl || '';
+  
+  console.log('📷 Initial photo URL from personalInfo:', profilePhotoUrl);
+  console.log('📷 personalInfo.photo:', personalInfo.photo);
+  console.log('📷 personalInfo.profilePhotoUrl:', personalInfo.profilePhotoUrl);
+  
+  // Convert to base64 data URL if it's a GridFS file ID
+  if (showProfilePhoto && profilePhotoUrl) {
+    // Extract GridFS file ID
+    let fileId = null;
+    if (profilePhotoUrl.startsWith('/api/file/')) {
+      fileId = profilePhotoUrl.replace('/api/file/', '');
+    } else if (profilePhotoUrl.startsWith('/file/')) {
+      fileId = profilePhotoUrl.replace('/file/', '');
+    } else if (/^[a-f0-9]{24}$/.test(profilePhotoUrl)) {
+      fileId = profilePhotoUrl;
+    } else if (profilePhotoUrl.includes('/file/')) {
+      // Handle full URLs like http://localhost:5000/file/abc123
+      const match = profilePhotoUrl.match(/\/file\/([a-f0-9]{24})/);
+      if (match) fileId = match[1];
+    }
+    
+    if (fileId && mongoose.connection.readyState === 1) {
+      try {
+        console.log('📷 Converting GridFS file to base64, fileId:', fileId);
+        const bucket = getBucket();
+        if (bucket) {
+          const chunks = [];
+          const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+          await new Promise((resolve, reject) => {
+            downloadStream.on('data', (chunk) => chunks.push(chunk));
+            downloadStream.on('end', resolve);
+            downloadStream.on('error', reject);
+          });
+          const buffer = Buffer.concat(chunks);
+          const base64 = buffer.toString('base64');
+          // Try to detect content type from file metadata
+          let contentType = 'image/jpeg';
+          try {
+            const files = await mongoose.connection.db.collection('student_files.files').findOne({ _id: new ObjectId(fileId) });
+            if (files?.contentType) contentType = files.contentType;
+          } catch (e) { /* use default */ }
+          profilePhotoUrl = `data:${contentType};base64,${base64}`;
+          console.log('📷 ✅ Converted to base64 data URL (length:', profilePhotoUrl.length, ')');
+        }
+      } catch (gridfsErr) {
+        console.error('📷 ❌ GridFS base64 conversion failed:', gridfsErr.message);
+        // Fallback: convert to full URL
+        const protocol = req?.protocol || 'http';
+        const host = req?.get('host') || 'localhost:5000';
+        if (!profilePhotoUrl.startsWith('http')) {
+          profilePhotoUrl = `${protocol}://${host}${profilePhotoUrl.startsWith('/') ? '' : '/'}${profilePhotoUrl}`;
+        }
+      }
+    } else if (!profilePhotoUrl.startsWith('data:') && !profilePhotoUrl.startsWith('http')) {
+      // Relative URL - convert to full URL as fallback
+      const protocol = req?.protocol || 'http';
+      const host = req?.get('host') || 'localhost:5000';
+      profilePhotoUrl = `${protocol}://${host}${profilePhotoUrl.startsWith('/') ? '' : '/'}${profilePhotoUrl}`;
+      console.log('📷 Converted relative URL to:', profilePhotoUrl);
+    }
+  }
+  
+  console.log('📷 Profile photo enabled:', showProfilePhoto, '| Position:', photoPosition, '| Has photo:', !!profilePhotoUrl, '| URL type:', profilePhotoUrl?.startsWith('data:') ? 'base64' : 'url');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -508,8 +678,15 @@ function buildResumeHTML(data) {
 <link href="https://fonts.googleapis.com/css2?family=${googleFontImport}&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: ${fontStack} !important; }
+  html, body { width: 100%; margin: 0; padding: 0; }
   body { font-family: ${fontStack} !important; font-size: 10.5pt; line-height: 1.45; color: #2d2d2d; background: #fff; }
-  .resume { max-width: 8.5in; margin: 0 auto; padding: 0.4in 0; }
+  .resume { width: 100%; margin: 0; padding: 0 0.3in; overflow: visible; }
+  .header-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; }
+  .header-container.photo-left { flex-direction: row; }
+  .header-container.photo-right { flex-direction: row-reverse; }
+  .header-container.no-photo .header-text { text-align: center; width: 100%; }
+  .header-text { flex: 1; text-align: center; }
+  .profile-photo { width: 90px; height: 110px; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
   h1 { font-family: ${fontStack} !important; font-size: 22pt; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 4px; letter-spacing: 0.5px; }
   h2, h3, h4, h5, h6, p, span, div, a, li, td, th { font-family: ${fontStack} !important; }
   .contact { text-align: center; font-size: 9pt; color: #555; margin-bottom: 14px; line-height: 1.6; }
@@ -517,9 +694,9 @@ function buildResumeHTML(data) {
   .section { margin-bottom: 10px; }
   .section-title { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; border-bottom: 2px solid #333; padding-bottom: 3px; margin-bottom: 8px; font-family: ${fontStack} !important; }
   .entry { margin-bottom: 8px; page-break-inside: avoid; }
-  .entry-header { display: flex; justify-content: space-between; align-items: baseline; }
-  .entry-title { font-weight: 700; font-size: 10.5pt; color: #1a1a1a; font-family: ${fontStack} !important; }
-  .entry-date { font-size: 9.5pt; color: #666; font-style: italic; }
+  .entry-header { display: flex; justify-content: space-between; align-items: baseline; gap: 15px; width: 100%; }
+  .entry-title { font-weight: 700; font-size: 10.5pt; color: #1a1a1a; font-family: ${fontStack} !important; min-width: 0; }
+  .entry-date { font-size: 9.5pt; color: #666; font-style: italic; white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
   .entry-sub { font-size: 9.5pt; color: #555; font-style: italic; margin-bottom: 3px; }
   .entry-desc { font-size: 10pt; color: #444; margin: 3px 0 3px 12px; }
   .tech-line { font-size: 9.5pt; color: #666; margin-left: 12px; }
@@ -533,52 +710,65 @@ function buildResumeHTML(data) {
 </head>
 <body>
 <div class="resume">
+  ${showProfilePhoto && profilePhotoUrl ? `
+  <div class="header-container photo-${photoPosition.toLowerCase()}" id="header-container">
+    <img src="${escapeHtml(profilePhotoUrl)}" alt="" class="profile-photo" onerror="document.getElementById('header-container').outerHTML='<h1>${escapeHtml((personalInfo.name || 'Your Name').replace(/'/g, "\\'"))}</h1><div class=\\'contact\\'>${contactItems.join(' &nbsp;|&nbsp; ').replace(/'/g, "\\'")}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ').replace(/'/g, "\\'") : ''}</div>';" />
+    <div class="header-text">
+      <h1>${escapeHtml(personalInfo.name || 'Your Name')}</h1>
+      <div class="contact">${contactItems.join(' &nbsp;|&nbsp; ')}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ') : ''}</div>
+    </div>
+  </div>` : `
   <h1>${escapeHtml(personalInfo.name || 'Your Name')}</h1>
-  <div class="contact">${contactParts.map(c => c.includes('@') ? `<a href="mailto:${escapeHtml(c)}">${escapeHtml(c)}</a>` : (c.startsWith('http') || c.includes('.com') ? `<a href="${escapeHtml(c)}" target="_blank">${escapeHtml(c)}</a>` : escapeHtml(c))).join(' &nbsp;|&nbsp; ')}</div>
+  <div class="contact">${contactItems.join(' &nbsp;|&nbsp; ')}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ') : ''}</div>`}
 
   ${summary ? `<div class="section"><div class="section-title">Professional Summary</div><p class="summary-text">${escapeHtml(summary)}</p></div>` : ''}
+
+  ${(Array.isArray(skills) && skills.length && ((typeof skills[0] === 'object' && skills[0].category) ? skills.some(c => c.items?.length > 0) : true)) ? `<div class="section"><div class="section-title">Skills</div>${(typeof skills[0] === 'object' && skills[0].category) ? `<ul style="margin-left:16px;font-size:10pt;">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${escapeHtml(c.category)}:</strong> ${c.items.map(i => escapeHtml(i)).join(', ')}</li>`).join('')}</ul>` : `<div class="skills-grid">${skills.map(s => `<span class="skill-tag">${escapeHtml(String(s))}</span>`).join('')}</div>`}</div>` : ''}
+
+  ${experiences.length ? `<div class="section"><div class="section-title">Internship</div>
+    ${experiences.map(e => {
+      const formatDate = (d) => { if (!d) return ''; const parts = d.split('-'); return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : d; };
+      const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
+      const titleParts = [];
+      if (e.companyName) titleParts.push(escapeHtml(e.companyName));
+      if (e.location) titleParts.push(escapeHtml(e.location));
+      const titleStr = titleParts.join(', ') + (modeLabel ? ' (' + modeLabel + ')' : '');
+      return `<div class="entry">
+      <div class="entry-header"><span class="entry-title">${titleStr}</span><span class="entry-date">${formatDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${formatDate(e.toDate) || 'Present'}</span></div>
+      ${e.description ? `<div class="entry-desc">${escapeHtml(typeof e.description === 'string' ? e.description.trim() : (e.description?.input || e.description?.text || e.description?.description || '').trim())}</div>` : ''}
+      ${e.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${e.technologies.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
+    </div>`;
+    }).join('')}
+  </div>` : ''}
+
+  ${projects.length ? `<div class="section"><div class="section-title">Projects</div>
+    ${projects.map(p => typeof p === 'string' ? `<div class="entry"><div class="entry-header"><span class="entry-title">${escapeHtml(p)}</span></div></div>` : `<div class="entry">
+      <div class="entry-header"><span class="entry-title">${escapeHtml(p.name || '')}</span><span class="entry-date">${p.githubRepo ? `<a href="${escapeHtml(p.githubRepo)}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${p.githubRepo && p.hostingLink ? ' | ' : ''}${p.hostingLink ? `<a href="${escapeHtml(p.hostingLink)}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
+      ${p.description ? `<div class="entry-desc">${escapeHtml(typeof p.description === 'string' ? p.description : (p.description?.input || p.description?.text || p.description?.description || ''))}</div>` : ''}
+      ${p.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${p.technologies.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
+    </div>`).join('')}
+  </div>` : ''}
+
+  ${certifications.length ? `<div class="section"><div class="section-title">Certifications</div>
+    ${certifications.map(c => `<div class="entry" style="margin-bottom:4px;">
+      <div class="entry-header"><span class="entry-title">${escapeHtml(c.certificateName || '')}</span></div>
+      ${c.description ? `<div class="entry-desc">${escapeHtml(typeof c.description === 'string' ? c.description : (c.description?.input || c.description?.text || c.description?.description || ''))}</div>` : ''}
+    </div>`).join('')}
+  </div>` : ''}
+
+  ${achievements.length ? `<div class="section"><div class="section-title">Achievements</div><ul>
+    ${achievements.map(a => `<li>${escapeHtml(a.details || '')}</li>`).join('')}
+  </ul></div>` : ''}
+
+  ${additionalInfo.length ? `<div class="section"><div class="section-title">Additional Information</div><ul>
+    ${additionalInfo.map(a => `<li>${escapeHtml(a.info || '')}</li>`).join('')}
+  </ul></div>` : ''}
 
   ${(education.college || education.school12 || education.school10) ? `<div class="section"><div class="section-title">Education</div>
     ${education.college ? `<div class="entry"><div class="entry-header"><span class="entry-title">${escapeHtml(education.degree || 'B.E.')} in ${escapeHtml(education.branch || 'Engineering')} - ${escapeHtml(education.college)}</span><span class="entry-date">${escapeHtml(education.graduationYear || '')}</span></div><div class="entry-sub">CGPA: ${escapeHtml(education.cgpa || 'N/A')}</div></div>` : ''}
     ${education.school12 ? `<div class="entry"><div class="entry-header"><span class="entry-title">12th Standard - ${escapeHtml(education.school12)}</span><span class="entry-date">${escapeHtml(education.batch12 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile12 || 'N/A')}</div></div>` : ''}
     ${education.school10 ? `<div class="entry"><div class="entry-header"><span class="entry-title">10th Standard - ${escapeHtml(education.school10)}</span><span class="entry-date">${escapeHtml(education.batch10 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile10 || 'N/A')}</div></div>` : ''}
   </div>` : ''}
-
-  ${(Array.isArray(skills) && skills.length && ((typeof skills[0] === 'object' && skills[0].category) ? skills.some(c => c.items?.length > 0) : true)) ? `<div class="section"><div class="section-title">Skills</div>${(typeof skills[0] === 'object' && skills[0].category) ? `<ul style="margin-left:16px;font-size:10pt;">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${escapeHtml(c.category)}:</strong> ${c.items.map(i => escapeHtml(i)).join(', ')}</li>`).join('')}</ul>` : `<div class="skills-grid">${skills.map(s => `<span class="skill-tag">${escapeHtml(String(s))}</span>`).join('')}</div>`}</div>` : ''}
-
-  ${experiences.length ? `<div class="section"><div class="section-title">Professional Experience</div>
-    ${experiences.map(e => `<div class="entry">
-      <div class="entry-header"><span class="entry-title">${escapeHtml(e.title || '')}</span><span class="entry-date">${escapeHtml(e.fromDate || '')} - ${escapeHtml(e.toDate || 'Present')}</span></div>
-      ${e.companyName ? `<div class="entry-sub">${escapeHtml(e.companyName)}${e.location ? ', ' + escapeHtml(e.location) : ''}</div>` : ''}
-      ${e.description ? `<div class="entry-desc">${escapeHtml(e.description)}</div>` : ''}
-      ${e.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${e.technologies.map(t => escapeHtml(t)).join(', ')}</div>` : ''}
-    </div>`).join('')}
-  </div>` : ''}
-
-  ${projects.length ? `<div class="section"><div class="section-title">Projects</div>
-    ${projects.map(p => `<div class="entry">
-      <div class="entry-header"><span class="entry-title">${escapeHtml(p.name || '')}</span></div>
-      ${p.description ? `<div class="entry-desc">${escapeHtml(p.description)}</div>` : ''}
-      ${p.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${p.technologies.map(t => escapeHtml(t)).join(', ')}</div>` : ''}
-      ${p.githubRepo ? `<div class="tech-line"><a href="${escapeHtml(p.githubRepo)}">GitHub</a>${p.hostingLink ? ` | <a href="${escapeHtml(p.hostingLink)}">Live Demo</a>` : ''}</div>` : ''}
-    </div>`).join('')}
-  </div>` : ''}
-
-  ${certifications.length ? `<div class="section"><div class="section-title">Certifications</div><ul>
-    ${certifications.map(c => `<li>${escapeHtml(c.certificateName || '')}${c.issuedBy ? ' — ' + escapeHtml(c.issuedBy) : ''}</li>`).join('')}
-  </ul></div>` : ''}
-
-  ${achievements.length ? `<div class="section"><div class="section-title">Achievements</div><ul>
-    ${achievements.map(a => `<li>${escapeHtml(a.details || '')}</li>`).join('')}
-  </ul></div>` : ''}
-
-  ${platforms.filter(p => p.url).length ? `<div class="section"><div class="section-title">Coding Profiles</div><ul>
-    ${platforms.filter(p => p.url).map(p => `<li><strong>${escapeHtml(p.name)}:</strong> <a href="${escapeHtml(p.url)}">${escapeHtml(p.url)}</a></li>`).join('')}
-  </ul></div>` : ''}
-
-  ${additionalInfo.length ? `<div class="section"><div class="section-title">Additional Information</div><ul>
-    ${additionalInfo.map(a => `<li>${escapeHtml(a.info || '')}</li>`).join('')}
-  </ul></div>` : ''}
 </div>
 </body></html>`;
 }
@@ -590,7 +780,7 @@ function buildResumeLatex(data) {
 
   return `\\documentclass[a4paper,10pt]{article}
 \\usepackage[utf8]{inputenc}
-\\usepackage[margin=0.5in]{geometry}
+\\usepackage[margin=0.25in]{geometry}
 \\usepackage{enumitem}
 \\usepackage{hyperref}
 \\usepackage{titlesec}
@@ -602,7 +792,7 @@ function buildResumeLatex(data) {
 \\begin{document}
 
 {\\centering {\\LARGE \\textbf{${escLatex(personalInfo.name || 'Your Name')}}} \\\\[4pt]
-${[personalInfo.mobile, personalInfo.email, personalInfo.linkedin, personalInfo.github].filter(Boolean).map(c => escLatex(c)).join(' $|$ ')} \\\\[8pt]}
+${[(() => { const m = personalInfo.mobile || ''; return m && !m.startsWith('+') ? `+91 ${m.replace(/^0+/, '')}` : m; })(), personalInfo.email, personalInfo.linkedin, personalInfo.github].filter(Boolean).map(c => escLatex(c)).join(' $|$ ')} \\\\[8pt]}
 
 ${summary ? `\\section*{Professional Summary}
 ${escLatex(summary)}` : ''}
@@ -617,7 +807,7 @@ ${(typeof skills[0] === 'object' && skills[0].category) ? `\\begin{itemize}[left
 ${skills.filter(c => c.items?.length > 0).map(c => `\\item \\textbf{${escLatex(c.category)}:} ${c.items.map(i => escLatex(i)).join(', ')}`).join('\n')}
 \\end{itemize}` : skills.map(s => escLatex(String(s))).join(' $\\cdot$ ')}` : ''}
 
-${experiences.length ? `\\section*{Professional Experience}
+${experiences.length ? `\\section*{Internship}
 ${experiences.map(e => `\\textbf{${escLatex(e.title || '')}} \\hfill ${escLatex(e.fromDate || '')} -- ${escLatex(e.toDate || 'Present')}
 ${e.companyName ? `\\\\ \\textit{${escLatex(e.companyName)}${e.location ? ', ' + escLatex(e.location) : ''}}` : ''}
 ${e.description ? `\\\\ ${escLatex(e.description)}` : ''}
@@ -914,6 +1104,37 @@ router.post('/ats-check', optionalAuth, async (req, res) => {
         );
 
         console.log(`✅ ATS analysis saved to resumeanalyses for student: ${studentName} (score: ${analysis.overallScore})`);
+        
+        // Also save ATS analysis to the resume collection for the Resume page display
+        try {
+          const Resume = getResumeModel();
+          const resumeDoc = await Resume.findOneAndUpdate(
+            { studentId: String(studentId) },
+            { 
+              atsAnalysis: {
+                overallScore: analysis.overallScore,
+                totalIssues: analysis.totalIssues,
+                categories: analysis.categories,
+                suggestions: analysis.suggestions || [],
+                strengths: analysis.strengths || [],
+                criticalFixes: analysis.criticalFixes || [],
+                overallTips: analysis.overallTips || [],
+                aiEnhanced: analysis.aiEnhanced || false,
+                analyzedAt: new Date()
+              },
+              updatedAt: new Date()
+            },
+            { new: true }
+          );
+          if (resumeDoc) {
+            console.log(`✅ ATS analysis also saved to resume collection for: ${resumeDoc.name}`);
+          } else {
+            console.log(`⚠️ Resume not found in resume collection for studentId: ${studentId} (ATS saved only in resumeanalyses)`);
+          }
+        } catch (resumeSaveErr) {
+          console.error('❌ Failed to save ATS to resume collection:', resumeSaveErr.message);
+        }
+        
       } catch (dbErr) {
         console.error('❌ Failed to save ATS analysis to MongoDB:', dbErr.message);
       }
@@ -942,18 +1163,42 @@ router.get('/ats-result/:studentId', optionalAuth, async (req, res) => {
     }
 
     console.log(`✅ ATS analysis loaded for student: ${result.studentName} (score: ${result.overallScore})`);
+    
+    const analysisData = {
+      overallScore: result.overallScore,
+      totalIssues: result.totalIssues,
+      aiEnhanced: result.aiEnhanced,
+      categories: result.categories,
+      suggestions: result.suggestions,
+      strengths: result.strengths,
+      criticalFixes: result.criticalFixes,
+      overallTips: result.overallTips
+    };
+    
+    // Sync to resume collection if not already there
+    try {
+      const Resume = getResumeModel();
+      const resumeDoc = await Resume.findOne({ studentId: String(studentId) });
+      if (resumeDoc && (!resumeDoc.atsAnalysis || !resumeDoc.atsAnalysis.overallScore)) {
+        await Resume.findOneAndUpdate(
+          { studentId: String(studentId) },
+          { 
+            atsAnalysis: {
+              ...analysisData,
+              analyzedAt: result.updatedAt || new Date()
+            },
+            updatedAt: new Date()
+          }
+        );
+        console.log(`✅ Synced ATS analysis to resume collection for: ${resumeDoc.name}`);
+      }
+    } catch (syncErr) {
+      console.warn('⚠️ Could not sync ATS to resume collection:', syncErr.message);
+    }
+    
     res.json({
       success: true,
-      analysis: {
-        overallScore: result.overallScore,
-        totalIssues: result.totalIssues,
-        aiEnhanced: result.aiEnhanced,
-        categories: result.categories,
-        suggestions: result.suggestions,
-        strengths: result.strengths,
-        criticalFixes: result.criticalFixes,
-        overallTips: result.overallTips
-      },
+      analysis: analysisData,
       analyzedAt: result.updatedAt
     });
   } catch (error) {
@@ -1250,12 +1495,190 @@ function buildPlainText(data) {
 
 function escapeHtml(text) {
   if (!text) return '';
-  return text.toString()
+  // Safely convert non-string types to avoid [object Object]
+  let str;
+  if (typeof text === 'string') {
+    str = text;
+  } else if (typeof text === 'number' || typeof text === 'boolean') {
+    str = String(text);
+  } else if (Array.isArray(text)) {
+    str = text.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join(', ');
+  } else if (typeof text === 'object') {
+    // Extract a meaningful string from common object shapes
+    str = text.input || text.description || text.name || text.title || text.text || text.value || '';
+    if (typeof str !== 'string') str = JSON.stringify(text);
+  } else {
+    str = String(text);
+  }
+  return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ===== POST /api/resume-builder/save-ats-analysis =====
+// Save ATS analysis results to the resume collection
+router.post('/save-ats-analysis', optionalAuth, async (req, res) => {
+  try {
+    const { studentId, atsAnalysis } = req.body;
+    
+    if (!studentId || !atsAnalysis) {
+      console.log('❌ Missing required data:', { hasStudentId: !!studentId, hasAtsAnalysis: !!atsAnalysis });
+      return res.status(400).json({ error: 'Missing studentId or atsAnalysis' });
+    }
+
+    console.log(`💾 ========================================`);
+    console.log(`💾 SAVING ATS ANALYSIS`);
+    console.log(`💾 StudentId: ${studentId}`);
+    console.log(`💾 Overall Score: ${atsAnalysis.overallScore}`);
+    console.log(`💾 Total Issues: ${atsAnalysis.totalIssues}`);
+    console.log(`💾 Suggestions Count: ${atsAnalysis.suggestions?.length || 0}`);
+    console.log(`💾 ========================================`);
+
+    if (mongoose.connection.readyState !== 1) {
+      console.log('❌ MongoDB not connected, readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    const Resume = getResumeModel();
+    
+    // First check if resume exists
+    const existingResume = await Resume.findOne({ studentId: String(studentId) });
+    if (!existingResume) {
+      console.log(`❌ Resume not found for studentId: ${studentId}`);
+      console.log(`❌ Please build your resume first in the Resume Builder`);
+      return res.status(404).json({ error: 'Resume not found. Please build your resume first.' });
+    }
+    
+    console.log(`✅ Found existing resume: ${existingResume.name}`);
+    
+    // Update the resume with ATS analysis
+    const resume = await Resume.findOneAndUpdate(
+      { studentId: String(studentId) },
+      { 
+        atsAnalysis: {
+          overallScore: atsAnalysis.overallScore,
+          totalIssues: atsAnalysis.totalIssues,
+          categories: atsAnalysis.categories,
+          suggestions: atsAnalysis.suggestions || [],
+          strengths: atsAnalysis.strengths || [],
+          criticalFixes: atsAnalysis.criticalFixes || [],
+          overallTips: atsAnalysis.overallTips || [],
+          aiEnhanced: atsAnalysis.aiEnhanced || false,
+          analyzedAt: new Date()
+        },
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    console.log(`✅ ========================================`);
+    console.log(`✅ ATS ANALYSIS SAVED SUCCESSFULLY!`);
+    console.log(`✅ Resume Name: ${resume.name}`);
+    console.log(`✅ Collection: resume`);
+    console.log(`✅ Document ID: ${resume._id}`);
+    console.log(`✅ Score: ${atsAnalysis.overallScore}/100`);
+    console.log(`✅ Issues: ${atsAnalysis.totalIssues}`);
+    console.log(`✅ Check MongoDB Atlas -> Database -> Collections -> resume`);
+    console.log(`✅ Look for document with studentId: ${studentId}`);
+    console.log(`✅ ========================================`);
+
+    res.json({ 
+      success: true, 
+      message: 'ATS analysis saved successfully',
+      resume: {
+        name: resume.name,
+        atsAnalysis: resume.atsAnalysis
+      }
+    });
+  } catch (error) {
+    console.error('❌ Save ATS analysis error:', error);
+    res.status(500).json({ error: 'Failed to save ATS analysis' });
+  }
+});
+
+// ===== GET /api/resume-builder/ats-analysis/:studentId =====
+// Fetch saved ATS analysis - checks resume collection first, then falls back to resumeanalyses
+router.get('/ats-analysis/:studentId', optionalAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    console.log(`🔍 GET /api/resume-builder/ats-analysis/${studentId}`);
+    
+    if (mongoose.connection.readyState !== 1) {
+      console.log('❌ MongoDB not connected');
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    const Resume = getResumeModel();
+    const resume = await Resume.findOne({ studentId: String(studentId) });
+    
+    if (!resume) {
+      console.log(`❌ Resume not found for studentId: ${studentId}`);
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    // Check if ATS analysis exists in resume collection
+    if (resume.atsAnalysis && resume.atsAnalysis.overallScore) {
+      console.log(`✅ ATS analysis found in resume collection: Score ${resume.atsAnalysis.overallScore}`);
+      return res.json({ 
+        success: true, 
+        hasAnalysis: true,
+        atsAnalysis: resume.atsAnalysis,
+        analyzedAt: resume.atsAnalysis.analyzedAt
+      });
+    }
+
+    // Fallback: check resumeanalyses collection and sync to resume
+    console.log(`⚠️ No ATS in resume collection, checking resumeanalyses...`);
+    try {
+      const ResumeAnalysis = mongoose.models.ResumeAnalysis || require('../models/ResumeAnalysis');
+      const analysisResult = await ResumeAnalysis.findOne({ studentId: String(studentId) }).sort({ updatedAt: -1 });
+      
+      if (analysisResult && analysisResult.overallScore) {
+        console.log(`✅ Found ATS analysis in resumeanalyses: Score ${analysisResult.overallScore}`);
+        
+        const atsData = {
+          overallScore: analysisResult.overallScore,
+          totalIssues: analysisResult.totalIssues,
+          categories: analysisResult.categories,
+          suggestions: analysisResult.suggestions || [],
+          strengths: analysisResult.strengths || [],
+          criticalFixes: analysisResult.criticalFixes || [],
+          overallTips: analysisResult.overallTips || [],
+          aiEnhanced: analysisResult.aiEnhanced || false,
+          analyzedAt: analysisResult.updatedAt || new Date()
+        };
+        
+        // Sync to resume collection
+        await Resume.findOneAndUpdate(
+          { studentId: String(studentId) },
+          { atsAnalysis: atsData, updatedAt: new Date() }
+        );
+        console.log(`✅ Synced ATS analysis from resumeanalyses to resume collection`);
+        
+        return res.json({ 
+          success: true, 
+          hasAnalysis: true,
+          atsAnalysis: atsData,
+          analyzedAt: atsData.analyzedAt
+        });
+      }
+    } catch (fallbackErr) {
+      console.warn('⚠️ Fallback to resumeanalyses failed:', fallbackErr.message);
+    }
+
+    console.log(`⚠️ No ATS analysis found in any collection for studentId: ${studentId}`);
+    return res.json({ 
+      success: true, 
+      hasAnalysis: false,
+      message: 'No ATS analysis available. Please check your resume on the ATS Checker page.'
+    });
+  } catch (error) {
+    console.error('❌ Fetch ATS analysis error:', error);
+    res.status(500).json({ error: 'Failed to fetch ATS analysis' });
+  }
+});
 
 module.exports = router;

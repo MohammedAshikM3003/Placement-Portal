@@ -1,58 +1,25 @@
-// Free file storage service using base64 encoding
-// This stores files as base64 strings in Firestore (free tier)
+// File storage service - GridFS-backed (replaces Base64 encoding)
+// Files are now stored via GridFS; this service handles upload/download/preview via URLs
 
 class FileStorageService {
-  // Optimized: Faster base64 conversion
-  async fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      // Optimize for faster processing
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
+  // Helper: detect if a value is a GridFS URL
+  isGridFSUrl(value) {
+    return value && typeof value === 'string' && (value.startsWith('/api/file/') || value.includes('/api/file/'));
   }
 
-  // Convert base64 to file (for download)
-  base64ToFile(base64String, filename) {
-    if (!base64String) {
-      throw new Error('No file data available for download');
-    }
-    
-    const arr = base64String.split(',');
-    if (arr.length < 2) {
-      throw new Error('Invalid file data format');
-    }
-    
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    if (!mimeMatch) {
-      throw new Error('Invalid MIME type in file data');
-    }
-    
-    const mime = mimeMatch[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  }
-
-  // Optimized: Faster file upload
+  // Upload file to GridFS and return URL
   async uploadFile(file, path) {
     try {
-      // Quick validation
-      if (file.size > 1024 * 1024) {
-        throw new Error('File size must be less than 1MB');
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must be less than 5MB');
       }
 
-      // Optimized: Direct base64 conversion
-      const base64String = await this.fileToBase64(file);
+      const gridfsService = (await import('./gridfsService')).default;
+      const result = await gridfsService.uploadFile(file, path || 'general');
       
-      // Return immediately for faster processing
       return {
-        url: base64String,
+        url: result.url,
+        fileId: result.fileId,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -63,98 +30,119 @@ class FileStorageService {
     }
   }
 
-  // Download file from base64
-  downloadFile(base64String, filename) {
+  // Download file - handles both GridFS URLs and legacy base64
+  downloadFile(fileUrlOrBase64, filename) {
     try {
-      if (!base64String) {
+      if (!fileUrlOrBase64) {
         throw new Error('No file data available for download');
       }
-      
-      const file = this.base64ToFile(base64String, filename);
-      const url = URL.createObjectURL(file);
-      
+
+      let downloadUrl;
+      if (this.isGridFSUrl(fileUrlOrBase64)) {
+        // GridFS URL - use directly
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        downloadUrl = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
+      } else if (fileUrlOrBase64.startsWith('data:')) {
+        // Legacy base64 data URL
+        downloadUrl = fileUrlOrBase64;
+      } else {
+        // Try as plain URL
+        downloadUrl = fileUrlOrBase64;
+      }
+
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading file:', error);
       throw error;
     }
   }
 
-  // OPTIMIZED: Ultra-fast file preview
-  previewFile(base64String) {
+  // Preview file - handles both GridFS URLs and legacy base64
+  previewFile(fileUrlOrBase64) {
     try {
-      // OPTIMIZED: Faster file type detection
-      const fileType = this.detectFileType(base64String);
+      if (this.isGridFSUrl(fileUrlOrBase64)) {
+        // GridFS URL - open directly
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        const fullUrl = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
+        window.open(fullUrl, '_blank');
+        return;
+      }
+
+      // Legacy: detect type and handle
+      const fileType = this.detectFileType(fileUrlOrBase64);
       
-      // INSTANT PREVIEW: Open immediately based on file type
       switch (fileType) {
         case 'pdf':
-          this.openPDFPreview(base64String);
+          this.openPDFPreview(fileUrlOrBase64);
           break;
         case 'doc':
-          this.openDOCPreview(base64String);
+          this.openDOCPreview(fileUrlOrBase64);
           break;
         default:
-          // OPTIMIZED: Direct window.open for other types
-          window.open(base64String, '_blank');
+          window.open(fileUrlOrBase64, '_blank');
           break;
       }
     } catch (error) {
       console.error('Error previewing file:', error);
-      throw error; // Let the calling function handle the error
+      throw error;
     }
   }
 
-  // OPTIMIZED: Fast file type detection
-  detectFileType(base64String) {
-    // Quick checks for common file types
-    if (base64String.includes('data:application/pdf')) return 'pdf';
-    if (base64String.includes('data:application/msword') || 
-        base64String.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+  // File type detection - handles both URLs and base64
+  detectFileType(fileUrlOrBase64) {
+    if (fileUrlOrBase64.includes('data:application/pdf') || fileUrlOrBase64.endsWith('.pdf')) return 'pdf';
+    if (fileUrlOrBase64.includes('data:application/msword') || 
+        fileUrlOrBase64.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+        fileUrlOrBase64.endsWith('.doc') || fileUrlOrBase64.endsWith('.docx')) {
       return 'doc';
     }
     return 'other';
   }
 
-  // OPTIMIZED: Ultra-fast PDF preview
-  openPDFPreview(base64String) {
+  // PDF preview - handles both URLs and base64
+  openPDFPreview(fileUrlOrBase64) {
     try {
-      // OPTIMIZED: Minimal HTML for faster rendering
       const newWindow = window.open('', '_blank', 'width=800,height=600');
       
       if (!newWindow) {
-        // Popup blocked - try direct window.open with data URL
-        window.open(base64String, '_blank');
+        window.open(fileUrlOrBase64, '_blank');
         return;
+      }
+      
+      let src = fileUrlOrBase64;
+      if (this.isGridFSUrl(fileUrlOrBase64)) {
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        src = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
       }
       
       newWindow.document.write(`
         <html>
           <head><title>PDF Preview</title></head>
           <body style="margin:0;padding:0;">
-            <iframe src="${base64String}" style="width:100%;height:100vh;border:none;"></iframe>
+            <iframe src="${src}" style="width:100%;height:100vh;border:none;"></iframe>
           </body>
         </html>
       `);
       newWindow.document.close();
     } catch (error) {
-      // Fallback: try direct window.open
       console.log('Fallback: Opening PDF directly');
-      window.open(base64String, '_blank');
+      window.open(fileUrlOrBase64, '_blank');
     }
   }
 
-  // OPTIMIZED: Ultra-fast DOC preview
-  openDOCPreview(base64String) {
-    // OPTIMIZED: Minimal HTML for faster rendering
+  // DOC preview
+  openDOCPreview(fileUrl) {
     const newWindow = window.open('', '_blank', 'width=800,height=600');
+    let href = fileUrl;
+    if (this.isGridFSUrl(fileUrl)) {
+      const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      href = fileUrl.startsWith('http') ? fileUrl : `${API_BASE}${fileUrl}`;
+    }
     newWindow.document.write(`
       <html>
         <head><title>Document Preview</title></head>
@@ -168,7 +156,7 @@ class FileStorageService {
           <script>
             function downloadDocument() {
               const link = document.createElement('a');
-              link.href = '${base64String}';
+              link.href = '${href}';
               link.download = 'document.docx';
               document.body.appendChild(link);
               link.click();
@@ -179,6 +167,31 @@ class FileStorageService {
       </html>
     `);
     newWindow.document.close();
+  }
+
+  // Legacy: Convert base64 to file (kept for backward compatibility)
+  base64ToFile(base64String, filename) {
+    if (!base64String) throw new Error('No file data available');
+    const arr = base64String.split(',');
+    if (arr.length < 2) throw new Error('Invalid file data format');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) throw new Error('Invalid MIME type');
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+    return new File([u8arr], filename, { type: mime });
+  }
+
+  // Legacy: Convert file to base64 (kept for backward compatibility)
+  async fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   }
 
   // Get file size in human readable format

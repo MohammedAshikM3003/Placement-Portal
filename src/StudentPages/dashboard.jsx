@@ -1,13 +1,12 @@
 import React from "react";
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
-import ksrCollegeImage from "../assets/ksrCollegeImage.jpg";
 import Profile from "../assets/totalpercentagestudenticon.png";
 import totalpercentagestudenticon from "../assets/UpcomingDriveIcon.svg";
 import Resume from "../assets/UploadResumeIcon.svg";
 import certificateuploadicon from "../assets/UploadCertificatecardicon.svg";
 import mongoDBService from '../services/mongoDBService';
-import { fetchCollegeImages } from '../services/collegeImagesService';
+import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // Import CSS Module
@@ -86,7 +85,7 @@ const AttendanceChart = ({ present, absent, isLoading }) => {
 
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(ksrCollegeImage); // Default fallback
+  const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(() => getCachedCollegeLogo());
 
   // Change favicon to student (blue) for student dashboard
   React.useEffect(() => {
@@ -343,7 +342,7 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
                 <img src={Resume} alt="Resume" />
               </div>
               <h3 className={styles['stu-db-card-title']}>Resume</h3>
-              <p className={styles['stu-db-card-sub']}>Upload and analyze<br />your resume</p>
+              <p className={styles['stu-db-card-sub']}>Create and analyze<br />your resume</p>
             </div>
 
             {/* Card 3: Achievements */}

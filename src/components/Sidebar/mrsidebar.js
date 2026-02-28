@@ -6,14 +6,12 @@ import styles from "./mrsidebar.module.css";
 import Adminicons from '../../assets/BlueAdminicon.png';
 import personalinfo from "../../assets/personal information icon.svg";
 import academicIcon from "../../assets/academic.svg";
-import semesterIcon from "../../assets/semester.svg";
 import otherDetailsIcon from "../../assets/otherdetails.svg";
 import loginDetailsIcon from "../../assets/logindetails.svg";
 
 const sectionList = [
     { key: 'personal', label: 'Personal Information', icon: personalinfo },
     { key: 'academic', label: 'Academic Background', icon: academicIcon },
-    { key: 'semester', label: 'Semester', icon: semesterIcon },
     { key: 'other', label: 'Other Details', icon: otherDetailsIcon },
     { key: 'login', label: 'Login Details', icon: loginDetailsIcon },
 ];

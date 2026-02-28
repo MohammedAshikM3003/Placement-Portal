@@ -99,14 +99,14 @@ function AdminEsprofile() {
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.type === "image/jpeg") {
+        if (file && (file.type === "image/jpeg" || file.type === "image/webp")) {
             if (profileImage) URL.revokeObjectURL(profileImage);
             setProfileImage(URL.createObjectURL(file));
             setUploadInfo({ name: file.name, date: new Date().toLocaleDateString('en-GB') });
             setUploadSuccess(true);
             setTimeout(() => setUploadSuccess(false), 5000);
         } else {
-            alert("Invalid file type. Please upload a JPG file.");
+            alert("Invalid file type. Please upload a JPG or WebP file.");
         }
     };
 
@@ -277,7 +277,7 @@ function AdminEsprofile() {
                                                 id="photo-upload-input" 
                                                 ref={fileInputRef} 
                                                 style={{ display: 'none' }} 
-                                                accept="image/jpeg" 
+ 
                                                 onChange={handleImageUpload} 
                                             />
                                             {uploadSuccess && (
@@ -285,7 +285,7 @@ function AdminEsprofile() {
                                                     Profile Photo uploaded Successfully!
                                                 </p>
                                             )}
-                                            <p className={styles['Admin-ES-StuProfile-upload-hint']}>*Only JPG format is allowed.</p>
+                                            <p className={styles['Admin-ES-StuProfile-upload-hint']}>*JPG and WebP formats allowed.</p>
                                         </div>
                                     </div>
                                 </div>

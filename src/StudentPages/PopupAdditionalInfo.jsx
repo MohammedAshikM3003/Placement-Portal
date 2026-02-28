@@ -16,7 +16,7 @@ export default function PopupAdditionalInfo({ data, onSave, onDiscard }) {
   }, [data]);
 
   return (
-    <div className={styles.overlay} onClick={onDiscard}>
+    <div className={styles.overlay}>
       <div className={styles.popupContainer} style={{ width: '460px' }} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>Additional Information</div>
         <div className={styles.popupBody}>
@@ -32,7 +32,7 @@ export default function PopupAdditionalInfo({ data, onSave, onDiscard }) {
         </div>
 
         <div className={styles.popupFooter}>
-          <button className={styles.popupDiscardBtn} onClick={onDiscard}>Discard</button>
+          <button className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
           <button className={styles.popupSaveBtn} onClick={() => onSave({ info })}>Save</button>
         </div>
       </div>

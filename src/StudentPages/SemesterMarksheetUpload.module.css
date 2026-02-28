@@ -1,0 +1,1336 @@
+/* Semester Marksheet Upload Page Styles */
+
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.main {
+    display: flex;
+    margin-top: 55px;
+    height: calc(100vh - 55px);
+}
+
+.dashboardArea {
+    flex: 1;
+    margin-left: 230px;
+    height: 100%;
+    background: #fff;
+    position: relative;
+    width: calc(100% - 230px);
+    padding: 15px;
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+.contentWrapper {
+    display: flex;
+    gap: 1.5rem;
+    height: 100%;
+    width: 100%;
+}
+
+/* Loading State */
+.initialLoaderOverlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.initialLoaderCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #197AFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Left Side - Profile Card */
+.profileCard {
+    width: 330px;
+    background-color: #197AFF;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(25, 122, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.profileIconContainer {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+}
+
+.profileIcon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.profileInfo {
+    width: 100%;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.infoLabel {
+    width: 110px;
+    font-weight: 500;
+    opacity: 0.9;
+    font-size: 15px;
+}
+
+.infoColon {
+    margin: 0 0.5rem;
+    opacity: 0.9;
+}
+
+.infoValue {
+    flex: 1;
+    font-weight: 600;
+    font-size: 17px;
+}
+
+/* View Profile Button - Removed */
+/*
+.viewProfileBtn {
+    background: white;
+    color: #197AFF;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: auto;
+}
+
+.viewProfileBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+*/
+
+/* Right Side - Upload Section */
+.uploadSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Upload Drop Zone */
+.uploadDropZone {
+    background: white;
+    border: 2px dashed #dde6f4;
+    border-radius: 16px;
+    padding: 3.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    min-height: 120px;
+}
+
+.uploadActions {
+    position: absolute;
+    top: 18px;
+    right: 25px;
+    display: flex;
+    gap: 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: visible;
+    background: white;
+}
+
+.actionIconBtn {
+    border: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    white-space: nowrap;
+    min-width: 50px;
+    height: 44px;
+}
+
+.actionIconBtn:hover {
+    padding: 12px 20px;
+}
+
+.actionIconBtn:first-child {
+    border-right: 1px solid #ddd;
+    background: #D23B42;
+    border-radius: 8px 0 0 8px;
+}
+
+.actionIconBtn:first-child:hover {
+    background: #b83238;
+}
+
+.actionIconBtn:last-child {
+    background: #5932EA;
+    border-radius: 0 8px 8px 0;
+}
+
+.actionIconBtn:last-child:hover {
+    background: #4a29c7;
+}
+
+.actionIconBtn span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.actionIconBtn:hover span,
+.actionIconBtn:first-child:hover span,
+.actionIconBtn:last-child:hover span {
+    display: inline;
+    opacity: 1;
+}
+
+.actionIcon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    flex-shrink: 0;
+}
+
+.actionIconPreview {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.uploadDropZone:hover {
+    border-color: #197AFF;
+    background-color: #f8fbff;
+}
+
+.uploadDropZone.dragging {
+    border-color: #197AFF;
+    background-color: #e8f2ff;
+}
+
+.uploadIconLarge {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.uploadHeading {
+    font-size: 25px;
+    font-weight: 600;
+    color: #1a2a4a;
+    margin: 0;
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.pdfIconLarge {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
+.fileUploadedView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uploadedFileName {
+    color: #1a2a4a;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* CGPA Info */
+.cgpaInfo {
+    display: flex;
+    gap: 2rem;
+}
+
+.cgpaItem {
+    font-size: 0.95rem;
+}
+
+.cgpaLabel {
+    color: #898989;
+    font-weight: 500;
+}
+
+.cgpaValue {
+    color: #197AFF;
+    font-weight: 700;
+}
+
+/* Action Buttons Row - hidden since moved to bottom */
+.actionButtonsRow {
+    display: none;
+}
+
+/* Top Action Buttons */
+.topActionButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+}
+
+.discardTopBtn {
+    background-color: #808080;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.discardTopBtn:hover {
+    background-color: #a0a0a0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
+}
+
+.previewBtn {
+    background-color: #5932EA;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.previewBtn:hover {
+    background-color: #4a29c7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(89, 50, 234, 0.3);
+}
+
+/* Table Outer Container */
+.tableOuter {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Table Scroll Container - only body scrolls */
+.tableScroll {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Hide scrollbar for the header area, show only in body */
+.tableScroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+    background: #2085f6;
+    border-radius: 20px;
+    border: 2px solid #f0f2f5;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+    background: #4338CA;
+}
+
+/* Table Header (Outside scroll) */
+.courseTableHeader {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    table-layout: fixed;
+}
+
+.courseTableHeader thead {
+    background-color: #197AFF;
+    color: white;
+}
+
+.courseTableHeader th {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #197AFF;
+}
+
+.courseTableHeader th:first-child {
+    text-align: center;
+    width: 60px;
+}
+
+.courseTableHeader th:nth-child(2) {
+    width: 100px;
+}
+
+.courseTableHeader th:nth-child(3) {
+    width: 140px;
+}
+
+.courseTableHeader th:nth-child(4) {
+    width: auto;
+}
+
+.courseTableHeader th:nth-child(5) {
+    width: 100px;
+    text-align: left;
+    padding-left: 2.5rem;
+}
+
+.courseTableHeader th:last-child {
+    text-align: center;
+    width: 100px;
+}
+
+/* Table Body (Inside scroll) */
+.courseTableBody {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.courseTableBody td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f2f5;
+    color: #333;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.courseTableBody td:first-child {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #333333;
+    width: 60px;
+}
+
+.courseTableBody td:nth-child(2) {
+    width: 100px;
+}
+
+.courseTableBody td:nth-child(3) {
+    width: 140px;
+}
+
+.courseTableBody td:nth-child(4) {
+    width: auto;
+}
+
+.courseTableBody td:nth-child(5) {
+    width: 100px;
+    text-align: left;
+    padding-left: 2.5rem;
+}
+
+.courseTableBody td:last-child {
+    text-align: center;
+    font-weight: 600;
+    width: 100px;
+}
+
+.courseTableBody tbody tr:hover {
+    background-color: #f8fbff;
+}
+
+.courseTableBody tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Result Colors */
+.courseTableBody td.passResult {
+    color: #16C098 !important;
+}
+
+.courseTableBody td.failResult {
+    color: #AD2C2C !important;
+}
+
+/* Bottom Action Buttons */
+.bottomActionButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 0.4rem;
+    padding-right: 0.5rem;
+}
+
+.discardBottomBtn {
+    background-color: #808080;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.discardBottomBtn:hover {
+    background-color: #a0a0a0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
+}
+
+.submitBtn {
+    background-color: #197AFF;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submitBtn:hover {
+    background-color: #1565d8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(25, 122, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .contentWrapper {
+        flex-direction: column;
+    }
+
+    .profileCard {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 900px) {
+    .dashboardArea {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .uploadHeading {
+        font-size: 20px;
+    }
+
+    .courseTable {
+        font-size: 0.85rem;
+    }
+
+    .courseTable th,
+    .courseTable td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .topActionButtons {
+        flex-direction: column;
+    }
+
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        gap: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    .discardTopBtn,
+    .previewBtn,
+    .discardBottomBtn {
+        width: 100%;
+    }
+
+    .submitBtn {
+        width: auto;
+        flex: 1;
+        max-width: 200px;
+    }
+
+    .discardTopBtn {
+        width: auto;
+        flex: 1;
+        max-width: 200px;
+        margin-left: 160px;
+    }
+
+    .cgpaInfo {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Mobile: Hide desktop tables, show unified mobile table */
+    .courseTableHeader,
+    .tableScroll,
+    .courseTableBody {
+        display: none;
+    }
+
+    .courseTableMobile {
+        display: table;
+        width: 100%;
+        min-width: 520px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .courseTableMobile thead tr {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #197AFF;
+    }
+
+    .courseTableMobile th,
+    .courseTableMobile td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+        text-align: center !important;
+    }
+
+    .courseTableMobile th {
+        background-color: #197AFF;
+        color: white;
+        font-weight: 600;
+    }
+
+    .courseTableMobile td {
+        border-bottom: 1px solid #f0f2f5;
+        color: #333;
+    }
+
+    /* Column widths - compact for mobile */
+    .courseTableMobile th:first-child,
+    .courseTableMobile td:first-child {
+        width: 35px;
+        min-width: 35px;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .courseTableMobile th:nth-child(2),
+    .courseTableMobile td:nth-child(2) {
+        width: 50px;
+        min-width: 50px;
+    }
+
+    .courseTableMobile th:nth-child(3),
+    .courseTableMobile td:nth-child(3) {
+        width: 65px;
+        min-width: 65px;
+    }
+
+    .courseTableMobile th:nth-child(4),
+    .courseTableMobile td:nth-child(4) {
+        width: 100px;
+        min-width: 100px;
+    }
+
+    .courseTableMobile th:nth-child(5),
+    .courseTableMobile td:nth-child(5) {
+        width: 45px;
+        min-width: 45px;
+        white-space: nowrap;
+    }
+
+    .courseTableMobile th:last-child,
+    .courseTableMobile td:last-child {
+        width: 50px;
+        min-width: 50px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .courseTableMobile td.passResult {
+        color: #16C098 !important;
+    }
+
+    .courseTableMobile td.failResult {
+        color: #AD2C2C !important;
+    }
+
+    .tableOuter {
+        overflow: auto;
+        max-width: 100%;
+        max-height: 400px;
+    }
+
+    /* Blue scrollbar for table */
+    .tableOuter::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .tableOuter::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb {
+        background: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb:hover {
+        background: #4338CA;
+    }
+
+    /* Silver horizontal scrollbar */
+    .tableOuter::-webkit-scrollbar-thumb:horizontal {
+        background: #c0c0c0;
+        border-radius: 4px;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb:horizontal:hover {
+        background: #a0a0a0;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboardArea {
+        padding: 0.75rem 0.75rem 80px 0.75rem;
+        overflow-y: auto;
+        height: calc(100vh - 55px);
+    }
+
+    .mainContainer {
+        padding: 1rem;
+    }
+
+    .pageTitle {
+        font-size: 20px;
+    }
+
+    .uploadDropZone {
+        padding: 2rem 1rem;
+        min-height: 100px;
+    }
+
+    .uploadIconLarge {
+        width: 40px;
+        height: 40px;
+    }
+
+    .uploadHeading {
+        font-size: 16px;
+    }
+
+    .pdfIconLarge {
+        width: 35px;
+        height: 35px;
+    }
+
+    .uploadedFileName {
+        font-size: 0.85rem;
+    }
+
+    .uploadActions {
+        top: 18px;
+        right: 25px;
+    }
+
+    .actionIconBtn {
+        padding: 8px 10px;
+        min-width: 36px;
+        height: 36px;
+    }
+
+    .actionIconBtn:hover {
+        padding: 8px 12px;
+    }
+
+    .actionIcon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .actionIconPreview {
+        width: 18px;
+        height: 18px;
+    }
+
+    .courseTableHeader th {
+        font-size: 13px;
+        padding: 0.75rem 0.4rem;
+        text-align: center !important;
+    }
+
+    .courseTableBody td {
+        font-size: 0.8rem;
+        padding: 0.75rem 0.4rem;
+        text-align: center !important;
+    }
+
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        padding-right: 0;
+        gap: 1rem;
+        flex-wrap: wrap;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .discardTopBtn,
+    .submitBtn {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        flex: 0 0 auto;
+        min-width: 120px;
+    }
+
+    /* Blue scrollbar for dashboard area */
+    .dashboardArea::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .dashboardArea::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .dashboardArea::-webkit-scrollbar-thumb {
+        background-color: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .dashboardArea::-webkit-scrollbar-thumb:hover {
+        background-color: #4338CA;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboardArea {
+        padding: 0.25rem 0.25rem 60px 0.25rem;
+    }
+
+    .mainContainer {
+        padding: 0.5rem;
+        border-radius: 6px;
+    }
+
+    .pageTitle {
+        font-size: 16px;
+    }
+
+    .uploadDropZone {
+        padding: 2rem 1rem;
+        min-height: 180px;
+    }
+
+    .uploadIconLarge {
+        width: 30px;
+        height: 30px;
+    }
+
+    .uploadHeading {
+        font-size: 13px;
+    }
+
+    .pdfIconLarge {
+        width: 28px;
+        height: 28px;
+    }
+
+    .uploadedFileName {
+        font-size: 0.75rem;
+    }
+
+    .uploadActions {
+        top: 25px;
+        right: 25px;
+    }
+
+    .actionIconBtn {
+        padding: 14px 18px;
+        min-width: 60px;
+        height: 60px;
+    }
+
+    .actionIcon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .actionIconPreview {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Mobile: Hide desktop tables, show unified mobile table */
+    .courseTableHeader,
+    .tableScroll,
+    .courseTableBody {
+        display: none;
+    }
+
+    .courseTableMobile {
+        display: table;
+        width: 100%;
+        min-width: 520px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .courseTableMobile thead tr {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #197AFF;
+    }
+
+    .courseTableMobile th,
+    .courseTableMobile td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.75rem;
+        text-align: center !important;
+    }
+
+    .courseTableMobile th {
+        background-color: #197AFF;
+        color: white;
+        font-weight: 600;
+    }
+
+    .courseTableMobile td {
+        border-bottom: 1px solid #f0f2f5;
+        color: #333;
+    }
+
+    .courseTableMobile th:first-child,
+    .courseTableMobile td:first-child {
+        width: 35px;
+        min-width: 35px;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .courseTableMobile th:nth-child(2),
+    .courseTableMobile td:nth-child(2) {
+        width: 50px;
+        min-width: 50px;
+    }
+
+    .courseTableMobile th:nth-child(3),
+    .courseTableMobile td:nth-child(3) {
+        width: 65px;
+        min-width: 65px;
+    }
+
+    .courseTableMobile th:nth-child(4),
+    .courseTableMobile td:nth-child(4) {
+        width: 100px;
+        min-width: 100px;
+    }
+
+    .courseTableMobile th:nth-child(5),
+    .courseTableMobile td:nth-child(5) {
+        width: 45px;
+        min-width: 45px;
+        white-space: nowrap;
+    }
+
+    .courseTableMobile th:last-child,
+    .courseTableMobile td:last-child {
+        width: 50px;
+        min-width: 50px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .courseTableMobile {
+        display: table;
+        width: 100%;
+        min-width: 345px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .courseTableMobile td.passResult {
+        color: #16C098 !important;
+    }
+
+    .courseTableMobile td.failResult {
+        color: #AD2C2C !important;
+    }
+
+    .tableOuter {
+        overflow: auto;
+        max-width: 100%;
+        max-height: 380px;
+    }
+
+    /* Blue scrollbar for table */
+    .tableOuter::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .tableOuter::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb {
+        background: #2085f6;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb:hover {
+        background: #4338CA;
+    }
+
+    /* Silver horizontal scrollbar */
+    .tableOuter::-webkit-scrollbar-thumb:horizontal {
+        background: #c0c0c0;
+        border-radius: 3px;
+    }
+
+    .tableOuter::-webkit-scrollbar-thumb:horizontal:hover {
+        background: #a0a0a0;
+    }
+
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .discardTopBtn,
+    .submitBtn {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        flex: 1;
+        max-width: 120px;
+    }
+}
+
+/* =================================== */
+/* ===== POPUP STYLES (UNIFIED) ===== */
+/* =================================== */
+
+/* Popup Overlay */
+.Semester-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: Semester-fadeIn 0.3s ease-out;
+}
+
+/* Popup Container */
+.Semester-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: Semester-slideIn 0.3s ease-out;
+}
+
+/* Popup Header */
+.Semester-popup-header {
+    background-color: #197AFF;
+    color: white;
+    padding: 1.11rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    
+}
+
+/* Popup Body */
+.Semester-popup-body {
+    padding: 2.5rem;
+}
+
+/* Status Icon Container */
+.Semester-status-icon {
+    width: auto;
+    height: auto;
+    margin: 0 auto 22px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Semester-status-icon svg {
+    width: 95px;
+    height: 95px;
+    margin-top: -15px;
+}
+
+/* Status Title */
+.Semester-status-title {
+    margin: -0.4rem 0 4px 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #1E1F24;
+}
+
+/* Status Text */
+.Semester-status-text {
+    margin: 0;
+    font-size: 0.98rem;
+    color: #6B6D74;
+}
+
+/* Popup Footer */
+.Semester-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+/* Close Button */
+.Semester-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Semester-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* Submit Button */
+.Semester-popup-submit-btn {
+    background-color: #197AFF;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(25, 122, 255, 0.2);
+}
+
+.Semester-popup-submit-btn:hover {
+    background-color: #1565d8;
+    box-shadow: 0 4px 12px rgba(25, 122, 255, 0.3);
+}
+
+/* Success Icon Animations */
+.Semester-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto 20px auto;
+    box-shadow: inset 0 0 0 #22C55E;
+    animation: Semester-fill 0.4s ease-in-out 0.4s forwards, 
+               Semester-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Semester-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22C55E;
+    fill: none;
+    animation: Semester-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Semester-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: Semester-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes Semester-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes Semester-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+
+@keyframes Semester-fill {
+    100% { box-shadow: inset 0 0 0 40px #22C55E; }
+}
+
+/* Analysing Spinner */
+.Semester-analysing-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.Semester-analysing-spinner-svg {
+    width: 80px;
+    height: 80px;
+    transform: rotate(-90deg);
+}
+
+.Semester-analysing-spinner-bg {
+    fill: none;
+    stroke: #E3F2FD;
+    stroke-width: 8;
+}
+
+.Semester-analysing-spinner-progress {
+    fill: none;
+    stroke: #197AFF;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s ease-out;
+}
+
+.Semester-analysing-percentage {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1.45rem;
+    color: #1E1F24;
+    font-weight: 700;
+}
+
+.Semester-analysing-message {
+    margin: 0;
+    font-size: 0.98rem;
+    color: #6B6D74;
+}
+
+.Semester-analysing-wait {
+    margin: 10px 0 0 0;
+    color: #6B6D74;
+    font-size: 0.88rem;
+}
+
+/* Popup Animations */
+@keyframes Semester-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes Semester-slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Desktop: Hide mobile table, show desktop tables */
+@media (min-width: 601px) {
+    .courseTableMobile {
+        display: none;
+    }
+}

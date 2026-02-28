@@ -475,7 +475,7 @@ function AdminAdProfile({ onLogout, onViewChange }) {
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.type === "image/jpeg") {
+        if (file && (file.type === "image/jpeg" || file.type === "image/webp")) {
             const maxSize = 500 * 1024; // 500KB in bytes
             const fileSizeKB = (file.size / 1024).toFixed(1);
             
@@ -624,19 +624,13 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                 loginPassword: pwd || ''
             };
 
-            // Handle profile picture upload if changed
+            // Handle profile picture upload via GridFS
             if (fileInputRef.current && fileInputRef.current.files[0]) {
                 const file = fileInputRef.current.files[0];
-                const reader = new FileReader();
-                
-                const profilePicData = await new Promise((resolve, reject) => {
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-                
-                payload.profilePicURL = profilePicData;
-                console.log('Profile picture updated');
+                const gridfsService = (await import('../services/gridfsService')).default;
+                const result = await gridfsService.uploadProfileImage(file, studentId, 'student');
+                payload.profilePicURL = result.url; // GridFS URL
+                console.log('Profile picture uploaded to GridFS:', result.id);
             }
 
             console.log('Payload being sent:', {
@@ -834,7 +828,7 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                     setSelectedCompanyTypes(parseMultiValue(merged.companyTypes));
                     setSelectedJobLocations(parseMultiValue(merged.preferredJobLocation));
                     
-                    // Load resume data
+                    // Load resume data (try uploaded resume first, then resume-builder PDF)
                     try {
                         const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
                         const resumeResponse = await mongoDBService.getResume(studentId);
@@ -842,13 +836,40 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                             setHasResume(true);
                             setResumeData(resumeResponse.resume);
                         } else {
+                            throw new Error('No uploaded resume');
+                        }
+                    } catch (resumeError) {
+                        console.warn('Uploaded resume not found, trying resume-builder PDF...', resumeError);
+                        // Fallback: try resume-builder generated PDF
+                        try {
+                            const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+                            const authToken = localStorage.getItem('authToken');
+                            const pdfResponse = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                                }
+                            });
+                            if (pdfResponse.ok) {
+                                const pdfResult = await pdfResponse.json();
+                                console.log('📄 Resume-builder response:', pdfResult);
+                                if (pdfResult.success && pdfResult.resume?.url) {
+                                    console.log('📄 Resume URL format:', pdfResult.resume.url.substring(0, 100));
+                                    setHasResume(true);
+                                    setResumeData({ ...pdfResult.resume, isBuilderResume: true });
+                                } else {
+                                    setHasResume(false);
+                                    setResumeData(null);
+                                }
+                            } else {
+                                setHasResume(false);
+                                setResumeData(null);
+                            }
+                        } catch (builderError) {
+                            console.warn('Resume-builder PDF also not found:', builderError);
                             setHasResume(false);
                             setResumeData(null);
                         }
-                    } catch (resumeError) {
-                        console.warn('Resume not found or error loading resume:', resumeError);
-                        setHasResume(false);
-                        setResumeData(null);
                     }
                     
                     console.log('✅ ADMIN PROFILE: Data loaded successfully');
@@ -901,37 +922,67 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                 });
             }, 100);
             
-            // Create data URL from resume data
-            const dataUrl = `data:${resumeData.fileType};base64,${resumeData.fileData}`;
+            let dataUrl;
+            
+            // Check for GridFS URL first (new system)
+            const gridfsUrl = resumeData.gridfsFileUrl || resumeData.url || '';
+            if (gridfsUrl.startsWith('/api/file/') || gridfsUrl.includes('/api/file/')) {
+                const fullUrl = gridfsUrl.startsWith('http') ? gridfsUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${gridfsUrl}`;
+                dataUrl = fullUrl;
+            } else if (resumeData.isBuilderResume && resumeData.url) {
+                // Resume-builder generated PDF - convert data URL to Blob URL
+                const base64Data = resumeData.url;
+                console.log('📄 Opening builder resume, URL length:', base64Data.length);
+                console.log('📄 URL start:', base64Data.substring(0, 100));
+                
+                // Validate URL format
+                if (!base64Data.startsWith('data:application/pdf;base64,')) {
+                    alert('Resume data is corrupted. Please ask the student to regenerate their resume from the Resume Builder page.');
+                    console.error('❌ Invalid resume URL format:', base64Data.substring(0, 200));
+                    setPreviewPopupState('none');
+                    setPreviewProgress(0);
+                    return;
+                }
+                
+                // Check if base64 part contains only valid characters (not comma-separated numbers)
+                const base64Part = base64Data.split(',')[1];
+                if (!base64Part || /^[\d,\s]+$/.test(base64Part.substring(0, 100))) {
+                    alert('Resume data is corrupted (byte array format detected). Please ask the student to regenerate their resume.');
+                    console.error('❌ Corrupted base64 (appears to be byte array):', base64Part.substring(0, 200));
+                    setPreviewPopupState('none');
+                    setPreviewProgress(0);
+                    return;
+                }
+                
+                const byteString = atob(base64Part);
+                const mimeType = base64Data.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], { type: mimeType || 'application/pdf' });
+                dataUrl = URL.createObjectURL(blob);
+            } else {
+                // Uploaded resume - convert to Blob URL too
+                const byteString = atob(resumeData.fileData);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], { type: resumeData.fileType || 'application/pdf' });
+                dataUrl = URL.createObjectURL(blob);
+            }
             
             setPreviewProgress(100);
             clearInterval(progressInterval);
             
-            // Open in new tab
+            // Open blob URL directly in new tab
             setTimeout(() => {
-                const newWindow = window.open('', '_blank');
-                if (newWindow) {
-                    newWindow.document.write(`
-                        <html>
-                            <head>
-                                <title>${studentData?.firstName} ${studentData?.lastName} - Resume</title>
-                                <style>
-                                    body { margin: 0; padding: 0; }
-                                    iframe { width: 100vw; height: 100vh; border: none; }
-                                </style>
-                            </head>
-                            <body>
-                                <iframe src="${dataUrl}"></iframe>
-                            </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-                }
+                window.open(dataUrl, '_blank');
                 setPreviewPopupState('none');
                 setPreviewProgress(0);
             }, 500);
         } catch (error) {
             console.error('Resume preview error:', error);
+            alert('Failed to open resume. The file may be corrupted. Please ask the student to regenerate their resume from the Resume Builder page.');
             setPreviewPopupState('none');
             setPreviewProgress(0);
         }
@@ -1126,9 +1177,9 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                                     <label htmlFor="photo-upload-input" className={styles['Admin-DB-AdProfile-profile-upload-btn']}><div className={styles['Admin-DB-AdProfile-upload-btn-content']}><MdUpload /><span>Upload (Max 500 KB)</span></div></label>
                                                     {profileImage && ( <button onClick={handleImageRemove} className={styles['Admin-DB-AdProfile-remove-image-btn']} aria-label="Remove image"><IoMdClose /></button> )}
                                                 </div>
-                                                <input type="file" id="photo-upload-input" ref={fileInputRef} style={{ display: 'none' }} accept="image/jpeg" onChange={handleImageUpload} />
+                                                <input type="file" id="photo-upload-input" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImageUpload} />
                                                 {uploadSuccess && ( <p className={styles['Admin-DB-AdProfile-upload-success-message']}>Profile Photo uploaded Successfully!</p> )}
-                                                <p className={styles['Admin-DB-AdProfile-upload-hint']}>*Only JPG format is allowed.</p>
+                                                <p className={styles['Admin-DB-AdProfile-upload-hint']}>*JPG and WebP formats allowed.</p>
                                             </div>
                                         )}
                                         

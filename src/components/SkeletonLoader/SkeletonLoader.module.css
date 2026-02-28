@@ -97,8 +97,18 @@
   padding: 20px 5%;
   display: flex;
   align-items: center;
-  gap: 60px;
+  justify-content: space-between;
+  gap: 40px;
   border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  min-height: 200px; /* Ensures proper height for skeleton animation */
+}
+
+.certificatesGroup {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-shrink: 0;
 }
 
 /* Row layout for multiple skeletons */
@@ -109,6 +119,13 @@
   flex-wrap: nowrap;
   padding: 0 40px;
   overflow: hidden;
+}
+
+/* Footer Banner Skeleton */
+.footerBannerSkeleton {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
 }
 
 /* Responsive */
@@ -129,7 +146,16 @@
   }
 
   .bannerSkeleton {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 20px;
-    flex-wrap: wrap;
+    min-height: auto;
+  }
+
+  .certificatesGroup {
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
   }
 }

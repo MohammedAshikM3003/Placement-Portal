@@ -292,8 +292,8 @@ function AdminCoDet() {
     const handlePhotoUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
-        if (file.type !== 'image/jpeg') {
-            alert('Invalid file type. Please upload a JPG file.');
+        if (file.type !== 'image/jpeg' && file.type !== 'image/webp') {
+            alert('Invalid file type. Please upload a JPG or WebP file.');
             return;
         }
         const fileSizeKB = (file.size / 1024).toFixed(2);
@@ -312,29 +312,17 @@ function AdminCoDet() {
         previewObjectUrlRef.current = objectUrl;
         setProfilePhoto(objectUrl);
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                const base64Data = reader.result.split(',')[1] || null;
-                setProfilePhotoData(base64Data);
-                setPhotoDetails({
-                    fileName: file.name,
-                    uploadDate: new Date().toLocaleDateString('en-GB'),
-                });
+        // Store the file object for GridFS upload during form submit
+        setProfilePhotoData(file); // Store raw File object instead of Base64
+        setPhotoDetails({
+            fileName: file.name,
+            uploadDate: new Date().toLocaleDateString('en-GB'),
+        });
 
-                setPopupMessage({ type: 'success', text: 'Photo ready for upload' });
-                if (errors.profilePhoto) {
-                    setErrors(prev => ({ ...prev, profilePhoto: null }));
-                }
-            }
-        };
-        reader.onerror = () => {
-            setProfilePhoto(null);
-            setProfilePhotoData(null);
-            setPhotoDetails({ fileName: null, uploadDate: null });
-            setPopupMessage({ type: 'error', text: 'Failed to read image file' });
-        };
-        reader.readAsDataURL(file);
+        setPopupMessage({ type: 'success', text: 'Photo ready for upload' });
+        if (errors.profilePhoto) {
+            setErrors(prev => ({ ...prev, profilePhoto: null }));
+        }
     };
 
     const closeFileSizeErrorPopup = () => {
@@ -432,9 +420,17 @@ function AdminCoDet() {
             username: formData.coordinatorId,
             degree: formData.degree,
             branch: formData.branch,
-            profilePhotoData,
+            profilePhotoData: null, // Will be uploaded via GridFS
             profilePhotoName: photoDetails.fileName,
         };
+
+        // Upload profile photo to GridFS if a File object is available
+        if (profilePhotoData instanceof File) {
+            const gridfsService = (await import('../services/gridfsService')).default;
+            const coordId = formData.coordinatorId || editIdParam;
+            const result = await gridfsService.uploadProfileImage(profilePhotoData, coordId, 'coordinator');
+            payload.profilePhotoData = result.url; // GridFS URL
+        }
 
         // Only include password fields when creating new coordinator
         if (!isEditMode) {
@@ -901,7 +897,7 @@ function AdminCoDet() {
                                                     <input
                                                         id="file-upload"
                                                         type="file"
-                                                        accept="image/jpeg"
+
                                                         className={styles['Admin-cood-detail-hidden-input']}
                                                         onChange={handlePhotoUpload}
                                                     />
@@ -913,7 +909,7 @@ function AdminCoDet() {
                                                             {popupMessage.text}
                                                         </p>
                                                     )}
-                                                    <p className={styles['Admin-cood-detail-upload-hint']}>*Only JPG format is allowed.</p>
+                                                    <p className={styles['Admin-cood-detail-upload-hint']}>*JPG and WebP formats allowed.</p>
                                                 </>
                                             )}
                                         </div>

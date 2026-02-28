@@ -43,12 +43,38 @@ export const HighlightCardSkeleton = () => (
 
 /**
  * Skeleton for college banner/header images
+ * Matches exact dimensions and positioning of actual banner
  */
 export const BannerSkeleton = () => (
   <div className={styles.bannerSkeleton}>
-    <div className={`${styles.skeletonBlock} ${styles.shimmer}`} style={{ width: '60%', height: '80px', borderRadius: '8px' }} />
-    <div className={`${styles.skeletonBlock} ${styles.shimmer}`} style={{ width: '100px', height: '100px', borderRadius: '50%' }} />
-    <div className={`${styles.skeletonBlock} ${styles.shimmer}`} style={{ width: '100px', height: '100px', borderRadius: '50%' }} />
+    <div 
+      className={`${styles.skeletonBlock} ${styles.shimmer}`} 
+      style={{ 
+        flex: '1',
+        maxWidth: '1100px', 
+        minWidth: '500px',
+        height: '160px', 
+        borderRadius: '12px' 
+      }} 
+    />
+    <div className={styles.certificatesGroup}>
+      <div 
+        className={`${styles.skeletonBlock} ${styles.shimmer}`} 
+        style={{ 
+          width: '150px', 
+          height: '150px', 
+          borderRadius: '50%'
+        }} 
+      />
+      <div 
+        className={`${styles.skeletonBlock} ${styles.shimmer}`} 
+        style={{ 
+          width: '150px', 
+          height: '150px', 
+          borderRadius: '50%'
+        }} 
+      />
+    </div>
   </div>
 );
 
@@ -74,11 +100,29 @@ export const DrivesSkeleton = ({ count = 4 }) => (
   </div>
 );
 
+/**
+ * Skeleton for footer banner/logo area
+ * Shows a shimmer placeholder while college images reload in the footer
+ */
+export const FooterBannerSkeleton = () => (
+  <div className={styles.footerBannerSkeleton}>
+    <div 
+      className={`${styles.skeletonBlock} ${styles.shimmer}`} 
+      style={{ 
+        width: '200px', 
+        height: '60px', 
+        borderRadius: '8px'
+      }} 
+    />
+  </div>
+);
+
 const SkeletonComponents = {
   StudentCardSkeleton,
   DriveCardSkeleton,
   HighlightCardSkeleton,
   BannerSkeleton,
+  FooterBannerSkeleton,
   PlacedStudentsSkeleton,
   DrivesSkeleton,
 };
