@@ -29,6 +29,7 @@ let cachedStudentData = null;
 let cacheTimestamp = null;
 let cachedProfilePicUrl = null; // Separate cache for profile pic URL
 let cachedProfileBlobUrl = null; // Blob URL for instant rendering (stays in memory)
+let cachedBlobSourceUrl = null; // The HTTP URL that was used to create the blob
 let blobFetchInProgress = null; // Prevent concurrent blob fetches
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour - longer cache since profile updates are event-driven
 
@@ -36,7 +37,14 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour - longer cache since profile up
 // Blob URLs are in-memory, so new <img> elements render them immediately
 const fetchAndCacheAsBlob = async (url) => {
   if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (cachedProfileBlobUrl) return cachedProfileBlobUrl;
+  // Return existing blob ONLY if it was created from the same source URL
+  if (cachedProfileBlobUrl && cachedBlobSourceUrl === url) return cachedProfileBlobUrl;
+  // If blob exists for a DIFFERENT URL (stale), revoke it first
+  if (cachedProfileBlobUrl && cachedBlobSourceUrl !== url) {
+    URL.revokeObjectURL(cachedProfileBlobUrl);
+    cachedProfileBlobUrl = null;
+    cachedBlobSourceUrl = null;
+  }
   if (blobFetchInProgress) return blobFetchInProgress;
 
   blobFetchInProgress = (async () => {
@@ -46,6 +54,7 @@ const fetchAndCacheAsBlob = async (url) => {
       const blob = await response.blob();
       if (blob.size > 0) {
         cachedProfileBlobUrl = URL.createObjectURL(blob);
+        cachedBlobSourceUrl = url;
         console.log('🖼️ Sidebar: Profile image cached as blob for instant rendering');
         return cachedProfileBlobUrl;
       }
@@ -61,6 +70,12 @@ const fetchAndCacheAsBlob = async (url) => {
   return blobFetchInProgress;
 };
 
+// Returns blob URL if it matches the given source URL, otherwise the source URL itself
+const getPreferredUrl = (resolvedUrl) => {
+  if (cachedProfileBlobUrl && cachedBlobSourceUrl === resolvedUrl) return cachedProfileBlobUrl;
+  return resolvedUrl;
+};
+
 export const clearSidebarCache = () => {
   cachedStudentData = null;
   cacheTimestamp = null;
@@ -68,6 +83,7 @@ export const clearSidebarCache = () => {
   if (cachedProfileBlobUrl) {
     URL.revokeObjectURL(cachedProfileBlobUrl);
     cachedProfileBlobUrl = null;
+    cachedBlobSourceUrl = null;
   }
   blobFetchInProgress = null;
   localStorage.removeItem('cachedProfilePicUrl');
@@ -81,6 +97,7 @@ export const updateCachedProfilePic = (url) => {
   if (cachedProfileBlobUrl) {
     URL.revokeObjectURL(cachedProfileBlobUrl);
     cachedProfileBlobUrl = null;
+    cachedBlobSourceUrl = null;
   }
   if (cachedStudentData) {
     cachedStudentData.profilePicURL = url;
@@ -171,12 +188,22 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     return profilePicUrl;
   }, [profilePicUrl]);
 
-  // Background: cache profile image as blob URL for instant rendering on next Sidebar mount
-  // This runs whenever profilePicUrl is set from any source (cache, prop, fetch)
+  // Background: cache profile image as blob URL for instant rendering
+  // When profilePicUrl is an HTTP URL, fetch it as blob and switch to blob URL
+  // The blob→state transition is visually identical (same image) so no visible flicker
   useEffect(() => {
-    if (profilePicUrl && !profilePicUrl.startsWith('blob:') && !profilePicUrl.startsWith('data:') && !cachedProfileBlobUrl) {
-      fetchAndCacheAsBlob(profilePicUrl);
+    if (!profilePicUrl || profilePicUrl.startsWith('blob:') || profilePicUrl.startsWith('data:')) return;
+    // If blob already exists for this exact URL, switch to it immediately
+    if (cachedProfileBlobUrl && cachedBlobSourceUrl === profilePicUrl) {
+      setProfilePicUrl(cachedProfileBlobUrl);
+      return;
     }
+    // Fetch and create blob URL, then update state for instant rendering on future mounts
+    fetchAndCacheAsBlob(profilePicUrl).then(blobUrl => {
+      if (blobUrl && blobUrl.startsWith('blob:')) {
+        setProfilePicUrl(blobUrl);
+      }
+    });
   }, [profilePicUrl]);
 
   useEffect(() => {
@@ -212,7 +239,9 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         // Update profile pic URL if available
         if (studentData.profilePicURL) {
           const resolvedUrl = resolveProfileUrl(studentData.profilePicURL);
-          setProfilePicUrl(resolvedUrl);
+          // Prefer blob URL if it matches this source URL (prevents blob→HTTP flicker)
+          const preferred = getPreferredUrl(resolvedUrl);
+          setProfilePicUrl(preferred);
           cachedProfilePicUrl = resolvedUrl;
           localStorage.setItem('cachedProfilePicUrl', resolvedUrl);
           console.log('📸 Sidebar: Profile pic URL updated from prop');
@@ -232,9 +261,10 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         if (currentStudentData?._id !== cachedStudentData._id) {
           setCurrentStudentData(cachedStudentData);
         }
-        // Ensure profilePicUrl is in sync with cached data
-        if (cachedProfilePicUrl && profilePicUrl !== cachedProfilePicUrl) {
-          setProfilePicUrl(cachedProfilePicUrl);
+        // Ensure profilePicUrl is in sync with cached data (prefer blob if available)
+        if (cachedProfilePicUrl && profilePicUrl !== cachedProfilePicUrl && profilePicUrl !== cachedProfileBlobUrl) {
+          const preferred = getPreferredUrl(cachedProfilePicUrl);
+          setProfilePicUrl(preferred);
           localStorage.setItem('cachedProfilePicUrl', cachedProfilePicUrl);
         }
         return;
@@ -264,7 +294,9 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
             
             if (completeData.student.profilePicURL) {
               const resolvedUrl = resolveProfileUrl(completeData.student.profilePicURL);
-              setProfilePicUrl(resolvedUrl);
+              // Prefer blob URL if it matches (prevents flicker on remount)
+              const preferred = getPreferredUrl(resolvedUrl);
+              setProfilePicUrl(preferred);
               cachedProfilePicUrl = resolvedUrl;
               localStorage.setItem('cachedProfilePicUrl', resolvedUrl);
               console.log('📸 Sidebar: Profile pic URL updated from fetched data');
@@ -305,7 +337,14 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           
           // INSTANT SYNC: Update profile pic URL only if it changed
           if (profileChanged) {
+            // Revoke old blob since profile pic changed (prevents old→new flicker)
+            if (cachedProfileBlobUrl) {
+              URL.revokeObjectURL(cachedProfileBlobUrl);
+              cachedProfileBlobUrl = null;
+              cachedBlobSourceUrl = null;
+            }
             setProfilePicUrl(newProfileUrl);
+            setImageError(false);
             cachedProfilePicUrl = newProfileUrl;
             localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
             console.log('📸 Sidebar: Profile pic URL updated instantly to', newProfileUrl);
@@ -341,6 +380,12 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           
           // INSTANT SYNC: Update profile pic URL if present and changed
           if (profileChanged) {
+            // Revoke old blob since profile pic changed
+            if (cachedProfileBlobUrl) {
+              URL.revokeObjectURL(cachedProfileBlobUrl);
+              cachedProfileBlobUrl = null;
+              cachedBlobSourceUrl = null;
+            }
             setProfilePicUrl(newProfileUrl);
             cachedProfilePicUrl = newProfileUrl;
             localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
@@ -372,6 +417,12 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         
         // INSTANT SYNC: Update profile pic URL if present and changed
         if (profileChanged) {
+          // Revoke old blob since profile pic changed
+          if (cachedProfileBlobUrl) {
+            URL.revokeObjectURL(cachedProfileBlobUrl);
+            cachedProfileBlobUrl = null;
+            cachedBlobSourceUrl = null;
+          }
           setProfilePicUrl(newProfileUrl);
           cachedProfilePicUrl = newProfileUrl;
           localStorage.setItem('cachedProfilePicUrl', newProfileUrl);
