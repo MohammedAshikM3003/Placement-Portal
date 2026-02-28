@@ -92,9 +92,12 @@ router.get('/file/:id', async (req, res) => {
 
         const file = files[0];
 
+        // Set mobile-friendly headers
         res.set('Content-Type', file.contentType || 'application/octet-stream');
         res.set('Content-Length', file.length);
         res.set('Cache-Control', 'public, max-age=86400'); // 24h cache
+        res.set('Accept-Ranges', 'bytes'); // Support range requests for mobile
+        res.set('X-Content-Type-Options', 'nosniff'); // Security header
 
         const isImage = (file.contentType || '').startsWith('image/');
         const isPdf = (file.contentType || '') === 'application/pdf';

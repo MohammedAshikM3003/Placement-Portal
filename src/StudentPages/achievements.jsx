@@ -1159,34 +1159,79 @@ This record is locked and cannot be modified.
         const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
         console.log('🔗 Downloading from:', fullUrl);
         
-        // Fetch the file as blob
-        const response = await fetch(fullUrl);
-        if (!response.ok) {
-          throw new Error('Failed to fetch certificate');
+        // Detect mobile device
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // 📱 Mobile: Use direct link approach (more reliable)
+          console.log('📱 Mobile device detected, using direct download link');
+          clearInterval(progressInterval);
+          setDownloadProgress(100);
+          
+          setTimeout(() => {
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = fullUrl;
+            link.download = certificateName;
+            link.target = '_blank'; // Fallback to open in new tab if download fails
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            setDownloadPopupState('success');
+            console.log('✅ Mobile download triggered');
+          }, 300);
+          return;
         }
         
-        const blob = await response.blob();
+        // 💻 Desktop: Fetch as blob with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
-        // Complete progress
-        clearInterval(progressInterval);
-        setDownloadProgress(100);
-        
-        // Create download link with blob URL
-        setTimeout(() => {
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = certificateName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(blobUrl);
+        try {
+          const response = await fetch(fullUrl, {
+            credentials: 'include',
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/pdf'
+            }
+          });
+          clearTimeout(timeoutId);
           
-          // Show success popup
-          setDownloadPopupState('success');
-          console.log('✅ Download completed');
-        }, 300);
-        return;
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+          
+          const blob = await response.blob();
+          
+          // Complete progress
+          clearInterval(progressInterval);
+          setDownloadProgress(100);
+          
+          // Create download link with blob URL
+          setTimeout(() => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = certificateName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            
+            // Show success popup
+            setDownloadPopupState('success');
+            console.log('✅ Download completed');
+          }, 300);
+          return;
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            throw new Error('Download timeout - please check your connection');
+          }
+          throw fetchError;
+        }
       }
       
       console.log('📥 Certificate URL source:', certificateData.gridfsFileUrl ? 'GridFS URL' : 
@@ -1510,16 +1555,52 @@ This record is locked and cannot be modified.
       if (certificateUrl && (certificateUrl.startsWith('/api/file/') || certificateUrl.includes('/api/file/') ||
           certificateUrl.startsWith('/api/gridfs/') || certificateUrl.includes('/api/gridfs/'))) {
         
-        console.log('✅ GridFS URL detected, fetching as blob for preview...');
+        console.log('✅ GridFS URL detected, preparing preview...');
         const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
         const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
-        console.log('🔗 Fetching from:', fullUrl);
+        console.log('🔗 Preview URL:', fullUrl);
         
+        // Detect mobile device
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // 📱 Mobile: Open GridFS URL directly (more reliable on mobile)
+          console.log('📱 Mobile device detected, using direct preview');
+          clearInterval(progressInterval);
+          setPreviewProgress(100);
+          
+          setTimeout(() => {
+            // Open in new tab - mobile browsers handle PDFs natively
+            const previewWindow = window.open(fullUrl, '_blank');
+            if (!previewWindow) {
+              console.warn('⚠️ Popup blocked - trying alternative method');
+              // Fallback: navigate to the URL
+              window.location.href = fullUrl;
+            }
+            
+            setPreviewPopupState('none');
+            setPreviewProgress(0);
+            console.log('✅ Mobile preview opened');
+          }, 300);
+          return;
+        }
+        
+        // 💻 Desktop: Fetch as blob and create HTML wrapper
         try {
-          // Fetch the file as blob
-          const response = await fetch(fullUrl);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          
+          const response = await fetch(fullUrl, {
+            credentials: 'include',
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/pdf'
+            }
+          });
+          clearTimeout(timeoutId);
+          
           if (!response.ok) {
-            throw new Error('Failed to fetch certificate');
+            throw new Error(`Server error: ${response.status}`);
           }
           
           const blob = await response.blob();
@@ -1566,13 +1647,19 @@ This record is locked and cannot be modified.
             setPreviewPopupState('none');
             setPreviewProgress(0);
             
-            console.log('✅ Preview opened with filename and PDF icon:', fileName);
+            console.log('✅ Desktop preview opened with filename and PDF icon:', fileName);
           }, 300);
         } catch (fetchErr) {
-          console.error('❌ Failed to fetch for preview:', fetchErr);
           clearInterval(progressInterval);
-          setPreviewPopupState('failed');
-          setTimeout(() => setPreviewPopupState('none'), 2000);
+          if (fetchErr.name === 'AbortError') {
+            console.error('❌ Preview timeout:', fetchErr);
+            setPreviewPopupState('failed');
+            setTimeout(() => setPreviewPopupState('none'), 2000);
+          } else {
+            console.error('❌ Failed to fetch for preview:', fetchErr);
+            setPreviewPopupState('failed');
+            setTimeout(() => setPreviewPopupState('none'), 2000);
+          }
         }
         return;
       }
@@ -2085,7 +2172,8 @@ This record is locked and cannot be modified.
       
       <DownloadFailedAlert 
         isOpen={downloadPopupState === 'failed'} 
-        onClose={closeDownloadPopup} 
+        onClose={closeDownloadPopup}
+        color="#2563EB"
       />
       
       <PreviewProgressAlert 
