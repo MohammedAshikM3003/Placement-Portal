@@ -1154,35 +1154,87 @@ This record is locked and cannot be modified.
       // ✨ For GridFS URLs, fetch as blob and download
       if (certificateUrl && (certificateUrl.startsWith('/api/file/') || certificateUrl.includes('/api/file/') ||
           certificateUrl.startsWith('/api/gridfs/') || certificateUrl.includes('/api/gridfs/'))) {
-        console.log('✅ GridFS URL detected, fetching and downloading...');
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        console.log('✅ GridFS URL detected, preparing download...');
+        
+        // Smart backend URL detection for production/mobile
+        let API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '');
+        
+        // If no env variable or localhost, try to detect from current location
+        if (!API_BASE || API_BASE.includes('localhost')) {
+          // Check if we're on Vercel (production)
+          if (window.location.hostname.includes('vercel.app')) {
+            // Use Render backend URL for production
+            API_BASE = 'https://placement-portal-zxo2.onrender.com';
+            console.log('🌐 Production mode detected, using Render backend');
+          } else {
+            API_BASE = 'http://localhost:5000';
+          }
+        }
+        
         const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
-        console.log('🔗 Downloading from:', fullUrl);
+        console.log('🔗 Download URL:', fullUrl);
+        console.log('📍 Current origin:', window.location.origin);
         
         // Detect mobile device
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        console.log('📱 Device type:', isMobile ? 'Mobile' : 'Desktop');
         
         if (isMobile) {
-          // 📱 Mobile: Use direct link approach (more reliable)
-          console.log('📱 Mobile device detected, using direct download link');
-          clearInterval(progressInterval);
-          setDownloadProgress(100);
+          // 📱 Mobile: Fetch blob first then trigger download to avoid CORS issues
+          console.log('📱 Mobile device: Fetching blob for download...');
           
-          setTimeout(() => {
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = fullUrl;
-            link.download = certificateName;
-            link.target = '_blank'; // Fallback to open in new tab if download fails
-            link.rel = 'noopener noreferrer';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             
-            setDownloadPopupState('success');
-            console.log('✅ Mobile download triggered');
-          }, 300);
-          return;
+            const response = await fetch(fullUrl, {
+              method: 'GET',
+              signal: controller.signal,
+              headers: {
+                'Accept': 'application/pdf'
+              }
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const blob = await response.blob();
+            console.log('✅ Blob received:', blob.size, 'bytes');
+            
+            clearInterval(progressInterval);
+            setDownloadProgress(100);
+            
+            // For mobile, use blob URL with download attribute
+            setTimeout(() => {
+              const blobUrl = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.download = certificateName;
+              link.style.display = 'none';
+              document.body.appendChild(link);
+              
+              // Force download on mobile
+              link.click();
+              
+              // Cleanup
+              setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+              }, 100);
+              
+              setDownloadPopupState('success');
+              console.log('✅ Mobile download completed');
+            }, 300);
+            return;
+          } catch (fetchError) {
+            console.error('❌ Mobile download fetch error:', fetchError);
+            clearInterval(progressInterval);
+            setDownloadPopupState('failed');
+            setTimeout(() => setDownloadPopupState('none'), 2000);
+            return;
+          }
         }
         
         // 💻 Desktop: Fetch as blob with timeout
@@ -1556,33 +1608,83 @@ This record is locked and cannot be modified.
           certificateUrl.startsWith('/api/gridfs/') || certificateUrl.includes('/api/gridfs/'))) {
         
         console.log('✅ GridFS URL detected, preparing preview...');
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        
+        // Smart backend URL detection for production/mobile
+        let API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '');
+        
+        // If no env variable or localhost, try to detect from current location
+        if (!API_BASE || API_BASE.includes('localhost')) {
+          // Check if we're on Vercel (production)
+          if (window.location.hostname.includes('vercel.app')) {
+            // Use Render backend URL for production
+            API_BASE = 'https://placement-portal-zxo2.onrender.com';
+            console.log('🌐 Production mode detected, using Render backend');
+          } else {
+            API_BASE = 'http://localhost:5000';
+          }
+        }
+        
         const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
         console.log('🔗 Preview URL:', fullUrl);
+        console.log('📍 Current origin:', window.location.origin);
         
         // Detect mobile device
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        console.log('📱 Device type:', isMobile ? 'Mobile' : 'Desktop');
         
         if (isMobile) {
-          // 📱 Mobile: Open GridFS URL directly (more reliable on mobile)
-          console.log('📱 Mobile device detected, using direct preview');
-          clearInterval(progressInterval);
-          setPreviewProgress(100);
+          // 📱 Mobile: Fetch blob first then preview (avoids CORS issues)
+          console.log('📱 Mobile device: Fetching blob for preview...');
           
-          setTimeout(() => {
-            // Open in new tab - mobile browsers handle PDFs natively
-            const previewWindow = window.open(fullUrl, '_blank');
-            if (!previewWindow) {
-              console.warn('⚠️ Popup blocked - trying alternative method');
-              // Fallback: navigate to the URL
-              window.location.href = fullUrl;
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            const response = await fetch(fullUrl, {
+              method: 'GET',
+              signal: controller.signal,
+              headers: {
+                'Accept': 'application/pdf'
+              }
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              throw new Error(`Preview failed: ${response.status} ${response.statusText}`);
             }
             
-            setPreviewPopupState('none');
-            setPreviewProgress(0);
-            console.log('✅ Mobile preview opened');
-          }, 300);
-          return;
+            const blob = await response.blob();
+            console.log('✅ Blob received:', blob.size, 'bytes');
+            
+            clearInterval(progressInterval);
+            setPreviewProgress(100);
+            
+            // Create blob URL and open in new tab
+            setTimeout(() => {
+              const blobUrl = window.URL.createObjectURL(blob);
+              const previewWindow = window.open(blobUrl, '_blank');
+              
+              if (!previewWindow) {
+                console.warn('⚠️ Popup blocked');
+                window.URL.revokeObjectURL(blobUrl);
+                setPreviewPopupState('failed');
+              } else {
+                setPreviewPopupState('none');
+                console.log('✅ Mobile preview opened');
+                // Cleanup after some time
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 30000);
+              }
+              
+              setPreviewProgress(0);
+            }, 300);
+            return;
+          } catch (fetchErr) {
+            console.error('❌ Mobile preview fetch error:', fetchErr);
+            clearInterval(progressInterval);
+            setPreviewPopupState('failed');
+            setTimeout(() => setPreviewPopupState('none'), 2000);
+            return;
+          }
         }
         
         // 💻 Desktop: Fetch as blob and create HTML wrapper
