@@ -27,12 +27,21 @@ class GridFSService {
    * Works for <img src>, <iframe src>, fetch(), etc.
    */
   getFileUrl(fileId) {
+    console.log('🔍 getFileUrl called with:', fileId);
+    console.log('🔍 baseURL:', this.baseURL);
+    
     if (!fileId) return '';
+    
     // If it's already a full URL or a /api/file/ path, return as-is
     if (fileId.startsWith('http') || fileId.startsWith('/api/file/') || fileId.startsWith('data:')) {
-      return fileId.startsWith('/api/file/') ? `${this.baseURL}${fileId.replace('/api', '')}` : fileId;
+      const result = fileId.startsWith('/api/file/') ? `${this.baseURL}${fileId.replace('/api', '')}` : fileId;
+      console.log('🔍 getFileUrl result (path case):', result);
+      return result;
     }
-    return `${this.baseURL}/file/${fileId}`;
+    
+    const result = `${this.baseURL}/file/${fileId}`;
+    console.log('🔍 getFileUrl result (ID case):', result);
+    return result;
   }
 
   /**

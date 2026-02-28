@@ -661,11 +661,11 @@ Rules:
   .contact { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; }
   .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
   .contact a:hover { text-decoration: underline; }
-  .header-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; }
+  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 10px; }
   .header-container.photo-left { flex-direction: row; }
   .header-container.photo-right { flex-direction: row-reverse; }
   .header-text { flex: 1; text-align: center; }
-  .profile-photo { width: 120px; aspect-ratio: 4 / 3; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
+  .profile-photo { width: 100px; aspect-ratio: 1 / 1; object-fit: cover; flex-shrink: 0; display: block; }
   .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 2px; margin: 14px 0 6px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
   .entry { margin-bottom: 8px; }
   .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 10.5pt; gap: 15px; width: 100%; }
@@ -1195,7 +1195,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           if (saved.certifications?.length) setCertifications(saved.certifications);
           if (saved.achievements?.length) setAchievements(saved.achievements);
           if (saved.additionalInfo?.length) setAdditionalInfo(saved.additionalInfo);
-          if (saved.resumeSettings) setResumeSettings(prev => ({ ...prev, ...saved.resumeSettings }));
+          if (saved.resumeSettings) setResumeSettings(prev => ({ ...prev, ...saved.resumeSettings, profilePhoto: false }));
           
           // After loading saved data, fill in any missing fields from student profile
           // Skip skills auto-populate because skills were explicitly saved (even if empty)
@@ -1275,9 +1275,9 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             </select>
           </div>
 
-          {/* Enable AI (swapped with Pages) */}
+          {/* AI Integration (swapped with Pages) */}
           <div className={styles.settingsField}>
-            <label className={styles.settingsLabel}>Enable AI</label>
+            <label className={styles.settingsLabel}>AI Integration</label>
             <div className={styles.aiToggleButtons}>
               <input
                 type="radio"
@@ -1286,7 +1286,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 checked={resumeSettings.enableAI === true}
                 onChange={() => setResumeSettings(prev => ({ ...prev, enableAI: true }))}
               />
-              <label htmlFor="enableAI-yes">Yes</label>
+              <label htmlFor="enableAI-yes">Enable</label>
               <input
                 type="radio"
                 id="enableAI-no"
@@ -1294,7 +1294,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 checked={resumeSettings.enableAI === false}
                 onChange={() => setResumeSettings(prev => ({ ...prev, enableAI: false }))}
               />
-              <label htmlFor="enableAI-no">No</label>
+              <label htmlFor="enableAI-no">Disable</label>
             </div>
           </div>
 
@@ -1491,12 +1491,22 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         <h3 className={styles.sectionTitle}>Core Skills</h3>
         {skills.map((cat, catIndex) => (
           <div key={catIndex} className={styles.skillCategoryRow}>
-            <span className={styles.platformChip}>
-              {cat.category}
-              <button className={styles.chipRemove} onClick={() => {
+            <div className={styles.skillCategoryField}>
+              <input
+                className={styles.skillCategoryInput}
+                value={cat.category}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSkills(prev => prev.map((c, ci) =>
+                    ci === catIndex ? { ...c, category: val } : c
+                  ));
+                }}
+                placeholder="Category Name"
+              />
+              <button className={styles.categoryRemoveBtn} onClick={() => {
                 setSkills(prev => prev.filter((_, ci) => ci !== catIndex));
-              }}>×</button>
-            </span>
+              }} title="Remove category">×</button>
+            </div>
             <div className={styles.chipsContainer} style={{ flex: 1 }}>
               {cat.items.map((skill, i) => (
                 <span key={i} className={styles.chip}>
@@ -1781,23 +1791,25 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 Your resume has been successfully created.
               </p>
             </div>
-            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '16px', justifyContent: 'center', padding: '1.5rem' }}>
               <button 
                 onClick={() => {
                   setShowCreated(false);
                   setIsPreviewing(false);
                   setHasCreatedOnce(false);
+                  if (onViewChange) onViewChange('resume');
                 }} 
                 className="achievement-popup-close-btn"
-                disabled={isPreviewing}
                 style={{ 
-                  opacity: isPreviewing ? 0.5 : 1, 
-                  cursor: isPreviewing ? 'not-allowed' : 'pointer',
                   flex: 1,
-                  maxWidth: '150px'
+                  maxWidth: '160px',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600'
                 }}
               >
-                Close
+                Back
               </button>
               <button 
                 onClick={() => {
@@ -1812,12 +1824,17 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 className="achievement-popup-close-btn"
                 disabled={isPreviewing || !resumePdfUrl}
                 style={{ 
-                  backgroundColor: isPreviewing ? '#6c757d' : '#28a745',
-                  borderColor: isPreviewing ? '#6c757d' : '#28a745',
+                  backgroundColor: isPreviewing ? '#6c757d' : '#2085f6',
+                  borderColor: isPreviewing ? '#6c757d' : '#2085f6',
+                  boxShadow: isPreviewing ? 'none' : '0 2px 8px rgba(32, 133, 246, 0.3)',
                   opacity: (isPreviewing || !resumePdfUrl) ? 0.7 : 1,
                   cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
                   flex: 1,
-                  maxWidth: '150px'
+                  maxWidth: '160px',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600'
                 }}
               >
                 {isPreviewing ? 'Previewing...' : 'Preview'}

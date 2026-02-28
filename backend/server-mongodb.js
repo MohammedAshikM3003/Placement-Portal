@@ -5005,6 +5005,17 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
             resumeData = resume;
             certificatesData = certificates || [];
             console.log(`✅ Complete data fetched - Student: ${!!student}, Resume: ${!!resume}, Certs: ${certificates?.length || 0}`);
+            
+            // 🔍 DEBUG: Log first certificate GridFS data
+            if (certificates && certificates.length > 0) {
+                console.log('🔍 FIRST CERT IN DB:', {
+                    id: certificates[0]._id,
+                    fileName: certificates[0].fileName,
+                    gridfsFileId: certificates[0].gridfsFileId,
+                    gridfsFileUrl: certificates[0].gridfsFileUrl,
+                    comp: certificates[0].comp || certificates[0].competition
+                });
+            }
         } else {
             // In-memory fallback
             studentData = students.find(s => (s._id || s.id) === studentId);

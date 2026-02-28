@@ -233,7 +233,6 @@ function AchievementsContent() {
   const [, setStudentData] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorAlertMsg, setErrorAlertMsg] = useState('');
-  const [certificateFileCache, setCertificateFileCache] = useState(() => new Map());
 
 
   // 🔥 FIX 1: Set MIN_LOADER_MS to 500ms for optimal perceived loading time
@@ -249,51 +248,7 @@ function AchievementsContent() {
     ).toString();
   }, []);
 
-  const extractCacheKeys = useCallback((candidate) => {
-    if (!candidate) return [];
-
-    if (typeof candidate === 'string' || typeof candidate === 'number') {
-      return [candidate.toString()];
-    }
-
-    const keys = [];
-    const register = (value) => {
-      if (value !== undefined && value !== null && value !== '') {
-        keys.push(value.toString());
-      }
-    };
-
-    register(candidate.id);
-    register(candidate.achievementId);
-    register(candidate.certificateId);
-    register(candidate._id);
-
-    return keys;
-  }, []);
-
-  const rememberCertificateFileData = useCallback((candidate, fileData) => {
-    if (!fileData) return;
-    const keys = extractCacheKeys(candidate);
-    if (keys.length === 0) return;
-
-    setCertificateFileCache((prev) => {
-      const updatedCache = new Map(prev);
-      keys.forEach((key) => {
-        updatedCache.set(key, fileData);
-      });
-      return updatedCache;
-    });
-  }, [extractCacheKeys]);
-
-  const getCachedCertificateFileData = useCallback((candidate) => {
-    const keys = extractCacheKeys(candidate);
-    for (const key of keys) {
-      if (certificateFileCache.has(key)) {
-        return certificateFileCache.get(key);
-      }
-    }
-    return undefined;
-  }, [certificateFileCache, extractCacheKeys]);
+  // 🔥 GridFS: Cache functions removed - files are now fetched from GridFS on demand
 
   const getAuthenticatedStudent = useCallback(async (mongoDBServiceInstance) => {
     let parsedStudent = null;
@@ -412,14 +367,26 @@ function AchievementsContent() {
           key,
       };
 
-      // Preserve client-only fields if backend does not send them
-      if (previousItem.fileData && !merged.fileData) {
-        merged.fileData = previousItem.fileData;
+      // 🔥 GridFS: Preserve GridFS references instead of base64 fileData
+      if (previousItem.gridfsFileId && !merged.gridfsFileId) {
+        merged.gridfsFileId = previousItem.gridfsFileId;
+      }
+      
+      if (previousItem.gridfsFileUrl && !merged.gridfsFileUrl) {
+        merged.gridfsFileUrl = previousItem.gridfsFileUrl;
       }
 
-      if (merged.fileData) {
-        rememberCertificateFileData(merged, merged.fileData);
-      }
+      // Remove any base64 fileData to ensure we only use GridFS
+      delete merged.fileData;
+
+      // 🔥 DEBUG: Log merged certificate
+      console.log('🔍 Merged certificate:', {
+        id: merged.id,
+        certificateId: merged.certificateId,
+        gridfsFileId: merged.gridfsFileId,
+        gridfsFileUrl: merged.gridfsFileUrl,
+        fileName: merged.fileName
+      });
 
       if (previousItem.localStatusOverride && !merged.localStatusOverride) {
         merged.localStatusOverride = previousItem.localStatusOverride;
@@ -427,7 +394,7 @@ function AchievementsContent() {
 
       return merged;
     });
-  }, [getCertificateKey, rememberCertificateFileData]);
+  }, [getCertificateKey]);
 
   const refreshAchievements = useCallback(async (isBackground = false) => {
     const startedAt = Date.now();
@@ -875,6 +842,18 @@ function AchievementsContent() {
       
       if (freshStudentData && freshStudentData.certificates) {
         console.log('MongoDB data received:', freshStudentData.certificates.length, 'certificates');
+        
+        // 🔍 DEBUG: Log first certificate data to verify GridFS info
+        if (freshStudentData.certificates.length > 0) {
+          console.log('🔍 FIRST CERTIFICATE DATA:', {
+            id: freshStudentData.certificates[0]._id || freshStudentData.certificates[0].id,
+            fileName: freshStudentData.certificates[0].fileName,
+            gridfsFileId: freshStudentData.certificates[0].gridfsFileId,
+            gridfsFileUrl: freshStudentData.certificates[0].gridfsFileUrl,
+            comp: freshStudentData.certificates[0].comp || freshStudentData.certificates[0].competition,
+            hasFileData: !!freshStudentData.certificates[0].fileData
+          });
+        }
 
         if (haveCertificatesChanged(achievements, freshStudentData.certificates)) {
           const mergedCertificates = mergeCertificateMetadata(achievements, freshStudentData.certificates);
@@ -969,36 +948,37 @@ function AchievementsContent() {
         comp: newAchievement.comp
       });
 
-      // ⚡ Upload certificate file to GridFS, then save metadata
+      // ⚡ Upload certificate file to GridFS (this also saves metadata to MongoDB)
       let gridfsFileId = null;
       let gridfsFileUrl = null;
+      let result = null;
+      
       if (newAchievement.rawFile) {
         const gridfsService = (await import('../services/gridfsService')).default;
         const uploadResult = await gridfsService.uploadCertificate(newAchievement.rawFile, {
           studentId,
           achievementId: newAchievement.achievementId,
           fileName: newAchievement.fileName,
+          studentName: newAchievement.name,
+          regNo: newAchievement.reg,
+          section: newAchievement.section,
+          department: newAchievement.department,
+          degree: newAchievement.degree,
+          year: newAchievement.year,
+          semester: newAchievement.semester,
+          comp: newAchievement.comp,
+          prize: newAchievement.prize,
+          date: newAchievement.date,
         });
+        
         gridfsFileId = uploadResult.gridfsFileId;
         gridfsFileUrl = uploadResult.gridfsFileUrl;
+        result = { certificate: uploadResult };
+        
         console.log('✅ Certificate file uploaded to GridFS:', gridfsFileUrl);
+      } else {
+        throw new Error('No file selected for upload');
       }
-
-      const certificateService = (await import('../services/certificateService.jsx')).default;
-
-      const achievementWithGridFS = {
-        ...newAchievement,
-        fileData: '', // No base64
-        gridfsFileId,
-        gridfsFileUrl,
-      };
-      delete achievementWithGridFS.rawFile;
-
-      const result = await certificateService.uploadCertificate(
-        studentId,
-        achievementWithGridFS,
-        '' // No base64 fileData
-      );
 
       console.log('✅ Certificate uploaded successfully:', result.certificate._id);
 
@@ -1012,63 +992,22 @@ function AchievementsContent() {
         id: metaId,
         achievementId: meta.achievementId || metaId,
         certificateId: meta.certificateId || result.certificate?._id || metaId,
+        gridfsFileId: gridfsFileId,
+        gridfsFileUrl: gridfsFileUrl,
       };
-      const updatedCertificatesForFirebase = [...achievements].map(a => {
-        const { fileData, ...rest } = a;
-        return rest;
-      }).concat([sanitizedMeta]);
-
-      await mongoDB.updateStudent(studentId, { certificates: updatedCertificatesForFirebase });
-      // Clear caches to force fresh data fetch
-      fastDataService.clearCache(studentId);
-
-      const uploadedCertificateKey = getCertificateKey(result.certificate) || metaId;
-
-      const waitForBackendSync = async () => {
-        const MAX_ATTEMPTS = 3;
-        const DELAY_MS = 500;
-
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-          console.log(`🔄 Waiting for backend sync (attempt ${attempt}/${MAX_ATTEMPTS})...`);
-          const completeData = await fastDataService.getCompleteStudentData(studentId, false);
-          const freshStudentData = completeData?.student;
-          const certificatesFromBackend = freshStudentData?.certificates || [];
-
-          const hasUploadedCertificate = certificatesFromBackend.some((certificate) => {
-            const backendKey = getCertificateKey(certificate);
-            return backendKey === uploadedCertificateKey || backendKey === metaId;
-          });
-
-          if (hasUploadedCertificate && freshStudentData) {
-            console.log('✅ Backend sync detected. Updating achievements state.');
-
-            setAchievements((prev) => mergeCertificateMetadata(prev, certificatesFromBackend));
-            setStudentData(freshStudentData);
-            setSelectedRows([uploadedCertificateKey]);
-
-            const normalizedStudentData = {
-              ...freshStudentData,
-              certificates: certificatesFromBackend,
-            };
-            localStorage.setItem('studentData', JSON.stringify(normalizedStudentData));
-
-            return;
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-        }
-
-        throw new Error('Certificate uploaded but latest data is not yet available. Please refresh and try again.');
-      };
-
-      const optimisticCertificates = [...achievements, {
-        ...newAchievement,
-        achievementId: uploadedCertificateKey,
-        certificateId: result.certificate?._id || uploadedCertificateKey,
-      }];
-
+      
+      // 🔥 DEBUG: Log sanitized metadata
+      console.log('🔍 Optimistic certificate metadata:', {
+        id: sanitizedMeta.id,
+        certificateId: sanitizedMeta.certificateId,
+        gridfsFileId: sanitizedMeta.gridfsFileId,
+        gridfsFileUrl: sanitizedMeta.gridfsFileUrl
+      });
+      
+      // 🔥 Optimistic UI update - show certificate immediately
+      const optimisticCertificates = [...achievements, sanitizedMeta];
       setAchievements(optimisticCertificates);
-      setSelectedRows([uploadedCertificateKey]);
+      setSelectedRows([metaId]);
 
       const optimisticStudentData = {
         ...studentData,
@@ -1077,14 +1016,52 @@ function AchievementsContent() {
       localStorage.setItem('studentData', JSON.stringify(optimisticStudentData));
       setStudentData(optimisticStudentData);
 
-      setIsLoading(true);
-      waitForBackendSync()
-        .then(() => console.log('✅ Certificate upload completed, table shows latest data'))
-        .catch((error) => console.warn('Certificate sync did not complete:', error?.message || error));
+      // 🔥 Update backend in background - don't wait for it
+      try {
+        const updatedCertificatesForFirebase = optimisticCertificates.map(a => {
+          const { fileData, ...rest } = a;
+          return rest;
+        });
+        await mongoDB.updateStudent(studentId, { certificates: updatedCertificatesForFirebase });
+        console.log('✅ Backend updated with new certificate');
+        
+        // Clear caches
+        fastDataService.clearCache(studentId);
+        
+        // Background refresh to sync with backend (non-blocking)
+        setTimeout(async () => {
+          try {
+            await refreshAchievements(true);
+            console.log('✅ Background sync completed');
+          } catch (syncError) {
+            console.warn('Background sync failed (non-critical):', syncError);
+          }
+        }, 1000);
+      } catch (updateError) {
+        console.warn('Backend update failed (non-critical):', updateError);
+        // Don't throw - upload was successful, just sync failed
+      }
 
     } catch (error) {
       console.error('❌ Certificate upload failed:', error);
-      throw error; // Re-throw to show error popup
+      
+      // More specific error messages
+      let errorMessage = 'Certificate upload failed. ';
+      
+      if (error.message.includes('GridFS')) {
+        errorMessage += 'File upload to storage failed. Please try again.';
+      } else if (error.message.includes('authentication') || error.message.includes('authenticated')) {
+        errorMessage += 'Please log in again.';
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage += 'Network error. Please check your connection.';
+      } else {
+        errorMessage += error.message || 'Please try again.';
+      }
+      
+      setErrorAlertMsg(errorMessage);
+      setShowErrorAlert(true);
+      
+      throw new Error(errorMessage); // Re-throw with better message
     } finally {
       setIsLoading(false);
     }
@@ -1107,49 +1084,10 @@ This record is locked and cannot be modified.
         setShowRestrictionPopup(true); 
         return; 
       } 
-      let fileDataToInject = selected?.fileData;
-
-      if (!fileDataToInject) {
-        const cached = getCachedCertificateFileData(selected);
-        if (cached) {
-          fileDataToInject = cached;
-        } else {
-          try {
-            setIsFetchingCertificate(true);
-            const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
-            let student = null;
-            try {
-              student = JSON.parse(localStorage.getItem('studentData') || 'null');
-            } catch (parseError) {
-              console.error('Failed to read studentData for fetch:', parseError);
-            }
-
-            const studentIdCandidate = student?.id || student?._id || student?.studentId || (student?.regNo ? `student_${student.regNo}` : null);
-
-            if (studentIdCandidate) {
-              const response = await mongoDBService.getCertificateFileByAchievementId(studentIdCandidate, selected.achievementId || selected.id);
-              if (response?.fileData) {
-                fileDataToInject = response.fileData;
-                rememberCertificateFileData(selected, response.fileData);
-              }
-            }
-          } catch (fetchError) {
-            console.error('Failed to preload certificate file:', fetchError);
-          } finally {
-            setIsFetchingCertificate(false);
-          }
-        }
-      }
-
-      const preparedRow = fileDataToInject
-        ? { ...selected, fileData: fileDataToInject }
-        : selected;
-
-      if (preparedRow?.fileData) {
-        rememberCertificateFileData(preparedRow, preparedRow.fileData);
-      }
-
-      setEditingRow(preparedRow); 
+      
+      // 🔥 GridFS: No need to fetch file content for editing - just pass the metadata with gridfsFileId/gridfsFileUrl
+      // The edit popup can fetch from GridFS if it needs to display/preview the file
+      setEditingRow(selected); 
       setShowEditPopup(true); 
     } else { 
       console.log('Selection issue - selectedRows:', selectedRows);
@@ -1186,117 +1124,174 @@ This record is locked and cannot be modified.
   const handleDownloadPDF = async (certificateData) => {
     // Prevent multiple downloads
     if (downloadPopupState !== 'none') {
-      console.log('Download already in progress, ignoring click');
+      console.log('⚠️ Download already in progress, ignoring click');
       return;
     }
 
-    let progressInterval; // Declare outside try block for proper cleanup
-    const achievementId = certificateData.id;
+    console.log('📥 Starting certificate download...');
     
-    // Set progress interval early to show loading animation
+    // Show progress popup immediately
     setDownloadPopupState('progress');
     setDownloadProgress(0);
-    progressInterval = setInterval(() => {
-      setDownloadProgress(prev => {
-        if (prev >= 85) { return prev; }
-        return prev + Math.random() * 12;
-      });
+    const progressInterval = setInterval(() => {
+      setDownloadProgress(prev => (prev >= 85 ? prev : prev + 10));
     }, 150);
 
     try {
+      console.log('🔍 Certificate data for download:', {
+        certificateId: certificateData.certificateId,
+        gridfsFileId: certificateData.gridfsFileId,
+        gridfsFileUrl: certificateData.gridfsFileUrl,
+        fileName: certificateData.fileName,
+        hasFileData: !!certificateData.fileData,
+        hasFileContent: !!certificateData.fileContent
+      });
       
-      // Check if we have file data first
-      if (!certificateData?.fileData) {
-        // Try to fetch file data from backend using the same method as preview
+      // Priority: GridFS URL > fileData > fileContent
+      let certificateUrl = certificateData.gridfsFileUrl || certificateData.fileData || certificateData.fileContent;
+      const certificateName = certificateData.fileName || `certificate_${certificateData.comp || 'download'}.pdf`;
+      
+      // ✨ For GridFS URLs, fetch as blob and download
+      if (certificateUrl && (certificateUrl.startsWith('/api/file/') || certificateUrl.includes('/api/file/') ||
+          certificateUrl.startsWith('/api/gridfs/') || certificateUrl.includes('/api/gridfs/'))) {
+        console.log('✅ GridFS URL detected, fetching and downloading...');
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
+        console.log('🔗 Downloading from:', fullUrl);
+        
+        // Fetch the file as blob
+        const response = await fetch(fullUrl);
+        if (!response.ok) {
+          throw new Error('Failed to fetch certificate');
+        }
+        
+        const blob = await response.blob();
+        
+        // Complete progress
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        
+        // Create download link with blob URL
+        setTimeout(() => {
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = certificateName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+          
+          // Show success popup
+          setDownloadPopupState('success');
+          console.log('✅ Download completed');
+        }, 300);
+        return;
+      }
+      
+      console.log('📥 Certificate URL source:', certificateData.gridfsFileUrl ? 'GridFS URL' : 
+                  (certificateData.fileData ? 'fileData' : 'fileContent'));
+      console.log('📥 File name:', certificateName);
+      
+      // If no certificate data, try fetching from MongoDB
+      if (!certificateUrl && certificateData.certificateId) {
+        console.log('⚠️ No cached certificate, fetching from MongoDB...');
         try {
-          let studentData = null;
-          try {
-            studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-          } catch(e) {
-            throw new Error('Please log in again to download files.');
-          }
-
-          if (!studentData) {
-            throw new Error('Please log in again to download files.');
-          }
-
-          let studentId = studentData.id || studentData._id || studentData.studentId;
-          if (!studentId) {
-            studentId = `student_${studentData.regNo}`;
-          }
-
-          // Use the dedicated single-file fetch instead of the slow method
-          const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
+          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          const authToken = localStorage.getItem('authToken');
           
-          const certificateDataResponse = await Promise.race([
-            mongoDBService.getCertificateFileByAchievementId(studentId, achievementId), // <-- NEW EFFICIENT METHOD
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Certificate file fetch timeout')), 30000) 
-            )
-          ]);
-
-          const foundFileData = certificateDataResponse?.fileData;
+          const response = await fetch(`${API_BASE}/api/file/${certificateData.certificateId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+            }
+          });
           
-          if (foundFileData) {
-            certificateData.fileData = foundFileData;
-            // Also cache locally for immediate reuse in UI state
-            setAchievements(prev => prev.map(achievement => 
-              achievement.id === achievementId 
-                ? { ...achievement, fileData: foundFileData }
-                : achievement
-            ));
-          } else {
-            throw new Error('No file data available');
+          if (response.ok) {
+            const blob = await response.blob();
+            certificateUrl = URL.createObjectURL(blob);
+            console.log('✅ Certificate fetched from MongoDB');
           }
-        } catch (fetchError) {
-          // Explicitly handle failure here
-          clearInterval(progressInterval);
-          setDownloadPopupState('failed');
-          console.error('Failed to fetch file data for download:', fetchError);
-          return;
+        } catch (fetchErr) {
+          console.error('❌ Failed to fetch certificate:', fetchErr);
         }
       }
 
-      // Let the progress animation run for a bit, then process the file
+      if (!certificateUrl) {
+        clearInterval(progressInterval);
+        setDownloadPopupState('failed');
+        throw new Error('Certificate file not found');
+      }
+      
+      // Wait for progress animation
       setTimeout(() => {
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        
         try {
-          // Ensure the file data has the correct format for download
-          let formattedFileData = certificateData.fileData;
-          if (!certificateData.fileData.startsWith('data:')) {
-            // If it's raw base64, add the PDF data URL prefix
-            formattedFileData = `data:application/pdf;base64,${certificateData.fileData}`;
-          }
-
-          // Complete progress to 100%
-          clearInterval(progressInterval);
-          setDownloadProgress(100);
-
-          // INSTANT DOWNLOAD: Use requestAnimationFrame for immediate execution
-          requestAnimationFrame(() => {
-            // Direct download implementation
+          // Check if it's already a blob URL
+          if (certificateUrl.startsWith('blob:')) {
+            console.log('✅ Blob URL detected, downloading directly');
             const link = document.createElement('a');
-            link.href = formattedFileData;
-            link.download = certificateData.fileName || 'certificate.pdf';
+            link.href = certificateUrl;
+            link.download = certificateName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             setDownloadPopupState('success');
-          });
+            return;
+          }
 
-        } catch (downloadError) {
-          clearInterval(progressInterval);
-          console.error('Download processing failed:', downloadError);
+          // Ensure proper format
+          let formattedData = certificateUrl;
+          
+          console.log('📥 Certificate URL type:', typeof certificateUrl);
+          console.log('📥 Certificate URL length:', certificateUrl.length);
+          
+          if (!certificateUrl.startsWith('data:')) {
+            formattedData = `data:application/pdf;base64,${certificateUrl}`;
+            console.log('✅ Added data URL prefix');
+          } else {
+            console.log('✅ URL already has data prefix');
+          }
+          
+          // Check if data is comma-separated bytes and convert to proper data URL
+          if (formattedData.startsWith('data:application/pdf;base64,')) {
+            const commaIndex = formattedData.indexOf(',');
+            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
+            
+            // Check if it's comma-separated bytes
+            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
+              console.log('🔧 Converting comma-separated bytes for download...');
+              const byteStrings = dataAfterPrefix.split(',');
+              const byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
+              const blob = new Blob([byteArray], { type: 'application/pdf' });
+              formattedData = URL.createObjectURL(blob);
+              console.log('✅ Converted to blob URL for download');
+            }
+          }
+          
+          // Direct download
+          const link = document.createElement('a');
+          link.href = formattedData;
+          link.download = certificateName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log('✅ Download triggered');
+          setDownloadPopupState('success');
+        } catch (err) {
+          console.error('❌ Download error:', err);
           setDownloadPopupState('failed');
+          setTimeout(() => setDownloadPopupState('none'), 2000);
         }
-      }, 1500); // Let progress run for 1.5 seconds to show smooth animation
-
+      }, 1500);
+      
     } catch (error) {
-      // General error handling
-      if (progressInterval) {
-        clearInterval(progressInterval);
-      }
-      console.error('Download failed:', error);
+      console.error('❌ Download failed:', error);
       setDownloadPopupState('failed');
+      setTimeout(() => setDownloadPopupState('none'), 2000);
     }
   };
 
@@ -1353,24 +1348,32 @@ This record is locked and cannot be modified.
     try {
         console.log('⚡ Starting BLOCKING DB deletion and metadata update...');
 
-        // A. Parallel Deletion of file documents (This must succeed)
-        // Ensure that the file document is deleted from the `certificates` collection.
+        // A. Delete GridFS files first
+        const gridfsService = (await import('../services/gridfsService')).default;
+        const gridfsDeletePromises = deletedCerts.map(async (achievement) => {
+            const gridfsFileId = achievement.gridfsFileId || achievement.certificateId;
+            if (gridfsFileId) {
+                try {
+                    await gridfsService.deleteFile(gridfsFileId);
+                    console.log('✅ GridFS file deleted:', gridfsFileId);
+                } catch (error) {
+                    console.warn('⚠️ Could not delete GridFS file:', gridfsFileId, error);
+                    // Don't fail the entire operation if GridFS delete fails
+                }
+            }
+        });
+        await Promise.all(gridfsDeletePromises);
+        console.log('✅ GridFS: All certificate files deleted.');
+
+        // B. Delete certificate metadata from certificates collection
+        const certificateService = (await import('../services/certificateService.jsx')).default;
         const deleteFilePromises = deletedCerts.map(async (achievement) => {
              try {
-                 // 1. Fetch the certificate document by achievement ID
-                 const certificateToDelete = await mongoDBService.getCertificateFileByAchievementId(studentId, achievement.id);
-                 
-                 if (certificateToDelete?._id) {
-                     // 2. Delete the actual certificate file data from the certificates collection
-                     await mongoDBService.deleteCertificate(certificateToDelete._id);
-                     console.log(`✅ DB: Certificate file ${certificateToDelete._id} deleted.`);
-                 } else {
-                     console.warn(`⚠️ DB: Certificate file not found for achievement ${achievement.id}, skipping file deletion.`);
-                 }
+                 await certificateService.deleteCertificate(studentId, achievement.achievementId || achievement.id);
+                 console.log('✅ Certificate metadata deleted:', achievement.achievementId || achievement.id);
              } catch (error) {
-                 console.error(`❌ DB: Critical failure during file deletion for achievement ${achievement.id}:`, error);
-                 // CRITICAL: If file deletion fails, still throw an error to prevent inconsistent state
-                 throw new Error(`Failed to delete file data for achievement ID ${achievement.id}`);
+                 console.error('❌ Failed to delete certificate:', achievement.achievementId || achievement.id, error);
+                 throw error; // Fail if metadata deletion fails
              }
         });
         
@@ -1378,17 +1381,17 @@ This record is locked and cannot be modified.
         await Promise.all(deleteFilePromises); 
         console.log('✅ DB: All individual file documents deleted successfully.');
 
-        // B. Update student metadata (Crucial for next login/load)
+        // C. Update student metadata (Crucial for next login/load)
         // Update the main student document to remove the reference to the achievement.
         await mongoDBService.updateStudent(studentId, {
             certificates: updatedCertificatesForFirebase
         });
         console.log('✅ DB: Student metadata updated successfully.');
         
-        // C. Cleanup cache
+        // D. Cleanup cache
         fastDataService.clearCache(studentId);
 
-        // D. Final verification refresh (Non-blocking but vital)
+        // E. Final verification refresh (Non-blocking but vital)
         await refreshAchievements(); 
         console.log('✅ Background: Final refresh completed.');
 
@@ -1465,177 +1468,240 @@ This record is locked and cannot be modified.
   const handleViewFile = async (fileName, fileData, achievementId) => { 
     // Prevent multiple previews
     if (previewPopupState !== 'none') {
-      console.log('Preview already in progress, ignoring click');
+      console.log('⚠️ Preview already in progress, ignoring click');
       return;
     }
 
-    console.log('⚡ Viewing file:', { fileName, fileData: fileData ? 'Present' : 'Missing', achievementId }); 
+    console.log('🔍 Starting certificate preview...');
     
-    // 🔥 FIX 1: Move popup initialization to the top for guaranteed visibility
+    // Show progress popup immediately
     setPreviewPopupState('progress');
     setPreviewProgress(0);
-
-    // Dynamic progress simulation while fetching from MongoDB
-    let progressInterval = setInterval(() => {
-      setPreviewProgress(prev => {
-        if (prev >= 85) {
-          return prev;
-        }
-        return prev + Math.random() * 12; 
-      });
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => (prev >= 85 ? prev : prev + 12));
     }, 150);
-    
-    // OPTIMIZED: Check local cache first for instant preview
-    const currentAchievement = achievements.find(a => a.id === achievementId);
-    const cachedFileData = currentAchievement?.fileData || fileData;
-    
-    if (cachedFileData) { 
-      // If cached, simulate loading for 500ms before showing content
-      console.log('⚡ INSTANT PREVIEW: Using cached file data (simulating load for 500ms)');
+
+    try {
+      // Get certificate data
+      const currentAchievement = achievements.find(a => a.id === achievementId);
+      if (!currentAchievement) {
+        clearInterval(progressInterval);
+        throw new Error('Certificate not found');
+      }
+
+      console.log('🔍 Certificate data for preview:', {
+        certificateId: currentAchievement.certificateId,
+        gridfsFileId: currentAchievement.gridfsFileId,
+        gridfsFileUrl: currentAchievement.gridfsFileUrl,
+        fileName: currentAchievement.fileName,
+        hasFileData: !!currentAchievement.fileData,
+        hasFileContent: !!currentAchievement.fileContent
+      });
+
+      // Priority: GridFS URL > fileData > fileContent
+      let certificateUrl = currentAchievement.gridfsFileUrl || currentAchievement.fileData || currentAchievement.fileContent;
       
-      setTimeout(() => {
+      // Wait for progress animation to show
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // ✨ If it's a GridFS URL, fetch as blob and open with filename
+      if (certificateUrl && (certificateUrl.startsWith('/api/file/') || certificateUrl.includes('/api/file/') ||
+          certificateUrl.startsWith('/api/gridfs/') || certificateUrl.includes('/api/gridfs/'))) {
+        
+        console.log('✅ GridFS URL detected, fetching as blob for preview...');
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        const fullUrl = certificateUrl.startsWith('http') ? certificateUrl : `${API_BASE}${certificateUrl}`;
+        console.log('🔗 Fetching from:', fullUrl);
+        
+        try {
+          // Fetch the file as blob
+          const response = await fetch(fullUrl);
+          if (!response.ok) {
+            throw new Error('Failed to fetch certificate');
+          }
+          
+          const blob = await response.blob();
+          
+          // Complete progress
           clearInterval(progressInterval);
           setPreviewProgress(100);
           
-          try {
-            // Ensure the file data has the correct data URL format
-            let formattedFileData = cachedFileData;
-            if (!cachedFileData.startsWith('data:')) {
-              // If it's raw base64, add the PDF data URL prefix
-              formattedFileData = `data:application/pdf;base64,${cachedFileData}`;
+          // Create blob URL and wrap in HTML to show PDF icon
+          setTimeout(() => {
+            const pdfBlobUrl = URL.createObjectURL(blob);
+            const fileName = currentAchievement.fileName || 'Certificate.pdf';
+            
+            // Create HTML wrapper to ensure PDF icon appears in tab
+            const htmlContent = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>${fileName}</title>
+                <style>
+                  body, html {
+                    margin: 0;
+                    padding: 0;
+                    height: 100%;
+                    overflow: hidden;
+                  }
+                  embed {
+                    width: 100%;
+                    height: 100%;
+                  }
+                </style>
+              </head>
+              <body>
+                <embed src="${pdfBlobUrl}" type="application/pdf" />
+              </body>
+              </html>
+            `;
+            
+            const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+            const htmlBlobUrl = URL.createObjectURL(htmlBlob);
+            
+            window.open(htmlBlobUrl, '_blank');
+            
+            setPreviewPopupState('none');
+            setPreviewProgress(0);
+            
+            console.log('✅ Preview opened with filename and PDF icon:', fileName);
+          }, 300);
+        } catch (fetchErr) {
+          console.error('❌ Failed to fetch for preview:', fetchErr);
+          clearInterval(progressInterval);
+          setPreviewPopupState('failed');
+          setTimeout(() => setPreviewPopupState('none'), 2000);
+        }
+        return;
+      }
+
+      // If no certificate data, try fetching from MongoDB
+      if (!certificateUrl && currentAchievement.certificateId) {
+        console.log('⚠️ No cached certificate, trying to fetch from MongoDB...');
+        try {
+          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+          const authToken = localStorage.getItem('authToken');
+          
+          const response = await fetch(`${API_BASE}/api/file/${currentAchievement.certificateId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+            }
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            certificateUrl = URL.createObjectURL(blob);
+            console.log('✅ Certificate fetched from MongoDB');
+          }
+        } catch (fetchErr) {
+          console.error('❌ Failed to fetch certificate:', fetchErr);
+        }
+      }
+
+      if (!certificateUrl) {
+        clearInterval(progressInterval);
+        setPreviewPopupState('failed');
+        throw new Error('Certificate file not found');
+      }
+
+      // Wait for progress animation
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        setPreviewProgress(100);
+
+        try {
+          // Check if it's already a blob URL
+          if (certificateUrl.startsWith('blob:')) {
+            console.log('✅ Blob URL detected, opening directly');
+            window.open(certificateUrl, '_blank');
+            setPreviewPopupState('none');
+            return;
+          }
+
+          // Ensure proper format for base64 data
+          let formattedData = certificateUrl;
+          
+          console.log('🔍 Certificate URL starts with:', certificateUrl.substring(0, 100));
+          console.log('🔍 Certificate URL type:', typeof certificateUrl);
+          
+          if (!certificateUrl.startsWith('data:')) {
+            formattedData = `data:application/pdf;base64,${certificateUrl}`;
+            console.log('✅ Added data URL prefix');
+          } else {
+            console.log('✅ URL already has data prefix');
+          }
+
+          // Convert base64 to blob for proper browser PDF viewing
+          if (formattedData.startsWith('data:application/pdf;base64,')) {
+            console.log('✅ Converting to blob for preview...');
+            
+            const commaIndex = formattedData.indexOf(',');
+            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
+            
+            if (!dataAfterPrefix || dataAfterPrefix.length === 0) {
+              throw new Error('Empty certificate data');
             }
             
-            // Direct preview using blob URL for native PDF viewer with zoom
-            requestAnimationFrame(() => {
-              try {
-                const base64 = formattedFileData.split(',')[1];
-                const byteCharacters = atob(base64);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                  byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/pdf' });
-                const blobUrl = URL.createObjectURL(blob);
-                window.open(blobUrl, '_blank');
-              } catch (blobError) {
-                console.error('Blob preview fallback:', blobError);
-                window.open(formattedFileData, '_blank');
-              }
-              setPreviewPopupState('none'); // Close popup after preview opens
-            });
+            console.log('🔍 Data length:', dataAfterPrefix.length);
             
-          } catch (previewError) {
-            console.error('❌ Preview error:', previewError);
-            setPreviewPopupState('failed');
-          }
-      }, 500); // Wait for 500ms minimum load time
-      
-      return; // Exit here as the work is scheduled
-    }
-    
-    // BACKGROUND FETCH: Get file data in background while showing loading
-    console.log('⚡ BACKGROUND FETCH: Loading file data...');
-    
-    try {
-      let studentData = null;
-      try {
-        studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-      } catch (e) {
-        clearInterval(progressInterval);
-        throw new Error('Please log in again to view files.');
-      }
-
-      if (!studentData) {
-        clearInterval(progressInterval);
-        throw new Error('Please log in again to view files.');
-      }
-
-      const mongoDBService = (await import('../services/mongoDBService.jsx')).default;
-      let studentId = studentData.id || studentData._id || studentData.studentId;
-      if (!studentId) {
-        studentId = `student_${studentData.regNo}`;
-      }
-      
-      // Use the dedicated single-file fetch 
-      const certificateDataResponse = await Promise.race([
-        mongoDBService.getCertificateFileByAchievementId(studentId, achievementId), // <-- NEW EFFICIENT METHOD
-        new Promise((_, reject) => 
-          setTimeout(() => {
-            clearInterval(progressInterval);
-            reject(new Error('Certificate file fetch timeout')); 
-          }, 30000) // 30s timeout for single large file retrieval
-        )
-      ]);
-      
-      // Clear the progress interval when data arrives
-      clearInterval(progressInterval);
-      
-      // The new endpoint should return the object containing the fileData field
-      const fileDataLoaded = certificateDataResponse?.fileData;
-      
-      if (fileDataLoaded) {
-        console.log('⚡ BACKGROUND FETCH: File data loaded successfully');
-        console.log('📄 File data length:', fileDataLoaded.length);
-        
-        // Loading toast removed - using popup system
-        
-        // Complete progress to 100% and preview instantly
-        setPreviewProgress(100);
-        
-        try {
-          // Ensure the file data has the correct data URL format
-          let formattedFileData = fileDataLoaded;
-          if (!formattedFileData.startsWith('data:')) {
-            // If it's raw base64, add the PDF data URL prefix
-            formattedFileData = `data:application/pdf;base64,${formattedFileData}`;
-          }
-          
-          // INSTANT PREVIEW: Use blob URL for native PDF viewer with zoom
-          requestAnimationFrame(() => {
-            try {
-              const base64 = formattedFileData.split(',')[1];
-              const byteCharacters = atob(base64);
+            let byteArray;
+            
+            // Check if data is comma-separated bytes (e.g., "37,80,68,70...")
+            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
+              console.log('🔧 Detected comma-separated byte format, converting...');
+              const byteStrings = dataAfterPrefix.split(',');
+              byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
+              console.log('✅ Converted from comma-separated bytes, size:', byteArray.length);
+            } else {
+              console.log('🔧 Detected base64 format, decoding...');
+              const byteCharacters = atob(dataAfterPrefix);
               const byteNumbers = new Array(byteCharacters.length);
               for (let i = 0; i < byteCharacters.length; i++) {
                 byteNumbers[i] = byteCharacters.charCodeAt(i);
               }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: 'application/pdf' });
-              const blobUrl = URL.createObjectURL(blob);
-              window.open(blobUrl, '_blank');
-            } catch (blobError) {
-              console.error('Blob preview fallback:', blobError);
-              window.open(formattedFileData, '_blank');
+              byteArray = new Uint8Array(byteNumbers);
+              console.log('✅ Decoded from base64, size:', byteArray.length);
             }
-            setPreviewPopupState('none');
-          });
+            
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            console.log('✅ Blob created, size:', blob.size, 'bytes');
+            
+            const blobUrl = URL.createObjectURL(blob);
+            console.log('✅ Blob URL created:', blobUrl);
+            
+            // Open blob URL directly — browser's native PDF viewer handles it
+            const win = window.open(blobUrl, '_blank');
+            if (!win) {
+              console.log('⚠️ Popup blocked, using fallback');
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.target = '_blank';
+              link.click();
+            }
+            // Set title after a short delay
+            setTimeout(() => {
+              try { if (win) win.document.title = `Certificate - ${currentAchievement.comp || 'Preview'}`; } catch(e) {}
+            }, 1000);
+          } else {
+            console.log('🔗 Opening regular URL');
+            window.open(formattedData, '_blank');
+          }
           
-          // BACKGROUND UPDATE: Update cache for future instant previews (store formatted data)
-          setAchievements(prev => prev.map(achievement => 
-            achievement.id === achievementId 
-              ? { ...achievement, fileData: formattedFileData }
-              : achievement
-          ));
-        } catch (previewError) {
-          console.error('❌ Preview error:', previewError);
+          setPreviewPopupState('none');
+        } catch (err) {
+          console.error('❌ Preview error:', err);
           setPreviewPopupState('failed');
+          setTimeout(() => setPreviewPopupState('none'), 2000);
         }
-      } else {
-        throw new Error('No file data found for this certificate. The file may not have been uploaded properly.');
-      }
+      }, 500);
+      
     } catch (error) {
-      console.error('❌ Error fetching file data:', error);
-      
-      // Clear progress interval on error
-      if (progressInterval) {
-        clearInterval(progressInterval);
-      }
-      
-      // Use popup system instead of alerts
-      console.error('Preview failed:', error.message);
-      // Ensure popup state is set to 'failed' on error
+      console.error('❌ Preview failed:', error);
       setPreviewPopupState('failed');
+      setTimeout(() => setPreviewPopupState('none'), 2000);
     }
   };
   const normalizeAchievement = useCallback((achievement) => {
@@ -1725,7 +1791,7 @@ This record is locked and cannot be modified.
       ).toString().trim();
     };
 
-    return {
+    const normalized = {
       ...achievement,
       comp: deriveComp(),
       status: deriveStatus(),
@@ -1738,6 +1804,19 @@ This record is locked and cannot be modified.
       date: deriveDate(),
       prize: derivePrize()
     };
+    
+    // 🔍 DEBUG: Log GridFS info after normalization
+    if (achievement.gridfsFileUrl || achievement.gridfsFileId) {
+      console.log('🔍 NORMALIZED CERTIFICATE WITH GRIDFS:', {
+        id: normalized.id,
+        comp: normalized.comp,
+        gridfsFileId: normalized.gridfsFileId,
+        gridfsFileUrl: normalized.gridfsFileUrl,
+        fileName: normalized.fileName
+      });
+    }
+    
+    return normalized;
   }, []);
 
   const getFilteredAndSortedAchievements = () => {
@@ -1962,7 +2041,7 @@ This record is locked and cannot be modified.
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "rgba(0,0,0,0.7)",
+          background: "rgba(0,0,0,0.2)",
           zIndex: 1003,
         }}>
           <DeleteConfirmationPopup 
@@ -1983,7 +2062,7 @@ This record is locked and cannot be modified.
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "rgba(0,0,0,0.7)",
+          background: "rgba(0,0,0,0.2)",
           zIndex: 1003,
         }}>
           <DeleteSuccessPopup 
@@ -2131,4 +2210,4 @@ const TableLoader = ({ message }) => (
       </div>
     </div>
   </div>
-)
+);

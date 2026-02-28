@@ -685,12 +685,12 @@ async function buildResumeHTML(data, req = null) {
   html, body { width: 100%; margin: 0; padding: 0; }
   body { font-family: ${fontStack} !important; font-size: 10.5pt; line-height: 1.45; color: #2d2d2d; background: #fff; }
   .resume { width: 100%; margin: 0; padding: 0 0.3in; overflow: visible; }
-  .header-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; }
+  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 10px; }
   .header-container.photo-left { flex-direction: row; }
   .header-container.photo-right { flex-direction: row-reverse; }
   .header-container.no-photo .header-text { text-align: center; width: 100%; }
   .header-text { flex: 1; text-align: center; }
-  .profile-photo { width: 120px; aspect-ratio: 4 / 3; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
+  .profile-photo { width: 100px; aspect-ratio: 1 / 1; object-fit: cover; flex-shrink: 0; display: block; }
   h1 { font-family: ${fontStack} !important; font-size: 22pt; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 4px; letter-spacing: 0.5px; }
   h2, h3, h4, h5, h6, p, span, div, a, li, td, th { font-family: ${fontStack} !important; }
   .contact { text-align: center; font-size: 9pt; color: #555; margin-bottom: 14px; line-height: 1.6; }
