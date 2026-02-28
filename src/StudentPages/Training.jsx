@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Sidebar from "../components/Sidebar/Sidebar";
-import styles from "./Attendance.module.css";
+import styles from "./Training.module.css";
 import mongoDBService from '../services/mongoDBService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-function Attendance({ onLogout, onViewChange }) {
+function Training({ onLogout, onViewChange }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [studentData, setStudentData] = useState(() => {
         try {
@@ -35,6 +35,7 @@ function Attendance({ onLogout, onViewChange }) {
 
     const [attendanceData, setAttendanceData] = useState(generateMockData());
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedPhase, setSelectedPhase] = useState('');
     const [trainingData, setTrainingData] = useState({
         company: 'R - Sequence',
         batch: 'Batch - II',
@@ -157,6 +158,22 @@ function Attendance({ onLogout, onViewChange }) {
 
                     {/* Progress Bars Section */}
                     <div className={styles.progressSection}>
+                        {/* Phase Selector */}
+                        <div className={styles.progressItem}>
+                            <select 
+                                value={selectedPhase} 
+                                onChange={(e) => setSelectedPhase(e.target.value)}
+                                className={styles.phaseSelect}
+                                required
+                            >
+                                <option value="" disabled>Select Phase</option>
+                                <option value="Phase-I">Phase-I</option>
+                                <option value="Phase-II">Phase-II</option>
+                                <option value="Phase-III">Phase-III</option>
+                            </select>
+                        </div>
+
+                        {/* Training Progress */}
                         <div className={styles.progressItem}>
                             <div className={styles.progressLabel}>
                                 <span className={styles.progressTitle}>Training Progress</span>
@@ -169,6 +186,8 @@ function Attendance({ onLogout, onViewChange }) {
                                 ></div>
                             </div>
                         </div>
+
+                        {/* Attendance Percentage */}
                         <div className={styles.progressItem}>
                             <div className={styles.progressLabel}>
                                 <span className={styles.progressTitle}>Attendance %</span>
@@ -280,4 +299,4 @@ function Attendance({ onLogout, onViewChange }) {
     );
 }
 
-export default Attendance;
+export default Training;

@@ -64,7 +64,7 @@ const PlacementPortalDashboard = lazy(() => import("./StudentPages/dashboard.jsx
 const Resume = lazy(() => import("./StudentPages/resume.jsx"));
 const ResumeBuilder = lazy(() => import("./StudentPages/ResumeBuilder.jsx"));
 const ATSChecker = lazy(() => import("./StudentPages/ATSChecker.jsx"));
-const Attendance = lazy(() => import("./StudentPages/Attendance.jsx"));
+const Training = lazy(() => import("./StudentPages/Training.jsx"));
 const Achievements = lazy(() => import("./StudentPages/achievements.jsx"));
 const Company = lazy(() => import("./StudentPages/company.jsx"));
 const StuProfile = lazy(() => import("./StudentPages/StuProfile.jsx"));
@@ -196,7 +196,7 @@ function AppContent() {
       <Route path="/resume" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Resume..." showAnimatedDots={true} />}><Resume onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/resume-builder" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Resume Builder..." showAnimatedDots={true} />}><ResumeBuilder onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/ats-checker" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading ATS Checker..." showAnimatedDots={true} />}><ATSChecker onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/attendance" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Attendance..." showAnimatedDots={true} />}><Attendance onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/training" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Training..." showAnimatedDots={true} />}><Training onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/achievements" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Achievements..." showAnimatedDots={true} />}><Achievements onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/company" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Company..." showAnimatedDots={true} />}><Company onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/profile" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Profile..." showAnimatedDots={true} />}><StuProfile onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
