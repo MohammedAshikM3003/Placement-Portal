@@ -28,12 +28,48 @@ const sidebarItems = [
 let cachedStudentData = null;
 let cacheTimestamp = null;
 let cachedProfilePicUrl = null; // Separate cache for profile pic URL
+let cachedProfileBlobUrl = null; // Blob URL for instant rendering (stays in memory)
+let blobFetchInProgress = null; // Prevent concurrent blob fetches
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour - longer cache since profile updates are event-driven
+
+// Fetch image and convert to blob URL for instant rendering on Sidebar remount
+// Blob URLs are in-memory, so new <img> elements render them immediately
+const fetchAndCacheAsBlob = async (url) => {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (cachedProfileBlobUrl) return cachedProfileBlobUrl;
+  if (blobFetchInProgress) return blobFetchInProgress;
+
+  blobFetchInProgress = (async () => {
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (blob.size > 0) {
+        cachedProfileBlobUrl = URL.createObjectURL(blob);
+        console.log('🖼️ Sidebar: Profile image cached as blob for instant rendering');
+        return cachedProfileBlobUrl;
+      }
+      return url;
+    } catch (e) {
+      console.warn('⚠️ Sidebar: Blob cache failed, using URL directly:', e.message);
+      return url;
+    } finally {
+      blobFetchInProgress = null;
+    }
+  })();
+
+  return blobFetchInProgress;
+};
 
 export const clearSidebarCache = () => {
   cachedStudentData = null;
   cacheTimestamp = null;
   cachedProfilePicUrl = null;
+  if (cachedProfileBlobUrl) {
+    URL.revokeObjectURL(cachedProfileBlobUrl);
+    cachedProfileBlobUrl = null;
+  }
+  blobFetchInProgress = null;
   localStorage.removeItem('cachedProfilePicUrl');
   console.log('🗑️ Sidebar cache cleared');
 };
@@ -41,9 +77,17 @@ export const clearSidebarCache = () => {
 export const updateCachedProfilePic = (url) => {
   cachedProfilePicUrl = url;
   localStorage.setItem('cachedProfilePicUrl', url);
+  // Invalidate blob cache since URL changed - will be re-cached on next render
+  if (cachedProfileBlobUrl) {
+    URL.revokeObjectURL(cachedProfileBlobUrl);
+    cachedProfileBlobUrl = null;
+  }
   if (cachedStudentData) {
     cachedStudentData.profilePicURL = url;
   }
+  // Pre-fetch new image as blob in background
+  const resolvedUrl = resolveProfileUrl(url);
+  if (resolvedUrl) fetchAndCacheAsBlob(resolvedUrl);
   console.log('📸 Sidebar: Profile pic cache updated', url);
 };
 
@@ -71,15 +115,20 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     return null;
   });
   const [imageError, setImageError] = useState(false);
-  const [imageKey, setImageKey] = useState(Date.now());
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState(() => {
-    // PRIORITY 1: Check module-level cache (fastest)
+    // PRIORITY 0: Check blob URL cache (instant rendering - already in memory)
+    if (cachedProfileBlobUrl) {
+      console.log('⚡ Sidebar: Profile pic from blob cache (instant)');
+      return cachedProfileBlobUrl;
+    }
+    
+    // PRIORITY 1: Check module-level URL cache
     if (cachedProfilePicUrl) {
       console.log('⚡ Sidebar: Profile pic URL from memory cache');
       return cachedProfilePicUrl;
     }
-    
+
     // PRIORITY 2: Check localStorage for pre-resolved profile pic URL (set during auth)
     try {
       const cachedUrl = localStorage.getItem('cachedProfilePicUrl');
@@ -120,6 +169,14 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   // Only use profilePicUrl state to ensure stability
   const stableProfilePicUrl = useMemo(() => {
     return profilePicUrl;
+  }, [profilePicUrl]);
+
+  // Background: cache profile image as blob URL for instant rendering on next Sidebar mount
+  // This runs whenever profilePicUrl is set from any source (cache, prop, fetch)
+  useEffect(() => {
+    if (profilePicUrl && !profilePicUrl.startsWith('blob:') && !profilePicUrl.startsWith('data:') && !cachedProfileBlobUrl) {
+      fetchAndCacheAsBlob(profilePicUrl);
+    }
   }, [profilePicUrl]);
 
   useEffect(() => {
@@ -347,6 +404,13 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
             <img 
               src={stableProfilePicUrl} 
               alt="Profile" 
+              onLoad={() => {
+                // Image loaded successfully — cache as blob for instant rendering on next mount
+                if (!cachedProfileBlobUrl && stableProfilePicUrl &&
+                    !stableProfilePicUrl.startsWith('blob:') && !stableProfilePicUrl.startsWith('data:')) {
+                  fetchAndCacheAsBlob(stableProfilePicUrl);
+                }
+              }}
               onError={() => {
                 console.warn('❌ Sidebar: Image load error');
                 setImageError(true);
@@ -430,9 +494,8 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           localStorage.removeItem('resumeData');
           localStorage.removeItem('certificatesData');
           
-          // Clear cache
-          cachedStudentData = null;
-          cacheTimestamp = null;
+          // Clear all sidebar caches (including blob URL)
+          clearSidebarCache();
           
           // Call AuthContext logout
           if (authLogout) {
