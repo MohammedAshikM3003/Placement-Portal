@@ -661,6 +661,11 @@ Rules:
   .contact { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; }
   .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
   .contact a:hover { text-decoration: underline; }
+  .header-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; }
+  .header-container.photo-left { flex-direction: row; }
+  .header-container.photo-right { flex-direction: row-reverse; }
+  .header-text { flex: 1; text-align: center; }
+  .profile-photo { width: 120px; aspect-ratio: 4 / 3; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
   .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 2px; margin: 14px 0 6px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
   .entry { margin-bottom: 8px; }
   .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 10.5pt; gap: 15px; width: 100%; }
@@ -674,17 +679,40 @@ Rules:
   .skills-list li strong { font-weight: bold; }
   @media print { body { padding: 0.4in 0.5in; } }
 </style></head><body>
-<h1>${personalInfo.name || 'Your Name'}</h1>
+${(() => {
+  const showPhoto = resumeSettings.profilePhoto === true;
+  const photoPos = resumeSettings.photoPosition || 'Left';
+  const photoUrl = studentData?.profilePicURL || studentData?.profilePic || personalInfo.photo || '';
+  if (showPhoto && photoUrl) {
+    return `<div class="header-container photo-${photoPos.toLowerCase()}">
+      <img src="${photoUrl}" alt="" class="profile-photo" onerror="this.style.display='none';" />
+      <div class="header-text">
+        <h1>${personalInfo.name || 'Your Name'}</h1>
+        <div class="contact">
+          ${[
+            personalInfo.mobile || '',
+            personalInfo.email || '',
+            personalInfo.linkedin ? '<a href="' + (personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin) + '" target="_blank">LinkedIn</a>' : '',
+            personalInfo.github ? '<a href="' + (personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github) + '" target="_blank">GitHub</a>' : '',
+            personalInfo.portfolio ? '<a href="' + (personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio) + '" target="_blank">Portfolio</a>' : ''
+          ].filter(item => item !== '').join(' | ')}
+          ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => '<a href="' + (p.url.startsWith('http') ? p.url : 'https://' + p.url) + '" target="_blank">' + p.name + '</a>').join(' | ') : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<h1>${personalInfo.name || 'Your Name'}</h1>
 <div class="contact">
   ${[
     personalInfo.mobile || '',
     personalInfo.email || '',
-    personalInfo.linkedin ? `<a href="${personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin}" target="_blank">LinkedIn</a>` : '',
-    personalInfo.github ? `<a href="${personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github}" target="_blank">GitHub</a>` : '',
-    personalInfo.portfolio ? `<a href="${personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio}" target="_blank">Portfolio</a>` : ''
+    personalInfo.linkedin ? '<a href="' + (personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin) + '" target="_blank">LinkedIn</a>' : '',
+    personalInfo.github ? '<a href="' + (personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github) + '" target="_blank">GitHub</a>' : '',
+    personalInfo.portfolio ? '<a href="' + (personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio) + '" target="_blank">Portfolio</a>' : ''
   ].filter(item => item !== '').join(' | ')}
-  ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => `<a href="${p.url.startsWith('http') ? p.url : 'https://' + p.url}" target="_blank">${p.name}</a>`).join(' | ') : ''}
-</div>
+  ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => '<a href="' + (p.url.startsWith('http') ? p.url : 'https://' + p.url) + '" target="_blank">' + p.name + '</a>').join(' | ') : ''}
+</div>`;
+})()}
 
 ${summary ? `<div class="section-title">Professional Summary</div><p style="font-size:10pt;">${summary}</p>` : ''}
 
@@ -797,14 +825,15 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
       setCreateProgress(5);
       
       // Add student's profile photo to personal info
-      const photoUrl = studentData?.profilePicURL || studentData?.profilePic || '';
+      const photoUrl = studentData?.profilePicURL || studentData?.profilePic || localStorage.getItem('cachedProfilePicUrl') || '';
       console.log('📷 Adding profile photo to resume:', photoUrl);
       console.log('📷 studentData.profilePicURL:', studentData?.profilePicURL);
       console.log('📷 studentData.profilePic:', studentData?.profilePic);
       
       const personalInfoWithPhoto = {
         ...personalInfo,
-        photo: photoUrl
+        photo: photoUrl,
+        profilePicURL: photoUrl
       };
       
       const resumeData = {
@@ -1757,6 +1786,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 onClick={() => {
                   setShowCreated(false);
                   setIsPreviewing(false);
+                  setHasCreatedOnce(false);
                 }} 
                 className="achievement-popup-close-btn"
                 disabled={isPreviewing}

@@ -20,11 +20,20 @@ router.get('/college-images/:adminLoginID', async (req, res) => {
     }
     
     // Return only public college images (not personal admin data)
+    // Normalize URLs: strip localhost/any host prefix, return relative paths
+    const normalizeUrl = (url) => {
+      if (!url) return null;
+      // Strip http://localhost:XXXX or any http(s)://host prefix, keep /api/file/xxx
+      const match = url.match(/(\/api\/file\/[a-f0-9]{24})/);
+      if (match) return match[1];
+      // Already a relative path or ObjectId
+      return url;
+    };
     const collegeImages = {
-      collegeBanner: admin.collegeBanner || null,
-      naacCertificate: admin.naacCertificate || null,
-      nbaCertificate: admin.nbaCertificate || null,
-      collegeLogo: admin.collegeLogo || null
+      collegeBanner: normalizeUrl(admin.collegeBanner),
+      naacCertificate: normalizeUrl(admin.naacCertificate),
+      nbaCertificate: normalizeUrl(admin.nbaCertificate),
+      collegeLogo: normalizeUrl(admin.collegeLogo)
     };
     
     res.json({ 

@@ -4,8 +4,6 @@ const puppeteer = require('puppeteer');
 const mongoose = require('mongoose');
 const { GridFSBucket, ObjectId } = require('mongodb');
 const { Readable } = require('stream');
-const http = require('http');
-const https = require('https');
 
 // GridFS bucket
 let gridFSBucket;
@@ -144,6 +142,10 @@ router.post('/generate', optionalAuth, async (req, res) => {
     if (!resumeData) {
       return res.status(400).json({ error: 'Missing resumeData' });
     }
+
+    console.log('📷 [generate] resumeSettings.profilePhoto:', resumeData.resumeSettings?.profilePhoto);
+    console.log('📷 [generate] personalInfo.photo:', resumeData.personalInfo?.photo);
+    console.log('📷 [generate] personalInfo.profilePicURL:', resumeData.personalInfo?.profilePicURL);
 
     const html = await buildResumeHTML(resumeData, req);
 
@@ -601,9 +603,9 @@ async function buildResumeHTML(data, req = null) {
   });
 
   // Profile photo settings
-  const showProfilePhoto = resumeSettings.profilePhoto === true;
+  const showProfilePhoto = resumeSettings.profilePhoto === true || resumeSettings.profilePhoto === 'On';
   const photoPosition = resumeSettings.photoPosition || 'Left';
-  let profilePhotoUrl = personalInfo.photo || personalInfo.profilePhotoUrl || '';
+  let profilePhotoUrl = personalInfo.photo || personalInfo.profilePhotoUrl || personalInfo.profilePicURL || '';
   
   console.log('📷 Initial photo URL from personalInfo:', profilePhotoUrl);
   console.log('📷 personalInfo.photo:', personalInfo.photo);
@@ -611,17 +613,19 @@ async function buildResumeHTML(data, req = null) {
   
   // Convert to base64 data URL if it's a GridFS file ID
   if (showProfilePhoto && profilePhotoUrl) {
-    // Extract GridFS file ID
+    // Extract GridFS file ID from various URL formats
     let fileId = null;
-    if (profilePhotoUrl.startsWith('/api/file/')) {
-      fileId = profilePhotoUrl.replace('/api/file/', '');
-    } else if (profilePhotoUrl.startsWith('/file/')) {
-      fileId = profilePhotoUrl.replace('/file/', '');
-    } else if (/^[a-f0-9]{24}$/.test(profilePhotoUrl)) {
-      fileId = profilePhotoUrl;
-    } else if (profilePhotoUrl.includes('/file/')) {
-      // Handle full URLs like http://localhost:5000/file/abc123
-      const match = profilePhotoUrl.match(/\/file\/([a-f0-9]{24})/);
+    // Strip query strings for pattern matching
+    const cleanUrl = profilePhotoUrl.split('?')[0];
+    if (cleanUrl.startsWith('/api/file/')) {
+      fileId = cleanUrl.replace('/api/file/', '').split('/')[0];
+    } else if (cleanUrl.startsWith('/file/')) {
+      fileId = cleanUrl.replace('/file/', '').split('/')[0];
+    } else if (/^[a-f0-9]{24}$/.test(cleanUrl)) {
+      fileId = cleanUrl;
+    } else if (cleanUrl.includes('/file/')) {
+      // Handle full URLs like http://localhost:5000/api/file/abc123
+      const match = cleanUrl.match(/\/file\/([a-f0-9]{24})/);
       if (match) fileId = match[1];
     }
     
@@ -686,7 +690,7 @@ async function buildResumeHTML(data, req = null) {
   .header-container.photo-right { flex-direction: row-reverse; }
   .header-container.no-photo .header-text { text-align: center; width: 100%; }
   .header-text { flex: 1; text-align: center; }
-  .profile-photo { width: 90px; height: 110px; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
+  .profile-photo { width: 120px; aspect-ratio: 4 / 3; border-radius: 4px; object-fit: cover; border: 2px solid #333; flex-shrink: 0; display: block; }
   h1 { font-family: ${fontStack} !important; font-size: 22pt; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 4px; letter-spacing: 0.5px; }
   h2, h3, h4, h5, h6, p, span, div, a, li, td, th { font-family: ${fontStack} !important; }
   .contact { text-align: center; font-size: 9pt; color: #555; margin-bottom: 14px; line-height: 1.6; }
@@ -712,7 +716,7 @@ async function buildResumeHTML(data, req = null) {
 <div class="resume">
   ${showProfilePhoto && profilePhotoUrl ? `
   <div class="header-container photo-${photoPosition.toLowerCase()}" id="header-container">
-    <img src="${escapeHtml(profilePhotoUrl)}" alt="" class="profile-photo" onerror="document.getElementById('header-container').outerHTML='<h1>${escapeHtml((personalInfo.name || 'Your Name').replace(/'/g, "\\'"))}</h1><div class=\\'contact\\'>${contactItems.join(' &nbsp;|&nbsp; ').replace(/'/g, "\\'")}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ').replace(/'/g, "\\'") : ''}</div>';" />
+    <img src="${profilePhotoUrl.startsWith('data:') ? profilePhotoUrl : escapeHtml(profilePhotoUrl)}" alt="" class="profile-photo" onerror="this.style.display='none';" />
     <div class="header-text">
       <h1>${escapeHtml(personalInfo.name || 'Your Name')}</h1>
       <div class="contact">${contactItems.join(' &nbsp;|&nbsp; ')}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ') : ''}</div>

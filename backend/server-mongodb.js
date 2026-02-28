@@ -2236,13 +2236,21 @@ app.get('/api/public/college-images', async (req, res) => {
             return res.json({ success: true, data: null });
         }
 
+        // Normalize URLs: strip localhost/any host prefix, return relative paths
+        const normalizeUrl = (url) => {
+            if (!url) return null;
+            const match = url.match(/\/api\/file\/([a-f0-9]{24})/);
+            if (match) return `/api/file/${match[1]}`;
+            return url;
+        };
+
         res.json({
             success: true,
             data: {
-                collegeBanner: admin.collegeBanner || null,
-                naacCertificate: admin.naacCertificate || null,
-                nbaCertificate: admin.nbaCertificate || null,
-                collegeLogo: admin.collegeLogo || null,
+                collegeBanner: normalizeUrl(admin.collegeBanner),
+                naacCertificate: normalizeUrl(admin.naacCertificate),
+                nbaCertificate: normalizeUrl(admin.nbaCertificate),
+                collegeLogo: normalizeUrl(admin.collegeLogo),
             }
         });
     } catch (error) {

@@ -197,9 +197,16 @@ export const fetchCollegeImagesPublic = async () => {
   // Empty string is explicitly treated as null so Landing Page never renders a broken <img>
   const resolveUrl = (val) => {
     if (!val || val === '' || typeof val !== 'string') return null;
-    if (val.startsWith('data:') || val.startsWith('http')) return val;
-    if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
+    if (val.startsWith('data:')) return val;
+    // Strip localhost or any host prefix — normalize to relative path first
+    const gridfsMatch = val.match(/\/api\/file\/([a-f0-9]{24})/);
+    if (gridfsMatch) return `${API_BASE_URL}/file/${gridfsMatch[1]}`;
+    // Raw ObjectId
     if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
+    // Relative path like /file/xxx
+    if (val.startsWith('/file/')) return `${API_BASE_URL}${val}`;
+    // Already a full URL (non-localhost)
+    if (val.startsWith('http')) return val;
     return val;
   };
 
