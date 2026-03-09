@@ -1,150 +1,18 @@
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Viewicon from "../assets/Viewicon.png";
 import Dashcompanydrive from '../assets/Dashcompanydrive.png';
-import PlacedStudentsCap from '../assets/PlacedStudentsCap.svg';
+import CoodEligibleStudentPlacestudicon from '../assets/Cood_EligibleStudentPlacestudicon.svg';
+import CoodEligibleStudestudicon from '../assets/Cood_EligibleStudestudicon.svg';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import AdminBrowseStudenticon from "../assets/AdminBrowseStudenticon.png";
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import * as XLSX from 'xlsx';
 import styles from './Coo_EligibleStudents.module.css';
-
-
-// =========================================================================
-// !!! START: EXPORT POPUP COMPONENTS (Copied from Coo_CompanyDrive.js) !!!
-// =========================================================================
-
-const ExportProgressPopup = ({ isOpen, operation, progress, onClose }) => {
-    if (!isOpen) return null;
-
-    const operationText = operation === 'excel' ? 'Exporting...' : 'Downloading...';
-    const progressText = operation === 'excel' ? 'Exported' : 'Downloaded';
-
-    // Calculate the stroke-dasharray for circular progress
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (progress / 100) * circumference;
-
-    return (
-        <div className={styles['co-es-export-popup-overlay']}>
-            <div className={styles['co-es-export-popup-container']}>
-                <div className={styles['co-es-export-popup-header']}>{operationText}</div>
-                <div className={styles['co-es-export-popup-body']}>
-                    <div className={styles['co-es-export-progress-circle']}>
-                        <svg width="100" height="100" viewBox="0 0 100 100">
-                            {/* Background circle */}
-                            <circle
-                                cx="50"
-                                cy="50"
-                                r={radius}
-                                fill="none"
-                                stroke="#e0e0e0"
-                                strokeWidth="8"
-                            />
-                            {/* Progress circle */}
-                            <circle
-                                cx="50"
-                                cy="50"
-                                r={radius}
-                                fill="none"
-                                stroke="#d23b42"
-                                strokeWidth="8"
-                                strokeDasharray={circumference}
-                                strokeDashoffset={offset}
-                                strokeLinecap="round"
-                                transform="rotate(-90 50 50)"
-                                style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-                            />
-                        </svg>
-                        {/*<div className={styles['co-es-export-progress-text']}>{progress}%</div>*/}
-                    </div>
-                    <h2 className={styles['co-es-export-popup-title']}>{progressText} {progress}%</h2>
-                    <p className={styles['co-es-export-popup-message']}>
-                        The Details have been {operation === 'excel' ? 'Exporting...' : 'Downloading...'}
-                    </p>
-                    <p className={styles['co-es-export-popup-message']}>Please wait...</p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ExportSuccessPopup = ({ isOpen, operation, onClose }) => {
-    if (!isOpen) return null;
-
-    const title = operation === 'excel' ? 'Exported To Excel ✓' : 'PDF Downloaded ✓';
-    const message = operation === 'excel'
-        ? 'The Details have been Successfully Exported to Excel in your device.'
-        : 'The Details have been Successfully Downloaded as PDF to your device.';
-    const headerText = operation === 'excel' ? 'Exported!' : 'Downloaded!';
-
-    return (
-        <div className={styles['co-es-export-popup-overlay']}>
-            <div className={styles['co-es-export-popup-container']}>
-                <div className={styles['co-es-export-popup-header']}>{headerText}</div>
-                <div className={styles['co-es-export-popup-body']}>
-                    <div className={styles['co-es-export-success-icon']}>
-                    <svg xmlns='http://www.w3.org/2000/svg' viewBox="0 0 52 52" fill="none">
-                        <circle className={styles['co-es-success-icon--circle']} cx="26" cy="26" r="25"/>
-                        <path className={styles['co-es-success-icon--check']} d="M14.1 27.2l7.1 7.2 16.7-16.8" fill="none"
-                            />
-                        </svg>
-                    </div>
-                    <h2 className={styles['co-es-export-popup-title']}>{title}</h2>
-                    <p className={styles['co-es-export-popup-message']}>{message}</p>
-                </div>
-                <div className={styles['co-es-export-popup-footer']}>
-                    <button onClick={onClose} className={styles['co-es-export-popup-close-btn']}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ExportFailedPopup = ({ isOpen, operation, onClose }) => {
-    if (!isOpen) return null;
-
-    // FIX: Corrected the static success message in the original file to reflect failure
-    const title = operation === 'excel' ? 'Export Failed!' : 'Download Failed!';
-    const message = operation === 'excel'
-        ? 'An error occurred during Excel export. Please try again.'
-        : 'An error occurred during PDF download. Please try again.';
-    const headerText = operation === 'excel' ? 'Export Failed!' : 'Download Failed!';
-
-    return (
-        <div className={styles['co-es-export-popup-overlay']}>
-            <div className={styles['co-es-export-popup-container']}>
-                <div className={styles['co-es-export-popup-header']}>{headerText}</div>
-                <div className={styles['co-es-export-popup-body']}>
-                    <div className={styles['co-es-export-failed-icon']}>
-                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                            <circle cx="40" cy="40" r="38" fill="#dc3545" />
-                            <path
-                                d="M30 30 L50 50 M50 30 L30 50"
-                                stroke="white"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                    </div>
-                    <h2 className={styles['co-es-export-popup-title']}>{title}</h2>
-                    <p className={styles['co-es-export-popup-message']}>{message}</p>
-                </div>
-                <div className={styles['co-es-export-popup-footer']}>
-                    <button onClick={onClose} className={styles['co-es-export-popup-close-btn']}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// =======================================================================
-// !!! END: EXPORT POPUP COMPONENTS (Copied from Coo_CompanyDrive.js) !!!
-// =======================================================================
-
 
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     useCoordinatorAuth(); // JWT authentication verification
@@ -152,23 +20,69 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     
     // START: MODIFIED/NEW STATE FOR EXPORT POPUPS
     const [showDropdown, setShowDropdown] = useState(false);
-    const [exportPopupState, setExportPopupState] = useState({
-        isOpen: false,
-        type: null, // 'progress', 'success', 'failed'
-        operation: null, // 'excel', 'pdf'
-        progress: 0
-    });
+    const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
+    const [exportProgress, setExportProgress] = useState(0);
+    const [exportType, setExportType] = useState('Excel');
     // END: MODIFIED/NEW STATE FOR EXPORT POPUPS
 
     const [filterData, setFilterData] = useState({
-        batch: '',
-        registerNo: '',
-        cgpa: '',
-        skills: ''
+        companyName: '',
+        jobRole: '',
+        startDate: '',
+        endDate: ''
     });
-    const [filteredStudents, setFilteredStudents] = useState([]);
-    const [isFiltered, setIsFiltered] = useState(false); // **FIXED LINE**
     const tableRef = useRef(null);
+
+    const companyDrives = [
+        {
+            companyName: 'Zoho',
+            jobRoles: [
+                { jobRole: 'Software Engineer', startDate: '2026-02-01', endDate: '2026-02-10' },
+                { jobRole: 'QA Engineer', startDate: '2026-03-05', endDate: '2026-03-15' }
+            ]
+        },
+        {
+            companyName: 'TCS',
+            jobRoles: [
+                { jobRole: 'Developer', startDate: '2026-02-12', endDate: '2026-02-20' },
+                { jobRole: 'Support Engineer', startDate: '2026-04-01', endDate: '2026-04-10' }
+            ]
+        }
+    ];
+
+    const companyOptions = useMemo(() => {
+        return companyDrives.map(d => d.companyName);
+    }, [companyDrives]);
+
+    const jobRoleOptions = useMemo(() => {
+        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        if (!selectedCompany) return [];
+        return selectedCompany.jobRoles.map(j => j.jobRole);
+    }, [companyDrives, filterData.companyName]);
+
+    const startDateOptions = useMemo(() => {
+        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        if (!selectedCompany) return [];
+        const selectedJobRole = filterData.jobRole;
+        const relevant = selectedJobRole
+            ? selectedCompany.jobRoles.filter(j => j.jobRole === selectedJobRole)
+            : selectedCompany.jobRoles;
+        return relevant.map(j => j.startDate);
+    }, [companyDrives, filterData.companyName, filterData.jobRole]);
+
+    const endDateOptions = useMemo(() => {
+        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        if (!selectedCompany) return [];
+        const selectedJobRole = filterData.jobRole;
+        const selectedStartDate = filterData.startDate;
+        const relevant = selectedCompany.jobRoles.filter(j => {
+            if (selectedJobRole && j.jobRole !== selectedJobRole) return false;
+            if (selectedStartDate && j.startDate !== selectedStartDate) return false;
+            return true;
+        });
+        return relevant.map(j => j.endDate);
+    }, [companyDrives, filterData.companyName, filterData.jobRole, filterData.startDate]);
+
     // Sample student data
     const studentData = [
         { id: 1, name: 'Student-1', registerNo: '73151929345', batch: '2023-2027', section: 'A', cgpa: '9.1', skills: 'Python', status: 'Unplaced' },
@@ -183,42 +97,74 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         { id: 10, name: 'Student-10', registerNo: '73152318908', batch: '2023-2027', section: 'B', cgpa: '6.9', skills: 'Python', status: 'Unplaced' }
     ];
 
-    const handleFilterChange = (field, value) => {
+    const handleCompanyChange = (value) => {
         setFilterData(prev => ({
             ...prev,
-            [field]: value
+            companyName: value,
+            jobRole: '',
+            startDate: '',
+            endDate: ''
         }));
     };
 
-    const handleFilter = () => {
-        const filtered = studentData.filter(student => {
-            const batchMatch = !filterData.batch || student.batch === filterData.batch;
-            const regMatch = !filterData.registerNo || student.registerNo.includes(filterData.registerNo);
-            const cgpaMatch = !filterData.cgpa || student.cgpa.includes(filterData.cgpa);
-            const skillsMatch = !filterData.skills || student.skills.toLowerCase().includes(filterData.skills.toLowerCase());
-            return batchMatch && regMatch && cgpaMatch && skillsMatch;
-        });
-        setFilteredStudents(filtered);
-        setIsFiltered(true);
+    const handleJobRoleChange = (value) => {
+        setFilterData(prev => ({
+            ...prev,
+            jobRole: value,
+            startDate: '',
+            endDate: ''
+        }));
     };
+
+    const handleStartDateChange = (value) => {
+        setFilterData(prev => {
+            const selectedCompany = companyDrives.find(d => d.companyName === prev.companyName);
+            const drive = selectedCompany?.jobRoles.find(j => {
+                if (prev.jobRole && j.jobRole !== prev.jobRole) return false;
+                return j.startDate === value;
+            });
+            return {
+                ...prev,
+                startDate: value,
+                endDate: drive?.endDate || ''
+            };
+        });
+    };
+
+    const handleEndDateChange = (value) => {
+        setFilterData(prev => ({
+            ...prev,
+            endDate: value
+        }));
+    };
+
+    const displayStudents = useMemo(() => {
+        return studentData.filter(student => {
+            const companyMatch =
+                !filterData.companyName ||
+                !student.companyName ||
+                (student.companyName ?? '').toLowerCase().includes(filterData.companyName.toLowerCase().trim());
+            const jobRoleMatch =
+                !filterData.jobRole ||
+                !student.jobRole ||
+                (student.jobRole ?? '').toLowerCase().includes(filterData.jobRole.toLowerCase().trim());
+            const startDateMatch =
+                !filterData.startDate ||
+                !student.startDate ||
+                (student.startDate ?? '').toLowerCase().includes(filterData.startDate.toLowerCase().trim());
+            const endDateMatch =
+                !filterData.endDate ||
+                !student.endDate ||
+                (student.endDate ?? '').toLowerCase().includes(filterData.endDate.toLowerCase().trim());
+            return companyMatch && jobRoleMatch && startDateMatch && endDateMatch;
+        });
+    }, [studentData, filterData]);
 
     const [activeItem, setActiveItem] = useState("Eligible Students");
 
     const handleItemClick = (itemName) => {
         setActiveItem(itemName);
     };
-    const handleClear = () => {
-        setFilterData({
-            batch: '',
-            registerNo: '',
-            cgpa: '',
-            skills: ''
-        });
-        setFilteredStudents([]);
-        setIsFiltered(false);
-    };
-
-    const displayStudents = isFiltered ? filteredStudents : studentData;
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const toggleSidebar = () => {
@@ -239,13 +185,9 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     const simulateExport = async (operation, exportFunction) => {
         setShowDropdown(false);
 
-        // Show progress popup
-        setExportPopupState({
-            isOpen: true,
-            type: 'progress',
-            operation: operation,
-            progress: 0
-        });
+        setExportType(operation === 'excel' ? 'Excel' : 'PDF');
+        setExportPopupState('progress');
+        setExportProgress(0);
 
         let progressInterval;
         let progressTimeout;
@@ -253,12 +195,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         try {
             // Simulate progress from 0 to 100
             progressInterval = setInterval(() => {
-                setExportPopupState(prev => {
-                    if (prev.progress < 100 && prev.type === 'progress') {
-                        return { ...prev, progress: Math.min(prev.progress + 10, 100) };
-                    }
-                    return prev;
-                });
+                setExportProgress(prev => Math.min(prev + 10, 100));
             }, 200);
 
             // Wait for progress animation to complete
@@ -272,24 +209,13 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             // Perform the actual export
             exportFunction();
 
-            // Show success popup
-            setExportPopupState({
-                isOpen: true,
-                type: 'success',
-                operation: operation,
-                progress: 100
-            });
+            setExportProgress(100);
+            setExportPopupState('success');
         } catch (error) {
             if (progressInterval) clearInterval(progressInterval);
             if (progressTimeout) clearTimeout(progressTimeout);
 
-            // Show failed popup
-            setExportPopupState({
-                isOpen: true,
-                type: 'failed',
-                operation: operation,
-                progress: 0
-            });
+            setExportPopupState('failed');
         }
     };
 
@@ -394,6 +320,8 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             onViewChange(view);
         }
     };
+    const placedCount = studentData.filter(s => s.status === 'Placed').length;
+    const eligibleCount = studentData.length;
     return (
         <div className={styles['coordinator-main-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
@@ -403,53 +331,98 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     <div className={styles['co-es-container']}>
                         <div className={styles['co-es-dashboard-area']}>
                             <div className={styles['co-es-summary-cards']}>
-                                <div className={`${styles['co-es-summary-card']} ${styles['co-es-company-drive-card']}`} >
-
-                                    <div className={styles['co-es-summary-card-icon']} style={{ background: '#ffffff' }}><img src={AdminBrowseStudenticon} alt="Company Drive" /></div>
+                                <div className={`${styles['co-es-summary-card']} ${styles['co-es-company-drive-card']}`}>
+                                    <div className={styles['co-es-summary-card-icon']} style={{ background: '#ffffff' }}>
+                                        <img src={AdminBrowseStudenticon} alt="Company Drive" />
+                                    </div>
                                     <div className={styles['co-es-summary-card-title-1']}>Student Database</div>
-                                    <div className={styles['co-es-summary-card-desc-1']} >Filter, sort and manage Student records</div>
+                                    <div className={styles['co-es-summary-card-desc-1']}>Filter, sort and manage Student records</div>
                                 </div>
+
                                 <div className={`${styles['co-es-search-filters']} ${styles['co-es-company-profile-search']}`}>
-                                    <div className={styles['co-es-search-tab']}> CSE Students</div>
+                                    <div className={styles['co-es-search-tab']}>CSE Students</div>
                                     <div className={styles['co-es-search-inputs']}>
-                                        <div className={`${styles['co-es-search-input']} ${filterData.batch ? styles['filled'] : ''}`}>
-                                            <input type="text" id="Batch" value={filterData.batch} onChange={(e) => handleFilterChange('batch', e.target.value)} list="batch-options" required />
-                                            <label htmlFor="batch">Batch</label>
-                                            <datalist id="batch-options">
-                                                <option value="2022-2026">2022-2026</option>
-                                                <option value="2023-2027">2023-2027</option>
-                                                <option value="2024-2028">2024-2028</option>
-                                                <option value="2025-2029">2025-2029</option>
-                                            </datalist>
-                                            <button className={styles['co-es-clear-btn']}></button>
+                                        <div className={styles['co-es-search-input']}>
+                                            <select
+                                                id="co-es-company-name"
+                                                value={filterData.companyName}
+                                                onChange={(e) => handleCompanyChange(e.target.value)}
+                                                required
+                                            >
+                                                <option value="" />
+                                                {companyOptions.map((name) => (
+                                                    <option key={name} value={name}>{name}</option>
+                                                ))}
+                                            </select>
+                                            <label htmlFor="co-es-company-name">Company Name</label>
                                         </div>
-                                        <div className={`${styles['co-es-search-input']} ${filterData.registerNo ? styles['filled'] : ''}`}>
-                                            <input type="text" id="Register No" value={filterData.registerNo} onChange={(e) => handleFilterChange('registerNo', e.target.value)} required />
-                                            <label htmlFor="register no">Register no</label>
-                                            <button className={styles['co-es-clear-btn']}></button>
+
+                                        <div className={styles['co-es-search-input']}>
+                                            <select
+                                                id="co-es-job-role"
+                                                value={filterData.jobRole}
+                                                onChange={(e) => handleJobRoleChange(e.target.value)}
+                                                required
+                                                disabled={!filterData.companyName}
+                                            >
+                                                <option value="" />
+                                                {jobRoleOptions.map((role) => (
+                                                    <option key={role} value={role}>{role}</option>
+                                                ))}
+                                            </select>
+                                            <label htmlFor="co-es-job-role">Job role</label>
                                         </div>
-                                        <div className={`${styles['co-es-search-input']} ${filterData.cgpa ? styles['filled'] : ''}`}>
-                                            <input type="text" id="CGPA" value={filterData.cgpa} onChange={(e) => handleFilterChange('cgpa', e.target.value)} required />
-                                            <label htmlFor="cgpa">CGPA</label>
-                                            <button className={styles['co-es-clear-btn']}></button>
+
+                                        <div className={styles['co-es-search-input']}>
+                                            <select
+                                                id="co-es-start-date"
+                                                value={filterData.startDate}
+                                                onChange={(e) => handleStartDateChange(e.target.value)}
+                                                required
+                                                disabled={!filterData.companyName}
+                                            >
+                                                <option value="" />
+                                                {startDateOptions.map((date) => (
+                                                    <option key={date} value={date}>{date}</option>
+                                                ))}
+                                            </select>
+                                            <label htmlFor="co-es-start-date">Start Date</label>
                                         </div>
-                                        <div className={`${styles['co-es-search-input']} ${filterData.skills ? styles['filled'] : ''}`}>
-                                            <input type="text" id="Skills" value={filterData.skills} onChange={(e) => handleFilterChange('skills', e.target.value)} required />
-                                            <label htmlFor="skills">Skills</label>
-                                            <button className={styles['co-es-clear-btn']}></button>
+
+                                        <div className={styles['co-es-search-input']}>
+                                            <select
+                                                id="co-es-end-date"
+                                                value={filterData.endDate}
+                                                onChange={(e) => handleEndDateChange(e.target.value)}
+                                                required
+                                                disabled={!filterData.startDate}
+                                            >
+                                                <option value="" />
+                                                {endDateOptions.map((date) => (
+                                                    <option key={date} value={date}>{date}</option>
+                                                ))}
+                                            </select>
+                                            <label htmlFor="co-es-end-date">End date</label>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                                        <button className={styles['co-es-search-btn-filter']} onClick={handleFilter}>Filter</button>
-                                        <button className={styles['co-es-clear-search-btn']} onClick={handleClear}>Clear</button>
                                     </div>
                                 </div>
-                                <div className={`${styles['co-es-summary-card']} ${styles['co-es-placed-students-card']}`} onClick={() => handleCardClick('placed-students')} >
-                                    <div className={styles['co-es-summary-card-icon']} style={{ background: '#ffffff', marginTop: 5 }}><img src={PlacedStudentsCap} alt="Placed Students" /></div>
-                                    <div className={styles['co-es-summary-card-title-2']} style={{ marginTop: 35 }}>Placed Students</div>
-                                    <div className={styles['co-es-summary-card-desc-2']} >Success gained through dedication daily</div>
+
+                                <div className={styles['co-es-stat-cards-group']}>
+                                    <div className={`${styles['co-es-summary-card']} ${styles['co-es-stat-card']}`} onClick={() => handleCardClick('placed-students')}>
+                                        <img src={CoodEligibleStudentPlacestudicon} alt="Placed Students" className={styles['co-es-stat-card__image']} />
+                                        <span className={styles['co-es-stat-card__label']}>Number of 
+                                            Rounds</span>
+                                        <span className={styles['co-es-stat-card__value']}>{placedCount}</span>
+                                    </div>
+                                    <div className={`${styles['co-es-summary-card']} ${styles['co-es-stat-card']}`}>
+                                        <img src={CoodEligibleStudestudicon} alt="Eligible Students" className={styles['co-es-stat-card__image']} />
+                                        <span className={styles['co-es-stat-card__label']}>Eligible
+                                            Students</span>
+                                        <span className={styles['co-es-stat-card__value']}>{eligibleCount}</span>
+                                    </div>
                                 </div>
                             </div>
+
                             <div className={`${styles['co-es-company-profile']} ${styles['company-profile-table']}`}>
                                 <div className={styles['co-es-profile-header']}>
                                     <div className={styles['co-es-profile-title']}>ELIGIBLE STUDENTS</div>
@@ -457,7 +430,6 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                         <button className={styles['co-es-print-btn']} onClick={() => setShowDropdown(!showDropdown)}>Print</button>
                                         {showDropdown && (
                                             <div className={styles['co-es-dropdown-menu']}>
-                                                {/* MODIFIED HANDLERS */}
                                                 <div className={styles['co-es-dropdown-item']} onClick={handleExportToExcel}>Export to Excel</div>
                                                 <div className={styles['co-es-dropdown-item']} onClick={handleExportToPDF}>Save as PDF</div>
                                             </div>
@@ -508,30 +480,26 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                 </div>
             </div>
             {/* START: NEW EXPORT POPUP RENDERING */}
-            {exportPopupState.isOpen && exportPopupState.type === 'progress' && (
-                <ExportProgressPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    progress={exportPopupState.progress}
-                    onClose={() => { }}
-                />
-            )}
-
-            {exportPopupState.isOpen && exportPopupState.type === 'success' && (
-                <ExportSuccessPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
-
-            {exportPopupState.isOpen && exportPopupState.type === 'failed' && (
-                <ExportFailedPopup
-                    isOpen={true}
-                    operation={exportPopupState.operation}
-                    onClose={() => setExportPopupState({ isOpen: false, type: null, operation: null, progress: 0 })}
-                />
-            )}
+            <ExportProgressAlert
+                isOpen={exportPopupState === 'progress'}
+                onClose={() => { }}
+                progress={exportProgress}
+                exportType={exportType}
+                color="#d23b42"
+                progressColor="#d23b42"
+            />
+            <ExportSuccessAlert
+                isOpen={exportPopupState === 'success'}
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+                color="#d23b42"
+            />
+            <ExportFailedAlert
+                isOpen={exportPopupState === 'failed'}
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+                color="#d23b42"
+            />
             {/* END: NEW EXPORT POPUP RENDERING */}
         </div>
     );

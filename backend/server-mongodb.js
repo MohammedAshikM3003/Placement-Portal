@@ -430,6 +430,17 @@ try {
 }
 
 // -------------------------------------------------
+// Marksheet OCR APIs
+// -------------------------------------------------
+try {
+    const marksheetOcrRoutes = require('./routes/marksheetOcr');
+    app.use('/api/marksheet', marksheetOcrRoutes);
+    console.log('✅ Marksheet OCR routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load marksheet OCR routes:', error.message);
+}
+
+// -------------------------------------------------
 // Ollama AI Status API
 // -------------------------------------------------
 app.get('/api/ai/status', async (req, res) => {

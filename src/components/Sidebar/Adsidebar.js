@@ -6,6 +6,7 @@ import gridfsService from '../../services/gridfsService';
 import styles from './Adsidebar.module.css';
 import AdDashboard from "../../assets/addashboardicon.svg";
 import ManageStudents from "../../assets/adstuddbicon.svg";
+import AdTrainingicon from "../../assets/Ad_Trainingicon.svg";
 import AdminCompanyProfileicon from "../../assets/adcompanyprofileicon.svg";
 import AdminCompanydriveicon from "../../assets/adcompanydriveicon.svg";
 import Adcertificate from "../../assets/adeligiblestudicon.svg";
@@ -20,6 +21,7 @@ import AdminProfileGraduationcap from "../../assets/Admincapsidebar.svg";
 const sidebarItems = [
   { icon: AdDashboard, text: 'Dashboard', view: 'admin-dashboard' },
   { icon: ManageStudents, text: 'Student Database', view: 'admin-student-database' },
+  { icon: AdTrainingicon, text: 'Placement Training', view: 'admin-placement-training' },
   { icon: AdminCompanyProfileicon, text: 'Company Profile', view: 'admin-company-profile' },
   { icon: AdminCompanydriveicon, text: 'Company Drive', view: 'admin-company-drive' },
   { icon: Adcertificate, text: 'Eligible Students', view: 'admin-student-application' },
@@ -266,6 +268,12 @@ const Adsidebar = ({ isOpen, onLogout }) => {
   const isEligibleStudentsPage = window.location.pathname === '/admin-eligible-students';
   // Check if current path is any report analysis page
   const isReportAnalysisPage = window.location.pathname.startsWith('/admin-report-analysis-');
+  // Check if current path is any training-related page
+  const isTrainingPage = window.location.pathname === '/admin-add-training' ||
+                         window.location.pathname === '/admin-schedule-training' ||
+                         window.location.pathname === '/admin-schedule-training-batch' ||
+                         window.location.pathname === '/admin-attendance-stdinfo' ||
+                         window.location.pathname === '/admin-train-attendance-stuinfo';
   
   const handleLogoutClick = async () => {
     // Clear admin image cache
@@ -332,6 +340,11 @@ const Adsidebar = ({ isOpen, onLogout }) => {
                 // Special handling for Student Database - highlight when viewing student profile or certificates
                 if (item.view === 'admin-student-database') {
                   const shouldHighlight = isActive || isAdminProfilePage || isCertificateViewPage;
+                  return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
+                }
+                // Special handling for Placement Training - highlight on all training-related pages
+                if (item.view === 'admin-placement-training') {
+                  const shouldHighlight = isActive || isTrainingPage;
                   return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
                 }
                 // Special handling for Add Branch - highlight on main, form, and manage coordinators pages

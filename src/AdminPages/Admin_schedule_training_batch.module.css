@@ -1,0 +1,471 @@
+.ad-stb-page {
+  min-height: 100vh;
+  background: #f4f7fb;
+}
+
+.ad-stb-content {
+  padding: 18px 22px;
+  margin-left: 290px;
+  position: relative;
+  top: 64px;
+}
+
+.ad-stb-training-pill {
+  margin: 0 auto 16px auto;
+  background: #3a9b4a;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 6px 42px;
+  display: inline-block;
+}
+
+.ad-stb-top-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ad-stb-filters-card {
+  background: #e6e6e6; /* slightly darker grey so the card is clearly visible */
+  border-radius: 18px;
+  padding: 18px 22px;
+}
+
+.ad-stb-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 12px;
+  column-gap: 12px;
+}
+
+.ad-stb-input {
+  height: 45px;
+  border-radius: 12px;
+  border: 2px solid #cccccc;
+  padding: 0px 12px 0 12px; /* extra top space for floating label */
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ad-stb-input:hover,
+.ad-stb-input:focus {
+  border-color: #4ea24e;
+}
+
+.ad-stb-search-group,
+.ad-stb-field {
+  position: relative;
+  width: 100%;
+}
+
+.ad-stb-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #8a8a8a;
+  pointer-events: none;
+  transition: all 0.18s ease;
+}
+
+.ad-stb-input:focus + .ad-stb-label,
+.ad-stb-input:not(:placeholder-shown) + .ad-stb-label {
+  top: -18px;
+  transform: translateY(0);
+  font-size: 13px;
+  color: #4ea24e;
+}
+
+.ad-stb-batch-card {
+  background: #28b5c9; /* outer teal card like first image */
+  color: #fff;
+  border-radius: 18px;
+  padding: 12px 16px 16px 16px;
+  min-width: 230px;
+}
+
+.ad-stb-batch-header {
+  font-weight: 800;
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.ad-stb-batch-inner {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  color: #000;
+  height:140px;
+}
+
+.ad-stb-batch-body {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ad-stb-batch-body span {
+  opacity: 0.9;
+}
+
+.ad-stb-table-card {
+  margin-top: 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 20px 14px 20px;
+  min-height: 325px;
+}
+
+.ad-stb-table-wrapper {
+  margin-top: 4px;
+  max-height: 260px; /* controls visible rows before scroll - show 5 rows */
+  overflow-y: auto;
+  border-radius: 12px;
+}
+
+/* Custom vertical scrollbar to match design (WebKit/Chromium) */
+.ad-stb-table-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.ad-stb-table-wrapper::-webkit-scrollbar-track {
+  background: #e4f5ea;
+  border-radius: 999px;
+}
+
+.ad-stb-table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #35c96d, #1f9a4a);
+  border-radius: 999px;
+}
+
+/* Firefox scrollbar color */
+.ad-stb-table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #1f9a4a #e4f5ea;
+}
+
+.ad-stb-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ad-stb-table-title {
+  font-weight: 800;
+  font-size: 18px;
+  text-align: justify;
+}
+
+.ad-stb-export-wrapper {
+  position: relative;
+}
+
+.ad-stb-export-menu {
+  position: absolute;
+  right: 0;
+  margin-top: 6px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+  min-width: 160px;
+  z-index: 10;
+}
+
+.ad-stb-export-item {
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ad-stb-export-item:hover {
+  background: #f4f7fb;
+}
+
+.ad-stb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  table-layout: fixed;
+  color:#000;
+  font-weight: 500;
+}
+
+.ad-stb-table thead th,
+.ad-stb-table tbody td {
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.ad-stb-table thead th {
+  text-align: left;
+  background: #ffffff;
+  font-weight: 600;
+  color:#606060;
+  position: sticky;
+  top: 0px;
+}
+
+.ad-stb-table tbody td {
+  border-top: 1px solid #e5e7eb;
+  height: 44px;           /* lock cell height so rows don't shrink/grow */
+  vertical-align: middle; /* keep content centered vertically */
+}
+
+.ad-stb-table tbody tr:hover td {
+  background-color: #f5f5f5;
+}
+
+.ad-stb-table tbody tr {
+  cursor: pointer;
+}
+
+.ad-stb-row-selected td {
+  background-color: #f0faf4;
+}
+
+/* Explicit column alignment + widths so headers line up with rows */
+.ad-stb-table thead th:nth-child(1),
+.ad-stb-table tbody td:nth-child(1) {
+  text-align: center;
+  width: 5%;   /* S.No */
+}
+
+.ad-stb-table thead th:nth-child(2),
+.ad-stb-table tbody td:nth-child(2) {
+  text-align: center;
+  width: 20%;  /* Student Name */
+}
+
+.ad-stb-table thead th:nth-child(3),
+.ad-stb-table tbody td:nth-child(3) {
+  text-align: center;
+  width: 18%;  /* Register Number */
+}
+
+.ad-stb-table thead th:nth-child(4),
+.ad-stb-table tbody td:nth-child(4) {
+  text-align: center;
+  width: 10%;  /* Department */
+}
+
+.ad-stb-table thead th:nth-child(5),
+.ad-stb-table tbody td:nth-child(5) {
+  text-align: center;
+  width: 7%;   /* Year */
+}
+
+.ad-stb-table thead th:nth-child(6),
+.ad-stb-table tbody td:nth-child(6) {
+  text-align: center;
+  width: 7%;   /* Section */
+}
+
+.ad-stb-table thead th:nth-child(7),
+.ad-stb-table tbody td:nth-child(7) {
+  text-align: center;
+  width: 8%;   /* CGPA */
+}
+
+.ad-stb-table thead th:nth-child(8),
+.ad-stb-table tbody td:nth-child(8) {
+  text-align: center;
+  width: 15%;  /* Mobile */
+}
+
+.ad-stb-table thead th:nth-child(9),
+.ad-stb-table tbody td:nth-child(9) {
+  text-align: center;
+  width: 10%;  /* Action */
+}
+
+.ad-stb-action-cell {
+  text-align: center;
+  font-weight: 700;
+}
+
+.ad-stb-action-tick-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  background: #f9f9f9;
+  color: transparent;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ad-stb-action-tick-box--selected {
+  color: #27b46d;
+  border-color: #27b46d;
+}
+
+.ad-stb-inner-actions-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ad-stb-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.ad-stb-btn-secondary {
+  border-radius: 8px;
+  background: #606060;
+  color: #ffffff;
+  border: 1px solid #d4d4d4;
+  padding: 6px 18px;
+  font-size: 15px;
+  position: relative;
+  left: 930px;
+  width: 115px;
+  height: 35px;
+}
+
+.ad-stb-btn-light {
+  border-radius: 8px;
+  background: #606060;
+  color: #fff;
+  border: none;
+  padding: 6px 18px;
+  font-size: 15px;
+  height: 35px;
+  width: 115px;;
+}
+
+.ad-stb-btn-primary {
+  border-radius: 8px;
+  background:  #3a9b4a;
+  color: #fff;
+  border: none;
+  padding: 6px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  height: 35px;
+  width: 115px;
+}
+
+.ad-stb-footer-actions {
+  margin-top: 9px;
+  padding: 10px 0 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ad-stb-footer-save {
+  border-radius: 8px;
+  background: #3a9b4a;
+  color: #fff;
+  border: none;
+  padding: 6px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  height: 35px;
+  width: 115px;;
+}
+
+/* --------------------------------------------------
+   Responsive layout adjustments for tablet/mobile.
+   Sidebar toggle controlled by navbar; only page
+   spacing and grid behavior change here.           
+   -------------------------------------------------- */
+
+/* tablet and small desktops */
+@media (max-width: 1024px) {
+  .ad-stb-content {
+    margin-left: 0;
+    padding: 18px 16px;
+  }
+
+  .ad-stb-top-row {
+    display: block;
+  }
+
+  .ad-stb-filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ad-stb-batch-card {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .ad-stb-btn-secondary,
+  .ad-stb-btn-light,
+  .ad-stb-btn-primary,
+  .ad-stb-footer-save {
+    width: 100%;
+    position: static;
+    left: auto;
+    margin-top: 8px;
+  }
+}
+
+/* mobile phones */
+@media (max-width: 768px) {
+  .ad-stb-content {
+    padding: 12px 10px;
+  }
+
+  .ad-stb-filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-stb-top-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ad-stb-batch-card {
+    padding: 12px 14px 16px 14px;
+  }
+
+  .ad-stb-table-card {
+    padding: 12px 14px 12px 14px;
+  }
+
+  .ad-stb-actions-right,
+  .ad-stb-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  /* mobile-only vertical scrollbar on page content */
+  .ad-stb-content {
+    overflow-y: auto;
+    scrollbar-color: #4caf50 transparent;
+  }
+
+  .ad-stb-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .ad-stb-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .ad-stb-content::-webkit-scrollbar-thumb {
+    background: #4caf50;
+    border-radius: 8px;
+  }
+}

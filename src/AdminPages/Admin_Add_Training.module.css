@@ -1,0 +1,198 @@
+body, html {
+  background: #f7f7f7;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.Admin-aat-outer-wrapper {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background: #f7f7f7;
+}
+
+.Admin-aat-layout {
+  display: flex;
+  flex: 1 1 auto;
+  height: calc(100vh - 64px);
+  min-height: 0;
+}
+
+.Admin-aat-main-wrapper {
+
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 32px 24px 32px 24px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin-left:295px;
+  margin-top:55px;
+}
+
+.Admin-aat-main-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.Admin-aat-main-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.Admin-aat-main-wrapper::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 8px;
+}
+
+.Admin-aat-main-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #388e3c;
+}
+
+.Admin-aat-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  margin-bottom: 13px;
+  padding: 0px 0px 24px 32px;
+  min-width: 0;
+}
+
+.Admin-aat-card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 28px;
+  position: relative;
+  text-align:justify;
+}
+.Admin-aat-card-title:after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 5px;
+  background: #4caf50;
+  border-radius: 3px;
+  margin-top: 8px;
+}
+
+.Admin-aat-card-content {
+  margin-bottom: 0;
+}
+
+.Admin-aat-form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 0;
+  margin-right:45px;
+}
+
+.Admin-aat-form-row.Admin-aat-dynamic-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 50px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.Admin-aat-form-row.Admin-aat-dynamic-row.Admin-aat-button-row {
+  margin-top: 20px;
+}
+
+.Admin-aat-form-row.Admin-aat-dynamic-row .Admin-aat-add-btn {
+  justify-content: center;
+}
+
+.Admin-aat-form-group {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.Admin-aat-form-group label {
+  font-size: 15px;
+  color: #222;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.Admin-aat-form-group input,
+.Admin-aat-form-group select {
+  width: 322.4px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1.5px solid #c2e0c6;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  background: #f9f9f9;
+  transition: border-color 0.2s;
+}
+.Admin-aat-form-group input:focus,
+.Admin-aat-form-group select:focus {
+  border-color: #4caf50;
+}
+.Admin-aat-form-group input[readonly],
+.Admin-aat-form-group select[disabled] {
+  background: #f4f4f4;
+  color: #888;
+}
+
+.Admin-aat-add-btn {
+  background: #4caf50;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+  height:45px;
+  width:320px;
+}
+.Admin-aat-add-btn:hover {
+  background: #388e3c;
+}
+.Admin-aat-plus {
+  font-size: 26px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.Admin-aat-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+}
+.Admin-aat-discard-btn {
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 38px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.Admin-aat-save-btn {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 38px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.Admin-aat-save-btn:hover {
+  background: #388e3c;
+}
+.Admin-aat-discard-btn:hover {
+  background: #222;
+}

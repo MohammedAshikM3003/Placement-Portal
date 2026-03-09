@@ -115,15 +115,18 @@
     padding: 12px 25px;
     color: #000;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
     gap: 15px;
     border-left: 4px solid transparent;
-    margin: 3px 0;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    margin: 10px 0;
     background: none;
-    border: none;
     width: 100%;
     text-align: left;
     position: relative;
+    box-sizing: border-box;
 }
 
 .navText {
@@ -131,58 +134,41 @@
 }
 
 .navItem:hover {
-    background: #f8f8f8;
+    background: #fef5f6;
+    border-left-color: #d23b42;
     color: #d23b42;
-    font-weight: 600;
-}
-
-.navItem:hover::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: #d23b42;
 }
 
 .navItemSelected {
-    background: #f8f8f8;
+    background: #fef5f6;
+    border-left-color: #d23b42;
     color: #d23b42;
-    font-weight: 700;
-}
-
-.navItemSelected::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: #d23b42;
+    font-weight: 600;
 }
 
 .navIcon {
     width: 20px;
     height: 20px;
-    transition: transform 0.2s ease;
+    transition: filter 0.2s, transform 0.2s;
     filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
     pointer-events: none;
+    flex-shrink: 0;
 }
 
 .navItem:hover .navIcon,
 .navItemSelected .navIcon {
-    transform: scale(1.1);
     filter: brightness(0) saturate(100%) invert(24%) sepia(98%) saturate(2522%) hue-rotate(340deg) brightness(85%) contrast(107%);
+    transform: scale(1.1);
 }
 
 .navDivider {
     height: 1px;
     width: 85%;
     background: #e0e0e0;
-    margin: 4px auto;
+    margin: 8px auto;
     border-top: 1px dotted #ccc;
     flex-shrink: 0;
+    margin-top: 12px;
 }
 
 .logoutBtn {

@@ -1,0 +1,490 @@
+.ad-tr-page {
+  min-height: 100vh;
+  background: #f4f7fb;
+  overflow-y: auto;
+}
+
+/* Green scrollbar — WebKit/Chromium */
+.ad-tr-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ad-tr-page::-webkit-scrollbar-track {
+  background: #e4f5ea;
+  border-radius: 999px;
+}
+
+.ad-tr-page::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #35c96d, #1f9a4a);
+  border-radius: 999px;
+}
+
+.ad-tr-page::-webkit-scrollbar-thumb:hover {
+  background: #1a7a3a;
+}
+
+/* Firefox */
+.ad-tr-page {
+  scrollbar-width: thin;
+  scrollbar-color: #27b46d #e4f5ea;
+}
+
+.ad-tr-content {
+  padding: 18px 22px;
+  margin-left: 290px;
+  position: relative;
+  top: 45px;
+}
+
+.ad-tr-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ad-tr-breadcrumb {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-tr-breadcrumb-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ad-tr-breadcrumb-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a9b4a;
+}
+
+.ad-tr-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.3fr;
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.ad-tr-action-card {
+  border: 2px solid #cccccc;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 27px;
+  cursor: pointer;
+  margin-top:2px;
+  height: 260.8px;
+  width:200px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+.ad-tr-action-card:hover {
+   border: 2px solid rgb(2, 171, 41);
+    transform: translateY(-2px);
+}
+.ad-tr-action-icon {
+  position: relative;
+  left: 40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  /* background: #eaf7ee;
+  color: #2f9a45; */
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.ad-tr-action-icon img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.ad-tr-action-title {
+  font-weight: 700;
+  font-size: 24px;
+  color: #000000;
+  margin-top: 0px;
+}
+
+.ad-tr-action-sub {
+  font-size: 11px;
+  color: #8e8e8e;
+  position: relative;
+  bottom:17px;
+  font-family: poppins;
+  margin-top: 5px;
+}
+
+.ad-tr-summary-card {
+  border-radius: 14px;
+  background: #d6efe0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-right: 0px;
+  width:460px;
+}
+
+.ad-tr-summary-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.ad-tr-select {
+  height: 34px;
+  border-radius: 12px;
+  border: 1.5px solid #b7ddc5;
+  padding: 0 10px;
+  background: #ffffff;
+  font-size: 12px;
+}
+.ad-tr-select:hover,
+.ad-tr-select:focus {
+  border-color: #4EA24E;
+  outline: none;
+}
+
+
+
+
+.ad-tr-apply-btn {
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: #1f8aa6;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ad-tr-summary-body {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  column-gap: 24px;
+  height: 170px;
+}
+
+.ad-tr-summary-line {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+  justify-content: start;
+  align-items: center;
+  font-size: 12px;
+  color: #1f2937;
+  padding: 4px 0;
+}
+
+.ad-tr-summary-text {
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+  margin-top: -65px;
+}
+
+.ad-tr-summary-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 8px;
+}
+
+.ad-tr-pie {
+  width: 200px;
+  height: 200px;
+  position: relative;
+    bottom: 35px;
+}
+
+.ad-tr-pie-label-present,
+.ad-tr-pie-label-absent {
+  fill: #ffffff;
+  font-size: 8px;
+}
+
+.ad-tr-pie-value-present,
+.ad-tr-pie-value-absent {
+  fill: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.ad-tr-summary-legend {
+  font-size: 13px;
+  color: #111827;
+  position: relative;
+    bottom: 67px;
+}
+
+.ad-tr-legend-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ad-tr-legend-present {
+  color: #17c491;
+}
+
+.ad-tr-legend-absent {
+  color: #ff6b6b;
+}
+
+.ad-tr-section-header {
+  background: #3a9b4a;
+  color: #fff;
+  font-weight: 800;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px 0 14px;
+  font-size: 22px;
+}
+
+.ad-tr-training-grid {
+  border: 1px solid #e6eef6;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 210px 210px;
+  gap: 16px;
+  min-height: 255px;
+}
+
+.ad-tr-training-card {
+  border-radius: 14px;
+  background: #66c98a;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  /* position: relative;
+  top: 30px; */
+}
+
+.ad-tr-training-card-alt {
+  border-radius: 14px;
+  background: #6cc6d4;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  /* position: relative;
+  top: 30px; */
+}
+
+.ad-tr-training-logo,
+.ad-tr-training-logo-alt {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  color: #2f9a45;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 24px;
+  margin-bottom: auto;
+  position: relative;
+    left: 52px;
+    top: 29px;
+}
+
+.ad-tr-training-logo-alt {
+  color: #1f8aa6;
+}
+
+.ad-tr-training-name {
+  font-weight: 800;
+  font-size: large;
+    font-family: poppins;
+}
+
+.ad-tr-training-meta {
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+/* ── Desktop: > 1200px ── default styles above apply ── */
+
+/* ── Tablet: 769px – 1200px ── */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .ad-tr-content {
+    margin-left: 290px;
+    padding: 14px 16px;
+  }
+
+  .ad-tr-top-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .ad-tr-action-card {
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+    gap: 16px;
+  }
+
+  .ad-tr-action-icon {
+    left: 0;
+    width: 60px;
+    height: 60px;
+  }
+
+  .ad-tr-action-icon img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .ad-tr-action-title {
+    font-size: 18px;
+  }
+
+  .ad-tr-summary-card {
+    width: 100%;
+    grid-column: 1 / -1;
+  }
+
+  .ad-tr-summary-body {
+    height: auto;
+  }
+
+  .ad-tr-training-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Mobile: ≤ 768px ── */
+@media (max-width: 768px) {
+  .ad-tr-content {
+    margin-left: 0;           /* sidebar overlays, content uses full width */
+    padding: 12px 14px;
+    top: 64px;   
+    height: 98vh;             /* below navbar */
+  }
+
+  .ad-tr-top-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ad-tr-action-card {
+    width: 400px;
+    height: auto;
+    min-height: 200px;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-left: 30px;
+  }
+
+  .ad-tr-action-icon {
+    left: 0;
+    width: 52px;
+    height: 52px;
+  }
+
+  .ad-tr-action-icon img {
+    width: 52px;
+    height: 52px;
+    position: relative;
+    left: 133px;
+  }
+
+  .ad-tr-action-title {
+    font-size: 21px;
+  }
+
+  .ad-tr-action-sub {
+    font-size: 16px;
+    bottom: 0;
+  }
+
+  .ad-tr-summary-card {
+    width: 430px;
+  }
+
+  .ad-tr-summary-filters {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .ad-tr-apply-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .ad-tr-summary-body {
+    grid-template-columns: 1fr;
+    height: 155px;
+    gap: 12px;
+  }
+
+  .ad-tr-summary-text {
+    margin-top: 0;
+  }
+
+  .ad-tr-summary-chart {
+    align-items: center;
+    position: relative;
+    bottom: 170px;
+    left: 95px;
+  }
+
+  .ad-tr-pie {
+    width: 150px;
+    height: 150px;
+    bottom: 0;
+  }
+
+  .ad-tr-summary-legend {
+    bottom: 20px;
+  }
+
+  .ad-tr-training-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ad-tr-training-logo,
+  .ad-tr-training-logo-alt {
+    left: 112px;
+    top: 0;
+    margin-bottom: 12px;
+  }
+
+  .ad-tr-section-header {
+    font-size: 17px;
+    padding: 8px;
+  }
+  .ad-tr-training-card{
+    width: 325px;
+    margin-left: 30px;
+    
+  }
+  .ad-tr-training-card-alt{
+    width: 325px;
+    margin-left: 30px;
+  }
+}

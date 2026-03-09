@@ -10,6 +10,7 @@ import mongoDBService from '../../services/mongoDBService.jsx';
 // Assets
 import CoDashboard from '../../assets/CoDashboard.svg';
 import ManageStudents from "../../assets/ManageStudents.svg";
+import CooTrainingicon from "../../assets/Coo_Trainingicon.svg";
 import AdminCompsnyProfileicon from "../../assets/CompanyProfileicon.svg";
 import AdminCompanydriveicon from "../../assets/CompanyDriveicon.svg";
 import Coordcertificate from "../../assets/CertificateVerrificationicon.svg";
@@ -108,6 +109,7 @@ const readCoordinatorDataFromStorage = () => {
 const sidebarItems = [
   { icon: CoDashboard, text: 'Dashboard', view: 'dashboard' },
   { icon: ManageStudents, text: 'Manage Students', view: 'manage-students' },
+  { icon: CooTrainingicon, text: 'Placement Training', view: 'training' },
   { icon: AdminCompsnyProfileicon, text: 'Company Profile', view: 'company-profile' },
   { icon: AdminCompanydriveicon, text: 'Company Drive', view: 'company-drive' },
   { icon: Coordcertificate, text: 'Certificate Verification', view: 'certificate-verification' },

@@ -125,10 +125,18 @@
   color: #222;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
   gap: 15px;
   border-left: 4px solid transparent;
-  margin: 3px 0;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  margin: 10px 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .adsidebar .ad-nav-text {
@@ -140,32 +148,27 @@
 
 /* --- SELECTED ITEM STYLES (Clicked) --- */
 .adsidebar .ad-nav-item.selected {
-  background: #f8f8f8;
-  border-left: 4px solid #4ea24e;
+  background: #f0f8f0;
+  border-left-color: #4ea24e;
   color: #4ea24e;
   font-weight: 600; /* Bold text for selected item */
 }
 
 .adsidebar .ad-nav-item.selected img {
-filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
-}
-.adsidebar .ad-nav-item.selected img {
-  /* Remove the filter line */
-  fill: #eef0ee; /* Only works if 'img' is an SVG */
+  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
 }
 
 
 /* --- HOVER ITEM STYLES (Mouse over) --- */
 .adsidebar .ad-nav-item:hover:not(.selected) {
-  background: #f8f8f8;
-  border-left: 4px solid #4ea24e;
+  background: #f0f8f0;
+  border-left-color: #4ea24e;
   color: #4ea24e;
   /* No font-weight change on hover */
 }
 
 .adsidebar .ad-nav-item:hover:not(.selected) img {
   filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
-
 }
 /* --- END OF FIX --- */
 
@@ -173,16 +176,23 @@ filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-
 .adsidebar .ad-nav-item img {
   width: 28px;
   height: 28px;
-  transition: transform 0.2s;
+  transition: filter 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-nav-item:hover img,
+.adsidebar .ad-nav-item.selected img {
+  transform: scale(1.1);
 }
 
 .adsidebar .ad-nav-divider {
   height: 1px;
   width: 85%;
   background: #e0e0e0;
-  margin: 4px auto;
+  margin: 8px auto;
   border-top: 1px dotted #ccc;
   flex-shrink: 0;
+  margin-top: 12px;
 }
 
 .adsidebar .ad-logout-btn {

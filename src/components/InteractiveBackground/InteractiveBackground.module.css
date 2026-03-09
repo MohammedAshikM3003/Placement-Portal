@@ -1,0 +1,243 @@
+.container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
+}
+
+.canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Welcome text overlay */
+.welcomeOverlay {
+    position: absolute;
+    top: 50%;
+    left: 43%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    text-align: center;
+    gap: 6px;
+}
+
+.welcomeLine1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: fadeSlideIn 0.8s ease-out both;
+}
+
+.welcomeTitle {
+    font-family: 'Poppins', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 1px;
+    line-height: 1.1;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeSlideIn 0.8s ease-out 0.15s both;
+}
+
+.welcomeDesc {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    animation: fadeSlideIn 0.8s ease-out 0.3s both;
+}
+
+.welcomeFooter {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+    max-width: 340px;
+    margin-top: 6px;
+    animation: fadeSlideIn 0.8s ease-out 0.4s both;
+}
+
+/* Testimonial card */
+.testimonialCard {
+    margin-top: 20px;
+    position: relative;
+    animation: testimonialSlideIn 0.5s ease-out both;
+    pointer-events: none;
+}
+
+.testimonialCardInner {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    max-width: 380px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.testimonialContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.testimonialText {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.55;
+    margin: 0;
+    font-style: italic;
+}
+
+.testimonialProfile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+    padding-top: 2px;
+}
+
+.testimonialAvatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.testimonialName {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.testimonialDetails {
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.3px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.testimonialRole {
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(74, 222, 128, 0.9);
+    letter-spacing: 0.3px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+@keyframes testimonialSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Click ripple effect */
+.ripple {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 3;
+    animation: rippleExpand 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes rippleExpand {
+    0% {
+        width: 10px;
+        height: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        opacity: 1;
+    }
+    50% {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    100% {
+        width: 180px;
+        height: 180px;
+        border: 2px solid rgba(255, 255, 255, 0);
+        opacity: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .welcomeTitle {
+        font-size: 26px;
+    }
+    .welcomeLine1 {
+        font-size: 13px;
+    }
+    .testimonialCardInner {
+        max-width: 300px;
+        padding: 14px 16px;
+    }
+    .testimonialText {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        display: none;
+    }
+}

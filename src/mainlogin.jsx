@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 import {
-  FaUserAlt,
-  FaLock,
-  FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import loginImage from "./assets/student1.png";
-import mainloginicon from "./assets/mainloginicon.png";
+
 import Navbar from "./components/Navbar/LandingNavbar.js";
 import { useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner.js';
@@ -18,6 +14,8 @@ import { API_BASE_URL } from './utils/apiConfig';
 import { fetchCollegeImages } from './services/collegeImagesService';
 import styles from './mainlogin.module.css';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
+import InteractiveBackground from './components/InteractiveBackground/InteractiveBackground.jsx';
+import loginDripsImg from './assets/logindrips.svg';
 
 // Internal Popup Component using Module Styles
 const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
@@ -389,31 +387,26 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         <Navbar />
         
         <div className={styles.mainLayout}>
-          <div className={styles.leftImageContainer}>
-            <img
-              src={loginImage}
-              alt="Login Visual"
-              className={styles.loginVisual}
-            />
-          </div>
-
-          <div className={`${styles.loginBox} ${styles.glowOnHover}`}>
-            <div className={styles.formWrapper}>
-              <div className={styles.logoContainer}>
-                <img
-                  src={mainloginicon}
-                  alt="Form Logo"
-                  className={styles.logoImage}
-                />
-              </div>
+          <img src={loginDripsImg} alt="" className={styles.dripDecoration} />
+          {/* Large shadow frame rectangle */}
+          <div className={styles.shadowFrame}>
+            {/* Left side - Interactive Animation */}
+            <div className={styles.leftSide}>
+              <InteractiveBackground />
+            </div>
+            
+            {/* Right side - Login Form */}
+            <div className={styles.rightSide}>
+              <h1 className={styles.loginTitle}>LOGIN</h1>
               
               <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
                 <div className={styles.field}>
-                  <label className={styles.fieldLabel}>
-                    Register Number
-                  </label>
+                  <label className={styles.fieldLabel}>Register Number</label>
                   <div className={styles.inputWrapper}>
-                    <FaUserAlt className={styles.inputIcon} />
+                    {/* User icon */}
+                    <div className={styles.inputIconWrap}>
+                      <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z"></path></svg>
+                    </div>
                     <input
                       type="text"
                       placeholder="Enter your Register Number"
@@ -426,12 +419,13 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                   </div>
                 </div>
                 
-                <div className={styles.field} style={{ marginBottom: "28px" }}>
-                  <label className={styles.fieldLabel}>
-                    Password
-                  </label>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>Password</label>
                   <div className={styles.inputWrapper}>
-                    <FaLock className={styles.inputIcon} />
+                    {/* Lock icon */}
+                    <div className={styles.inputIconWrap}>
+                      <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"></path></svg>
+                    </div>
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
@@ -446,15 +440,18 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       onClick={() => setShowPassword(!showPassword)}
                       className={styles.eyeButton}
                     >
-                      {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                      {showPassword ? (
+                        <FaEyeSlash size={16} color="currentColor" />
+                      ) : (
+                        <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"></path></svg>
+                      )}
                     </button>
                   </div>
                 </div>
                 
                 {error && (
                   <div key={`error-${forceRender}`} role="alert" className={styles.errorMessage}>
-                    <span style={{ fontSize: "16px", marginTop: "1px", flexShrink: 0 }}>⚠️</span>
-                    <span style={{ flex: 1, wordBreak: "break-word" }}>
+                    <span style={{ wordBreak: "break-word" }}>
                       {error}
                       {/Sign up/i.test(error) && (
                         <> {" "}
@@ -477,13 +474,14 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
               </form>
               
               <p className={styles.signupText}>
-                Don't have an account?{" "}
+                <span>Don't have an Account ?</span>{" "}
+                <span> </span>
                 <a
                   href="#!"
                   onClick={onNavigateToSignUp}
                   className={styles.link}
                 >
-                  Sign up
+                  Sign Up
                 </a>
               </p>
             </div>

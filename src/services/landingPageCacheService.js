@@ -19,7 +19,7 @@ const CACHE_KEYS = {
 const CACHE_DURATION = {
   PLACED_STUDENTS: 10 * 60 * 1000,  // 10 minutes
   COMPANY_DRIVES: 10 * 60 * 1000,   // 10 minutes
-  COLLEGE_IMAGES: 5 * 60 * 1000,    // 5 minutes (reduced for faster updates)
+  COLLEGE_IMAGES: 30 * 60 * 1000,   // 30 minutes (admin updates trigger explicit cache clear)
 };
 
 // In-memory cache for instant access (even faster than sessionStorage)
@@ -334,6 +334,19 @@ export const clearLandingCache = () => {
   });
 };
 
+/**
+ * Synchronously return whatever landing data is already in cache.
+ * Use this to hydrate component state on mount so users never see
+ * skeletons when data was already fetched in the same session.
+ */
+export const getCachedLandingData = () => {
+  return {
+    placedStudents: getCached(CACHE_KEYS.PLACED_STUDENTS) || null,
+    companyDrives: getCached(CACHE_KEYS.COMPANY_DRIVES) || null,
+    collegeImages: getCached(CACHE_KEYS.COLLEGE_IMAGES) || null,
+  };
+};
+
 const landingPageCacheService = {
   fetchAllLandingData,
   fetchPlacedStudents,
@@ -342,6 +355,7 @@ const landingPageCacheService = {
   warmUpBackend,
   clearLandingCache,
   clearCollegeImagesCache,
+  getCachedLandingData,
 };
 
 export default landingPageCacheService;

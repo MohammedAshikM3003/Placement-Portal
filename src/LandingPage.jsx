@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
-import Navbar from "../src/components/Navbar/LandingNavbar.js";
-import { fetchAllLandingData, clearCollegeImagesCache, fetchCollegeImagesPublic } from './services/landingPageCacheService';
+import navbarStyles from './components/Navbar/LandingNavbar.module.css';
+import { fetchAllLandingData, clearCollegeImagesCache, fetchCollegeImagesPublic, getCachedLandingData } from './services/landingPageCacheService';
 import { PlacedStudentsSkeleton, DrivesSkeleton, BannerSkeleton, FooterBannerSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 
@@ -13,6 +14,13 @@ import Infosis from './assets/LandingInfosys.svg';
 import Zoho from './assets/LandingZoho.svg';
 import WiproLogo from './assets/LandingWipro.svg';
 import TCS from './assets/LandingTcs.svg';
+
+// --- Navbar Assets ---
+import Adminicon from "./assets/Adminicon.png";
+import Home from "./assets/landingHomeicon.svg";
+import About from "./assets/landingabouticon.svg";
+import Drives from "./assets/landingDrivesicon.svg";
+import Contact from "./assets/landingContacticon.svg";
 
 // --- Assets Footer ---
 import PhoneIcon from './assets/Phoneicon.svg';
@@ -26,6 +34,130 @@ import Twitter from './assets/Twittericon.svg';
 import TwitterHover from './assets/Twittericon-hover.svg';
 
 // --- College images are now loaded from the database (GridFS) ---
+
+// Navbar Component (integrated from LandingNavbar.js)
+const Navbar = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  const openSidebar = () => {
+    setSidebarOpen(true);
+    updateActiveSection(); // Update active section when opening sidebar
+  };
+
+  const updateActiveSection = () => {
+    const hash = window.location.hash.replace('#', '').split('?')[0];
+    if (hash === 'about') {
+      setActiveSection('about');
+    } else if (hash === 'drive') {
+      setActiveSection('drive');
+    } else if (hash === 'contact') {
+      setActiveSection('contact');
+    } else {
+      setActiveSection('home'); // Default to home
+    }
+  };
+
+  useEffect(() => {
+    // Track current hash location
+    const handleHashChange = () => {
+      updateActiveSection();
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    updateActiveSection(); // Call on mount
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  return (
+    <header className={navbarStyles['main-header']}>
+      <div className={navbarStyles['header-logo']}>
+        <img src={Adminicon} alt="Placement Portal Icon" className={navbarStyles['header-logo-img']} />
+        <span>Placement Portal</span>
+      </div>
+      
+      <nav className={navbarStyles['header-nav']}>
+        {/* HashLinks for smooth scrolling */}
+        <HashLink smooth to="/#home">Home</HashLink>
+        <HashLink smooth to="/#about">About</HashLink>
+        <HashLink smooth to="/#drive">Drives</HashLink>
+        <HashLink smooth to="/#contact">Contact</HashLink>
+      </nav>
+      
+      {/* Mobile Hamburger Menu */}
+      <button 
+        className={navbarStyles['hamburger-menu']}
+        onClick={() => {
+          if (!sidebarOpen) {
+            openSidebar();
+          } else {
+            closeSidebar();
+          }
+        }}
+        aria-label="Toggle menu"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      {/* Mobile Sidebar */}
+      <div className={`${navbarStyles['mobile-sidebar']} ${sidebarOpen ? navbarStyles['sidebar-open'] : ''}`}>
+        <nav className={navbarStyles['sidebar-nav']}>
+          <HashLink 
+            smooth 
+            to="/#home" 
+            onClick={closeSidebar} 
+            className={`${navbarStyles['sidebar-link']} ${activeSection === 'home' ? navbarStyles['sidebar-link-active'] : ''}`}
+          >
+            <img src={Home} alt="Home" className={navbarStyles['sidebar-icon']} />
+            <span>Home</span>
+          </HashLink>
+          <HashLink 
+            smooth 
+            to="/#about" 
+            onClick={closeSidebar} 
+            className={`${navbarStyles['sidebar-link']} ${activeSection === 'about' ? navbarStyles['sidebar-link-active'] : ''}`}
+          >
+            <img src={About} alt="About" className={navbarStyles['sidebar-icon']} />
+            <span>About</span>
+          </HashLink>
+          <HashLink 
+            smooth 
+            to="/#drive" 
+            onClick={closeSidebar} 
+            className={`${navbarStyles['sidebar-link']} ${activeSection === 'drive' ? navbarStyles['sidebar-link-active'] : ''}`}
+          >
+            <img src={Drives} alt="Drives" className={navbarStyles['sidebar-icon']} />
+            <span>Drives</span>
+          </HashLink>
+          <HashLink 
+            smooth 
+            to="/#contact" 
+            onClick={closeSidebar} 
+            className={`${navbarStyles['sidebar-link']} ${activeSection === 'contact' ? navbarStyles['sidebar-link-active'] : ''}`}
+          >
+            <img src={Contact} alt="Contact" className={navbarStyles['sidebar-icon']} />
+            <span>Contact</span>
+          </HashLink>
+        </nav>
+        <Link to="/mainlogin" onClick={closeSidebar} className={navbarStyles['sidebar-login-btn']}>Login</Link>
+      </div>
+
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className={navbarStyles['sidebar-overlay']}
+          onClick={closeSidebar}
+        ></div>
+      )}
+    </header>
+  );
+};
 
 const HeroSection = ({ collegeImages, imagesLoading }) => {
   // College images loaded from database (GridFS) - no static fallbacks
@@ -147,17 +279,17 @@ const PlacementPage = ({ placedStudentsData }) => {
           <>
             <h2 className={styles['section-title']}>PLACEMENT HIGHLIGHTS</h2>
             <div className={styles['highlights-wrapper']}>
-              <div className={styles['highlight-card']}>
-                <p className={styles['value']}>100%</p>
-                <p className={styles['label']}>Placement rate</p>
+              <div className={styles['placement-highlight-card']} style={{backgroundColor:'#ffffff',backgroundImage:'linear-gradient(180deg, #DDEBFF 0%, #FFFFFF 100%)',borderRadius:'24px',border:'1px solid #BABABA',boxShadow:'0 10px 25px rgba(0,0,0,0.1)'}}>
+                <p className={styles['highlight-value']} style={{fontSize:'3.5rem',fontWeight:700,color:'#022893',margin:'0 0 10px 0',lineHeight:1}}>100%</p>
+                <p className={styles['highlight-label']} style={{fontSize:'1.2rem',color:'#022893',fontWeight:500,margin:0}}>Placement rate</p>
               </div>
-              <div className={`${styles['highlight-card']} ${styles['special']}`}>
-                <p className={styles['value']}>{stats.highestPackage}</p>
-                <p className={styles['label']}>Highest Package</p>
+              <div className={`${styles['placement-highlight-card']} ${styles['highlight-special']}`} style={{backgroundColor:'#ffffff',backgroundImage:'linear-gradient(180deg, #FFEDD5 0%, #FFFFFF 100%)',borderRadius:'24px',border:'1px solid #BABABA',boxShadow:'0 10px 25px rgba(0,0,0,0.1)'}}>
+                <p className={styles['highlight-value']} style={{fontSize:'3.5rem',fontWeight:700,color:'rgb(212, 116, 86)',margin:'0 0 10px 0',lineHeight:1}}>{stats.highestPackage}</p>
+                <p className={styles['highlight-label']} style={{fontSize:'1.2rem',color:'#D97706',fontWeight:500,margin:0}}>Highest Package</p>
               </div>
-              <div className={styles['highlight-card']}>
-                <p className={styles['value']}>{stats.averagePackage}</p>
-                <p className={styles['label']}>Average Package</p>
+              <div className={styles['placement-highlight-card']} style={{backgroundColor:'#ffffff',backgroundImage:'linear-gradient(180deg, #DDEBFF 0%, #FFFFFF 100%)',borderRadius:'24px',border:'1px solid #BABABA',boxShadow:'0 10px 25px rgba(0,0,0,0.1)'}}>
+                <p className={styles['highlight-value']} style={{fontSize:'3.5rem',fontWeight:700,color:'#022893',margin:'0 0 10px 0',lineHeight:1}}>{stats.averagePackage}</p>
+                <p className={styles['highlight-label']} style={{fontSize:'1.2rem',color:'#022893',fontWeight:500,margin:0}}>Average Package</p>
               </div>
             </div>
           </>
@@ -410,10 +542,14 @@ const KSRSection = ({ collegeImages, imagesLoading }) => {
 };
 
 const LandingPageContent = () => {
-  const [collegeImages, setCollegeImages] = useState(null);
-  const [placedStudentsData, setPlacedStudentsData] = useState(null);
-  const [companyDrivesData, setCompanyDrivesData] = useState(null);
-  const [imagesLoading, setImagesLoading] = useState(true);
+  // Hydrate from cache synchronously — avoids skeleton flash on re-mount
+  const cached = useMemo(() => getCachedLandingData(), []);
+  const hasCachedImages = !!cached.collegeImages;
+
+  const [collegeImages, setCollegeImages] = useState(cached.collegeImages);
+  const [placedStudentsData, setPlacedStudentsData] = useState(cached.placedStudents);
+  const [companyDrivesData, setCompanyDrivesData] = useState(cached.companyDrives);
+  const [imagesLoading, setImagesLoading] = useState(!hasCachedImages);
 
   useEffect(() => {
     // Change favicon to default (purple) for landing page
@@ -422,7 +558,8 @@ const LandingPageContent = () => {
     // Fetch ALL landing page data in PARALLEL with caching
     const loadAllData = async () => {
       try {
-        setImagesLoading(true);
+        // Only show skeleton if we have no cached data at all
+        if (!hasCachedImages) setImagesLoading(true);
         const { placedStudents, companyDrives, collegeImages: images } = await fetchAllLandingData();
         
         // Set all state at once - React batches these updates
