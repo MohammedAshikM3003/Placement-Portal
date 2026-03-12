@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import {
   FaEyeSlash,
@@ -61,6 +61,20 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const [showUserNotFoundPopup, setShowUserNotFoundPopup] = useState(false);
   const [isBlockedPopupOpen, setIsBlockedPopupOpen] = useState(false);
   const [blockedInfo, setBlockedInfo] = useState(null);
+  const mainLayoutRef = useRef(null);
+
+  const handleInputBlur = useCallback(() => {
+    // Wait for keyboard to close, then scroll mainLayout back to top to re-center card
+    setTimeout(() => {
+      // Only reset if no input inside the form is currently focused
+      if (!mainLayoutRef.current) return;
+      const active = document.activeElement;
+      const isStillInForm = mainLayoutRef.current.querySelector('form')?.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+      if (!isStillInForm) {
+        mainLayoutRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 350);
+  }, []);
 
   const handleInlineSignup = (e) => {
     e.preventDefault();
@@ -386,7 +400,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       <div className={styles.pageContainer}>
         <Navbar />
         
-        <div className={styles.mainLayout}>
+        <div className={styles.mainLayout} ref={mainLayoutRef}>
           <img src={loginDripsImg} alt="" className={styles.dripDecoration} />
           {/* Large shadow frame rectangle */}
           <div className={styles.shadowFrame}>
@@ -416,6 +430,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       className={styles.inputField}
                       autoComplete="off"
                       onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
+                      onBlur={handleInputBlur}
                     />
                   </div>
                 </div>
@@ -436,6 +451,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       className={styles.inputField}
                       autoComplete="new-password"
                       onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
+                      onBlur={handleInputBlur}
                     />
                     <button
                       type="button"
