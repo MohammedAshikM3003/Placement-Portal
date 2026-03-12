@@ -2587,6 +2587,8 @@ app.post('/api/coordinators', async (req, res) => {
         emailId,
         domainMailId,
         phoneNumber,
+        degree,
+        branch,
         department,
         staffId,
         cabin,
@@ -2651,6 +2653,8 @@ app.post('/api/coordinators', async (req, res) => {
             email: emailId,
             domainEmail: domainMailId,
             phone: phoneNumber,
+            degree: degree || null,
+            branch: branch || null,
             department,
             staffId,
             cabin,
@@ -2787,7 +2791,8 @@ app.put('/api/coordinators/:coordinatorId', async (req, res) => {
         const allowedFields = [
             'firstName', 'lastName', 'dob', 'gender',
             'email', 'domainEmail', 'phone', 'phoneNumber',
-            'department', 'cabin', 'profilePhoto', 'profilePicURL'
+            'degree', 'branch', 'department', 'cabin',
+            'profilePhoto', 'profilePicURL', 'profilePhotoName'
         ];
 
         // Build update object with only allowed fields
@@ -3118,6 +3123,8 @@ const coordinatorSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     domainEmail: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, required: true },
+    degree: { type: String },
+    branch: { type: String },
     department: { type: String, required: true },
     staffId: { type: String },
     cabin: { type: String },

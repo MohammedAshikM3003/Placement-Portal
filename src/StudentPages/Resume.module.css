@@ -37,8 +37,9 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 1003;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    cursor: pointer;
 }
 
 /* The primary content display area */
@@ -195,7 +196,7 @@
         margin-left: 0; 
         overflow-y: auto !important; 
         overflow-x: hidden !important;
-        padding: 10px 15px 120px 15px !important;
+        padding: 10px 15px 50px 15px !important;
         height: calc(100vh - 55px);
         max-height: calc(100vh - 55px);
         -webkit-overflow-scrolling: touch;

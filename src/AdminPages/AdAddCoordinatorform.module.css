@@ -194,7 +194,7 @@
     grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 20px;
-    width:167%;
+    width: 100%;
 }
 
 .Admin-cood-detail-login-buttons {
@@ -486,9 +486,6 @@
 /* Default (mobile-first): show buttons only in the mobile actions container */
 .Admin-cood-detail-login-buttons-desktop {
     display: none;
-    position:relative;
-    top: -73px;
-    left: -135px;;
 }
 
 .Admin-cood-detail-mobile-actions {

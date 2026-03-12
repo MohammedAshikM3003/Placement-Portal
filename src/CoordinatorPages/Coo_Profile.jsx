@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import mongoDBService from '../services/mongoDBService.jsx';
 import { fileToBase64WithCompression, getBase64SizeKB } from '../utils/imageCompression';
+import API_BASE_URL from '../utils/apiConfig';
 
 // Import CSS Module
 import styles from './Coo_Profile.module.css'; 
@@ -74,6 +75,12 @@ const normalizeProfilePhotoUrl = (data) => {
     // Already a valid URL format
     if (source.startsWith('data:') || source.startsWith('http') || source.startsWith('blob:')) {
         return source;
+    }
+    
+    // GridFS relative path /api/file/... - prepend backend base URL
+    if (source.startsWith('/api/file/')) {
+        const backendBase = API_BASE_URL.replace('/api', '');
+        return `${backendBase}${source}`;
     }
     
     // Raw base64 string - add the data URL prefix
@@ -199,12 +206,29 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         emailId: '',
         domainMailId: '',
         phoneNumber: '',
+        degree: '',
+        branch: '',
         department: '',
         staffId: '',
         cabin: '',
     });
 
-    const [profilePhoto, setProfilePhoto] = useState(null);
+    // Initialize profile photo instantly from the URL already cached by the sidebar / auth service.
+    // Falls back to extracting from coordinatorData if the separate key doesn't exist yet.
+    const [profilePhoto, setProfilePhoto] = useState(() => {
+        try {
+            const cached = localStorage.getItem('cachedCoordinatorPicUrl');
+            if (cached) return cached;
+        } catch (_) {}
+        try {
+            const stored = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
+            if (stored) {
+                const url = normalizeProfilePhotoUrl(stored);
+                if (url) return url;
+            }
+        } catch (_) {}
+        return null;
+    });
     const [profilePhotoBase64, setProfilePhotoBase64] = useState('');
     const [photoDetails, setPhotoDetails] = useState({ fileName: null, uploadDate: null });
     const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -255,8 +279,10 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                         // Check if cache has FULL profile data (not just minimal login data)
                         // Must have firstName OR lastName OR email - not just coordinatorId/username
                         const hasFullProfileData = data.firstName || data.lastName || data.email;
+                        // Cache is only considered complete if degree+branch are also present
+                        const hasDegreeData = data.degree && data.branch;
                         
-                        if (hasFullProfileData) {
+                        if (hasFullProfileData && hasDegreeData) {
                             console.log('✅ Loading coordinator profile from cache - INSTANT');
                             
                             // Set all data from cache immediately
@@ -268,30 +294,49 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 emailId: data.email || data.emailId || '',
                                 domainMailId: data.domainEmail || data.domainMailId || '',
                                 phoneNumber: data.phone || data.phoneNumber || '',
+                                degree: data.degree || '',
+                                branch: data.branch || '',
                                 department: data.department || '',
                                 staffId: data.coordinatorId || data.username || data.staffId || '',
                                 cabin: data.cabin || '',
                             });
                             
-                            // Load profile photo from cache (normalize for base64)
-                            const photoUrl = normalizeProfilePhotoUrl(data);
+                            // Profile photo: prefer the pre-resolved URL cached by the sidebar,
+                            // then fall back to extracting from coordinatorData.
+                            const cachedPicUrl = localStorage.getItem('cachedCoordinatorPicUrl');
+                            const photoUrl = cachedPicUrl || normalizeProfilePhotoUrl(data);
                             if (photoUrl) {
-                                console.log('🖼️ Profile photo URL normalized:', photoUrl.substring(0, 50) + '...');
+                                console.log('🖼️ Profile photo from cache:', photoUrl.substring(0, 60));
                                 setProfilePhoto(photoUrl);
-                                setProfilePhotoBase64(photoUrl);
+                                // Only set base64 for data: URLs; leave File objects untouched
+                                if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
+                                // Ensure the separate key is populated for next time
+                                if (!cachedPicUrl) localStorage.setItem('cachedCoordinatorPicUrl', photoUrl);
                             }
                             
                             console.log('✅ Coordinator profile loaded instantly from cache');
                             setIsLoading(false);
                             return; // Don't fetch from server - cache is fresh
                         } else {
-                            // Only have minimal data (coordinatorId/username) - set staffId at least
-                            console.log('⚠️ Cache only has minimal data, will fetch full profile from server');
-                            // Set at least the ID so user sees something while loading
+                            // Cache is incomplete (missing degree/branch or only minimal data)
+                            // Pre-fill whatever is available while we fetch full data from server
+                            console.log('⚠️ Cache incomplete (missing degree/branch), fetching from server...');
                             const staffIdValue = data.coordinatorId || data.username || data.staffId || '';
-                            if (staffIdValue) {
-                                setFormData(prev => ({ ...prev, staffId: staffIdValue }));
-                            }
+                            setFormData(prev => ({
+                                ...prev,
+                                firstName: data.firstName || prev.firstName,
+                                lastName: data.lastName || prev.lastName,
+                                dob: data.dob || prev.dob,
+                                gender: data.gender || prev.gender,
+                                emailId: data.email || data.emailId || prev.emailId,
+                                domainMailId: data.domainEmail || data.domainMailId || prev.domainMailId,
+                                phoneNumber: data.phone || data.phoneNumber || prev.phoneNumber,
+                                degree: data.degree || prev.degree,
+                                branch: data.branch || prev.branch,
+                                department: data.department || prev.department,
+                                staffId: staffIdValue || prev.staffId,
+                                cabin: data.cabin || prev.cabin,
+                            }));
                         }
                     } catch (err) {
                         console.warn('Cache parse error:', err);
@@ -332,21 +377,26 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                         emailId: data.email || '',
                         domainMailId: data.domainEmail || '',
                         phoneNumber: data.phone || '',
+                        degree: data.degree || '',
+                        branch: data.branch || '',
                         department: data.department || '',
                         staffId: data.coordinatorId || '',
                         cabin: data.cabin || '',
                     });
                     
-                    // Load profile photo (normalize for base64)
-                    const photoUrl = normalizeProfilePhotoUrl(data);
+                    // Load profile photo — prefer pre-resolved sidebar cache key
+                    const cachedPicUrl = localStorage.getItem('cachedCoordinatorPicUrl');
+                    const photoUrl = cachedPicUrl || normalizeProfilePhotoUrl(data);
                     if (photoUrl) {
                         setProfilePhoto(photoUrl);
-                        setProfilePhotoBase64(photoUrl);
+                        if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
+                        if (!cachedPicUrl) localStorage.setItem('cachedCoordinatorPicUrl', photoUrl);
                     }
                     
                     // Update localStorage cache
                     const cacheData = {
                         ...data,
+                        profilePicURL: photoUrl || data.profilePicURL || null,
                         timestamp: Date.now()
                     };
                     localStorage.setItem('coordinatorData', JSON.stringify(cacheData));
@@ -429,7 +479,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 // Just reset form if no ID
                 setFormData({
                     firstName: '', lastName: '', dob: '', gender: '', emailId: '',
-                    domainMailId: '', phoneNumber: '', department: '', staffId: '', cabin: '',
+                    domainMailId: '', phoneNumber: '', degree: '', branch: '', department: '', staffId: '', cabin: '',
                 });
                 setProfilePhoto(null);
                 setProfilePhotoBase64('');
@@ -452,6 +502,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     emailId: data.email || '',
                     domainMailId: data.domainEmail || '',
                     phoneNumber: data.phone || '',
+                    degree: data.degree || '',
+                    branch: data.branch || '',
                     department: data.department || '',
                     staffId: data.coordinatorId || '',
                     cabin: data.cabin || '',
@@ -496,6 +548,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 email: formData.emailId,
                 domainEmail: formData.domainMailId,
                 phone: formData.phoneNumber,
+                degree: formData.degree,
+                branch: formData.branch,
                 department: formData.department,
                 cabin: formData.cabin,
             };
@@ -518,14 +572,17 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 
                 // Update localStorage cache with complete data
                 const existingData = JSON.parse(localStorage.getItem('coordinatorData') || '{}');
+                const resolvedPhotoUrl = dataToSave.profilePicURL || dataToSave.profilePhoto || existingData.profilePicURL || null;
                 const updatedCacheData = {
                     ...existingData,
                     ...dataToSave,
                     coordinatorId: coordinatorId,
-                    profilePicURL: dataToSave.profilePhoto || existingData.profilePicURL || null,
+                    profilePicURL: resolvedPhotoUrl,
                     timestamp: Date.now()
                 };
                 localStorage.setItem('coordinatorData', JSON.stringify(updatedCacheData));
+                // Keep the separate photo URL key in sync so the profile page loads it instantly next time
+                if (resolvedPhotoUrl) localStorage.setItem('cachedCoordinatorPicUrl', resolvedPhotoUrl);
                 console.log('✅ Coordinator profile cache updated after save');
                 
                 // 🔔 INSTANT SYNC: Dispatch event with data payload to update sidebar immediately
@@ -605,66 +662,54 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             <div className={`${styles['co-profile-layout']} ${isSaving ? styles['co-profile-saving'] : ''}`}>
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={onViewChange} />
                 <div className={styles['co-profile-main-content']}>
-                    <div className={styles['co-profile-master-card']}>
+                    
+                    <div className={styles['co-profile-card']}>
+                        <h3 className={styles['co-profile-section-header']}>Personal Information</h3>
                         
                         <div className={styles['co-profile-content-grid']}>
-                            
-                            <div className={styles['co-profile-form-area']}>
+                            <div className={styles['co-profile-input-grid']}>
+                                <input type="text" name="firstName" placeholder="First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
+                                <input type="text" name="lastName" placeholder="Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
                                 
-                                <section className={`${styles['co-profile-section']} ${styles['co-profile-personal-info']}`}>
-                                    <h3 className={styles['co-profile-section-header']}>Personal Information</h3>
-                                    <div className={styles['co-profile-input-grid']}>
-                                        <input type="text" name="firstName" placeholder="First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
-                                        <input type="text" name="lastName" placeholder="Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
-                                        
-                                        <div className={styles['co-profile-date-wrapper']}>
-                                            <DatePicker
-                                                selected={formData.dob ? new Date(formData.dob) : null}
-                                                onChange={(date) =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        dob: date ? date.toISOString().split('T')[0] : '',
-                                                    }))
-                                                }
-                                                dateFormat="dd-MM-yyyy"
-                                                placeholderText="DOB"
-                                                className={styles['co-profile-date-input']}
-                                                showPopperArrow={false}
-                                                showMonthDropdown
-                                                showYearDropdown
-                                                dropdownMode="select"
-                                                yearDropdownItemNumber={7}
-                                                scrollableYearDropdown
-                                                popperClassName={styles['co-profile-date-popper']}
-                                                disabled={isSaving}
-                                            />
-                                        </div>
-                                        <select name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
-                                            <option value="" disabled hidden>Gender</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                        
-                                        <input type="email" name="emailId" placeholder="Email id" className={styles['co-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
-                                        <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['co-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
-                                        
-                                        <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['co-profile-form-input']} value={formData.phoneNumber} onChange={handleInputChange} disabled={isSaving} />
-                                        <input type="text" name="department" placeholder="Department" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
-                                    </div>
-                                </section>
-
-                                <section className={`${styles['co-profile-section']} ${styles['co-profile-office-details']}`}>
-                                    <div className={styles['co-profile-section-header2']}>
-                                        <h3 className={styles['co-profile-section-header']}>Office Details</h3>
-                                        <div className={`${styles['co-profile-input-grid']} ${styles['co-profile-input-grid-two-col']}`}>
-                                            <input type="text" name="staffId" placeholder="Staff ID" className={styles['co-profile-form-input']} value={formData.staffId} onChange={handleInputChange} disabled />
-                                            <input type="text" name="cabin" placeholder="Cabin" className={styles['co-profile-form-input']} value={formData.cabin} onChange={handleInputChange} disabled={isSaving} />
-                                        </div>
-                                    </div>
-                                </section>
+                                <div className={styles['co-profile-date-wrapper']}>
+                                    <DatePicker
+                                        selected={formData.dob ? new Date(formData.dob) : null}
+                                        onChange={(date) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                dob: date ? date.toISOString().split('T')[0] : '',
+                                            }))
+                                        }
+                                        dateFormat="dd-MM-yyyy"
+                                        placeholderText="DOB"
+                                        className={styles['co-profile-date-input']}
+                                        showPopperArrow={false}
+                                        showMonthDropdown
+                                        showYearDropdown
+                                        dropdownMode="select"
+                                        yearDropdownItemNumber={7}
+                                        scrollableYearDropdown
+                                        popperClassName={styles['co-profile-date-popper']}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <select name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
+                                    <option value="" disabled hidden>Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                
+                                <input type="email" name="emailId" placeholder="Email id" className={styles['co-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
+                                <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['co-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
+                                
+                                <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['co-profile-form-input']} value={formData.phoneNumber} onChange={handleInputChange} disabled={isSaving} />
+                                <input type="text" name="degree" placeholder="Degree" className={styles['co-profile-form-input']} value={formData.degree} onChange={handleInputChange} disabled={isSaving} />
+                                
+                                <input type="text" name="branch" placeholder="Branch" className={styles['co-profile-form-input']} value={formData.branch} onChange={handleInputChange} disabled={isSaving} />
+                                <input type="text" name="department" placeholder="Department" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
                             </div>
-                            
+
                             <aside className={styles['co-profile-photo-card']}>
                                 <h3 className={`${styles['co-profile-section-header']} ${styles['co-profile-photo-header']}`}>Profile Photo</h3>
                                 <div className={styles['co-profile-photo-header-line']}>
@@ -677,7 +722,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                                 onClick={handleImageClick}
                                             />
                                         ) : (
-                                            <img src={ProfileGraduationcap} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop:'50px'}}/>
+                                            <img src={ProfileGraduationcap} alt="Graduation Cap" style={{ width: '100px', height: '90px'}}/>
                                         )}
                                     </div>
                                 </div>
@@ -698,24 +743,29 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                         onChange={handlePhotoUpload}
                                         disabled={isSaving}
                                     />
-                                    {uploadSuccess && (
-                                        <p className={styles['co-profile-upload-success-message']}>Profile Photo uploaded Successfully!</p>
-                                    )}
                                     <p className={styles['co-profile-upload-hint']}>*JPG, PNG, and WebP formats allowed.</p>
                                 </div>
                             </aside>
-
-                        </div>
-
-                        <div className={styles['co-profile-action-buttons']}>
-                            <button type="button" className={styles['co-profile-discard-btn']} onClick={handleDiscard} disabled={isSaving}>
-                                Discard
-                            </button>
-                            <button type="button" className={styles['co-profile-save-btn']} onClick={handleSave} disabled={isSaving}>
-                                {isSaving ? 'Saving...' : 'Save'}
-                            </button>
                         </div>
                     </div>
+
+                    <div className={styles['co-profile-card']}>
+                        <h3 className={styles['co-profile-section-header']}>Office Details</h3>
+                        <div className={`${styles['co-profile-input-grid']} ${styles['co-profile-input-grid-two-col']}`}>
+                            <input type="text" name="staffId" placeholder="Staff ID" className={styles['co-profile-form-input']} value={formData.staffId} onChange={handleInputChange} disabled />
+                            <input type="text" name="cabin" placeholder="Cabin" className={styles['co-profile-form-input']} value={formData.cabin} onChange={handleInputChange} disabled={isSaving} />
+                        </div>
+                    </div>
+
+                    <div className={styles['co-profile-action-buttons']}>
+                        <button type="button" className={styles['co-profile-discard-btn']} onClick={handleDiscard} disabled={isSaving}>
+                            Discard
+                        </button>
+                        <button type="button" className={styles['co-profile-save-btn']} onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+
                 </div>
             </div>
 

@@ -54,7 +54,7 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
   };
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={onDiscard}>
       <div className={styles.popupContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>{formData.name || 'Project'}</div>
         <div className={styles.popupBody}>

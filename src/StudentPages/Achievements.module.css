@@ -177,9 +177,7 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    cursor: pointer;
 }
 
 /* Desktop layout */
@@ -756,7 +754,7 @@
 /* Restriction popup */
 .restriction-overlay {
     backdrop-filter: none;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .restriction-container {

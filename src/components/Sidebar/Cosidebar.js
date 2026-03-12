@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Cosidebar.module.css';
+import API_BASE_URL from '../../utils/apiConfig';
 
 // Assets
 import Adminicon from '../../assets/Adminicon.png';
@@ -20,10 +21,14 @@ import AdminPlacedStudentsicon from "../../assets/PlacedStudentIcon.svg";
 import AdminResourceAnalysisicon from "../../assets/Reportanalysisicon.svg";
 import AdminProfileicon from "../../assets/AdminProfileicon.svg";
 
-const COORDINATOR_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const COORDINATOR_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 let cachedCoordinator = null;
 let coordinatorCacheTimestamp = null;
+let cachedCoordinatorPicUrl = null;
+let cachedCoordinatorBlobUrl = null;
+let cachedCoordinatorBlobSourceUrl = null;
+let coordinatorBlobFetchInProgress = null;
 
 const coordinateMimeFromName = (name) => {
   if (!name || typeof name !== 'string') {
@@ -58,10 +63,16 @@ const normalizeProfileUrl = (record = {}, fallback = {}) => {
   } = record || {};
 
   const source = profilePicURL || profilePhoto || profilePhotoUrl || photoURL;
-  if (!source) {    if (!fallback) return null;    const fallbackSource = fallback.profilePicURL || fallback.profilePhoto || fallback.profilePhotoUrl || fallback.photoURL;
+  if (!source) {
+    if (!fallback) return null;
+    const fallbackSource = fallback.profilePicURL || fallback.profilePhoto || fallback.profilePhotoUrl || fallback.photoURL;
     if (!fallbackSource) return null;
     if (fallbackSource.startsWith('data:') || fallbackSource.startsWith('http') || fallbackSource.startsWith('blob:')) {
       return fallbackSource;
+    }
+    if (fallbackSource.startsWith('/api/file/')) {
+      const backendBase = API_BASE_URL.replace('/api', '');
+      return `${backendBase}${fallbackSource}`;
     }
     const mime = coordinateMimeFromName(fallback.profilePhotoName);
     return `data:${mime};base64,${fallbackSource}`;
@@ -69,6 +80,12 @@ const normalizeProfileUrl = (record = {}, fallback = {}) => {
 
   if (source.startsWith('data:') || source.startsWith('http') || source.startsWith('blob:')) {
     return source;
+  }
+
+  // GridFS relative path /api/file/... - prepend backend base URL
+  if (source.startsWith('/api/file/')) {
+    const backendBase = API_BASE_URL.replace('/api', '');
+    return `${backendBase}${source}`;
   }
 
   if (isLikelyBase64(source)) {
@@ -99,11 +116,50 @@ const readCoordinatorDataFromStorage = () => {
       return null;
     }
     const parsed = JSON.parse(stored);
-    return mergeCoordinatorData(null, parsed);
+    const merged = mergeCoordinatorData(null, parsed);
+
+    // Persist computed profilePicURL back to localStorage so it's available
+    // on future reads without re-computing (avoids needing a network fetch just for the URL)
+    if (merged.profilePicURL && merged.profilePicURL !== parsed.profilePicURL) {
+      try {
+        window.localStorage.setItem('coordinatorData', JSON.stringify({ ...parsed, profilePicURL: merged.profilePicURL }));
+      } catch (_) { /* non-critical */ }
+    }
+
+    return merged;
   } catch (error) {
     console.error('Failed to parse coordinatorData from storage:', error);
     return null;
   }
+};
+
+const fetchAndCacheCoordinatorBlob = async (url) => {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl === url) return cachedCoordinatorBlobUrl;
+  if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl !== url) {
+    URL.revokeObjectURL(cachedCoordinatorBlobUrl);
+    cachedCoordinatorBlobUrl = null;
+    cachedCoordinatorBlobSourceUrl = null;
+  }
+  if (coordinatorBlobFetchInProgress) return coordinatorBlobFetchInProgress;
+  coordinatorBlobFetchInProgress = (async () => {
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (blob.size > 0) {
+        cachedCoordinatorBlobUrl = URL.createObjectURL(blob);
+        cachedCoordinatorBlobSourceUrl = url;
+        return cachedCoordinatorBlobUrl;
+      }
+      return url;
+    } catch (e) {
+      return url;
+    } finally {
+      coordinatorBlobFetchInProgress = null;
+    }
+  })();
+  return coordinatorBlobFetchInProgress;
 };
 
 const sidebarItems = [
@@ -122,13 +178,16 @@ const sidebarItems = [
 const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
   const { logout: authLogout } = useAuth();
   const navigate = useNavigate();
-  
+  const hasFetchedRef = useRef(false);
+
   const [coordinatorData, setCoordinatorData] = useState(() => {
     if (
       cachedCoordinator &&
       coordinatorCacheTimestamp &&
       Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION
     ) {
+      // Refresh timestamp on each mount so 5-min TTL resets on navigation
+      coordinatorCacheTimestamp = Date.now();
       return cachedCoordinator;
     }
 
@@ -144,6 +203,36 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
 
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(() => {
+    // P0: blob URL (instant, in-memory)
+    if (cachedCoordinatorBlobUrl) return cachedCoordinatorBlobUrl;
+    // P1: module-level URL cache
+    if (cachedCoordinatorPicUrl) return cachedCoordinatorPicUrl;
+    // P2: separate localStorage key
+    try {
+      const cached = localStorage.getItem('cachedCoordinatorPicUrl');
+      if (cached) { cachedCoordinatorPicUrl = cached; return cached; }
+    } catch (_) {}
+    // P3: from cached coordinator data (module-level)
+    if (cachedCoordinator) {
+      const url = normalizeProfileUrl(cachedCoordinator);
+      if (url) { cachedCoordinatorPicUrl = url; return url; }
+    }
+    // P4: from localStorage coordinatorData
+    try {
+      const stored = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
+      if (stored) {
+        const url = normalizeProfileUrl(stored);
+        if (url) {
+          cachedCoordinatorPicUrl = url;
+          localStorage.setItem('cachedCoordinatorPicUrl', url);
+          return url;
+        }
+      }
+    } catch (_) {}
+    return null;
+  });
+
   const coordinatorUsername = useMemo(() => {
     if (coordinatorData?.firstName || coordinatorData?.lastName) {
       return `${coordinatorData.firstName || ''} ${coordinatorData.lastName || ''}`.trim() || (coordinatorData.username || 'Coordinator');
@@ -151,12 +240,30 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
     return coordinatorData?.username || localStorage.getItem('coordinatorUsername') || coordinatorData?.coordinatorId || 'Coordinator';
   }, [coordinatorData]);
 
-  const profilePhotoUrl = useMemo(() => {
-    return normalizeProfileUrl(coordinatorData) || null;
-  }, [coordinatorData]);
+  // Background: cache profile image as blob for instant rendering on next mount
+  useEffect(() => {
+    if (!profilePhotoUrl || profilePhotoUrl.startsWith('blob:') || profilePhotoUrl.startsWith('data:')) return;
+    if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl === profilePhotoUrl) {
+      setProfilePhotoUrl(cachedCoordinatorBlobUrl);
+      return;
+    }
+    fetchAndCacheCoordinatorBlob(profilePhotoUrl).then(blobUrl => {
+      if (blobUrl && blobUrl.startsWith('blob:')) setProfilePhotoUrl(blobUrl);
+    });
+  }, [profilePhotoUrl]);
 
   useEffect(() => {
     const fetchCoordinatorProfile = async () => {
+      // Skip if already fetched in this lifecycle and cache is still valid
+      if (
+        hasFetchedRef.current &&
+        cachedCoordinator &&
+        coordinatorCacheTimestamp &&
+        (Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION)
+      ) {
+        return;
+      }
+
       const stored = localStorage.getItem('coordinatorData');
       if (!stored) {
         return;
@@ -173,16 +280,19 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
           setCoordinatorData(normalized);
           cachedCoordinator = normalized;
           coordinatorCacheTimestamp = Date.now();
+          hasFetchedRef.current = true;
           return;
         }
 
+        // Skip network fetch if module-level cache is fresh and has coordinator identity.
         if (
           cachedCoordinator &&
           coordinatorCacheTimestamp &&
           (Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION) &&
-          cachedCoordinator?.profilePicURL
+          (cachedCoordinator?.coordinatorId || cachedCoordinator?.username)
         ) {
           setCoordinatorData(cachedCoordinator);
+          hasFetchedRef.current = true;
           return;
         }
 
@@ -198,7 +308,14 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
 
           cachedCoordinator = enriched;
           coordinatorCacheTimestamp = Date.now();
+          hasFetchedRef.current = true;
           setCoordinatorData(enriched);
+
+          if (enriched.profilePicURL) {
+            setProfilePhotoUrl(enriched.profilePicURL);
+            cachedCoordinatorPicUrl = enriched.profilePicURL;
+            localStorage.setItem('cachedCoordinatorPicUrl', enriched.profilePicURL);
+          }
 
           try {
             localStorage.setItem('coordinatorData', JSON.stringify(enriched));
@@ -280,6 +397,11 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
           setCoordinatorData(normalized);
           setImageError(false);
           setImageKey(Date.now());
+          if (normalized.profilePicURL) {
+            setProfilePhotoUrl(normalized.profilePicURL);
+            cachedCoordinatorPicUrl = normalized.profilePicURL;
+            localStorage.setItem('cachedCoordinatorPicUrl', normalized.profilePicURL);
+          }
         } catch (error) {
           console.error('Failed to parse coordinatorData from storage event:', error);
         }
@@ -323,6 +445,11 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
         coordinatorCacheTimestamp = Date.now();
         setImageError(false);
         setImageKey(Date.now());
+        if (nextMerged.profilePicURL) {
+          setProfilePhotoUrl(nextMerged.profilePicURL);
+          cachedCoordinatorPicUrl = nextMerged.profilePicURL;
+          localStorage.setItem('cachedCoordinatorPicUrl', nextMerged.profilePicURL);
+        }
         try {
           localStorage.setItem('coordinatorData', JSON.stringify(nextMerged));
         } catch (storageError) {
@@ -344,6 +471,11 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
 
   const getNavItemClass = (view) =>
     [styles.navItem, currentView === view ? styles.navItemSelected : '']
+      .filter(Boolean)
+      .join(' ');
+
+  const getProfileItemClass = () =>
+    [styles.profileItem, currentView === 'profile' ? styles.profileItemSelected : '']
       .filter(Boolean)
       .join(' ');
 
@@ -393,13 +525,13 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
             </button>
           ))}
         </div>
+      </nav>
 
-        <div className={styles.navDivider} />
-
+      <div className={styles.bottomSection}>
         <button
           type="button"
           onClick={() => handleViewChange('profile')}
-          className={getNavItemClass('profile')}
+          className={getProfileItemClass()}
         >
           <img src={AdminProfileicon} alt="" className={styles.navIcon} />
           <span className={styles.navText}>Profile</span>
@@ -421,6 +553,13 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
           // Clear cache
           cachedCoordinator = null;
           coordinatorCacheTimestamp = null;
+          cachedCoordinatorPicUrl = null;
+          if (cachedCoordinatorBlobUrl) {
+            URL.revokeObjectURL(cachedCoordinatorBlobUrl);
+            cachedCoordinatorBlobUrl = null;
+            cachedCoordinatorBlobSourceUrl = null;
+          }
+          localStorage.removeItem('cachedCoordinatorPicUrl');
           
           // Call AuthContext logout
           if (authLogout) {
@@ -432,7 +571,7 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
         }}>
           Logout
         </button>
-      </nav>
+      </div>
     </div>
   );
 };

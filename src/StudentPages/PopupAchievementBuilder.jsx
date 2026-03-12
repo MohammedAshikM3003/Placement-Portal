@@ -27,7 +27,7 @@ export default function PopupAchievementBuilder({ data, onSave, onDiscard, enabl
   }, [details]);
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={onDiscard}>
       <div className={styles.popupContainer} style={{ width: '500px' }} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>Achievement</div>
         <div className={styles.popupBody}>

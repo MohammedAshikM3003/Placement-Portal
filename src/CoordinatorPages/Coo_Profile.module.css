@@ -1,18 +1,27 @@
+/* --- Poppins Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 /* --- Global Layout --- */
 .co-profile-layout {
     display: flex;
-    min-height: 90vh;
-    background-color: #f6f8fb; /* Light background for the overall page */
+    background-color: #f8f8fb;
+    font-family: 'Poppins', Arial, sans-serif;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .co-profile-main-content {
-    flex-grow: 1;
-    /* Implements the requested 10px gap around the master card */
-    padding: 10px; 
-    display: flex;
-    justify-content: center; 
-    align-items: flex-start; /* Align content to the top */
-    margin-left:-218px;
+    flex: 1;
+    background: #f8f8fb;
+    padding: 25px;
+    margin-left: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 /* Desktop scrollbar - red styling to match theme */
@@ -35,77 +44,47 @@
   background-color: #b32d34;
 }
 
-/* --- Master Card Container (One Card for Everything) --- */
-.co-profile-master-card {
+/* --- Individual Card Styling --- */
+.co-profile-card {
     background-color: #ffffff;
-    border-radius: 17px;
-    width: 1176px; 
-    max-width: none; 
-    height:635px;
-    padding: 30px;
-    padding-bottom: 110px;
+    border-radius: 16px;
+    padding: 2rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e0e0e0;
-    display: flex;
-    flex-direction: column;
-    margin-left: 511px;
-    margin-top: 76px;
+    max-width: 1176px;
+    width: 100%;
+    margin-bottom: 25px;
 }
 
 /* --- Content Grid (Forms + Photo) --- */
 .co-profile-content-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Forms on the left (2x wider), Photo on the right */
+    grid-template-columns: 2fr 1fr;
     gap: 30px;
-    margin-bottom: 20px;
-    /* KEY CHANGE: Forces grid items (including photo card) to stretch vertically to match the height of the tallest item (the form area) */
-    align-items: stretch; 
-}
-
-.co-profile-form-area {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    height: 350px;
-    margin-top: -15px;
-    position: relative; /* z-index only works on positioned elements */
-    z-index: 2; 
-}
-
-/* --- Section Styling (Personal Info / Office Details) --- */
-.co-profile-section {
-    padding-bottom: 15px;
+    align-items: start;
 }
 
 /* Base header style */
 .co-profile-section-header {
-    font-size: 1.40em;
-    font-weight: 649;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: #333;
-    margin-bottom: 20px;
-    padding-bottom: 5px;
-    /* FIX 1: Make header relative to position its own ::after line */
+    margin-top: 0;
+    margin-bottom: 1.5rem;
     position: relative;
+    padding-bottom: 0.5rem;
     width: fit-content;
 }
 
-/* Styling for the red line under Personal Info and Office Details */
-.co-profile-section-header::after{
+/* Styling for the red line under headers */
+.co-profile-section-header::after {
     background-color: #d23b42;
     border-radius: 2px;
-    /* FIX 2: Position line relative to the header element */
     bottom: 0px; 
     content: "";
     height: 3px;
     left: 0;
     position: absolute;
     width: 40px;
-}
-
-/* REMOVE: .co-profile-section-header2::after and .co-profile-section-header3::after as they are no longer needed */
-.co-profile-section-header2 {
-    /* To correctly position the header inside here for the fixed positioning of the line */
-    position: relative;
 }
 
 /* --- Input Grid Layout --- */
@@ -122,23 +101,24 @@
 
 /* --- Form Inputs --- */
 .co-profile-form-input {
-    width: 353.96px;
-    height:53.6px;
+    width: 100%;
+    height: 53.6px;
     padding: 12px 15px;
-    /* This rule sets the default grey border (2px solid #808080) for all inputs */
-    border:1px solid  #f4dddd;
-    border-radius: 6px;
-    font-size: 1em;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
     color: #333;
     background-color: #fff9f9;
     box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .co-profile-form-input:focus {
     outline: none;
-    border-color: #d73d3d;
-    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(210, 59, 66, 0.2);
 }
 
 /* Dropdown Styling */
@@ -149,13 +129,15 @@
     background-position: right 15px center;
     
     background-size: 10px;
-    color: #888; 
+    color: #888;
+    font-weight: 500;
     /* This ensures the select maintains the correct border */
     border: 1px solid #f4dddd; 
 }
 
 .co-profile-form-select:not([value=""]) {
-    color: #333; 
+    color: #333;
+    font-weight: 500;
 }
 
 /* Date input specific style to add a calendar icon to the right */
@@ -187,9 +169,10 @@
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #f4dddd;
-    border-radius: 6px;
-    font-size: 1em;
-    font-family: inherit;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
     transition: all 0.3s ease;
     background-color: #fff9f9;
     color: #333;
@@ -203,13 +186,13 @@
 
 .co-profile-date-input:focus {
     outline: none;
-    border-color: #d73d3d;
-    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(210, 59, 66, 0.2);
     background-color: #ffffff;
 }
 
 .co-profile-date-input:hover {
-    border-color: #d73d3d;
+    border-color: #d23b42;
 }
 
 .co-profile-date-popper {
@@ -473,48 +456,41 @@
 /* --- Profile Photo Card (Small Card Inside Master Card) --- */
 .co-profile-photo-card {
     background-color: #ffffff;
-    border-radius: 20px;
-    padding: 25px 20px; /* Increased vertical padding */
-    border: 1px solid #eee;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #f4dddd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: -14px;
-    margin-left: 31px;
-   /* border: 1px solid #808080; */
-    /* Adjusted height to accommodate status message if needed, keeping flex layout */
-    height: 375px; 
+    height: 375px;
     width: 290px;
-    justify-content: space-between; /* Adjusted to space-around to better fit new element */
+    justify-content: space-between;
 }
 
-/* Profile Photo Header (Desktop) */
+/* Profile Photo Header */
 .co-profile-photo-header {
     width: 100%;
     text-align: left;
-    margin-top:-10px;
-    font-size: 22px;
-    padding-bottom: 5px;
-    margin-bottom: 20px; 
-    margin-left: 0px;/* Reduced margin */
-    /* FIX 3: Make header relative to position its own ::after line */
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1rem;
     position: relative;
+    padding-bottom: 0.5rem;
 }
 
-/* FIX 4: Specific Red Line for Profile Photo Header (Desktop & Mobile) */
-.co-profile-photo-header::after{
+.co-profile-photo-header::after {
     background-color: #d23b42;
     border-radius: 2px;
-    bottom: 0px; /* Position relative to the header element */
+    bottom: 0px;
     content: "";
     height: 3px;
     left: 0;
     position: absolute;
     width: 40px;
 }
-
-/* REMOVE: .co-profile-photo-header-line::after as it is no longer needed */
 
 
 .co-profile-photo-upload-area {
@@ -726,13 +702,12 @@
 
 /* --- Profile Photo Upload Styles --- */
 .co-profile-photo-icon-container {
-    padding: 1rem 0;
-    flex-grow: 1;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 95px;
-    
+    min-height: 160px;
+    margin-bottom: 0.5rem;
 }
 
 .co-profile-photo-preview {
@@ -761,22 +736,25 @@
 
 .co-profile-upload-info-container {
     margin-top: 0rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background-color: #f9fbff;
-    border: 1px solid #dde6f4;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    background-color: #fff9f9;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     text-align: left;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 500;
     word-break: break-all;
-    position: relative;
-    top: -13px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .co-profile-upload-info-item {
     display: flex;
     align-items: center;
     color: #555;
+    font-weight: 500;
+    gap: 8px;
 }
 
 .co-profile-upload-info-item:not(:last-child) {
@@ -788,18 +766,14 @@
 }
 
 .co-profile-upload-action-area {
-    margin-top: 8px;
-    position: relative;
-    top:-8px;
-   
+    margin-top: 0;
+    width: 100%;
 }
 
 .co-profile-upload-btn-wrapper {
     display: flex;
     align-items: center;
     gap: 10px;
-    position: relative;
-    left: 5px;
 }
 
 .co-profile-profile-upload-btn {
@@ -813,6 +787,8 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.95rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
     color: #555;
     height:44px;
     width:160px;
@@ -854,17 +830,19 @@
 }
 
 .co-profile-upload-success-message {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: #28a745;
-    font-weight: 500;
+    font-weight: 600;
     text-align: center;
     margin: 6px 0 0 0;
+    display: none;
 }
 
 .co-profile-upload-hint {
     font-size: 0.8rem;
+    font-weight: 500;
     color: #888;
-    margin-top: 6px;
+    margin-top: 8px;
     text-align: center;
 }
 
@@ -897,10 +875,10 @@
     display: flex;
     justify-content: flex-end; 
     gap: 1rem;
-    padding-top: 46px;
-    margin-right: 53px;
-    margin-top: 2rem; 
-    margin-bottom: 0;
+    margin-top: 0;
+    max-width: 1176px;
+    width: 100%;
+    margin-bottom: 2rem;
 }
 
 .co-profile-discard-btn,
@@ -908,7 +886,8 @@
     padding: 0.8rem 2rem;
     border-radius: 8px;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 120px;
@@ -1162,10 +1141,6 @@ input:disabled {
 @media screen and (max-width: 768px) {
     
     /* 1. Overall Layout */
-
-    .co-profile-section {
-        padding-bottom: 15px;
-    }
     
     .co-profile-main-content {
         padding: 0; 
@@ -1174,36 +1149,26 @@ input:disabled {
         overflow-y: auto;
         height: 93vh;
         box-sizing: border-box;
-            width: 484px;
-    margin-left: 8px;
+        width: 484px;
+        margin-left: 8px;
     }
 
-    /* 2. Master Card (Full Width, No Margin, No Fixed Height) */
-    .co-profile-master-card {
+    /* 2. Individual Card */
+    .co-profile-card {
         width: 100%;
         max-width: 100%;
-        height: auto; /* Allow height to grow with content */
-        margin: 0; /* Remove fixed margins */
+        height: auto;
+        margin: 0 0 20px 0;
         border-radius: 0; 
         padding: 15px; 
-        padding-bottom: 90px; /* Essential space for fixed action buttons */
         box-shadow: none;
         border: none;
     }
 
     /* 3. Content Grid (Single Column) */
     .co-profile-content-grid {
-        /* Forms on top, Photo Card below (1fr 1fr grid or simple column, the order is handled by the DOM order which is form-area then photo-card) */
         grid-template-columns: 1fr; 
-        gap: 25px; 
-        margin-bottom: 0;
-    }
-
-    /* 4. Form Area Adjustments */
-    .co-profile-form-area {
-        height: auto; /* Remove fixed height */
-        margin-top: 0;
-        gap: 20px; /* Slightly reduced gap */
+        gap: 25px;
     }
     
     /* FIX: Re-adjust .co-profile-section-header::after for mobile (Personal Info/Office Details) */
@@ -1212,8 +1177,6 @@ input:disabled {
         left: 0;
         top: initial;
     }
-    
-    /* REMOVED: co-profile-section-header2::after and co-profile-section-header3::after from here */
     
     /* 5. Input Grid (Single Column) */
     .co-profile-input-grid,
@@ -1228,36 +1191,31 @@ input:disabled {
         height: 50px; /* Slight height adjustment for mobile */
     }
     
-    /* 6. Profile Photo Card (Below Forms, Full Width) */
+    /* 6. Profile Photo Card (Full width on mobile) */
     .co-profile-photo-card {
         width: 100%;
-        
-        margin: 0; /* Remove fixed margins/offsets */
+        height: auto;
+        margin: 0;
         padding: 20px; 
         align-items: center;
-        /* Reset positioning specific to desktop grid */
-        margin-top: 0;
-        margin-left: 0;
     }
+    
     .co-profile-layout{position:absolute; left:2px;}
+    
     .co-profile-photo-header {
-        text-align: left; /* Aligns header text to the left */
-        margin-left: -30px; /* Remove desktop margin offset */
+        text-align: left;
         font-size: 22px;
         padding-bottom: 0;
         position: relative;
         width: 100%;
     }
 
-    /* FIX: Ensure the photo header line works correctly in mobile, using the specific class */
+    /* FIX: Ensure the photo header line works correctly in mobile */
     .co-profile-photo-header::after {
-        /* This rule correctly positions the line below the Profile Photo header in mobile */
-        bottom: 0px; /* Position it correctly at the bottom of the header */
+        bottom: 0px;
         left: 0;
         top: initial; 
     }
-    
-    /* REMOVED: .co-profile-photo-header-line::after from here */
 
     .co-profile-photo-icon-container {
         min-height: 100px;
@@ -1285,7 +1243,7 @@ input:disabled {
     .co-profile-upload-action-area {
         width: 55%;
         position: relative;
-    top: 13px;
+        top: 13px;
     }
     
     

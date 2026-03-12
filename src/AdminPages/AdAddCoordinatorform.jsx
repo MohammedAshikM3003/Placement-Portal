@@ -193,7 +193,7 @@ function AdminCoDet() {
     // NEW: Fetch coordinator data when in edit or view mode
     useEffect(() => {
         const coordinatorId = editIdParam || viewIdParam;
-        if ((isEditMode || isViewMode) && coordinatorId) {
+        if ((isEditMode || isViewMode) && coordinatorId && degrees.length > 0 && branches.length > 0) {
             const fetchCoordinatorData = async () => {
                 try {
                     // Start loading
@@ -216,6 +216,31 @@ function AdminCoDet() {
                     
                     if (coordinator) {
                         const dobValue = coordinator.dob ? new Date(coordinator.dob) : null;
+                        
+                        // Find matching degree and branch objects to get abbreviations for dropdowns
+                        const matchingDegree = degrees.find(d => 
+                            normalizeString(d?.degreeFullName) === normalizeString(coordinator.degree) ||
+                            normalizeString(d?.degreeAbbreviation) === normalizeString(coordinator.degree)
+                        );
+                        
+                        const matchingBranch = branches.find(b => 
+                            normalizeString(b?.branchFullName) === normalizeString(coordinator.branch) ||
+                            normalizeString(b?.branchAbbreviation) === normalizeString(coordinator.branch) ||
+                            normalizeString(b?.branchAbbreviation) === normalizeString(coordinator.department)
+                        );
+                        
+                        // Set degree abbreviation for dropdown, fallback to stored value
+                        const degreeValue = matchingDegree 
+                            ? degreeOptionValue(matchingDegree)
+                            : (coordinator.degree || '');
+                            
+                        // Set branch abbreviation for dropdown, fallback to department or stored value
+                        const branchValue = matchingBranch
+                            ? branchSelectValue(matchingBranch)
+                            : (coordinator.department || coordinator.branch || '');
+                        
+                        setSelectedDegree(degreeValue);
+                        
                         setFormData({
                             firstName: coordinator.firstName || '',
                             lastName: coordinator.lastName || '',
@@ -228,8 +253,8 @@ function AdminCoDet() {
                             cabin: coordinator.cabin || '',
                             password: '',
                             confirmPassword: '',
-                            degree: coordinator.degree || '',
-                            branch: coordinator.department || ''
+                            degree: degreeValue,
+                            branch: branchValue
                         });
                         if (coordinator.profilePhoto) {
                             const photoData = coordinator.profilePhoto.startsWith('data:') 
@@ -261,7 +286,7 @@ function AdminCoDet() {
             };
             fetchCoordinatorData();
         }
-    }, [isEditMode, isViewMode, editIdParam, viewIdParam]);
+    }, [isEditMode, isViewMode, editIdParam, viewIdParam, degrees, branches]);
 
     const handleBack = () => {
         navigate(-1); 
@@ -406,6 +431,18 @@ function AdminCoDet() {
         setIsSaving(true);
         setSaveStatus('saving');
 
+        // Find the selected degree and branch objects to get full names
+        const selectedDegreeObj = degrees.find(d => 
+            normalizeString(d?.degreeAbbreviation) === normalizeString(formData.degree) ||
+            normalizeString(d?.degreeFullName) === normalizeString(formData.degree)
+        );
+        
+        const selectedBranchObj = branches.find(b => 
+            normalizeString(b?.branchAbbreviation) === normalizeString(formData.branch) ||
+            normalizeString(b?.branchFullName) === normalizeString(formData.branch) ||
+            normalizeString(b?.branchCode) === normalizeString(formData.branch)
+        );
+
         const payload = {
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -414,12 +451,12 @@ function AdminCoDet() {
             emailId: formData.emailId,
             domainMailId: formData.domainMailId,
             phoneNumber: formData.phoneNumber,
-            department: formData.branch,
+            degree: selectedDegreeObj?.degreeFullName || formData.degree,
+            branch: selectedBranchObj?.branchFullName || formData.branch,
+            department: selectedBranchObj?.branchAbbreviation || formData.branch,
             coordinatorId: formData.coordinatorId,
             cabin: formData.cabin,
             username: formData.coordinatorId,
-            degree: formData.degree,
-            branch: formData.branch,
             profilePhotoData: null, // Will be uploaded via GridFS
             profilePhotoName: photoDetails.fileName,
         };

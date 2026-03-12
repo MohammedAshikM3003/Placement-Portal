@@ -5,6 +5,7 @@ import Profile from "../assets/totalpercentagestudenticon.png";
 import totalpercentagestudenticon from "../assets/UpcomingDriveIcon.svg";
 import Resume from "../assets/UploadResumeIcon.svg";
 import certificateuploadicon from "../assets/UploadCertificatecardicon.svg";
+import StuTrainingicon from "../assets/StuTrainingicon.svg";
 import mongoDBService from '../services/mongoDBService';
 import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -355,9 +356,9 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
             </div>
 
             {/* Row 2 - 2 Cards spanning different widths */}
-            {/* Card 4: Attendance (spans 2 columns) */}
-            <div className={`${styles['stu-db-card']} ${styles['stu-db-attendance-card']}`} onClick={() => handleViewChange('attendance')}>
-              <h2 className={styles['stu-db-new-attendance-title']}>Attendance</h2>
+            {/* Card 4: Training Progress (spans 2 columns) */}
+            <div className={`${styles['stu-db-card']} ${styles['stu-db-attendance-card']}`} onClick={() => handleViewChange('training')}>
+              <h2 className={styles['stu-db-new-attendance-title']}>Training Progress</h2>
               <AttendanceChart 
                 present={attendanceData.present} 
                 absent={attendanceData.absent} 

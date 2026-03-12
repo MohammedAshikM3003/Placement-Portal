@@ -13,7 +13,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 1001;
   height: 65px;
   box-sizing: border-box;
   /* 2. Apply Font from LandingNavbar */
@@ -23,28 +23,29 @@
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 20px; /* Matching LandingNavbar logo gap */
+  gap: 20px;
   position: relative;
   left: -45px;
-  margin-top:4px;
-   /* Matching LandingNavbar offset */
+  margin-top: 4px;
 }
 
 .portal-logo {
   height: 30px;
   width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .portal-logo img {
   height: 30px;
-  width:40px;
-  
-  /* Removed brightness filter to match LandingNavbar's clean look */
+  width: 40px;
+  filter: brightness(0) invert(1);
 }
 
 .portal-name {
   font-size: 1.5rem;
-  font-weight: 700; /* Matching LandingNavbar's bold logo weight */
+  font-weight: 700;
   color: white;
   margin-top: 4px;
 }
@@ -83,9 +84,16 @@
     padding: 15px 20px;
   }
   .navbar-left {
-    left: 0; /* Reset offset for mobile */
+    position: static;
+    left: 0;
+    margin-top: 0;
+    margin-left: 5px;
+  }
+  .portal-logo {
+    margin-top: 4px;
   }
   .portal-name {
     font-size: 1.2rem;
+    margin-top: 8px;
   }
 }

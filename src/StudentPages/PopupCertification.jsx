@@ -38,7 +38,7 @@ export default function PopupCertification({ data, onSave, onDiscard, enableAI =
   };
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={onDiscard}>
       <div className={styles.popupContainer} style={{ width: '500px' }} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>Certification</div>
         <div className={styles.popupBody}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '../../utils/apiConfig';
@@ -33,26 +33,72 @@ const sidebarItems = [
 
 const viewToPath = (view) => `/` + view;
 
+// ─── Module-level cache (persists across component remounts within a session) ──
+const ADMIN_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+let cachedAdminData = null;
+let adminDataCacheTimestamp = null;
+let cachedAdminPicUrl = null;
+let cachedAdminBlobUrl = null;
+let cachedAdminBlobSourceUrl = null;
+let adminBlobFetchInProgress = null;
+
+const fetchAndCacheAdminBlob = async (url) => {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (cachedAdminBlobUrl && cachedAdminBlobSourceUrl === url) return cachedAdminBlobUrl;
+  if (cachedAdminBlobUrl && cachedAdminBlobSourceUrl !== url) {
+    URL.revokeObjectURL(cachedAdminBlobUrl);
+    cachedAdminBlobUrl = null;
+    cachedAdminBlobSourceUrl = null;
+  }
+  if (adminBlobFetchInProgress) return adminBlobFetchInProgress;
+  adminBlobFetchInProgress = (async () => {
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (blob.size > 0) {
+        cachedAdminBlobUrl = URL.createObjectURL(blob);
+        cachedAdminBlobSourceUrl = url;
+        return cachedAdminBlobUrl;
+      }
+      return url;
+    } catch (e) {
+      return url;
+    } finally {
+      adminBlobFetchInProgress = null;
+    }
+  })();
+  return adminBlobFetchInProgress;
+};
+
 const Adsidebar = ({ isOpen, onLogout }) => {
   const { logout: authLogout } = useAuth();
   const navigate = useNavigate();
   
   // State for admin profile data - initialize from localStorage if available
   const [adminProfile, setAdminProfile] = useState(() => {
+    // P0: module-level cache (in-memory, survives component remounts)
+    if (cachedAdminData && adminDataCacheTimestamp &&
+        (Date.now() - adminDataCacheTimestamp < ADMIN_CACHE_DURATION)) {
+      const d = cachedAdminData;
+      const fullName = (d.firstName || d.lastName)
+        ? `${d.firstName || ''} ${d.lastName || ''}`.trim() : 'Admin';
+      return { name: fullName, profilePhoto: gridfsService.resolveImageUrl(d.profilePhoto) || null };
+    }
+    // P1: localStorage adminProfileCache
     const cachedProfile = localStorage.getItem('adminProfileCache');
     if (cachedProfile) {
       try {
         const data = JSON.parse(cachedProfile);
-        // Handle both formats: full profile cache OR sidebar-only cache
         if (data.firstName || data.lastName) {
-          // Full profile cache format from AdminmainProfile.jsx
           const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Admin';
+          cachedAdminData = data;
+          adminDataCacheTimestamp = Date.now();
           return {
             name: fullName,
             profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
           };
         } else if (data.name) {
-          // Already in sidebar format
           return {
             ...data,
             profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
@@ -67,14 +113,51 @@ const Adsidebar = ({ isOpen, onLogout }) => {
       profilePhoto: null
     };
   });
+
+  // adminPicUrl: separate state for profile photo URL with blob caching
+  const [adminPicUrl, setAdminPicUrl] = useState(() => {
+    // P0: blob URL (instant, in-memory)
+    if (cachedAdminBlobUrl) return cachedAdminBlobUrl;
+    // P1: module-level URL cache
+    if (cachedAdminPicUrl) return cachedAdminPicUrl;
+    // P2: separate localStorage key
+    try {
+      const cached = localStorage.getItem('cachedAdminPicUrl');
+      if (cached) { cachedAdminPicUrl = cached; return cached; }
+    } catch (_) {}
+    // P3: from module-level cached admin data
+    if (cachedAdminData?.profilePhoto) {
+      const url = gridfsService.resolveImageUrl(cachedAdminData.profilePhoto);
+      if (url) { cachedAdminPicUrl = url; return url; }
+    }
+    // P4: from localStorage adminProfileCache
+    try {
+      const stored = JSON.parse(localStorage.getItem('adminProfileCache') || 'null');
+      if (stored?.profilePhoto) {
+        const url = gridfsService.resolveImageUrl(stored.profilePhoto);
+        if (url) {
+          cachedAdminPicUrl = url;
+          localStorage.setItem('cachedAdminPicUrl', url);
+          return url;
+        }
+      }
+    } catch (_) {}
+    return null;
+  });
   
   // Image handling states (like student sidebar)
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
   const [isLoading, setIsLoading] = useState(false);
+  const hasFetchedRef = useRef(false);
 
   // Function to fetch admin profile data - wrapped in useCallback to prevent stale closures
-  const fetchAdminProfile = useCallback(async () => {
+  const fetchAdminProfile = useCallback(async (force = false) => {
+    // Skip if we already have fresh cached data and are not forced
+    if (!force && hasFetchedRef.current && cachedAdminData && adminDataCacheTimestamp &&
+        (Date.now() - adminDataCacheTimestamp < ADMIN_CACHE_DURATION)) {
+      return;
+    }
     try {
       setIsLoading(true);
       const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
@@ -118,10 +201,22 @@ const Adsidebar = ({ isOpen, onLogout }) => {
             profilePhoto: gridfsService.resolveImageUrl(profilePhotoUrl) || null
           };
           
+          // Update module-level cache
+          cachedAdminData = data;
+          adminDataCacheTimestamp = Date.now();
+          hasFetchedRef.current = true;
+
           // Force complete state refresh with new object
           setAdminProfile({ ...profileData });
           setImageError(false);
           setImageKey(Date.now()); // Force image re-render
+
+          // Update pic URL state and cache
+          if (profileData.profilePhoto) {
+            setAdminPicUrl(profileData.profilePhoto);
+            cachedAdminPicUrl = profileData.profilePhoto;
+            localStorage.setItem('cachedAdminPicUrl', profileData.profilePhoto);
+          }
           
           // NOTE: Don't update adminProfileCacheTime here to avoid infinite loops
           // The storage event listener in this same component would trigger
@@ -153,10 +248,31 @@ const Adsidebar = ({ isOpen, onLogout }) => {
     }
   }, []); // Empty dependencies since it doesn't rely on any props or state
 
-  // Fetch admin profile data on mount
+  // Fetch admin profile data on mount — skip if module-level cache is still fresh
   useEffect(() => {
+    if (hasFetchedRef.current && cachedAdminData && adminDataCacheTimestamp &&
+        (Date.now() - adminDataCacheTimestamp < ADMIN_CACHE_DURATION)) {
+      return;
+    }
+    if (cachedAdminData && adminDataCacheTimestamp &&
+        (Date.now() - adminDataCacheTimestamp < ADMIN_CACHE_DURATION)) {
+      hasFetchedRef.current = true;
+      return; // useState already initialized from module cache
+    }
     fetchAdminProfile();
   }, [fetchAdminProfile]);
+
+  // Background: cache profile image as blob URL for instant rendering on next mount
+  useEffect(() => {
+    if (!adminPicUrl || adminPicUrl.startsWith('blob:') || adminPicUrl.startsWith('data:')) return;
+    if (cachedAdminBlobUrl && cachedAdminBlobSourceUrl === adminPicUrl) {
+      setAdminPicUrl(cachedAdminBlobUrl);
+      return;
+    }
+    fetchAndCacheAdminBlob(adminPicUrl).then(blobUrl => {
+      if (blobUrl && blobUrl.startsWith('blob:')) setAdminPicUrl(blobUrl);
+    });
+  }, [adminPicUrl]);
 
   // Listen for profile update events (when admin saves their profile)
   useEffect(() => {
@@ -175,10 +291,18 @@ const Adsidebar = ({ isOpen, onLogout }) => {
           name: fullName,
           profilePhoto: gridfsService.resolveImageUrl(data.profilePhoto) || null
         });
-        
+
         setImageError(false);
         setImageKey(Date.now()); // Forces the <img> tag to refresh
         setIsLoading(false); // No spinner needed - instant update!
+
+        // Update pic URL cache
+        const resolvedPhoto = gridfsService.resolveImageUrl(data.profilePhoto);
+        if (resolvedPhoto) {
+          setAdminPicUrl(resolvedPhoto);
+          cachedAdminPicUrl = resolvedPhoto;
+          localStorage.setItem('cachedAdminPicUrl', resolvedPhoto);
+        }
         
         // NOTE: Don't overwrite adminProfileCache here - the profile page manages the full cache
         // We just update our local component state for instant UI sync
@@ -216,6 +340,15 @@ const Adsidebar = ({ isOpen, onLogout }) => {
         setImageError(false);
         setImageKey(Date.now());
         setIsLoading(false);
+
+        // Update pic URL cache
+        const resolvedForce = gridfsService.resolveImageUrl(data.profilePhoto);
+        if (resolvedForce) {
+          setAdminPicUrl(resolvedForce);
+          cachedAdminPicUrl = resolvedForce;
+          localStorage.setItem('cachedAdminPicUrl', resolvedForce);
+        }
+
         console.log('✅ Admin sidebar force-refreshed from event payload');
         return;
       }
@@ -239,7 +372,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
         console.log('🔄 Admin profile cache updated, refreshing sidebar');
         setImageError(false);
         setImageKey(Date.now());
-        fetchAdminProfile();
+        fetchAdminProfile(true);
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -292,6 +425,16 @@ const Adsidebar = ({ isOpen, onLogout }) => {
     localStorage.removeItem('adminLoginID');
     localStorage.removeItem('adminProfileCache');
     localStorage.removeItem('adminProfileCacheTime');
+    localStorage.removeItem('cachedAdminPicUrl');
+    // Clear module-level cache
+    cachedAdminData = null;
+    adminDataCacheTimestamp = null;
+    cachedAdminPicUrl = null;
+    if (cachedAdminBlobUrl) {
+      URL.revokeObjectURL(cachedAdminBlobUrl);
+      cachedAdminBlobUrl = null;
+      cachedAdminBlobSourceUrl = null;
+    }
     
     // Clear legacy keys
     localStorage.removeItem('adminData');
@@ -312,10 +455,10 @@ const Adsidebar = ({ isOpen, onLogout }) => {
     <div className={`${styles.adsidebar} ${isOpen ? styles.open : ''}`}>
       <div className={styles['ad-user-info']}>
         <div className={styles['ad-user-details']}>
-          {adminProfile.profilePhoto && !imageError ? (
+          {adminPicUrl && !imageError ? (
             <img 
               key={imageKey}
-              src={gridfsService.resolveImageUrl(adminProfile.profilePhoto)} 
+              src={adminPicUrl} 
               alt="Profile" 
               onError={() => setImageError(true)}
             />

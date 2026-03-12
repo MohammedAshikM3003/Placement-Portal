@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { API_BASE_URL } from '../utils/apiConfig';
@@ -9,6 +10,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import styles from './StuProfile.module.css'; // Module Import
 import achievementStyles from './Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/BlueAdminicon.png';
+import BestAchievement from '../assets/BestAchievementicon.svg';
 import StuEyeIcon from '../assets/StuEyeicon.svg';
 import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
@@ -33,6 +35,14 @@ const JOB_LOCATION_OPTIONS = [
 ];
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
+
+const PREFERRED_TRAINING_OPTIONS = [
+    "Java",
+    "Python",
+    "Fullstack Development",
+    "Gen AI",
+    "Cloud Computing"
+];
 
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
@@ -62,6 +72,8 @@ const IoMdClose = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z"></path></svg>
 );
 
+const RequiredStar = () => <span className={styles.requiredStar}>*</span>;
+
 const GraduationCapIcon = () => (
     <img src={Adminicons} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop:'-20px'}}/>
 );
@@ -87,9 +99,9 @@ const CalendarIcon = () => (
 const SuccessPopup = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     return (
-        <div className={styles.popupOverlay}>
+        <div className={styles.popupOverlay} onClick={onClose}>
             {/* Reuse Achievements-style animated success card */}
-            <div className={achievementStyles['Achievement-popup-container']}>
+            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
                 <div className={achievementStyles['Achievement-popup-header']}>Saved!</div>
                 <div className={achievementStyles['Achievement-popup-body']}>
                     <svg className={achievementStyles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -126,8 +138,8 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     })();
 
     return (
-        <div className={styles.popupOverlay}>
-            <div className={styles.imageSizePopup}>
+        <div className={styles.popupOverlay} onClick={onClose}>
+            <div className={styles.imageSizePopup} onClick={e => e.stopPropagation()}>
                 <div className={styles.imageSizePopupHeader}>Image Too Large!</div>
                 <div className={styles.imageSizePopupBody}>
                     <div className={styles.imageSizePopupIconWrapper}>
@@ -222,8 +234,8 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
     };
 
     return (
-        <div className={styles.popupOverlay}>
-            <div className={styles.imageSizePopup}>
+        <div className={styles.popupOverlay} onClick={onClose}>
+            <div className={styles.imageSizePopup} onClick={e => e.stopPropagation()}>
                 <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
                 <div className={styles.imageSizePopupBody}>
                     {renderIcon()}
@@ -281,6 +293,17 @@ function StuProfile({ onLogout, onViewChange }) {
     const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
     const [urlErrorType, setUrlErrorType] = useState('');
     const [invalidUrl, setInvalidUrl] = useState('');
+    const [skills, setSkills] = useState([]);
+    const [showAnalysis, setShowAnalysis] = useState(false);
+    const [hoveredRound, setHoveredRound] = useState(null);
+    const [selectedRound, setSelectedRound] = useState(null);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 600);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 600);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const selectedCompanyTypes = useMemo(
         () => parseMultiValue(studentData?.companyTypes),
@@ -297,10 +320,150 @@ function StuProfile({ onLogout, onViewChange }) {
         [selectedCompanyTypes]
     );
 
+    const selectedTrainings = useMemo(
+        () => parseMultiValue(studentData?.preferredTraining),
+        [studentData?.preferredTraining]
+    );
+
+    const handleTrainingToggle = (option) => {
+        if (isSaving) return;
+        const current = parseMultiValue(studentData?.preferredTraining);
+        // Toggle off if already selected, otherwise select only this one
+        const updated = current.includes(option) ? [] : [option];
+        setStudentData(prev => ({ ...prev, preferredTraining: updated.join(', ') }));
+    };
+
     const jobLocationsHiddenValue = useMemo(
         () => selectedJobLocations.join(', '),
         [selectedJobLocations]
     );
+
+    // Company Details — merge real studentData with mock fallbacks
+    const companyStats = useMemo(() => ({
+        totalCompaniesAttended: studentData?.totalCompaniesAttended ?? 10,
+        totalDrivesAttended:    studentData?.totalDrivesAttended    ?? 14,
+        shortlistedCount:       studentData?.shortlistedCount       ?? 11,
+        preferredModeOfDrive:   studentData?.preferredModeOfDrive   || 'Hybrid',
+        lastDriveAttended:      studentData?.lastDriveAttended      || '',
+        lastDriveResult:        studentData?.lastDriveResult        || '',
+        highestPackageDrive:    studentData?.highestPackageDrive    ?? 24,
+        totalRoundsCleared:     studentData?.totalRoundsCleared     ?? 19,
+    }), [studentData]);
+
+    const PIE_DATA = [
+        { name: 'GD Round',      value: 20, color: '#FF9F43' },
+        { name: 'Aptitude',      value: 26, color: '#F4C542' },
+        { name: 'Technical',     value: 15, color: '#3DDAD7' },
+        { name: 'HR Round',      value: 28, color: '#FF7A9E' },
+        { name: 'Communication', value: 36, color: '#6C7A89' },
+        { name: 'Coding',        value: 31, color: '#197AFF' },
+    ];
+
+    const ROUND_DETAILS = {
+        'GD Round': {
+            companies: [
+                { name: 'TCS',           status: 'PASSED'      },
+                { name: 'Infosys',       status: 'FAILED'      },
+                { name: 'Wipro',         status: 'IN PROGRESS' },
+                { name: 'Accenture',     status: 'PASSED'      },
+                { name: 'Capgemini',     status: 'PASSED'      },
+                { name: 'HCL',           status: 'FAILED'      },
+                { name: 'Tech Mahindra', status: 'PASSED'      },
+                { name: 'L&T Infotech',  status: 'IN PROGRESS' },
+                { name: 'Cognizant',     status: 'PASSED'      },
+                { name: 'Mphasis',       status: 'FAILED'      },
+            ],
+            good: ['Strong articulation of points during the debate.', 'Active listening and building on others\' ideas.'],
+            bad:  ['Tended to interrupt occasionally when excited.', 'Eye contact could be more balanced across group.'],
+        },
+        'Aptitude': {
+            companies: [
+                { name: 'TCS',           status: 'PASSED'      },
+                { name: 'Wipro',         status: 'PASSED'      },
+                { name: 'Infosys',       status: 'FAILED'      },
+                { name: 'HCL',           status: 'PASSED'      },
+                { name: 'Capgemini',     status: 'IN PROGRESS' },
+                { name: 'Accenture',     status: 'PASSED'      },
+                { name: 'IBM',           status: 'FAILED'      },
+                { name: 'Cognizant',     status: 'PASSED'      },
+                { name: 'Oracle',        status: 'IN PROGRESS' },
+                { name: 'Mphasis',       status: 'PASSED'      },
+            ],
+            good: ['Consistently strong in quantitative reasoning.', 'Completed all sections within time limits.'],
+            bad:  ['Occasional errors in data interpretation.', 'Verbal reasoning scores could be improved.'],
+        },
+        'Technical': {
+            companies: [
+                { name: 'Google',        status: 'PASSED'      },
+                { name: 'Microsoft',     status: 'IN PROGRESS' },
+                { name: 'Amazon',        status: 'FAILED'      },
+                { name: 'Flipkart',      status: 'PASSED'      },
+                { name: 'Zoho',          status: 'PASSED'      },
+                { name: 'Freshworks',    status: 'FAILED'      },
+                { name: 'Adobe',         status: 'PASSED'      },
+                { name: 'Salesforce',    status: 'IN PROGRESS' },
+                { name: 'SAP',           status: 'PASSED'      },
+                { name: 'Qualcomm',      status: 'FAILED'      },
+            ],
+            good: ['Strong knowledge of data structures and algorithms.', 'Explained approach clearly before coding.'],
+            bad:  ['Struggled with on-the-spot system design questions.', 'Edge cases missed in a few solutions.'],
+        },
+        'HR Round': {
+            companies: [
+                { name: 'Deloitte',      status: 'PASSED'      },
+                { name: 'EY',            status: 'PASSED'      },
+                { name: 'KPMG',          status: 'FAILED'      },
+                { name: 'Accenture',     status: 'PASSED'      },
+                { name: 'TCS',           status: 'IN PROGRESS' },
+                { name: 'Infosys',       status: 'PASSED'      },
+                { name: 'Wipro',         status: 'FAILED'      },
+                { name: 'HCL',           status: 'PASSED'      },
+                { name: 'Capgemini',     status: 'PASSED'      },
+                { name: 'Cognizant',     status: 'IN PROGRESS' },
+            ],
+            good: ['Confident and well-structured answers.', 'Good alignment of career goals with company values.'],
+            bad:  ['Salary negotiation needs improvement.', 'Answers were occasionally too long-winded.'],
+        },
+        'Communication': {
+            companies: [
+                { name: 'TCS',           status: 'PASSED'      },
+                { name: 'Infosys',       status: 'PASSED'      },
+                { name: 'Wipro',         status: 'FAILED'      },
+                { name: 'Accenture',     status: 'PASSED'      },
+                { name: 'L&T Infotech',  status: 'IN PROGRESS' },
+                { name: 'Capgemini',     status: 'PASSED'      },
+                { name: 'HCL',           status: 'PASSED'      },
+                { name: 'Tech Mahindra', status: 'FAILED'      },
+                { name: 'Mphasis',       status: 'IN PROGRESS' },
+                { name: 'Cognizant',     status: 'PASSED'      },
+            ],
+            good: ['Clear and confident verbal communication.', 'Excellent email and written communication skills.'],
+            bad:  ['Pace of speech becomes fast under pressure.', 'Could improve active listening in panel discussions.'],
+        },
+        'Coding': {
+            companies: [
+                { name: 'Google',        status: 'PASSED'      },
+                { name: 'Microsoft',     status: 'PASSED'      },
+                { name: 'Amazon',        status: 'IN PROGRESS' },
+                { name: 'Adobe',         status: 'PASSED'      },
+                { name: 'Flipkart',      status: 'FAILED'      },
+                { name: 'Zoho',          status: 'PASSED'      },
+                { name: 'Freshworks',    status: 'PASSED'      },
+                { name: 'Oracle',        status: 'FAILED'      },
+                { name: 'SAP',           status: 'IN PROGRESS' },
+                { name: 'Qualcomm',      status: 'PASSED'      },
+            ],
+            good: ['Efficient solutions with optimal time complexity.', 'Strong command of multiple programming languages.'],
+            bad:  ['Occasionally skipped writing test cases.', 'Dynamic programming approach needs more practice.'],
+        },
+    };
+
+    const successRate = useMemo(() => {
+        const attended   = companyStats.totalDrivesAttended;
+        const shortlisted = companyStats.shortlistedCount;
+        if (attended === 0) return 0;
+        return Math.min(100, Math.round((shortlisted / attended) * 100));
+    }, [companyStats.totalDrivesAttended, companyStats.shortlistedCount]);
 
     const getAvailableSemesters = (year) => {
         const semesterMap = { 'I': ['1', '2'], 'II': ['3', '4'], 'III': ['5', '6'], 'IV': ['7', '8'] };
@@ -355,6 +518,7 @@ function StuProfile({ onLogout, onViewChange }) {
         setCurrentYear(merged.currentYear ? String(merged.currentYear) : '');
         setCurrentSemester(merged.currentSemester ? String(merged.currentSemester) : '');
         setSelectedSection(merged.section ? String(merged.section) : '');
+        setSkills(Array.isArray(merged.skills) ? merged.skills : parseMultiValue(merged.skillSet || ''));
         
         if (merged.dob) {
             const dobStr = merged.dob.toString();
@@ -668,6 +832,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
                 passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
                 skillSet: formData.get('skillSet') || studentData?.skillSet || '',
+                skills: skills.filter(s => s.trim()),
                 valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
                 aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
                 rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
@@ -778,12 +943,32 @@ function StuProfile({ onLogout, onViewChange }) {
         }
     };
 
+    const handleAddSkill = () => {
+        setSkills(prev => [...prev, '']);
+    };
+
+    const handleSkillChange = (index, value) => {
+        setSkills(prev => {
+            const updated = [...prev];
+            updated[index] = value;
+            return updated;
+        });
+    };
+
+    const handleRemoveSkill = (index) => {
+        setSkills(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleMobileChange = (e, fieldName) => {
         let value = e.target.value;
         // Remove leading zeros
         value = value.replace(/^0+/, '');
         // Only allow digits
         value = value.replace(/\D/g, '');
+        // First digit must be 6, 7, 8, or 9
+        if (value.length > 0 && !/^[6789]/.test(value)) {
+            value = '';
+        }
         // Limit to 10 digits
         value = value.substring(0, 10);
         setStudentData(prev => ({ ...prev, [fieldName]: value }));
@@ -867,126 +1052,215 @@ function StuProfile({ onLogout, onViewChange }) {
                             <h3 className={styles.sectionHeader}>Personal Information</h3>
                             <div className={styles.formGrid}>
                                 <div className={styles.personalInfoFields}>
-                                    <input type="text" name="firstName" placeholder="First Name" value={studentData?.firstName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="lastName" placeholder="Last Name" value={studentData?.lastName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="regNo" placeholder="Register Number" value={studentData?.regNo || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="batch" placeholder="Batch" value={studentData?.batch || ''} readOnly className={styles.readOnlyInput} />
-                                    <div className={styles.datepickerWrapper}>
-                                        <DatePicker
-                                            selected={dob}
-                                            onChange={() => {}}
-                                            dateFormat="dd/MM/yyyy"
-                                            placeholderText="DOB"
-                                            className={`${styles.datepickerInput} ${styles.readOnlyInput}`}
-                                            wrapperClassName="StuProfile-datepicker-wrapper-inner"
-                                            showPopperArrow={false}
-                                            readOnly
-                                            disabled
-                                        />
+                                    <div className={styles.field}>
+                                        <label>First Name <RequiredStar /></label>
+                                        <input type="text" name="firstName" placeholder="Enter First Name" value={studentData?.firstName || ''} readOnly className={styles.readOnlyInput} />
                                     </div>
-                                    <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
-                                        <option value="" disabled>Degree</option>
-                                        <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
-                                    </select>
-                                    <select
-                                        name="branch"
-                                        value={studentData?.branch || ''}
-                                        disabled
-                                        className={styles.readOnlyInput}
-                                    >
-                                        <option value="" disabled>Branch</option>
-                                        <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
-                                    </select>
-                                    <select
-                                        name="currentYear"
-                                        value={currentYear || ''}
-                                        required
-                                        onChange={(e) => {
-                                            const newYear = e.target.value;
-                                            setCurrentYear(newYear);
-                                            const semesters = getAvailableSemesters(newYear);
-                                            const firstSemester = semesters[0] || '';
-                                            setCurrentSemester(firstSemester);
-                                            setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
-                                        }}
-                                        disabled={isSaving}
-                                    >
-                                        <option value="" disabled>Current Year</option>
-                                        <option value="I">I</option>
-                                        <option value="II">II</option>
-                                        <option value="III">III</option>
-                                        <option value="IV">IV</option>
-                                    </select>
-                                    <select
-                                        name="currentSemester"
-                                        value={currentSemester || ''}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setCurrentSemester(value);
-                                            setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
-                                        }}
-                                        required
-                                        disabled={!currentYear || isSaving}
-                                    >
-                                        <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
-                                        {getAvailableSemesters(currentYear).map((sem) => (
-                                            <option key={sem} value={sem}>
-                                                {sem}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <>
+                                    <div className={styles.field}>
+                                        <label>Last Name <RequiredStar /></label>
+                                        <input type="text" name="lastName" placeholder="Enter Last Name" value={studentData?.lastName || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Register Number <RequiredStar /></label>
+                                        <input type="text" name="regNo" placeholder="Enter Register Number" value={studentData?.regNo || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Batch <RequiredStar /></label>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <input
+                                                type="text"
+                                                value={studentData?.batch ? (studentData.batch.split('-')[0] || '') : ''}
+                                                placeholder="Start"
+                                                readOnly
+                                                className={styles.readOnlyInput}
+                                                style={{ flex: 1 }}
+                                            />
+                                            <span style={{ fontWeight: '600', color: '#333' }}>-</span>
+                                            <input
+                                                type="text"
+                                                value={studentData?.batch ? (studentData.batch.split('-')[1] || '') : ''}
+                                                placeholder="End"
+                                                readOnly
+                                                className={styles.readOnlyInput}
+                                                style={{ flex: 1 }}
+                                            />
+                                        </div>
+                                        <input type="hidden" name="batch" value={studentData?.batch || ''} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Date of Birth <RequiredStar /></label>
+                                        <div className={styles.datepickerWrapper}>
+                                            <DatePicker
+                                                selected={dob}
+                                                onChange={() => {}}
+                                                dateFormat="dd-MM-yyyy"
+                                                placeholderText="Enter DOB"
+                                                className={`${styles.datepickerInput} ${styles.readOnlyInput}`}
+                                                wrapperClassName="StuProfile-datepicker-wrapper-inner"
+                                                showPopperArrow={false}
+                                                readOnly
+                                                disabled
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Degree <RequiredStar /></label>
+                                        <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
+                                            <option value="" disabled>Degree</option>
+                                            <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
+                                        </select>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Branch <RequiredStar /></label>
                                         <select
-                                            name="section"
-                                            value={selectedSection}
+                                            name="branch"
+                                            value={studentData?.branch || ''}
                                             disabled
                                             className={styles.readOnlyInput}
                                         >
-                                            <option value="" disabled>
-                                                Section *
-                                            </option>
-                                            <option value="A">A</option>
-                                            <option value="B">B</option>
-                                            <option value="C">C</option>
-                                            <option value="D">D</option>
+                                            <option value="" disabled>Branch</option>
+                                            <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
                                         </select>
-                                        <input type="hidden" name="section" value={selectedSection || ''} />
-                                    </>
-                                    <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
-                                        <option value="" disabled>Gender</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                    </select>
-                                    <input type="text" name="address" placeholder="Address" defaultValue={studentData?.address || ''} disabled={isSaving} />
-                                    <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} disabled={isSaving} />
-                                    <input type="email" name="primaryEmail" placeholder="Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={isSaving} />
-                                    <input type="email" name="domainEmail" placeholder="Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
-                                    <div className={styles.mobileInputWrapper}>
-                                        <div className={styles.countryCode}>+91</div>
-                                        <input type="tel" name="mobileNo" placeholder="Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
                                     </div>
-                                    <input type="text" name="fatherName" placeholder="Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={isSaving} />
-                                    <div className={styles.mobileInputWrapper}>
-                                        <div className={styles.countryCode}>+91</div>
-                                        <input type="tel" name="fatherMobile" placeholder="Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    <div className={styles.field}>
+                                        <label>Current Year <RequiredStar /></label>
+                                        <select
+                                            name="currentYear"
+                                            value={currentYear || ''}
+                                            required
+                                            onChange={(e) => {
+                                                const newYear = e.target.value;
+                                                setCurrentYear(newYear);
+                                                const semesters = getAvailableSemesters(newYear);
+                                                const firstSemester = semesters[0] || '';
+                                                setCurrentSemester(firstSemester);
+                                                setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
+                                            }}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="" disabled>Current Year</option>
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                        </select>
                                     </div>
-                                    <input type="text" name="motherName" placeholder="Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={isSaving} />
-                                    <div className={styles.mobileInputWrapper}>
-                                        <div className={styles.countryCode}>+91</div>
-                                        <input type="tel" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    <div className={styles.field}>
+                                        <label>Current Semester <RequiredStar /></label>
+                                        <select
+                                            name="currentSemester"
+                                            value={currentSemester || ''}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setCurrentSemester(value);
+                                                setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
+                                            }}
+                                            required
+                                            disabled={!currentYear || isSaving}
+                                        >
+                                            <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
+                                            {getAvailableSemesters(currentYear).map((sem) => (
+                                                <option key={sem} value={sem}>
+                                                    {sem}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={isSaving} />
-                                    <div className={styles.mobileInputWrapper}>
-                                        <div className={styles.countryCode}>+91</div>
-                                        <input type="tel" name="guardianMobile" placeholder="Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                    <div className={styles.field}>
+                                        <label>Section <RequiredStar /></label>
+                                        <>
+                                            <select
+                                                name="section"
+                                                value={selectedSection}
+                                                disabled
+                                                className={styles.readOnlyInput}
+                                            >
+                                                <option value="" disabled>
+                                                    Section *
+                                                </option>
+                                                <option value="A">A</option>
+                                                <option value="B">B</option>
+                                                <option value="C">C</option>
+                                                <option value="D">D</option>
+                                            </select>
+                                            <input type="hidden" name="section" value={selectedSection || ''} />
+                                        </>
                                     </div>
-                                    <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" value={studentData?.aadhaarNo || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="url" name="portfolioLink" placeholder="Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={isSaving} />
+                                    <div className={styles.field}>
+                                        <label>Gender <RequiredStar /></label>
+                                        <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
+                                            <option value="" disabled>Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                        </select>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Address</label>
+                                        <input type="text" name="address" placeholder="Enter Address" defaultValue={studentData?.address || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>City</label>
+                                        <input type="text" name="city" placeholder="Enter City" defaultValue={studentData?.city || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Primary Email <RequiredStar /></label>
+                                        <input type="email" name="primaryEmail" placeholder="Enter Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Domain Email <RequiredStar /></label>
+                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Mobile No. <RequiredStar /></label>
+                                        <div className={styles.mobileInputWrapper}>
+                                            <div className={styles.countryCode}>+91</div>
+                                            <input type="tel" name="mobileNo" placeholder="Enter Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                        </div>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Father Name <RequiredStar /></label>
+                                        <input type="text" name="fatherName" placeholder="Enter Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Father Occupation</label>
+                                        <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Father Mobile No. <RequiredStar /></label>
+                                        <div className={styles.mobileInputWrapper}>
+                                            <div className={styles.countryCode}>+91</div>
+                                            <input type="tel" name="fatherMobile" placeholder="Enter Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                        </div>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Mother Name <RequiredStar /></label>
+                                        <input type="text" name="motherName" placeholder="Enter Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Mother Occupation</label>
+                                        <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Mother Mobile No. <RequiredStar /></label>
+                                        <div className={styles.mobileInputWrapper}>
+                                            <div className={styles.countryCode}>+91</div>
+                                            <input type="tel" name="motherMobile" placeholder="Enter Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                        </div>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Guardian Name</label>
+                                        <input type="text" name="guardianName" placeholder="Enter Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Guardian Number</label>
+                                        <div className={styles.mobileInputWrapper}>
+                                            <div className={styles.countryCode}>+91</div>
+                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
-                                    <div className={styles.profilePhotoBox} style={{ height: '675px' }}>
+                                    <div className={styles.profilePhotoBox} style={{ height: '732px' }}>
                                         <h3 className={styles.sectionHeader}>Profile Photo</h3>
                                         <div className={styles.profileIconContainer}>
                                             {profileImage ? (
@@ -1038,7 +1312,8 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <p className={styles.uploadHint}>*JPG, JPEG, and WebP formats allowed (WebP recommended).</p>
                                         </div>
                                     </div>
-                                    <div style={{ marginTop: '24px' }}>
+                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                        <label>Community <RequiredStar /></label>
                                         <select name="community" value={studentData?.community || ''} disabled className={styles.readOnlyInput}>
                                             <option value="" disabled>
                                                 Community
@@ -1052,7 +1327,8 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <option value="ST">ST</option>
                                         </select>
                                     </div>
-                                    <div style={{ marginTop: '24px' }}>
+                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                        <label>Medium of Study <RequiredStar /></label>
                                         <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} disabled className={styles.readOnlyInput}>
                                             <option value="" disabled>
                                                 Medium
@@ -1062,8 +1338,17 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <option value="Other">Others</option>
                                         </select>
                                     </div>
-                                    <div style={{ marginTop: '24px' }}>
-                                        <input type="text" name="bloodGroup" placeholder="Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={isSaving} />
+                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                        <label>Blood Group</label>
+                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={isSaving} />
+                                    </div>
+                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                        <label>Aadhaar Number <RequiredStar /></label>
+                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                        <label>Portfolio Link</label>
+                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={isSaving} />
                                     </div>
                                 </div>
                             </div>
@@ -1081,12 +1366,78 @@ function StuProfile({ onLogout, onViewChange }) {
                                     <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} disabled />
                                     <label htmlFor="both">Both</label>
                                 </div>
-                                    <input type="text" name="tenthInstitution" placeholder="10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
-                                    <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}><option value="" disabled>10th Board/University</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select>
-                                    <input type="text" name="tenthPercentage" placeholder="10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.readOnlyInput} />
-                                    <input type="text" name="tenthYear" placeholder="10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
-                                    {(studyCategory === '12th' || studyCategory === 'both') && ( <> <input type="text" name="twelfthInstitution" placeholder="12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput}/> <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}><option value="" disabled>12th Board/University</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select> <input type="text" name="twelfthPercentage" placeholder="12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.readOnlyInput}/> <input type="text" name="twelfthYear" placeholder="12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput}/> <input type="text" name="twelfthCutoff" placeholder="12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.readOnlyInput}/> </> )}
-                                    {(studyCategory === 'diploma' || studyCategory === 'both') && ( <> <input type="text" name="diplomaInstitution" placeholder="Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput}/> <input type="text" name="diplomaBranch" placeholder="Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput}/> <input type="text" name="diplomaPercentage" placeholder="Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.readOnlyInput}/> <input type="text" name="diplomaYear" placeholder="Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput}/> </> )}
+                                    <div className={styles.field}>
+                                        <label>10th Institution Name <RequiredStar /></label>
+                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>10th Board / University <RequiredStar /></label>
+                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
+                                            <option value="" disabled>10th Board/University</option>
+                                            <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
+                                            <option value="CBSE">CBSE</option>
+                                            <option value="ICSE">ICSE</option>
+                                            <option value="Other State Board">Other State Board</option>
+                                        </select>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>10th Percentage <RequiredStar /></label>
+                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>10th Year of Passing <RequiredStar /></label>
+                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
+                                    </div>
+                                    {(studyCategory === '12th' || studyCategory === 'both') && (
+                                        <>
+                                            <div className={styles.field}>
+                                                <label>12th Institution Name <RequiredStar /></label>
+                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>12th Board / University <RequiredStar /></label>
+                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}>
+                                                    <option value="" disabled>12th Board/University</option>
+                                                    <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
+                                                    <option value="CBSE">CBSE</option>
+                                                    <option value="ICSE">ICSE</option>
+                                                    <option value="Other State Board">Other State Board</option>
+                                                </select>
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>12th Percentage <RequiredStar /></label>
+                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>12th Year of Passing <RequiredStar /></label>
+                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>12th Cut-off Marks <RequiredStar /></label>
+                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                        </>
+                                    )}
+                                    {(studyCategory === 'diploma' || studyCategory === 'both') && (
+                                        <>
+                                            <div className={styles.field}>
+                                                <label>Diploma Institution <RequiredStar /></label>
+                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>Diploma Branch <RequiredStar /></label>
+                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>Diploma Percentage <RequiredStar /></label>
+                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>Diploma Year of Passing <RequiredStar /></label>
+                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput} />
+                                            </div>
+                                        </>
+                                    )}
                             </div>
                         </div>
                         
@@ -1128,225 +1479,675 @@ function StuProfile({ onLogout, onViewChange }) {
                             <div className={styles.semesterSeparator}></div>
                             
                             <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
-                                <input
-                                    type="text"
-                                    name="overallCGPA"
-                                    placeholder="CGPA"
-                                    value={studentData?.overallCGPA ?? ''}
-                                    readOnly
-                                    className={styles.readOnlyInput}
-                                />
-                                <input
-                                    type="text"
-                                    name="clearedBacklogs"
-                                    placeholder="No. of Backlog (Arrear Cleared)"
-                                    value={studentData?.clearedBacklogs ?? ''}
-                                    readOnly
-                                    className={styles.readOnlyInput}
-                                />
-                                <input
-                                    type="text"
-                                    name="currentBacklogs"
-                                    placeholder="No. of Current Backlog"
-                                    value={studentData?.currentBacklogs ?? ''}
-                                    readOnly
-                                    className={styles.readOnlyInput}
-                                />
-                                <input
-                                    type="text"
-                                    name="yearOfGap"
-                                    placeholder="Year of Gap"
-                                    value={studentData?.yearOfGap ?? ''}
-                                    readOnly
-                                    className={styles.readOnlyInput}
-                                />
-                                <input
-                                    type="text"
-                                    name="gapReason"
-                                    placeholder="Reason for year of Gap"
-                                    value={studentData?.gapReason ?? ''}
-                                    readOnly
-                                    className={`${styles.readOnlyInput} ${styles.fullWidth}`}
-                                />
+                                <div className={styles.field}>
+                                    <label>CGPA</label>
+                                    <input
+                                        type="text"
+                                        name="overallCGPA"
+                                        placeholder="Enter CGPA"
+                                        value={studentData?.overallCGPA ?? ''}
+                                        readOnly
+                                        className={styles.readOnlyInput}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>No. of Backlog (Arrear Cleared)</label>
+                                    <input
+                                        type="text"
+                                        name="clearedBacklogs"
+                                        placeholder="Enter No. of Backlog (Arrear Cleared)"
+                                        value={studentData?.clearedBacklogs ?? ''}
+                                        readOnly
+                                        className={styles.readOnlyInput}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>No. of Current Backlog</label>
+                                    <input
+                                        type="text"
+                                        name="currentBacklogs"
+                                        placeholder="Enter No. of Current Backlog"
+                                        value={studentData?.currentBacklogs ?? ''}
+                                        readOnly
+                                        className={styles.readOnlyInput}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Year of Gap</label>
+                                    <input
+                                        type="text"
+                                        name="yearOfGap"
+                                        placeholder="Enter Year of Gap"
+                                        value={studentData?.yearOfGap ?? ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, yearOfGap: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={`${styles.field} ${styles.fullWidth}`}>
+                                    <label>Reason for Year of Gap</label>
+                                    <input
+                                        type="text"
+                                        name="gapReason"
+                                        placeholder="Enter Reason for Year of Gap"
+                                        value={studentData?.gapReason ?? ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, gapReason: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
                             </div>
                         </div>
                         
+                        {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
+                        <div className={styles.profileSectionContainer}>
+                            {!showAnalysis ? (
+                                <>
+                                    <h3 className={styles.sectionHeader}>Company Details</h3>
+                                    <div className={styles.companyStatsGrid}>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Total Companies Attended</span>
+                                            <span className={styles.companyStatValue}>{companyStats.totalCompaniesAttended}</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Total Drives Attended</span>
+                                            <span className={styles.companyStatValue}>{companyStats.totalDrivesAttended}</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Shortlisted Count</span>
+                                            <span className={styles.companyStatValue}>{companyStats.shortlistedCount}</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Preferred Mode</span>
+                                            <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
+                                        </div>
+                                        <div className={styles.companyStatCardEmpty}>
+                                            <span className={styles.companyStatLabel}>#Last Drive Attended</span>
+                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
+                                        </div>
+                                        <div className={styles.companyStatCardEmpty}>
+                                            <span className={styles.companyStatLabel}>#Last Drive Result</span>
+                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
+                                        </div>
+                                    </div>
+                                    <div className={styles.companyBottomRow}>
+                                        <div className={styles.successRateWrapper}>
+                                            <div className={styles.successRateCircleContainer}>
+                                                <svg className={styles.successRateSvg} viewBox="0 0 120 120">
+                                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e8e8" strokeWidth="10" />
+                                                    <circle
+                                                        cx="60" cy="60" r="50" fill="none"
+                                                        stroke="#0062C5"
+                                                        strokeWidth="10"
+                                                        strokeLinecap="round"
+                                                        strokeDasharray="314.16"
+                                                        strokeDashoffset={314.16 * (1 - successRate / 100)}
+                                                        transform="rotate(-90 60 60)"
+                                                        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                                                    />
+                                                </svg>
+                                                <div className={styles.successRateInner}>
+                                                    <span className={styles.successRateLabel}>Success Rate %</span>
+                                                    <span className={styles.successRateNum}>{successRate}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={styles.performanceInsightsCard}>
+                                            <h4 className={styles.insightsTitle}>Top performance Insights</h4>
+                                            <div className={styles.insightRow}>
+                                                <span className={styles.insightLabel}>Highest Package Drive :</span>
+                                                <span className={styles.insightValue}>{companyStats.highestPackageDrive} LPA</span>
+                                            </div>
+                                            <div className={styles.insightRow}>
+                                                <span className={styles.insightLabel}>Total Rounds Cleared :</span>
+                                                <span className={styles.insightValue}>{companyStats.totalRoundsCleared}</span>
+                                            </div>
+                                        </div>
+                                        <button type="button" className={styles.viewAnalysisBtn} onClick={() => setShowAnalysis(true)}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={styles.viewAnalysisIcon}>
+                                                <path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-3h2v15h-2V5zm4 6h2v9h-2v-9z"/>
+                                            </svg>
+                                            <span>View Analysis</span>
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {/* ── Analysis Panel (inline) ── */}
+                                    <div className={styles.anlsHeader}>
+                                        <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
+                                        <div className={styles.anlsTitleRow}>
+                                            <span className={styles.anlsPlacedBadge}><span className={styles.anlsPlacedDot} />Placed</span>
+                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back ↩</button>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.anlsGrid}>
+                                        {/* Left: Pie Chart */}
+                                        <div
+                                            className={styles.anlsPieCol}
+                                            onMouseLeave={() => { if (!selectedRound) setHoveredRound(null); }}
+                                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                                        >
+                                            <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
+                                                <PieChart tabIndex={-1} style={{ outline: 'none' }}>
+                                                    <Pie
+                                                        data={PIE_DATA}
+                                                        cx="50%" cy="50%" outerRadius={isMobile ? 130 : 148} dataKey="value"
+                                                        animationBegin={0} animationDuration={800}
+                                                        isAnimationActive={false}
+                                                        labelLine={false}
+                                                        activeIndex={-1}
+                                                        activeShape={null}
+                                                        onMouseEnter={(data, index) => {
+                                                            if (!selectedRound) setHoveredRound(PIE_DATA[index].name);
+                                                        }}
+                                                        onClick={(data, index) => {
+                                                            const name = PIE_DATA[index].name;
+                                                            setSelectedRound(name);
+                                                            setHoveredRound(name);
+                                                        }}
+                                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
+                                                            const RADIAN = Math.PI / 180;
+                                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
+                                                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                            let rot = -midAngle;
+                                                            rot = ((rot % 360) + 360) % 360;
+                                                            if (rot > 180) rot -= 360;
+                                                            if (rot > 90) rot -= 180;
+                                                            if (rot < -90) rot += 180;
+                                                            const label = name === 'HR Round' ? 'HR'
+                                                                        : name === 'GD Round' ? 'GD'
+                                                                        : name;
+                                                            const fs = isMobile ? 11 : 11;
+                                                            return (
+                                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
+                                                                    {label}
+                                                                </text>
+                                                            );
+                                                        }}
+                                                    >
+                                                        {PIE_DATA.map((entry, i) => {
+                                                            const activeRound = selectedRound || hoveredRound;
+                                                            const isActive = !activeRound || entry.name === activeRound;
+                                                            return (
+                                                                <Cell
+                                                                    key={i}
+                                                                    fill={isActive ? entry.color : '#BDBDBD'}
+                                                                    style={{ cursor: 'pointer', outline: 'none' }}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </Pie>
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                            {selectedRound && (
+                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-4px' }}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.anlsClearBtn}
+                                                        onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
+                                                    >
+                                                        ✕ Clear Selection
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right: stats + legend */}
+                                        <div className={styles.anlsRightCol}>
+                                            <div className={styles.anlsRightTop}>
+                                                {/* Left column: Stats grid OR Companies card on click */}
+                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                    <div className={styles.anlsCompaniesCard} style={{ borderColor: PIE_DATA.find(d => d.name === selectedRound)?.color }}>
+                                                        <h4 className={styles.anlsCompaniesTitle}>{selectedRound} Companies</h4>
+                                                        <div className={styles.anlsCompaniesList}>
+                                                            {ROUND_DETAILS[selectedRound].companies.map(c => {
+                                                                const sColor = c.status === 'PASSED' ? '#10B981' : c.status === 'FAILED' ? '#EF4444' : '#94A3B8';
+                                                                return (
+                                                                    <div key={c.name} className={styles.anlsCompanyRow}>
+                                                                        <span className={styles.anlsCompanyDot} style={{ background: sColor }} />
+                                                                        <span className={styles.anlsCompanyName}>{c.name}</span>
+                                                                        <span className={styles.anlsCompanyStatus} style={{ color: sColor }}>{c.status}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className={styles.anlsStatsGrid}>
+                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardLavender}`}>
+                                                            <div className={styles.anlsStatTop}>
+                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                    <circle cx="9" cy="7" r="4" stroke="#6C63FF" strokeWidth="1.8"/>
+                                                                    <path d="M2 20c0-4 3.134-7 7-7" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round"/>
+                                                                    <path d="M16 13l2 2 4-4" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                </svg>
+                                                                <span className={styles.anlsStatLabel}>Attended</span>
+                                                            </div>
+                                                            <div className={styles.anlsStatValue}>38</div>
+                                                        </div>
+                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
+                                                            <div className={styles.anlsStatTop}>
+                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                    <circle cx="12" cy="12" r="9" stroke="#2085f6" strokeWidth="1.8"/>
+                                                                    <path d="M8 12l3 3 5-5" stroke="#2085f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                </svg>
+                                                                <span className={styles.anlsStatLabel}>Shortlisted</span>
+                                                            </div>
+                                                            <div className={styles.anlsStatValue}>12</div>
+                                                        </div>
+                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
+                                                            <div className={styles.anlsStatTop}>
+                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                    <circle cx="12" cy="12" r="9" stroke="#E05C6C" strokeWidth="1.8"/>
+                                                                    <path d="M12 8v4" stroke="#E05C6C" strokeWidth="1.8" strokeLinecap="round"/>
+                                                                    <circle cx="12" cy="16" r="0.8" fill="#E05C6C"/>
+                                                                </svg>
+                                                                <span className={styles.anlsStatLabel}>Work On</span>
+                                                            </div>
+                                                            <ul className={styles.anlsStatList}>
+                                                                {['Group Discussion','Aptitude','HR Round','Technical'].map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                            </ul>
+                                                        </div>
+                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
+                                                            <div className={styles.anlsStatTop}>
+                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#27AE8C" strokeWidth="1.6" strokeLinejoin="round"/>
+                                                                </svg>
+                                                                <span className={styles.anlsStatLabel}>Best</span>
+                                                            </div>
+                                                            <ul className={styles.anlsStatList}>
+                                                                {['Communication','Coding','HR Round'].map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Right column: Achievement+LastActivity OR Good/Bad on click */}
+                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                    <div className={styles.anlsAchievCol}>
+                                                        <div className={styles.anlsGoodCard}>
+                                                            <div className={styles.anlsGoodBadHeader}>
+                                                                <span className={styles.anlsGoodIcon}>👍</span>
+                                                                <span className={styles.anlsGoodLabel}>GOOD</span>
+                                                            </div>
+                                                            {ROUND_DETAILS[selectedRound].good.map((g, i) => (
+                                                                <div key={i} className={styles.anlsGoodItem}>
+                                                                    <span className={styles.anlsCheckIcon}>✅</span>
+                                                                    <span>{g}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className={styles.anlsBadCard}>
+                                                            <div className={styles.anlsGoodBadHeader}>
+                                                                <span className={styles.anlsGoodIcon}>👎</span>
+                                                                <span className={styles.anlsBadLabel}>BAD</span>
+                                                            </div>
+                                                            {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
+                                                                <div key={i} className={styles.anlsBadItem}>
+                                                                    <span className={styles.anlsCheckIcon}>❌</span>
+                                                                    <span>{b}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className={styles.anlsAchievCol}>
+                                                        <div className={styles.anlsAchievBanner}>
+                                                            <div>
+                                                                <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
+                                                                <div className={styles.anlsAchievMain}>
+                                                                    <span className={styles.anlsAchievLPA}>24 LPA</span>
+                                                                    <span className={styles.anlsAchievSub}>Highest Package</span>
+                                                                </div>
+                                                                <div className={styles.anlsAchievCompany}>
+                                                                    <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z"/></svg>
+                                                                    <span>Google</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className={styles.anlsAchievBadge}>
+                                                                <img src={BestAchievement} alt="Best Achievement" width="40" height="40" style={{ objectFit: 'contain' }} />
+                                                            </div>
+                                                        </div>
+                                                        <div className={styles.anlsLastActivity}>
+                                                            <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
+                                                            <p className={styles.anlsLastCompany}>Microsoft</p>
+                                                            <p className={styles.anlsLastRole}>SDE Intern</p>
+                                                            <span className={styles.anlsLastBadge}>Interviewing</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Legend always visible */}
+                                            <div className={styles.anlsLegendBox}>
+                                                <div className={styles.anlsLegend}>
+                                                    {[
+                                                        { n:'Communication', c:'#6C7A89', p:26 },
+                                                        { n:'Coding',        c:'#197AFF', p:24 },
+                                                        { n:'GD Round',      c:'#FF9F43', p:8  },
+                                                        { n:'Aptitude',      c:'#F4C542', p:12 },
+                                                        { n:'Technical',     c:'#3DDAD7', p:15 },
+                                                        { n:'HR round',      c:'#FF7A9E', p:15 },
+                                                    ].map(d => (
+                                                        <div key={d.n} className={styles.anlsLegendItem}>
+                                                            <span className={styles.anlsLegendCircle} style={{ background: d.c }}>{d.p}%</span>
+                                                            <span className={styles.anlsLegendName}>{d.n}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Stepper */}
+                                    <div className={styles.anlsStepper}>
+                                        {[
+                                            { label:'Applied',   s:'done'    },
+                                            { label:'Attended',  s:'done'    },
+                                            { label:'Interview', s:'current' },
+                                            { label:'Result',    s:'pending' },
+                                        ].map((step, i, arr) => (
+                                            <React.Fragment key={step.label}>
+                                                <div className={styles.anlsStepItem}>
+                                                    <div className={`${styles.anlsStepCircle} ${step.s === 'done' ? styles.anlsStep_done : step.s === 'current' ? styles.anlsStep_current : styles.anlsStep_pending}`}>
+                                                        {step.s === 'done' ? (
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        ) : step.s === 'current' ? (
+                                                            <span className={styles.anlsStepDot}/>
+                                                        ) : null}
+                                                    </div>
+                                                    <span className={`${styles.anlsStepLabel} ${step.s === 'done' ? styles.anlsStepLbl_done : step.s === 'current' ? styles.anlsStepLbl_current : styles.anlsStepLbl_pending}`}>{step.label}</span>
+                                                </div>
+                                                {i < arr.length - 1 && (
+                                                    <div className={`${styles.anlsStepLine} ${arr[i+1].s === 'pending' ? styles.anlsStepLinePending : styles.anlsStepLineDone}`}/>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* --- SKILLS --- */}
+                        <div className={styles.profileSectionContainer}>
+                            <h3 className={styles.sectionHeader}>Skills</h3>
+                            <div className={styles.skillsGrid}>
+                                {skills.map((skill, index) => (
+                                    <div key={index} className={styles.skillCard}>
+                                        <input
+                                            type="text"
+                                            className={styles.skillInput}
+                                            value={skill}
+                                            onChange={(e) => handleSkillChange(index, e.target.value)}
+                                            placeholder={`Skill ${index + 1}`}
+                                            disabled={isSaving}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={styles.removeSkillBtn}
+                                            onClick={() => handleRemoveSkill(index)}
+                                            disabled={isSaving}
+                                            aria-label="Remove skill"
+                                        >
+                                            <svg viewBox="0 0 512 512" fill="currentColor" style={{width:'14px',height:'14px'}}><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z"/></svg>
+                                        </button>
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    className={styles.addSkillBtn}
+                                    onClick={handleAddSkill}
+                                    disabled={isSaving}
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:'22px',height:'22px',flexShrink:0}}>
+                                        <circle cx="12" cy="12" r="10" fill="white" stroke="white"/>
+                                        <line x1="12" y1="7" x2="12" y2="17" stroke="#197AFF" strokeWidth="2.5"/>
+                                        <line x1="7" y1="12" x2="17" y2="12" stroke="#197AFF" strokeWidth="2.5"/>
+                                    </svg>
+                                    <span>Click to Add Skill</span>
+                                </button>
+                            </div>
+                        </div>
+
                         {/* --- OTHER DETAILS --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Other Details</h3>
                             <div className={styles.formGrid}>
-                                    <select
-                                        name="residentialStatus"
-                                        value={studentData?.residentialStatus || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
-                                        disabled={isSaving}
-                                    >
-                                        <option value="" disabled>Residential status</option>
-                                        <option value="Hosteller">Hosteller</option>
-                                        <option value="Dayscholar">Dayscholar</option>
-                                    </select>
-                                    <>
+                                    <div className={styles.field}>
+                                        <label>Residential Status <RequiredStar /></label>
                                         <select
-                                            name="quota"
-                                            value={studentData?.quota || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
+                                            name="residentialStatus"
+                                            value={studentData?.residentialStatus || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
+                                            disabled={isSaving}
                                         >
-                                            <option value="" disabled>Quota</option>
-                                            <option value="Management">Management</option>
-                                            <option value="Counselling">Counselling</option>
+                                            <option value="" disabled>Residential status</option>
+                                            <option value="Hosteller">Hosteller</option>
+                                            <option value="Dayscholar">Dayscholar</option>
                                         </select>
-                                        <input type="hidden" name="quota" value={studentData?.quota || ''} />
-                                    </>
-                                    <input
-                                        type="text"
-                                        name="languagesKnown"
-                                        placeholder="Languages Known"
-                                        value={studentData?.languagesKnown || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <>
-                                        <select
-                                            name="firstGraduate"
-                                            value={studentData?.firstGraduate || ''}
-                                            disabled
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Quota <RequiredStar /></label>
+                                        <>
+                                            <select
+                                                name="quota"
+                                                value={studentData?.quota || ''}
+                                                disabled
+                                                className={styles.readOnlyInput}
+                                            >
+                                                <option value="" disabled>Quota</option>
+                                                <option value="Management">Management</option>
+                                                <option value="Counselling">Counselling</option>
+                                            </select>
+                                            <input type="hidden" name="quota" value={studentData?.quota || ''} />
+                                        </>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Spoken Languages</label>
+                                        <input
+                                            type="text"
+                                            name="languagesKnown"
+                                            placeholder="Exclude Tamil & English"
+                                            value={studentData?.languagesKnown || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>First Graduate <RequiredStar /></label>
+                                        <>
+                                            <select
+                                                name="firstGraduate"
+                                                value={studentData?.firstGraduate || ''}
+                                                disabled
+                                                className={styles.readOnlyInput}
+                                            >
+                                                <option value="" disabled>First Graduate</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                            <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
+                                        </>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Passport No.</label>
+                                        <input
+                                            type="text"
+                                            name="passportNo"
+                                            placeholder="Enter Passport No."
+                                            value={studentData?.passportNo || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Skill Set <RequiredStar /></label>
+                                        <input
+                                            type="text"
+                                            name="skillSet"
+                                            placeholder="Enter Skill Set"
+                                            value={studentData?.skillSet || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Value Added Courses</label>
+                                        <input
+                                            type="text"
+                                            name="valueAddedCourses"
+                                            placeholder="Enter Value Added Courses"
+                                            value={studentData?.valueAddedCourses || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>About Sibling</label>
+                                        <input
+                                            type="text"
+                                            name="aboutSibling"
+                                            placeholder="Enter About Sibling"
+                                            value={studentData?.aboutSibling || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Ration Card No. <RequiredStar /></label>
+                                        <input
+                                            type="text"
+                                            name="rationCardNo"
+                                            placeholder="Enter Ration Card No."
+                                            value={studentData?.rationCardNo || ''}
+                                            readOnly
                                             className={styles.readOnlyInput}
-                                        >
-                                            <option value="" disabled>First Graduate</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                        <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
-                                    </>
-                                    <input
-                                        type="text"
-                                        name="passportNo"
-                                        placeholder="Passport No."
-                                        value={studentData?.passportNo || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="skillSet"
-                                        placeholder="Skill set"
-                                        value={studentData?.skillSet || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="valueAddedCourses"
-                                        placeholder="Value Added Courses"
-                                        value={studentData?.valueAddedCourses || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="aboutSibling"
-                                        placeholder="About sibling"
-                                        value={studentData?.aboutSibling || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="rationCardNo"
-                                        placeholder="Ration card No."
-                                        value={studentData?.rationCardNo || ''}
-                                        readOnly
-                                        className={styles.readOnlyInput}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="familyAnnualIncome"
-                                        placeholder="Family Annual Income"
-                                        value={studentData?.familyAnnualIncome || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="text"
-                                        name="panNo"
-                                        placeholder="PAN No."
-                                        value={studentData?.panNo || ''}
-                                        readOnly
-                                        className={styles.readOnlyInput}
-                                    />
-                                    <>
-                                        <select
-                                            name="willingToSignBond"
-                                            value={studentData?.willingToSignBond || ''}
-                                            disabled
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Family Annual Income <RequiredStar /></label>
+                                        <input
+                                            type="text"
+                                            name="familyAnnualIncome"
+                                            placeholder="Enter Family Annual Income"
+                                            value={studentData?.familyAnnualIncome || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>PAN No. <RequiredStar /></label>
+                                        <input
+                                            type="text"
+                                            name="panNo"
+                                            placeholder="Enter PAN No."
+                                            value={studentData?.panNo || ''}
+                                            readOnly
                                             className={styles.readOnlyInput}
-                                        >
-                                            <option value="" disabled>Willing to Sign Bond</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                        <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
-                                    </>
-                                    <>
-                                        <select
-                                            name="preferredModeOfDrive"
-                                            value={studentData?.preferredModeOfDrive || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
-                                        >
-                                            <option value="" disabled>Preferred Mode of Drive</option>
-                                            <option value="On-Campus">On-Campus</option>
-                                            <option value="Off-Campus">Off-Campus</option>
-                                            <option value="Hybrid">Hybrid</option>
-                                        </select>
-                                        <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
-                                    </>
-                                    <input
-                                        type="url"
-                                        name="githubLink"
-                                        placeholder="GitHub Link (e.g. https://github.com/username)"
-                                        value={studentData?.githubLink || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
-                                        onBlur={(e) => {
-                                            const val = e.target.value.trim();
-                                            if (val && !GITHUB_URL_REGEX.test(val)) {
-                                                e.target.style.borderColor = '#dc3545';
-                                                e.target.title = 'Must be: https://github.com/your-username';
-                                                setUrlErrorType('GitHub');
-                                                setInvalidUrl(val);
-                                                setURLErrorPopupOpen(true);
-                                            } else {
-                                                e.target.style.borderColor = val ? '#28a745' : '';
-                                                e.target.title = '';
-                                            }
-                                        }}
-                                        disabled={isSaving}
-                                    />
-                                    <input
-                                        type="url"
-                                        name="linkedinLink"
-                                        placeholder="LinkedIn Link (e.g. https://linkedin.com/in/username)"
-                                        value={studentData?.linkedinLink || ''}
-                                        onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
-                                        onBlur={(e) => {
-                                            const val = e.target.value.trim();
-                                            if (val && !LINKEDIN_URL_REGEX.test(val)) {
-                                                e.target.style.borderColor = '#dc3545';
-                                                e.target.title = 'Must be: https://linkedin.com/in/your-username';
-                                                setUrlErrorType('LinkedIn');
-                                                setInvalidUrl(val);
-                                                setURLErrorPopupOpen(true);
-                                            } else {
-                                                e.target.style.borderColor = val ? '#28a745' : '';
-                                                e.target.title = '';
-                                            }
-                                        }}
-                                        disabled={isSaving}
-                                    />
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Willing to Sign Bond <RequiredStar /></label>
+                                        <>
+                                            <select
+                                                name="willingToSignBond"
+                                                value={studentData?.willingToSignBond || ''}
+                                                disabled
+                                                className={styles.readOnlyInput}
+                                            >
+                                                <option value="" disabled>Willing to Sign Bond</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                            <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
+                                        </>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Preferred Mode of Drive <RequiredStar /></label>
+                                        <>
+                                            <select
+                                                name="preferredModeOfDrive"
+                                                value={studentData?.preferredModeOfDrive || ''}
+                                                disabled
+                                                className={styles.readOnlyInput}
+                                            >
+                                                <option value="" disabled>Preferred Mode of Drive</option>
+                                                <option value="On-Campus">On-Campus</option>
+                                                <option value="Off-Campus">Off-Campus</option>
+                                                <option value="Hybrid">Hybrid</option>
+                                            </select>
+                                            <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
+                                        </>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>GitHub Link</label>
+                                        <input
+                                            type="url"
+                                            name="githubLink"
+                                            placeholder="Enter GitHub Link (e.g. https://github.com/username)"
+                                            value={studentData?.githubLink || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
+                                            onBlur={(e) => {
+                                                const val = e.target.value.trim();
+                                                if (val && !GITHUB_URL_REGEX.test(val)) {
+                                                    e.target.style.borderColor = '#dc3545';
+                                                    e.target.title = 'Must be: https://github.com/your-username';
+                                                    setUrlErrorType('GitHub');
+                                                    setInvalidUrl(val);
+                                                    setURLErrorPopupOpen(true);
+                                                } else {
+                                                    e.target.style.borderColor = val ? '#28a745' : '';
+                                                    e.target.title = '';
+                                                }
+                                            }}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>LinkedIn Link</label>
+                                        <input
+                                            type="url"
+                                            name="linkedinLink"
+                                            placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
+                                            value={studentData?.linkedinLink || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
+                                            onBlur={(e) => {
+                                                const val = e.target.value.trim();
+                                                if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                                                    e.target.style.borderColor = '#dc3545';
+                                                    e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                                                    setUrlErrorType('LinkedIn');
+                                                    setInvalidUrl(val);
+                                                    setURLErrorPopupOpen(true);
+                                                } else {
+                                                    e.target.style.borderColor = val ? '#28a745' : '';
+                                                    e.target.title = '';
+                                                }
+                                            }}
+                                            disabled={isSaving}
+                                        />
+                                    </div>
                                     <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Company Types</span>
+                                        <span className={styles.checkboxGroupLabel}>Preferred Training</span>
+                                        <div className={styles.checkboxOptions}>
+                                            {PREFERRED_TRAINING_OPTIONS.map((option) => (
+                                                <label key={option} className={styles.checkboxOption}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedTrainings.includes(option)}
+                                                        onChange={() => handleTrainingToggle(option)}
+                                                        disabled={isSaving}
+                                                        style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                                                    />
+                                                    <span style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>{option}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className={styles.checkboxGroup}>
+                                        <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>
                                         <div className={styles.checkboxOptions}>
                                             {COMPANY_TYPE_OPTIONS.map((option) => (
                                                 <label key={option} className={styles.checkboxOption}>
@@ -1362,7 +2163,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         </div>
                                     </div>
                                     <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Preferred Job Locations</span>
+                                        <span className={styles.checkboxGroupLabel}>Preferred Job Locations <RequiredStar /></span>
                                         <div className={styles.checkboxOptions}>
                                             {JOB_LOCATION_OPTIONS.map((option) => (
                                                 <label key={option} className={styles.checkboxOption}>

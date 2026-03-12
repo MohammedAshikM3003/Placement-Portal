@@ -1,13 +1,13 @@
 import React from 'react';
 import styles from './Adnavbar.module.css';
-import Admincapicon from '../../assets/updatedcoordAdminCapicon.svg';
+import Adminicon from '../../assets/Adminicon.png';
 
 const Adnavbar = ({ onToggleSidebar }) => {
   return (
     <div className={styles['ad-navbar']}>
       <div className={styles['ad-navbar-left']}> {/* Group logo and name */}
         <span className={styles['ad-portal-logo']}>
-          <img src={Admincapicon} alt="Portal Logo" />
+          <img src={Adminicon} alt="Portal Logo" />
         </span>
         <span className={styles['ad-portal-name']}>Placement Portal</span>
       </div>

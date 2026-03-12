@@ -1344,8 +1344,8 @@ function MainContent({ onViewChange }) {
   }, [studentData]);
 
   return (
-    <Box sx={{ p: { xs: 1, md: 1 }, mt: { xs: 0, md: 0 }, height: '100%' }}>
-        <Box display="flex" gap={2} sx={{ width: '100%', height: '100%', flexDirection: { xs: 'column', md: 'row' } }}>
+    <Box sx={{ p: { xs: 1, md: 1 }, mt: { xs: 0, md: 0 }, height: { xs: 'auto', md: '100%' } }}>
+        <Box display="flex" gap={2} sx={{ width: '100%', height: { xs: 'auto', md: '100%' }, flexDirection: { xs: 'column', md: 'row' } }}>
           {/* Left Column */}
           <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: { xs: '100%', md: '30%' }, height: { xs: 'auto', md: '100%' } }}>
             <Paper
@@ -1609,11 +1609,11 @@ function MainContent({ onViewChange }) {
             
             {/* Bottom Cards - ATS Score and Suggestions */}
             {resumeFromDB && (
-              <Box sx={{ display: 'flex', gap: 1.5, flex: '1 1 0', minHeight: '180px', mt: 0, flexDirection: { xs: 'column', md: 'row' } }}>
-                 <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: 'flex', gap: 1.5, flex: { xs: 'none', md: '1 1 0' }, minHeight: { xs: 'auto', md: '180px' }, mt: 0, flexDirection: { xs: 'column', md: 'row' } }}>
+                 <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: { xs: '270px', md: '100%' } }}>
                    <ATSScoreCard analysisResult={analysisResult} />
                  </Box>
-                 <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                 <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: { xs: '340px', md: '100%' } }}>
                    <ATSSuggestionsCard analysisResult={analysisResult} />
                  </Box>
               </Box>

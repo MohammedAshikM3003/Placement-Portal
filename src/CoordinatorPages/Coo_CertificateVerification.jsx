@@ -11,6 +11,7 @@ import { FaRegEye, FaSearch, FaMapMarkerAlt, FaImage, FaWindowMaximize } from "r
 import { IoClose } from "react-icons/io5";
 import certificateService from "../services/certificateService.jsx";
 import mongoDBService from "../services/mongoDBService.jsx";
+import gridfsService from "../services/gridfsService";
 import {
     CertificatePreviewProgressAlert,
     CertificatePreviewFailedAlert
@@ -160,6 +161,8 @@ const mapCertificateRecord = (certificate) => {
         fileType: certificate.fileType || '',
         fileSize: certificate.fileSize || 0,
         achievementId: certificate.achievementId || certificateId,
+        gridfsFileId: certificate.gridfsFileId || null,
+        gridfsFileUrl: certificate.gridfsFileUrl || null,
     };
 };
 
@@ -514,19 +517,107 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             return;
         }
 
+        // --- Try GridFS first: open directly as a streaming URL (no base64 download) ---
+        const gridfsUrl = certificateRecord.gridfsFileUrl || 
+            (certificateRecord.gridfsFileId ? `/api/file/${certificateRecord.gridfsFileId}` : null);
+
+        if (gridfsUrl) {
+            // Show progress popup and animate gradually while fetch runs in parallel
+            setPreviewState({ status: 'progress', progress: 0, errorMessage: '' });
+
+            const progressInterval = setInterval(() => {
+                setPreviewState(prev => {
+                    if (prev.status !== 'progress') return prev;
+                    return { ...prev, progress: prev.progress >= 85 ? prev.progress : prev.progress + 12 };
+                });
+            }, 150);
+
+            const resolvedUrl = gridfsService.getFileUrl(gridfsUrl);
+
+            try {
+                // Wait a moment so the progress popup is visible
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                const response = await fetch(resolvedUrl, {
+                    mode: 'cors',
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/pdf' }
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const blob = await response.blob();
+
+                clearInterval(progressInterval);
+                setPreviewState(prev => ({ ...prev, progress: 100 }));
+
+                // Let the 100% paint before opening the tab
+                setTimeout(() => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const fileName = certificateRecord.certName || certificateRecord.fileName || 'Certificate.pdf';
+
+                    const htmlContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>${fileName}</title>
+                            <style>body,html{margin:0;padding:0;height:100%;overflow:hidden}embed{width:100%;height:100%}</style>
+                        </head>
+                        <body>
+                            <embed src="${blobUrl}" type="application/pdf" />
+                        </body>
+                        </html>
+                    `;
+                    const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                    const htmlBlobUrl = URL.createObjectURL(htmlBlob);
+
+                    const previewWindow = window.open(htmlBlobUrl, '_blank');
+                    if (!previewWindow) {
+                        URL.revokeObjectURL(blobUrl);
+                        URL.revokeObjectURL(htmlBlobUrl);
+                        setPreviewState({
+                            status: 'error',
+                            progress: 0,
+                            errorMessage: 'Popup blocked. Please allow popups for this site.'
+                        });
+                    } else {
+                        setPreviewState({ status: 'idle', progress: 0, errorMessage: '' });
+                        setTimeout(() => {
+                            URL.revokeObjectURL(blobUrl);
+                            URL.revokeObjectURL(htmlBlobUrl);
+                        }, 30000);
+                    }
+                }, 300);
+            } catch (err) {
+                clearInterval(progressInterval);
+                if (err.name === 'AbortError') {
+                    console.error('GridFS preview timeout:', err);
+                } else {
+                    console.error('GridFS preview failed:', err);
+                }
+                setPreviewState({
+                    status: 'error',
+                    progress: 0,
+                    errorMessage: err.message || 'Failed to load certificate file.'
+                });
+            }
+            return;
+        }
+
+        // --- Legacy fallback: fetch base64 fileData from the achievement endpoint ---
         let progressTimer;
         setPreviewState({ status: 'progress', progress: 0, errorMessage: '' });
 
         const animateProgress = () => {
             setPreviewState((prev) => {
-                if (prev.status !== 'progress') {
-                    return prev;
-                }
-
+                if (prev.status !== 'progress') return prev;
                 const nextProgress = prev.progress >= 85
                     ? prev.progress
                     : Math.min(prev.progress + Math.random() * 12, 85);
-
                 return { ...prev, progress: nextProgress };
             });
         };
@@ -534,13 +625,32 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         progressTimer = setInterval(animateProgress, 150);
 
         try {
-            let certificateDocument = null;
+            if (!certificateRecord.studentId || !certificateRecord.achievementId) {
+                throw new Error('Certificate file data is unavailable.');
+            }
 
-            if (certificateRecord.studentId && certificateRecord.achievementId) {
-                certificateDocument = await mongoDBService.getCertificateFileByAchievementId(
-                    certificateRecord.studentId,
-                    certificateRecord.achievementId
-                );
+            const certificateDocument = await mongoDBService.getCertificateFileByAchievementId(
+                certificateRecord.studentId,
+                certificateRecord.achievementId
+            );
+
+            // If the fetched document has a GridFS URL, prefer it
+            const fetchedGridfsUrl = certificateDocument?.gridfsFileUrl ||
+                (certificateDocument?.gridfsFileId ? `/api/file/${certificateDocument.gridfsFileId}` : null);
+
+            if (fetchedGridfsUrl) {
+                clearInterval(progressTimer);
+                setPreviewState({ status: 'idle', progress: 0, errorMessage: '' });
+                const resolvedUrl = gridfsService.getFileUrl(fetchedGridfsUrl);
+                const previewWindow = window.open(resolvedUrl, '_blank');
+                if (!previewWindow) {
+                    setPreviewState({
+                        status: 'error',
+                        progress: 0,
+                        errorMessage: 'Popup blocked. Please allow popups for this site.'
+                    });
+                }
+                return;
             }
 
             if (!certificateDocument || !certificateDocument.fileData) {
@@ -551,15 +661,11 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 ? certificateDocument.fileData
                 : `data:${certificateDocument.fileType || 'application/pdf'};base64,${certificateDocument.fileData}`;
 
-            if (progressTimer) {
-                clearInterval(progressTimer);
-            }
-
+            clearInterval(progressTimer);
             setPreviewState((prev) => ({ ...prev, progress: 100 }));
 
             setTimeout(() => {
                 const previewWindow = window.open('', '_blank');
-
                 if (!previewWindow) {
                     setPreviewState({
                         status: 'error',
@@ -568,7 +674,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                     });
                     return;
                 }
-
                 previewWindow.document.write(`
                     <html>
                         <head><title>${certificateRecord.certName || 'Certificate Preview'}</title></head>
@@ -578,7 +683,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                     </html>
                 `);
                 previewWindow.document.close();
-
                 setTimeout(
                     () => setPreviewState({ status: 'idle', progress: 0, errorMessage: '' }),
                     400
@@ -592,9 +696,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 errorMessage: error.message || 'Unable to preview the certificate. Please try again.'
             });
         } finally {
-            if (progressTimer) {
-                clearInterval(progressTimer);
-            }
+            if (progressTimer) clearInterval(progressTimer);
         }
     }, [previewState.status]);
 

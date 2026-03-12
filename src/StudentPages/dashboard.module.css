@@ -25,6 +25,12 @@
     background-color: #4338CA; /* Darker shade for hover */
 }
 
+.stu-db-dashboard-area::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+.stu-db-dashboard-area::-webkit-scrollbar-button:start:decrement,
+.stu-db-dashboard-area::-webkit-scrollbar-button:end:increment,
+.stu-db-dashboard-area::-webkit-scrollbar-button:vertical:start:increment,
+.stu-db-dashboard-area::-webkit-scrollbar-button:vertical:end:decrement { display: none; height: 0; }
+
 /* =================================== */
 /* ===== BASE LAYOUT STYLES ===== */
 /* =================================== */
@@ -49,8 +55,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  cursor: pointer;
 }
 
 /* =================================== */
@@ -170,12 +177,13 @@
 }
 
 /* =================================== */
-/* ===== ATTENDANCE CARD STYLES ===== */
-/* =================================== */
+/* ===== TRAINING PROGRESS CARD STYLES ===== */
+/* ========================================= */
 
 .stu-db-attendance-card {
   grid-column: span 2;
-  justify-content: center; 
+  justify-content: flex-start;
+  align-items: flex-start;
   cursor: pointer;
 }
 
@@ -184,9 +192,11 @@
   font-size: 22px;
   font-weight: 800;
   color: #1a202c;
-  margin-bottom: 24px;
+  margin: 0px 0 0 16px;
+  padding: 0;
   width: 100%;
   text-align: left;
+  flex-shrink: 0;
 }
 
 .stu-db-attendance-card-content {
@@ -194,9 +204,8 @@
   align-items: center;
   justify-content: center;
   gap: 40px;
-  flex-grow: 1;
+  flex: 1;
   width: 100%;
-  margin-bottom: 30px;
   padding: 0 40px;
 }
 
@@ -329,11 +338,18 @@
     background-color: #4338CA;
   }
 
+  .stu-db-dashboard-area::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+  .stu-db-dashboard-area::-webkit-scrollbar-button:start:decrement,
+  .stu-db-dashboard-area::-webkit-scrollbar-button:end:increment,
+  .stu-db-dashboard-area::-webkit-scrollbar-button:vertical:start:increment,
+  .stu-db-dashboard-area::-webkit-scrollbar-button:vertical:end:decrement { display: none; height: 0; }
+
   /* College Header Mobile Styles */
   .stu-db-college-header {
     flex-direction: column;
     text-align: center;
     margin-bottom: 15px;
+    margin-top: 15px;
   }
 
   .stu-db-college-name {
@@ -374,8 +390,10 @@
   .stu-db-attendance-chart-wrapper {
     order: -1;
     margin-left: 0;
-    width: 120px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
+    flex-shrink: 0;
+    margin-top: 10px;
   }
 
   .stu-db-attendance-details-wrapper {
@@ -408,9 +426,10 @@
   }
 
   .stu-db-attendance-chart-wrapper {
-    width: 100px;
-    height: 100px;
+    width: 160px;
+    height: 160px;
     margin-left: 0;
+    flex-shrink: 0;
   }
 
   .stu-db-attendance-details-wrapper {

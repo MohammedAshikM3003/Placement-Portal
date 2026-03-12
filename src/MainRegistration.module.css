@@ -252,6 +252,10 @@
     color: #1f2d3d;
 }
 
+.mr-required-star {
+    color: #dc3545;
+}
+
 .mr-multiselect-wrapper {
     content: attr(data-label);
     color: #22304a;

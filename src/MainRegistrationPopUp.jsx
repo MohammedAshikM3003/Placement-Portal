@@ -27,7 +27,7 @@ const MainRegistrationPopup = ({ onContinue, onBack }) => {
                 <div className={styles['modal-body']}>
                     <ol className={styles['note-list']}>
                         <li>Only Placement interested B.E/B.Tech Students should Register here</li>
-                        <li>Mandatory fields are marked with an asterisk [<span className={styles['required']}>Required</span>]</li>
+                        <li>Mandatory fields are marked with an asterisk<br></br>[ <span className={styles['required']}>* Required</span> ]</li>
                         <li>
                             Photo size: (100-500 KB)<br />
                             Photo Format: (JPEG, WebP)

@@ -8,13 +8,10 @@
  * Rebuilt fresh to avoid browser cache issues.
  */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import ReactDOM from 'react-dom';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import BlueAdminicon from './assets/BlueAdminicon.png'
 import Navbar from "./components/Navbar/mrnavbar";
-import achievementStyles from './StudentPages/Achievements.module.css';
 import Sidebar from "./components/Sidebar/mrsidebar";
 import personalinfo from "./assets/personal information icon.svg";
 import academicIcon from "./assets/academic.svg";
@@ -74,6 +71,10 @@ const MobileInputWithPrefix = ({ name, placeholder, value, onChange, maxLength =
     let inputValue = e.target.value;
     inputValue = inputValue.replace(/\D/g, '');
     inputValue = inputValue.replace(/^0+/, '');
+    // First digit must be 6, 7, 8, or 9
+    if (inputValue.length > 0 && !/^[6789]/.test(inputValue)) {
+      inputValue = '';
+    }
     if (inputValue.length > maxLength) {
       inputValue = inputValue.slice(0, maxLength);
     }
@@ -125,6 +126,8 @@ const IoMdClose = () => (
     <path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z" />
   </svg>
 );
+
+const RequiredStar = () => <span className={cx("mr-required-star")}>*</span>;
 
 const GraduationCapIcon = () => (
   <img
@@ -498,6 +501,324 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
   );
 };
 
+/* ─── DOB Date Picker ─── */
+
+function DOBDatePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('day');
+  const today = useMemo(() => new Date(), []);
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [hovered, setHovered] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState(null);
+  const [hoveredMonth, setHoveredMonth] = useState(null);
+  const [hoveredYear, setHoveredYear] = useState(null);
+  const [hoveredMonthBtn, setHoveredMonthBtn] = useState(false);
+  const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
+  const triggerRef  = useRef(null);
+  const calendarRef = useRef(null);
+
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
+
+  const selDay   = value ? parseInt(value.split('-')[2]) : null;
+  const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
+  const selYear  = value ? parseInt(value.split('-')[0]) : null;
+  const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
+  const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+
+  const displayVal = value
+    ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
+    : '';
+
+  const currentYearForPicker = new Date().getFullYear();
+  const years = Array.from({ length: currentYearForPicker - 2000 + 1 }, (_, i) => 2000 + i);
+  const yearListRef    = useRef(null);
+  const yearThumbRef   = useRef(null);
+  const yearDragging   = useRef(false);
+  const yearDragStartY = useRef(0);
+  const yearScrollStart= useRef(0);
+
+  useEffect(() => {
+    if (viewMode === 'year' && yearListRef.current) {
+      const el = yearListRef.current;
+      const selected = el.querySelector('[data-selected="true"]');
+      if (selected) {
+        el.scrollTop = selected.offsetTop - el.clientHeight / 2 + selected.clientHeight / 2;
+      }
+      updateYearThumb();
+    }
+  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateYearThumb = () => {
+    const el    = yearListRef.current;
+    const thumb = yearThumbRef.current;
+    if (!el || !thumb) return;
+    const ratio    = el.clientHeight / el.scrollHeight;
+    const thumbH   = Math.max(30, el.clientHeight * ratio);
+    const thumbTop = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * (el.clientHeight - thumbH);
+    thumb.style.height  = `${thumbH}px`;
+    thumb.style.top     = `${thumbTop}px`;
+    thumb.style.opacity = el.scrollHeight > el.clientHeight ? '1' : '0';
+  };
+
+  const onYearThumbMouseDown = (e) => {
+    e.preventDefault();
+    yearDragging.current    = true;
+    yearDragStartY.current  = e.clientY;
+    yearScrollStart.current = yearListRef.current.scrollTop;
+    const onMove = (ev) => {
+      if (!yearDragging.current) return;
+      const el    = yearListRef.current;
+      const thumb = yearThumbRef.current;
+      if (!el || !thumb) return;
+      const ratio  = el.clientHeight / el.scrollHeight;
+      const thumbH = Math.max(30, el.clientHeight * ratio);
+      const delta  = ev.clientY - yearDragStartY.current;
+      el.scrollTop = yearScrollStart.current + delta / (el.clientHeight - thumbH) * (el.scrollHeight - el.clientHeight);
+      updateYearThumb();
+    };
+    const onUp = () => {
+      yearDragging.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
+  const handleToggle = () => setOpen(o => !o);
+  const handleClose  = () => setOpen(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      const inTrigger  = triggerRef.current  && triggerRef.current.contains(e.target);
+      const inCalendar = calendarRef.current && calendarRef.current.contains(e.target);
+      if (!inTrigger && !inCalendar) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const calendarPortal = open ? ReactDOM.createPortal(
+    <div
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 99998, display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+    >
+      <div
+        ref={calendarRef}
+        style={{
+          position: 'relative', zIndex: 99999,
+          backgroundColor: '#fff', borderRadius: '14px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.22)',
+          overflow: 'hidden', width: 'min(320px, 90vw)',
+          fontFamily: "'Poppins', sans-serif"
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          backgroundColor: '#197AFF',
+          padding: '12px 18px', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', gap: '40px'
+        }}>
+          <button
+            onClick={() => setViewMode(v => v === 'month' ? 'day' : 'month')}
+            onMouseEnter={() => setHoveredMonthBtn(true)}
+            onMouseLeave={() => setHoveredMonthBtn(false)}
+            style={{
+              background: hoveredMonthBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px',
+              color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
+              cursor: 'pointer', padding: '8px 14px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontFamily: "'Poppins', sans-serif", minWidth: '80px', justifyContent: 'center',
+              transition: 'background-color 0.15s'
+            }}
+          >
+            {viewMode === 'month' ? 'MON' : MONTHS[calMonth]}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points={viewMode === 'month' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'} />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode(v => v === 'year' ? 'day' : 'year')}
+            onMouseEnter={() => setHoveredYearBtn(true)}
+            onMouseLeave={() => setHoveredYearBtn(false)}
+            style={{
+              background: hoveredYearBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px',
+              color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
+              cursor: 'pointer', padding: '8px 14px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontFamily: "'Poppins', sans-serif", minWidth: '90px', justifyContent: 'center',
+              transition: 'background-color 0.15s'
+            }}
+          >
+            {viewMode === 'year' ? 'YEAR' : calYear}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points={viewMode === 'year' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'} />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body – fixed height so card never resizes */}
+        <div style={{ height: '288px', overflow: 'hidden', position: 'relative' }}>
+
+          {viewMode === 'month' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', padding: '18px 16px', height: '100%', boxSizing: 'border-box', alignContent: 'center' }}>
+              {MONTHS.map((m, i) => {
+                const isSel = i === calMonth;
+                const isHov = hoveredMonth === i;
+                return (
+                <button
+                  key={m}
+                  onClick={() => { setCalMonth(i); setViewMode('day'); }}
+                  onMouseEnter={() => setHoveredMonth(i)}
+                  onMouseLeave={() => setHoveredMonth(null)}
+                  style={{
+                    padding: '12px 6px', borderRadius: '8px', border: 'none',
+                    cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
+                    backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                    color: isSel ? '#fff' : '#333',
+                    fontFamily: "'Poppins', sans-serif",
+                    transition: 'background-color 0.15s'
+                  }}
+                >{m}</button>
+                );
+              })}
+            </div>
+          ) : viewMode === 'year' ? (
+            <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
+              <div
+                ref={yearListRef}
+                onScroll={updateYearThumb}
+                style={{ flex: 1, overflowY: 'scroll', overflowX: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                <style>{`.dob-year-list::-webkit-scrollbar{display:none}`}</style>
+                <div className="dob-year-list">
+                  {years.map(y => {
+                    const isSel = y === calYear;
+                    const isHov = hoveredYear === y;
+                    return (
+                    <div
+                      key={y}
+                      data-selected={y === calYear}
+                      onClick={() => { setCalYear(y); setViewMode('day'); }}
+                      onMouseEnter={() => setHoveredYear(y)}
+                      onMouseLeave={() => setHoveredYear(null)}
+                      style={{
+                        padding: '12px 20px', cursor: 'pointer',
+                        fontWeight: 700, fontSize: '1rem', textAlign: 'center',
+                        fontFamily: "'Poppins', sans-serif",
+                        backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                        color: isSel ? '#fff' : '#333',
+                        transition: 'background-color 0.15s'
+                      }}
+                    >{y}</div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Custom scrollbar thumb */}
+              <div style={{ width: '8px', background: '#e8eef7', borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
+                <div
+                  ref={yearThumbRef}
+                  onMouseDown={onYearThumbMouseDown}
+                  style={{
+                    position: 'absolute', left: 0, right: 0,
+                    background: '#197AFF', borderRadius: '4px',
+                    cursor: 'grab', minHeight: '30px', top: 0
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Day picker */
+            <div style={{ padding: '10px 14px 14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '6px' }}>
+                {DAYS.map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', color: '#888', fontWeight: 700, padding: '4px 0' }}>{d}</div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                {Array.from({ length: firstWeekDay }, (_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const sel = isSelected(day);
+                  const tod = isToday(day);
+                  const isHov = hoveredDay === day;
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => {
+                        const mm = String(calMonth + 1).padStart(2, '0');
+                        const dd = String(day).padStart(2, '0');
+                        onChange(`${calYear}-${mm}-${dd}`);
+                        handleClose();
+                      }}
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
+                      style={{
+                        textAlign: 'center', padding: '7px 0', borderRadius: '50%',
+                        border: tod && !sel ? '2px solid #197AFF' : 'none',
+                        cursor: 'pointer', fontSize: '0.95rem',
+                        fontWeight: sel || tod ? 700 : 500,
+                        backgroundColor: sel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                        color: sel ? '#fff' : tod ? '#197AFF' : '#333',
+                        fontFamily: "'Poppins', sans-serif",
+                        transition: 'background-color 0.15s'
+                      }}
+                    >{day}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+        </div>{/* end fixed-height body */}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Trigger field */}
+      <div
+        ref={triggerRef}
+        data-dob-field="true"
+        onClick={handleToggle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          border: hovered ? '1px solid #2085f6' : '1px solid #dde6f4',
+          boxShadow: hovered ? '0 0 0 3px rgba(32,133,246,0.2)' : 'none',
+          borderRadius: '8px',
+          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#f9fbff',
+          fontSize: '0.95rem', color: displayVal ? '#333' : '#9aa7c2',
+          userSelect: 'none', boxSizing: 'border-box', width: '100%',
+          transition: 'border-color 0.3s, box-shadow 0.3s'
+        }}
+      >
+        <span style={{ flex: 1 }}>{displayVal || 'DD-MM-YYYY'}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8"  y1="2" x2="8"  y2="6" />
+          <line x1="3"  y1="10" x2="21" y2="10" />
+        </svg>
+      </div>
+      {calendarPortal}
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 
 function MainRegistration() {
@@ -540,7 +861,7 @@ function MainRegistration() {
   const [activeSection, setActiveSection] = useState("personal");
   const [completedSections, setCompletedSections] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [dob, setDob] = useState(null);
+  const [dob, setDob] = useState('');
   const [studyCategory, setStudyCategory] = useState("12th");
   const [currentYear, setCurrentYear] = useState("");
   const [currentSemester, setCurrentSemester] = useState("");
@@ -650,8 +971,7 @@ function MainRegistration() {
     let field = null;
 
     if (fieldName === 'dob') {
-      const dobWrapper = formRef.current.querySelector('.StuProfile-datepicker-wrapper');
-      field = dobWrapper?.querySelector('input');
+      field = formRef.current.querySelector('[data-dob-field]');
     } else if (fieldName === 'companyTypes') {
       field = formRef.current.querySelector('input[name="companyTypes"]');
     } else if (fieldName === 'preferredJobLocation') {
@@ -795,7 +1115,7 @@ function MainRegistration() {
     const regNo = formData.get("regNo");
     if (regNo && !/^\d{11}$/.test(regNo)) errors.push({ message: "Registration number must be exactly 11 digits", field: "regNo" });
 
-    const dobFormatted = dob ? dob.toLocaleDateString("en-GB").replace(/\//g, "") : "";
+    const dobFormatted = dob ? dob.split('-').reverse().join('') : "";
     if (dob && !/^\d{8}$/.test(dobFormatted)) errors.push({ message: "Please select a valid date of birth", field: "dob" });
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -805,10 +1125,16 @@ function MainRegistration() {
     if (domainEmail && !emailRegex.test(domainEmail)) errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
 
     const mobileNo = formData.get("mobileNo");
-    if (mobileNo && !/^\d{10}$/.test(mobileNo)) errors.push({ message: "Mobile number must be exactly 10 digits", field: "mobileNo" });
+    if (mobileNo && !/^[6789]\d{9}$/.test(mobileNo)) errors.push({ message: "Mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "mobileNo" });
+
+    const fatherMobile = formData.get("fatherMobile");
+    if (fatherMobile && !/^[6789]\d{9}$/.test(fatherMobile)) errors.push({ message: "Father's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "fatherMobile" });
 
     const motherMobile = formData.get("motherMobile");
-    if (motherMobile && !/^\d{10}$/.test(motherMobile)) errors.push({ message: "Mother mobile number must be exactly 10 digits", field: "motherMobile" });
+    if (motherMobile && !/^[6789]\d{9}$/.test(motherMobile)) errors.push({ message: "Mother's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "motherMobile" });
+
+    const aadhaarNo = formData.get("aadhaarNo");
+    if (aadhaarNo && !/^\d{12}$/.test(aadhaarNo)) errors.push({ message: "Aadhaar number must be exactly 12 digits", field: "aadhaarNo" });
 
     const loginRegNoValue = formData.get("loginRegNo");
     const loginPassword = formData.get("loginPassword");
@@ -990,6 +1316,8 @@ function MainRegistration() {
   const handleBatchStartYearChange = useCallback((e) => {
     const value = e.target.value;
     if (value.length <= 4 && /^\d*$/.test(value)) {
+      // First digit must be 2 (valid years start with 2, e.g. 2021)
+      if (value.length > 0 && value[0] !== '2') return;
       setBatchStartYear(value);
       if (value.length === 4) {
         setBatchEndYear(String(parseInt(value, 10) + 4));
@@ -1178,7 +1506,7 @@ function MainRegistration() {
         const loginRegNoValue = formData.get("loginRegNo") || "";
         const loginPassword = formData.get("loginPassword") || "";
         const confirmPassword = formData.get("confirmPassword") || "";
-        const dobFormatted = dob ? dob.toLocaleDateString("en-GB").replace(/\//g, "") : "";
+        const dobFormatted = dob ? dob.split('-').reverse().join('') : "";
 
         const invalidMessages = [];
         if (!/^\d{11}$/.test(regNoValue)) invalidMessages.push("Registration number must be exactly 11 digits");
@@ -1376,15 +1704,15 @@ function MainRegistration() {
                 <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-personal-info-fields")}>
                     <div className={cx("mr-field")}>
-                      <label>First Name *</label>
+                      <label>First Name <RequiredStar /></label>
                       <input type="text" name="firstName" placeholder="Enter First Name" required />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Last Name *</label>
+                      <label>Last Name <RequiredStar /></label>
                       <input type="text" name="lastName" placeholder="Enter Last Name" required />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Register Number *</label>
+                      <label>Register Number <RequiredStar /></label>
                       <div style={{ position: "relative" }}>
                         <input
                           type="text"
@@ -1398,7 +1726,7 @@ function MainRegistration() {
                       </div>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Batch *</label>
+                      <label>Batch <RequiredStar /></label>
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <input
                           type="text"
@@ -1427,29 +1755,11 @@ function MainRegistration() {
                       />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>DOB *</label>
-                      <div className={achievementStyles['Achievement-datepicker-wrapper']}>
-                        <DatePicker
-                          selected={dob}
-                          onChange={(date) => setDob(date)}
-                          dateFormat="dd-MM-yyyy"
-                          placeholderText="Enter DOB"
-                          className="input-hover"
-                          showPopperArrow={false}
-                          showMonthDropdown
-                          showYearDropdown
-                          dropdownMode="select"
-                          yearDropdownItemNumber={7}
-                          scrollableYearDropdown
-                          minDate={new Date(new Date().getFullYear() - 50, 0, 1)}
-                          maxDate={new Date()}
-                          required
-                          autoComplete="off"
-                        />
-                      </div>
+                      <label>DOB <RequiredStar /></label>
+                      <DOBDatePicker value={dob} onChange={setDob} />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Degree *</label>
+                      <label>Degree <RequiredStar /></label>
                       <select
                         name="degree"
                         value={selectedDegree}
@@ -1474,7 +1784,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Branch *</label>
+                      <label>Branch <RequiredStar /></label>
                       <select
                         name="branch"
                         value={selectedBranch}
@@ -1499,7 +1809,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Current Year *</label>
+                      <label>Current Year <RequiredStar /></label>
                       <select
                         name="currentYear"
                         value={currentYear}
@@ -1520,7 +1830,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Current Semester *</label>
+                      <label>Current Semester <RequiredStar /></label>
                       <select
                         name="currentSemester"
                         value={currentSemester}
@@ -1540,7 +1850,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Section *</label>
+                      <label>Section <RequiredStar /></label>
                       <select name="section" defaultValue="" required>
                         <option value="" disabled>Select Section</option>
                         <option value="A">A</option>
@@ -1550,7 +1860,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Gender *</label>
+                      <label>Gender <RequiredStar /></label>
                       <select name="gender" defaultValue="" required>
                         <option value="" disabled>Select Gender</option>
                         <option value="male">Male</option>
@@ -1566,19 +1876,19 @@ function MainRegistration() {
                       <input type="text" name="city" placeholder="Enter City" />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Primary Email *</label>
+                      <label>Primary Email <RequiredStar /></label>
                       <input type="email" name="primaryEmail" placeholder="Enter Primary Email" required />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Domain Email *</label>
+                      <label>Domain Email <RequiredStar /></label>
                       <input type="email" name="domainEmail" placeholder="Enter Domain Email" required />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Mobile No. *</label>
+                      <label>Mobile No. <RequiredStar /></label>
                       <MobileInputWithPrefix name="mobileNo" placeholder="Enter Mobile No." onChange={handleInputChange} />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Father Name *</label>
+                      <label>Father Name <RequiredStar /></label>
                       <input type="text" name="fatherName" placeholder="Enter Father Name" required />
                     </div>
                     <div className={cx("mr-field")}>
@@ -1586,11 +1896,11 @@ function MainRegistration() {
                       <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Father's Mobile No. *</label>
+                      <label>Father's Mobile No. <RequiredStar /></label>
                       <MobileInputWithPrefix name="fatherMobile" placeholder="Enter Father's Mobile No." onChange={handleInputChange} />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Mother Name *</label>
+                      <label>Mother Name <RequiredStar /></label>
                       <input type="text" name="motherName" placeholder="Enter Mother Name" required />
                     </div>
                     <div className={cx("mr-field")}>
@@ -1598,7 +1908,7 @@ function MainRegistration() {
                       <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Mother's Mobile No. *</label>
+                      <label>Mother's Mobile No. <RequiredStar /></label>
                       <MobileInputWithPrefix name="motherMobile" placeholder="Enter Mother's Mobile No." onChange={handleInputChange} />
                     </div>
                     <div className={cx("mr-field")}>
@@ -1678,7 +1988,7 @@ function MainRegistration() {
                       </div>
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
-                      <label>Community *</label>
+                      <label>Community <RequiredStar /></label>
                       <select name="community" defaultValue="" required>
                         <option value="" disabled>Select Community</option>
                         <option value="OC">OC</option>
@@ -1691,7 +2001,7 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
-                      <label>Medium *</label>
+                      <label>Medium <RequiredStar /></label>
                       <select name="mediumOfStudy" defaultValue="" required>
                         <option value="" disabled>Select Medium</option>
                         <option value="English">English</option>
@@ -1704,8 +2014,8 @@ function MainRegistration() {
                       <input type="text" name="bloodGroup" placeholder="Enter Blood Group" />
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
-                      <label>Aadhaar Number *</label>
-                      <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number" required />
+                      <label>Aadhaar Number <RequiredStar /></label>
+                      <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" maxLength="12" required />
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
                       <label>Portfolio Link</label>
@@ -1728,11 +2038,11 @@ function MainRegistration() {
                     <label htmlFor="both">Both</label>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>10th Institution Name *</label>
+                    <label>10th Institution Name <RequiredStar /></label>
                     <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" required />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>10th Board *</label>
+                    <label>10th Board <RequiredStar /></label>
                     <select name="tenthBoard" defaultValue="" required>
                       <option value="" disabled>Select 10th Board</option>
                       <option value="State Board">State Board</option>
@@ -1742,21 +2052,21 @@ function MainRegistration() {
                     </select>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>10th Percentage *</label>
+                    <label>10th Percentage <RequiredStar /></label>
                     <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" required />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>10th Year of Passing *</label>
+                    <label>10th Year of Passing <RequiredStar /></label>
                     <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" required />
                   </div>
                   {(studyCategory === "12th" || studyCategory === "both") && (
                     <>
                       <div className={cx("mr-field")}>
-                        <label>12th Institution Name *</label>
+                        <label>12th Institution Name <RequiredStar /></label>
                         <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>12th Board *</label>
+                        <label>12th Board <RequiredStar /></label>
                         <select name="twelfthBoard" defaultValue="" required>
                           <option value="" disabled>Select 12th Board</option>
                           <option value="State Board">State Board</option>
@@ -1766,15 +2076,15 @@ function MainRegistration() {
                         </select>
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>12th Percentage *</label>
+                        <label>12th Percentage <RequiredStar /></label>
                         <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>12th Year *</label>
-                        <input type="text" name="twelfthYear" placeholder="Enter 12th Year" required />
+                        <label>12th Year of Passing <RequiredStar /></label>
+                        <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>12th Cut-off *</label>
+                        <label>12th Cut-off <RequiredStar /></label>
                         <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off" required />
                       </div>
                     </>
@@ -1782,19 +2092,19 @@ function MainRegistration() {
                   {(studyCategory === "diploma" || studyCategory === "both") && (
                     <>
                       <div className={cx("mr-field")}>
-                        <label>Diploma Institution *</label>
+                        <label>Diploma Institution <RequiredStar /></label>
                         <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>Diploma Branch *</label>
+                        <label>Diploma Branch <RequiredStar /></label>
                         <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>Diploma Percentage *</label>
+                        <label>Diploma Percentage <RequiredStar /></label>
                         <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" required />
                       </div>
                       <div className={cx("mr-field")}>
-                        <label>Diploma Year *</label>
+                        <label>Diploma Year <RequiredStar /></label>
                         <input type="text" name="diplomaYear" placeholder="Enter Diploma Year" required />
                       </div>
                     </>
@@ -1807,7 +2117,7 @@ function MainRegistration() {
                 <h3 className={cx("mr-section-header")}>Other Details</h3>
                 <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-field")}>
-                    <label>Residential Status *</label>
+                    <label>Residential Status <RequiredStar /></label>
                     <select name="residentialStatus" value={residentialStatus} onChange={(e) => setResidentialStatus(e.target.value)} required>
                       <option value="" disabled>Select Residential Status</option>
                       <option value="Hosteller">Hosteller</option>
@@ -1815,7 +2125,7 @@ function MainRegistration() {
                     </select>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Quota *</label>
+                    <label>Quota <RequiredStar /></label>
                     <select name="quota" value={quota} onChange={(e) => setQuota(e.target.value)} required>
                       <option value="" disabled>Select Quota</option>
                       <option value="Management">Management</option>
@@ -1823,11 +2133,11 @@ function MainRegistration() {
                     </select>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Languages Known</label>
-                    <input type="text" name="languagesKnown" placeholder="Enter Languages Known (exclude Tamil & English)" />
+                    <label>Spoken Languages</label>
+                    <input type="text" name="languagesKnown" placeholder="Exclude Tamil & English" />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>First Graduate *</label>
+                    <label>First Graduate <RequiredStar /></label>
                     <select name="firstGraduate" value={firstGraduate} onChange={(e) => setFirstGraduate(e.target.value)} required>
                       <option value="" disabled>Select First Graduate</option>
                       <option value="Yes">Yes</option>
@@ -1839,7 +2149,7 @@ function MainRegistration() {
                     <input type="text" name="passportNo" placeholder="Enter Passport No." />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Skill set *</label>
+                    <label>Skill set <RequiredStar /></label>
                     <input type="text" name="skillSet" placeholder="Enter Skill set" required />
                   </div>
                   <div className={cx("mr-field")}>
@@ -1851,19 +2161,19 @@ function MainRegistration() {
                     <input type="text" name="aboutSibling" placeholder="Enter About Sibling" />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Ration card No. *</label>
+                    <label>Ration card No. <RequiredStar /></label>
                     <input type="text" name="rationCardNo" placeholder="Enter Ration card No." required />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Family Annual Income *</label>
+                    <label>Family Annual Income <RequiredStar /></label>
                     <input type="text" name="familyAnnualIncome" placeholder="Enter Family Annual Income" required />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>PAN No. *</label>
+                    <label>PAN No. <RequiredStar /></label>
                     <input type="text" name="panNo" placeholder="Enter PAN No." required />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Willing to Sign Bond *</label>
+                    <label>Willing to Sign Bond <RequiredStar /></label>
                     <select name="willingToSignBond" value={willingToSignBond} onChange={(e) => setWillingToSignBond(e.target.value)} required>
                       <option value="" disabled>Select Willing to Sign Bond</option>
                       <option value="Yes">Yes</option>
@@ -1871,7 +2181,7 @@ function MainRegistration() {
                     </select>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Preferred Mode of Drive *</label>
+                    <label>Preferred Mode of Drive <RequiredStar /></label>
                     <select name="preferredModeOfDrive" value={preferredModeOfDrive} onChange={(e) => setPreferredModeOfDrive(e.target.value)} required>
                       <option value="" disabled>Select Preferred Mode of Drive</option>
                       <option value="Online">Online</option>
@@ -1928,7 +2238,7 @@ function MainRegistration() {
                   <input type="hidden" name="preferredJobLocation" value={selectedJobLocations.join(", ")} />
                   
                   <div className={cx("mr-checkbox-group")}>
-                    <span className={cx("mr-checkbox-group__label")}>Company Types *</span>
+                    <span className={cx("mr-checkbox-group__label")}>Company Types <RequiredStar /></span>
                     <div className={cx("mr-checkbox-group__options")}>
                       {COMPANY_TYPE_OPTIONS.map((option, index) => {
                         const isChecked = selectedCompanyTypes.includes(option);
@@ -1949,7 +2259,7 @@ function MainRegistration() {
                     </div>
                   </div>
                   <div className={cx("mr-checkbox-group")}>
-                    <span className={cx("mr-checkbox-group__label")}>Preferred Job Locations *</span>
+                    <span className={cx("mr-checkbox-group__label")}>Preferred Job Locations <RequiredStar /></span>
                     <div className={cx("mr-checkbox-group__options")}>
                       {JOB_LOCATION_OPTIONS.map((option, index) => {
                         const isChecked = selectedJobLocations.includes(option);
@@ -1977,7 +2287,7 @@ function MainRegistration() {
                 <h3 className={cx("mr-section-header")}>Login Details</h3>
                 <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-field")}>
-                    <label>Register No *</label>
+                    <label>Register No <RequiredStar /></label>
                     <input
                       type="text"
                       name="loginRegNo"
@@ -1988,7 +2298,7 @@ function MainRegistration() {
                     />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Password *</label>
+                    <label>Password <RequiredStar /></label>
                     <div style={{ position: "relative" }}>
                       <input
                         type={showLoginPassword ? "text" : "password"}
@@ -2003,7 +2313,7 @@ function MainRegistration() {
                     </div>
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Confirm Password *</label>
+                    <label>Confirm Password <RequiredStar /></label>
                     <div style={{ position: "relative" }}>
                       <input
                         type={showConfirmPassword ? "text" : "password"}

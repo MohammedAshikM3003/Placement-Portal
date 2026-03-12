@@ -390,6 +390,35 @@ class AuthService {
         localStorage.setItem('coordinatorData', JSON.stringify(coordinatorData));
         console.log('✅ Coordinator profile data cached for instant loading');
 
+        // 🚀 Fetch COMPLETE profile in background to ensure degree/branch/photo are fully populated
+        // Runs without blocking navigation
+        Promise.resolve().then(async () => {
+          try {
+            const { default: mongoDBService } = await import('./mongoDBService.jsx');
+            const fullResponse = await mongoDBService.getCoordinatorById(coordinatorIdValue);
+            const fullData = fullResponse?.coordinator || fullResponse;
+            if (fullData) {
+              const enriched = {
+                ...coordinatorData,
+                ...fullData,
+                coordinatorId: coordinatorIdValue,
+                username: usernameValue,
+                timestamp: Date.now()
+              };
+              localStorage.setItem('coordinatorData', JSON.stringify(enriched));
+              // Notify sidebar/profile via storage event
+              window.dispatchEvent(new StorageEvent('storage', {
+                key: 'coordinatorData',
+                newValue: JSON.stringify(enriched),
+                storageArea: localStorage
+              }));
+              console.log('✅ Full coordinator profile prefetched and cached');
+            }
+          } catch (prefetchError) {
+            console.warn('⚠️ Background coordinator prefetch failed (non-critical):', prefetchError.message);
+          }
+        });
+
         return {
           success: true,
           coordinator: response.coordinator,

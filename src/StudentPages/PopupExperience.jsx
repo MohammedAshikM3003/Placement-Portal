@@ -91,7 +91,7 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
   };
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={onDiscard}>
       <div className={styles.popupContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.popupHeader}>{formData.title || 'Professional Experience'}</div>
         <div className={styles.popupBody}>

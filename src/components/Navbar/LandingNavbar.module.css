@@ -79,7 +79,7 @@
   top: 65px;
   left: 0;
   width: 230px;
-  height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
   background-color: #ffffff;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
   transform: translateX(-100%);
@@ -88,6 +88,7 @@
   padding-top: 20px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .mobile-sidebar.sidebar-open {
@@ -98,7 +99,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
   padding: 0;
 }
 
@@ -154,7 +154,7 @@
   font-size: 0.95rem;
   border-radius: 8px;
   text-align: center;
-  margin: 8px 16px 20px 16px;
+  margin: 16px 16px 24px 16px;
   transition: all 0.3s ease;
   display: block;
   cursor: pointer;
@@ -170,7 +170,7 @@
 /* Sidebar Overlay */
 .sidebar-overlay {
   position: fixed;
-  top: 0;
+  top: 65px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -188,10 +188,25 @@
     width: auto;
     justify-content: flex-start;
     flex: 1;
+    margin-top: 0;
+    margin-left: 5px;
+    gap: 20px;
+  }
+
+  .header-logo-img {
+    margin-top: 4px;
+    filter: brightness(0) invert(1);
+    transform: scaleX(-1);
+  }
+
+  .header-logo span {
+    font-size: 1.2rem;
+    margin-top: 8px;
   }
 
   .main-header {
     justify-content: space-between;
+    padding: 15px 20px;
   }
 
   /* Show hamburger menu on mobile */

@@ -37,6 +37,7 @@
     height: 30px;
     width: 40px;
     filter: brightness(0) invert(1);
+    transform: scaleX(-1);
 }
 
 .portalName {
