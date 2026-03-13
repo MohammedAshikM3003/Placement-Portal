@@ -429,7 +429,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       required
                       className={styles.inputField}
                       autoComplete="off"
-                      onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
+                      onFocus={(e) => {
+                        // Only animate scroll on mobile devices (screen width < 768px)
+                        if (window.innerWidth < 768) {
+                          setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                        }
+                      }}
                       onBlur={handleInputBlur}
                     />
                   </div>
@@ -450,7 +455,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                       required
                       className={styles.inputField}
                       autoComplete="new-password"
-                      onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
+                      onFocus={(e) => {
+                        // Only animate scroll on mobile devices (screen width < 768px)
+                        if (window.innerWidth < 768) {
+                          setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                        }
+                      }}
                       onBlur={handleInputBlur}
                     />
                     <button

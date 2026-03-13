@@ -5420,6 +5420,7 @@ const certificateSchema = new mongoose.Schema({
     prize: { type: String, default: '' },
     verifiedAt: { type: Date, default: null },
     verifiedBy: { type: String, default: '' },
+    notificationRead: { type: Boolean, default: true }, // false = student hasn't seen status change yet
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -5813,6 +5814,13 @@ app.put('/api/certificates/:id', async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
+    // When coordinator approves/rejects, mark as unread so student gets notified
+    const newStatus = (updateData.status || '').toLowerCase();
+    if (newStatus === 'approved' || newStatus === 'rejected') {
+        updateData.notificationRead = false;
+        console.log('🔔 Setting notificationRead=false for certificate', id, 'status:', newStatus);
+    }
+
     console.log('🔄 Backend: Updating certificate:', { id, updateData: { ...updateData, fileData: updateData.fileData ? 'Present' : 'Missing' } });
 
     try {
@@ -6023,6 +6031,97 @@ app.put('/api/certificates/student/:studentId/achievement/:achievementId', async
 });
 
 // ... (rest of the code remains the same)
+
+// =====================================================
+// CERTIFICATE NOTIFICATION ROUTES
+// =====================================================
+
+// One-time migration: set notificationRead=true on all legacy certificates that lack the field
+// This prevents old approved/rejected certificates from flooding students with popups
+(async () => {
+    try {
+        if (mongoose.connection.readyState === 1) {
+            const result = await Certificate.updateMany(
+                { notificationRead: { $exists: false } },
+                { $set: { notificationRead: true } }
+            );
+            if (result.modifiedCount > 0) {
+                console.log(`📋 Migration: Set notificationRead=true on ${result.modifiedCount} legacy certificate(s)`);
+            }
+        } else {
+            mongoose.connection.once('open', async () => {
+                const result = await Certificate.updateMany(
+                    { notificationRead: { $exists: false } },
+                    { $set: { notificationRead: true } }
+                );
+                if (result.modifiedCount > 0) {
+                    console.log(`📋 Migration: Set notificationRead=true on ${result.modifiedCount} legacy certificate(s)`);
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Migration error:', err);
+    }
+})();
+
+// GET: Fetch unread certificate notifications for a student
+// Accepts studentId (MongoDB _id) as primary, falls back to regNo
+app.get('/api/certificates/notifications/:identifier', async (req, res) => {
+    const { identifier } = req.params;
+    if (!identifier) return res.status(400).json({ error: 'Student identifier required' });
+
+    try {
+        // Query by studentId OR regNo so it works regardless of which is available
+        const notifications = await Certificate.find({
+            $or: [{ studentId: identifier }, { regNo: identifier }],
+            status: { $in: ['approved', 'rejected'] },
+            notificationRead: false
+        }).select('_id achievementId comp competition certificateName status notificationRead updatedAt').lean();
+
+        res.json({
+            success: true,
+            notifications: notifications.map(n => ({
+                id: n._id,
+                achievementId: n.achievementId,
+                certificateName: n.comp || n.competition || n.certificateName || 'Certificate',
+                status: n.status,
+                updatedAt: n.updatedAt
+            }))
+        });
+    } catch (error) {
+        console.error('❌ Notifications fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+// PATCH: Mark certificate notifications as read for a student
+app.patch('/api/certificates/notifications/mark-read', async (req, res) => {
+    const { regNo, studentId, certificateIds } = req.body;
+    const identifier = studentId || regNo;
+    if (!identifier) return res.status(400).json({ error: 'Student identifier required' });
+
+    try {
+        const query = {
+            $or: [{ studentId: identifier }, { regNo: identifier }],
+            notificationRead: false
+        };
+        if (certificateIds && certificateIds.length > 0) {
+            // Convert string IDs to ObjectIds for proper _id matching
+            query._id = {
+                $in: certificateIds.map(id =>
+                    mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id
+                )
+            };
+        }
+
+        const result = await Certificate.updateMany(query, { $set: { notificationRead: true } });
+        console.log(`✅ Marked ${result.modifiedCount} notification(s) as read for ${regNo} (ids: ${certificateIds})`);
+        res.json({ success: true, updated: result.modifiedCount });
+    } catch (error) {
+        console.error('❌ Mark notifications read error:', error);
+        res.status(500).json({ error: 'Failed to mark notifications as read' });
+    }
+});
 
 // =====================================================
 // GRIDFS FILE ROUTES (Upload, Fetch, Stream)

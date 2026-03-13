@@ -7,6 +7,7 @@ import RouteErrorBoundary from "./components/RouteErrorBoundary/RouteErrorBounda
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute, { RoleGuard } from "./components/ProtectedRoute.jsx";
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
+import GlobalNotificationChecker from "./components/CertificateNotification/GlobalNotificationChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -186,12 +187,16 @@ function AppContent() {
     <>
       {/* Unified loading screen OVERLAYS the app (position:fixed) — never blocks Routes */}
       {authPreloading && isAuthenticated && (
-        <UnifiedLoadingScreen 
+        <UnifiedLoadingScreen
           role={authRole}
           message={`Loading ${authRole === 'admin' ? 'Admin' : authRole === 'coordinator' ? 'Coordinator' : 'Student'} Dashboard...`}
           subMessage="Preparing your profile, sidebar, and dashboard data..."
         />
       )}
+
+      {/* Global Certificate Notification Checker - Only on student-authenticated routes */}
+      {isStudentLoggedIn && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && <GlobalNotificationChecker />}
+
     <Routes>
       {/* PUBLIC ROUTES */}
       <Route path="/" element={<LandingPage />} />

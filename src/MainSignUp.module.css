@@ -381,8 +381,8 @@
   
   /* Drips show from left, same size as login page */
   .dripDecoration {
-    width: 380px;
-    left: 0;
+    width: 360px;
+    left: -11px;
     top: 0;
     height: 160px;
     object-fit: cover;

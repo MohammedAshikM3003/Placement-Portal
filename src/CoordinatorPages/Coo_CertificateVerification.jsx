@@ -482,6 +482,9 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             }
             try {
                 const updated = await certificateService.updateCertificateStatus(certificateId, payload);
+                // Backend automatically sets notificationRead: false when status → approved/rejected
+                // GlobalNotificationChecker on student side will pick it up within 5 seconds
+
                 setCertData((prev) =>
                     prev.filter((item) => item.certificateId !== certificateId)
                 );

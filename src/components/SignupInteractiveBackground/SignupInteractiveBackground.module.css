@@ -22,7 +22,7 @@
 .welcomeOverlay {
     position: absolute;
     top: 50%;
-    left: 43%;
+    left: 53%;
     transform: translate(-50%, -50%);
     z-index: 2;
     display: flex;
@@ -78,23 +78,23 @@
 
 /* Testimonial card */
 .testimonialCard {
-    margin-top: 20px;
+    margin-top: 24px;
     position: relative;
     animation: testimonialSlideIn 0.5s ease-out both;
     pointer-events: none;
 }
 
 .testimonialCardInner {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(16px);
+    border-radius: 18px;
+    padding: 20px 22px;
     display: flex;
     align-items: stretch;
-    gap: 16px;
-    max-width: 380px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    gap: 18px;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .testimonialContent {
@@ -106,10 +106,10 @@
 
 .testimonialText {
     font-family: 'Poppins', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
     margin: 0;
     font-style: italic;
 }
@@ -118,14 +118,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    min-width: 70px;
-    padding-top: 2px;
+    gap: 5px;
+    min-width: 80px;
+    padding-top: 4px;
 }
 
 .testimonialAvatar {
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, #8b5cf6, #6d28d9);
     display: flex;
@@ -140,13 +140,19 @@
     border: 2px solid rgba(255, 255, 255, 0.25);
 }
 
+.testimonialAvatar svg {
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
 .testimonialName {
     font-family: 'Poppins', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.95);
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.3;
 }
 
 .testimonialDetails {
@@ -161,7 +167,7 @@
 
 .testimonialRole {
     font-family: 'Poppins', sans-serif;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     color: rgba(74, 222, 128, 0.9);
     letter-spacing: 0.3px;
@@ -230,11 +236,19 @@
         font-size: 13px;
     }
     .testimonialCardInner {
-        max-width: 300px;
-        padding: 14px 16px;
+        max-width: 340px;
+        padding: 16px 18px;
     }
     .testimonialText {
-        font-size: 10px;
+        font-size: 11px;
+    }
+    .testimonialAvatar {
+        width: 45px;
+        height: 45px;
+    }
+    .testimonialAvatar svg {
+        width: 24px;
+        height: 24px;
     }
 }
 
