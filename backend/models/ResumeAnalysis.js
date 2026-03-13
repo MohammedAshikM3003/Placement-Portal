@@ -77,7 +77,7 @@ const resumeAnalysisSchema = new mongoose.Schema({
   },
   apiProvider: {
     type: String,
-    enum: ['huggingface', 'openai', 'gemini', 'fallback', 'rule-based'],
+    enum: ['ollama', 'openai', 'gemini', 'fallback', 'rule-based'],
     default: 'rule-based'
   },
   processingTime: {

@@ -5274,7 +5274,7 @@ app.get('/api/resume/:studentId', authenticateToken, checkRole('student', 'admin
     }
 });
 
-// Resume analysis endpoint - calls Postman API for Hugging Face analysis
+// Resume analysis endpoint - uses local AI service for analysis
 app.post('/api/resume/analyze', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { studentId, fileData, fileName, analysisResult } = req.body;

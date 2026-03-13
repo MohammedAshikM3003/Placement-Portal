@@ -59,14 +59,12 @@ graph TD
 
     subgraph "External Services"
         D[Ollama]
-        E[Hugging Face]
     end
 
     A -- "API Requests" --> B
     B -- "Database Queries" --> C
     B -- "File Storage" --> C
-    B -- "OCR/AI Tasks" --> D
-    B -- "Resume Analysis" --> E
+    B -- "OCR/AI Tasks & Resume Analysis" --> D
 
     style A fill:#61DAFB,stroke:#000,stroke-width:2px
     style B fill:#8CC84B,stroke:#000,stroke-width:2px
@@ -93,7 +91,7 @@ graph TD
 *   **OCR and AI:**
     *   `pdf-parse` for extracting text from digital PDFs.
     *   Ollama with vision models for OCR on scanned documents.
-    *   Integration with Hugging Face and other AI services for resume analysis.
+    *   Integration with Ollama and local AI services for resume analysis.
 
 ## User Flow
 
@@ -104,7 +102,7 @@ Here are some of the key user flows in the application:
 ```mermaid
 graph TD
     A[Start] --> B{User visits the portal};
-    B --> C[Clicks on "Sign Up"];
+    B --> C[Clicks on &quot;Sign Up&quot;];
     C --> D[Fills out the sign-up form];
     D --> E{Submits the form};
     E --> F[Completes the registration process with personal and academic details];
@@ -213,6 +211,9 @@ To get the project running locally, follow these steps:
     *   ESLint
     *   Prettier
 
-## Contributing
+*   **Figma**
+https://www.figma.com/design/UyHXeAFXWMxpfhbwXe3QvU/Placement-portal-grid?node-id=0-1&t=xCF2roKj5kssZkTO-1
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have any suggestions or find any bugs.
+*  **Refrence site**
+
+https://ce.ksrei.org/2026/

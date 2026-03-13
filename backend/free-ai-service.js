@@ -1,7 +1,7 @@
 // Free AI Resume Analysis Service using Ollama (local AI, no API key required)
 class FreeResumeAnalysisService {
   constructor() {
-    // Ollama replaces Hugging Face — runs fully locally
+    // Ollama — runs fully locally, no API key required
     this.ollamaService = null;
     try {
       this.ollamaService = require('./ollamaService');
