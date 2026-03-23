@@ -994,103 +994,20 @@ function MainContent({ onViewChange }) {
         clearInterval(progressInterval);
         setPreviewProgress(100);
 
-        try {
-          // Check if it's a GridFS URL (e.g., /api/file/abc123)
-          if (resumeUrl.startsWith('/api/file/') || resumeUrl.includes('/api/file/')) {
-            console.log('✅ GridFS URL detected, opening directly');
-            const fullUrl = resumeUrl.startsWith('http') ? resumeUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${resumeUrl}`;
-            const win = window.open(fullUrl, '_blank');
-            if (!win) {
-              const link = document.createElement('a');
-              link.href = fullUrl;
-              link.target = '_blank';
-              link.click();
-            }
-            setPreviewPopupState('none');
-            return;
-          }
-
-          // Ensure proper format
-          let formattedData = resumeUrl;
-          
-          console.log('🔍 Resume URL starts with:', resumeUrl.substring(0, 100));
-          console.log('🔍 Resume URL type:', typeof resumeUrl);
-          
-          if (!resumeUrl.startsWith('data:')) {
-            formattedData = `data:application/pdf;base64,${resumeUrl}`;
-            console.log('✅ Added data URL prefix');
-          } else {
-            console.log('✅ URL already has data prefix');
-          }
-
-          // Convert base64 to blob for proper browser PDF viewing
-          if (formattedData.startsWith('data:application/pdf;base64,')) {
-            console.log('✅ Converting to blob for preview...');
-            
-            // Find the comma that separates the prefix from the data
-            const commaIndex = formattedData.indexOf(',');
-            console.log('🔍 Comma found at index:', commaIndex);
-            
-            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
-            
-            if (!dataAfterPrefix || dataAfterPrefix.length === 0) {
-              throw new Error('Empty data');
-            }
-            
-            console.log('🔍 Data length:', dataAfterPrefix.length);
-            console.log('🔍 First 50 chars:', dataAfterPrefix.substring(0, 50));
-            
-            let byteArray;
-            
-            // Check if data is comma-separated bytes (e.g., "37,80,68,70...")
-            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
-              console.log('🔧 Detected comma-separated byte format, converting...');
-              const byteStrings = dataAfterPrefix.split(',');
-              byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
-              console.log('✅ Converted from comma-separated bytes, size:', byteArray.length);
-            } else {
-              console.log('🔧 Detected base64 format, decoding...');
-              const byteCharacters = atob(dataAfterPrefix);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              byteArray = new Uint8Array(byteNumbers);
-              console.log('✅ Decoded from base64, size:', byteArray.length);
-            }
-            
-            const blob = new Blob([byteArray], { type: 'application/pdf' });
-            
-            console.log('✅ Blob created, size:', blob.size, 'bytes');
-            
-            const blobUrl = URL.createObjectURL(blob);
-            console.log('✅ Blob URL created:', blobUrl);
-            
-            // Open blob URL directly — browser's native PDF viewer handles it
-            const win = window.open(blobUrl, '_blank');
-            if (!win) {
-              console.log('⚠️ Popup blocked, using fallback');
-              const link = document.createElement('a');
-              link.href = blobUrl;
-              link.target = '_blank';
-              link.click();
-            }
-            // Set title after a short delay
-            setTimeout(() => {
-              try { if (win) win.document.title = `Resume - ${studentData?.firstName || 'Preview'}`; } catch(e) {}
-            }, 1000);
-          } else {
-            console.log('🔗 Opening regular URL');
-            window.open(formattedData, '_blank');
-          }
-          
+        // Open resume in new tab/window
+        setTimeout(() => {
           setPreviewPopupState('none');
-        } catch (err) {
-          console.error('❌ Preview error:', err);
-          setPreviewPopupState('error');
-          setTimeout(() => setPreviewPopupState('none'), 2000);
-          alert('Failed to preview PDF: ' + err.message);
-        }
+
+          // Convert relative URLs to absolute URLs
+          let fullUrl = resumeUrl;
+          if (resumeUrl.startsWith('/api/file/') || resumeUrl.startsWith('/file/')) {
+            const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+            fullUrl = `${API_BASE}${resumeUrl}`;
+            console.log('✅ Converted to full URL:', fullUrl);
+          }
+
+          window.open(fullUrl, '_blank', 'noopener,noreferrer');
+        }, 500);
       }, 500);
       
     } catch (error) {
