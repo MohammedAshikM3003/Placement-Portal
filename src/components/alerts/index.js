@@ -7,6 +7,8 @@ export { default as ErrorAlert } from './ErrorAlert';
 export { default as ConfirmAlert } from './ConfirmAlert';
 export { default as InfoAlert } from './InfoAlert';
 export { default as PlacementStatusPopup } from './PlacementStatusPopup';
+export { default as FieldUpdateBanner } from './FieldUpdateBanner';
+export { default as UnsavedChangesAlert } from './UnsavedChangesAlert';
 export { AchievementSuccessAlert, AchievementErrorAlert } from './AchievementUploadAlert';
 export { 
   RegistrationSuccessAlert, 

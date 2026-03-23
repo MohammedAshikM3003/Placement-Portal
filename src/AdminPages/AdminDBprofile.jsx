@@ -6,8 +6,9 @@ import useAdminAuth from '../utils/useAdminAuth';
 
 import Navbar from '../components/Navbar/Adnavbar.js';
 import Sidebar from '../components/Sidebar/Adsidebar.js';
-import styles from './AdminDBprofile.module.css'; 
+import styles from './AdminDBprofile.module.css';
 import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts.js';
+import gridfsService from '../services/gridfsService';
 
 import Adminicons from '../assets/AdmingreenCapicon.svg';
 
@@ -627,7 +628,6 @@ function AdminAdProfile({ onLogout, onViewChange }) {
             // Handle profile picture upload via GridFS
             if (fileInputRef.current && fileInputRef.current.files[0]) {
                 const file = fileInputRef.current.files[0];
-                const gridfsService = (await import('../services/gridfsService')).default;
                 const result = await gridfsService.uploadProfileImage(file, studentId, 'student');
                 payload.profilePicURL = result.url; // GridFS URL
                 console.log('Profile picture uploaded to GridFS:', result.id);
@@ -819,7 +819,9 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                         }
                     }
                     if (merged.profilePicURL) {
-                        setProfileImage(merged.profilePicURL);
+                        // Resolve GridFS URLs to full backend URL for display
+                        const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
+                        setProfileImage(resolvedUrl);
                         setUploadInfo({ name: 'profile.jpg', date: merged.profileUploadDate || new Date().toLocaleDateString('en-GB') });
                     }
                     setLoginPwdValue(merged.loginPassword || '');
@@ -1018,135 +1020,214 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                             <h3 className={styles['Admin-DB-AdProfile-section-header']}>Personal Information</h3>
                             <div className={styles['Admin-DB-AdProfile-form-grid']}>
                                 <div className={styles['Admin-DB-AdProfile-personal-info-fields']}>
-                                    <input type="text" name="firstName" placeholder="First Name" defaultValue={studentData?.firstName || ''} disabled={!isEditable} />
-                                    <input type="text" name="lastName" placeholder="Last Name" defaultValue={studentData?.lastName || ''} disabled={!isEditable} />
-                                    <input type="text" name="regNo" placeholder="Register Number (11 digits)" defaultValue={studentData?.regNo || ''} disabled={!isEditable} />
-                                    <select name="batch" value={studentData?.batch || ''} onChange={(e) => handleSelectChange('batch', e.target.value)} disabled={!isEditable}>
-                                        <option value="" disabled>Batch</option>
-                                        {generateBatchOptions().map((batch) => (
-                                            <option key={batch.value} value={batch.value}>
-                                                {batch.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className={styles['Admin-DB-AdProfile-date-wrapper']}>
-                                        <DatePicker
-                                            selected={dob}
-                                            onChange={(date) => setDob(date)}
-                                            dateFormat="dd-MM-yyyy"
-                                            placeholderText="Select DOB"
-                                            className={styles['Admin-DB-AdProfile-date-input']}
-                                            showPopperArrow={false}
-                                            showMonthDropdown
-                                            showYearDropdown
-                                            dropdownMode="select"
-                                            yearDropdownItemNumber={15}
-                                            scrollableYearDropdown
-                                            maxDate={new Date()}
-                                            isClearable
-                                            autoComplete="off"
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>First Name</label>
+                                        <input type="text" name="firstName" placeholder="Enter First Name" defaultValue={studentData?.firstName || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Last Name</label>
+                                        <input type="text" name="lastName" placeholder="Enter Last Name" defaultValue={studentData?.lastName || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Register Number</label>
+                                        <input type="text" name="regNo" placeholder="Register Number (11 digits)" defaultValue={studentData?.regNo || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Batch</label>
+                                        <select name="batch" value={studentData?.batch || ''} onChange={(e) => handleSelectChange('batch', e.target.value)} disabled={!isEditable}>
+                                            <option value="" disabled>Select Batch</option>
+                                            {generateBatchOptions().map((batch) => (
+                                                <option key={batch.value} value={batch.value}>
+                                                    {batch.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Date of Birth</label>
+                                        <div className={styles['Admin-DB-AdProfile-date-wrapper']}>
+                                            <DatePicker
+                                                selected={dob}
+                                                onChange={(date) => setDob(date)}
+                                                dateFormat="dd-MM-yyyy"
+                                                placeholderText="Select DOB"
+                                                className={styles['Admin-DB-AdProfile-date-input']}
+                                                showPopperArrow={false}
+                                                showMonthDropdown
+                                                showYearDropdown
+                                                dropdownMode="select"
+                                                yearDropdownItemNumber={15}
+                                                scrollableYearDropdown
+                                                maxDate={new Date()}
+                                                isClearable
+                                                autoComplete="off"
+                                                disabled={!isEditable}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Degree</label>
+                                        <select
+                                            name="degree"
+                                            value={selectedDegree}
+                                            onChange={(e) => handleSelectChange('degree', e.target.value)}
                                             disabled={!isEditable}
-                                        />
+                                            required
+                                        >
+                                            <option value="" disabled>Select Degree</option>
+                                            {degrees.map((degree) => {
+                                                const value = degree.degreeAbbreviation || degree.degreeFullName;
+                                                const label = degree.degreeFullName
+                                                    ? degree.degreeAbbreviation
+                                                        ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                        : degree.degreeFullName
+                                                    : value;
+                                                return (
+                                                    <option key={degree.id || degree._id || value} value={value}>
+                                                        {label}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
                                     </div>
-                                    <select 
-                                        name="degree" 
-                                        value={selectedDegree} 
-                                        onChange={(e) => handleSelectChange('degree', e.target.value)} 
-                                        disabled={!isEditable}
-                                        required
-                                    >
-                                        <option value="" disabled>Degree *</option>
-                                        {degrees.map((degree) => {
-                                            const value = degree.degreeAbbreviation || degree.degreeFullName;
-                                            const label = degree.degreeFullName
-                                                ? degree.degreeAbbreviation
-                                                    ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                                                    : degree.degreeFullName
-                                                : value;
-                                            return (
-                                                <option key={degree.id || degree._id || value} value={value}>
-                                                    {label}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    <select 
-                                        name="branch" 
-                                        value={selectedBranch} 
-                                        onChange={(e) => handleSelectChange('branch', e.target.value)} 
-                                        disabled={!isEditable || !selectedDegree}
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            {selectedDegree ? 'Branch *' : 'Select Degree First'}
-                                        </option>
-                                        {filteredBranches.map((branch) => {
-                                            const value = getBranchOptionValue(branch);
-                                            const label = branch.branchFullName
-                                                ? branch.branchAbbreviation
-                                                    ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                    : branch.branchFullName
-                                                : value;
-                                            return (
-                                                <option key={branch.id || branch._id || value} value={value}>
-                                                    {label}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    <select name="currentYear" value={currentYear || studentData?.currentYear || ''} onChange={(e) => handleSelectChange('currentYear', e.target.value)} disabled={!isEditable}><option value="" disabled>Current Year</option><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option></select>
-                                    <select 
-                                        name="currentSemester" 
-                                        value={currentSemester || studentData?.currentSemester || ''} 
-                                        onChange={(e) => handleSelectChange('currentSemester', e.target.value)} 
-                                        disabled={!isEditable || !currentYear}
-                                    >
-                                        <option value="" disabled>
-                                            {currentYear ? 'Current Semester' : 'Select Year First'}
-                                        </option>
-                                        {getAvailableSemesters(currentYear).map((semesterOption) => (
-                                            <option key={semesterOption} value={semesterOption}>
-                                                {semesterOption}
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Branch</label>
+                                        <select
+                                            name="branch"
+                                            value={selectedBranch}
+                                            onChange={(e) => handleSelectChange('branch', e.target.value)}
+                                            disabled={!isEditable || !selectedDegree}
+                                            required
+                                        >
+                                            <option value="" disabled>
+                                                {selectedDegree ? 'Select Branch' : 'Select Degree First'}
                                             </option>
-                                        ))}
-                                    </select>
-                                    <select name="section" value={studentData?.section || ''} onChange={(e) => handleSelectChange('section', e.target.value)} disabled={!isEditable}><option value="" disabled>Section</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
-                                    <select name="gender" value={studentData?.gender || ''} onChange={(e) => handleSelectChange('gender', e.target.value)} disabled={!isEditable}><option value="" disabled>Gender</option><option value="male">Male</option><option value="female">Female</option></select>
-                                    
-                                    <input type="text" name="address" placeholder="Address" defaultValue={studentData?.address || ''} disabled={!isEditable} />
-                                    
-                                    
-                                    
-                                    <input type="text" name="city" placeholder="City" defaultValue={studentData?.city || ''} disabled={!isEditable} />
-                                    <input type="email" name="primaryEmail" placeholder="Primary Mail id" defaultValue={studentData?.primaryEmail || ''} disabled={!isEditable} />
-                                    <input type="email" name="domainEmail" placeholder="Domain Mail id" defaultValue={studentData?.domainEmail || ''} disabled={!isEditable} />
-                                    <div className={styles['mobileInputWrapper']}>
-                                        <div className={styles['countryCode']}>+91</div>
-                                        <input type="tel" name="mobileNo" placeholder="Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                            {filteredBranches.map((branch) => {
+                                                const value = getBranchOptionValue(branch);
+                                                const label = branch.branchFullName
+                                                    ? branch.branchAbbreviation
+                                                        ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                        : branch.branchFullName
+                                                    : value;
+                                                return (
+                                                    <option key={branch.id || branch._id || value} value={value}>
+                                                        {label}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
                                     </div>
-                                   
-                                    <input type="text" name="fatherName" placeholder="Father Name" defaultValue={studentData?.fatherName || ''} disabled={!isEditable} />
-                                    <input type="text" name="fatherOccupation" placeholder="Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={!isEditable} />
-                                    <div className={styles['mobileInputWrapper']}>
-                                        <div className={styles['countryCode']}>+91</div>
-                                        <input type="tel" name="fatherMobile" placeholder="Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Current Year</label>
+                                        <select name="currentYear" value={currentYear || studentData?.currentYear || ''} onChange={(e) => handleSelectChange('currentYear', e.target.value)} disabled={!isEditable}>
+                                            <option value="" disabled>Select Year</option>
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                        </select>
                                     </div>
-                                    
-                                    <input type="text" name="motherName" placeholder="Mother Name" defaultValue={studentData?.motherName || ''} disabled={!isEditable} />
-                                    <input type="text" name="motherOccupation" placeholder="Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={!isEditable} />
-                                    <div className={styles['mobileInputWrapper']}>
-                                        <div className={styles['countryCode']}>+91</div>
-                                        <input type="tel" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Current Semester</label>
+                                        <select
+                                            name="currentSemester"
+                                            value={currentSemester || studentData?.currentSemester || ''}
+                                            onChange={(e) => handleSelectChange('currentSemester', e.target.value)}
+                                            disabled={!isEditable || !currentYear}
+                                        >
+                                            <option value="" disabled>
+                                                {currentYear ? 'Select Semester' : 'Select Year First'}
+                                            </option>
+                                            {getAvailableSemesters(currentYear).map((semesterOption) => (
+                                                <option key={semesterOption} value={semesterOption}>
+                                                    {semesterOption}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    
-                                    <input type="text" name="guardianName" placeholder="Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={!isEditable} />
-                                    <div className={styles['mobileInputWrapper']}>
-                                        <div className={styles['countryCode']}>+91</div>
-                                        <input type="tel" name="guardianNumber" placeholder="Guardian Number" value={studentData?.guardianNumber || ''} onChange={(e) => handleMobileChange(e, 'guardianNumber')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Section</label>
+                                        <select name="section" value={studentData?.section || ''} onChange={(e) => handleSelectChange('section', e.target.value)} disabled={!isEditable}>
+                                            <option value="" disabled>Select Section</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
                                     </div>
-                                    <input type="text" name="aadhaarNo" placeholder="Aadhaar Number" defaultValue={studentData?.aadhaarNo || ''} disabled={!isEditable} />
-                                    <input type="text" name="portfolioLink" placeholder="Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={!isEditable} />
-                                     <button 
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Gender</label>
+                                        <select name="gender" value={studentData?.gender || ''} onChange={(e) => handleSelectChange('gender', e.target.value)} disabled={!isEditable}>
+                                            <option value="" disabled>Select Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                        </select>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Address</label>
+                                        <input type="text" name="address" placeholder="Enter Address" defaultValue={studentData?.address || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>City</label>
+                                        <input type="text" name="city" placeholder="Enter City" defaultValue={studentData?.city || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Primary Email</label>
+                                        <input type="email" name="primaryEmail" placeholder="Enter Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Domain Email</label>
+                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" defaultValue={studentData?.domainEmail || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Mobile Number</label>
+                                        <div className={styles['mobileInputWrapper']}>
+                                            <div className={styles['countryCode']}>+91</div>
+                                            <input type="tel" name="mobileNo" placeholder="Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                        </div>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Father Name</label>
+                                        <input type="text" name="fatherName" placeholder="Enter Father Name" defaultValue={studentData?.fatherName || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Father Occupation</label>
+                                        <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Father Mobile</label>
+                                        <div className={styles['mobileInputWrapper']}>
+                                            <div className={styles['countryCode']}>+91</div>
+                                            <input type="tel" name="fatherMobile" placeholder="Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                        </div>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Mother Name</label>
+                                        <input type="text" name="motherName" placeholder="Enter Mother Name" defaultValue={studentData?.motherName || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Mother Occupation</label>
+                                        <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Mother Mobile</label>
+                                        <div className={styles['mobileInputWrapper']}>
+                                            <div className={styles['countryCode']}>+91</div>
+                                            <input type="tel" name="motherMobile" placeholder="Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                        </div>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Guardian Name</label>
+                                        <input type="text" name="guardianName" placeholder="Enter Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']}>
+                                        <label>Guardian Mobile</label>
+                                        <div className={styles['mobileInputWrapper']}>
+                                            <div className={styles['countryCode']}>+91</div>
+                                            <input type="tel" name="guardianNumber" placeholder="Guardian Number" value={studentData?.guardianNumber || ''} onChange={(e) => handleMobileChange(e, 'guardianNumber')} disabled={!isEditable} className={styles['mobileNumberInput']} />
+                                        </div>
+                                    </div>
+                                     <button
                                             type="button"
                                             className={styles['Admin-DB-AdProfile-certificate-btn']}
                                             onClick={() => navigate(`/admin-student-certificates/${studentId}`, {
@@ -1156,11 +1237,11 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                             Certificates
                                         </button>
                                     {/* Certificates and Resume Buttons */}
-                                    
-                                    
+
+
                                 </div>
                                 <div className={styles['Admin-DB-AdProfile-profile-photo-wrapper']}>
-                                    <div className={styles['Admin-DB-AdProfile-profile-photo-box']} style={{ height: '675px' }}>
+                                    <div className={styles['Admin-DB-AdProfile-profile-photo-box']} style={{ height: '732px' }}>
                                         <h3 className={styles['Admin-DB-AdProfile-section-header']}>Profile Photo</h3>
                                         <div className={styles['Admin-DB-AdProfile-profile-icon-container']}>
                                             {profileImage ? ( <img src={profileImage} alt="Profile Preview" className={styles['Admin-DB-AdProfile-profile-preview-img']} onClick={() => setImagePreviewOpen(true)} /> ) : ( <GraduationCapIcon /> )}
@@ -1183,15 +1264,29 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                             </div>
                                         )}
                                         
-                                            
-                                    </div>
-                                    <div className={styles['Admin-DB-AdProfile-additional-info-fields']} style={{gap: '2.5rem'}}  >
-                                
-                                    <select name="community" value={studentData?.community || ''} onChange={(e) => handleSelectChange('community', e.target.value)} disabled={!isEditable} style={{marginTop:'23px'}}><option value="" disabled>Community</option> <option value="OC">OC</option><option value="BC">BC</option><option value="BCM">BCM</option><option value="MBC">MBC</option><option value="SC">SC</option><option value="SCA">SCA</option><option value="ST">ST</option></select>
 
-                                    <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} onChange={(e) => handleSelectChange('mediumOfStudy', e.target.value)} disabled={!isEditable} style={{marginTop:'23px'}}><option value="" disabled>Medium of study</option><option value="English">English</option><option value="Tamil">Tamil</option><option value="Other">Others</option></select>
-                                    <input type="text" name="bloodGroup"  style={{marginTop:'23px'}} placeholder="Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={!isEditable}  />
-                                    <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']} style={{ marginTop: '24px' }}>
+                                        <label>Community</label>
+                                        <select name="community" value={studentData?.community || ''} onChange={(e) => handleSelectChange('community', e.target.value)} disabled={!isEditable}><option value="" disabled>Select Community</option><option value="OC">OC</option><option value="BC">BC</option><option value="BCM">BCM</option><option value="MBC">MBC</option><option value="SC">SC</option><option value="SCA">SCA</option><option value="ST">ST</option></select>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']} style={{ marginTop: '24px' }}>
+                                        <label>Medium of Study</label>
+                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} onChange={(e) => handleSelectChange('mediumOfStudy', e.target.value)} disabled={!isEditable}><option value="" disabled>Select Medium</option><option value="English">English</option><option value="Tamil">Tamil</option><option value="Other">Others</option></select>
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']} style={{ marginTop: '24px' }}>
+                                        <label>Blood Group</label>
+                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']} style={{ marginTop: '24px' }}>
+                                        <label>Aadhaar Number</label>
+                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" defaultValue={studentData?.aadhaarNo || ''} maxLength="12" disabled={!isEditable} />
+                                    </div>
+                                    <div className={styles['Admin-DB-AdProfile-field']} style={{ marginTop: '24px' }}>
+                                        <label>Portfolio Link</label>
+                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={!isEditable} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '15px', marginTop: '24px' }}>
                                        
                                         <button 
                                             type="button"
@@ -1238,8 +1333,7 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                         </button>
                                     </div>
                                 </div>
-                                </div>
-                            
+
                         </div>
                         {isInitialLoading && (
                             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -1266,25 +1360,64 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                                     <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} onChange={(e) => setStudyCategory(e.target.value)} disabled={!isEditable} />
                                     <label htmlFor="both" style={{ cursor: !isEditable ? 'default' : 'pointer' }}>Both</label>
                                 </div>
-                                <input type="text" name="tenthInstitution" placeholder="10th Institution Name" defaultValue={studentData?.tenthInstitution || ''} disabled={!isEditable} />
-                                <select name="tenthBoard" value={studentData?.tenthBoard || ''} onChange={(e) => handleSelectChange('tenthBoard', e.target.value)} disabled={!isEditable}><option value="" disabled>10th Board/University</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select>
-                                <input type="text" name="tenthPercentage" placeholder="10th Percentage" defaultValue={studentData?.tenthPercentage || ''} disabled={!isEditable} />
-                                <input type="text" name="tenthYear" placeholder="10th Year of Passing" defaultValue={studentData?.tenthYear || ''} disabled={!isEditable} />
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>10th Institution Name</label>
+                                    <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" defaultValue={studentData?.tenthInstitution || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>10th Board / University</label>
+                                    <select name="tenthBoard" value={studentData?.tenthBoard || ''} onChange={(e) => handleSelectChange('tenthBoard', e.target.value)} disabled={!isEditable}><option value="" disabled>Select 10th Board</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>10th Percentage</label>
+                                    <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" defaultValue={studentData?.tenthPercentage || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>10th Year of Passing</label>
+                                    <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" defaultValue={studentData?.tenthYear || ''} disabled={!isEditable} />
+                                </div>
                                 {(studyCategory === '12th' || studyCategory === 'both') && (
                                     <>
-                                        <input type="text" name="twelfthInstitution" placeholder="12th Institution Name" defaultValue={studentData?.twelfthInstitution || ''} disabled={!isEditable} />
-                                        <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} onChange={(e) => handleSelectChange('twelfthBoard', e.target.value)} disabled={!isEditable}><option value="" disabled>12th Board/University</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select>
-                                        <input type="text" name="twelfthPercentage" placeholder="12th Percentage" defaultValue={studentData?.twelfthPercentage || ''} disabled={!isEditable} />
-                                        <input type="text" name="twelfthYear" placeholder="12th Year of Passing" defaultValue={studentData?.twelfthYear || ''} disabled={!isEditable} />
-                                        <input type="text" name="twelfthCutoff" placeholder="12th Cut-off Marks" defaultValue={studentData?.twelfthCutoff || ''} disabled={!isEditable} />
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>12th Institution Name</label>
+                                            <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" defaultValue={studentData?.twelfthInstitution || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>12th Board / University</label>
+                                            <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} onChange={(e) => handleSelectChange('twelfthBoard', e.target.value)} disabled={!isEditable}><option value="" disabled>Select 12th Board</option><option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="Other State Board">Other State Board</option></select>
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>12th Percentage</label>
+                                            <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" defaultValue={studentData?.twelfthPercentage || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>12th Year of Passing</label>
+                                            <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" defaultValue={studentData?.twelfthYear || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>12th Cut-off Marks</label>
+                                            <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" defaultValue={studentData?.twelfthCutoff || ''} disabled={!isEditable} />
+                                        </div>
                                     </>
                                 )}
                                 {(studyCategory === 'diploma' || studyCategory === 'both') && (
                                     <>
-                                        <input type="text" name="diplomaInstitution" placeholder="Diploma Institution" defaultValue={studentData?.diplomaInstitution || ''} disabled={!isEditable} />
-                                        <input type="text" name="diplomaBranch" placeholder="Diploma Branch" defaultValue={studentData?.diplomaBranch || ''} disabled={!isEditable} />
-                                        <input type="text" name="diplomaPercentage" placeholder="Diploma Percentage" defaultValue={studentData?.diplomaPercentage || ''} disabled={!isEditable} />
-                                        <input type="text" name="diplomaYear" placeholder="Diploma Year of Passing" defaultValue={studentData?.diplomaYear || ''} disabled={!isEditable} />
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>Diploma Institution</label>
+                                            <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" defaultValue={studentData?.diplomaInstitution || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>Diploma Branch</label>
+                                            <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" defaultValue={studentData?.diplomaBranch || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>Diploma Percentage</label>
+                                            <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" defaultValue={studentData?.diplomaPercentage || ''} disabled={!isEditable} />
+                                        </div>
+                                        <div className={styles['Admin-DB-AdProfile-field']}>
+                                            <label>Diploma Year of Passing</label>
+                                            <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" defaultValue={studentData?.diplomaYear || ''} disabled={!isEditable} />
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -1295,64 +1428,123 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                         {/* --- SEMESTER & OTHER DETAILS --- */}
                         <div className={styles['Admin-DB-AdProfile-profile-section-container']}>
                             <h3 className={styles['Admin-DB-AdProfile-section-header']}>Semester</h3>
-                            <div className={styles['Admin-DB-AdProfile-form-grid']}>
-                                {getAllGPAFields().map((field) => {
-                                    const isRequired = getRequiredGPAFields().includes(field);
-                                    const semesterLabel = field.replace(/\D/g, '');
-                                    return (
-                                        <input
-                                            key={field}
-                                            type="text"
-                                            name={field}
-                                            placeholder={`Semester ${semesterLabel} GPA${isRequired ? ' *' : ''} (e.g., 9.08)`}
-                                            defaultValue={studentData?.[field] || ''}
-                                            inputMode="decimal"
-                                            onInput={isEditable ? handleGpaInput : undefined}
-                                            onBlur={isEditable ? handleGpaBlur : undefined}
-                                            disabled={!isEditable}
-                                        />
-                                    );
-                                })}
-                                <input 
-                                    type="text" 
-                                    name="overallCGPA" 
-                                    placeholder="Overall CGPA (e.g., 9.08)" 
-                                    defaultValue={studentData?.overallCGPA || ''} 
-                                    inputMode="decimal"
-                                    onInput={isEditable ? handleGpaInput : undefined}
-                                    onBlur={isEditable ? handleGpaBlur : undefined}
-                                    disabled={!isEditable} 
-                                />
-                                <input type="text" name="clearedBacklogs" placeholder="No. of Backlogs (Cleared)" defaultValue={studentData?.clearedBacklogs || ''} disabled={!isEditable} />
-                                <input type="text" name="currentBacklogs" placeholder="No. of Current Backlogs" defaultValue={studentData?.currentBacklogs || ''} disabled={!isEditable} />
-                                <select name="arrearStatus" value={studentData?.arrearStatus || ''} onChange={(e) => handleSelectChange('arrearStatus', e.target.value)} disabled={!isEditable}>
-                                    <option value="" disabled>Arrear Status</option>
-                                    <option value="NHA">NHA</option>
-                                    <option value="NSA">NSA</option>
-                                    <option value="SA">SA</option>
-                                </select>
-                                <input type="text" name="yearOfGap" placeholder="Year of Gap" defaultValue={studentData?.yearOfGap || ''} disabled={!isEditable} />
-                                <input type="text" name="gapReason" placeholder="Reason for year of Gap" style={{ gridColumn: '1 / -1' }} defaultValue={studentData?.gapReason || ''} disabled={!isEditable} />
+                            <div className={styles['Admin-DB-AdProfile-marksheet-grid']}>
+                                {/* Show semesters 1 to current semester */}
+                                {(() => {
+                                    const currentSem = parseInt(currentSemester) || 1;
+                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
+                                    return semestersToShow.map((semesterNumber) => (
+                                        <div key={semesterNumber} className={styles['Admin-DB-AdProfile-semester-box']}>
+                                            <span className={styles['Admin-DB-AdProfile-semester-label']}>Semester {semesterNumber}</span>
+                                            <button type="button" className={styles['Admin-DB-AdProfile-view-marksheet-btn']}>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={styles['Admin-DB-AdProfile-eye-icon']}>
+                                                    <ellipse cx="12" cy="12" rx="9" ry="6" stroke="#4EA24E" strokeWidth="2"/>
+                                                    <circle cx="12" cy="12" r="2" stroke="#4EA24E" strokeWidth="2"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ));
+                                })()}
+                            </div>
+
+                            {/* Separator line */}
+                            <div className={styles['Admin-DB-AdProfile-semester-separator']}></div>
+
+                            <div className={`${styles['Admin-DB-AdProfile-form-grid']} ${styles['Admin-DB-AdProfile-academic-grid']}`} style={{ marginTop: '1rem' }}>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>CGPA</label>
+                                    <input
+                                        type="text"
+                                        name="overallCGPA"
+                                        placeholder="Enter CGPA"
+                                        defaultValue={studentData?.overallCGPA || ''}
+                                        inputMode="decimal"
+                                        onInput={isEditable ? handleGpaInput : undefined}
+                                        onBlur={isEditable ? handleGpaBlur : undefined}
+                                        disabled={!isEditable}
+                                    />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>No. of Backlog (Arrear Cleared)</label>
+                                    <input type="text" name="clearedBacklogs" placeholder="Enter cleared backlogs" defaultValue={studentData?.clearedBacklogs || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>No. of Current Backlog</label>
+                                    <input type="text" name="currentBacklogs" placeholder="Enter current backlogs" defaultValue={studentData?.currentBacklogs || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Year of Gap</label>
+                                    <input type="text" name="yearOfGap" placeholder="Enter year of gap" defaultValue={studentData?.yearOfGap || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']} style={{ gridColumn: '1 / -1' }}>
+                                    <label>Reason for Year of Gap</label>
+                                    <input type="text" name="gapReason" placeholder="Enter reason for year of gap" defaultValue={studentData?.gapReason || ''} disabled={!isEditable} />
+                                </div>
                             </div>
                         </div>
                         <div className={styles['Admin-DB-AdProfile-profile-section-container']}>
                             <h3 className={styles['Admin-DB-AdProfile-section-header']}>Other Details</h3>
                             <div className={styles['Admin-DB-AdProfile-form-grid']}>
-                                <select name="residentialStatus" value={studentData?.residentialStatus || ''} onChange={(e) => handleSelectChange('residentialStatus', e.target.value)} disabled={!isEditable}><option value="" disabled>Residential status</option><option value="Hosteller">Hosteller</option><option value="Dayscholar">Dayscholar</option></select>
-                                <select name="quota" value={studentData?.quota || ''} onChange={(e) => handleSelectChange('quota', e.target.value)} disabled={!isEditable}><option value="" disabled>Quota</option><option value="Management">Management</option><option value="Counselling">Counselling</option></select>
-                                <input type="text" name="languagesKnown" placeholder="Languages Known" defaultValue={studentData?.languagesKnown || ''} disabled={!isEditable} />
-                                <select name="firstGraduate" value={studentData?.firstGraduate || ''} onChange={(e) => handleSelectChange('firstGraduate', e.target.value)} disabled={!isEditable}><option value="" disabled>First Graduate</option><option value="Yes">Yes</option><option value="No">No</option></select>
-                                <input type="text" name="passportNo" placeholder="Passport No." defaultValue={studentData?.passportNo || ''} disabled={!isEditable} />
-                                <input type="text" name="skillSet" placeholder="Skill set" defaultValue={studentData?.skillSet || ''} disabled={!isEditable} />
-                                <input type="text" name="valueAddedCourses" placeholder="Value Added Courses" defaultValue={studentData?.valueAddedCourses || ''} disabled={!isEditable} />
-                                <input type="text" name="aboutSibling" placeholder="About sibling" defaultValue={studentData?.aboutSibling || ''} disabled={!isEditable} />
-                                <input type="text" name="rationCardNo" placeholder="Ration card No." defaultValue={studentData?.rationCardNo || ''} disabled={!isEditable} />
-                                <input type="text" name="familyAnnualIncome" placeholder="Family Annual Income" defaultValue={studentData?.familyAnnualIncome || ''} disabled={!isEditable} />
-                                <input type="text" name="panNo" placeholder="PAN No." defaultValue={studentData?.panNo || ''} disabled={!isEditable} />
-                                <select name="willingToSignBond" value={studentData?.willingToSignBond || ''} onChange={(e) => handleSelectChange('willingToSignBond', e.target.value)} disabled={!isEditable}><option value="" disabled>Willing to Sign Bond</option><option value="Yes">Yes</option><option value="No">No</option></select>
-                                <select name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} onChange={(e) => handleSelectChange('preferredModeOfDrive', e.target.value)} disabled={!isEditable}><option value="" disabled>Preferred Mode of Drive</option><option value="Online">Online</option><option value="Offline">Offline</option><option value="Hybrid">Hybrid</option></select>
-                                <input type="text" name="githubLink" placeholder="GitHub Link" defaultValue={studentData?.githubLink || ''} disabled={!isEditable} />
-                                <input type="text" name="linkedinLink" placeholder="LinkedIn Profile Link" defaultValue={studentData?.linkedinLink || ''} disabled={!isEditable} />
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Residential Status</label>
+                                    <select name="residentialStatus" value={studentData?.residentialStatus || ''} onChange={(e) => handleSelectChange('residentialStatus', e.target.value)} disabled={!isEditable}><option value="" disabled>Select Residential Status</option><option value="Hosteller">Hosteller</option><option value="Dayscholar">Dayscholar</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Quota</label>
+                                    <select name="quota" value={studentData?.quota || ''} onChange={(e) => handleSelectChange('quota', e.target.value)} disabled={!isEditable}><option value="" disabled>Select Quota</option><option value="Management">Management</option><option value="Counselling">Counselling</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Languages Known</label>
+                                    <input type="text" name="languagesKnown" placeholder="Enter languages known" defaultValue={studentData?.languagesKnown || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>First Graduate</label>
+                                    <select name="firstGraduate" value={studentData?.firstGraduate || ''} onChange={(e) => handleSelectChange('firstGraduate', e.target.value)} disabled={!isEditable}><option value="" disabled>Select</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Passport No.</label>
+                                    <input type="text" name="passportNo" placeholder="Enter passport number" defaultValue={studentData?.passportNo || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Skill Set</label>
+                                    <input type="text" name="skillSet" placeholder="Enter skill set" defaultValue={studentData?.skillSet || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Value Added Courses</label>
+                                    <input type="text" name="valueAddedCourses" placeholder="Enter value added courses" defaultValue={studentData?.valueAddedCourses || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>About Sibling</label>
+                                    <input type="text" name="aboutSibling" placeholder="Enter about sibling" defaultValue={studentData?.aboutSibling || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Ration Card No.</label>
+                                    <input type="text" name="rationCardNo" placeholder="Enter ration card number" defaultValue={studentData?.rationCardNo || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Family Annual Income</label>
+                                    <input type="text" name="familyAnnualIncome" placeholder="Enter family annual income" defaultValue={studentData?.familyAnnualIncome || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>PAN No.</label>
+                                    <input type="text" name="panNo" placeholder="Enter PAN number" defaultValue={studentData?.panNo || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Willing to Sign Bond</label>
+                                    <select name="willingToSignBond" value={studentData?.willingToSignBond || ''} onChange={(e) => handleSelectChange('willingToSignBond', e.target.value)} disabled={!isEditable}><option value="" disabled>Select</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>Preferred Mode of Drive</label>
+                                    <select name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} onChange={(e) => handleSelectChange('preferredModeOfDrive', e.target.value)} disabled={!isEditable}><option value="" disabled>Select Mode</option><option value="Online">Online</option><option value="Offline">Offline</option><option value="Hybrid">Hybrid</option></select>
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>GitHub Link</label>
+                                    <input type="text" name="githubLink" placeholder="Enter GitHub link" defaultValue={studentData?.githubLink || ''} disabled={!isEditable} />
+                                </div>
+                                <div className={styles['Admin-DB-AdProfile-field']}>
+                                    <label>LinkedIn Profile Link</label>
+                                    <input type="text" name="linkedinLink" placeholder="Enter LinkedIn profile link" defaultValue={studentData?.linkedinLink || ''} disabled={!isEditable} />
+                                </div>
                                 
                                 {/* Company Types Checkbox Group */}
                                 <div className={styles['Admin-DB-AdProfile-checkbox-group']}>

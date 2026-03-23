@@ -135,6 +135,33 @@
     align-content: start;
 }
 
+/* Field wrapper with label */
+.Admin-DB-AdProfile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.Admin-DB-AdProfile-field label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0;
+}
+
+.Admin-DB-AdProfile-field input,
+.Admin-DB-AdProfile-field select {
+    width: 100%;
+}
+
+.Admin-DB-AdProfile-field .Admin-DB-AdProfile-date-wrapper {
+    width: 100%;
+}
+
+.Admin-DB-AdProfile-field .mobileInputWrapper {
+    width: 100%;
+}
+
 .Admin-DB-AdProfile-profile-photo-wrapper, .AdProfile-profile-photo-wrapper {
     grid-column: 3 / 4;
 }
@@ -597,6 +624,11 @@
         grid-column: auto;
         display: block;
     }
+
+    /* Mobile field wrapper spacing */
+    .Admin-DB-AdProfile-field {
+        margin-bottom: 1rem;
+    }
     
     /* Adding spacing to inputs on mobile */
     .Admin-DB-AdProfile-profile-section-container input:not(:last-child), .AdProfile-profile-section-container input:not(:last-child),
@@ -753,6 +785,92 @@
     line-height: 1.4;
 }
 
+/* Marksheet Grid - 3 columns for semester cards */
+.Admin-DB-AdProfile-marksheet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+    .Admin-DB-AdProfile-marksheet-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .Admin-DB-AdProfile-marksheet-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Semester Box - Green themed */
+.Admin-DB-AdProfile-semester-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem;
+    background: #f9fff9;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+}
+
+.Admin-DB-AdProfile-semester-box:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-DB-AdProfile-semester-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+}
+
+/* View Marksheet Button */
+.Admin-DB-AdProfile-view-marksheet-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.Admin-DB-AdProfile-view-marksheet-btn:hover {
+    transform: scale(1.1);
+}
+
+.Admin-DB-AdProfile-eye-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Semester Separator */
+.Admin-DB-AdProfile-semester-separator {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #def4dd, transparent);
+    margin: 1.5rem 0;
+}
+
+/* Academic Grid - 3 columns for CGPA, Backlogs, etc. */
+.Admin-DB-AdProfile-academic-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 768px) {
+    .Admin-DB-AdProfile-academic-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 /* Certificates and Resume Buttons */
 .Admin-DB-AdProfile-certificate-btn,
 .Admin-DB-AdProfile-resume-btn {
@@ -807,4 +925,316 @@
         padding: 0.8rem;
         font-size: 0.9rem;
     }
+}
+
+/* ================================================================
+   COMPANY DETAILS SECTION - Green Theme
+   ================================================================ */
+
+/* 3-column grid for the stat cards */
+.Admin-DB-AdProfile-company-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+/* Each stat card — label on left, colored full-height panel on right */
+.Admin-DB-AdProfile-company-stat-card {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+    min-height: 62px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: default;
+}
+
+.Admin-DB-AdProfile-company-stat-card:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-DB-AdProfile-company-stat-label {
+    flex: 1;
+    padding: 0.85rem 1.1rem;
+    font-size: 0.88rem;
+    color: #666;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.Admin-DB-AdProfile-company-stat-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    padding: 0.75rem 1.1rem;
+    background: #c8e6c9;
+    color: #2E7D32;
+    font-size: 1.5rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    letter-spacing: -0.5px;
+}
+
+/* Stat card without a colored value panel (Last Drive items) */
+.Admin-DB-AdProfile-company-stat-card-empty {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+    min-height: 62px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: default;
+}
+
+.Admin-DB-AdProfile-company-stat-card-empty:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-DB-AdProfile-company-stat-value-empty {
+    display: flex;
+    align-items: center;
+    min-width: 90px;
+    padding: 0.75rem 1.1rem;
+    font-size: 0.88rem;
+    color: #999;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* Bottom row: Success Rate circle + Insights card + View Analysis button */
+.Admin-DB-AdProfile-company-bottom-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+/* Success Rate donut */
+.Admin-DB-AdProfile-success-rate-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-DB-AdProfile-success-rate-circle-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.Admin-DB-AdProfile-success-rate-svg {
+    width: 120px;
+    height: 120px;
+}
+
+.Admin-DB-AdProfile-success-rate-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.Admin-DB-AdProfile-success-rate-label {
+    display: block;
+    font-size: 0.6rem;
+    color: #888;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.Admin-DB-AdProfile-success-rate-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #2E7D32;
+}
+
+/* Performance Insights card */
+.Admin-DB-AdProfile-performance-insights-card {
+    background: #f0f7f0;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}
+
+.Admin-DB-AdProfile-insights-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2E7D32;
+    margin: 0 0 0.75rem 0;
+}
+
+.Admin-DB-AdProfile-insight-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.Admin-DB-AdProfile-insight-row:last-child {
+    margin-bottom: 0;
+}
+
+.Admin-DB-AdProfile-insight-label {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.Admin-DB-AdProfile-insight-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* View Analysis button */
+.Admin-DB-AdProfile-view-analysis-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4EA24E 0%, #2E7D32 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-width: 120px;
+}
+
+.Admin-DB-AdProfile-view-analysis-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+.Admin-DB-AdProfile-view-analysis-icon {
+    width: 50px;
+    height: 50px;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.Admin-DB-AdProfile-view-analysis-btn span {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .Admin-DB-AdProfile-company-stats-grid { grid-template-columns: 1fr 1fr; }
+    .Admin-DB-AdProfile-company-bottom-row { grid-template-columns: 1fr; }
+    .Admin-DB-AdProfile-success-rate-circle-container { width: 160px; height: 160px; }
+    .Admin-DB-AdProfile-success-rate-svg { width: 160px; height: 160px; }
+}
+
+@media (max-width: 600px) {
+    .Admin-DB-AdProfile-company-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ================================================================
+   SKILLS SECTION - Green Theme
+   ================================================================ */
+
+.Admin-DB-AdProfile-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Each skill card is a bordered box containing data + remove button */
+.Admin-DB-AdProfile-skill-card {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.Admin-DB-AdProfile-skill-card:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.18);
+}
+
+.Admin-DB-AdProfile-skill-input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    color: #1a2a4a;
+    outline: none;
+    box-shadow: none !important;
+}
+
+.Admin-DB-AdProfile-skill-input::placeholder {
+    color: #b0c4b0;
+}
+
+.Admin-DB-AdProfile-remove-skill-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    color: #bbb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.Admin-DB-AdProfile-remove-skill-btn:hover {
+    color: #d9534f;
+}
+
+/* "Click to Add Skill" button */
+.Admin-DB-AdProfile-add-skill-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #4EA24E 0%, #2E7D32 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    min-height: 52px;
+}
+
+.Admin-DB-AdProfile-add-skill-btn:hover {
+    background: linear-gradient(135deg, #3d8a3d 0%, #1b5e20 100%);
+    transform: translateY(-1px);
+}
+
+.Admin-DB-AdProfile-add-skill-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 900px) {
+    .Admin-DB-AdProfile-skills-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .Admin-DB-AdProfile-skills-grid { grid-template-columns: 1fr; }
 }

@@ -8,6 +8,7 @@ import styles from './Achievements.module.css';
 import alertStyles from '../components/alerts/AlertStyles.module.css';
 import UploadCertificatecardicon from '../assets/UploadCertificatecardicon.svg';
 import editcertificatecardicon from '../assets/editcertificatecardicon.svg';
+import Uploadblueiocn from '../assets/Uploadblueiocn.svg';
 // REMOVED: Redundant static imports for mongoDBService, certificateService, and fastDataService
 // The code now relies solely on dynamic imports inside functions for stability and performance.
 
@@ -2121,7 +2122,8 @@ This record is locked and cannot be modified.
               </svg>
               Refresh
             </button> */}
-            <button 
+            {achievements.length > 0 && (
+            <button
               onClick={handleDeleteClick}
               // FIX: Converted className to styles.className
               className={styles['delete-selected-btn']}
@@ -2147,10 +2149,11 @@ This record is locked and cannot be modified.
           >
             {selectedRows.length > 0 ? `Delete Selected (${selectedRows.length})` : 'Delete Selected'}
           </button>
+            )}
           </div>
         </div>
         {/* FIX: Converted className to styles.className */}
-        <div className={styles['table-scroll-wrapper']}>
+        <div className={styles['table-scroll-wrapper']} style={!isInitialLoading && !isLoading && achievements.length === 0 ? { overflowY: 'hidden' } : undefined}>
             {isInitialLoading || isLoading ? (
               <div style={{
                 minHeight: '300px',
@@ -2160,6 +2163,12 @@ This record is locked and cannot be modified.
                 justifyContent: 'center'
               }}>
                 <TableLoader message={isInitialLoading ? "Loading achievements..." : "Refreshing..."} />
+              </div>
+            ) : filteredAchievements.length === 0 ? (
+              <div className={styles['achievements-empty-state']}>
+                <img src={Uploadblueiocn} alt="No Certificates" className={styles['achievements-empty-icon']} />
+                <h3>No Certificates Yet</h3>
+                <p>Upload your certificates to see them here</p>
               </div>
             ) : (
               // FIX: Converted className to styles.className

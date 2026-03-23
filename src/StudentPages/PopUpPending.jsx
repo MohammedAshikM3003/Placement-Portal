@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactDOM from 'react-dom';
 import { FaCheckCircle, FaExclamationCircle, FaTimes, FaStar, FaRegStar } from "react-icons/fa";
 import scrollStyles from './PopupScrollbar.module.css';
@@ -350,7 +350,7 @@ function SFPScrollTextarea({ value, onChange, readOnly, height = 110 }) {
 }
 
 // ── Student Feedback Date Picker ────────────────────────────────────────────
-function StudentFeedbackDatePicker({ value, onChange, viewOnly = false, onOpenChange }) {
+function StudentFeedbackDatePicker({ value, onChange, viewOnly = false, onOpenChange, triggerHeight }) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
@@ -629,7 +629,8 @@ function StudentFeedbackDatePicker({ value, onChange, viewOnly = false, onOpenCh
           padding: '0.9rem 0.9rem', cursor: 'pointer', backgroundColor: '#f9fbff',
           fontSize: '0.95rem', color: displayVal ? '#333' : '#888',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
-          transition: 'border-color 0.3s, box-shadow 0.3s'
+          transition: 'border-color 0.3s, box-shadow 0.3s',
+          ...(triggerHeight ? { height: triggerHeight } : {})
         }}
       >
         <span style={{ flex: 1 }}>{displayVal || 'Date'}</span>
@@ -652,10 +653,21 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [feedback, setFeedback]       = useState('');
   const [suggestion, setSuggestion]   = useState('');
-  const [rating, setRating]           = useState(4);
+  const [rating, setRating]           = useState(1);
   const [hoverRating, setHoverRating] = useState(0);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [isPopupMobile, setIsPopupMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
+
+  useEffect(() => {
+    const handlePopupResize = () => setIsPopupMobile(window.innerWidth <= 768);
+    handlePopupResize();
+    window.addEventListener('resize', handlePopupResize);
+    return () => window.removeEventListener('resize', handlePopupResize);
+  }, []);
 
   /* ── Inline submit success popup ─────────────────────────────────────── */
   if (showSubmitSuccess) return (
@@ -768,32 +780,63 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             }
           `}</style>
 
-          {/* AI Integration + Overall Assessment two-column row */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '14px' }}>
+          {/* AI Integration + Overall Assessment — mobile/desktop layouts */}
+          {isPopupMobile ? (
+            /* ── MOBILE: flat column, no gap below stars ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
 
-            {/* Left column: AI toggle + Difficulty + Date */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* AI Integration row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.4rem', backgroundColor: '#f9fbff', borderRadius: '8px', border: '1px solid #dde6f4', height: '53.6px', boxSizing: 'border-box' }}>
+              {/* Row 1: AI Integration — full width */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
+                <div style={{ flex: 1, display: 'flex', gap: '0.35rem', alignItems: 'center', padding: '0.32rem', backgroundColor: '#f9fbff', borderRadius: '8px', border: '1px solid #dde6f4', height: '50px', boxSizing: 'border-box', minWidth: 0 }}>
                   <input type="radio" id="sfp-ai-enable" name="sfp-ai" checked={aiEnabled} onChange={() => !viewOnly && setAiEnabled(true)} style={{ display: 'none' }} />
-                  <label htmlFor="sfp-ai-enable" style={{ flex: 1, textAlign: 'center', padding: '6px 14px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? '#2085f6' : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
+                  <label htmlFor="sfp-ai-enable" style={{ flex: 1, textAlign: 'center', padding: '6px 10px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? '#2085f6' : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.86rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
                   <input type="radio" id="sfp-ai-disable" name="sfp-ai" checked={!aiEnabled} onChange={() => !viewOnly && setAiEnabled(false)} style={{ display: 'none' }} />
-                  <label htmlFor="sfp-ai-disable" style={{ flex: 1, textAlign: 'center', padding: '6px 14px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: !aiEnabled ? '#fff' : '#666', backgroundColor: !aiEnabled ? '#2085f6' : 'transparent', fontWeight: !aiEnabled ? 700 : 400, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: !aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Disable</label>
+                  <label htmlFor="sfp-ai-disable" style={{ flex: 1, textAlign: 'center', padding: '6px 10px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: !aiEnabled ? '#fff' : '#666', backgroundColor: !aiEnabled ? '#2085f6' : 'transparent', fontWeight: !aiEnabled ? 700 : 400, fontSize: '0.86rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: !aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Disable</label>
                 </div>
               </div>
 
-              {/* Difficulty Level + Date picker row */}
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                {/* Difficulty dropdown */}
+              {/* Row 2: Overall Assessment + Stars — side by side in one row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  backgroundColor: '#4A5BB3', color: '#fff', borderRadius: '8px',
+                  padding: '0 8px', fontWeight: 700, fontSize: '0.95rem',
+                  textAlign: 'center', flex: 1, boxSizing: 'border-box', height: '50px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  Overall Assessment
+                </div>
+                <div style={{ display: 'flex', gap: '3px', flexWrap: 'nowrap', flexShrink: 0 }}>
+                  {[1,2,3,4,5].map(star => (
+                    <span
+                      key={star}
+                      style={{ cursor: viewOnly ? 'default' : 'pointer', fontSize: '2.5rem', lineHeight: 1 }}
+                      onMouseEnter={() => !viewOnly && setHoverRating(star)}
+                      onMouseLeave={() => !viewOnly && setHoverRating(0)}
+                      onClick={() => !viewOnly && setRating(star)}
+                    >
+                      {(hoverRating || rating) >= star ? <FaStar color="#FFE817" /> : <FaRegStar color="#ccc" />}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Row 3: Select (left half) + Date (right half) */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <select
                     className="sfp-select"
                     value={difficulty}
                     onChange={e => !viewOnly && setDifficulty(e.target.value)}
                     disabled={viewOnly}
-                    style={{ color: difficulty ? '#333' : '#888', cursor: viewOnly ? 'default' : 'pointer' }}
+                    style={{
+                      color: difficulty ? '#333' : '#888',
+                      cursor: viewOnly ? 'default' : 'pointer',
+                      fontSize: '0.88rem',
+                      padding: '0.9rem 2.2rem 0.9rem 0.82rem',
+                      height: '50px',
+                      boxSizing: 'border-box'
+                    }}
                   >
                     <option value="" disabled>Select Difficulty Level</option>
                     <option value="easy">Easy</option>
@@ -801,73 +844,175 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                     <option value="hard">Hard</option>
                     <option value="hardcore">Hardcore</option>
                   </select>
-                  <span style={{
-                    position: 'absolute', right: '10px', top: '50%',
-                    transform: 'translateY(-50%)', pointerEvents: 'none'
-                  }}>
+                  <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
                   </span>
                 </div>
-
-                {/* Date picker */}
-                <StudentFeedbackDatePicker value={selectedDate} onChange={viewOnly ? () => {} : setSelectedDate} viewOnly={viewOnly} onOpenChange={setDatePickerOpen} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <StudentFeedbackDatePicker value={selectedDate} onChange={viewOnly ? () => {} : setSelectedDate} viewOnly={viewOnly} onOpenChange={setDatePickerOpen} triggerHeight="50px" />
+                </div>
               </div>
             </div>
-
-            {/* Right column: Overall Assessment + Stars */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', minWidth: '158px' }}>
-              <div style={{
-                backgroundColor: '#4A5BB3',
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                textAlign: 'center',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}>
-                Overall Assessment
+          ) : (
+            /* ── DESKTOP: two-column layout ── */
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '14px' }}>
+              {/* Left column: AI toggle + Difficulty + Date */}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* AI Integration row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', padding: '0.4rem', backgroundColor: '#f9fbff', borderRadius: '8px', border: '1px solid #dde6f4', height: '53.6px', boxSizing: 'border-box', minWidth: 0 }}>
+                    <input type="radio" id="sfp-ai-enable" name="sfp-ai" checked={aiEnabled} onChange={() => !viewOnly && setAiEnabled(true)} style={{ display: 'none' }} />
+                    <label htmlFor="sfp-ai-enable" style={{ flex: 1, textAlign: 'center', padding: '6px 14px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? '#2085f6' : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
+                    <input type="radio" id="sfp-ai-disable" name="sfp-ai" checked={!aiEnabled} onChange={() => !viewOnly && setAiEnabled(false)} style={{ display: 'none' }} />
+                    <label htmlFor="sfp-ai-disable" style={{ flex: 1, textAlign: 'center', padding: '6px 14px', borderRadius: '6px', cursor: viewOnly ? 'default' : 'pointer', transition: 'all 0.2s ease-in-out', color: !aiEnabled ? '#fff' : '#666', backgroundColor: !aiEnabled ? '#2085f6' : 'transparent', fontWeight: !aiEnabled ? 700 : 400, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: !aiEnabled ? '0 2px 8px rgba(32,133,246,0.3)' : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Disable</label>
+                  </div>
+                </div>
+                {/* Difficulty + Date row */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <select
+                      className="sfp-select"
+                      value={difficulty}
+                      onChange={e => !viewOnly && setDifficulty(e.target.value)}
+                      disabled={viewOnly}
+                      style={{ color: difficulty ? '#333' : '#888', cursor: viewOnly ? 'default' : 'pointer', fontSize: '0.95rem', padding: '0.9rem 2.5rem 0.9rem 0.9rem' }}
+                    >
+                      <option value="" disabled>Select Difficulty Level</option>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                      <option value="hardcore">Hardcore</option>
+                    </select>
+                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <StudentFeedbackDatePicker value={selectedDate} onChange={viewOnly ? () => {} : setSelectedDate} viewOnly={viewOnly} onOpenChange={setDatePickerOpen} />
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '4px', paddingLeft: '2px' }}>
-                {[1,2,3,4,5].map(star => (
-                  <span
-                    key={star}
-                    style={{ cursor: viewOnly ? 'default' : 'pointer', fontSize: '1.6rem' }}
-                    onMouseEnter={() => !viewOnly && setHoverRating(star)}
-                    onMouseLeave={() => !viewOnly && setHoverRating(0)}
-                    onClick={() => !viewOnly && setRating(star)}
-                  >
-                    {(hoverRating || rating) >= star
-                      ? <FaStar color="#FFE817" />
-                      : <FaRegStar color="#ccc" />}
-                  </span>
-                ))}
+              {/* Right column: Overall Assessment + Stars */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', minWidth: '158px' }}>
+                <div style={{
+                  backgroundColor: '#4A5BB3', color: '#fff', borderRadius: '8px',
+                  padding: '0 14px', fontWeight: 700, fontSize: '0.95rem',
+                  textAlign: 'center', width: '100%', boxSizing: 'border-box',
+                  height: '53.6px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  Overall Assessment
+                </div>
+                <div style={{ display: 'flex', gap: '4px', paddingLeft: '2px' }}>
+                  {[1,2,3,4,5].map(star => (
+                    <span
+                      key={star}
+                      style={{ cursor: viewOnly ? 'default' : 'pointer', fontSize: '2rem' }}
+                      onMouseEnter={() => !viewOnly && setHoverRating(star)}
+                      onMouseLeave={() => !viewOnly && setHoverRating(0)}
+                      onClick={() => !viewOnly && setRating(star)}
+                    >
+                      {(hoverRating || rating) >= star ? <FaStar color="#FFE817" /> : <FaRegStar color="#ccc" />}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Feedback + Suggestion two-column */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
-              <SFPScrollTextarea
-                value={feedback}
-                onChange={e => setFeedback(e.target.value)}
-                readOnly={viewOnly}
-                height={110}
-              />
+              <div style={{ position: 'relative' }}>
+                <SFPScrollTextarea
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  readOnly={viewOnly}
+                  height={140}
+                />
+                {aiEnabled && !viewOnly && (
+                  <div style={{
+                    position: 'absolute', bottom: '8px', right: '18px',
+                    display: 'flex', gap: '6px', zIndex: 1
+                  }}>
+                    <button
+                      onClick={() => setFeedback('')}
+                      style={{
+                        backgroundColor: '#ef4444', color: '#fff', border: 'none',
+                        borderRadius: '6px', padding: '4px 12px',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                        fontFamily: "'Poppins', sans-serif",
+                        boxShadow: '0 2px 6px rgba(239,68,68,0.35)',
+                        transition: 'background 0.2s ease'
+                      }}
+                      onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'}
+                      onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      style={{
+                        backgroundColor: '#197AFF', color: '#fff', border: 'none',
+                        borderRadius: '6px', padding: '4px 12px',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                        fontFamily: "'Poppins', sans-serif",
+                        boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
+                      }}
+                    >
+                      Generate
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
-              <SFPScrollTextarea
-                value={suggestion}
-                onChange={e => setSuggestion(e.target.value)}
-                readOnly={viewOnly}
-                height={110}
-              />
+              <div style={{ position: 'relative' }}>
+                <SFPScrollTextarea
+                  value={suggestion}
+                  onChange={e => setSuggestion(e.target.value)}
+                  readOnly={viewOnly}
+                  height={140}
+                />
+                {aiEnabled && !viewOnly && (
+                  <div style={{
+                    position: 'absolute', bottom: '8px', right: '18px',
+                    display: 'flex', gap: '6px', zIndex: 1
+                  }}>
+                    <button
+                      onClick={() => setSuggestion('')}
+                      style={{
+                        backgroundColor: '#ef4444', color: '#fff', border: 'none',
+                        borderRadius: '6px', padding: '4px 12px',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                        fontFamily: "'Poppins', sans-serif",
+                        boxShadow: '0 2px 6px rgba(239,68,68,0.35)',
+                        transition: 'background 0.2s ease'
+                      }}
+                      onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'}
+                      onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      style={{
+                        backgroundColor: '#197AFF', color: '#fff', border: 'none',
+                        borderRadius: '6px', padding: '4px 12px',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                        fontFamily: "'Poppins', sans-serif",
+                        boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
+                      }}
+                    >
+                      Generate
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1022,33 +1167,227 @@ export default function PopUpPending({ app, onBack }) {
   const [showStudentFeedback, setShowStudentFeedback] = useState(false);
   const [selectedRoundName, setSelectedRoundName] = useState('');
   const [feedbackViewMode, setFeedbackViewMode] = useState('edit'); // 'edit' | 'view'
+  const roundsListRef = useRef(null);
+  const [roundsThumb, setRoundsThumb] = useState({ height: 34, top: 0 });
+  const [showRoundsBar, setShowRoundsBar] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const updateRoundsThumb = useCallback(() => {
+    const el = roundsListRef.current;
+    if (!isMobile || !el) {
+      setShowRoundsBar(false);
+      return;
+    }
+    const canScroll = el.scrollHeight > el.clientHeight;
+    setShowRoundsBar(canScroll);
+    if (!canScroll) return;
+
+    const ratio = el.clientHeight / el.scrollHeight;
+    const thumbHeight = Math.max(30, el.clientHeight * ratio);
+    const maxScrollTop = el.scrollHeight - el.clientHeight;
+    const maxThumbTop = el.clientHeight - thumbHeight;
+    const thumbTop = maxScrollTop > 0 ? (el.scrollTop / maxScrollTop) * maxThumbTop : 0;
+
+    setRoundsThumb({ height: thumbHeight, top: thumbTop });
+  }, [isMobile]);
+
+  useEffect(() => {
+    updateRoundsThumb();
+  }, [isMobile, rounds.length, selectedRole, updateRoundsThumb]);
+
+  useEffect(() => {
+    const handleThumbResize = () => updateRoundsThumb();
+    window.addEventListener('resize', handleThumbResize);
+    return () => window.removeEventListener('resize', handleThumbResize);
+  }, [updateRoundsThumb]);
+
+  const onRoundsThumbMouseDown = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startTop = roundsThumb.top;
+    const el = roundsListRef.current;
+    if (!el) return;
+
+    const thumbHeight = roundsThumb.height;
+    const maxThumbTop = el.clientHeight - thumbHeight;
+    const maxScrollTop = el.scrollHeight - el.clientHeight;
+
+    const onMove = (mv) => {
+      const nextTop = Math.max(0, Math.min(maxThumbTop, startTop + mv.clientY - startY));
+      el.scrollTop = maxThumbTop > 0 ? (nextTop / maxThumbTop) * maxScrollTop : 0;
+      updateRoundsThumb();
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
 
   console.log('PopUpPending Status analysis:', { overallStatus });
 
   // Get total rounds from roundDetails or rounds array
   const displayTotalRounds = app?.totalRounds || app?.roundDetails?.length || rounds.length || 'N/A';
+  const shouldUseMobileRoundsScroll = isMobile && rounds.length > 3;
+
+  const feedbackSelector = (
+    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'stretch' : 'flex-start', gap: '4px', width: isMobile ? '100%' : 'auto' }}>
+      <span style={{ fontSize: isMobile ? '1.1rem' : '1.1rem', fontWeight: 700, color: '#555', marginBottom: isMobile ? '0.2rem' : '0.5rem', lineHeight: 1.05 }}>Feedback</span>
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        alignItems: 'center',
+        padding: '0.4rem',
+        backgroundColor: '#f9fbff',
+        borderRadius: '8px',
+        border: '1px solid #dde6f4',
+        height: isMobile ? '56px' : '53.6px',
+        boxSizing: 'border-box',
+        width: isMobile ? '100%' : 'auto'
+      }}>
+        {['Student', 'Admin'].map(role => (
+          <button
+            key={role}
+            onClick={(e) => { e.stopPropagation(); setSelectedRole(role); }}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: isMobile ? '9px 10px' : '8px 22px',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out',
+              color: selectedRole === role ? '#fff' : '#666',
+              backgroundColor: selectedRole === role ? '#2085f6' : 'transparent',
+              fontWeight: selectedRole === role ? 700 : 400,
+              boxShadow: selectedRole === role ? '0 2px 8px rgba(32,133,246,0.3)' : 'none',
+              fontSize: isMobile ? '0.95rem' : '0.95rem',
+              fontFamily: "'Poppins', sans-serif",
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {role}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const roundsContent = rounds.length > 0 ? rounds.map((round, index) => (
+    <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: "#f6f7fa", borderRadius: 16, marginBottom: index === rounds.length - 1 ? 0 : 18, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: isMobile ? '12px 12px 8px 12px' : '16px 18px 16px 24px', gap: isMobile ? '10px' : '18px' }}>
+        <div style={{ flexShrink: 0 }}>{round.icon}</div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <div style={{ fontSize: isMobile ? "1rem" : "1.05rem", fontWeight: 700, color: '#1a1a1a', lineHeight: 1.25 }}>
+            Round {index + 1} ({round.name})
+          </div>
+          <div style={{ fontSize: isMobile ? '0.9rem' : '0.85rem', color: '#666', fontWeight: 500 }}>
+            Status: <span style={{ color: round.statusColor, fontWeight: 700 }}>{round.statusText}</span>
+          </div>
+        </div>
+      </div>
+      {selectedRole === 'Admin' && (
+        <div style={{ display: 'flex', flexShrink: 0 }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const isPassed = ['Passed', 'Selected', 'Cleared'].includes(round.statusText);
+              setAdminFeedbackRoundPassed(isPassed);
+              setShowAdminFeedback(true);
+            }}
+            style={{
+              backgroundColor: '#4EA24E', border: 'none', cursor: 'pointer',
+              padding: isMobile ? '0 14px' : '0 24px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: isMobile ? '70px' : 'auto',
+              minHeight: 'auto'
+            }}
+          >
+            <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
+          </button>
+        </div>
+      )}
+      {selectedRole === 'Student' && (
+        <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '100px' : 'auto' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+              setFeedbackViewMode('edit');
+              setShowStudentFeedback(true);
+            }}
+            style={{
+              backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
+              padding: isMobile ? '0 0' : '0 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRight: '1px solid rgba(255,255,255,0.35)',
+              width: isMobile ? '50px' : 'auto',
+              minHeight: 'auto'
+            }}
+          >
+            <img src={companyfeedbackicon} alt="Feedback" style={{ width: 34, height: 34, filter: 'brightness(0) invert(1)' }} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+              setFeedbackViewMode('view');
+              setShowStudentFeedback(true);
+            }}
+            style={{
+              backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
+              padding: isMobile ? '0 0' : '0 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: isMobile ? '50px' : 'auto',
+              minHeight: 'auto'
+            }}
+          >
+            <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
+          </button>
+        </div>
+      )}
+    </div>
+  )) : (
+    <div style={{ textAlign: 'center', color: '#888', padding: '40px', fontSize: '1rem' }}>
+      No round information available
+    </div>
+  );
 
   return (
     <>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: "28px", borderRadius: 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <style>{`.popup-rounds-hide-native::-webkit-scrollbar { display: none; }`}</style>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '18px' : '28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             {/* Company Info Section */}
-            <div style={{ marginBottom: 20, padding: "16px", background: "#f6f7fa", borderRadius: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.95rem' }}>
+            <div style={{ marginBottom: isMobile ? 16 : 20, padding: isMobile ? '14px' : '16px', background: "#f6f7fa", borderRadius: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
                 <div>
-                  <span style={{ color: "#888", fontWeight: 500 }}>Company: </span>
-                  <span style={{ color: "#333", fontWeight: 600 }}>{app?.company || 'N/A'}</span>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Company: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', wordBreak: 'break-word' }}>{app?.company || 'N/A'}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#888", fontWeight: 500 }}>Job Role: </span>
-                  <span style={{ color: "#333", fontWeight: 600 }}>{app?.jobRole || 'N/A'}</span>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Job Role: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', wordBreak: 'break-word' }}>{app?.jobRole || 'N/A'}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#888", fontWeight: 500 }}>Total Rounds: </span>
-                  <span style={{ color: "#333", fontWeight: 600 }}>{displayTotalRounds}</span>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Total Rounds: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{displayTotalRounds}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#888", fontWeight: 500 }}>Drive Date: </span>
-                  <span style={{ color: "#333", fontWeight: 600 }}>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Drive Date: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', overflowWrap: 'anywhere' }}>
                     {app?.startDate && app?.endDate 
                       ? `${formatDate(app.startDate)} to ${formatDate(app.endDate)}` 
                       : app?.startDate 
@@ -1059,139 +1398,72 @@ export default function PopUpPending({ app, onBack }) {
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <span style={{ fontSize: 23, color: "#888" }}>Overall Status: </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row' }}>
+              <div style={{ width: 'auto', minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
+                <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
                 <span style={{ 
-                  fontSize: 25, 
+                  fontSize: isMobile ? 18 : 25, 
                   color: overallStatusColor, 
-                  fontWeight: 700,
-                  padding: '4px 16px',
+                  fontWeight: isMobile ? 600 : 700,
+                  padding: isMobile ? '4px 12px' : '4px 16px',
                   borderRadius: '8px',
-                  background: `${overallStatusColor}15`
+                  background: `${overallStatusColor}15`,
+                  whiteSpace: 'nowrap'
                 }}>
                   {overallStatus}
                 </span>
               </div>
-              <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: "8px 32px", fontWeight: 600, fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center" }}>
-                <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>↩</span>
+              <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: isMobile ? '9px 15px' : "8px 32px", fontWeight: isMobile ? 600 : 600, fontSize: isMobile ? 16 : 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>↩</span>
               </button>
             </div>
-            <div style={{ marginTop: 20, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                <h3 style={{ fontWeight: 700, fontSize: "1.7rem", marginBottom: 12 }}>Recruitment Journey</h3>
-                <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#555', marginBottom: '0.5rem' }}>Feedback</span>
-                  <div style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    alignItems: 'center',
-                    padding: '0.4rem',
-                    backgroundColor: '#f9fbff',
-                    borderRadius: '8px',
-                    border: '1px solid #dde6f4',
-                    height: '53.6px',
-                    boxSizing: 'border-box'
-                  }}>
-                    {['Student', 'Admin'].map(role => (
-                      <button
-                        key={role}
-                        onClick={(e) => { e.stopPropagation(); setSelectedRole(role); }}
-                        style={{
-                          flex: 1,
-                          textAlign: 'center',
-                          padding: '8px 22px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease-in-out',
-                          color: selectedRole === role ? '#fff' : '#666',
-                          backgroundColor: selectedRole === role ? '#2085f6' : 'transparent',
-                          fontWeight: selectedRole === role ? 700 : 400,
-                          boxShadow: selectedRole === role ? '0 2px 8px rgba(32,133,246,0.3)' : 'none',
-                          fontSize: '0.95rem',
-                          fontFamily: "'Poppins', sans-serif",
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {role}
-                      </button>
-                    ))}
-                  </div>
+            <div style={{ marginTop: isMobile ? 14 : 20, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {isMobile ? (
+                <>
+                  {feedbackSelector}
+                  <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 20, marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
+                </>
+              ) : (
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.7rem', marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
+                  {feedbackSelector}
                 </div>
-              </div>
-              <div style={{ marginTop: 28, overflowY: "auto", paddingRight: 4, flexGrow: 1 }} className={scrollStyles['scroll-rounds']}>
-                {rounds.length > 0 ? rounds.map((round, index) => (
-                  <div key={index} style={{ display: "flex", alignItems: "stretch", background: "#f6f7fa", borderRadius: 16, marginBottom: 18, overflow: 'hidden' }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '16px 18px 16px 24px', gap: '18px' }}>
-                      <div style={{ flexShrink: 0 }}>{round.icon}</div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        <div style={{ fontSize: "1.05rem", fontWeight: 700, color: '#1a1a1a' }}>
-                          Round {index + 1} ({round.name})
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>
-                          Status: <span style={{ color: round.statusColor, fontWeight: 700 }}>{round.statusText}</span>
-                        </div>
-                      </div>
+              )}
+              {isMobile ? (
+                <div style={{ marginTop: 12, height: shouldUseMobileRoundsScroll ? '300px' : 'auto', position: 'relative', overflow: 'hidden', borderRadius: 12 }}>
+                  <div
+                    ref={roundsListRef}
+                    onScroll={updateRoundsThumb}
+                    style={{
+                      height: shouldUseMobileRoundsScroll ? '100%' : 'auto',
+                      overflowY: shouldUseMobileRoundsScroll ? 'auto' : 'visible',
+                      overflowX: 'hidden',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                      paddingRight: 12
+                    }}
+                    className={'popup-rounds-hide-native'}
+                  >
+                    {roundsContent}
+                  </div>
+                  {shouldUseMobileRoundsScroll && showRoundsBar && (
+                    <div style={{ width: '6px', backgroundColor: '#d7d7d7', borderRadius: '20px', position: 'absolute', top: 2, right: 2, bottom: 2 }}>
+                      <div
+                        onMouseDown={onRoundsThumbMouseDown}
+                        style={{
+                          position: 'absolute', left: 0, width: '100%',
+                          height: `${roundsThumb.height}px`, top: `${roundsThumb.top}px`,
+                          backgroundColor: '#1f7cf6', borderRadius: '20px', cursor: 'grab'
+                        }}
+                      />
                     </div>
-                    {selectedRole === 'Admin' && (
-                      <div style={{ display: 'flex', flexShrink: 0 }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const isPassed = ['Passed', 'Selected', 'Cleared'].includes(round.statusText);
-                            setAdminFeedbackRoundPassed(isPassed);
-                            setShowAdminFeedback(true);
-                          }}
-                          style={{
-                            backgroundColor: '#4EA24E', border: 'none', cursor: 'pointer',
-                            padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}
-                        >
-                          <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
-                        </button>
-                      </div>
-                    )}
-                    {selectedRole === 'Student' && (
-                      <div style={{ display: 'flex', flexShrink: 0 }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRoundName(`Round ${index + 1} (${round.name})`);
-                            setFeedbackViewMode('edit');
-                            setShowStudentFeedback(true);
-                          }}
-                          style={{
-                            backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
-                            padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            borderRight: '1px solid rgba(255,255,255,0.35)'
-                          }}
-                        >
-                          <img src={companyfeedbackicon} alt="Feedback" style={{ width: 34, height: 34, filter: 'brightness(0) invert(1)' }} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRoundName(`Round ${index + 1} (${round.name})`);
-                            setFeedbackViewMode('view');
-                            setShowStudentFeedback(true);
-                          }}
-                          style={{
-                            backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
-                            padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}
-                        >
-                          <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )) : (
-                  <div style={{ textAlign: 'center', color: '#888', padding: '40px', fontSize: '1rem' }}>
-                    No round information available
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ marginTop: 28, overflowY: "auto", paddingRight: 4, flexGrow: 1, minHeight: 0 }} className={scrollStyles['scroll-rounds']}>
+                  {roundsContent}
+                </div>
+              )}
             </div>
         </div>
         {showAdminFeedback && (

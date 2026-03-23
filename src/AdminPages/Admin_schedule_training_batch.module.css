@@ -18,6 +18,7 @@
   border-radius: 999px;
   padding: 6px 42px;
   display: inline-block;
+  margin-left:340px;
 }
 
 .ad-stb-top-row {
@@ -100,7 +101,7 @@
   border-radius: 14px;
   padding: 10px 14px;
   color: #000;
-  height:140px;
+  height:190px;
 }
 
 .ad-stb-batch-body {
@@ -126,29 +127,26 @@
   margin-top: 4px;
   max-height: 260px; /* controls visible rows before scroll - show 5 rows */
   overflow-y: auto;
+  overflow-x: auto;
   border-radius: 12px;
 }
 
-/* Custom vertical scrollbar to match design (WebKit/Chromium) */
+/* Vertical scrollbar track */
 .ad-stb-table-wrapper::-webkit-scrollbar {
-  width: 10px;
-}
-
-.ad-stb-table-wrapper::-webkit-scrollbar-track {
-  background: #e4f5ea;
-  border-radius: 999px;
-}
-
-.ad-stb-table-wrapper::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #35c96d, #1f9a4a);
-  border-radius: 999px;
-}
-
+    width: 8px;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #4ea24e;
+  }
 /* Firefox scrollbar color */
-.ad-stb-table-wrapper {
-  scrollbar-width: thin;
-  scrollbar-color: #1f9a4a #e4f5ea;
-}
+
 
 .ad-stb-table-header {
   display: flex;
@@ -167,30 +165,55 @@
   position: relative;
 }
 
+.ad-stb-print-button-container {
+  position: relative;
+  display: inline-block;
+  z-index: 15;
+}
+
+.ad-stb-print-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.ad-stb-print-btn:hover {
+  background-color: #3d8a3d;
+}
+
 .ad-stb-export-menu {
   position: absolute;
+  top: 40px;
   right: 0;
-  margin-top: 6px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  padding: 4px 0;
-  min-width: 160px;
-  z-index: 10;
+  z-index: 2000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.ad-stb-export-item {
-  width: 100%;
-  padding: 8px 14px;
+.ad-stb-export-menu button {
+  padding: 10px 15px;
   border: none;
-  background: transparent;
-  font-size: 13px;
+  background: none;
   text-align: left;
   cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.2s;
 }
 
-.ad-stb-export-item:hover {
-  background: #f4f7fb;
+.ad-stb-export-menu button:hover {
+  background-color: #f0f0f0;
 }
 
 .ad-stb-table {
@@ -362,6 +385,10 @@
   width: 115px;
 }
 
+.ad-stb-btn-primary:hover{
+  background-color:#4ea24e
+}
+
 .ad-stb-footer-actions {
   margin-top: 9px;
   padding: 10px 0 0 0;
@@ -421,9 +448,6 @@
 
 /* mobile phones */
 @media (max-width: 768px) {
-  .ad-stb-content {
-    padding: 12px 10px;
-  }
 
   .ad-stb-filters-grid {
     grid-template-columns: 1fr;
@@ -435,8 +459,20 @@
     gap: 12px;
   }
 
+  .ad-stb-training-pill {
+  margin: 0 auto 16px auto;
+  background: #3a9b4a;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 6px 42px;
+  display: inline-block;
+  margin-left:140px;
+}
   .ad-stb-batch-card {
     padding: 12px 14px 16px 14px;
+    width:430px;
+    margin-left:15px;
   }
 
   .ad-stb-table-card {
@@ -445,27 +481,56 @@
 
   .ad-stb-actions-right,
   .ad-stb-footer-actions {
-    flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
 
-  /* mobile-only vertical scrollbar on page content */
+  /* replicate Admin_Add_Training.module.css mobile scrollbar */
   .ad-stb-content {
     overflow-y: auto;
-    scrollbar-color: #4caf50 transparent;
+    max-height: 90vh;
   }
-
   .ad-stb-content::-webkit-scrollbar {
     width: 4px;
   }
-
   .ad-stb-content::-webkit-scrollbar-track {
     background: transparent;
   }
-
   .ad-stb-content::-webkit-scrollbar-thumb {
     background: #4caf50;
     border-radius: 8px;
   }
+  .ad-stb-content::-webkit-scrollbar-thumb:hover {
+    background: #388e3c;
+  }
+
+    .ad-stb-table-wrapper {
+     
+      max-width: 100vw;
+      border-radius: 12px;
+      position: relative;
+    }
+    .ad-stb-table-wrapper::-webkit-scrollbar:horizontal {
+    height: 6px;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-thumb:horizontal {
+    background: #afadad;
+    border-radius: 8px;
+  }
+  .ad-stb-table-wrapper::-webkit-scrollbar-thumb:hover:horizontal {
+    background: #afadad;
+  }
+   
+    .ad-stb-table {
+      border-collapse: collapse;
+      font-size: 15px;
+      color: #000;
+      font-weight: 500;
+      min-width: 900px;
+      width: 100%;
+      table-layout: auto;
+    }
 }

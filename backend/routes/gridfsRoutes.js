@@ -12,11 +12,24 @@ const { Readable } = require('stream');
 
 let gridFSBucket;
 
-// Initialize/get GridFS bucket
+// Initialize/get GridFS bucket - lazy loading with immediate init if connection is ready
 function getBucket() {
-    if (!gridFSBucket && mongoose.connection.readyState === 1) {
-        gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+    // If bucket exists and connection is good, return it
+    if (gridFSBucket && mongoose.connection.readyState === 1) {
+        return gridFSBucket;
     }
+
+    // If no bucket but connection is ready, initialize immediately
+    if (!gridFSBucket && mongoose.connection.readyState === 1 && mongoose.connection.db) {
+        gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+        console.log('✅ GridFS bucket initialized on-demand');
+    }
+
+    // If connection dropped, clear the stale bucket reference
+    if (gridFSBucket && mongoose.connection.readyState !== 1) {
+        gridFSBucket = null;
+    }
+
     return gridFSBucket;
 }
 
@@ -29,6 +42,12 @@ mongoose.connection.once('open', () => {
 mongoose.connection.on('reconnected', () => {
     gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
     console.log('✅ GridFS bucket re-initialized');
+});
+
+// Clear bucket on disconnect to prevent stale references
+mongoose.connection.on('disconnected', () => {
+    gridFSBucket = null;
+    console.log('⚠️ GridFS bucket cleared (connection lost)');
 });
 
 // Use multer memory storage (stores file buffer in memory, then we push to GridFS manually)
@@ -75,7 +94,7 @@ router.get('/file/:id', async (req, res) => {
     try {
         const bucket = getBucket();
         if (!bucket) {
-            return res.status(503).json({ error: 'GridFS not initialized' });
+            return res.status(503).json({ error: 'GridFS not initialized. Please try again.' });
         }
 
         let fileId;
@@ -92,12 +111,21 @@ router.get('/file/:id', async (req, res) => {
 
         const file = files[0];
 
-        // Set mobile-friendly headers
+        // Generate ETag for caching
+        const etag = `"${file._id.toString()}-${file.uploadDate.getTime()}"`;
+
+        // Check if client has cached version
+        if (req.headers['if-none-match'] === etag) {
+            return res.status(304).end();
+        }
+
+        // Set mobile-friendly headers with strong caching
         res.set('Content-Type', file.contentType || 'application/octet-stream');
         res.set('Content-Length', file.length);
-        res.set('Cache-Control', 'public, max-age=86400'); // 24h cache
-        res.set('Accept-Ranges', 'bytes'); // Support range requests for mobile
-        res.set('X-Content-Type-Options', 'nosniff'); // Security header
+        res.set('Cache-Control', 'public, max-age=604800, immutable'); // 7 days, immutable
+        res.set('ETag', etag);
+        res.set('Accept-Ranges', 'bytes');
+        res.set('X-Content-Type-Options', 'nosniff');
 
         const isImage = (file.contentType || '').startsWith('image/');
         const isPdf = (file.contentType || '') === 'application/pdf';

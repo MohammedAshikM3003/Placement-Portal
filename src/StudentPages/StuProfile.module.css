@@ -701,6 +701,51 @@
     cursor: not-allowed !important;
 }
 
+/* --- UNSAVED CHANGES MODAL --- */
+.unsavedIconWrap {
+    background: #E9DE48;
+    border-radius: 50%;
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+    box-shadow: 0 4px 16px rgba(233, 222, 72, 0.45);
+}
+
+.unsavedTitle {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #0f1b32;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.unsavedFieldText {
+    font-size: 0.95rem;
+    color: #555;
+    text-align: center;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.unsavedSaveBtn {
+    background: #197AFF;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(25, 122, 255, 0.3);
+}
+
+.unsavedSaveBtn:hover { background: #1168e0; }
+
 .stu-profile-saving-overlay {
     position: fixed;
     inset: 0;

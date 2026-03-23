@@ -426,8 +426,7 @@ const studentSchema = new mongoose.Schema({
 // ========================================
 // OPTIMIZED INDEXES FOR FAST QUERIES
 // ========================================
-// Single field indexes
-studentSchema.index({ regNo: 1 });
+// Single field indexes (regNo already indexed via unique: true)
 studentSchema.index({ email: 1 });
 studentSchema.index({ department: 1 });
 studentSchema.index({ branch: 1 });

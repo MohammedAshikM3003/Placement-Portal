@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdNavbar from '../components/Navbar/Adnavbar.js';
 import AdSidebar from '../components/Sidebar/Adsidebar.js';
+import AdminTrainAddPopup from '../components/alerts/Admin_TrainAddPopup.jsx';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import styles from './Admin_schedule_training_batch.module.css';
 
 function AdminScheduleTrainingBatch({ onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportPopupState, setExportPopupState] = useState('none');
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportType, setExportType] = useState('Excel');
+  const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -42,10 +51,61 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   };
 
   const handleToggleExportMenu = () => {
-    setIsExportOpen((v) => !v);
+    setShowExportMenu((v) => !v);
   };
 
-  const handleExportExcel = () => {
+  const handleAddButtonClick = () => {
+    if (selectedRows.length === 0) {
+      alert('Please select at least one student before adding.');
+      return;
+    }
+    setIsAddPopupOpen(true);
+  };
+
+  const handleCloseAddPopup = () => {
+    setIsAddPopupOpen(false);
+  };
+
+  const handleConfirmAdd = () => {
+    console.log('Selected students:', selectedRows);
+    setIsAddPopupOpen(false);
+    // Add your logic here for handling the confirmation
+    alert(`${selectedRows.length} student(s) added to the batch successfully!`);
+  };
+
+  const simulateExport = useCallback(async (type, exportFn) => {
+    setShowExportMenu(false);
+    setExportType(type);
+    setExportProgress(0);
+    setExportPopupState('progress');
+
+    let progressInterval;
+    try {
+      progressInterval = setInterval(() => {
+        setExportProgress((prevProgress) => {
+          if (prevProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prevProgress + 10;
+        });
+      }, 120);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await exportFn();
+
+      clearInterval(progressInterval);
+      setExportProgress(100);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      setExportPopupState('success');
+    } catch (error) {
+      if (progressInterval) clearInterval(progressInterval);
+      console.error('Export failed:', error);
+      setExportPopupState('failed');
+    }
+  }, []);
+
+  const exportToExcel = useCallback(async () => {
     const header = ['S.No', 'Student Name', 'Register Number', 'Department', 'Year', 'Section', 'CGPA', 'Mobile'];
     const rows = students.map((s) => [
       s.id,
@@ -58,85 +118,42 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       s.mobile,
     ]);
 
-    const csvContent = [header, ...rows]
-      .map((row) =>
-        row
-          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-          .join(',')
-      )
-      .join('\n');
+    const worksheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Training Batch');
+    XLSX.writeFile(workbook, 'Training_Batch_Report.xlsx');
+  }, [students]);
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'training-students.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setIsExportOpen(false);
+  const exportToPDF = useCallback(async () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const head = [['S.No', 'Student Name', 'Register Number', 'Department', 'Year', 'Section', 'CGPA', 'Mobile']];
+    const body = students.map((s) => [
+      s.id,
+      s.name,
+      s.regNo,
+      s.dept,
+      s.year,
+      s.section,
+      s.cgpa,
+      s.mobile,
+    ]);
+
+    doc.text('Training Batch Report', 14, 15);
+    autoTable(doc, {
+      head,
+      body,
+      startY: 20,
+      styles: { fontSize: 8 },
+    });
+    doc.save('Training_Batch_Report.pdf');
+  }, [students]);
+
+  const handleExportExcel = () => {
+    simulateExport('Excel', exportToExcel);
   };
 
   const handleExportPdf = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const tableRowsHtml = students
-      .map(
-        (s) => `
-        <tr>
-          <td>${s.id}</td>
-          <td>${s.name}</td>
-          <td>${s.regNo}</td>
-          <td>${s.dept}</td>
-          <td>${s.year}</td>
-          <td>${s.section}</td>
-          <td>${s.cgpa}</td>
-          <td>${s.mobile}</td>
-        </tr>`
-      )
-      .join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Training Students</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 16px; }
-            h2 { margin-bottom: 12px; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-            th { background: #f3f3f3; }
-          </style>
-        </head>
-        <body>
-          <h2>COMPUTER SCIENCE &amp; ENGINEERING</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Student Name</th>
-                <th>Register Number</th>
-                <th>Department</th>
-                <th>Year</th>
-                <th>Section</th>
-                <th>CGPA</th>
-                <th>Mobile</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRowsHtml}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    setIsExportOpen(false);
+    simulateExport('PDF', exportToPDF);
   };
 
   return (
@@ -207,30 +224,18 @@ function AdminScheduleTrainingBatch({ onLogout }) {
         <div className={styles['ad-stb-table-card']}>
           <div className={styles['ad-stb-table-header']}>
             <div className={styles['ad-stb-table-title']}>COMPUTER SCIENCE &amp; ENGINEERING</div>
-            <div className={styles['ad-stb-export-wrapper']}>
+            <div className={styles['ad-stb-print-button-container']}>
               <button
                 type="button"
-                className={styles['ad-stb-btn-primary']}
+                className={styles['ad-stb-print-btn']}
                 onClick={handleToggleExportMenu}
               >
                 Print
               </button>
-              {isExportOpen && (
+              {showExportMenu && (
                 <div className={styles['ad-stb-export-menu']}>
-                  <button
-                    type="button"
-                    className={styles['ad-stb-export-item']}
-                    onClick={handleExportExcel}
-                  >
-                    Export as Excel
-                  </button>
-                  <button
-                    type="button"
-                    className={styles['ad-stb-export-item']}
-                    onClick={handleExportPdf}
-                  >
-                    Save as PDF
-                  </button>
+                  <button type="button" onClick={handleExportExcel}>Export to Excel</button>
+                  <button type="button" onClick={handleExportPdf}>Export to PDF</button>
                 </div>
               )}
             </div>
@@ -295,7 +300,13 @@ function AdminScheduleTrainingBatch({ onLogout }) {
               >
                 Clear
               </button>
-              <button className={styles['ad-stb-btn-primary']}>Add</button>
+              <button 
+                type="button"
+                className={styles['ad-stb-btn-primary']}
+                onClick={handleAddButtonClick}
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>
@@ -305,6 +316,30 @@ function AdminScheduleTrainingBatch({ onLogout }) {
           <button className={styles['ad-stb-footer-save']}>Save</button>
         </div> */}
       </div>
+
+      <AdminTrainAddPopup 
+        isOpen={isAddPopupOpen}
+        onClose={handleCloseAddPopup}
+        onConfirm={handleConfirmAdd}
+        selectedCount={selectedRows.length}
+      />
+
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
+        progress={exportProgress}
+        exportType={exportType}
+      />
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+      />
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+      />
     </div>
   );
 }

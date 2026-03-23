@@ -215,7 +215,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 localStorage.setItem('adminProfileCache', JSON.stringify(profileCacheData));
                 localStorage.setItem('adminProfileCacheTime', Date.now().toString());
                 console.log('✅ Admin profile cached with', Object.keys(profileCacheData).length, 'fields');
-                
+
                 // 🖼️ Pre-cache college images for instant dashboard loading
                 // Resolve GridFS URLs and store via collegeImagesService
                 try {

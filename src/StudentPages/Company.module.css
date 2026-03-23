@@ -242,6 +242,7 @@
     overflow: hidden;
     cursor: default;
     transition: all 0.3s ease;
+    margin-top: 10px;
 }
 
 .appItem:hover {
@@ -375,7 +376,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 27px;
+    font-size: 50px;
     color: #8b8ba3;
 }
 
@@ -441,7 +442,7 @@
 
     .dashboardArea {
         margin-left: 0;
-        padding: 20px 12px 100px 12px !important;
+        padding: 20px 12px 20px 12px !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: 100%;
@@ -567,6 +568,7 @@
         padding: 12px 10px;
         gap: 8px;
         min-height: 64px;
+        margin-top: 10px;
     }
 
     .appLogo { width: 36px; height: 36px; font-size: 16px; margin-right: 6px; flex-shrink: 0; }
@@ -585,7 +587,7 @@
 
     .appStatusText { font-size: 0.78rem; }
 
-    .appArrow { font-size: 20px; }
+    .appArrow { font-size: 40px; }
 
     .dashboardArea { padding-bottom: 120px; }
 }

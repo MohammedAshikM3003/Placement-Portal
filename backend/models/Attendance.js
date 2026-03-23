@@ -97,8 +97,7 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-attendanceSchema.index({ driveId: 1 });
+// Index for faster queries (driveId already indexed via index: true in schema)
 attendanceSchema.index({ companyName: 1, jobRole: 1, startDate: 1 });
 attendanceSchema.index({ 'students.studentId': 1 });
 attendanceSchema.index({ 'students.regNo': 1 });

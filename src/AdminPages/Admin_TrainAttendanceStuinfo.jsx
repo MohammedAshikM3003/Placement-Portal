@@ -6,7 +6,7 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import styles from "./Admin_TrainAttendanceStuinfo.module.css";
 
 const studentData = [
-  { id: 1, name: "Maneesh Adhithya", regNo: "73152313038", dept: "CSE", year: "III", section: "A", phone: "9898986547", date: "25-02-2025", status: "-" },
+  { id: 1, name: "Kiruthika", regNo: "73152313038", dept: "CSE", year: "III", section: "A", phone: "9898986547", date: "25-02-2025", status: "-" },
   { id: 2, name: "Chandan", regNo: "73152313049", dept: "CSE", year: "III", section: "B", phone: "9788657300", date: "25-02-2025", status: "-" },
   { id: 3, name: "Rovinder Singh", regNo: "73152313052", dept: "CSE", year: "III", section: "B", phone: "7845014685", date: "25-02-2025", status: "-" },
   { id: 4, name: "Divam Balwal", regNo: "73152313061", dept: "CSE", year: "III", section: "B", phone: "6369123456", date: "25-02-2025", status: "-" },

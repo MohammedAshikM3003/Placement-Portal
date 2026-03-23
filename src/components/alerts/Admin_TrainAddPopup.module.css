@@ -1,0 +1,180 @@
+/* Popup Overlay */
+.admin-train-add-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: popup-fadeIn 0.3s ease-out;
+}
+
+/* Popup Container */
+.admin-train-add-popup-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Popup Header */
+.admin-train-add-popup-header {
+  background: #4ea24e;
+  color: white;
+  padding: 16px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 16px 16px 0 0;
+}
+
+/* Popup Body */
+.admin-train-add-popup-body {
+  padding: 32px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Question Mark Icon */
+.admin-train-add-popup-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #4ea24e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.25);
+}
+
+/* Title */
+.admin-train-add-popup-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+/* Message */
+.admin-train-add-popup-message {
+  margin: 0;
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+  max-width: 100%;
+}
+
+/* Popup Footer */
+.admin-train-add-popup-footer {
+  padding: 20px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Confirm Button */
+.admin-train-add-popup-confirm-btn {
+  padding: 10px 32px;
+  border: none;
+  background-color: #757575;
+  color: white;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(117, 117, 117, 0.25);
+  font-family: inherit;
+}
+
+.admin-train-add-popup-confirm-btn:hover {
+  background-color: #616161;
+  box-shadow: 0 4px 12px rgba(117, 117, 117, 0.35);
+}
+
+.admin-train-add-popup-confirm-btn:active {
+  transform: translateY(0);
+}
+
+/* Close Button */
+.admin-train-add-popup-close-btn {
+  padding: 10px 32px;
+  border: none;
+  background-color: #d23b42;
+  color: white;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.25);
+  font-family: inherit;
+}
+
+.admin-train-add-popup-close-btn:hover {
+  background-color: #b32d34;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.35);
+}
+
+.admin-train-add-popup-close-btn:active {
+  transform: translateY(0);
+}
+
+/* Animation */
+@keyframes popup-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .admin-train-add-popup-container {
+    width: 90vw;
+  }
+
+  .admin-train-add-popup-body {
+    padding: 24px 16px;
+  }
+
+  .admin-train-add-popup-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 40px;
+  }
+
+  .admin-train-add-popup-title {
+    font-size: 20px;
+  }
+
+  .admin-train-add-popup-message {
+    font-size: 13px;
+  }
+
+  .admin-train-add-popup-confirm-btn,
+  .admin-train-add-popup-close-btn {
+    padding: 8px 24px;
+    font-size: 13px;
+    width: 100%;
+  }
+}

@@ -27,21 +27,26 @@ class GridFSService {
    * Works for <img src>, <iframe src>, fetch(), etc.
    */
   getFileUrl(fileId) {
-    console.log('🔍 getFileUrl called with:', fileId);
-    console.log('🔍 baseURL:', this.baseURL);
-    
     if (!fileId) return '';
-    
-    // If it's already a full URL or a /api/file/ path, return as-is
-    if (fileId.startsWith('http') || fileId.startsWith('/api/file/') || fileId.startsWith('data:')) {
-      const result = fileId.startsWith('/api/file/') ? `${this.baseURL}${fileId.replace('/api', '')}` : fileId;
-      console.log('🔍 getFileUrl result (path case):', result);
-      return result;
+
+    // If it's a data URL (Base64), return as-is
+    if (fileId.startsWith('data:')) return fileId;
+
+    // If it's already a full http URL, return as-is
+    if (fileId.startsWith('http')) return fileId;
+
+    // If it's a /api/file/ path, replace /api since baseURL already includes it
+    if (fileId.startsWith('/api/file/')) {
+      return `${this.baseURL}${fileId.replace('/api', '')}`;
     }
-    
-    const result = `${this.baseURL}/file/${fileId}`;
-    console.log('🔍 getFileUrl result (ID case):', result);
-    return result;
+
+    // If it's just a file ID (24 hex chars), build the full URL
+    if (/^[a-f0-9]{24}$/.test(fileId)) {
+      return `${this.baseURL}/file/${fileId}`;
+    }
+
+    // Fallback - return as-is
+    return fileId;
   }
 
   /**
@@ -261,7 +266,7 @@ class GridFSService {
     if (value.startsWith('data:')) return value;
     // Already a full http(s) URL
     if (value.startsWith('http')) return value;
-    // GridFS path like /api/file/abc123
+    // GridFS path like /api/file/abc123 - baseURL already has /api
     if (value.startsWith('/api/file/')) return `${this.baseURL}${value.replace('/api', '')}`;
     // Raw ObjectId string — build URL
     if (/^[a-f0-9]{24}$/.test(value)) return `${this.baseURL}/file/${value}`;

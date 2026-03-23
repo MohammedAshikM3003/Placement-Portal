@@ -172,14 +172,43 @@ const KeyIcon = () => (
     </svg>
 );
 
+// File Icon for upload info
+const FileIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+    </svg>
+);
+
+// Calendar Icon for upload date
+const CalendarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+
 function Admainprofile() {
     useAdminAuth(); // JWT authentication verification
     // State to manage form data
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        regNo: '',
+        batch: '',
         dob: '',
+        degree: '',
+        branch: '',
+        currentYear: '',
+        currentSemester: '',
+        section: '',
         gender: '',
+        address: '',
+        city: '',
         emailId: '',
         domainMailId: '',
         phoneNumber: '',
@@ -200,6 +229,7 @@ function Admainprofile() {
     const [profilePhoto, setProfilePhoto] = useState(null);
     const [profilePhotoBase64, setProfilePhotoBase64] = useState('');
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [uploadInfo, setUploadInfo] = useState({ name: '', date: '' });
     const [isModalOpen, setIsModalOpen] = useState(false); 
     const [saveStatus, setSaveStatus] = useState(null); 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -351,8 +381,17 @@ function Admainprofile() {
                             setFormData({
                                 firstName: profileData.firstName || '',
                                 lastName: profileData.lastName || '',
+                                regNo: profileData.regNo || '',
+                                batch: profileData.batch || '',
                                 dob: profileData.dob || '',
+                                degree: profileData.degree || '',
+                                branch: profileData.branch || '',
+                                currentYear: profileData.currentYear || '',
+                                currentSemester: profileData.currentSemester || '',
+                                section: profileData.section || '',
                                 gender: profileData.gender || '',
+                                address: profileData.address || '',
+                                city: profileData.city || '',
                                 emailId: profileData.emailId || '',
                                 domainMailId: profileData.domainMailId || '',
                                 phoneNumber: profileData.phoneNumber || '',
@@ -369,6 +408,12 @@ function Admainprofile() {
                                 const resolvedPhoto = gridfsService.resolveImageUrl(profileData.profilePhoto);
                                 setProfilePhoto(resolvedPhoto);
                                 setProfilePhotoBase64(resolvedPhoto);
+                                setUploadInfo({
+                                    name: 'profile.jpg',
+                                    date: profileData.profilePhotoUpdatedAt
+                                        ? new Date(profileData.profilePhotoUpdatedAt).toLocaleDateString('en-GB')
+                                        : new Date().toLocaleDateString('en-GB')
+                                });
                             }
                             
                             // Load college images from cache if available (resolve GridFS URLs)
@@ -424,8 +469,17 @@ function Admainprofile() {
                     console.log('📦 Admin Data Received:', {
                         firstName: data.firstName,
                         lastName: data.lastName,
+                        regNo: data.regNo,
+                        batch: data.batch,
                         dob: data.dob,
+                        degree: data.degree,
+                        branch: data.branch,
+                        currentYear: data.currentYear,
+                        currentSemester: data.currentSemester,
+                        section: data.section,
                         gender: data.gender,
+                        address: data.address,
+                        city: data.city,
                         emailId: data.emailId,
                         domainMailId: data.domainMailId,
                         phoneNumber: data.phoneNumber,
@@ -441,8 +495,17 @@ function Admainprofile() {
                     setFormData({
                         firstName: data.firstName || '',
                         lastName: data.lastName || '',
+                        regNo: data.regNo || '',
+                        batch: data.batch || '',
                         dob: data.dob || '',
+                        degree: data.degree || '',
+                        branch: data.branch || '',
+                        currentYear: data.currentYear || '',
+                        currentSemester: data.currentSemester || '',
+                        section: data.section || '',
                         gender: data.gender || '',
+                        address: data.address || '',
+                        city: data.city || '',
                         emailId: data.emailId || '',
                         domainMailId: data.domainMailId || '',
                         phoneNumber: data.phoneNumber || '',
@@ -483,6 +546,12 @@ function Admainprofile() {
                         const resolvedPhoto = gridfsService.resolveImageUrl(profilePhotoUrl);
                         setProfilePhoto(resolvedPhoto);
                         setProfilePhotoBase64(resolvedPhoto);
+                        setUploadInfo({
+                            name: 'profile.jpg',
+                            date: data.profilePhotoUpdatedAt
+                                ? new Date(data.profilePhotoUpdatedAt).toLocaleDateString('en-GB')
+                                : new Date().toLocaleDateString('en-GB')
+                        });
                     }
                     
                     // College Banner (resolve GridFS URL for display)
@@ -528,8 +597,17 @@ function Admainprofile() {
                         adminLoginID: data.adminLoginID,
                         firstName: data.firstName,
                         lastName: data.lastName,
+                        regNo: data.regNo,
+                        batch: data.batch,
                         dob: data.dob,
+                        degree: data.degree,
+                        branch: data.branch,
+                        currentYear: data.currentYear,
+                        currentSemester: data.currentSemester,
+                        section: data.section,
                         gender: data.gender,
+                        address: data.address,
+                        city: data.city,
                         emailId: data.emailId,
                         domainMailId: data.domainMailId,
                         phoneNumber: data.phoneNumber,
@@ -553,8 +631,17 @@ function Admainprofile() {
                                 adminLoginID: data.adminLoginID,
                                 firstName: data.firstName,
                                 lastName: data.lastName,
+                                regNo: data.regNo,
+                                batch: data.batch,
                                 dob: data.dob,
+                                degree: data.degree,
+                                branch: data.branch,
+                                currentYear: data.currentYear,
+                                currentSemester: data.currentSemester,
+                                section: data.section,
                                 gender: data.gender,
+                                address: data.address,
+                                city: data.city,
                                 emailId: data.emailId,
                                 domainMailId: data.domainMailId,
                                 phoneNumber: data.phoneNumber,
@@ -633,6 +720,10 @@ function Admainprofile() {
         // Store raw File for GridFS upload on save
         setProfilePhotoFile(file);
         setProfilePhoto(URL.createObjectURL(file));
+        setUploadInfo({
+            name: file.name,
+            date: new Date().toLocaleDateString('en-GB')
+        });
         setUploadSuccess(true);
         setTimeout(() => setUploadSuccess(false), 5000);
     };
@@ -656,6 +747,7 @@ function Admainprofile() {
         setProfilePhoto(null);
         setProfilePhotoBase64('');
         setProfilePhotoFile(null);
+        setUploadInfo({ name: '', date: '' });
         setIsModalOpen(false);
         const fileInput = document.getElementById('file-upload');
         if (fileInput) fileInput.value = '';
@@ -683,8 +775,17 @@ function Admainprofile() {
                 setFormData({
                     firstName: data.firstName || '',
                     lastName: data.lastName || '',
+                    regNo: data.regNo || '',
+                    batch: data.batch || '',
                     dob: data.dob || '',
+                    degree: data.degree || '',
+                    branch: data.branch || '',
+                    currentYear: data.currentYear || '',
+                    currentSemester: data.currentSemester || '',
+                    section: data.section || '',
                     gender: data.gender || '',
+                    address: data.address || '',
+                    city: data.city || '',
                     emailId: data.emailId || '',
                     domainMailId: data.domainMailId || '',
                     phoneNumber: data.phoneNumber || '',
@@ -709,6 +810,16 @@ function Admainprofile() {
                 const resolvedLogo = gridfsService.resolveImageUrl(data.collegeLogo);
                 setProfilePhoto(resolvedProfile || null);
                 setProfilePhotoBase64(resolvedProfile || '');
+                if (resolvedProfile) {
+                    setUploadInfo({
+                        name: 'profile.jpg',
+                        date: data.profilePhotoUpdatedAt
+                            ? new Date(data.profilePhotoUpdatedAt).toLocaleDateString('en-GB')
+                            : new Date().toLocaleDateString('en-GB')
+                    });
+                } else {
+                    setUploadInfo({ name: '', date: '' });
+                }
                 setCollegeBanner(resolvedBanner || null);
                 setCollegeBannerBase64(resolvedBanner || '');
                 setNaacCertificate(resolvedNaac || null);
@@ -720,7 +831,9 @@ function Admainprofile() {
             } else {
                 // If no data exists, clear everything
                 setFormData({
-                    firstName: '', lastName: '', dob: '', gender: '', emailId: '',
+                    firstName: '', lastName: '', regNo: '', batch: '', dob: '',
+                    degree: '', branch: '', currentYear: '', currentSemester: '',
+                    section: '', gender: '', address: '', city: '', emailId: '',
                     domainMailId: '', phoneNumber: '', department: '',
                 });
                 setLoginData({
@@ -871,13 +984,22 @@ function Admainprofile() {
                     adminLoginID: adminLoginID,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
+                    regNo: formData.regNo,
+                    batch: formData.batch,
+                    degree: formData.degree,
+                    branch: formData.branch,
+                    currentYear: formData.currentYear,
+                    currentSemester: formData.currentSemester,
+                    section: formData.section,
+                    gender: formData.gender,
+                    address: formData.address,
+                    city: formData.city,
                     profilePhoto: profilePhotoUrl,
                     emailId: formData.emailId,
                     personalEmail: formData.personalEmail,
                     phoneNumber: formData.phoneNumber,
                     department: formData.department,
                     dateOfBirth: formData.dateOfBirth,
-                    gender: formData.gender,
                     collegeBanner: collegeBannerUrl,
                     naacCertificate: naacCertificateUrl,
                     nbaCertificate: nbaCertificateUrl,
@@ -1153,7 +1275,11 @@ function Admainprofile() {
                                         {/* UPDATED CLASSES for form inputs */}
                                         <input type="text" name="firstName" placeholder="First Name" className={styles['Admin-main-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
                                         <input type="text" name="lastName" placeholder="Last Name" className={styles['Admin-main-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
-                                        
+
+                                        <input type="text" name="regNo" placeholder="Register Number" className={styles['Admin-main-profile-form-input']} value={formData.regNo} onChange={handleInputChange} disabled={isSaving} />
+
+                                        <input type="text" name="batch" placeholder="Batch (e.g., 2023-2027)" className={styles['Admin-main-profile-form-input']} value={formData.batch} onChange={handleInputChange} disabled={isSaving} />
+
                                         <div className={styles['Admin-main-profile-date-wrapper']}>
                                             <DatePicker
                                                 selected={parseDateValue(formData.dob)}
@@ -1216,16 +1342,53 @@ function Admainprofile() {
                                                 )}
                                             />
                                         </div>
+
+                                        <input type="text" name="degree" placeholder="Degree" className={styles['Admin-main-profile-form-input']} value={formData.degree} onChange={handleInputChange} disabled={isSaving} />
+
+                                        <input type="text" name="branch" placeholder="Branch" className={styles['Admin-main-profile-form-input']} value={formData.branch} onChange={handleInputChange} disabled={isSaving} />
+
+                                        <select name="currentYear" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.currentYear} onChange={handleInputChange} disabled={isSaving}>
+                                            <option value="" disabled hidden>Current Year</option>
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                        </select>
+
+                                        <select name="currentSemester" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.currentSemester} onChange={handleInputChange} disabled={isSaving}>
+                                            <option value="" disabled hidden>Current Semester</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                        </select>
+
+                                        <select name="section" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.section} onChange={handleInputChange} disabled={isSaving}>
+                                            <option value="" disabled hidden>Section</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+
                                         <select name="gender" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
                                             <option value="" disabled hidden>Gender</option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                             <option value="Other">Other</option>
                                         </select>
-                                        
+
+                                        <input type="text" name="address" placeholder="Address" className={styles['Admin-main-profile-form-input']} value={formData.address} onChange={handleInputChange} disabled={isSaving} />
+
+                                        <input type="text" name="city" placeholder="City" className={styles['Admin-main-profile-form-input']} value={formData.city} onChange={handleInputChange} disabled={isSaving} />
+
                                         <input type="email" name="emailId" placeholder="Email id" className={styles['Admin-main-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
                                         <input type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['Admin-main-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
-                                        
+
                                         <div className={styles['mobileInputWrapper']}>
                                             <div className={styles['countryCode']}>+91</div>
                                             <input type="tel" name="phoneNumber" placeholder="Phone number" className={styles['mobileNumberInput']} value={formData.phoneNumber} onChange={handleMobileChange} disabled={isSaving} />
@@ -1310,6 +1473,19 @@ function Admainprofile() {
                                     )}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG and WebP formats allowed.</p>
                                 </div>
+
+                                {profilePhoto && uploadInfo.name && (
+                                    <div className={styles['Admin-main-profile-upload-info-container']}>
+                                        <div className={styles['Admin-main-profile-upload-info-item']}>
+                                            <FileIcon />
+                                            <span>{uploadInfo.name}</span>
+                                        </div>
+                                        <div className={styles['Admin-main-profile-upload-info-item']}>
+                                            <CalendarIcon />
+                                            <span>Uploaded on: {uploadInfo.date}</span>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {saveStatus && (
                                     // UPDATED CLASSES

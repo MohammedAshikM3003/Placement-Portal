@@ -200,10 +200,10 @@ export default function Company({ onLogout, onViewChange }) {
             currentView={'company'}
             studentData={studentData}
           />
-          <div className={styles.dashboardArea}>
-            <PopUpPending 
-              app={selectedApplication} 
-              onBack={() => setSelectedApplication(null)} 
+          <div className={styles.dashboardArea} style={{ overflow: 'hidden' }}>
+            <PopUpPending
+              app={selectedApplication}
+              onBack={() => setSelectedApplication(null)}
             />
           </div>
         </div>

@@ -16,6 +16,8 @@ import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
+import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
+import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -260,6 +262,60 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
     );
 };
 
+const EDITABLE_FIELD_LABELS = {
+    address: 'Address', city: 'City', primaryEmail: 'Primary Email',
+    mobileNo: 'Mobile Number', fatherOccupation: "Father's Occupation",
+    fatherMobile: "Father's Mobile", motherOccupation: "Mother's Occupation",
+    motherMobile: "Mother's Mobile", guardianName: 'Guardian Name',
+    guardianMobile: 'Guardian Mobile', bloodGroup: 'Blood Group',
+    section: 'Section', currentYear: 'Current Year', currentSemester: 'Current Semester',
+    semester1GPA: 'Sem 1 GPA', semester2GPA: 'Sem 2 GPA',
+    semester3GPA: 'Sem 3 GPA', semester4GPA: 'Sem 4 GPA',
+    semester5GPA: 'Sem 5 GPA', semester6GPA: 'Sem 6 GPA',
+    semester7GPA: 'Sem 7 GPA', semester8GPA: 'Sem 8 GPA',
+    overallCGPA: 'Overall CGPA', clearedBacklogs: 'Cleared Backlogs',
+    currentBacklogs: 'Current Backlogs', yearOfGap: 'Year of Gap',
+    gapReason: 'Gap Reason', residentialStatus: 'Residential Status',
+    quota: 'Quota', languagesKnown: 'Languages Known',
+    firstGraduate: 'First Graduate', passportNo: 'Passport No',
+    skillSet: 'Skill Set', valueAddedCourses: 'Value Added Courses',
+    aboutSibling: 'About Sibling', rationCardNo: 'Ration Card No',
+    familyAnnualIncome: 'Family Annual Income', willingToSignBond: 'Willing to Sign Bond',
+    preferredModeOfDrive: 'Preferred Mode of Drive',
+    githubLink: 'GitHub Link', linkedinLink: 'LinkedIn Link',
+    portfolioLink: 'Portfolio Link', companyTypes: 'Company Types',
+    preferredJobLocation: 'Preferred Job Location',
+    preferredTraining: 'Preferred Training',
+    skills: 'Skills', profilePicURL: 'Profile Photo',
+};
+
+function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
+    const fieldText = changedFields.length > 2
+        ? `${changedFields.slice(0, 2).join(', ')},....... have successfully changed`
+        : `${changedFields.join(', ')} have successfully changed`;
+    return (
+        <div className={styles.popupOverlay}>
+            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
+                <div className={achievementStyles['Achievement-popup-header']}>Details Changed!</div>
+                <div className={achievementStyles['Achievement-popup-body']}>
+                    <div className={styles.unsavedIconWrap}>
+                        <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="7" x2="12" y2="14"/>
+                            <circle cx="12" cy="18" r="0.5" fill="#333" stroke="#333"/>
+                        </svg>
+                    </div>
+                    <h2 className={styles.unsavedTitle}>Save Changes!</h2>
+                    <p className={styles.unsavedFieldText}>{fieldText}</p>
+                </div>
+                <div className={achievementStyles['Achievement-popup-footer']}>
+                    <button className={achievementStyles['Achievement-popup-cancel-btn']} onClick={onDiscard}>Discard</button>
+                    <button className={styles.unsavedSaveBtn} onClick={onSave}>Save</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function StuProfile({ onLogout, onViewChange }) {
     const [studyCategory, setStudyCategory] = useState('12th');
     const [isPopupOpen, setPopupOpen] = useState(false);
@@ -298,12 +354,183 @@ function StuProfile({ onLogout, onViewChange }) {
     const [hoveredRound, setHoveredRound] = useState(null);
     const [selectedRound, setSelectedRound] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 600);
+    const savedDataRef = useRef(null);
+    const afterSaveNavRef = useRef(null);
+    const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+    const [pendingNavView, setPendingNavView] = useState(null);
+
+    // Field Update Banner & Unsaved Changes Tracking
+    const [originalFormData, setOriginalFormData] = useState(null);
+    const [originalSkills, setOriginalSkills] = useState([]);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [changedFieldsList, setChangedFieldsList] = useState([]);
+
+    /**
+     * Detects which fields have changed between original and current form data
+     * @param {Object} original - Original student data
+     * @param {Object} current - Current form data
+     * @returns {Array} - Array of user-friendly field labels that were changed
+     */
+    const detectChangedFields = useCallback((original, current) => {
+        if (!original || !current) return [];
+
+        const changedFields = [];
+
+        // Field mapping with exact form labels
+        const fieldLabels = {
+            // Basic Information
+            firstName: 'First Name',
+            lastName: 'Last Name',
+            regNo: 'Register Number',
+            batch: 'Batch',
+            degree: 'Degree',
+            branch: 'Branch',
+            section: 'Section',
+            gender: 'Gender',
+
+            // Academic Information
+            currentYear: 'Current Year',
+            currentSemester: 'Current Semester',
+            cgpa: 'CGPA',
+            gpa: 'GPA',
+            overallCGPA: 'CGPA',
+            clearedBacklogs: 'No. of Backlog (Arrear Cleared)',
+            currentBacklogs: 'No. of Current Backlog',
+            arrearStatus: 'Arrear Status',
+
+            // Personal Information
+            address: 'Address',
+            city: 'City',
+            primaryEmail: 'Primary Email',
+            domainEmail: 'Domain Email',
+            mobileNo: 'Mobile No.',
+            bloodGroup: 'Blood Group',
+            aadhaarNo: 'Aadhaar Number',
+            portfolioLink: 'Portfolio Link',
+            community: 'Community',
+            mediumOfStudy: 'Medium of Study',
+
+            // Family Information
+            fatherName: 'Father Name',
+            fatherOccupation: 'Father Occupation',
+            fatherMobile: 'Father Mobile No.',
+            motherName: 'Mother Name',
+            motherOccupation: 'Mother Occupation',
+            motherMobile: 'Mother Mobile No.',
+            guardianName: 'Guardian Name',
+            guardianMobile: 'Guardian Number',
+            aboutSibling: 'About Sibling',
+            familyAnnualIncome: 'Family Annual Income',
+
+            // 10th Details
+            tenthInstitution: '10th Institution Name',
+            tenthBoard: '10th Board',
+            tenthPercentage: '10th Percentage',
+            tenthYear: '10th Year of Passing',
+            tenthMarksheet: '10th Marksheet',
+
+            // 12th Details
+            twelfthInstitution: '12th Institution Name',
+            twelfthBoard: '12th Board',
+            twelfthPercentage: '12th Percentage',
+            twelfthYear: '12th Year of Passing',
+            twelfthCutoff: '12th Cut-off Marks',
+            twelfthMarksheet: '12th Marksheet',
+
+            // Diploma Details
+            diplomaInstitution: 'Diploma Institution',
+            diplomaBranch: 'Diploma Branch',
+            diplomaPercentage: 'Diploma Percentage',
+            diplomaYear: 'Diploma Year of Passing',
+            diplomaMarksheet: 'Diploma Marksheet',
+
+            // Gap Year
+            yearOfGap: 'Year of Gap',
+            gapReason: 'Reason for Year of Gap',
+
+            // Additional Information
+            residentialStatus: 'Residential Status',
+            quota: 'Quota',
+            languagesKnown: 'Spoken Languages',
+            firstGraduate: 'First Graduate',
+            passportNo: 'Passport No.',
+            skillSet: 'Skill Set',
+            valueAddedCourses: 'Value Added Courses',
+            rationCardNo: 'Ration Card No.',
+            panNo: 'PAN No.',
+
+            // Preferences
+            willingToSignBond: 'Willing to Sign Bond',
+            preferredModeOfDrive: 'Preferred Mode of Drive',
+            companyTypes: 'Company Preferences',
+            preferredJobLocation: 'Job Locations',
+            preferredTraining: 'Preferred Training',
+
+            // Profile Links
+            githubLink: 'GitHub Link',
+            linkedinLink: 'LinkedIn Link',
+
+            // Profile Photo
+            profilePicURL: 'Profile Photo'
+        };
+
+        // Check each field for changes
+        Object.keys(fieldLabels).forEach(field => {
+            const oldValue = original[field];
+            const newValue = current[field];
+
+            // Handle arrays (like companyTypes, preferredJobLocation, preferredTraining)
+            if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                const oldSorted = JSON.stringify([...oldValue].sort());
+                const newSorted = JSON.stringify([...newValue].sort());
+                if (oldSorted !== newSorted) {
+                    changedFields.push(fieldLabels[field]);
+                }
+            }
+            // Handle regular values (strings, numbers, etc.)
+            else if (oldValue !== newValue) {
+                // Only add if there's a meaningful change (not just undefined/null/empty conversions)
+                const oldNormalized = oldValue?.toString()?.trim() || '';
+                const newNormalized = newValue?.toString()?.trim() || '';
+                if (oldNormalized !== newNormalized && newNormalized !== '') {
+                    changedFields.push(fieldLabels[field]);
+                }
+            }
+        });
+
+        return changedFields;
+    }, []);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 600);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Track original form data when loaded
+    useEffect(() => {
+        if (studentData && !originalFormData) {
+            setOriginalFormData({ ...studentData });
+        }
+    }, [studentData, originalFormData]);
+
+    // Detect changes in real-time when form data changes
+    useEffect(() => {
+        if (originalFormData && studentData) {
+            const changed = detectChangedFields(originalFormData, studentData);
+
+            // Track skills changes - just show "Skills" if any skill was added/removed/modified
+            const currentSkillsFiltered = skills.filter(s => s.trim()).sort().join(',');
+            const originalSkillsFiltered = originalSkills.filter(s => s.trim()).sort().join(',');
+
+            if (currentSkillsFiltered !== originalSkillsFiltered && !changed.includes('Skills')) {
+                changed.push('Skills');
+            }
+
+            setChangedFieldsList(changed);
+            setHasUnsavedChanges(changed.length > 0);
+        }
+    }, [studentData, originalFormData, detectChangedFields, skills, originalSkills]);
 
     const selectedCompanyTypes = useMemo(
         () => parseMultiValue(studentData?.companyTypes),
@@ -514,11 +741,14 @@ function StuProfile({ onLogout, onViewChange }) {
 
         const merged = { ...data, ...normalized };
         setStudentData(merged);
+        const processedSkills = Array.isArray(merged.skills) ? merged.skills : parseMultiValue(merged.skillSet || '');
         setStudyCategory(merged.studyCategory || '12th');
         setCurrentYear(merged.currentYear ? String(merged.currentYear) : '');
         setCurrentSemester(merged.currentSemester ? String(merged.currentSemester) : '');
         setSelectedSection(merged.section ? String(merged.section) : '');
-        setSkills(Array.isArray(merged.skills) ? merged.skills : parseMultiValue(merged.skillSet || ''));
+        setSkills(processedSkills);
+        setOriginalSkills([...processedSkills]); // Track original skills for banner
+        savedDataRef.current = { ...merged, skills: processedSkills };
         
         if (merged.dob) {
             const dobStr = merged.dob.toString();
@@ -917,14 +1147,26 @@ function StuProfile({ onLogout, onViewChange }) {
             if (finalResolvedUrl) {
                 setProfileImage(finalResolvedUrl);
             }
-            
+
             // Update localStorage and sidebar ONCE with complete data (image already loaded)
             localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
             window.dispatchEvent(new CustomEvent('profileUpdated', { detail: updatedStudentData }));
-            
+
+            // Update the reference for next comparison (this makes the banner disappear)
+            setOriginalFormData({ ...updatedStudentData });
+            setOriginalSkills([...skills.filter(s => s.trim())]); // Reset original skills after save
+            setHasUnsavedChanges(false);
+            setChangedFieldsList([]);
+
             // Show success popup immediately after everything is ready
             setIsSaving(false);
             setPopupOpen(true);
+            savedDataRef.current = { ...updatedStudentData, skills: skills.filter(s => s.trim()) };
+            if (afterSaveNavRef.current) {
+                const navTarget = afterSaveNavRef.current;
+                afterSaveNavRef.current = null;
+                onViewChange(navTarget);
+            }
         } catch (error) {
             if (error.message.includes('permission')) { alert('Permission denied.'); }
             else if (error.message.includes('not-found')) { alert('Student record not found.'); }
@@ -940,6 +1182,13 @@ function StuProfile({ onLogout, onViewChange }) {
             formRef.current.reset();
             setStudyCategory('12th'); setDob(null);
             loadStudentData();
+
+            // Reset unsaved changes tracking
+            setHasUnsavedChanges(false);
+            setChangedFieldsList([]);
+            if (studentData) {
+                setOriginalFormData({ ...studentData });
+            }
         }
     };
 
@@ -976,9 +1225,34 @@ function StuProfile({ onLogout, onViewChange }) {
 
     const closePopup = () => setPopupOpen(false);
     
+    const getChangedFields = () => {
+        if (!savedDataRef.current || !studentData) return [];
+        const saved = savedDataRef.current;
+        const changed = [];
+        for (const [key, label] of Object.entries(EDITABLE_FIELD_LABELS)) {
+            if (key === 'skills') {
+                const savedSkills = Array.isArray(saved.skills) ? saved.skills.filter(s => s).join(',') : '';
+                const curSkills = skills.filter(s => s.trim()).join(',');
+                if (savedSkills !== curSkills) changed.push(label);
+            } else if (key === 'profilePicURL') {
+                if (profilePhotoFile) changed.push(label);
+            } else {
+                if (String(saved[key] || '') !== String(studentData[key] || '')) changed.push(label);
+            }
+        }
+        return changed;
+    };
+
     const handleViewChange = (view) => {
-        onViewChange(view);
-        setIsSidebarOpen(false);
+        const changed = getChangedFields();
+        if (changed.length > 0) {
+            setPendingNavView(view);
+            setShowUnsavedModal(true);
+            setIsSidebarOpen(false);
+        } else {
+            onViewChange(view);
+            setIsSidebarOpen(false);
+        }
     };
 
     if (isInitialLoading) {
@@ -1035,8 +1309,42 @@ function StuProfile({ onLogout, onViewChange }) {
                     <span>Your profile has been updated by admin</span>
                 </div>
             )}
-            
+
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+
+            {/* Field Update Banner - shows when there are unsaved changes */}
+            <FieldUpdateBanner
+                isVisible={hasUnsavedChanges}
+                onClose={() => setHasUnsavedChanges(false)}
+                updatedFields={changedFieldsList}
+            />
+
+            {/* Unsaved Changes Alert */}
+            <UnsavedChangesAlert
+                isOpen={showUnsavedModal}
+                onClose={() => {
+                    setShowUnsavedModal(false);
+                    setPendingNavView(null);
+                }}
+                onSave={() => {
+                    // Set the navigation target to execute after save completes
+                    afterSaveNavRef.current = pendingNavView;
+                    setShowUnsavedModal(false);
+                    if (formRef.current) {
+                        formRef.current.requestSubmit();
+                    }
+                }}
+                onDiscard={() => {
+                    setShowUnsavedModal(false);
+                    handleDiscard();
+                    if (pendingNavView) {
+                        onViewChange(pendingNavView);
+                        setPendingNavView(null);
+                    }
+                }}
+                changedFields={changedFieldsList.length > 0 ? changedFieldsList : getChangedFields()}
+            />
+
             <div className={styles.main}>
                 <Sidebar
                     isOpen={isSidebarOpen}
@@ -1196,15 +1504,15 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
-                                        <input type="text" name="address" placeholder="Enter Address" defaultValue={studentData?.address || ''} disabled={isSaving} />
+                                        <input type="text" name="address" placeholder="Enter Address" value={studentData?.address || ''} onChange={(e) => setStudentData(prev => ({ ...prev, address: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>City</label>
-                                        <input type="text" name="city" placeholder="Enter City" defaultValue={studentData?.city || ''} disabled={isSaving} />
+                                        <input type="text" name="city" placeholder="Enter City" value={studentData?.city || ''} onChange={(e) => setStudentData(prev => ({ ...prev, city: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Primary Email <RequiredStar /></label>
-                                        <input type="email" name="primaryEmail" placeholder="Enter Primary Email" defaultValue={studentData?.primaryEmail || ''} disabled={isSaving} />
+                                        <input type="email" name="primaryEmail" placeholder="Enter Primary Email" value={studentData?.primaryEmail || ''} onChange={(e) => setStudentData(prev => ({ ...prev, primaryEmail: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Domain Email <RequiredStar /></label>
@@ -1223,7 +1531,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Occupation</label>
-                                        <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" defaultValue={studentData?.fatherOccupation || ''} disabled={isSaving} />
+                                        <input type="text" name="fatherOccupation" placeholder="Enter Father Occupation" value={studentData?.fatherOccupation || ''} onChange={(e) => setStudentData(prev => ({ ...prev, fatherOccupation: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Mobile No. <RequiredStar /></label>
@@ -1238,7 +1546,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Occupation</label>
-                                        <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" defaultValue={studentData?.motherOccupation || ''} disabled={isSaving} />
+                                        <input type="text" name="motherOccupation" placeholder="Enter Mother Occupation" value={studentData?.motherOccupation || ''} onChange={(e) => setStudentData(prev => ({ ...prev, motherOccupation: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Mobile No. <RequiredStar /></label>
@@ -1249,7 +1557,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Guardian Name</label>
-                                        <input type="text" name="guardianName" placeholder="Enter Guardian Name" defaultValue={studentData?.guardianName || ''} disabled={isSaving} />
+                                        <input type="text" name="guardianName" placeholder="Enter Guardian Name" value={studentData?.guardianName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, guardianName: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Guardian Number</label>
@@ -1340,7 +1648,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Blood Group</label>
-                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" defaultValue={studentData?.bloodGroup || ''} disabled={isSaving} />
+                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving} />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Aadhaar Number <RequiredStar /></label>
@@ -1348,7 +1656,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Portfolio Link</label>
-                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" defaultValue={studentData?.portfolioLink || ''} disabled={isSaving} />
+                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving} />
                                     </div>
                                 </div>
                             </div>

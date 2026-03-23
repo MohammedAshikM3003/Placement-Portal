@@ -537,7 +537,9 @@
 }
 
 .achievements-empty-icon {
-    font-size: 40px;
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
 }
 
 /* =================================== */
@@ -946,8 +948,8 @@
 @media (max-width: 576px) {
     .achievements-area {
         padding: 10px;
-        padding-top: 25px;
-        padding-bottom: 100px;
+        padding-top: 25px; 
+        padding-bottom: 25px;
     }
 
     .achievements-cards-container {

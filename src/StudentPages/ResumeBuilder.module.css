@@ -47,16 +47,17 @@
 
 .overlay {
   position: fixed;
-  top: 0;
+  top: 55px;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 55px);
   background: rgba(0, 0, 0, 0.2);
-  z-index: 1003;
+  z-index: 999;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  overflow-y: auto;
 }
 
 /* ========== HEADER ========== */
@@ -776,6 +777,8 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   font-family: 'Poppins', sans-serif;
   animation: popupScale 0.3s ease-out forwards;
+  cursor: auto;
+  margin: auto;
 }
 
 .popupHeader {
@@ -1030,7 +1033,7 @@
 /* ========== GLOBAL SAVE/DISCARD BAR ========== */
 .globalActionBar {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 16px;
   padding: 24px 0;
   margin-top: 10px;
@@ -1127,7 +1130,6 @@
 @media (max-width: 900px) {
   .dashboardArea {
     margin-left: 0;
-    padding: 12px 14px 120px 14px !important;
     width: 100%;
     height: calc(100vh - 55px);
     -webkit-overflow-scrolling: touch;
@@ -1155,8 +1157,10 @@
   }
 
   .popupContainer {
-    width: 95vw;
-    max-height: 85vh;
+    width: 90vw;
+    max-width: 90vw;
+    max-height: 80vh;
+    margin: 20px auto;
   }
 
   .popupRow {
@@ -1169,8 +1173,16 @@
   }
 
   .globalActionBar {
-    flex-direction: column;
-    align-items: center;
+    justify-content: flex-end;
+    padding: 20px 0;
+    gap: 12px;
+  }
+
+  .globalDiscardBtn,
+  .globalSaveBtn,
+  .globalCreateBtn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
   }
 
   .platformRow {

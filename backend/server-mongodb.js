@@ -272,24 +272,27 @@ const connectDB = async (retryCount = 0) => {
 
         // Advanced connection options for maximum reliability
         const connectionOptions = {
-            // Timeout settings
-            serverSelectionTimeoutMS: 15000, // Increased from 10s
-            socketTimeoutMS: 60000, // Increased from 45s
-            connectTimeoutMS: 15000, // Increased from 10s
-            
+            // DNS resolution - Force IPv4 to avoid IPv6 connection issues
+            family: 4,
+
+            // Timeout settings - Increased for Atlas Free Tier cold starts
+            serverSelectionTimeoutMS: 45000, // 45 seconds for cluster wake-up
+            socketTimeoutMS: 75000, // 75 seconds
+            connectTimeoutMS: 45000, // 45 seconds for initial connection
+
             // Connection pooling for serverless
             maxPoolSize: 10,
             minPoolSize: 1,
             maxIdleTimeMS: 45000, // Keep connections alive longer
-            
+
             // Retry and reliability
             retryWrites: true,
             retryReads: true,
-            
+
             // Serverless optimizations
-            bufferCommands: false,
-            // Removed deprecated bufferMaxEntries option
-            
+            // Buffer commands during initial connection to prevent early request failures
+            bufferCommands: true,
+
             // Heartbeat to keep connection alive
             heartbeatFrequencyMS: 10000,
         };
@@ -3073,7 +3076,7 @@ const studentSchema = new mongoose.Schema({
 
 // PERFORMANCE INDEXES: Essential for 1000+ students
 // These indexes make queries 10-100x faster as data scales
-studentSchema.index({ regNo: 1 }); // Already unique, but explicit index
+// Note: regNo already has an index via unique:true constraint
 studentSchema.index({ department: 1 }); // Fast filtering by department
 studentSchema.index({ batch: 1 }); // Fast filtering by batch
 studentSchema.index({ regNo: 1, department: 1 }); // Compound index for combined queries
@@ -3291,8 +3294,7 @@ const attendanceSchema = new mongoose.Schema({
     submittedBy: { type: String, default: 'Admin' }
 }, { timestamps: true });
 
-// Index for faster queries
-attendanceSchema.index({ driveId: 1 });
+// Index for faster queries (driveId already has index:true in schema)
 attendanceSchema.index({ companyName: 1, jobRole: 1, startDate: 1 });
 attendanceSchema.index({ 'students.studentId': 1 });
 attendanceSchema.index({ 'students.regNo': 1 });
@@ -6071,6 +6073,16 @@ app.get('/api/certificates/notifications/:identifier', async (req, res) => {
     if (!identifier) return res.status(400).json({ error: 'Student identifier required' });
 
     try {
+        // Check if MongoDB is connected before querying
+        if (mongoose.connection.readyState !== 1) {
+            console.log('⚠️ MongoDB not connected yet, returning empty notifications');
+            return res.json({
+                success: true,
+                notifications: [],
+                message: 'Database connecting, please retry in a moment'
+            });
+        }
+
         // Query by studentId OR regNo so it works regardless of which is available
         const notifications = await Certificate.find({
             $or: [{ studentId: identifier }, { regNo: identifier }],
@@ -6090,6 +6102,16 @@ app.get('/api/certificates/notifications/:identifier', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Notifications fetch error:', error);
+
+        // If connection error, return empty array instead of 500
+        if (error.message?.includes('not connected') || error.message?.includes('connection')) {
+            return res.json({
+                success: true,
+                notifications: [],
+                message: 'Database temporarily unavailable'
+            });
+        }
+
         res.status(500).json({ error: 'Failed to fetch notifications' });
     }
 });
@@ -6135,29 +6157,35 @@ app.use('/api', gridfsRoutes);
 // Server startup logic - works for both development and production (Render)
 if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
     // Development or Render production - start traditional server
-    app.listen(PORT, async () => {
+    // IMPORTANT: Connect to MongoDB BEFORE starting the server to prevent early request failures
+    (async () => {
         try {
+            console.log('🔄 Initializing database connection...');
             await startServer();
             dbInitialized = true;
-            console.log(`✅ Placement Portal Server running on port ${PORT}`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`🚀 Status: Ready and accepting connections`);
-            console.log(`📊 MongoDB: Connected to Atlas cluster`);
-            
-            // JWT Status Information
-            console.log('\n🔐 JWT AUTHENTICATION STATUS: ACTIVE');
-            console.log('🕐 Token Duration: 6 hours');
-            console.log('🛡️  Protected Endpoints:');
-            console.log('   ✅ Student routes protected');
-            console.log('   ✅ Admin routes protected');
-            console.log('   ✅ Coordinator routes protected');
-            console.log('   ✅ Role-based access control enabled\n');
-            
+            console.log('✅ Database initialized successfully');
+
+            // Now start accepting HTTP requests
+            app.listen(PORT, () => {
+                console.log(`✅ Placement Portal Server running on port ${PORT}`);
+                console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+                console.log(`🚀 Status: Ready and accepting connections`);
+                console.log(`📊 MongoDB: Connected to Atlas cluster`);
+
+                // JWT Status Information
+                console.log('\n🔐 JWT AUTHENTICATION STATUS: ACTIVE');
+                console.log('🕐 Token Duration: 6 hours');
+                console.log('🛡️  Protected Endpoints:');
+                console.log('   ✅ Student routes protected');
+                console.log('   ✅ Admin routes protected');
+                console.log('   ✅ Coordinator routes protected');
+                console.log('   ✅ Role-based access control enabled\n');
+            });
         } catch (error) {
-            console.error('❌ Server startup error:', error);
-            console.log('⚠️  Server running without MongoDB connection');
+            console.error('❌ Server initialization failed:', error.message);
+            process.exit(1);
         }
-    });
+    })();
 } else {
     // Serverless mode (Vercel) - initialize DB connection immediately
     try {

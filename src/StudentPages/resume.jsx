@@ -1172,22 +1172,41 @@ function MainContent({ onViewChange }) {
       }
       
       // Wait for progress animation
-      setTimeout(() => {
+      setTimeout(async () => {
         clearInterval(progressInterval);
         setDownloadProgress(100);
-        
+
         try {
           // Check if it's a GridFS URL
           if (resumeUrl.startsWith('/api/file/') || resumeUrl.includes('/api/file/')) {
-            console.log('✅ GridFS URL detected, downloading directly');
+            console.log('✅ GridFS URL detected, fetching as blob for download');
             const fullUrl = resumeUrl.startsWith('http') ? resumeUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${resumeUrl}`;
-            const link = document.createElement('a');
-            link.href = fullUrl;
-            link.download = resumeName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            setDownloadPopupState('success');
+
+            try {
+              // Fetch as blob to force download instead of opening in browser
+              const response = await fetch(fullUrl);
+              if (!response.ok) throw new Error('Failed to fetch file');
+
+              const blob = await response.blob();
+              const blobUrl = window.URL.createObjectURL(blob);
+
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.download = resumeName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+
+              // Clean up blob URL after download
+              setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+
+              setDownloadPopupState('success');
+              setTimeout(() => setDownloadPopupState('none'), 2000);
+            } catch (fetchErr) {
+              console.error('❌ Blob download error:', fetchErr);
+              setDownloadPopupState('error');
+              setTimeout(() => setDownloadPopupState('none'), 2000);
+            }
             return;
           }
 
@@ -1230,6 +1249,7 @@ function MainContent({ onViewChange }) {
           
           console.log('✅ Download triggered');
           setDownloadPopupState('success');
+          setTimeout(() => setDownloadPopupState('none'), 2000);
         } catch (err) {
           console.error('❌ Download error:', err);
           setDownloadPopupState('error');

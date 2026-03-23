@@ -153,7 +153,7 @@ body, html {
   font-size: 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 25px;
   margin-bottom: 0;
   height:45px;
   width:320px;
@@ -195,4 +195,119 @@ body, html {
 }
 .Admin-aat-discard-btn:hover {
   background: #222;
+}
+
+/* --------------------------------------------------
+   Responsive breakpoints: desktop / tablet / mobile
+   Sidebar visibility is managed by the navbar toggle
+   (handled in Adsidebar component). This section only
+   adjusts page layout and form widths.
+   -------------------------------------------------- */
+
+/* tablet and small desktops */
+@media (max-width: 1024px) {
+  .Admin-aat-main-wrapper {
+    margin-left: 0; /* allow full width (sidebar may slide out) */
+    padding: 24px 16px 32px 16px;
+  }
+
+  .Admin-aat-form-row {
+    flex-direction: column;
+    gap: 16px;
+    margin-right: 0;
+  }
+
+  .Admin-aat-form-group input,
+  .Admin-aat-form-group select {
+    width: 425px;
+  }
+
+  .Admin-aat-add-btn {
+    width: 100%;
+  }
+}
+
+/* mobile phones */
+@media (max-width: 768px) {
+  .Admin-aat-main-wrapper {
+    padding: 16px 12px 24px 12px;
+  }
+
+  .Admin-aat-card {
+    padding: 0px 16px 24px 16px;
+  }
+
+  .Admin-aat-actions {
+    flex-direction: column;
+    gap: 12px;
+    width: 200px;
+  }
+
+
+  .Admin-aat-discard-btn{
+      width: 100%;
+    padding: 12px 0;
+  }
+  .Admin-aat-save-btn {
+    width: 100%;
+    padding: 12px 0;
+    position: relative;
+    left: 255px;
+    margin-top: -54px;
+  }
+  .Admin-aat-add-btn {
+  background: #4caf50;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  margin-bottom: 0;
+  height:45px;
+}
+}
+
+/* Static input styles for saved courses/trainers */
+.Admin-aat-static-input {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #495057 !important;
+  font-weight: 500 !important;
+  cursor: not-allowed !important;
+}
+
+.Admin-aat-static-input::placeholder {
+  color: #6c757d !important;
+}
+
+/* Remove button for courses/trainers */
+.Admin-aat-remove-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f0f0f0;
+  color: grey;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Position relative for form group to contain remove button */
+.Admin-aat-form-group {
+  position: relative;
 }

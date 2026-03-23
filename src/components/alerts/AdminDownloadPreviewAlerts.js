@@ -34,7 +34,7 @@ export const DownloadFailedAlert = ({ isOpen, onClose, color = '#4ea24e' }) => {
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -131,7 +131,7 @@ export const CertificatePreviewFailedAlert = ({
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -174,7 +174,7 @@ export const SelectionAlert = ({
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Got it
           </button>
         </div>
@@ -215,7 +215,7 @@ export const DownloadSuccessAlert = ({ isOpen, onClose, fileLabel = 'resume', ti
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -303,7 +303,7 @@ export const PreviewFailedAlert = ({ isOpen, onClose, color = '#197AFF' }) => {
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -507,7 +507,7 @@ export const ExportSuccessAlert = ({ isOpen, onClose, exportType = 'Excel', colo
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>
@@ -542,7 +542,7 @@ export const ExportFailedAlert = ({ isOpen, onClose, exportType = 'Excel', color
           </p>
         </div>
         <div className="achievement-popup-footer">
-          <button onClick={onClose} className="achievement-popup-close-btn">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
             Close
           </button>
         </div>

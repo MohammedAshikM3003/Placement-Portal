@@ -330,15 +330,9 @@ const dateToStr = (d) => {
 function AchievementDatePicker({ value, onChange, disabled = false }) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
-  const today = React.useMemo(() => new Date(), []);
-  const [calMonth, setCalMonth] = useState(today.getMonth());
-  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [hovered, setHovered] = useState(false);
-  const [hoveredDay, setHoveredDay] = useState(null);
-  const [hoveredMonth, setHoveredMonth] = useState(null);
-  const [hoveredYear, setHoveredYear] = useState(null);
-  const [hoveredMonthBtn, setHoveredMonthBtn] = useState(false);
-  const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
   const triggerRef  = useRef(null);
   const calendarRef = useRef(null);
 
@@ -352,7 +346,6 @@ function AchievementDatePicker({ value, onChange, disabled = false }) {
   const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
   const selYear  = value ? parseInt(value.split('-')[0]) : null;
   const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
-  const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
 
   const displayVal = value
     ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
@@ -429,50 +422,38 @@ function AchievementDatePicker({ value, onChange, disabled = false }) {
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
     >
-      <div ref={calendarRef} style={{ position: 'relative', zIndex: 99999, backgroundColor: '#fff', borderRadius: '14px', boxShadow: '0 8px 30px rgba(0,0,0,0.22)', overflow: 'hidden', width: 'min(320px, 90vw)', fontFamily: "'Poppins', sans-serif" }}>
+      <div ref={calendarRef} style={{ position: 'relative', zIndex: 99999, backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 8px 30px rgba(0,0,0,0.22)', overflow: 'hidden', width: '268px', fontFamily: "'Poppins', sans-serif" }}>
         {/* Header */}
-        <div style={{ backgroundColor: '#197AFF', padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px' }}>
+        <div style={{ backgroundColor: '#197AFF', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <button onClick={() => setViewMode(v => v === 'month' ? 'day' : 'month')}
-            onMouseEnter={() => setHoveredMonthBtn(true)} onMouseLeave={() => setHoveredMonthBtn(false)}
-            style={{ background: hoveredMonthBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '80px', justifyContent: 'center', transition: 'background-color 0.15s' }}>
-            {viewMode === 'month' ? 'MON' : MONTHS[calMonth]}
+            style={{ background: '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '80px', justifyContent: 'center' }}>
+            {viewMode === 'month' ? 'MONTH' : MONTHS[calMonth]}
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points={viewMode === 'month' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'}/></svg>
           </button>
           <button onClick={() => setViewMode(v => v === 'year' ? 'day' : 'year')}
-            onMouseEnter={() => setHoveredYearBtn(true)} onMouseLeave={() => setHoveredYearBtn(false)}
-            style={{ background: hoveredYearBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '90px', justifyContent: 'center', transition: 'background-color 0.15s' }}>
+            style={{ background: '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '90px', justifyContent: 'center' }}>
             {viewMode === 'year' ? 'YEAR' : calYear}
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points={viewMode === 'year' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'}/></svg>
           </button>
         </div>
         {/* Body – fixed height */}
-        <div style={{ height: '288px', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ height: '252px', overflow: 'hidden', position: 'relative' }}>
           {viewMode === 'month' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', padding: '18px 16px', height: '100%', boxSizing: 'border-box', alignContent: 'center' }}>
-              {MONTHS.map((m, i) => {
-                const isSel = i === calMonth;
-                const isHov = hoveredMonth === i;
-                return (
-                  <button key={m} onClick={() => { setCalMonth(i); setViewMode('day'); }}
-                    onMouseEnter={() => setHoveredMonth(i)} onMouseLeave={() => setHoveredMonth(null)}
-                    style={{ padding: '12px 6px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem', backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent', color: isSel ? '#fff' : '#333', fontFamily: "'Poppins', sans-serif", transition: 'background-color 0.15s' }}>{m}</button>
-                );
-              })}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', padding: '16px 12px', height: '100%', boxSizing: 'border-box', alignContent: 'center' }}>
+              {MONTHS.map((m, i) => (
+                <button key={m} onClick={() => { setCalMonth(i); setViewMode('day'); }}
+                  style={{ padding: '10px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem', backgroundColor: i === calMonth ? '#197AFF' : 'transparent', color: i === calMonth ? '#fff' : '#333', fontFamily: "'Poppins', sans-serif" }}>{m}</button>
+              ))}
             </div>
           ) : viewMode === 'year' ? (
             <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
               <div ref={yearListRef} onScroll={updateYearThumb} style={{ flex: 1, overflowY: 'scroll', overflowX: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <style>{`.ach-ed-year::-webkit-scrollbar{display:none}`}</style>
                 <div className="ach-ed-year">
-                  {years.map(y => {
-                    const isSel = y === calYear;
-                    const isHov = hoveredYear === y;
-                    return (
-                      <div key={y} data-selected={y === calYear} onClick={() => { setCalYear(y); setViewMode('day'); }}
-                        onMouseEnter={() => setHoveredYear(y)} onMouseLeave={() => setHoveredYear(null)}
-                        style={{ padding: '12px 20px', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', textAlign: 'center', fontFamily: "'Poppins', sans-serif", backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent', color: isSel ? '#fff' : '#333', transition: 'background-color 0.15s' }}>{y}</div>
-                    );
-                  })}
+                  {years.map(y => (
+                    <div key={y} data-selected={y === calYear} onClick={() => { setCalYear(y); setViewMode('day'); }}
+                      style={{ padding: '11px 20px', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center', fontFamily: "'Poppins', sans-serif", backgroundColor: y === calYear ? '#197AFF' : 'transparent', color: y === calYear ? '#fff' : '#333' }}>{y}</div>
+                  ))}
                 </div>
               </div>
               <div style={{ width: '8px', background: '#e8eef7', borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
@@ -481,18 +462,17 @@ function AchievementDatePicker({ value, onChange, disabled = false }) {
               </div>
             </div>
           ) : (
-            <div style={{ padding: '10px 14px 14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '6px' }}>
-                {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', color: '#888', fontWeight: 700, padding: '4px 0' }}>{d}</div>)}
+            <div style={{ padding: '8px 10px 12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
+                {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: '#888', fontWeight: 700, padding: '4px 0' }}>{d}</div>)}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
                 {Array.from({ length: firstWeekDay }, (_, i) => <div key={`e${i}`} />)}
                 {Array.from({ length: daysInMonth }, (_, i) => {
-                  const day = i + 1; const sel = isSelected(day); const tod = isToday(day); const isHov = hoveredDay === day;
+                  const day = i + 1; const sel = isSelected(day);
                   return (
                     <button key={day} onClick={() => { const mm = String(calMonth+1).padStart(2,'0'); const dd = String(day).padStart(2,'0'); onChange(`${calYear}-${mm}-${dd}`); handleClose(); }}
-                      onMouseEnter={() => setHoveredDay(day)} onMouseLeave={() => setHoveredDay(null)}
-                      style={{ textAlign: 'center', padding: '7px 0', borderRadius: '50%', border: tod && !sel ? '2px solid #197AFF' : 'none', cursor: 'pointer', fontSize: '0.95rem', fontWeight: sel || tod ? 700 : 500, backgroundColor: sel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent', color: sel ? '#fff' : tod ? '#197AFF' : '#333', fontFamily: "'Poppins', sans-serif", transition: 'background-color 0.15s' }}>{day}</button>
+                      style={{ textAlign: 'center', padding: '5px 0', borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: '0.95rem', fontWeight: sel ? 700 : 400, backgroundColor: sel ? '#197AFF' : 'transparent', color: sel ? '#fff' : '#333', fontFamily: "'Poppins', sans-serif" }}>{day}</button>
                   );
                 })}
               </div>
