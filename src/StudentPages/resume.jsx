@@ -833,7 +833,7 @@ function MainContent({ onViewChange }) {
           const controller2 = new AbortController();
           const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
           targetProgress = 40;
-          const atsResponse = await fetch(`${API_BASE}/api/resume-builder/ats-result/${studentId}`, {
+          const atsResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-result/${studentId}`, {
             headers: {
               'Content-Type': 'application/json',
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -862,7 +862,7 @@ function MainContent({ onViewChange }) {
         setAtsProgressMessage('AI analyzing content quality...');
         try {
           targetProgress = 60;
-          const atsCheckResponse = await fetch(`${API_BASE}/api/resume-builder/ats-check`, {
+          const atsCheckResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-check`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -880,7 +880,7 @@ function MainContent({ onViewChange }) {
               setAtsProgressMessage('Analysis complete!');
 
               // Save analysis to MongoDB in background
-              fetch(`${API_BASE}/api/resume-builder/save-ats-analysis`, {
+              fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/save-ats-analysis`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
