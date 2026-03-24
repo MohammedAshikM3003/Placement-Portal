@@ -696,7 +696,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -709,7 +709,7 @@
   border-radius: 12px;
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
+  max-width: 400px;
   width: 90%;
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
@@ -730,13 +730,14 @@
   justify-content: center;
   align-items: center;
   background: #fafbfc;
-  min-height: 300px;
+  min-height: 400px;
 }
 
 .imagePreviewBody img {
   max-width: 100%;
-  max-height: 500px;
+  max-height: 600px;
   border-radius: 8px;
+  object-fit: contain;
 }
 
 .imagePreviewFooter {
@@ -779,6 +780,72 @@
   background: #1565c0;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(32, 133, 246, 0.3);
+}
+
+/* Responsive design for image preview modal */
+@media (max-width: 768px) {
+  .imagePreviewContainer {
+    max-width: 95vw;
+    width: 95%;
+  }
+
+  .imagePreviewBody {
+    min-height: 350px;
+    padding: 20px;
+  }
+
+  .imagePreviewBody img {
+    max-height: 500px;
+  }
+
+  .imagePreviewHeader {
+    padding: 16px 20px;
+    font-size: 18px;
+  }
+
+  .imagePreviewFooter {
+    padding: 12px 20px 20px;
+    gap: 10px;
+  }
+
+  .imagePreviewFooterBtn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .imagePreviewContainer {
+    max-width: 98vw;
+    width: 98%;
+    border-radius: 10px;
+  }
+
+  .imagePreviewBody {
+    min-height: 300px;
+    padding: 16px;
+  }
+
+  .imagePreviewBody img {
+    max-height: 450px;
+  }
+
+  .imagePreviewHeader {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .imagePreviewFooter {
+    padding: 12px 16px 16px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .imagePreviewFooterBtn {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
 }
 
 
@@ -1959,7 +2026,7 @@ select:disabled {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -162,16 +162,37 @@
 
 @media (max-width: 480px) {
   .bannerContainer {
+    top: 65px;
     right: 10px;
-    left: 10px;
+    left: auto;
   }
 
   .banner {
-    min-width: auto;
-    max-width: none;
+    min-width: 240px;
+    max-width: 280px;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .header {
+    font-size: 13px;
   }
 
   .fieldNamesWrapper {
-    max-width: calc(100vw - 120px);
+    max-width: 170px;
+  }
+
+  .fieldNames {
+    font-size: 12px;
+  }
+
+  .saveIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .iconWrapper {
+    width: 20px;
+    height: 20px;
   }
 }

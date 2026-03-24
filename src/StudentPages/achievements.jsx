@@ -1077,11 +1077,9 @@ function AchievementsContent() {
       console.log('Found selected achievement:', selected);
       
       if (selected.status === "approved" || selected.status === "rejected") { 
-        setRestrictionMessage(`❌ Cannot edit ${selected.status} achievements!
+        setRestrictionMessage(`Cannot edit ${selected.status} achievements!
 
-This record is locked and cannot be modified.
-
-📝 Only pending records can be edited.`); 
+Only pending records can be edited.`); 
         setShowRestrictionPopup(true); 
         return; 
       } 

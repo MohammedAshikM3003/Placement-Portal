@@ -9,6 +9,8 @@
  */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import BlueAdminicon from './assets/BlueAdminicon.png'
 import Navbar from "./components/Navbar/mrnavbar";
 import Sidebar from "./components/Sidebar/mrsidebar";
@@ -435,11 +437,173 @@ const FileFormatErrorPopup = ({ isOpen, onClose, fileName }) => {
 
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
   if (!isOpen) return null;
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = src;
+    link.download = 'profile-image.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className={cx("mr-image-preview-overlay")} onClick={onClose}>
       <div className={cx("mr-image-preview-container")} onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt="Profile Preview" className={cx("mr-image-preview-content")} />
-        <button onClick={onClose} className={cx("mr-image-preview-close-btn")}>&times;</button>
+        <div className={cx("mr-image-preview-header")}>Preview Image</div>
+        <div className={cx("mr-image-preview-body")}>
+          <img src={src} alt="Profile Preview" className={cx("mr-image-preview-content")} />
+        </div>
+        <div className={cx("mr-image-preview-footer")}>
+          <button onClick={onClose} className={cx("mr-image-preview-btn", "mr-image-preview-close-btn")}>
+            Close
+          </button>
+          <button onClick={handleDownload} className={cx("mr-image-preview-btn", "mr-image-preview-download-btn")}>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [aspect, setAspect] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = useCallback((_, areaPixels) => {
+    setCroppedAreaPixels(areaPixels);
+  }, []);
+
+  const createCroppedImage = useCallback(async () => {
+    if (!imageSrc || !croppedAreaPixels) return null;
+
+    try {
+      const image = await createImage(imageSrc);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      const { width, height, x, y } = croppedAreaPixels;
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.save();
+      if (rotation !== 0) {
+        const centerX = width / 2;
+        const centerY = height / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-centerX, -centerY);
+      }
+
+      ctx.drawImage(image, x, y, width, height, 0, 0, width, height);
+      ctx.restore();
+
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob || null), 'image/jpeg', 0.95);
+      });
+    } catch (error) {
+      console.error('Error creating cropped image:', error);
+      return null;
+    }
+  }, [imageSrc, croppedAreaPixels, rotation]);
+
+  const handleSaveCrop = async () => {
+    const croppedBlob = await createCroppedImage();
+    if (!croppedBlob) return;
+    onCrop(croppedBlob);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={cx("mr-crop-overlay")} onClick={onClose}>
+      <div className={cx("mr-crop-container")} onClick={(e) => e.stopPropagation()}>
+        <div className={cx("mr-crop-header")}>Crop Image</div>
+
+        <div className={cx("mr-crop-content")}>
+          <div className={cx("mr-crop-preview-area")}>
+            {imageSrc && (
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                rotation={rotation}
+                aspect={aspect}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onRotationChange={setRotation}
+                onCropComplete={onCropComplete}
+                cropShape="rect"
+                restrictPosition={true}
+                showGrid={true}
+              />
+            )}
+          </div>
+
+          <div className={cx("mr-crop-controls")}>
+            <div className={cx("mr-crop-control-group")}>
+              <label className={cx("mr-crop-control-label")}>Rotate</label>
+              <div className={cx("mr-crop-rotate-control")}>
+                <button onClick={() => setRotation((r) => (r - 10 + 360) % 360)} className={cx("mr-crop-rotate-btn")} type="button">↺</button>
+                <span className={cx("mr-crop-angle-value")}>{rotation}°</span>
+                <button onClick={() => setRotation((r) => (r + 10) % 360)} className={cx("mr-crop-rotate-btn")} type="button">↻</button>
+              </div>
+              <input
+                type="range"
+                min="-180"
+                max="180"
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value))}
+                className={cx("mr-crop-angle-slider")}
+              />
+              <button onClick={() => setRotation(0)} className={cx("mr-crop-reset-btn")} type="button">Reset</button>
+            </div>
+
+            <div className={cx("mr-crop-control-group")}>
+              <label className={cx("mr-crop-control-label")}>Aspect Ratio</label>
+              <div className={cx("mr-crop-aspect-buttons")}>
+                <button onClick={() => setAspect(null)} className={cx("mr-crop-aspect-btn", aspect === null ? "mr-crop-aspect-btn-active" : "")} type="button">Custom</button>
+                <button onClick={() => setAspect(1)} className={cx("mr-crop-aspect-btn", aspect === 1 ? "mr-crop-aspect-btn-active" : "")} type="button">1:1</button>
+                <button onClick={() => setAspect(4 / 3)} className={cx("mr-crop-aspect-btn", aspect === 4 / 3 ? "mr-crop-aspect-btn-active" : "")} type="button">4:3</button>
+                <button onClick={() => setAspect(3 / 4)} className={cx("mr-crop-aspect-btn", aspect === 3 / 4 ? "mr-crop-aspect-btn-active" : "")} type="button">3:4</button>
+              </div>
+            </div>
+
+            <div className={cx("mr-crop-control-group")}>
+              <label className={cx("mr-crop-control-label")}>Zoom</label>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.1"
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className={cx("mr-crop-zoom-slider")}
+              />
+              <span className={cx("mr-crop-zoom-value")}>{(zoom * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={cx("mr-crop-footer")}>
+          <button onClick={onDiscard} className={cx("mr-crop-btn", "mr-crop-discard-btn")} type="button">Discard</button>
+          <button onClick={handleSaveCrop} className={cx("mr-crop-btn", "mr-crop-upload-btn")} type="button">Upload</button>
+        </div>
       </div>
     </div>
   );
@@ -552,6 +716,9 @@ function MainRegistration() {
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [uploadInfo, setUploadInfo] = useState({ name: "", date: "" });
   const [isImagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [pendingUploadInfo, setPendingUploadInfo] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isRegisterEnabled, setIsRegisterEnabled] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
@@ -956,8 +1123,11 @@ function MainRegistration() {
       if (profileImage && profileImage.startsWith('blob:')) {
         URL.revokeObjectURL(profileImage);
       }
+      if (imageToCrop && imageToCrop.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToCrop);
+      }
     };
-  }, [profileImage]);
+  }, [profileImage, imageToCrop]);
 
   // Fetch degrees and branches
   useEffect(() => {
@@ -1076,22 +1246,16 @@ function MainRegistration() {
         return;
       }
 
-      // Store raw File object for GridFS upload (NOT base64)
-      setProfilePhotoFile(file);
-
-      // Create object URL for preview
+      // Open crop popup before finalizing profile image
       const objectUrl = URL.createObjectURL(file);
-      setProfileImage(objectUrl);
-
-      setUploadInfo({
+      setImageToCrop(objectUrl);
+      setPendingUploadInfo({
         name: file.name,
         date: new Date().toLocaleDateString("en-GB"),
         size: sizeKB,
         type: fileType
       });
-
-      setUploadSuccess(true);
-      setTimeout(() => setUploadSuccess(false), 5000);
+      setIsCropModalOpen(true);
 
       console.log('[MainRegistration] Image accepted:', {
         name: file.name,
@@ -1119,6 +1283,56 @@ function MainRegistration() {
     },
     [profileImage]
   );
+
+  const handleCropComplete = useCallback((croppedBlob) => {
+    if (!croppedBlob) return;
+
+    if (profileImage && profileImage.startsWith('blob:')) {
+      URL.revokeObjectURL(profileImage);
+    }
+
+    const objectUrl = URL.createObjectURL(croppedBlob);
+    setProfileImage(objectUrl);
+
+    const sourceName = pendingUploadInfo?.name || 'profile-image.jpg';
+    const fileBaseName = sourceName.replace(/\.[^.]+$/, '');
+    const croppedFile = new File([croppedBlob], `${fileBaseName}-cropped.jpg`, { type: 'image/jpeg' });
+    setProfilePhotoFile(croppedFile);
+
+    if (pendingUploadInfo) {
+      setUploadInfo({
+        name: pendingUploadInfo.name,
+        date: pendingUploadInfo.date,
+        size: (croppedBlob.size / 1024).toFixed(1),
+        type: 'jpg'
+      });
+    }
+
+    if (imageToCrop && imageToCrop.startsWith('blob:')) {
+      URL.revokeObjectURL(imageToCrop);
+    }
+
+    setIsCropModalOpen(false);
+    setImageToCrop(null);
+    setPendingUploadInfo(null);
+    setUploadSuccess(true);
+    setTimeout(() => setUploadSuccess(false), 5000);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [imageToCrop, pendingUploadInfo, profileImage]);
+
+  const handleCropModalClose = useCallback(() => {
+    if (imageToCrop && imageToCrop.startsWith('blob:')) {
+      URL.revokeObjectURL(imageToCrop);
+    }
+    setIsCropModalOpen(false);
+    setImageToCrop(null);
+    setPendingUploadInfo(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [imageToCrop]);
+
+  const handleCropDiscard = useCallback(() => {
+    handleCropModalClose();
+  }, [handleCropModalClose]);
 
   /* ── Registration Number Checks ── */
 
@@ -2094,6 +2308,13 @@ function MainRegistration() {
       <URLValidationErrorPopup isOpen={isURLErrorPopupOpen} onClose={closeURLErrorPopup} urlType={urlErrorType} invalidUrl={invalidUrl} />
       <ValidationErrorPopup isOpen={isValidationErrorPopupOpen} onClose={() => setValidationErrorPopupOpen(false)} message={validationErrorMessage} />
       <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
+      <CropImageModal
+        isOpen={isCropModalOpen}
+        imageSrc={imageToCrop}
+        onCrop={handleCropComplete}
+        onClose={handleCropModalClose}
+        onDiscard={handleCropDiscard}
+      />
     </div>
   );
 }
