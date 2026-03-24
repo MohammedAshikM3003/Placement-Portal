@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import certificateService from "../services/certificateService.jsx";
 import styles from "./Achievements.module.css";
+import DOBDatePicker from "../components/Calendar/DOBDatePicker.jsx";
 
 // ++ NEW: Success Popup Component with Animation ++
 const SuccessPopup = ({ onClose }) => (
@@ -60,180 +61,6 @@ const formatDate = (date) => {
   const year = d.getFullYear();
   return `${day}-${month}-${year}`;
 };
-
-// ── Custom Date Picker (same as PopUpPending.jsx) ──────────────────────────
-function AchievementDatePicker({ value, onChange, disabled = false }) {
-  const [open, setOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('day');
-  const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const [calYear, setCalYear] = useState(new Date().getFullYear());
-  const [hovered, setHovered] = useState(false);
-  const triggerRef  = useRef(null);
-  const calendarRef = useRef(null);
-
-  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-
-  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
-  const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
-
-  const selDay   = value ? parseInt(value.split('-')[2]) : null;
-  const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
-  const selYear  = value ? parseInt(value.split('-')[0]) : null;
-  const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
-
-  const displayVal = value
-    ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
-    : '';
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 2019 + 2 }, (_, i) => 2019 + i);
-  const yearListRef    = useRef(null);
-  const yearThumbRef   = useRef(null);
-  const yearDragging   = useRef(false);
-  const yearDragStartY = useRef(0);
-  const yearScrollStart= useRef(0);
-
-  useEffect(() => {
-    if (viewMode === 'year' && yearListRef.current) {
-      const el = yearListRef.current;
-      const selected = el.querySelector('[data-selected="true"]');
-      if (selected) {
-        el.scrollTop = selected.offsetTop - el.clientHeight / 2 + selected.clientHeight / 2;
-      }
-      updateYearThumb();
-    }
-  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const updateYearThumb = () => {
-    const el    = yearListRef.current;
-    const thumb = yearThumbRef.current;
-    if (!el || !thumb) return;
-    const ratio    = el.clientHeight / el.scrollHeight;
-    const thumbH   = Math.max(30, el.clientHeight * ratio);
-    const thumbTop = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * (el.clientHeight - thumbH);
-    thumb.style.height  = `${thumbH}px`;
-    thumb.style.top     = `${thumbTop}px`;
-    thumb.style.opacity = el.scrollHeight > el.clientHeight ? '1' : '0';
-  };
-
-  const onYearThumbMouseDown = (e) => {
-    e.preventDefault();
-    yearDragging.current    = true;
-    yearDragStartY.current  = e.clientY;
-    yearScrollStart.current = yearListRef.current.scrollTop;
-    const onMove = (ev) => {
-      if (!yearDragging.current) return;
-      const el    = yearListRef.current;
-      const thumb = yearThumbRef.current;
-      if (!el || !thumb) return;
-      const ratio  = el.clientHeight / el.scrollHeight;
-      const thumbH = Math.max(30, el.clientHeight * ratio);
-      const delta  = ev.clientY - yearDragStartY.current;
-      el.scrollTop = yearScrollStart.current + delta / (el.clientHeight - thumbH) * (el.scrollHeight - el.clientHeight);
-      updateYearThumb();
-    };
-    const onUp = () => { yearDragging.current = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  };
-
-  const handleToggle = () => { if (disabled) return; setOpen(o => !o); };
-  const handleClose  = () => setOpen(false);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      const inTrigger  = triggerRef.current  && triggerRef.current.contains(e.target);
-      const inCalendar = calendarRef.current && calendarRef.current.contains(e.target);
-      if (!inTrigger && !inCalendar) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const calendarPortal = open ? ReactDOM.createPortal(
-    <div
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
-    >
-      <div ref={calendarRef} style={{ position: 'relative', zIndex: 99999, backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 8px 30px rgba(0,0,0,0.22)', overflow: 'hidden', width: '268px', fontFamily: "'Poppins', sans-serif" }}>
-        {/* Header */}
-        <div style={{ backgroundColor: '#197AFF', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-          <button onClick={() => setViewMode(v => v === 'month' ? 'day' : 'month')}
-            style={{ background: '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '80px', justifyContent: 'center' }}>
-            {viewMode === 'month' ? 'MONTH' : MONTHS[calMonth]}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points={viewMode === 'month' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'}/></svg>
-          </button>
-          <button onClick={() => setViewMode(v => v === 'year' ? 'day' : 'year')}
-            style={{ background: '#fff', border: 'none', borderRadius: '8px', color: '#1a1a1a', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Poppins', sans-serif", minWidth: '90px', justifyContent: 'center' }}>
-            {viewMode === 'year' ? 'YEAR' : calYear}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points={viewMode === 'year' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'}/></svg>
-          </button>
-        </div>
-        {/* Body – fixed height */}
-        <div style={{ height: '252px', overflow: 'hidden', position: 'relative' }}>
-          {viewMode === 'month' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', padding: '16px 12px', height: '100%', boxSizing: 'border-box', alignContent: 'center' }}>
-              {MONTHS.map((m, i) => (
-                <button key={m} onClick={() => { setCalMonth(i); setViewMode('day'); }}
-                  style={{ padding: '10px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem', backgroundColor: i === calMonth ? '#197AFF' : 'transparent', color: i === calMonth ? '#fff' : '#333', fontFamily: "'Poppins', sans-serif" }}>{m}</button>
-              ))}
-            </div>
-          ) : viewMode === 'year' ? (
-            <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
-              <div ref={yearListRef} onScroll={updateYearThumb} style={{ flex: 1, overflowY: 'scroll', overflowX: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <style>{`.ach-up-year::-webkit-scrollbar{display:none}`}</style>
-                <div className="ach-up-year">
-                  {years.map(y => (
-                    <div key={y} data-selected={y === calYear} onClick={() => { setCalYear(y); setViewMode('day'); }}
-                      style={{ padding: '11px 20px', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center', fontFamily: "'Poppins', sans-serif", backgroundColor: y === calYear ? '#197AFF' : 'transparent', color: y === calYear ? '#fff' : '#333' }}>{y}</div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ width: '8px', background: '#e8eef7', borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
-                <div ref={yearThumbRef} onMouseDown={onYearThumbMouseDown}
-                  style={{ position: 'absolute', left: 0, right: 0, background: '#197AFF', borderRadius: '4px', cursor: 'grab', minHeight: '30px', top: 0 }} />
-              </div>
-            </div>
-          ) : (
-            <div style={{ padding: '8px 10px 12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
-                {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: '#888', fontWeight: 700, padding: '4px 0' }}>{d}</div>)}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-                {Array.from({ length: firstWeekDay }, (_, i) => <div key={`e${i}`} />)}
-                {Array.from({ length: daysInMonth }, (_, i) => {
-                  const day = i + 1; const sel = isSelected(day);
-                  return (
-                    <button key={day} onClick={() => { const mm = String(calMonth+1).padStart(2,'0'); const dd = String(day).padStart(2,'0'); onChange(`${calYear}-${mm}-${dd}`); handleClose(); }}
-                      style={{ textAlign: 'center', padding: '5px 0', borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: '0.95rem', fontWeight: sel ? 700 : 400, backgroundColor: sel ? '#197AFF' : 'transparent', color: sel ? '#fff' : '#333', fontFamily: "'Poppins', sans-serif" }}>{day}</button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null;
-
-  return (
-    <div style={{ position: 'relative', flex: 1 }}>
-      <div ref={triggerRef} onClick={handleToggle}
-        onMouseEnter={() => !disabled && setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', border: hovered ? '1.5px solid #2276fc' : '1.5px solid #bddaed', boxShadow: hovered ? '0 0 6px rgba(34,118,252,0.5)' : 'none', borderRadius: '10px', padding: '12px 16px 12px 13px', cursor: disabled ? 'not-allowed' : 'pointer', backgroundColor: disabled ? '#f5f5f5' : '#f8faff', fontSize: '15.4px', fontFamily: "'Poppins', sans-serif", fontWeight: 500, letterSpacing: '0.03em', color: displayVal ? '#3A4957' : '#aaa', userSelect: 'none', boxSizing: 'border-box', width: '100%', transition: 'border-color 0.2s ease, box-shadow 0.2s ease', opacity: disabled ? 0.6 : 1 }}>
-        <span style={{ flex: 1 }}>{displayVal || 'Date'}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      </div>
-      {calendarPortal}
-    </div>
-  );
-}
 
 export default function CertificateUpload({ onClose, onUpload }) {
   const fileInputRef = useRef();
@@ -548,11 +375,12 @@ Please compress your PDF or choose a smaller file.`);
                       className={styles['input-hover']} type="text" name="section" placeholder="Section" value={formData.section} readOnly style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}} required
                     />
                   </div>
-                  <AchievementDatePicker
-                    value={formData.date}
-                    onChange={isLoading ? undefined : handleDateChange}
-                    disabled={isLoading}
-                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <DOBDatePicker
+                      value={formData.date}
+                      onChange={isLoading ? () => {} : handleDateChange}
+                    />
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
                   <input

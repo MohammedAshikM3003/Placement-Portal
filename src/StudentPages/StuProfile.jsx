@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import { API_BASE_URL } from '../utils/apiConfig';
 
 import Navbar from '../components/Navbar/Navbar';
@@ -63,6 +65,23 @@ const parseMultiValue = (value) => {
     }
 
     return [];
+};
+
+const normalizeProfilePicValue = (value) => {
+    const raw = (value || '').toString().trim();
+    if (!raw) return '';
+
+    // Ignore temporary/browser-only representations for dirty checking
+    if (raw.startsWith('blob:') || raw.startsWith('data:')) return '';
+
+    // Normalize to stable relative GridFS path so full URL and relative path compare equal
+    const apiPathMatch = raw.match(/\/api\/file\/[a-f0-9]+/i);
+    if (apiPathMatch) return apiPathMatch[0].toLowerCase();
+
+    const filePathMatch = raw.match(/\/file\/([a-f0-9]+)/i);
+    if (filePathMatch) return `/api/file/${filePathMatch[1].toLowerCase()}`;
+
+    return raw.toLowerCase();
 };
 
 // Helper components
@@ -179,15 +198,262 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
     if (!isOpen) return null;
+
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = src;
+        link.download = 'profile-image.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className={styles.imagePreviewOverlay} onClick={onClose}>
             <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                <img src={src} alt="Profile Preview" className={styles.profilePreviewImg} />
-                <button onClick={onClose} className={styles.imagePreviewCloseBtn}>&times;</button>
+                <div className={styles.imagePreviewHeader}>Preview Image</div>
+                <div className={styles.imagePreviewBody}>
+                    <img src={src} alt="Profile Preview" />
+                </div>
+                <div className={styles.imagePreviewFooter}>
+                    <button onClick={onClose} className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}>
+                        Close
+                    </button>
+                    <button onClick={handleDownload} className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}>
+                        Download
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
+
+const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [rotation, setRotation] = useState(0);
+    const [aspect, setAspect] = useState(1); // 1:1
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const createCroppedImage = useCallback(async () => {
+        if (!imageSrc || !croppedAreaPixels) {
+            console.error('Missing imageSrc or croppedAreaPixels');
+            return;
+        }
+
+        try {
+            const image = await createImage(imageSrc);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                console.error('Failed to get canvas context');
+                return;
+            }
+
+            // Calculate the canvas size based on the cropped area
+            const { width, height, x, y } = croppedAreaPixels;
+
+            // Set canvas dimensions to the crop size
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw the image on canvas
+            ctx.save();
+
+            // If there's rotation, apply it
+            if (rotation !== 0) {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                ctx.translate(centerX, centerY);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.translate(-centerX, -centerY);
+            }
+
+            ctx.drawImage(
+                image,
+                x,
+                y,
+                width,
+                height,
+                0,
+                0,
+                width,
+                height
+            );
+
+            ctx.restore();
+
+            // Convert canvas to blob
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.error('Canvas is empty');
+                        return;
+                    }
+                    console.log('✅ Cropped blob created:', blob.size, 'bytes');
+                    resolve(blob);
+                }, 'image/jpeg', 0.95);
+            });
+        } catch (error) {
+            console.error('Error creating cropped image:', error);
+            return null;
+        }
+    }, [imageSrc, croppedAreaPixels, rotation]);
+
+    const handleSaveCrop = async () => {
+        try {
+            const croppedBlob = await createCroppedImage();
+            if (croppedBlob) {
+                onCrop(croppedBlob);
+                onClose();
+            } else {
+                console.error('Failed to create cropped image');
+            }
+        } catch (err) {
+            console.error('Crop save error:', err);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles.cropOverlay} onClick={onClose}>
+            <div className={styles.cropContainer} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.cropHeader}>Crop Image</div>
+
+                <div className={styles.cropContent}>
+                    <div className={styles.cropPreviewArea}>
+                        {imageSrc && (
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                rotation={rotation}
+                                aspect={aspect}
+                                onCropChange={setCrop}
+                                onZoomChange={setZoom}
+                                onRotationChange={setRotation}
+                                onCropComplete={onCropComplete}
+                                cropShape="rect"
+                                restrictPosition={true}
+                                showGrid={true}
+                            />
+                        )}
+                    </div>
+
+                    <div className={styles.cropControls}>
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Rotate</label>
+                            <div className={styles.rotateControl}>
+                                <button
+                                    onClick={() => setRotation((r) => (r - 10 + 360) % 360)}
+                                    className={styles.rotateBtn}
+                                    title="Rotate left"
+                                >
+                                    ↺
+                                </button>
+                                <span className={styles.angleValue}>{rotation}°</span>
+                                <button
+                                    onClick={() => setRotation((r) => (r + 10) % 360)}
+                                    className={styles.rotateBtn}
+                                    title="Rotate right"
+                                >
+                                    ↻
+                                </button>
+                            </div>
+                            <input
+                                type="range"
+                                min="-180"
+                                max="180"
+                                value={rotation}
+                                onChange={(e) => setRotation(Number(e.target.value))}
+                                className={styles.angleSlider}
+                            />
+                            <button
+                                onClick={() => setRotation(0)}
+                                className={styles.resetBtn}
+                            >
+                                Reset
+                            </button>
+                        </div>
+
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Aspect Ratio</label>
+                            <div className={styles.aspectRatioButtons}>
+                                <button
+                                    onClick={() => setAspect(null)}
+                                    className={`${styles.aspectBtn} ${aspect === null ? styles.active : ''}`}
+                                    title="Custom"
+                                >
+                                    Custom
+                                </button>
+                                <button
+                                    onClick={() => setAspect(1)}
+                                    className={`${styles.aspectBtn} ${aspect === 1 ? styles.active : ''}`}
+                                    title="1:1"
+                                >
+                                    1:1
+                                </button>
+                                <button
+                                    onClick={() => setAspect(4 / 3)}
+                                    className={`${styles.aspectBtn} ${aspect === 4 / 3 ? styles.active : ''}`}
+                                    title="4:3"
+                                >
+                                    4:3
+                                </button>
+                                <button
+                                    onClick={() => setAspect(3 / 4)}
+                                    className={`${styles.aspectBtn} ${aspect === 3 / 4 ? styles.active : ''}`}
+                                    title="3:4"
+                                >
+                                    3:4
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Zoom</label>
+                            <input
+                                type="range"
+                                min="1"
+                                max="3"
+                                step="0.1"
+                                value={zoom}
+                                onChange={(e) => setZoom(Number(e.target.value))}
+                                className={styles.zoomSlider}
+                            />
+                            <span className={styles.zoomValue}>{(zoom * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.cropFooter}>
+                    <button onClick={onDiscard} className={`${styles.cropBtn} ${styles.discardBtn}`}>
+                        Discard
+                    </button>
+                    <button onClick={handleSaveCrop} className={`${styles.cropBtn} ${styles.uploadBtn}`}>
+                        Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Helper function to create an image from a source
+const createImage = (url) =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener('load', () => resolve(image));
+        image.addEventListener('error', (error) => reject(error));
+        image.setAttribute('crossOrigin', 'anonymous');
+        image.src = url;
+    });
 
 const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
     if (!isOpen) return null;
@@ -359,6 +625,11 @@ function StuProfile({ onLogout, onViewChange }) {
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
 
+    // Crop Modal State
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState(null);
+    const [hasNewProfilePhoto, setHasNewProfilePhoto] = useState(false); // Track if user uploaded new photo
+
     // Field Update Banner & Unsaved Changes Tracking
     const [originalFormData, setOriginalFormData] = useState(null);
     const [originalSkills, setOriginalSkills] = useState([]);
@@ -489,6 +760,15 @@ function StuProfile({ onLogout, onViewChange }) {
             }
             // Handle regular values (strings, numbers, etc.)
             else if (oldValue !== newValue) {
+                if (field === 'profilePicURL') {
+                    const oldNormalizedPic = normalizeProfilePicValue(oldValue);
+                    const newNormalizedPic = normalizeProfilePicValue(newValue);
+                    if (oldNormalizedPic !== newNormalizedPic) {
+                        changedFields.push(fieldLabels[field]);
+                    }
+                    return;
+                }
+
                 // Only add if there's a meaningful change (not just undefined/null/empty conversions)
                 const oldNormalized = oldValue?.toString()?.trim() || '';
                 const newNormalized = newValue?.toString()?.trim() || '';
@@ -507,30 +787,29 @@ function StuProfile({ onLogout, onViewChange }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Track original form data when loaded
-    useEffect(() => {
-        if (studentData && !originalFormData) {
-            setOriginalFormData({ ...studentData });
-        }
-    }, [studentData, originalFormData]);
-
     // Detect changes in real-time when form data changes
     useEffect(() => {
-        if (originalFormData && studentData) {
-            const changed = detectChangedFields(originalFormData, studentData);
+        // Don't run change detection during initial loading
+        if (isInitialLoading || !originalFormData || !studentData) return;
 
-            // Track skills changes - just show "Skills" if any skill was added/removed/modified
-            const currentSkillsFiltered = skills.filter(s => s.trim()).sort().join(',');
-            const originalSkillsFiltered = originalSkills.filter(s => s.trim()).sort().join(',');
+        const changed = detectChangedFields(originalFormData, studentData);
 
-            if (currentSkillsFiltered !== originalSkillsFiltered && !changed.includes('Skills')) {
-                changed.push('Skills');
-            }
+        // Track skills changes - just show "Skills" if any skill was added/removed/modified
+        const currentSkillsFiltered = skills.filter(s => s.trim()).sort().join(',');
+        const originalSkillsFiltered = originalSkills.filter(s => s.trim()).sort().join(',');
 
-            setChangedFieldsList(changed);
-            setHasUnsavedChanges(changed.length > 0);
+        if (currentSkillsFiltered !== originalSkillsFiltered && !changed.includes('Skills')) {
+            changed.push('Skills');
         }
-    }, [studentData, originalFormData, detectChangedFields, skills, originalSkills]);
+
+        // Track profile photo changes - only consider it changed if user uploaded a new photo
+        if (hasNewProfilePhoto && !changed.includes('Profile Photo')) {
+            changed.push('Profile Photo');
+        }
+
+        setChangedFieldsList(changed);
+        setHasUnsavedChanges(changed.length > 0);
+    }, [studentData, originalFormData, detectChangedFields, skills, originalSkills, hasNewProfilePhoto, isInitialLoading]);
 
     const selectedCompanyTypes = useMemo(
         () => parseMultiValue(studentData?.companyTypes),
@@ -741,6 +1020,10 @@ function StuProfile({ onLogout, onViewChange }) {
 
         const merged = { ...data, ...normalized };
         setStudentData(merged);
+        setOriginalFormData({ ...merged });
+        setHasUnsavedChanges(false);
+        setChangedFieldsList([]);
+        setHasNewProfilePhoto(false);
         const processedSkills = Array.isArray(merged.skills) ? merged.skills : parseMultiValue(merged.skillSet || '');
         setStudyCategory(merged.studyCategory || '12th');
         setCurrentYear(merged.currentYear ? String(merged.currentYear) : '');
@@ -865,7 +1148,7 @@ function StuProfile({ onLogout, onViewChange }) {
         if (!file) return;
 
         const fileName = file.name.toLowerCase();
-        
+
         // Robust file type detection using both MIME type and extension
         const getFileType = (file, fileName) => {
             // Check MIME type first (most reliable)
@@ -873,16 +1156,16 @@ function StuProfile({ onLogout, onViewChange }) {
                 if (file.type === "image/jpeg" || file.type === "image/jpg") return "jpg";
                 if (file.type === "image/webp") return "webp";
             }
-            
+
             // Fallback to extension check
             if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return "jpg";
             if (fileName.endsWith('.webp')) return "webp";
-            
+
             return null;
         };
 
         const fileType = getFileType(file, fileName);
-        
+
         if (!fileType) {
             setInvalidUrl(file.name);
             setUrlErrorType('File Format');
@@ -892,10 +1175,10 @@ function StuProfile({ onLogout, onViewChange }) {
             }
             return;
         }
-        
+
         const maxSize = 500 * 1024;
         const fileSizeKB = (file.size / 1024).toFixed(1);
-        
+
         if (file.size > maxSize) {
             setFileSizeErrorKB(fileSizeKB);
             setIsFileSizeErrorOpen(true);
@@ -904,25 +1187,81 @@ function StuProfile({ onLogout, onViewChange }) {
             }
             return;
         }
-        
-        // Store raw File for GridFS upload on Save
+
+        // Store the image blob URL for cropping
+        const blobUrl = URL.createObjectURL(file);
+        setImageToCrop(blobUrl);
         setProfilePhotoFile(file);
-        setProfileImage(URL.createObjectURL(file));
-        setUploadInfo({ 
-            name: file.name, 
-            date: new Date().toLocaleDateString('en-GB'),
-            size: fileSizeKB,
-            type: fileType
-        });
-        setUploadSuccess(true);
-        setTimeout(() => setUploadSuccess(false), 5000);
-        
-        console.log('✅ File selected:', {
+        setIsCropModalOpen(true);
+
+        console.log('✅ File selected for cropping:', {
             name: file.name,
             mimeType: file.type || 'unknown',
             size: `${fileSizeKB}KB`,
             detectedType: fileType
         });
+    };
+
+    const handleCropComplete = (croppedBlob) => {
+        // Convert blob to URL and update profile image
+        const croppedUrl = URL.createObjectURL(croppedBlob);
+        setProfileImage(croppedUrl);
+
+        // Convert blob to File for upload
+        const fileName = profilePhotoFile?.name || 'profile.jpg';
+        const croppedFile = new File([croppedBlob], fileName, {
+            type: croppedBlob.type || 'image/jpeg',
+            lastModified: Date.now()
+        });
+        setProfilePhotoFile(croppedFile);
+
+        // Update upload info
+        setUploadInfo({
+            name: fileName,
+            date: new Date().toLocaleDateString('en-GB'),
+            size: (croppedBlob.size / 1024).toFixed(1),
+            type: 'cropped'
+        });
+
+        // Show success message
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 5000);
+
+        // Mark that user has uploaded a new profile photo
+        setHasNewProfilePhoto(true);
+
+        // Clean up
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+    };
+
+    const handleCropModalClose = () => {
+        setIsCropModalOpen(false);
+        // Clean up the image blob
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
+        // DON'T reset profilePhotoFile here - it should keep the cropped file
+    };
+
+    const handleCropDiscard = () => {
+        setIsCropModalOpen(false);
+        // Clean up the image blob
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
+        // Reset everything when discarding
+        setProfilePhotoFile(null);
+        setProfileImage(null);
+        setUploadInfo({ name: '', date: '' });
+        setUploadSuccess(false);
+        setHasNewProfilePhoto(false); // Reset profile photo change flag
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     const handleImageRemove = (e) => {
@@ -931,6 +1270,7 @@ function StuProfile({ onLogout, onViewChange }) {
         setProfilePhotoFile(null);
         setUploadInfo({ name: '', date: '' });
         setUploadSuccess(false);
+        setHasNewProfilePhoto(false); // Reset profile photo change flag
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
@@ -1157,17 +1497,16 @@ function StuProfile({ onLogout, onViewChange }) {
             setOriginalSkills([...skills.filter(s => s.trim())]); // Reset original skills after save
             setHasUnsavedChanges(false);
             setChangedFieldsList([]);
+            setHasNewProfilePhoto(false); // Reset profile photo change flag after save
+            setShowUnsavedModal(false);
+            setPendingNavView(null);
 
             // Show success popup immediately after everything is ready
             setIsSaving(false);
             setPopupOpen(true);
             savedDataRef.current = { ...updatedStudentData, skills: skills.filter(s => s.trim()) };
-            if (afterSaveNavRef.current) {
-                const navTarget = afterSaveNavRef.current;
-                afterSaveNavRef.current = null;
-                onViewChange(navTarget);
-            }
         } catch (error) {
+            afterSaveNavRef.current = null;
             if (error.message.includes('permission')) { alert('Permission denied.'); }
             else if (error.message.includes('not-found')) { alert('Student record not found.'); }
             else if (error.message.includes('network')) { alert('Network error.'); }
@@ -1186,6 +1525,7 @@ function StuProfile({ onLogout, onViewChange }) {
             // Reset unsaved changes tracking
             setHasUnsavedChanges(false);
             setChangedFieldsList([]);
+            setHasNewProfilePhoto(false); // Reset profile photo change flag
             if (studentData) {
                 setOriginalFormData({ ...studentData });
             }
@@ -1223,7 +1563,14 @@ function StuProfile({ onLogout, onViewChange }) {
         setStudentData(prev => ({ ...prev, [fieldName]: value }));
     };
 
-    const closePopup = () => setPopupOpen(false);
+    const closePopup = () => {
+        setPopupOpen(false);
+        if (afterSaveNavRef.current) {
+            const navTarget = afterSaveNavRef.current;
+            afterSaveNavRef.current = null;
+            onViewChange(navTarget);
+        }
+    };
     
     const getChangedFields = () => {
         if (!savedDataRef.current || !studentData) return [];
@@ -1323,18 +1670,19 @@ function StuProfile({ onLogout, onViewChange }) {
             <UnsavedChangesAlert
                 isOpen={showUnsavedModal}
                 onClose={() => {
+                    if (isSaving) return;
                     setShowUnsavedModal(false);
                     setPendingNavView(null);
                 }}
                 onSave={() => {
                     // Set the navigation target to execute after save completes
                     afterSaveNavRef.current = pendingNavView;
-                    setShowUnsavedModal(false);
                     if (formRef.current) {
                         formRef.current.requestSubmit();
                     }
                 }}
                 onDiscard={() => {
+                    if (isSaving) return;
                     setShowUnsavedModal(false);
                     handleDiscard();
                     if (pendingNavView) {
@@ -1342,6 +1690,7 @@ function StuProfile({ onLogout, onViewChange }) {
                         setPendingNavView(null);
                     }
                 }}
+                isSaving={isSaving}
                 changedFields={changedFieldsList.length > 0 ? changedFieldsList : getChangedFields()}
             />
 
@@ -2519,6 +2868,13 @@ function StuProfile({ onLogout, onViewChange }) {
                 onClose={() => setURLErrorPopupOpen(false)}
                 urlType={urlErrorType}
                 invalidUrl={invalidUrl}
+            />
+            <CropImageModal
+                isOpen={isCropModalOpen}
+                imageSrc={imageToCrop}
+                onCrop={handleCropComplete}
+                onClose={handleCropModalClose}
+                onDiscard={handleCropDiscard}
             />
             <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
         </div>

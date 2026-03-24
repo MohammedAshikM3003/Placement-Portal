@@ -406,10 +406,9 @@ function MainContent({ onViewChange }) {
                   // Fetch in background without blocking UI
                   (async () => {
                     try {
-                      const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
                       const authToken = localStorage.getItem('authToken');
                       
-                      const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+                      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`, {
                         headers: {
                           'Content-Type': 'application/json',
                           ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -485,18 +484,27 @@ function MainContent({ onViewChange }) {
           
           if (studentId) {
             try {
-              const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
               const authToken = localStorage.getItem('authToken');
-              console.log('📡 Fetching resume from:', `${API_BASE}/api/resume-builder/pdf/${studentId}`);
-              
-              const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+              const apiUrl = `${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`;
+              console.log('📡 API_BASE_URL:', API_BASE_URL);
+              console.log('📡 Student ID:', studentId);
+              console.log('📡 Auth Token exists:', !!authToken);
+              console.log('📡 Fetching resume from:', apiUrl);
+
+              const response = await fetch(apiUrl, {
                 headers: {
                   'Content-Type': 'application/json',
                   ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                 }
               });
-              
+
               console.log('📡 Resume fetch response status:', response.status);
+
+              // Log response body for debugging
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Resume fetch error response:', errorText);
+              }
               
               if (response.ok) {
                 const result = await response.json();
@@ -694,12 +702,11 @@ function MainContent({ onViewChange }) {
 
       // No cache - fetch from server (fallback)
       try {
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
         const authToken = localStorage.getItem('authToken');
         
         console.log('📊 Fetching ATS analysis for studentId:', studentId);
         
-        const response = await fetch(`${API_BASE}/api/resume-builder/ats-analysis/${studentId}`, {
+        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-analysis/${studentId}`, {
           headers: {
             'Content-Type': 'application/json',
             ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -772,7 +779,6 @@ function MainContent({ onViewChange }) {
     try {
       const studentId = studentData?._id || studentData?.id;
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
       let fetchedResumeData = null;
       let analysisResult = null;
 
@@ -785,7 +791,7 @@ function MainContent({ onViewChange }) {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-          const response = await fetch(`${API_BASE}/api/resume-builder/ats-data/${studentId}`, {
+          const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-data/${studentId}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -1001,8 +1007,7 @@ function MainContent({ onViewChange }) {
           // Convert relative URLs to absolute URLs
           let fullUrl = resumeUrl;
           if (resumeUrl.startsWith('/api/file/') || resumeUrl.startsWith('/file/')) {
-            const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-            fullUrl = `${API_BASE}${resumeUrl}`;
+            fullUrl = `${API_BASE_URL.replace('/api', '')}${resumeUrl}`;
             console.log('✅ Converted to full URL:', fullUrl);
           }
 
@@ -1192,10 +1197,9 @@ function MainContent({ onViewChange }) {
       const sd = studentData || JSON.parse(localStorage.getItem('studentData') || 'null');
       const studentId = sd?._id || sd?.id;
       if (studentId) {
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
         const authToken = localStorage.getItem('token');
         // Pre-fetch resume data from MongoDB and cache in localStorage
-        const response = await fetch(`${API_BASE}/api/resume-builder/load/${studentId}`, {
+        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/load/${studentId}`, {
           headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }
         });
         if (response.ok) {

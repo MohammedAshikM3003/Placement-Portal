@@ -1,20 +1,19 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { fetchUnreadNotifications, markNotificationsAsRead } from '../../services/certificateNotificationService';
-import CertificateApprovedPopup from './CertificateApprovedPopup';
-import CertificateRejectedPopup from './CertificateRejectedPopup';
+import CertificateStatusBanner from './CertificateStatusBanner';
 
-const POLL_INTERVAL_MS = 10000; // Poll every 10 seconds
+const POLL_INTERVAL_MS = 2000; // Poll every 2 seconds for faster notifications
 
 /**
  * GlobalNotificationChecker
  * Mounts once in App.jsx for logged-in students on authenticated routes.
  * Polls the server for certificate approval/rejection notifications
- * and shows one popup at a time, marking each as read before moving on.
+ * and shows one banner at a time, marking each as read before moving on.
  */
 const GlobalNotificationChecker = () => {
     const [current, setCurrent] = useState(null);
     const [studentIdentifier, setStudentIdentifier] = useState(null);
-    const showingRef            = useRef(false);   // true while any popup is visible
+    const showingRef            = useRef(false);   // true while any banner is visible
     const closingRef            = useRef(false);   // true while mark-as-read is in flight
     const pollingRef            = useRef(null);
     const queueRef              = useRef([]);       // mutable queue to avoid stale closures
@@ -44,7 +43,7 @@ const GlobalNotificationChecker = () => {
 
     // ── 2. Poll server for unread notifications ───────────────────────────────
     const poll = useCallback(async () => {
-        // Skip if popup is open or mark-as-read is in flight
+        // Skip if banner is open or mark-as-read is in flight
         if (!studentIdentifier || showingRef.current || closingRef.current) return;
 
         console.log('🔔 [NotifChecker] Polling for:', studentIdentifier);
@@ -66,8 +65,8 @@ const GlobalNotificationChecker = () => {
     useEffect(() => {
         if (!studentIdentifier) return;
 
-        // Immediate first check (with small delay for page to settle)
-        const timeout = setTimeout(poll, 1500);
+        // Immediate first check (with minimal delay for page to settle)
+        const timeout = setTimeout(poll, 500);
 
         // Periodic polling
         pollingRef.current = setInterval(poll, POLL_INTERVAL_MS);
@@ -78,7 +77,7 @@ const GlobalNotificationChecker = () => {
         };
     }, [studentIdentifier, poll]);
 
-    // ── 3. Handle popup close ────────────────────────────────────────────────
+    // ── 3. Handle banner close ────────────────────────────────────────────────
     const handleClose = useCallback(async () => {
         if (!current || closingRef.current) return;
         closingRef.current = true;
@@ -95,11 +94,11 @@ const GlobalNotificationChecker = () => {
         queueRef.current = remaining;
 
         if (remaining.length > 0) {
-            // Show next popup after short delay
+            // Show next banner after short delay
             setTimeout(() => {
                 setCurrent(remaining[0]);
                 closingRef.current = false;
-            }, 400);
+            }, 200);
         } else {
             // All done — resume polling
             setCurrent(null);
@@ -111,13 +110,9 @@ const GlobalNotificationChecker = () => {
     // ── 4. Render ─────────────────────────────────────────────────────────────
     if (!current) return null;
 
-    return current.status === 'approved' ? (
-        <CertificateApprovedPopup
-            certificateName={current.certificateName}
-            onClose={handleClose}
-        />
-    ) : (
-        <CertificateRejectedPopup
+    return (
+        <CertificateStatusBanner
+            status={current.status}
             certificateName={current.certificateName}
             onClose={handleClose}
         />

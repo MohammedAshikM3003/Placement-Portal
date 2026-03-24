@@ -92,8 +92,26 @@ function uploadToGridFS(buffer, filename, contentType, metadata = {}) {
 // =====================================================
 router.get('/file/:id', async (req, res) => {
     try {
+        // Wait for connection if it's connecting
+        if (mongoose.connection.readyState === 2) { // 2 = connecting
+            await new Promise((resolve) => {
+                const checkConnection = setInterval(() => {
+                    if (mongoose.connection.readyState === 1) {
+                        clearInterval(checkConnection);
+                        resolve();
+                    }
+                }, 100);
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    clearInterval(checkConnection);
+                    resolve();
+                }, 5000);
+            });
+        }
+
         const bucket = getBucket();
         if (!bucket) {
+            console.error('❌ GridFS bucket not available, connection state:', mongoose.connection.readyState);
             return res.status(503).json({ error: 'GridFS not initialized. Please try again.' });
         }
 

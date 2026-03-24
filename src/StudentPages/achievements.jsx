@@ -1560,8 +1560,18 @@ This record is locked and cannot be modified.
   };
   const handleSemesterChange = (e) => setSemesterFilter(e.target.value);
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  
-  
+
+  // Check if any filter is active
+  const hasActiveFilters = searchQuery || yearFilter || semesterFilter || statusFilter !== 'all';
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setYearFilter("");
+    setSemesterFilter("");
+    setStatusFilter("all");
+  };
+
 
   const handleViewFile = async (fileName, fileData, achievementId) => { 
     // Prevent multiple previews
@@ -2033,6 +2043,24 @@ This record is locked and cannot be modified.
       const normalizedStatus = statusFilter.toLowerCase();
       filtered = filtered.filter(a => a.status === normalizedStatus);
     }
+
+    // Sort by year (IV to I) and semester (8 to 1) descending
+    filtered.sort((a, b) => {
+      const yearOrder = { 'IV': 4, 'III': 3, 'II': 2, 'I': 1 };
+      const yearA = yearOrder[a.year] || 0;
+      const yearB = yearOrder[b.year] || 0;
+
+      // First compare by year (descending: IV first, I last)
+      if (yearB !== yearA) {
+        return yearB - yearA;
+      }
+
+      // Then compare by semester (descending: 8 first, 1 last)
+      const semA = parseInt(a.semester, 10) || 0;
+      const semB = parseInt(b.semester, 10) || 0;
+      return semB - semA;
+    });
+
     return filtered;
   };
 
@@ -2056,7 +2084,6 @@ This record is locked and cannot be modified.
             <button className={styles['filter-card-button']}>Sort & Filter</button>
             <div className={styles['filter-grid']}>
                 <div className={styles['achievements-input-container']}>
-                    {/* FIX: Combined local styles object with CSS module class names */}
                     <input type="text" id="competitionName" value={searchQuery} onChange={handleSearchChange} className={`${styles['achievements-filter-input']} ${searchQuery ? styles['achievements-has-value'] : ''}`} />
                     <label htmlFor="competitionName" className={styles['achievements-floating-label']}>Competition Name / Prize</label>
                 </div>
@@ -2094,7 +2121,17 @@ This record is locked and cannot be modified.
                     <option value="all">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option>
                 </select>
             </div>
-            <div className={styles['filter-actions-spacer']}></div>
+            {hasActiveFilters ? (
+                <button
+                    onClick={handleClearFilters}
+                    className={styles['filter-card-button']}
+                    style={{ marginTop: 'auto', marginBottom: '0px' }}
+                >
+                    Clear
+                </button>
+            ) : (
+                <div className={styles['filter-actions-spacer']}></div>
+            )}
         </div>
         {/* FIX: Converted className to styles.className */}
         <div className={styles['achievements-action-card']} onClick={handleEditClick}>

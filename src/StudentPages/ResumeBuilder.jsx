@@ -1791,27 +1791,8 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 Your resume has been successfully created.
               </p>
             </div>
-            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '16px', justifyContent: 'center', padding: '1.5rem' }}>
-              <button 
-                onClick={() => {
-                  setShowCreated(false);
-                  setIsPreviewing(false);
-                  setHasCreatedOnce(false);
-                  if (onViewChange) onViewChange('resume');
-                }} 
-                className="achievement-popup-close-btn"
-                style={{ 
-                  flex: 1,
-                  maxWidth: '160px',
-                  padding: '0.8rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600'
-                }}
-              >
-                Back
-              </button>
-              <button 
+            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '24px', justifyContent: 'center', padding: '1.5rem' }}>
+              <button
                 onClick={() => {
                   if (!resumePdfUrl || isPreviewing) return;
                   setIsPreviewing(true);
@@ -1820,24 +1801,71 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                   setTimeout(() => {
                     setIsPreviewing(false);
                   }, 2000);
-                }} 
+                }}
                 className="achievement-popup-close-btn"
                 disabled={isPreviewing || !resumePdfUrl}
-                style={{ 
-                  backgroundColor: isPreviewing ? '#6c757d' : '#2085f6',
-                  borderColor: isPreviewing ? '#6c757d' : '#2085f6',
-                  boxShadow: isPreviewing ? 'none' : '0 2px 8px rgba(32, 133, 246, 0.3)',
-                  opacity: (isPreviewing || !resumePdfUrl) ? 0.7 : 1,
-                  cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
-                  flex: 1,
-                  maxWidth: '160px',
-                  padding: '0.8rem 1.5rem',
+                style={{
+                  background: '#e9f1fc',
+                  color: '#2085f6',
+                  border: 'none',
+                  padding: '0.8rem 2rem',
                   borderRadius: '8px',
                   fontSize: '1rem',
-                  fontWeight: '600'
+                  fontWeight: '500',
+                  cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
+                  opacity: (isPreviewing || !resumePdfUrl) ? 0.6 : 1,
+                  transition: 'background 0.2s ease',
+                  boxShadow: 'none',
+                  transform: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isPreviewing && resumePdfUrl) {
+                    e.target.style.background = '#d5e5f9';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#e9f1fc';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
                 }}
               >
                 {isPreviewing ? 'Previewing...' : 'Preview'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreated(false);
+                  setIsPreviewing(false);
+                  setHasCreatedOnce(false);
+                  if (onViewChange) onViewChange('ats-checker');
+                }}
+                className="achievement-popup-close-btn"
+                style={{
+                  backgroundColor: '#2085f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.8rem 2rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  boxShadow: 'none',
+                  transform: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#1976d2';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#2085f6';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+              >
+                ATS check
               </button>
             </div>
           </div>

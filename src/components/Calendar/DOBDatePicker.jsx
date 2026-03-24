@@ -276,15 +276,30 @@ function DOBDatePicker({ value, onChange }) {
                       onMouseLeave={() => setHoveredDay(null)}
                       style={{
                         textAlign: 'center', padding: '7px 0', borderRadius: '50%',
-                        border: tod && !sel ? '2px solid #197AFF' : 'none',
+                        border: 'none',
                         cursor: 'pointer', fontSize: '0.95rem',
                         fontWeight: sel || tod ? 700 : 500,
-                        backgroundColor: sel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                        backgroundColor: sel ? '#197AFF' : isHov ? '#e8eef7' : tod ? '#e8f4ff' : 'transparent',
                         color: sel ? '#fff' : tod ? '#197AFF' : '#333',
                         fontFamily: "'Poppins', sans-serif",
-                        transition: 'background-color 0.15s'
+                        transition: 'background-color 0.15s',
+                        position: 'relative'
                       }}
-                    >{day}</button>
+                    >
+                      {day}
+                      {tod && !sel && (
+                        <span style={{
+                          position: 'absolute',
+                          bottom: '2px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '4px',
+                          height: '4px',
+                          borderRadius: '50%',
+                          backgroundColor: '#197AFF'
+                        }} />
+                      )}
+                    </button>
                   );
                 })}
               </div>

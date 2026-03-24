@@ -17,22 +17,23 @@ const UnsavedChangesAlert = ({
   onClose,
   onSave,
   onDiscard,
-  changedFields = []
+  changedFields = [],
+  isSaving = false
 }) => {
   if (!isOpen) return null;
 
   const handleSave = () => {
+    if (isSaving) return;
     onSave();
-    onClose();
   };
 
   const handleDiscard = () => {
+    if (isSaving) return;
     onDiscard();
-    onClose();
   };
 
   return (
-    <div className="alert-overlay" onClick={onClose}>
+    <div className="alert-overlay" onClick={isSaving ? undefined : onClose}>
       <div className="alert-container" onClick={(e) => e.stopPropagation()}>
         <div className={`alert-header ${styles.detailsChangedHeader}`}>
           Details Changed !
@@ -88,14 +89,23 @@ const UnsavedChangesAlert = ({
           <button
             onClick={handleDiscard}
             className={`alert-button ${styles.discardButton}`}
+            disabled={isSaving}
           >
             Discard
           </button>
           <button
             onClick={handleSave}
             className={`alert-button ${styles.saveButton}`}
+            disabled={isSaving}
           >
-            Save
+            {isSaving ? (
+              <span className={styles.saveButtonContent}>
+                <span className={styles.saveSpinner} aria-hidden="true"></span>
+                Saving...
+              </span>
+            ) : (
+              'Save'
+            )}
           </button>
         </div>
       </div>
