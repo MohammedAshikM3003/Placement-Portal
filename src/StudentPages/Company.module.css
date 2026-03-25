@@ -242,7 +242,6 @@
     overflow: hidden;
     cursor: default;
     transition: all 0.3s ease;
-    margin-top: 10px;
 }
 
 .appItem:hover {
@@ -356,7 +355,7 @@
 }
 
 .appStatusTextAbsent {
-    color: #FA7B20;
+    color: #ff2800;
 }
 
 .appStatusTextPending {
@@ -443,64 +442,100 @@
     .dashboardArea {
         --mobile-side-gap: 10px;
         margin-left: 0;
-        padding: 20px var(--mobile-side-gap) 20px var(--mobile-side-gap) !important;
+        padding: 60px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 20px) + 110px) var(--mobile-side-gap) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: 100%;
         scrollbar-gutter: stable both-edges;
     }
 
-    /* Summary cards: compact 3-column row on tablet */
+    /* Summary cards: stack vertically as 3 separate cards on mobile */
     .summaryCardsContainer {
-        gap: 10px;
+        gap: 12px;
         margin-bottom: 16px;
         margin-top: 8px;
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .summaryCard {
-        padding: 20px 10px;
-        min-height: 130px;
+        padding: 18px 18px;
         border-radius: 14px;
     }
 
     .summaryCardTitle {
-        font-size: 14px;
-        margin-bottom: 10px;
+        font-size: 13px;
+        margin-bottom: 8px;
+        line-height: 1.2;
     }
 
     .summaryCardNumber {
-        font-size: 40px;
+        font-size: 32px;
     }
 
-    /* Application History */
+    /* Application History with scrollable list */
     .applicationHistoryContainer {
-        min-height: 250px;
-        padding: 20px 14px;
+        min-height: 350px;
+        padding: 18px 14px;
         border-radius: 14px;
+        display: flex;
+        flex-direction: column;
     }
 
     .applicationHistoryTitle {
-        font-size: 20px;
+        font-size: 18px;
         margin-bottom: 14px;
+        flex-shrink: 0;
+    }
+
+    /* Scrollable app list for mobile */
+    .appList {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding-right: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+    }
+
+    .appList::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .appList::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .appList::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .appList::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.8);
     }
 
     /* App list items */
     .appItem {
-        padding: 14px 16px;
-        gap: 10px;
-        min-height: 70px;
+        padding: 12px 12px;
+        gap: 8px;
+        min-height: 60px;
     }
 
     .appLogo {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-        margin-right: 10px;
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+        margin-right: 8px;
     }
 
-    .appCompany { font-size: 1.1rem; }
-    .appPosition { font-size: 0.85rem; }
-    .appArrow { font-size: 22px; }
+    .appCompany { font-size: 0.95rem; }
+    .appPosition { font-size: 0.78rem; }
+    .appArrow { font-size: 24px; }
 
     /* Congrats Banner */
     .congratsBanner {
@@ -531,55 +566,51 @@
     .placeholderText { font-size: 13px; }
 }
 
-/* Very small phones: stack summary cards vertically */
+/* Very small phones: adjust card styling for extra small screens */
 @media (max-width: 480px) {
-    .summaryCardsContainer {
-        flex-direction: column;
-        gap: 10px;
-    }
-
     .summaryCard {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: 18px 22px;
-        min-height: unset;
-        border-radius: 14px;
-        width: 100%;
-        box-sizing: border-box;
+        padding: 16px 16px;
+        min-height: auto;
     }
 
     .summaryCardTitle {
-        font-size: 16px;
-        margin-bottom: 0;
-        text-align: left;
+        font-size: 12px;
+        margin-bottom: 6px;
     }
 
     .summaryCardNumber {
-        font-size: 42px;
+        font-size: 28px;
     }
+
+    .appItem {
+        padding: 10px 10px;
+        min-height: 56px;
+    }
+
+    .appCompany { font-size: 0.88rem; }
+    .appPosition { font-size: 0.72rem; }
 }
 
 @media (max-width: 576px) {
     .hubTitle { font-size: 22px; margin-bottom: 15px; }
     .historyContainer { padding: 20px 15px; }
 
-    /* Keep single-row layout — no wrapping, no absolute arrow */
+    /* App item adjustments for small screens */
     .appItem {
         flex-wrap: nowrap;
-        padding: 12px 10px;
+        padding: 10px 10px;
         gap: 8px;
-        min-height: 64px;
-        margin-top: 10px;
+        min-height: 56px;
+        margin-top: 0;
     }
 
     .appLogo { width: 36px; height: 36px; font-size: 16px; margin-right: 6px; flex-shrink: 0; }
 
     .appDetails { flex: 1; min-width: 0; }
-    .appCompany { font-size: 0.92rem; }
-    .appPosition { font-size: 0.75rem; }
+    .appCompany { font-size: 0.88rem; }
+    .appPosition { font-size: 0.72rem; }
 
-    /* Status + arrow: stay together, shrink w/ smaller badge */
+    /* Status + arrow: stay together */
     .appStatusContainer { gap: 6px; flex-shrink: 0; }
 
     .appStatus {
@@ -587,9 +618,9 @@
         padding: 5px 10px;
     }
 
-    .appStatusText { font-size: 0.78rem; }
+    .appStatusText { font-size: 0.72rem; }
 
-    .appArrow { font-size: 40px; }
+    .appArrow { font-size: 20px; }
 
     .dashboardArea { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px); }
 }

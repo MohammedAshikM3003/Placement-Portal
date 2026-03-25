@@ -142,7 +142,7 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
         <div style={{ padding: '1.4rem 1.6rem' }}>
           <style>{`
             @keyframes afp-marquee {
-              0%   { transform: translateX(100%); }
+              0%   { transform: translateX(0); }
               100% { transform: translateX(-100%); }
             }
             .afp-marquee-inner {
@@ -236,7 +236,7 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
                   whiteSpace: 'nowrap'
                 }}>
                   <span className="afp-marquee-inner">
-                    Better luck next time ! – we encourage you
+                    {'\u00A0\u00A0'}Better luck next time ! – we encourage you
                   </span>
                 </div>
               )}
@@ -361,17 +361,79 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
   const [hoverRating, setHoverRating] = useState(0);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const mobileScrollRef = useRef(null);
+  const mobileTrackRef = useRef(null);
+  const [mobileThumb, setMobileThumb] = useState({ height: 40, top: 0 });
+
   const [isPopupMobile, setIsPopupMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
   });
 
+  // Single scroll authority - track entire body scroll
+  const updateMobileThumb = useCallback(() => {
+    const el = mobileScrollRef.current;
+    const track = mobileTrackRef.current;
+    if (!el || !track || !isPopupMobile) return;
+
+    const trackH = track.clientHeight;
+    const scrollH = el.scrollHeight;
+    const clientH = el.clientHeight;
+
+    const ratio = clientH / scrollH;
+    const thumbH = Math.max(40, Math.min(trackH * ratio, trackH));
+    const maxScroll = scrollH - clientH;
+    const maxThumb = trackH - thumbH;
+
+    setMobileThumb({
+      height: thumbH,
+      top: maxScroll > 0 ? (el.scrollTop / maxScroll) * maxThumb : 0
+    });
+  }, [isPopupMobile]);
+
   useEffect(() => {
-    const handlePopupResize = () => setIsPopupMobile(window.innerWidth <= 768);
+    const handlePopupResize = () => {
+      setIsPopupMobile(window.innerWidth <= 768);
+      updateMobileThumb();
+    };
     handlePopupResize();
     window.addEventListener('resize', handlePopupResize);
     return () => window.removeEventListener('resize', handlePopupResize);
-  }, []);
+  }, [updateMobileThumb]);
+
+  useEffect(() => {
+    const timer = setTimeout(updateMobileThumb, 100);
+    return () => clearTimeout(timer);
+  }, [feedback, suggestion, isPopupMobile, updateMobileThumb]);
+
+  const onMobileThumbDrag = (startE) => {
+    startE.preventDefault();
+    const isTouch = startE.type === 'touchstart';
+    const startY = isTouch ? startE.touches[0].clientY : startE.clientY;
+    const startTop = mobileThumb.top;
+    const el = mobileScrollRef.current;
+    const track = mobileTrackRef.current;
+    if (!el || !track) return;
+
+    const thumbH = mobileThumb.height;
+    const maxThumb = track.clientHeight - thumbH;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+
+    const onMove = (mv) => {
+      const clientY = isTouch ? mv.touches[0].clientY : mv.clientY;
+      const nextTop = Math.max(0, Math.min(maxThumb, startTop + clientY - startY));
+      el.scrollTop = maxThumb > 0 ? (nextTop / maxThumb) * maxScroll : 0;
+      updateMobileThumb();
+    };
+
+    const onEnd = () => {
+      document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
+      document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+    };
+
+    document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: false });
+    document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+  };
 
   /* ── Inline submit success popup ─────────────────────────────────────── */
   if (showSubmitSuccess) return (
@@ -465,7 +527,19 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
         </div>
 
         {/* ── Body ── */}
-        <div style={{ padding: '12px 20px 8px', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        <div
+          ref={isPopupMobile ? mobileScrollRef : null}
+          onScroll={isPopupMobile ? updateMobileThumb : null}
+          className="sfp-hide-native"
+          style={{
+            padding: '12px 20px 8px',
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
+          }}
+        >
           <style>{`
             .sfp-hide-native::-webkit-scrollbar { display: none; }
             .sfp-select {
@@ -628,9 +702,56 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             </div>
           )}
 
-          {/* Feedback + Suggestion two-column */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <div>
+          {/* Feedback + Suggestion */}
+          {isPopupMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '20px' }}>
+              {/* Feedback Area */}
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
+                <div style={{ position: 'relative' }}>
+                  <SFPScrollTextarea
+                    value={feedback}
+                    onChange={e => setFeedback(e.target.value)}
+                    readOnly={viewOnly}
+                    height={130}
+                  />
+                  {aiEnabled && !viewOnly && (
+                    <div style={{
+                      position: 'absolute', bottom: '8px', right: '18px',
+                      display: 'flex', gap: '6px', zIndex: 1
+                    }}>
+                      <button onClick={() => setFeedback('')} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
+                      <button style={{ backgroundColor: '#197AFF', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>Generate</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Suggestion Area */}
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
+                <div style={{ position: 'relative' }}>
+                  <SFPScrollTextarea
+                    value={suggestion}
+                    onChange={e => setSuggestion(e.target.value)}
+                    readOnly={viewOnly}
+                    height={130}
+                  />
+                  {aiEnabled && !viewOnly && (
+                    <div style={{
+                      position: 'absolute', bottom: '8px', right: '18px',
+                      display: 'flex', gap: '6px', zIndex: 1
+                    }}>
+                      <button onClick={() => setSuggestion('')} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
+                      <button style={{ backgroundColor: '#197AFF', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>Generate</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div>
               <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
               <div style={{ position: 'relative' }}>
                 <SFPScrollTextarea
@@ -673,56 +794,90 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                   </div>
                 )}
               </div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
-              <div style={{ position: 'relative' }}>
-                <SFPScrollTextarea
-                  value={suggestion}
-                  onChange={e => setSuggestion(e.target.value)}
-                  readOnly={viewOnly}
-                  height={140}
-                />
-                {aiEnabled && !viewOnly && (
-                  <div style={{
-                    position: 'absolute', bottom: '8px', right: '18px',
-                    display: 'flex', gap: '6px', zIndex: 1
-                  }}>
-                    <button
-                      onClick={() => setSuggestion('')}
-                      style={{
-                        backgroundColor: '#ef4444', color: '#fff', border: 'none',
-                        borderRadius: '6px', padding: '4px 12px',
-                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'Poppins', sans-serif",
-                        boxShadow: '0 2px 6px rgba(239,68,68,0.35)',
-                        transition: 'background 0.2s ease'
-                      }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'}
-                      onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      style={{
-                        backgroundColor: '#197AFF', color: '#fff', border: 'none',
-                        borderRadius: '6px', padding: '4px 12px',
-                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'Poppins', sans-serif",
-                        boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
-                      }}
-                    >
-                      Generate
-                    </button>
-                  </div>
-                )}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
+                <div style={{ position: 'relative' }}>
+                  <SFPScrollTextarea
+                    value={suggestion}
+                    onChange={e => setSuggestion(e.target.value)}
+                    readOnly={viewOnly}
+                    height={140}
+                  />
+                  {aiEnabled && !viewOnly && (
+                    <div style={{
+                      position: 'absolute', bottom: '8px', right: '18px',
+                      display: 'flex', gap: '6px', zIndex: 1
+                    }}>
+                      <button
+                        onClick={() => setSuggestion('')}
+                        style={{
+                          backgroundColor: '#ef4444', color: '#fff', border: 'none',
+                          borderRadius: '6px', padding: '4px 12px',
+                          fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                          fontFamily: "'Poppins', sans-serif",
+                          boxShadow: '0 2px 6px rgba(239,68,68,0.35)',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'}
+                        onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}
+                      >
+                        Clear
+                      </button>
+                      <button
+                        style={{
+                          backgroundColor: '#197AFF', color: '#fff', border: 'none',
+                          borderRadius: '6px', padding: '4px 12px',
+                          fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                          fontFamily: "'Poppins', sans-serif",
+                          boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
+                        }}
+                      >
+                        Generate
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
+        {/* Fixed scrollbar track for mobile - positioned on right edge of popup */}
+        {isPopupMobile && (
+          <div
+            ref={mobileTrackRef}
+            style={{
+              position: 'absolute',
+              right: '6px',
+              top: '120px',
+              bottom: '80px',
+              width: '6px',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '10px',
+              zIndex: 5
+            }}
+          >
+            <div
+              onMouseDown={onMobileThumbDrag}
+              onTouchStart={onMobileThumbDrag}
+              style={{
+                position: 'absolute',
+                left: 0,
+                width: '100%',
+                height: `${mobileThumb.height}px`,
+                top: `${mobileThumb.top}px`,
+                backgroundColor: '#2085f6',
+                borderRadius: '6px',
+                cursor: 'grab',
+                touchAction: 'none'
+              }}
+            />
+          </div>
+        )}
+
         {/* ── Footer ── */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', padding: '14px 24px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', padding: isPopupMobile ? '14px 24px calc(env(safe-area-inset-bottom, 20px) + 25px)' : '14px 24px 20px', position: 'sticky', bottom: 0, background: '#fff', borderTop: '1px solid #eef1f7', zIndex: 2 }}>
           {viewOnly ? (
             <button
               onClick={onClose}
@@ -769,9 +924,31 @@ const formatDate = (dateString) => {
 };
 
 // Dynamic rounds based on app data - no hardcoded mock data
+const AbsentIcon = ({ size = 28 }) => (
+  <div style={{
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    backgroundColor: '#ff2800',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 800,
+    fontSize: size * 0.5,
+    lineHeight: 1
+  }}>A</div>
+);
+
 export const generateRounds = (app) => {
-  // Check if student is Absent - if any round is Absent, mark all as Absent
+  const normalizedAppStatus = (app?.status || '').toString().trim().toLowerCase();
+  const isApplicationAbsent = normalizedAppStatus === 'absent';
+  // Keep backward compatibility for round-level absence from existing data.
   const hasAbsent = app?.rounds?.some(r => r.status === 'Absent');
+  
+  // Check if Round 1 is failed - if yes, mark subsequent rounds as Not Eligible
+  const isRound1Failed = app?.rounds?.[0]?.status === 'Failed' || 
+                         (app?.roundDetails && app?.rounds?.find(r => r.roundNumber === 1 || r.name === app.roundDetails[0])?.status === 'Failed');
   
   // If roundDetails exist, use them as the base and merge with student rounds
   if (app?.roundDetails && app.roundDetails.length > 0) {
@@ -783,8 +960,19 @@ export const generateRounds = (app) => {
              r.roundNumber === (index + 1)
       );
       
-      // If student is absent, mark all rounds as Absent
-      const status = hasAbsent ? "Absent" : (studentRound?.status || "Pending");
+      let status;
+      if (isApplicationAbsent) {
+        // Attendance-level absent: show first round absent and remaining rounds not eligible.
+        status = index === 0 ? "Absent" : "Not Eligible";
+      } else if (hasAbsent) {
+        // Round-level absent from existing data: preserve old behavior.
+        status = "Absent";
+      } else if (isRound1Failed && index > 0 && !studentRound?.status) {
+        // If Round 1 is failed and this is not the first round and no status exists, mark as Not Eligible
+        status = "Not Eligible";
+      } else {
+        status = studentRound?.status || "Pending";
+      }
       
       return {
         name: roundName || `Round ${index + 1}`,
@@ -794,11 +982,14 @@ export const generateRounds = (app) => {
           : status === "Failed"
           ? <FaTimes color="#D23B42" size={28} />
           : status === "Absent"
-          ? <FaExclamationCircle color="#FA7B20" size={28} />
+          ? <AbsentIcon />
+          : status === "Not Eligible"
+          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
           : <FaExclamationCircle color="#949494" size={28} />,
         statusColor: status === "Passed" ? "#197AFF" : 
                      status === "Failed" ? "#D23B42" :
-                     status === "Absent" ? "#FA7B20" : "#717070",
+                     status === "Absent" ? "#ff2800" :
+                     status === "Not Eligible" ? "#f39c12" : "#717070",
         statusText: status
       };
     });
@@ -808,9 +999,20 @@ export const generateRounds = (app) => {
   if (app?.rounds && app.rounds.length > 0) {
     // Check if any round has Absent status
     const hasAbsent = app.rounds.some(r => r.status === 'Absent');
+    // Check if first round is failed
+    const isFirstRoundFailed = app.rounds[0]?.status === 'Failed';
     
-    return app.rounds.map(round => {
-      const status = hasAbsent ? "Absent" : round.status;
+    return app.rounds.map((round, index) => {
+      let status;
+      if (isApplicationAbsent) {
+        status = index === 0 ? "Absent" : "Not Eligible";
+      } else if (hasAbsent) {
+        status = "Absent";
+      } else if (isFirstRoundFailed && index > 0 && !round.status) {
+        status = "Not Eligible";
+      } else {
+        status = round.status || "Pending";
+      }
       
       return {
         name: round.name || round.roundName || `Round ${round.roundNumber}`,
@@ -820,20 +1022,50 @@ export const generateRounds = (app) => {
           : status === "Failed"
           ? <FaTimes color="#D23B42" size={28} />
           : status === "Absent"
-          ? <FaExclamationCircle color="#FA7B20" size={28} />
+          ? <AbsentIcon />
+          : status === "Not Eligible"
+          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
           : <FaExclamationCircle color="#949494" size={28} />,
         statusColor: status === "Passed" ? "#197AFF" : 
                      status === "Failed" ? "#D23B42" :
-                     status === "Absent" ? "#FA7B20" : "#717070",
+                     status === "Absent" ? "#ff2800" :
+                     status === "Not Eligible" ? "#f39c12" : "#717070",
         statusText: status || "Pending"
       };
     });
   }
   
-  return []; // Return empty array if no rounds data
+  // Final fallback: build placeholder rounds from totalRounds when names/statuses are unavailable.
+  const inferredTotalRounds = Number(app?.totalRounds) || 0;
+  if (inferredTotalRounds > 0) {
+    return Array.from({ length: inferredTotalRounds }, (_, index) => {
+      const status = isApplicationAbsent
+        ? (index === 0 ? 'Absent' : 'Not Eligible')
+        : 'Pending';
+
+      return {
+        name: `Round ${index + 1}`,
+        status,
+        icon: status === 'Absent'
+          ? <AbsentIcon />
+          : status === 'Not Eligible'
+          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
+          : <FaExclamationCircle color="#949494" size={28} />,
+        statusColor: status === 'Absent' ? '#ff2800' : status === 'Not Eligible' ? '#f39c12' : '#717070',
+        statusText: status
+      };
+    });
+  }
+
+  return []; // Return empty array if no rounds data at all
 };
 
 export const getOverallStatus = (app) => {
+  const normalizedAppStatus = (app?.status || '').toString().trim().toLowerCase();
+  if (normalizedAppStatus === 'absent') {
+    return { status: "Absent", color: "#ff2800" };
+  }
+
   const rounds = generateRounds(app);
   const hasAbsent = rounds.some(r => r.status === "Absent");
   const hasFailed = rounds.some(r => r.status === "Failed");
@@ -842,7 +1074,7 @@ export const getOverallStatus = (app) => {
   const allPassed = passedCount === totalRounds && totalRounds > 0;
 
   if (hasAbsent) {
-    return { status: "Absent", color: "#FA7B20" };
+    return { status: "Absent", color: "#ff2800" };
   }
   if (hasFailed) {
     return { status: "Rejected", color: "#D23B42" };
@@ -857,12 +1089,7 @@ export const getOverallStatus = (app) => {
 };
 
 export default function PopUpPending({ app, onBack }) {
-  console.log('PopUpPending received app:', app);
-  console.log('App rounds:', app?.rounds);
-  console.log('App roundDetails:', app?.roundDetails);
-  
   const rounds = generateRounds(app);
-  console.log('Generated rounds:', rounds);
 
   const { status: overallStatus, color: overallStatusColor } = getOverallStatus(app);
   const [selectedRole, setSelectedRole] = useState('Student');
@@ -941,11 +1168,15 @@ export default function PopUpPending({ app, onBack }) {
     document.addEventListener('mouseup', onUp);
   };
 
-  console.log('PopUpPending Status analysis:', { overallStatus });
-
   // Get total rounds from roundDetails or rounds array
   const displayTotalRounds = app?.totalRounds || app?.roundDetails?.length || rounds.length || 'N/A';
-  const shouldUseMobileRoundsScroll = isMobile && rounds.length > 3;
+  const isFirstRoundAbsent = rounds[0]?.status === 'Absent';
+  
+  // Show only first 3 rounds on mobile, or all if less than 3
+  const displayedRounds = isMobile ? rounds.slice(0, 3) : rounds;
+  
+  // Mobile rounds pane should stay scrollable for consistent UX.
+  const useMobileRoundsScroll = isMobile;
 
   const feedbackSelector = (
     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'stretch' : 'flex-start', gap: '4px', width: isMobile ? '100%' : 'auto' }}>
@@ -990,9 +1221,11 @@ export default function PopUpPending({ app, onBack }) {
     </div>
   );
 
-  const roundsContent = rounds.length > 0 ? rounds.map((round, index) => (
-    <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: "#f6f7fa", borderRadius: 16, marginBottom: index === rounds.length - 1 ? 0 : 18, overflow: 'hidden' }}>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: isMobile ? '12px 12px 8px 12px' : '16px 18px 16px 24px', gap: isMobile ? '10px' : '18px' }}>
+  const roundsToRender = isMobile ? displayedRounds : rounds;
+
+  const roundsContent = roundsToRender.length > 0 ? roundsToRender.map((round, index) => (
+    <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 74 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: isMobile ? '12px' : '16px 18px 16px 24px', gap: isMobile ? '10px' : '18px' }}>
         <div style={{ flexShrink: 0 }}>{round.icon}</div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
           <div style={{ fontSize: isMobile ? "1rem" : "1.05rem", fontWeight: 700, color: '#1a1a1a', lineHeight: 1.25 }}>
@@ -1003,7 +1236,7 @@ export default function PopUpPending({ app, onBack }) {
           </div>
         </div>
       </div>
-      {selectedRole === 'Admin' && (
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Admin' && (
         <div style={{ display: 'flex', flexShrink: 0 }}>
           <button
             onClick={(e) => {
@@ -1024,7 +1257,7 @@ export default function PopUpPending({ app, onBack }) {
           </button>
         </div>
       )}
-      {selectedRole === 'Student' && (
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && (
         <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '100px' : 'auto' }}>
           <button
             onClick={(e) => {
@@ -1124,41 +1357,47 @@ export default function PopUpPending({ app, onBack }) {
             <div style={{ marginTop: isMobile ? 14 : 20, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {isMobile ? (
                 <>
-                  {feedbackSelector}
+                  {!isFirstRoundAbsent && feedbackSelector}
                   <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 20, marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
                 </>
               ) : (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
                   <h3 style={{ fontWeight: 700, fontSize: '1.7rem', marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
-                  {feedbackSelector}
+                  {!isFirstRoundAbsent && feedbackSelector}
                 </div>
               )}
               {isMobile ? (
-                <div style={{ marginTop: 12, height: shouldUseMobileRoundsScroll ? '300px' : 'auto', position: 'relative', overflow: 'hidden', borderRadius: 12 }}>
+                <div style={{ marginTop: 12, height: '320px', minHeight: 120, position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
                   <div
                     ref={roundsListRef}
                     onScroll={updateRoundsThumb}
                     style={{
-                      height: shouldUseMobileRoundsScroll ? '100%' : 'auto',
-                      overflowY: shouldUseMobileRoundsScroll ? 'auto' : 'visible',
+                      height: '100%',
+                      minHeight: 0,
+                      overflowY: useMobileRoundsScroll ? 'auto' : 'visible',
                       overflowX: 'hidden',
                       scrollbarWidth: 'none',
                       msOverflowStyle: 'none',
-                      paddingRight: 12
+                      paddingRight: 12,
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                     className={'popup-rounds-hide-native'}
                   >
                     {roundsContent}
                   </div>
-                  {shouldUseMobileRoundsScroll && showRoundsBar && (
-                    <div style={{ width: '6px', backgroundColor: '#d7d7d7', borderRadius: '20px', position: 'absolute', top: 2, right: 2, bottom: 2 }}>
+                  {showRoundsBar && (
+                    <div style={{ width: '8px', backgroundColor: '#e8e8e8', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
                       <div
                         onMouseDown={onRoundsThumbMouseDown}
                         style={{
                           position: 'absolute', left: 0, width: '100%',
                           height: `${roundsThumb.height}px`, top: `${roundsThumb.top}px`,
-                          backgroundColor: '#1f7cf6', borderRadius: '20px', cursor: 'grab'
+                          backgroundColor: '#2085f6', borderRadius: '20px', cursor: 'grab',
+                          transition: 'background-color 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#1667e8'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#2085f6'}
                       />
                     </div>
                   )}
