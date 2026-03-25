@@ -193,17 +193,20 @@
     }
 
     .dashboard-area {
+        --mobile-side-gap: 10px;
         margin-left: 0; 
         overflow-y: auto !important; 
         overflow-x: hidden !important;
         height: calc(100vh - 55px);
         max-height: calc(100vh - 55px);
+        padding: 15px var(--mobile-side-gap);
         -webkit-overflow-scrolling: touch;
         width: 100%;
+        scrollbar-gutter: stable both-edges;
     }
 
     .container .main .dashboard-area.resume-page {
-        padding-bottom: 150px !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     }
 
     .main {

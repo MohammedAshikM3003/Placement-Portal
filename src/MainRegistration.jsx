@@ -742,6 +742,15 @@ function MainRegistration() {
   const [batchEndYear, setBatchEndYear] = useState("");
   const [isValidationErrorPopupOpen, setValidationErrorPopupOpen] = useState(false);
   const [validationErrorMessage, setValidationErrorMessage] = useState("");
+  const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+
+  const handleErrorTooltipMove = useCallback((event) => {
+    setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+  }, []);
+
+  const handleErrorTooltipLeave = useCallback(() => {
+    setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+  }, []);
 
   /* ── Derived / Memoized ── */
 
@@ -812,6 +821,8 @@ function MainRegistration() {
 
     if (fieldName === 'dob') {
       field = formRef.current.querySelector('[data-dob-field]');
+    } else if (fieldName === 'batch') {
+      field = formRef.current.querySelector('[data-batch-start]') || formRef.current.querySelector('[name="batch"]');
     } else if (fieldName === 'companyTypes') {
       field = formRef.current.querySelector('input[name="companyTypes"]');
     } else if (fieldName === 'preferredJobLocation') {
@@ -835,6 +846,18 @@ function MainRegistration() {
             container.classList.add('field-blink');
             setTimeout(() => container.classList.remove('field-blink'), 3000);
           }
+        } else if (fieldName === 'batch') {
+          const batchContainer = formRef.current.querySelector('[data-batch-field]') || field.closest('[data-batch-field]');
+          const batchInputs = batchContainer
+            ? Array.from(batchContainer.querySelectorAll('input[type="text"]'))
+            : [field];
+
+          batchInputs.forEach((input) => input.classList.add('field-blink'));
+          if (batchInputs[0]) batchInputs[0].focus();
+
+          setTimeout(() => {
+            batchInputs.forEach((input) => input.classList.remove('field-blink'));
+          }, 3000);
         } else {
           // Check if this is a mobile input field (inside mobile-input-wrapper)
           const mobileWrapper = field.closest('[class*="mr-mobile-input-wrapper"]');
@@ -918,7 +941,18 @@ function MainRegistration() {
       };
       const sectionKey = sectionMap[fieldName];
       if (sectionKey && sectionRefs[sectionKey]?.current) {
-        sectionRefs[sectionKey].current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const sectionElement = sectionRefs[sectionKey].current;
+        sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Fallback: still blink a visible field in the section when direct selector misses.
+        const fallbackField = sectionElement.querySelector('input:not([type="hidden"]), select, textarea, [data-dob-field]');
+        if (fallbackField) {
+          setTimeout(() => {
+            fallbackField.classList.add('field-blink');
+            if (typeof fallbackField.focus === 'function') fallbackField.focus();
+            setTimeout(() => fallbackField.classList.remove('field-blink'), 3000);
+          }, 450);
+        }
       }
     }
   }, [sectionRefs]);
@@ -1612,11 +1646,12 @@ function MainRegistration() {
                         {isCheckingRegNo && <div className={cx("mr-regno-checking-spinner")} />}
                       </div>
                     </div>
-                    <div className={cx("mr-field")}>
+                    <div className={cx("mr-field")} data-batch-field>
                       <label>Batch <RequiredStar /></label>
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <input
                           type="text"
+                          data-batch-start
                           value={batchStartYear}
                           onChange={handleBatchStartYearChange}
                           placeholder="Start"
@@ -2254,29 +2289,60 @@ function MainRegistration() {
               {/* ── Validation Error List ── */}
               {validationErrors.length > 0 && (
                 <div className={styles.validationErrorBox}>
-                  <h4>⚠️ Required Fields Missing:</h4>
+                  <h4 className={styles.validationErrorHeading}>
+                    <span className={styles.validationWarningIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                        <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                      </svg>
+                    </span>
+                    Required Fields Missing:
+                  </h4>
                   <ul>
                     {(showAllErrors ? validationErrors : validationErrors.slice(0, 10)).map((error, index) => (
                       <li
                         key={index}
                         onClick={() => scrollToFieldAndBlink(error.field)}
                         className={styles.validationErrorItem}
+                        aria-label="Click to navigate"
+                        onMouseEnter={handleErrorTooltipMove}
+                        onMouseMove={handleErrorTooltipMove}
+                        onMouseLeave={handleErrorTooltipLeave}
                       >
                         {error.message}
                       </li>
                     ))}
                   </ul>
+                  {errorTooltip.visible && (
+                    <div
+                      className={styles.validationPointerTooltip}
+                      style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+                    >
+                      Click to navigate
+                    </div>
+                  )}
                   {validationErrors.length > 10 && (
                     <div className={styles.validationErrorToggle}>
                       <button
                         type="button"
                         onClick={() => setShowAllErrors(!showAllErrors)}
                         className={styles.showMoreButton}
+                        type="button"
                       >
-                        {showAllErrors
-                          ? 'Show Less ▲'
-                          : `Show More (${validationErrors.length - 10} more) ▼`
-                        }
+                        <span>
+                          {showAllErrors
+                            ? 'Show Less'
+                            : `Show More (${validationErrors.length - 10} more)`
+                          }
+                        </span>
+                        <span className={styles.showMoreCaret} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="14" height="14" focusable="false">
+                            {showAllErrors ? (
+                              <path d="M7 14l5-5 5 5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            ) : (
+                              <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            )}
+                          </svg>
+                        </span>
                       </button>
                     </div>
                   )}

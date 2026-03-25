@@ -1129,10 +1129,13 @@
 /* ========== MOBILE RESPONSIVE ========== */
 @media (max-width: 900px) {
   .dashboardArea {
+    --mobile-side-gap: 10px;
     margin-left: 0;
     width: 100%;
     height: calc(100vh - 55px);
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap);
     -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable both-edges;
   }
 
   .formGrid {

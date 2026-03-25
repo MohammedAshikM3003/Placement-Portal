@@ -900,12 +900,14 @@
     }
 
     .achievements-area {
+        --mobile-side-gap: 10px;
         margin-left: 0 !important;
-        padding: 60px 15px calc(env(safe-area-inset-bottom, 20px) + 110px) 15px;
+        padding: 60px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 20px) + 110px) var(--mobile-side-gap);
         overflow-y: auto !important;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         height: 100%;
+        scrollbar-gutter: stable both-edges;
     }
 
     /* Stack cards vertically on mobile: Upload, Filter, Edit */
@@ -969,9 +971,11 @@
 
 @media (max-width: 576px) {
     .achievements-area {
-        padding: 10px;
+        --mobile-side-gap: 10px;
+        padding: 10px var(--mobile-side-gap);
         padding-top: 25px; 
         padding-bottom: 25px;
+        scrollbar-gutter: stable both-edges;
     }
 
     .achievements-cards-container {

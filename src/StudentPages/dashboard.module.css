@@ -309,7 +309,8 @@
 @media (max-width: 768px) {
   /* CRITICAL: Enable scrolling on mobile */
   .stu-db-dashboard-area {
-    padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 120px) 16px;
+    --mobile-side-gap: 10px;
+    padding: 10px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 25px) var(--mobile-side-gap);
     overflow-y: auto; /* ENABLE vertical scrolling */
     overflow-x: hidden;
     max-height: none; /* Allow content to expand */
@@ -317,6 +318,7 @@
     justify-content: flex-start; /* Reset alignment for scrolling */
     min-height: 100vh;
     -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable both-edges;
   }
 
   /* Mobile Scrollbar Styling */
@@ -408,7 +410,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: 80px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
   }
 }
 
@@ -450,7 +452,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: 120px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
   }
 }
 

@@ -522,10 +522,12 @@
     }
 
     .attendanceArea {
+        --mobile-side-gap: 10px;
         margin-left: 0;
-        padding: 12px;
+        padding: 12px var(--mobile-side-gap);
         height: calc(100vh - 55px);
         -webkit-overflow-scrolling: touch;
+        scrollbar-gutter: stable both-edges;
     }
 
     .attendanceArea::-webkit-scrollbar {
@@ -685,8 +687,10 @@
 
 @media (max-width: 480px) {
     .attendanceArea {
-        padding: 10px;
+        --mobile-side-gap: 10px;
+        padding: 10px var(--mobile-side-gap);
         padding-bottom: 25px;
+        scrollbar-gutter: stable both-edges;
     }
 
     .profileHeaderCard {

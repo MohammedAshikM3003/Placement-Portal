@@ -441,11 +441,13 @@
     .main { height: calc(100vh - 50px); margin-top: 50px; overflow: hidden !important; }
 
     .dashboardArea {
+        --mobile-side-gap: 10px;
         margin-left: 0;
-        padding: 20px 12px 20px 12px !important;
+        padding: 20px var(--mobile-side-gap) 20px var(--mobile-side-gap) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: 100%;
+        scrollbar-gutter: stable both-edges;
     }
 
     /* Summary cards: compact 3-column row on tablet */
@@ -589,7 +591,7 @@
 
     .appArrow { font-size: 40px; }
 
-    .dashboardArea { padding-bottom: 120px; }
+    .dashboardArea { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px); }
 }
 
 @media (max-width: 992px) {

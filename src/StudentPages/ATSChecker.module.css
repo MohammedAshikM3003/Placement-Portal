@@ -870,15 +870,19 @@
   }
 
   .dashboardArea {
-    padding: 20px;
+    --mobile-side-gap: 10px;
+    padding: 20px var(--mobile-side-gap);
     margin-left: 0;
+    scrollbar-gutter: stable both-edges;
   }
 }
 
 @media (max-width: 768px) {
   .dashboardArea {
-    padding: 16px;
+    --mobile-side-gap: 10px;
+    padding: 16px var(--mobile-side-gap);
     margin-left: 0;
+    scrollbar-gutter: stable both-edges;
   }
 
   .checkerHeader {

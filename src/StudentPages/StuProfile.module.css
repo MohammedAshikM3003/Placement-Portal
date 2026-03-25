@@ -946,11 +946,13 @@ select:disabled {
     .main { overflow-x: hidden !important; height: calc(100vh - 60px) !important; margin-top: 60px !important; }
 
     .dashboardArea {
+        --mobile-side-gap: 10px;
         margin-left: 0 !important;
-        padding: 10px 20px 20px 20px !important;
-        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 80px) !important;
+        padding: 10px var(--mobile-side-gap) 20px var(--mobile-side-gap) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         overflow-y: auto !important;
         height: calc(100vh - 60px) !important;
+        scrollbar-gutter: stable both-edges;
     }
     .main { flex-direction: column !important; margin-top: 60px !important; height: calc(100vh - 60px) !important; }
     
@@ -1924,7 +1926,33 @@ select:disabled {
 /* ── Mobile: Analysis Panel ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     .profileSectionContainer {
+        width: 100%;
+        max-width: calc(100% - var(--mobile-side-gap, 10px) - var(--mobile-side-gap, 10px));
+        margin: 0 auto 1.25rem;
         padding: 1.1rem;
+        box-sizing: border-box;
+    }
+
+    .checkboxGroup {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 1.1rem 1rem;
+        box-sizing: border-box;
+    }
+
+    .checkboxOptions {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+    }
+
+    .checkboxOption {
+        align-items: flex-start;
+        gap: 0.7rem;
+    }
+
+    .checkboxOption span {
+        line-height: 1.35;
     }
 
     /* Stack pie and right panel vertically */
