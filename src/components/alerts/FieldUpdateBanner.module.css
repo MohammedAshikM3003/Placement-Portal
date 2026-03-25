@@ -131,7 +131,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .bannerContainer {
-    top: 70px;
+    top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
     right: 12px;
   }
 
@@ -162,7 +162,7 @@
 
 @media (max-width: 480px) {
   .bannerContainer {
-    top: 65px;
+    top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
     right: 10px;
     left: auto;
   }

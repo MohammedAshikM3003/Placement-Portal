@@ -709,8 +709,8 @@
   border-radius: 12px;
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  max-width: 400px;
-  width: 90%;
+    width: 400px;
+    max-width: 90vw;
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
 }
@@ -718,46 +718,46 @@
 .imagePreviewHeader {
   background: linear-gradient(135deg, #2085f6, #1565c0);
   color: white;
-  padding: 20px 24px;
-  font-size: 20px;
-  font-weight: 600;
+    padding: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
   text-align: center;
 }
 
 .imagePreviewBody {
-  padding: 24px;
+    padding: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #fafbfc;
-  min-height: 400px;
+    background: #fff;
+    min-height: 220px;
 }
 
 .imagePreviewBody img {
   max-width: 100%;
-  max-height: 600px;
+    max-height: 220px;
   border-radius: 8px;
   object-fit: contain;
 }
 
 .imagePreviewFooter {
-  padding: 16px 24px 24px;
+    padding: 1.5rem;
   text-align: center;
-  background: white;
+    background: #f7f7f7;
   display: flex;
   gap: 12px;
   justify-content: center;
 }
 
 .imagePreviewFooterBtn {
-  padding: 10px 24px;
+    padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+    border-radius: 8px;
+    font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 100px;
+    min-width: 130px;
 }
 
 .imagePreviewCloseBtn {
@@ -782,69 +782,78 @@
   box-shadow: 0 4px 12px rgba(32, 133, 246, 0.3);
 }
 
+.imagePreviewFooterBtn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Responsive design for image preview modal */
 @media (max-width: 768px) {
   .imagePreviewContainer {
-    max-width: 95vw;
-    width: 95%;
+    width: 400px;
+    max-width: 92vw;
   }
 
   .imagePreviewBody {
-    min-height: 350px;
-    padding: 20px;
+    padding: 1.5rem;
+    min-height: 200px;
   }
 
   .imagePreviewBody img {
-    max-height: 500px;
+    max-height: 210px;
   }
 
   .imagePreviewHeader {
-    padding: 16px 20px;
-    font-size: 18px;
+    padding: 0.95rem;
+    font-size: 1.55rem;
   }
 
   .imagePreviewFooter {
-    padding: 12px 20px 20px;
+    padding: 1.2rem;
     gap: 10px;
   }
 
   .imagePreviewFooterBtn {
-    padding: 10px 20px;
-    font-size: 13px;
+    padding: 0.72rem 1.2rem;
+    font-size: 0.95rem;
+    min-width: 120px;
   }
 }
 
 @media (max-width: 480px) {
   .imagePreviewContainer {
-    max-width: 98vw;
-    width: 98%;
+    width: 400px;
+    max-width: 94vw;
     border-radius: 10px;
   }
 
   .imagePreviewBody {
-    min-height: 300px;
-    padding: 16px;
+    padding: 1.15rem;
+    min-height: 180px;
   }
 
   .imagePreviewBody img {
-    max-height: 450px;
+    max-height: 190px;
   }
 
   .imagePreviewHeader {
-    padding: 14px 16px;
-    font-size: 16px;
+    padding: 0.9rem;
+    font-size: 1.35rem;
   }
 
   .imagePreviewFooter {
-    padding: 12px 16px 16px;
+    padding: 1rem;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .imagePreviewFooterBtn {
-    padding: 10px 16px;
-    font-size: 12px;
-    min-width: 80px;
+    padding: 0.68rem 0.9rem;
+    font-size: 0.9rem;
+    min-width: 108px;
+    flex: 1;
   }
 }
 
@@ -1437,6 +1446,9 @@ select:disabled {
     color: #222;
     font-size: 0.84rem;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .anlsLegendPct {
@@ -1911,38 +1923,78 @@ select:disabled {
 
 /* ── Mobile: Analysis Panel ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
+    .profileSectionContainer {
+        padding: 1.1rem;
+    }
+
     /* Stack pie and right panel vertically */
     .anlsGrid {
         grid-template-columns: 1fr;
         gap: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     /* Pie col: full width, shrink chart */
     .anlsPieCol {
         width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     /* Right col takes full width below pie */
     .anlsRightCol {
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* Stack stats and achievement column vertically */
     .anlsRightTop {
         grid-template-columns: 1fr;
         gap: 10px;
+        width: 100%;
     }
 
     /* Stats: 2 columns on mobile */
     .anlsStatsGrid {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
+        width: 100%;
+    }
+
+    .anlsStatCard,
+    .anlsLegendBox,
+    .anlsAchievBanner,
+    .anlsLastActivity,
+    .anlsCompaniesCard,
+    .anlsGoodCard,
+    .anlsBadCard {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* Legend: 2 columns on mobile */
     .anlsLegend {
         grid-template-columns: 1fr 1fr;
         gap: 10px 12px;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .anlsLegendBox {
+        overflow: hidden;
+    }
+
+    .anlsLegendItem {
+        min-width: 0;
     }
 
     /* Legend circle smaller */
@@ -1950,6 +2002,10 @@ select:disabled {
         width: 34px;
         height: 34px;
         font-size: 0.6rem;
+    }
+
+    .anlsLegendName {
+        font-size: 0.8rem;
     }
 
     /* Good/Bad row stacked on mobile */
@@ -1976,6 +2032,8 @@ select:disabled {
     .anlsHeader {
         flex-wrap: wrap;
         gap: 6px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .anlsTitleRow {
@@ -1995,6 +2053,13 @@ select:disabled {
     /* Companies card full width */
     .anlsCompaniesCard {
         width: 100%;
+    }
+
+    .anlsStepper {
+        width: 100%;
+        box-sizing: border-box;
+        padding-left: 4px;
+        padding-right: 4px;
     }
 }
 

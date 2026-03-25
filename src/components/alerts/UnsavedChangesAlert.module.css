@@ -219,14 +219,16 @@
   }
 
   .detailsChangedFooter {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
   }
 
   .discardButton,
   .saveButton {
-    width: 100%;
-    min-width: auto;
+    width: auto;
+    min-width: 130px;
+    flex: 1;
   }
 
   .warningMessage {

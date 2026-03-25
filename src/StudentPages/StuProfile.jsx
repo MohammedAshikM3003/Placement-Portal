@@ -20,6 +20,10 @@ import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
 import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
 import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
+import {
+    DownloadSuccessAlert,
+    DownloadFailedAlert
+} from '../components/alerts/DownloadPreviewAlerts';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -197,34 +201,116 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 };
 
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
+    const [downloadPopupState, setDownloadPopupState] = useState('none');
+    const shouldShowPreviewPopup = downloadPopupState === 'none' || downloadPopupState === 'progress';
+
     if (!isOpen) return null;
 
-    const handleDownload = () => {
-        const link = document.createElement('a');
-        link.href = src;
-        link.download = 'profile-image.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleSuccessClose = () => {
+        setDownloadPopupState('none');
+        onClose();
+    };
+
+    const handleDownload = async () => {
+        if (downloadPopupState !== 'none') return;
+
+        setDownloadPopupState('progress');
+
+        try {
+            if (!src) {
+                throw new Error('Profile image not available');
+            }
+
+            let resolvedUrl = src;
+            const backendBaseUrl = API_BASE_URL.replace('/api', '');
+
+            if (/^[a-f0-9]{24}$/i.test(resolvedUrl)) {
+                resolvedUrl = `${backendBaseUrl}/file/${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/api/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl.replace('/api', '')}`;
+            } else if (resolvedUrl.startsWith('/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            }
+
+            let hrefForDownload = resolvedUrl;
+            let revokeObjectUrl = null;
+
+            if (!resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch(resolvedUrl, {
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Download failed with status ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                revokeObjectUrl = window.URL.createObjectURL(blob);
+                hrefForDownload = revokeObjectUrl;
+            }
+
+            const link = document.createElement('a');
+            link.href = hrefForDownload;
+            link.download = 'profile-image.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if (revokeObjectUrl) {
+                setTimeout(() => window.URL.revokeObjectURL(revokeObjectUrl), 1000);
+            }
+
+            setDownloadPopupState('success');
+        } catch (error) {
+            console.error('Image download failed:', error);
+            setDownloadPopupState('error');
+        }
     };
 
     return (
-        <div className={styles.imagePreviewOverlay} onClick={onClose}>
-            <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.imagePreviewHeader}>Preview Image</div>
-                <div className={styles.imagePreviewBody}>
-                    <img src={src} alt="Profile Preview" />
-                </div>
-                <div className={styles.imagePreviewFooter}>
-                    <button onClick={onClose} className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}>
-                        Close
-                    </button>
-                    <button onClick={handleDownload} className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}>
-                        Download
-                    </button>
+        <>
+        {shouldShowPreviewPopup && (
+            <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
+                <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.imagePreviewHeader}>Preview Image</div>
+                    <div className={styles.imagePreviewBody}>
+                        <img src={src} alt="Profile Preview" />
+                    </div>
+                    <div className={styles.imagePreviewFooter}>
+                        <button
+                            onClick={onClose}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                        >
+                            {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        )}
+        <DownloadSuccessAlert
+            isOpen={downloadPopupState === 'success'}
+            onClose={handleSuccessClose}
+            fileLabel="image"
+            title="Downloaded !"
+            description="The image has been successfully downloaded to your device."
+        />
+        <DownloadFailedAlert
+            isOpen={downloadPopupState === 'error'}
+            onClose={() => setDownloadPopupState('none')}
+            color="#2563EB"
+        />
+        </>
     );
 };
 
@@ -2281,7 +2367,9 @@ function StuProfile({ onLogout, onViewChange }) {
                                         {/* Left: Pie Chart */}
                                         <div
                                             className={styles.anlsPieCol}
-                                            onMouseLeave={() => { if (!selectedRound) setHoveredRound(null); }}
+                                            onMouseLeave={() => {
+                                                if (!isMobile && !selectedRound) setHoveredRound(null);
+                                            }}
                                             style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
                                         >
                                             <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
@@ -2295,7 +2383,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                                         activeIndex={-1}
                                                         activeShape={null}
                                                         onMouseEnter={(data, index) => {
-                                                            if (!selectedRound) setHoveredRound(PIE_DATA[index].name);
+                                                            if (!isMobile && !selectedRound) setHoveredRound(PIE_DATA[index].name);
                                                         }}
                                                         onClick={(data, index) => {
                                                             const name = PIE_DATA[index].name;
