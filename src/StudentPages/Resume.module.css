@@ -215,3 +215,11 @@
         overflow: hidden;
     }
 }
+
+@media (max-width: 992px) {
+    .dashboard-area {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

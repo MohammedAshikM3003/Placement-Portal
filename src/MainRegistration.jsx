@@ -438,15 +438,6 @@ const FileFormatErrorPopup = ({ isOpen, onClose, fileName }) => {
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
   if (!isOpen) return null;
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = src;
-    link.download = 'profile-image.jpg';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className={cx("mr-image-preview-overlay")} onClick={onClose}>
       <div className={cx("mr-image-preview-container")} onClick={(e) => e.stopPropagation()}>
@@ -455,14 +446,14 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
           <img src={src} alt="Profile Preview" className={cx("mr-image-preview-content")} />
         </div>
         <div className={cx("mr-image-preview-footer")}>
-          <button onClick={onClose} className={cx("mr-image-preview-btn", "mr-image-preview-close-btn")}>
+          <button
+            onClick={onClose}
+            className={cx("mr-image-preview-btn", "mr-image-preview-close-btn", "mr-image-preview-single-btn")}
+          >
             Close
           </button>
-          <button onClick={handleDownload} className={cx("mr-image-preview-btn", "mr-image-preview-download-btn")}>
-            Download
-          </button>
         </div>
-      </div>
+          </div>
     </div>
   );
 };

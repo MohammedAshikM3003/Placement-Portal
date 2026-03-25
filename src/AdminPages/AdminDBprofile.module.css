@@ -1238,3 +1238,12 @@
 @media (max-width: 600px) {
     .Admin-DB-AdProfile-skills-grid { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 992px) {
+    .Admin-DB-AdProfile-dashboard-area,
+    .AdProfile-dashboard-area {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

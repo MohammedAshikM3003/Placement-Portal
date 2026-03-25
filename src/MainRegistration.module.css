@@ -697,7 +697,7 @@
     background: white;
     display: flex;
     gap: 12px;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .mr-image-preview-btn {
@@ -709,6 +709,16 @@
     cursor: pointer;
     transition: all 0.2s ease;
     flex: 1;
+}
+
+.mr-image-preview-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.mr-image-preview-single-btn {
+    flex: 0 0 180px;
 }
 
 .mr-image-preview-close-btn {

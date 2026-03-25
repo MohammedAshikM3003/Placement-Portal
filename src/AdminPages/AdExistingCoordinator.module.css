@@ -1239,3 +1239,11 @@
         transform: rotate(360deg);
     }
 }
+
+@media (max-width: 992px) {
+    .Admin-MC-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

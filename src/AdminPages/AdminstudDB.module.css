@@ -915,3 +915,11 @@
     font-size: 0.98rem;
     color: #6B6D74;
 }
+
+@media (max-width: 992px) {
+    .Admin-DB-top-card {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

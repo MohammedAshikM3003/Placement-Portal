@@ -1419,3 +1419,11 @@
 .Admin-Drive-AD-dept-btn-select:hover {
     background: #3d8a3d;
 }
+
+@media (max-width: 992px) {
+    .Admin-Drive-AD-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

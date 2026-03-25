@@ -778,3 +778,11 @@
 .Admin-rasw-dropdown-item:not(:last-child) {
     border-bottom: 1px solid #e5e5e5;
 }
+
+@media (max-width: 992px) {
+  .Admin-rasw-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
