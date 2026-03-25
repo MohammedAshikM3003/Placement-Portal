@@ -307,16 +307,29 @@
 /* =================================== */
 
 @media (max-width: 768px) {
+  .stu-db-container {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .stu-db-main {
+    margin-top: 65px;
+    height: calc(100dvh - 65px);
+    min-height: calc(100dvh - 65px);
+    overflow: hidden;
+  }
+
   /* CRITICAL: Enable scrolling on mobile */
   .stu-db-dashboard-area {
     --mobile-side-gap: 10px;
-    padding: 10px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 25px) var(--mobile-side-gap);
-    overflow-y: auto; /* ENABLE vertical scrolling */
+    padding: 10px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 90px) var(--mobile-side-gap);
+    overflow-y: scroll; /* Keep blue scrollbar visible like other pages */
     overflow-x: hidden;
-    max-height: none; /* Allow content to expand */
+    height: 100%;
+    max-height: calc(100dvh - 65px);
     margin-left: 0; /* Remove sidebar margin */
     justify-content: flex-start; /* Reset alignment for scrolling */
-    min-height: 100vh;
+    min-height: 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable both-edges;
   }
@@ -410,7 +423,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
   }
 }
 
@@ -452,7 +465,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
   }
 }
 

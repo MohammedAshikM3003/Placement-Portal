@@ -96,7 +96,7 @@
 /* Form Sections */
 .mr-profile-section-container {
     background-color: #fff;
-    padding: 4.0rem;
+    padding: 2.5rem;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 2rem;
@@ -1208,7 +1208,7 @@
     .mr-dashboard-area { 
         --mobile-side-gap: 10px;
         margin-left: 0; 
-        padding: 15px var(--mobile-side-gap); 
+        padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap); 
         height: calc(100vh - 50px);
         overflow-y: auto;
         overflow-x: hidden;
@@ -1222,7 +1222,7 @@
         width: 100%;
         max-width: calc(100% - var(--mobile-side-gap, 10px) - var(--mobile-side-gap, 10px));
         margin: 0 auto 1.25rem;
-        padding: 1.1rem;
+        padding: 1.75rem;
         box-sizing: border-box;
     }
 
