@@ -18,6 +18,7 @@ const getEligibleStudents = async (studentId) => {
 export default function Company({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
   const [studentData, setStudentData] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -134,10 +135,17 @@ export default function Company({ onLogout, onViewChange }) {
     if (matched) return true;
 
     // Fallback: any absent record for the same company, even if role/date differ.
-    return studentAttendanceRecords.some((record) => 
+    return studentAttendanceRecords.some((record) =>
       normalizeText(record?.status) === 'absent' && normalizeText(record?.companyName) === driveCompany
     );
   };
+
+  // Mobile detection
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     let isFetching = false;
@@ -334,7 +342,7 @@ export default function Company({ onLogout, onViewChange }) {
             currentView={'company'}
             studentData={studentData}
           />
-          <div className={styles.dashboardArea} style={{ overflow: 'hidden' }}>
+          <div className={styles.dashboardArea}>
             <PopUpPending
               app={selectedApplication}
               onBack={() => setSelectedApplication(null)}

@@ -1172,9 +1172,6 @@ export default function PopUpPending({ app, onBack }) {
   const displayTotalRounds = app?.totalRounds || app?.roundDetails?.length || rounds.length || 'N/A';
   const isFirstRoundAbsent = rounds[0]?.status === 'Absent';
   
-  // Show only first 3 rounds on mobile, or all if less than 3
-  const displayedRounds = isMobile ? rounds.slice(0, 3) : rounds;
-  
   // Mobile rounds pane should stay scrollable for consistent UX.
   const useMobileRoundsScroll = isMobile;
 
@@ -1221,7 +1218,7 @@ export default function PopUpPending({ app, onBack }) {
     </div>
   );
 
-  const roundsToRender = isMobile ? displayedRounds : rounds;
+  const roundsToRender = rounds;
 
   const roundsContent = roundsToRender.length > 0 ? roundsToRender.map((round, index) => (
     <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 74 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
@@ -1229,7 +1226,7 @@ export default function PopUpPending({ app, onBack }) {
         <div style={{ flexShrink: 0 }}>{round.icon}</div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
           <div style={{ fontSize: isMobile ? "1rem" : "1.05rem", fontWeight: 700, color: '#1a1a1a', lineHeight: 1.25 }}>
-            Round {index + 1} ({round.name})
+            Round {index + 1} ({round.name.toLowerCase()})
           </div>
           <div style={{ fontSize: isMobile ? '0.9rem' : '0.85rem', color: '#666', fontWeight: 500 }}>
             Status: <span style={{ color: round.statusColor, fontWeight: 700 }}>{round.statusText}</span>
@@ -1246,7 +1243,7 @@ export default function PopUpPending({ app, onBack }) {
               setShowAdminFeedback(true);
             }}
             style={{
-              backgroundColor: '#4EA24E', border: 'none', cursor: 'pointer',
+              backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
               padding: isMobile ? '0 14px' : '0 24px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: isMobile ? '70px' : 'auto',
@@ -1306,10 +1303,10 @@ export default function PopUpPending({ app, onBack }) {
   return (
     <>
         <style>{`.popup-rounds-hide-native::-webkit-scrollbar { display: none; }`}</style>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '18px' : '28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'calc(100vh - 40px)' : 0, height: isMobile ? 'calc(100vh - 40px)' : 'auto', overflow: 'hidden' }}>
             {/* Company Info Section */}
             <div style={{ marginBottom: isMobile ? 16 : 20, padding: isMobile ? '14px' : '16px', background: "#f6f7fa", borderRadius: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
                 <div>
                   <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Company: </span>
                   <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', wordBreak: 'break-word' }}>{app?.company || 'N/A'}</span>
@@ -1319,18 +1316,32 @@ export default function PopUpPending({ app, onBack }) {
                   <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', wordBreak: 'break-word' }}>{app?.jobRole || 'N/A'}</span>
                 </div>
                 <div>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Mode: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{app?.mode || app?.driveMode || 'N/A'}</span>
+                </div>
+                <div>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Package: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{app?.package || 'N/A'}</span>
+                </div>
+                <div>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Start Date: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', overflowWrap: 'anywhere' }}>
+                    {app?.startDate ? formatDate(app.startDate) : 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>End Date: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', overflowWrap: 'anywhere' }}>
+                    {app?.endDate ? formatDate(app.endDate) : 'N/A'}
+                  </span>
+                </div>
+                <div>
                   <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Total Rounds: </span>
                   <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{displayTotalRounds}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Drive Date: </span>
-                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit', overflowWrap: 'anywhere' }}>
-                    {app?.startDate && app?.endDate 
-                      ? `${formatDate(app.startDate)} to ${formatDate(app.endDate)}` 
-                      : app?.startDate 
-                      ? formatDate(app.startDate) 
-                      : 'N/A'}
-                  </span>
+                  <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Bond Period: </span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{app?.bondPeriod || 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -1338,9 +1349,9 @@ export default function PopUpPending({ app, onBack }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row' }}>
               <div style={{ width: 'auto', minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
                 <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
-                <span style={{ 
-                  fontSize: isMobile ? 18 : 25, 
-                  color: overallStatusColor, 
+                <span style={{
+                  fontSize: isMobile ? 18 : 25,
+                  color: overallStatusColor,
                   fontWeight: isMobile ? 600 : 700,
                   padding: isMobile ? '4px 12px' : '4px 16px',
                   borderRadius: '8px',
@@ -1358,7 +1369,7 @@ export default function PopUpPending({ app, onBack }) {
               {isMobile ? (
                 <>
                   {!isFirstRoundAbsent && feedbackSelector}
-                  <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 20, marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 10, marginBottom: 8, lineHeight: 1.1 }}>Recruitment Journey</h3>
                 </>
               ) : (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
@@ -1367,27 +1378,27 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
               )}
               {isMobile ? (
-                <div style={{ marginTop: 12, height: '320px', minHeight: 120, position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginTop: 0, flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column', paddingTop: 0, paddingBottom: 8 }}>
                   <div
                     ref={roundsListRef}
                     onScroll={updateRoundsThumb}
                     style={{
-                      height: '100%',
+                      flex: 1,
                       minHeight: 0,
-                      overflowY: useMobileRoundsScroll ? 'auto' : 'visible',
+                      overflowY: 'auto',
                       overflowX: 'hidden',
-                      scrollbarWidth: 'none',
-                      msOverflowStyle: 'none',
+                      paddingTop: 0,
+                      paddingBottom: 12,
                       paddingRight: 12,
                       display: 'flex',
                       flexDirection: 'column'
                     }}
-                    className={'popup-rounds-hide-native'}
+                    className={scrollStyles['scroll-rounds']}
                   >
                     {roundsContent}
                   </div>
-                  {showRoundsBar && (
-                    <div style={{ width: '8px', backgroundColor: '#e8e8e8', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
+                  {showRoundsBar && !isMobile && (
+                    <div style={{ width: '6px', backgroundColor: '#e8e8e8', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
                       <div
                         onMouseDown={onRoundsThumbMouseDown}
                         style={{
