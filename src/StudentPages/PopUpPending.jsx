@@ -101,6 +101,7 @@ function FeedbackScrollBox({ text, bg }) {
 // ── Admin Feedback Popup ────────────────────────────────────────────────────
 function AdminFeedbackPopup({ isPassed, onClose }) {
   const [rating] = useState(isPassed ? 4 : 1);
+  const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 480;
 
   const headerBg   = isPassed ? '#197AFF' : '#5C5C5C';
   const assessBg   = isPassed ? '#4A5BB3' : '#404040';
@@ -153,9 +154,9 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
             .afp-hide-native::-webkit-scrollbar { display: none; }
           `}</style>
           {/* Overall Assessment + Next Round / Scheduled On */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', gap: isMobileView ? '12px' : '16px', alignItems: 'flex-start', marginBottom: '14px', flexDirection: isMobileView ? 'column' : 'row' }}>
             {/* Left: assessment box + stars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '160px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: isMobileView ? '100%' : '160px', width: isMobileView ? '100%' : 'auto' }}>
               <div style={{
                 backgroundColor: assessBg,
                 color: '#fff',
@@ -182,23 +183,25 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
             </div>
 
             {/* Right: Next Round + Scheduled On */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {/* Next Round */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: '78px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '74px' : '78px', flexShrink: 0 }}>
                   {isPassed ? 'Next round' : 'Next Round'}
                 </span>
-                <span style={{ fontWeight: 700 }}>:</span>
+                <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
                 <div style={{
                   flex: 1,
+                  minWidth: 0,
                   padding: '0.5rem 0.75rem',
                   border: '1px solid #dde6f4',
                   borderRadius: '8px',
                   backgroundColor: '#f9fbff',
-                  fontSize: '0.8rem',
+                  fontSize: isMobileView ? '0.76rem' : '0.8rem',
                   fontFamily: "'Poppins', sans-serif",
                   color: '#555',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  overflowWrap: 'anywhere'
                 }}>
                   {isPassed ? 'HR Round' : 'Closed'}
                 </div>
@@ -206,20 +209,21 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
 
               {/* Scheduled On / Better luck */}
               {isPassed ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: '78px' }}>Scheduled On</span>
-                  <span style={{ fontWeight: 700 }}>:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                  <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '74px' : '78px', flexShrink: 0 }}>Scheduled On</span>
+                  <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
                   <div style={{
                     flex: 1,
+                    minWidth: 0,
                     padding: '0.5rem 0.75rem',
                     border: '1px solid #dde6f4',
                     borderRadius: '8px',
                     backgroundColor: '#f9fbff',
-                    fontSize: '0.8rem',
+                    fontSize: isMobileView ? '0.76rem' : '0.8rem',
                     fontFamily: "'Poppins', sans-serif",
                     color: '#555',
                     boxSizing: 'border-box',
-                    whiteSpace: 'nowrap'
+                    overflowWrap: 'anywhere'
                   }}>
                     19-07-2026
                   </div>
