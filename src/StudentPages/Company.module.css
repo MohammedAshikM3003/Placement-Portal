@@ -499,7 +499,7 @@
     .appList {
         overflow-y: auto;
         flex-grow: 0;
-        max-height: 195px;
+        max-height: 270px;
         padding-right: 0;
         display: flex;
         flex-direction: column;
