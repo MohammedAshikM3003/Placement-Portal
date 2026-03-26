@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import PopUpPending from './PopUpPending.jsx';
@@ -30,6 +30,11 @@ export default function Company({ onLogout, onViewChange }) {
   const [studentApplications, setStudentApplications] = useState([]);
   const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Custom scrollbar states
+  const appListRef = useRef(null);
+  const [scrollThumb, setScrollThumb] = useState({ height: 34, top: 0 });
+  const [showScrollBar, setShowScrollBar] = useState(false);
 
   const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
   const normalizeDate = (value) => {
@@ -139,6 +144,67 @@ export default function Company({ onLogout, onViewChange }) {
       normalizeText(record?.status) === 'absent' && normalizeText(record?.companyName) === driveCompany
     );
   };
+
+  // Custom scrollbar logic
+  const updateScrollThumb = useCallback(() => {
+    const el = appListRef.current;
+    if (!el) {
+      setShowScrollBar(false);
+      return;
+    }
+    const canScroll = el.scrollHeight > el.clientHeight;
+    setShowScrollBar(canScroll);
+    if (!canScroll) return;
+
+    const ratio = el.clientHeight / el.scrollHeight;
+    const thumbHeight = Math.max(30, el.clientHeight * ratio);
+    const maxScrollTop = el.scrollHeight - el.clientHeight;
+    const maxThumbTop = el.clientHeight - thumbHeight;
+    const thumbTop = maxScrollTop > 0 ? (el.scrollTop / maxScrollTop) * maxThumbTop : 0;
+
+    setScrollThumb({ height: thumbHeight, top: thumbTop });
+  }, []);
+
+  const onScrollThumbMouseDown = (e) => {
+    e.preventDefault();
+    const startY = e.clientY || (e.touches && e.touches[0].clientY);
+    const startTop = scrollThumb.top;
+    const el = appListRef.current;
+    if (!el) return;
+
+    const thumbHeight = scrollThumb.height;
+    const maxThumbTop = el.clientHeight - thumbHeight;
+    const maxScrollTop = el.scrollHeight - el.clientHeight;
+
+    const onMove = (mv) => {
+      const clientY = mv.clientY || (mv.touches && mv.touches[0].clientY);
+      const nextTop = Math.max(0, Math.min(maxThumbTop, startTop + clientY - startY));
+      el.scrollTop = maxThumbTop > 0 ? (nextTop / maxThumbTop) * maxScrollTop : 0;
+      updateScrollThumb();
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+  };
+
+  useEffect(() => {
+    updateScrollThumb();
+  }, [eligibleDrives.length, isLoading, updateScrollThumb]);
+
+  useEffect(() => {
+    const handleScrollResize = () => updateScrollThumb();
+    window.addEventListener('resize', handleScrollResize);
+    return () => window.removeEventListener('resize', handleScrollResize);
+  }, [updateScrollThumb]);
 
   // Mobile detection
   useEffect(() => {
@@ -385,9 +451,9 @@ export default function Company({ onLogout, onViewChange }) {
           </div>
 
           {/* My Application History Section */}
-          <div className={styles.applicationHistoryContainer}>
+          <div className={styles.applicationHistoryContainer} style={{ position: 'relative' }}>
             <div className={styles.applicationHistoryTitle}>My Application History</div>
-            
+
             {isLoading ? (
               <div className={styles.loadingWrapper}>
                 <div className={styles.loadingContainer}>
@@ -412,7 +478,12 @@ export default function Company({ onLogout, onViewChange }) {
                 </div>
               </div>
             ) : (
-              <div className={styles.appList}>
+              <>
+                <div
+                  ref={appListRef}
+                  onScroll={updateScrollThumb}
+                  className={styles.appList}
+                >
                 {eligibleDrives.map((drive, idx) => {
                   // Find matching application to get round data
                   const application = findApplicationForDrive(drive);
@@ -476,6 +547,37 @@ export default function Company({ onLogout, onViewChange }) {
                   );
                 })}
               </div>
+              {showScrollBar && (
+                <div style={{
+                  position: 'absolute',
+                  right: isMobile ? '8px' : '10px',
+                  top: isMobile ? '50px' : '85px',
+                  bottom: isMobile ? '12px' : '24px',
+                  width: isMobile ? '6px' : '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '20px',
+                  zIndex: 5
+                }}>
+                  <div
+                    onMouseDown={onScrollThumbMouseDown}
+                    onTouchStart={onScrollThumbMouseDown}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: '100%',
+                      height: `${scrollThumb.height}px`,
+                      top: `${scrollThumb.top}px`,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '20px',
+                      cursor: 'grab',
+                      touchAction: 'none'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#ffffff'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+                  />
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

@@ -1119,7 +1119,7 @@ export default function PopUpPending({ app, onBack }) {
 
   const updateRoundsThumb = useCallback(() => {
     const el = roundsListRef.current;
-    if (!isMobile || !el) {
+    if (!el) {
       setShowRoundsBar(false);
       return;
     }
@@ -1134,7 +1134,7 @@ export default function PopUpPending({ app, onBack }) {
     const thumbTop = maxScrollTop > 0 ? (el.scrollTop / maxScrollTop) * maxThumbTop : 0;
 
     setRoundsThumb({ height: thumbHeight, top: thumbTop });
-  }, [isMobile]);
+  }, []);
 
   useEffect(() => {
     updateRoundsThumb();
@@ -1148,7 +1148,7 @@ export default function PopUpPending({ app, onBack }) {
 
   const onRoundsThumbMouseDown = (e) => {
     e.preventDefault();
-    const startY = e.clientY;
+    const startY = e.clientY || (e.touches && e.touches[0].clientY);
     const startTop = roundsThumb.top;
     const el = roundsListRef.current;
     if (!el) return;
@@ -1158,7 +1158,8 @@ export default function PopUpPending({ app, onBack }) {
     const maxScrollTop = el.scrollHeight - el.clientHeight;
 
     const onMove = (mv) => {
-      const nextTop = Math.max(0, Math.min(maxThumbTop, startTop + mv.clientY - startY));
+      const clientY = mv.clientY || (mv.touches && mv.touches[0].clientY);
+      const nextTop = Math.max(0, Math.min(maxThumbTop, startTop + clientY - startY));
       el.scrollTop = maxThumbTop > 0 ? (nextTop / maxThumbTop) * maxScrollTop : 0;
       updateRoundsThumb();
     };
@@ -1166,10 +1167,14 @@ export default function PopUpPending({ app, onBack }) {
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
     };
 
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
   };
 
   // Get total rounds from roundDetails or rounds array
@@ -1237,7 +1242,7 @@ export default function PopUpPending({ app, onBack }) {
           </div>
         </div>
       </div>
-      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Admin' && (
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Admin' && overallStatus !== "Pending" && (
         <div style={{ display: 'flex', flexShrink: 0 }}>
           <button
             onClick={(e) => {
@@ -1258,7 +1263,7 @@ export default function PopUpPending({ app, onBack }) {
           </button>
         </div>
       )}
-      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && (
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && overallStatus !== "Pending" && (
         <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '112px' : 'auto' }}>
           <button
             onClick={(e) => {
@@ -1376,13 +1381,13 @@ export default function PopUpPending({ app, onBack }) {
             <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
               {isMobile ? (
                 <>
-                  {!isFirstRoundAbsent && feedbackSelector}
+                  {!isFirstRoundAbsent && overallStatus !== "Pending" && feedbackSelector}
                   <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 14, marginBottom: 12, lineHeight: 1.1 }}>Recruitment Journey</h3>
                 </>
               ) : (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
                   <h3 style={{ fontWeight: 700, fontSize: '1.7rem', marginBottom: 0, lineHeight: 1.1 }}>Recruitment Journey</h3>
-                  {!isFirstRoundAbsent && feedbackSelector}
+                  {!isFirstRoundAbsent && overallStatus !== "Pending" && feedbackSelector}
                 </div>
               )}
               {isMobile ? (
@@ -1424,8 +1429,32 @@ export default function PopUpPending({ app, onBack }) {
                   )}
                 </div>
               ) : (
-                <div style={{ marginTop: 28, overflowY: "auto", paddingRight: 4, flexGrow: 1, minHeight: 0 }} className={scrollStyles['scroll-rounds']}>
-                  {roundsContent}
+                <div style={{ marginTop: 28, flexGrow: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
+                  <div
+                    ref={roundsListRef}
+                    onScroll={updateRoundsThumb}
+                    style={{ overflowY: "auto", paddingRight: 14, height: '100%' }}
+                    className={scrollStyles['scroll-rounds']}
+                  >
+                    {roundsContent}
+                  </div>
+                  {showRoundsBar && (
+                    <div style={{ width: '8px', backgroundColor: '#d7e9ff', borderRadius: '20px', position: 'absolute', top: 2, right: 2, bottom: 2 }}>
+                      <div
+                        onMouseDown={onRoundsThumbMouseDown}
+                        onTouchStart={onRoundsThumbMouseDown}
+                        style={{
+                          position: 'absolute', left: 0, width: '100%',
+                          height: `${roundsThumb.height}px`, top: `${roundsThumb.top}px`,
+                          backgroundColor: '#2085f6', borderRadius: '20px', cursor: 'grab',
+                          transition: 'background-color 0.2s ease',
+                          touchAction: 'none'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#1667e8'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#2085f6'}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

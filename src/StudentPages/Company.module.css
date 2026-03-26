@@ -220,12 +220,11 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
-    /* Hide native scrollbar completely */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-/* Hide scrollbar for Chrome, Safari, Opera, Edge */
+/* Hide native scrollbar - use custom overlay instead */
 .appList::-webkit-scrollbar {
     display: none;
     width: 0;
@@ -388,7 +387,7 @@
 .applicationHistoryContainer {
     background: #3B6FB6;
     border-radius: 18px;
-    padding: 30px 25px;
+    padding: 30px 25px 18px 25px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -483,7 +482,7 @@
         min-height: auto;
         flex-grow: 0;
         height: auto;
-        padding: 18px 14px;
+        padding: 18px 14px 12px 14px;
         border-radius: 14px;
         display: flex;
         flex-direction: column;
@@ -495,12 +494,12 @@
         flex-shrink: 0;
     }
 
-    /* Scrollable app list for mobile - hide native scrollbar */
+    /* Scrollable app list for mobile - hide native scrollbar, use custom overlay */
     .appList {
         overflow-y: auto;
         flex-grow: 0;
         max-height: 270px;
-        padding-right: 0;
+        padding-right: 10px;
         display: flex;
         flex-direction: column;
         gap: 12px;
