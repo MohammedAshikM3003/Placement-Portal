@@ -476,6 +476,8 @@
     /* Application History with scrollable list */
     .applicationHistoryContainer {
         min-height: auto;
+        flex-grow: 0;
+        height: auto;
         padding: 18px 14px;
         border-radius: 14px;
         display: flex;

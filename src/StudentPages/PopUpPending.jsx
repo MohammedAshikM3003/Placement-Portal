@@ -1221,7 +1221,7 @@ export default function PopUpPending({ app, onBack }) {
   const roundsToRender = rounds;
 
   const roundsContent = roundsToRender.length > 0 ? roundsToRender.map((round, index) => (
-    <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 74 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
+    <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 78 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: isMobile ? '12px' : '16px 18px 16px 24px', gap: isMobile ? '10px' : '18px' }}>
         <div style={{ flexShrink: 0 }}>{round.icon}</div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -1255,7 +1255,7 @@ export default function PopUpPending({ app, onBack }) {
         </div>
       )}
       {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && (
-        <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '100px' : 'auto' }}>
+        <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '112px' : 'auto' }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -1268,11 +1268,11 @@ export default function PopUpPending({ app, onBack }) {
               padding: isMobile ? '0 0' : '0 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               borderRight: '1px solid rgba(255,255,255,0.35)',
-              width: isMobile ? '50px' : 'auto',
+              width: isMobile ? '56px' : 'auto',
               minHeight: 'auto'
             }}
           >
-            <img src={companyfeedbackicon} alt="Feedback" style={{ width: 34, height: 34, filter: 'brightness(0) invert(1)' }} />
+            <img src={companyfeedbackicon} alt="Feedback" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, filter: 'brightness(0) invert(1)' }} />
           </button>
           <button
             onClick={(e) => {
@@ -1285,11 +1285,11 @@ export default function PopUpPending({ app, onBack }) {
               backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
               padding: isMobile ? '0 0' : '0 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: isMobile ? '50px' : 'auto',
+              width: isMobile ? '56px' : 'auto',
               minHeight: 'auto'
             }}
           >
-            <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
+            <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34 }} />
           </button>
         </div>
       )}
@@ -1303,7 +1303,7 @@ export default function PopUpPending({ app, onBack }) {
   return (
     <>
         <style>{`.popup-rounds-hide-native::-webkit-scrollbar { display: none; }`}</style>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'calc(100vh - 40px)' : 0, height: isMobile ? 'calc(100vh - 40px)' : 'auto', overflow: 'hidden' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'auto' : 0, height: 'auto', maxHeight: isMobile ? 'calc(100vh - 40px)' : 'none', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden' }}>
             {/* Company Info Section */}
             <div style={{ marginBottom: isMobile ? 16 : 20, padding: isMobile ? '14px' : '16px', background: "#f6f7fa", borderRadius: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
@@ -1346,7 +1346,7 @@ export default function PopUpPending({ app, onBack }) {
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row', marginBottom: isMobile ? 0 : 0 }}>
               <div style={{ width: 'auto', minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
                 <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
                 <span style={{
@@ -1365,11 +1365,11 @@ export default function PopUpPending({ app, onBack }) {
                 <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>↩</span>
               </button>
             </div>
-            <div style={{ marginTop: isMobile ? 14 : 20, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
               {isMobile ? (
                 <>
                   {!isFirstRoundAbsent && feedbackSelector}
-                  <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 10, marginBottom: 8, lineHeight: 1.1 }}>Recruitment Journey</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.45rem', marginTop: 14, marginBottom: 12, lineHeight: 1.1 }}>Recruitment Journey</h3>
                 </>
               ) : (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
@@ -1378,7 +1378,7 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
               )}
               {isMobile ? (
-                <div style={{ marginTop: 0, flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column', paddingTop: 0, paddingBottom: 8 }}>
+                <div style={{ marginTop: 0, flex: '0 0 auto', minHeight: 0, maxHeight: '42vh', position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column', paddingTop: 0, paddingBottom: 8 }}>
                   <div
                     ref={roundsListRef}
                     onScroll={updateRoundsThumb}
@@ -1398,7 +1398,7 @@ export default function PopUpPending({ app, onBack }) {
                     {roundsContent}
                   </div>
                   {showRoundsBar && !isMobile && (
-                    <div style={{ width: '6px', backgroundColor: '#e8e8e8', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
+                    <div style={{ width: '6px', backgroundColor: '#d7e9ff', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
                       <div
                         onMouseDown={onRoundsThumbMouseDown}
                         style={{
