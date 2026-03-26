@@ -1306,8 +1306,12 @@ export default function PopUpPending({ app, onBack }) {
 
   return (
     <>
-        <style>{`.popup-rounds-hide-native::-webkit-scrollbar { display: none; }`}</style>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'auto' : 0, height: 'auto', maxHeight: isMobile ? 'calc(100vh - 40px)' : 'none', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden' }}>
+        <style>{`
+          .popup-rounds-hide-native::-webkit-scrollbar { display: none; }
+          .popup-main-container { scrollbar-width: none; -ms-overflow-style: none; }
+          .popup-main-container::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        `}</style>
+        <div onClick={(e) => e.stopPropagation()} className="popup-main-container" style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'auto' : 0, height: 'auto', maxHeight: isMobile ? 'calc(100vh - 40px)' : 'none', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden' }}>
             {/* Company Info Section */}
             <div style={{ marginBottom: isMobile ? 16 : 20, padding: isMobile ? '14px' : '16px', background: "#f6f7fa", borderRadius: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
@@ -1401,15 +1405,17 @@ export default function PopUpPending({ app, onBack }) {
                   >
                     {roundsContent}
                   </div>
-                  {showRoundsBar && !isMobile && (
+                  {showRoundsBar && (
                     <div style={{ width: '6px', backgroundColor: '#d7e9ff', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
                       <div
                         onMouseDown={onRoundsThumbMouseDown}
+                        onTouchStart={onRoundsThumbMouseDown}
                         style={{
                           position: 'absolute', left: 0, width: '100%',
                           height: `${roundsThumb.height}px`, top: `${roundsThumb.top}px`,
                           backgroundColor: '#2085f6', borderRadius: '20px', cursor: 'grab',
-                          transition: 'background-color 0.2s ease'
+                          transition: 'background-color 0.2s ease',
+                          touchAction: 'none'
                         }}
                         onMouseEnter={(e) => e.target.style.backgroundColor = '#1667e8'}
                         onMouseLeave={(e) => e.target.style.backgroundColor = '#2085f6'}
