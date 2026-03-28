@@ -816,108 +816,81 @@ function AdminEsstudapp() {
 
                 <div className={`${styles['Admin-es-apk-search-inputs']} ${styles['Admin-es-apk-eligible-inputs']}`}>
 
-                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${filterData.companyName ? styles['filled'] : ''}`}>
-
-                    <select 
-
-                      id="companyName" 
-
-                      value={filterData.companyName} 
-
-                      onChange={(e) => handleFilterChange('companyName', e.target.value)}
-
-                      className={styles['Admin-es-apk-select']}
-
-                      disabled={isLoading}
-
-                    >
-
-                      <option value="">Company Name</option>
-
-                      {companyNames.map((name, idx) => (
-
-                        <option key={idx} value={name}>{name}</option>
-
-                      ))}
-
-                    </select>
-
+                  {/* Company Name with Static Label */}
+                  <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                      <select
+                        id="companyName"
+                        value={filterData.companyName}
+                        onChange={(e) => handleFilterChange('companyName', e.target.value)}
+                        className={styles['Admin-es-apk-select']}
+                        disabled={isLoading}
+                      >
+                        <option value="">Select Company Name</option>
+                        {companyNames.map((name, idx) => (
+                          <option key={idx} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${filterData.driveStartDate ? styles['filled'] : ''}`}>
+                  {/* Drive Start Date with Static Label */}
+                  <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                      <select
+                        id="driveStartDate"
+                        value={filterData.driveStartDate}
+                        onChange={(e) => handleFilterChange('driveStartDate', e.target.value)}
+                        className={styles['Admin-es-apk-select']}
+                        disabled={!filterData.companyName || availableDrives.length === 0}
+                      >
+                        <option value="">Start Date</option>
+                        {availableDrives.map((drive, idx) => {
 
-                    <select 
+                          // Extract date in YYYY-MM-DD format without timezone conversion
 
-                      id="driveStartDate" 
+                          const startDate = drive.startingDate ? drive.startingDate.split('T')[0] : '';
 
-                      value={filterData.driveStartDate} 
+                          // Format for display as DD-MM-YYYY
 
-                      onChange={(e) => handleFilterChange('driveStartDate', e.target.value)}
+                          const displayDate = startDate ? startDate.split('-').reverse().join('-') : 'No Date';
 
-                      className={styles['Admin-es-apk-select']}
+                          return startDate ? (
 
-                      disabled={!filterData.companyName || availableDrives.length === 0}
+                            <option key={idx} value={startDate}>{displayDate}</option>
 
-                    >
+                          ) : null;
 
-                      <option value="">Drive Start Date</option>
-
-                      {availableDrives.map((drive, idx) => {
-
-                        // Extract date in YYYY-MM-DD format without timezone conversion
-
-                        const startDate = drive.startingDate ? drive.startingDate.split('T')[0] : '';
-
-                        // Format for display as DD-MM-YYYY
-
-                        const displayDate = startDate ? startDate.split('-').reverse().join('-') : 'No Date';
-
-                        return startDate ? (
-
-                          <option key={idx} value={startDate}>{displayDate}</option>
-
-                        ) : null;
-
-                      })}
-
-                    </select>
-
+                        })}
+                      </select>
+                    </div>
                   </div>
 
-                  <div className={`${styles['Admin-es-apk-search-input']} ${filterData.driveEndDate ? styles['filled'] : ''}`}>
-
-                    <input 
-
-                      type="text" 
-
-                      id="driveEndDate" 
-
-                      value={filterData.driveEndDate ? filterData.driveEndDate.split('-').reverse().join('-') : ''} 
-
-                      readOnly
-
-                      placeholder="Drive End Date"
-
-                    />
-
+                  {/* Drive End Date with Static Label */}
+                  <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <div className={styles['Admin-es-apk-search-input']}>
+                      <input
+                        type="text"
+                        id="driveEndDate"
+                        value={filterData.driveEndDate ? filterData.driveEndDate.split('-').reverse().join('-') : ''}
+                        readOnly
+                        placeholder="End Date"
+                      />
+                    </div>
                   </div>
 
-                  <div className={`${styles['Admin-es-apk-search-input']} ${filterData.totalRound ? styles['filled'] : ''}`}>
-
-                    <input 
-
-                      type="text" 
-
-                      id="totalRound" 
-
-                      value={filterData.totalRound} 
-
-                      readOnly
-
-                      placeholder="Total Round"
-
-                    />
-
+                  {/* Total Round with Static Label */}
+                  <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <label className={styles['Admin-es-apk-static-label']} htmlFor="totalRound">Total Round</label>
+                    <div className={styles['Admin-es-apk-search-input']}>
+                      <input
+                        type="text"
+                        id="totalRound"
+                        value={filterData.totalRound}
+                        readOnly
+                        placeholder="Total Round"
+                      />
+                    </div>
                   </div>
 
                 </div>

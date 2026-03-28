@@ -435,17 +435,46 @@ export const AdminPreviewFailedAlert = ({ isOpen, onClose }) => {
 export const ExportProgressAlert = ({ isOpen, progress = 25, exportType = 'Excel', color = '#4ea24e', progressColor = '#4ea24e' }) => {
   if (!isOpen) return null;
 
-  const messages = {
+  const isLoading = exportType === 'Loading';
+  const isPreviewing = exportType === 'Previewing';
+  
+  const messages = isLoading ? {
+    initial: `Loading...`,
+    mid: `Loading...`,
+    final: `Almost there...`,
+  } : isPreviewing ? {
+    initial: `Preparing preview...`,
+    mid: `Loading preview...`,
+    final: `Almost ready...`,
+  } : {
     initial: `Preparing ${exportType} export...`,
     mid: `Generating ${exportType} file...`,
     final: `Finalizing ${exportType} export...`,
+  };
+
+  const getHeaderText = () => {
+    if (isLoading) return 'Loading...';
+    if (isPreviewing) return 'Previewing...';
+    return 'Exporting...';
+  };
+
+  const getProgressText = () => {
+    if (isLoading) return `Loading ${Math.round(progress)}%`;
+    if (isPreviewing) return `Previewing ${Math.round(progress)}%`;
+    return `Exporting ${Math.round(progress)}%`;
+  };
+
+  const getBottomText = () => {
+    if (isLoading) return progress >= 100 ? 'Redirecting...' : 'Please wait...';
+    if (isPreviewing) return progress >= 100 ? 'Opening preview...' : 'Please wait...';
+    return progress >= 100 ? 'Download starting...' : 'Please wait...';
   };
 
   return (
     <div className="alert-overlay">
       <div className="achievement-popup-container">
         <div className="achievement-popup-header" style={{ backgroundColor: color }}>
-          Exporting...
+          {getHeaderText()}
         </div>
         <div className="achievement-popup-body">
           <div className="preview-progress-icon-container">
@@ -466,7 +495,7 @@ export const ExportProgressAlert = ({ isOpen, progress = 25, exportType = 'Excel
             </svg>
           </div>
           <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-            Exporting {Math.round(progress)}%
+            {getProgressText()}
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
             {progress < 40
@@ -476,7 +505,7 @@ export const ExportProgressAlert = ({ isOpen, progress = 25, exportType = 'Excel
                 : messages.final}
           </p>
           <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
-            {progress >= 100 ? 'Download starting...' : 'Please wait...'}
+            {getBottomText()}
           </p>
         </div>
       </div>

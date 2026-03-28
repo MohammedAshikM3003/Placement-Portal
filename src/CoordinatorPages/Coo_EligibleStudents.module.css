@@ -38,6 +38,7 @@
   margin-left: 270px;
   max-width: calc(100vw - 270px);
   box-sizing: border-box;
+  /* max-width: 512px; */
 }
 
 /* Desktop scrollbar - red styling to match theme */
@@ -82,7 +83,7 @@
   background-color: #D2D1D1;
   max-width: 628px;
   height: 248px;
-  border-radius: 43px;
+  border-radius: 18px;
   margin-left: 0;
 }
 .co-es-summary-card {
@@ -280,7 +281,7 @@
 
 .co-es-search-tab {
   position: absolute;
-  top: 25px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   height: 32px;
@@ -301,22 +302,18 @@
 .co-es-search-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 26px 18px;
+  gap: 40px 18px;
   width: 100%;
   margin-right: 20px;
   margin-bottom: 18px;
-  margin-top: 44px;
+  margin-top: 50px;
 }
 
 .co-es-search-input {
   position: relative;
-  width: 100%;
-  border: 2px solid transparent;
-  border-radius: 10px;
-}
-
-.co-es-search-input:hover{
-  border: 2px solid #d73d3d;
+  flex: 1;
+  height: 46px;
+  width: 280px;
 }
 
 .co-es-search-input input {
@@ -333,7 +330,7 @@
   outline: none;
 }
 
-.co-es-search-input select {
+.co-es-select {
   border-radius: 8px;
   border: 1px solid #e1e1e1;
   padding: 12px 34px 12px 14px;
@@ -350,31 +347,47 @@
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 14px;
+  transition: border 0.2s;
 }
 
-.co-es-search-input label {
+.co-es-select:hover {
+  border: 2px solid #d73d3d;
+}
+
+.co-es-select option[value=""] {
+  color: #9a9a9a;
+}
+
+.co-es-select:required:invalid {
+  color: #9a9a9a;
+}
+
+.co-es-select:valid {
+  color: #000;
+}
+
+.co-es-static-label {
   position: absolute;
-  top: 23px;
-  transform: translateY(-65%);
-  left: 15px;
-  color: #999;
+  top: -27px;
+  left: 10px;
+  color: #000;
   pointer-events: none;
   transition: all 0.2s ease-out;
   font-size: 1rem;
+  font-weight: 500;
+  background: transparent;
+  padding: 0;
 }
 
-.co-es-search-input input:focus + label,
-.co-es-search-input input:valid + label,
-.co-es-search-input select:focus + label,
-.co-es-search-input select:valid + label
-{
-  top: -20px;
+.co-es-select:focus + .co-es-static-label,
+.co-es-select:valid + .co-es-static-label {
+  top: -27px;
   left: 10px;
-  font-size: 0.85rem;
-  color: #d73d3d;
-  padding: 0 5px;
-  font-weight: 600;
-  transform: translateY(0);
+  font-size: 1rem;
+  color: #000;
+  padding: 0;
+  font-weight: 500;
+  transform: none;
 }
 
 .co-es-search-input .co-es-search-icon {
@@ -384,6 +397,10 @@
   transform: translateY(-50%);
   color: #007bff;
   font-size: 14px;
+}
+
+.co-es-search-input select option {
+  color: #1f2937;
 }
 
 .co-es-search-input .co-es-clear-btn {
@@ -890,6 +907,7 @@
         box-sizing: border-box;
         position: fixed;/* Let the container handle the scroll */
         left:5px;
+       min-width: 513px;
   }
 
   
@@ -921,6 +939,7 @@
   .co-es-summary-card.co-es-company-drive-card{
     height:258px;
     width:450px;
+    max-width: 450px;
     margin-left: 60px;
      transform: translateX(-30px);
       margin-right:-31px;
@@ -937,7 +956,7 @@
 
   /* 4. Filter Card Reset and Sizing (Filter Card is the second element in HTML) */
   .co-es-search-filters.co-es-company-profile-search {
-    order: 2; /* Explicitly enforce order 2 */
+    /* order: 2; Explicitly enforce order 2 */
     width: 100%; /* Make filter form almost full width */
     max-width: 450px; 
     height: auto; /* Auto height based on content */
@@ -948,8 +967,8 @@
   /* Filter input layout adjustment */
   .co-es-company-profile-search .co-es-search-inputs {
     grid-template-columns: 1fr; /* Stack filter inputs vertically */
-    gap: 15px;
-    margin-top: 40px; /* Adjust top margin after the tab */
+    gap: 35px;
+    margin-top: 50px; /* Adjust top margin after the tab */
   }
   .co-es-search-tab {
     margin-top: 10px;
@@ -957,24 +976,32 @@
     padding: 8px 20px;
     border-radius: 80px;
     position: absolute;
-    top: 10px;
+    top: 5px;
     left: 50%;
     transform: translateX(-50%);
   }
 
   /* Input field sizing for mobile */
-  .co-es-company-profile-search .co-es-search-input input {
+  .co-es-company-profile-search .co-es-search-input input,
+  .co-es-company-profile-search .co-es-search-input select,
+  .co-es-company-profile-search .co-es-search-input .co-es-select {
       width: 100%;
       padding: 12px 10px; /* Better padding for mobile input */
   }
 
+  .co-es-company-profile-search .co-es-search-input {
+      width: 100%;
+  }
+
   /* 5. Eligible Students Table */
   .co-es-company-profile {
-           width: 32%;
+           width: 95%;
         margin: 20px auto;
         height: 360px;
         min-width: unset;
         margin-left: 0px;
+        position: relative;
+        bottom: 22px;
   }
   /* 6. Table scrolling (Horizontal and Vertical) */
   .co-es-table-container {

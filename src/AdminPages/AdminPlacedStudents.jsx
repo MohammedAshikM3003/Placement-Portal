@@ -139,7 +139,7 @@ const PlacementDashboard = () => {
           const mappedData = response.data.map((student, index) => ({
             sno: index + 1,
             name: student.name,
-            regNo: student.regNo,
+            regNo: student.regNo || student.enrollmentNo || student.roll || student.rollNo || student.studentId || 'N/A',
             branch: student.dept,
             batch: student.batch,
             company: student.company,
@@ -163,6 +163,12 @@ const PlacementDashboard = () => {
           const uniqueRoles = [...new Set(mappedData.map(s => s.role))].sort();
           setCompanies(uniqueCompanies);
           setJobRoles(uniqueRoles);
+          
+          // Debug: log first student to check available fields
+          if (mappedData.length > 0) {
+            console.log('First student object:', mappedData[0]);
+            console.log('Available fields in backend response:', response.data[0]);
+          }
         }
       } catch (error) {
         console.error('Error fetching placed students:', error);
@@ -224,7 +230,6 @@ const PlacementDashboard = () => {
         'Company': truncateText(student.company),
         'Job Role': truncateText(student.role),
         'Package (LPA)': truncateText(student.pkg),
-        'Date': truncateText(student.date),
         'Status': truncateText(student.status)
       }));
       
@@ -271,7 +276,7 @@ const PlacementDashboard = () => {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       autoTable(doc, {
-        head: [["S.No", "Name", "Reg No", "Branch", "Batch", "Company", "Job Role", "Package", "Date", "Status"]],
+        head: [["S.No", "Name", "Reg No", "Branch", "Batch", "Company", "Job Role", "Package", "Status"]],
         body: displayedStudents.map((s, index) => [
           index + 1,
           s.name || '',
@@ -281,7 +286,6 @@ const PlacementDashboard = () => {
           s.company || '',
           s.role || '',
           s.pkg || '',
-          s.date || '',
           s.status || ''
         ]),
       });
@@ -440,7 +444,6 @@ const PlacementDashboard = () => {
                     <th>Company</th>
                     <th>Job Role</th>
                     <th>Package</th>
-                    <th>Date</th>
                     <th>Offer</th>
                     <th>Action</th>
                   </tr>
@@ -448,7 +451,7 @@ const PlacementDashboard = () => {
                 <tbody>
                   {isLoading ? (
                     <tr className={styles['Admin-ps-loading-row']}>
-                      <td colSpan="11" className={styles['Admin-ps-loading-cell']}>
+                      <td colSpan="10" className={styles['Admin-ps-loading-cell']}>
                         <div className={styles['Admin-ps-loading-wrapper']}>
                           <div className={styles['Admin-ps-spinner']}></div>
                           <span className={styles['Admin-ps-loading-text']}>Loading placed students...</span>
@@ -457,7 +460,7 @@ const PlacementDashboard = () => {
                     </tr>
                   ) : displayedStudents.length === 0 ? (
                     <tr>
-                      <td colSpan="11" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
                         No placed students found
                       </td>
                     </tr>
@@ -472,7 +475,6 @@ const PlacementDashboard = () => {
                         <td>{student.company}</td>
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
-                        <td>{student.date}</td>
                         <td>
                           <span className={`${styles['Admin-ps-status-badge']} ${styles[`Admin-ps-status-${student.status.toLowerCase()}`]}`}>
                             {student.status}

@@ -14,7 +14,6 @@ import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
 import Adminicon from '../assets/Adminicon.png';
 
 import AdminCompanyprofilePopup from './AdminCompanyprofilepopup';
-import popupStyles from '../StudentPages/Achievements.module.css';
 import mongoDBService from '../services/mongoDBService';
 
 const EyeIcon = () => (
@@ -22,6 +21,67 @@ const EyeIcon = () => (
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
         <circle cx="12" cy="12" r="3"></circle>
     </svg>
+);
+
+// --- Delete Confirmation Popup Component ---
+const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
+    <div className={styles['Admin-cp-popup-overlay']}>
+        <div className={styles['Admin-cp-popup-container']}>
+            <div className={styles['Admin-cp-popup-header']}>Delete Company</div>
+            <div className={styles['Admin-cp-popup-body']}>
+                <div className={styles['Admin-cp-warning-icon']}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle className={styles['Admin-cp-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+                        <path className={styles['Admin-cp-warning-icon--exclamation']} d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
+                    </svg>
+                </div>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
+                    Delete {selectedCount} selected compan{selectedCount > 1 ? 'ies' : 'y'}?
+                </p>
+            </div>
+            <div className={styles['Admin-cp-popup-footer']}>
+                <button
+                    onClick={onClose}
+                    className={styles['Admin-cp-popup-cancel-btn']}
+                    disabled={isDeleting}
+                >
+                    Discard
+                </button>
+                <button
+                    onClick={onConfirm}
+                    className={styles['Admin-cp-popup-delete-btn']}
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
+// --- Delete Success Popup Component ---
+const DeleteSuccessPopup = ({ onClose }) => (
+    <div className={styles['Admin-cp-popup-overlay']}>
+        <div className={styles['Admin-cp-popup-container']}>
+            <div className={styles['Admin-cp-popup-header']}>Deleted !</div>
+            <div className={styles['Admin-cp-popup-body']}>
+                <div className={styles['Admin-cp-icon-wrapper']}>
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Company Deleted ✓</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The selected companies have been deleted successfully!</p>
+            </div>
+            <div className={styles['Admin-cp-popup-footer']}>
+                <button onClick={onClose} className={styles['Admin-cp-popup-close-btn']}>Close</button>
+            </div>
+        </div>
+    </div>
 );
 
 const formatDisplayDate = (value) => {
@@ -438,84 +498,16 @@ function Admincompanyprofile({ onLogout }) {
                 <Adnavbar onToggleSidebar={toggleSidebar} onLogout={onLogout} Adminicon={Adminicon} />
 
                 {showDeleteWarning && (
-                    <div className={popupStyles.overlay} onClick={() => setShowDeleteWarning(false)}>
-                        <div className={popupStyles['Achievement-popup-container']} onClick={(event) => event.stopPropagation()}>
-                            <div className={popupStyles['Achievement-popup-header']}>Delete Company</div>
-                            <div className={popupStyles['Achievement-popup-body']}>
-                                <svg className={popupStyles['Achievement-warning-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                    <circle className={popupStyles['Achievement-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
-                                    <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
-                                </svg>
-                                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
-                                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
-                                    Delete {selectedCompanyIds.size} selected compan{selectedCompanyIds.size > 1 ? 'ies' : 'y'}?
-                                </p>
-                            </div>
-                            <div className={popupStyles['Achievement-popup-footer']}>
-                                <button
-                                    onClick={() => setShowDeleteWarning(false)}
-                                    className={popupStyles['Achievement-popup-cancel-btn']}
-                                    disabled={isDeleting}
-                                >
-                                    Discard
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    className={popupStyles['Achievement-popup-delete-btn']}
-                                    disabled={isDeleting}
-                                >
-                                    {isDeleting ? 'Deleting…' : 'Delete'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <DeleteConfirmationPopup 
+                        onClose={() => setShowDeleteWarning(false)} 
+                        onConfirm={confirmDelete} 
+                        selectedCount={selectedCompanyIds.size}
+                        isDeleting={isDeleting}
+                    />
                 )}
 
                 {showDeleteSuccess && (
-                    <div className={popupStyles.overlay} onClick={closeDeleteSuccess}>
-                        <div className={popupStyles['Achievement-popup-container']} onClick={(event) => event.stopPropagation()}>
-                            <div className={popupStyles['Achievement-popup-header']}>Deleted !</div>
-                            <div className={popupStyles['Achievement-popup-body']}>
-                                <svg className={popupStyles['Achievement-delete-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                    <circle className={popupStyles['Achievement-delete-icon--circle']} cx="26" cy="26" r="25" fill="none" />
-                                    <g className={popupStyles['Achievement-delete-icon--bin']} fill="none" strokeWidth="2">
-                                        <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8" />
-                                    </g>
-                                </svg>
-                                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Company Deleted ✓</h2>
-                                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The selected companies have been deleted successfully.</p>
-                            </div>
-                            <div className={popupStyles['Achievement-popup-footer']}>
-                                <button className={popupStyles['Achievement-popup-close-btn']} onClick={closeDeleteSuccess}>
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {showUpdateSuccess && (
-                    <div className={popupStyles.overlay} onClick={closeUpdateSuccess}>
-                        <div className={popupStyles['Achievement-popup-container']} onClick={(event) => event.stopPropagation()}>
-                            <div className={`${popupStyles['Achievement-popup-header']} ${popupStyles['Achievement-popup-header--success']}`}>Updated !</div>
-                            <div className={popupStyles['Achievement-popup-body']}>
-                                <div className={popupStyles['Achievement-status-icon']}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                </div>
-                                <h2 className={popupStyles['Achievement-status-title']}>Company Updated</h2>
-                                <p className={popupStyles['Achievement-status-text']}>
-                                    The company details have been saved successfully.
-                                </p>
-                                <div className={popupStyles['Achievement-popup-footer']}>
-                                    <button className={popupStyles['Achievement-popup-close-btn']} onClick={closeUpdateSuccess}>
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <DeleteSuccessPopup onClose={closeDeleteSuccess} />
                 )}
 
                 {errorMessage && (
@@ -539,86 +531,88 @@ function Admincompanyprofile({ onLogout }) {
                             {/* <span className={styles['Admin-cp-filter-icon-container']}>☰</span> */}
                         </div>
                         <div className={styles['Admin-cp-filter-content']}>
-                            <div
-                                className={`${styles['Admin-cp-text-container']} ${filters.company ? styles['has-value'] : ''} ${companyFocused ? styles['is-focused'] : ''}`}
-                            >
-                                <label className={styles['Admin-cp-floating-label']} htmlFor="admin-search-company">
-                                    Search Company / Job Role
+                            {/* Company / Job Role Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-company">
+                                    Company / Job Role
                                 </label>
-                                <input
-                                    id="admin-search-company"
-                                    type="text"
-                                    className={styles['Admin-cp-text']}
-                                    value={filters.company}
-                                    onChange={(event) => setFilters((prev) => ({ ...prev, company: event.target.value }))}
-                                    onFocus={() => setCompanyFocused(true)}
-                                    onBlur={() => setCompanyFocused(false)}
-                                    aria-label="Search Company or Job Role"
-                                />
+                                <div className={`${styles['Admin-cp-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-company"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search Company / Job Role"
+                                        value={filters.company}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, company: event.target.value }))}
+                                        onFocus={() => setCompanyFocused(true)}
+                                        onBlur={() => setCompanyFocused(false)}
+                                        aria-label="Search Company or Job Role"
+                                    />
+                                </div>
                             </div>
 
-                            <div
-                                className={`${styles['Admin-cp-text-container']} ${filters.hrName ? styles['has-value'] : ''} ${hrNameFocused ? styles['is-focused'] : ''}`}
-                            >
-                                <label className={styles['Admin-cp-floating-label']} htmlFor="admin-search-hr-name">
-                                    Search HR Name
+                            {/* HR Name Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-hr-name">
+                                    HR Name
                                 </label>
-                                <input
-                                    id="admin-search-hr-name"
-                                    type="text"
-                                    className={styles['Admin-cp-text']}
-                                    value={filters.hrName}
-                                    onChange={(event) => setFilters((prev) => ({ ...prev, hrName: event.target.value }))}
-                                    onFocus={() => setHrNameFocused(true)}
-                                    onBlur={() => setHrNameFocused(false)}
-                                    aria-label="Search HR Name"
-                                />
+                                <div className={`${styles['Admin-cp-text-container']} ${hrNameFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-hr-name"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search HR Name"
+                                        value={filters.hrName}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, hrName: event.target.value }))}
+                                        onFocus={() => setHrNameFocused(true)}
+                                        onBlur={() => setHrNameFocused(false)}
+                                        aria-label="Search HR Name"
+                                    />
+                                </div>
                             </div>
 
-                            <div
-                                className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${filters.mode ? styles['has-value'] : ''} ${modeFocused ? styles['is-focused'] : ''}`}
-                            >
-                                <label className={styles['Admin-cp-floating-label']} htmlFor="admin-search-mode">
-                                    Search Mode
-                                </label>
-                                <select
-                                    id="admin-search-mode"
-                                    className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
-                                    value={filters.mode}
-                                    onChange={(event) => setFilters((prev) => ({ ...prev, mode: event.target.value }))}
-                                    onFocus={() => setModeFocused(true)}
-                                    onBlur={() => setModeFocused(false)}
-                                    aria-label="Search Mode"
-                                >
-                                    <option value="">Search Mode</option>
-                                    <option value="Online">Online</option>
-                                    <option value="Offline">Offline</option>
-                                    <option value="Hybrid">Hybrid</option>
-                                </select>
+                            {/* Mode Dropdown with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                
+                                <div className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
+                                    <select
+                                        id="admin-search-mode"
+                                        className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
+                                        value={filters.mode}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, mode: event.target.value }))}
+                                        onFocus={() => setModeFocused(true)}
+                                        onBlur={() => setModeFocused(false)}
+                                        aria-label="Search Mode"
+                                    >
+                                        <option value="">Search Mode</option>
+                                        <option value="Online">Online</option>
+                                        <option value="Offline">Offline</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div
-                                className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${filters.visitDate ? styles['has-value'] : ''} ${visitDateFocused ? styles['is-focused'] : ''}`}
-                            >
-                                <label className={styles['Admin-cp-floating-label']} htmlFor="admin-search-visit-date">
-                                    Visit Date
-                                </label>
-                                <select
-                                    id="admin-search-visit-date"
-                                    className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
-                                    value={filters.visitDate}
-                                    onChange={handleFilterVisitDateChange}
-                                    onFocus={() => setVisitDateFocused(true)}
-                                    onBlur={() => setVisitDateFocused(false)}
-                                    aria-label="Visit Date"
-                                >
-                                    <option value="">Visit Date</option>
-                                    {visitDateOptions.map((visitDate) => (
-                                        <option key={visitDate} value={visitDate}>
-                                            {formatDisplayDate(visitDate)}
-                                        </option>
-                                    ))}
-                                </select>
+                            {/* Visit Date Dropdown with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                
+                                <div className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${visitDateFocused ? styles['is-focused'] : ''}`}>
+                                    <select
+                                        id="admin-search-visit-date"
+                                        className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
+                                        value={filters.visitDate}
+                                        onChange={handleFilterVisitDateChange}
+                                        onFocus={() => setVisitDateFocused(true)}
+                                        onBlur={() => setVisitDateFocused(false)}
+                                        aria-label="Visit Date"
+                                    >
+                                        <option value="">Select Visit Date</option>
+                                        {visitDateOptions.map((visitDate) => (
+                                            <option key={visitDate} value={visitDate}>
+                                                {formatDisplayDate(visitDate)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -644,7 +638,7 @@ function Admincompanyprofile({ onLogout }) {
                                 Select the company records before deleting.
                             </p>
                             <button
-                                className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-delete-btn']}`}
+                                className={`${styles['Admin-cp-delete-btn']}`}
                                 onClick={handleDeleteClick}
                                 disabled={!selectedCompanyIds.size}
                             >

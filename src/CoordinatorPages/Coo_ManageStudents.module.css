@@ -55,6 +55,7 @@
     margin-top: 55px;
     margin-right: 20px;
     flex-shrink: 0;
+    height: 267px;
 }
   .co-ms-table-container::-webkit-scrollbar {
     height:12px;
@@ -75,7 +76,7 @@
     flex: 0 0 424px;
     background-color: #e8e8e8;
     padding: 20px;
-    border-radius: 43px;
+    border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -98,6 +99,8 @@
     border-radius: 30px;
     display: block;
     width: 180px;
+    position: relative;
+    bottom:14px;
 }
 
 .co-ms-filter-icon-container {
@@ -115,6 +118,184 @@
     gap: 12px;
     flex-grow: 1;
     align-items: start;
+    margin-top: -25px;
+}
+
+/* Explicit ordering so buttons stay below all fields */
+.co-ms-filter-content .co-ms-floating-input-container {
+    order: 1;
+}
+
+.co-ms-filter-content .co-ms-batch-range {
+    order: 2;
+}
+
+/* Swap positions: Year-Sem (left) and Section (right) */
+.co-ms-filter-content .co-ms-yearsem-range {
+    order: 3;
+    margin-top: -18px;
+}
+
+.co-ms-filter-content .co-ms-section-filter {
+    order: 4;
+    margin-top: -18px;
+}
+
+.co-ms-filter-content .co-ms-button-group {
+    order: 5;
+    grid-column: 1 / -1;
+    margin-top: 6px;
+}
+
+/* Batch range (Start - End) */
+.co-ms-batch-range {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 215px;
+}
+
+.co-ms-batch-range-label {
+    font-weight: 600;
+    color: #111;
+    font-size: 0.95rem;
+    padding-left: 2px;
+}
+
+.co-ms-batch-range-required {
+    color: #dc3545;
+}
+
+.co-ms-batch-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.co-ms-batch-range-field {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.co-ms-batch-range-select,
+.co-ms-batch-range-input {
+    width: 111%;
+    height: 45px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    padding: 0 15px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.co-ms-batch-range-select:focus,
+.co-ms-batch-range-input:focus {
+    border-color: #d23b42;
+    border-width: 2px;
+}
+
+.co-ms-batch-range-sep {
+    flex: 0 0 auto;
+    font-weight: 700;
+    color: #444;
+    margin-top: 2px;
+}
+
+/* Year-Sem (same style as Batch) */
+.co-ms-yearsem-range {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 215px;
+}
+
+.co-ms-yearsem-range-label {
+    font-weight: 600;
+    color: #111;
+    font-size: 0.95rem;
+    padding-left: 2px;
+}
+
+.co-ms-yearsem-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.co-ms-yearsem-range-field {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.co-ms-yearsem-range-select {
+    width: 100%;
+    height: 45px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    padding: 0 15px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    appearance: none;
+    cursor: pointer;
+}
+
+.co-ms-yearsem-range-select:focus {
+    border-color: #d23b42;
+    border-width: 2px;
+}
+
+.co-ms-yearsem-range-sep {
+    flex: 0 0 auto;
+    font-weight: 700;
+    color: #444;
+    margin-top: 2px;
+}
+
+/* Section filter (placed under Batch, same fixed-label style) */
+.co-ms-section-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 215px;
+}
+
+.co-ms-section-filter-label {
+    font-weight: 600;
+    color: #111;
+    font-size: 0.95rem;
+    padding-left: 2px;
+}
+
+.co-ms-section-filter-select {
+    width: 100%;
+    height: 45px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    padding: 0 15px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    appearance: none;
+    cursor: pointer;
+}
+
+.co-ms-section-filter-select:focus {
+    border-color: #d23b42;
+    border-width: 2px;
 }
 
 .co-ms-dropdown-container1 {
@@ -140,6 +321,47 @@
     max-width: 215px;
     height: 45px;
     margin-bottom: 12px;
+}
+
+/* In Filter box: make Name/Reg No label fixed on top (not floating) */
+.co-ms-filter-section .co-ms-floating-input-container {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    height: auto;
+}
+
+.co-ms-filter-section .co-ms-floating-label {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    padding: 0;
+    background: transparent;
+    font-weight: 600;
+    color: #111;
+    pointer-events: none;
+}
+
+.co-ms-filter-section .co-ms-floating-input {
+    height: 45px;
+    padding: 0 15px;
+}
+
+.co-ms-filter-section .co-ms-floating-input::placeholder {
+    color: #9aa0a6;
+}
+
+.co-ms-filter-section .co-ms-floating-input:focus::placeholder {
+    color: transparent;
+}
+
+.co-ms-filter-section .co-ms-floating-input:focus + .co-ms-floating-label,
+.co-ms-filter-section .co-ms-floating-input:not(:placeholder-shown) + .co-ms-floating-label {
+    transform: none;
+    color: #111;
+    margin-top: 0;
+    background: transparent;
 }
 
 .co-ms-floating-input {
@@ -444,6 +666,7 @@
     border: 2px solid #808080;
     display: flex;
     flex-direction: column;
+    height: 360px;
 }
 
 .co-ms-table-header-row {
@@ -529,6 +752,7 @@
     flex-grow: 1;
     padding-right: 0;
     max-height: calc((var(--co-ms-row-height) * 3) + var(--co-ms-header-height));
+    min-height: calc((var(--co-ms-row-height) * 3) + var(--co-ms-header-height));
 }
 
 .co-ms-students-table {
@@ -539,6 +763,7 @@
     display: flex;
     flex-direction: column;
     max-height: calc((var(--co-ms-row-height, 72px) * 3) + var(--co-ms-header-height, 64px));
+    min-height: calc((var(--co-ms-row-height, 72px) * 3) + var(--co-ms-header-height, 64px));
     overflow-y: hidden;
 }
 /* ============================================================
@@ -587,6 +812,7 @@
 /* Table Body for Vertical Scroll */
 .co-ms-students-table tbody {
     max-height: calc(var(--co-ms-row-height, 72px) * 3);
+    min-height: calc(var(--co-ms-row-height, 72px) * 3);
     display: block;
     width: 100%;
     box-sizing: border-box;
@@ -1279,6 +1505,7 @@ overflow: hidden  ;
         padding-top: 90px;
         overflow-x: hidden;
         overflow-y: auto;
+        height: 100vh;
         box-sizing: border-box;
         background-color: #fff;
     }
@@ -1306,19 +1533,20 @@ overflow: hidden  ;
         gap: 20px; 
         margin-left: 0;
         margin-top: 0; 
-        padding: 0 15px; 
+        padding: 0; 
         width: 100%;
-        max-height: 490px;
+        height: auto;
+        max-height: none;
     }
 
     .co-ms-bottom-card 
     {
-       margin: 20px 3px;
+       margin: 20px 0 0 0;
         padding: 15px;
         width: 100%; 
-       max-width: 700px;
-       position: relative;
-       top: 735px;
+       max-width: 100%;
+       position: static;
+       top: auto;
     }
  .co-ms-table-container::-webkit-scrollbar {
       width: 10px;
@@ -1353,23 +1581,26 @@ overflow: hidden  ;
       background-color: #c1bfbf;
     }
     .co-ms-filter-section {
-        flex: 1 1 100%; 
-        width: 100%; 
-        max-width: 100%; 
-        margin-left: 0; 
-        padding: 20px; 
-        border-radius: 20px; 
-        margin-top: 0px;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        padding: 16px 15px;
+        border-radius: 18px;
+        margin-top: 0;
+        height: auto;
     }
     .co-ms-filter-content {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+        margin-top: 0;
     }
     
     .co-ms-filter-header {
         margin-left: auto;
         margin-right: auto;
+        bottom: 0;
     }
     
     /* Filter Fields Stacking (Fixes overlap/positioning) */
@@ -1383,7 +1614,105 @@ overflow: hidden  ;
         left: 0 !important;
         top: 0 !important;
         margin-top: 0 !important;
-        margin-bottom: 15px;
+        margin-bottom: 4px;
+    }
+
+    .co-ms-batch-range,
+    .co-ms-yearsem-range,
+    .co-ms-section-filter {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 0;
+    }
+
+    .co-ms-batch-range-inputs,
+    .co-ms-yearsem-range-inputs {
+        width: 100%;
+    }
+
+    .co-ms-batch-range-field,
+    .co-ms-yearsem-range-field {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .co-ms-batch-range-select,
+    .co-ms-batch-range-input,
+    .co-ms-yearsem-range-select,
+    .co-ms-section-filter-select,
+    .co-ms-floating-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .co-ms-batch-range-label,
+    .co-ms-yearsem-range-label,
+    .co-ms-section-filter-label,
+    .co-ms-filter-section .co-ms-floating-label {
+        margin: 0;
+    }
+
+    .co-ms-name-container, .co-ms-register-number-container {
+        margin-bottom: 8px;
+    }
+
+    /* Mobile-specific filter section input containers with proper spacing */
+    .co-ms-filter-section .co-ms-batch-range,
+    .co-ms-filter-section .co-ms-yearsem-range,
+    .co-ms-filter-section .co-ms-section-filter {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 8px;
+        margin-top: 0.1px;
+    }
+
+    /* Mobile filter section labels with proper spacing */
+    .co-ms-filter-section .co-ms-batch-range-label,
+    .co-ms-filter-section .co-ms-yearsem-range-label,
+    .co-ms-filter-section .co-ms-section-filter-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #111;
+        margin: 0 0 4px 0;
+        padding: 0;
+    }
+
+    /* Mobile filter section input rows */
+    .co-ms-filter-section .co-ms-batch-range-inputs,
+    .co-ms-filter-section .co-ms-yearsem-range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    /* Mobile filter section inputs */
+    .co-ms-filter-section .co-ms-batch-range-select,
+    .co-ms-filter-section .co-ms-batch-range-input,
+    .co-ms-filter-section .co-ms-yearsem-range-select,
+    .co-ms-filter-section .co-ms-section-filter-select {
+        height: 42px;
+        padding: 0 12px;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+
+    /* Mobile filter section separators */
+    .co-ms-filter-section .co-ms-batch-range-sep,
+    .co-ms-filter-section .co-ms-yearsem-range-sep {
+        font-weight: 700;
+        color: #444;
+        margin-top: 0;
+    }
+
+    /* Mobile filter section input fields */
+    .co-ms-filter-section .co-ms-batch-range-field,
+    .co-ms-filter-section .co-ms-yearsem-range-field {
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     /* Button Group */
@@ -1398,27 +1727,37 @@ overflow: hidden  ;
         flex: 1; 
     }
 
+    .co-ms-blocklist-btn {
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+    }
+
     /* Action Card Container */
     .co-ms-action-cards-section {
-                display: grid;
+        display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
         width: 100%;
-        margin-left: -576px;
-        order: 1;
-        position: relative;
-        top: 510px;
+        margin-left: 0;
+        order: 2;
+        position: static;
+        top: auto;
+        margin-top: 20px;
     }
     
     .co-ms-action-card {
        min-width: 0;
-        max-width: 207px;
+        max-width: 100%;
         width: 100%;
-        margin-left: 50%;
+        margin-left: 0;
     }
 
     .co-ms-delete-card {
+        width: 100%;
         grid-column: 1 / -1;
+        justify-self: center;
+        max-width: calc((100% - 15px) / 2);
     }
 
 

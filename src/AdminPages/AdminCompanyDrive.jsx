@@ -7,6 +7,7 @@ import Cosidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminCompanyDrive.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
+import EligibleStudentsIcon from '../assets/Ad_cd_Eligiblestu.svg';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -88,61 +89,6 @@ const BuildingIcon = () => (
     </svg>
 );
 
-// Loading Popup Component for fetching students
-const LoadingStudentsPopup = ({ isOpen }) => {
-    if (!isOpen) return null;
-    
-    return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999
-        }}>
-            <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '40px',
-                minWidth: '400px',
-                textAlign: 'center',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
-            }}>
-                <div style={{
-                    width: '60px',
-                    height: '60px',
-                    border: '5px solid #f3f3f3',
-                    borderTop: '5px solid #4EA24E',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite',
-                    margin: '0 auto 20px'
-                }}></div>
-                <style>{`
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                `}</style>
-                <h3 style={{ 
-                    margin: '0 0 10px 0', 
-                    fontSize: '24px', 
-                    color: '#333',
-                    fontWeight: '600'
-                }}>Loading...</h3>
-                <p style={{ 
-                    margin: 0, 
-                    color: '#888', 
-                    fontSize: '16px' 
-                }}>Setting up students for the drive</p>
-            </div>
-        </div>
-    );
-};
 
 function AdminCompanyDrive({ onLogout }) {
     const navigate = useNavigate();
@@ -177,7 +123,8 @@ function AdminCompanyDrive({ onLogout }) {
     const [exportProgress, setExportProgress] = useState(0);
     const [exportType, setExportType] = useState('Excel');
     const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+    const [navPopupState, setNavPopupState] = useState('none');
+    const [navProgress, setNavProgress] = useState(0);
     
     // Company drives data
     const [companies, setCompanies] = useState([]);
@@ -339,15 +286,63 @@ function AdminCompanyDrive({ onLogout }) {
                 return {
                     ...drive,
                     attendanceTaken: hasAttendance,
-                    eligibleCreated: hasEligible
+                    eligibleCreated: hasEligible,
+                    allRoundsCompleted: false  // Will be updated in the second pass
                 };
             });
+
+            // Second pass: Fetch round results to check if all rounds are completed
+            const drivesWithRoundStatus = await Promise.all(
+                drivesWithAttendance.map(async (drive) => {
+                    try {
+                        // Only fetch round results if attendance was taken
+                        if (!drive.attendanceTaken) {
+                            return drive;
+                        }
+
+                        // Fetch round results for this drive
+                        const roundResults = await mongoDBService.getAllRoundResults(
+                            drive.companyName,
+                            drive.jobRole,
+                            drive.startingDate,
+                            drive._id
+                        );
+
+                        console.log(`📊 Round results for ${drive.companyName} - ${drive.jobRole}:`, roundResults);
+
+                        // Check if all rounds are completed
+                        let allRoundsCompleted = false;
+                        const totalRounds = drive.rounds || drive.numberOfRounds || 1;
+
+                        if (roundResults && roundResults.data && roundResults.data.rounds) {
+                            const completedRounds = roundResults.data.rounds.filter(round => 
+                                round.roundNumber && 
+                                Array.isArray(round.passedStudents) && 
+                                Array.isArray(round.failedStudents)
+                            );
+
+                            // All rounds are completed if we have results for all expected rounds
+                            allRoundsCompleted = completedRounds.length === totalRounds && totalRounds > 0;
+                            
+                            console.log(`✏️ Drive: ${drive.companyName} - Total rounds: ${totalRounds}, Completed rounds: ${completedRounds.length}, All completed: ${allRoundsCompleted}`);
+                        }
+
+                        return {
+                            ...drive,
+                            allRoundsCompleted
+                        };
+                    } catch (error) {
+                        console.error(`Error checking round results for ${drive.companyName}:`, error);
+                        return drive;
+                    }
+                })
+            );
 
             // Compute unique departments / eligible branches
             const deptSet = new Set();
             const dateRangeSet = new Set();
 
-            drivesWithAttendance.forEach(d => {
+            drivesWithRoundStatus.forEach(d => {
                 if (d.department && String(d.department).trim()) {
                     deptSet.add(String(d.department).trim());
                 }
@@ -378,7 +373,7 @@ function AdminCompanyDrive({ onLogout }) {
                 }
             });
 
-            setCompanies(drivesWithAttendance);
+            setCompanies(drivesWithRoundStatus);
             setDepartmentOptions(['', ...Array.from(deptSet).sort()]);
             setDateRangeOptions(['', ...Array.from(dateRangeSet).sort()]);
         } catch (error) {
@@ -509,12 +504,28 @@ function AdminCompanyDrive({ onLogout }) {
     };
 
     const handleViewDrive = (company) => {
-        navigate('/admin/company-drive/add', { 
-            state: { 
+        navigate('/admin/company-drive/add', {
+            state: {
                 viewMode: true,
-                editingDrive: company 
-            } 
+                editingDrive: company
+            }
         });
+    };
+
+    const startNavigationLoading = async (navigateAction) => {
+        setNavPopupState('progress');
+        setNavProgress(0);
+
+        setNavProgress(25);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        setNavProgress(60);
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        setNavProgress(100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        navigateAction();
     };
 
     const filteredCompanies = companies.filter(company => {
@@ -706,74 +717,80 @@ function AdminCompanyDrive({ onLogout }) {
                                 {/* <span className={styles['Admin-cd-filter-icon-container']}>☰</span> */}
                             </div>
                             <div className={styles['Admin-cd-filter-content']}>
-                                {/* Company Name Filter */}
-                                <div className={`${styles['Admin-cd-text-container']} ${tempFilterCompany ? styles['has-value'] : ''} ${companyFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-cd-floating-label']}>Search Company/Job Role</label>
-                                    <input
-                                        type="text"
-                                        className={styles['Admin-cd-text']}
-                                        value={tempFilterCompany}
-                                        onChange={(e) => setTempFilterCompany(e.target.value)}
-                                        onFocus={() => setCompanyFocused(true)}
-                                        onBlur={() => setCompanyFocused(false)}
-                                    />
+                                {/* Company Name Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <label className={styles['Admin-cd-static-label']}>Search Company/Job Role</label>
+                                    <div className={`${styles['Admin-cd-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
+                                        <input
+                                            type="text"
+                                            className={styles['Admin-cd-text']}
+                                            placeholder="Search Company/Job Role"
+                                            value={tempFilterCompany}
+                                            onChange={(e) => setTempFilterCompany(e.target.value)}
+                                            onFocus={() => setCompanyFocused(true)}
+                                            onBlur={() => setCompanyFocused(false)}
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* Department Filter */}
-                                <div className={`${styles['Admin-cd-text-container']} ${tempFilterDepartment ? styles['has-value'] : ''} ${departmentFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-cd-floating-label']}>Search by Department</label>
-                                    <select
-                                        className={styles['Admin-cd-text']}
-                                        value={tempFilterDepartment}
-                                        onChange={(e) => setTempFilterDepartment(e.target.value)}
-                                        onFocus={() => setDepartmentFocused(true)}
-                                        onBlur={() => setDepartmentFocused(false)}
-                                    >
-                                        {departmentOptions && departmentOptions.length > 0 ? (
-                                            departmentOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Departments' : opt}</option>
-                                            ))
-                                        ) : (
-                                            <option value="">All Departments</option>
-                                        )}
-                                    </select>
+                                {/* Department Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <div className={`${styles['Admin-cd-text-container']} ${departmentFocused ? styles['is-focused'] : ''}`}>
+                                        <select
+                                            className={styles['Admin-cd-text']}
+                                            value={tempFilterDepartment}
+                                            onChange={(e) => setTempFilterDepartment(e.target.value)}
+                                            onFocus={() => setDepartmentFocused(true)}
+                                            onBlur={() => setDepartmentFocused(false)}
+                                        >
+                                            {departmentOptions && departmentOptions.length > 0 ? (
+                                                departmentOptions.map((opt, idx) => (
+                                                    <option key={idx} value={opt}>{opt === '' ? 'All Departments' : opt}</option>
+                                                ))
+                                            ) : (
+                                                <option value="">All Departments</option>
+                                            )}
+                                        </select>
+                                    </div>
                                 </div>
 
-                                {/* Domain Filter */}
-                                <div className={`${styles['Admin-cd-text-container']} ${tempFilterDomain ? styles['has-value'] : ''} ${domainFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-cd-floating-label']}>Start Date-End Date</label>
-                                    <select
-                                        className={styles['Admin-cd-text']}
-                                        value={tempFilterDomain}
-                                        onChange={(e) => setTempFilterDomain(e.target.value)}
-                                        onFocus={() => setDomainFocused(true)}
-                                        onBlur={() => setDomainFocused(false)}
-                                    >
-                                        {dateRangeOptions && dateRangeOptions.length > 0 ? (
-                                            dateRangeOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Dates' : opt}</option>
-                                            ))
-                                        ) : (
-                                            <option value="">All Dates</option>
-                                        )}
-                                    </select>
+                                {/* Domain Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <div className={`${styles['Admin-cd-text-container']} ${domainFocused ? styles['is-focused'] : ''}`}>
+                                        <select
+                                            className={styles['Admin-cd-text']}
+                                            value={tempFilterDomain}
+                                            onChange={(e) => setTempFilterDomain(e.target.value)}
+                                            onFocus={() => setDomainFocused(true)}
+                                            onBlur={() => setDomainFocused(false)}
+                                        >
+                                            {dateRangeOptions && dateRangeOptions.length > 0 ? (
+                                                dateRangeOptions.map((opt, idx) => (
+                                                    <option key={idx} value={opt}>{opt === '' ? 'Start Date-End Date' : opt}</option>
+                                                ))
+                                            ) : (
+                                                <option value="">All Dates</option>
+                                            )}
+                                        </select>
+                                    </div>
                                 </div>
 
-                                {/* Mode Filter - Dropdown */}
-                                <div className={`${styles['Admin-cd-text-container']} ${tempFilterMode ? styles['has-value'] : ''} ${modeFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-cd-floating-label']}>Search Mode</label>
-                                    <select
-                                        className={styles['Admin-cd-text']}
-                                        value={tempFilterMode}
-                                        onChange={(e) => setTempFilterMode(e.target.value)}
-                                        onFocus={() => setModeFocused(true)}
-                                        onBlur={() => setModeFocused(false)}
-                                    >
-                                        <option value="">Search Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
+                                {/* Mode Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <div className={`${styles['Admin-cd-text-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
+                                        <select
+                                            className={styles['Admin-cd-text']}
+                                            value={tempFilterMode}
+                                            onChange={(e) => setTempFilterMode(e.target.value)}
+                                            onFocus={() => setModeFocused(true)}
+                                            onBlur={() => setModeFocused(false)}
+                                        >
+                                            <option value="">Search Mode</option>
+                                            <option value="Online">Online</option>
+                                            <option value="Offline">Offline</option>
+                                            <option value="Hybrid">Hybrid</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -926,6 +943,28 @@ function AdminCompanyDrive({ onLogout }) {
                                                             const status = company.driveStatus || 'not-started';
                                                             const attendanceTaken = company.attendanceTaken || false;
                                                             const eligibleCreated = company.eligibleCreated || false;
+                                                            const allRoundsCompleted = company.allRoundsCompleted || false;
+                                                            
+                                                            // Show clickable tick icon if all rounds are completed
+                                                            if (allRoundsCompleted) {
+                                                                return (
+                                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={() => {
+                                                                        startNavigationLoading(() => {
+                                                                            navigate('/admin/company-drive/details', {
+                                                                                state: {
+                                                                                    company: company,
+                                                                                    driveId: company._id,
+                                                                                    startingDate: company.startingDate,
+                                                                                    isReadOnly: true  // All rounds completed - view only mode
+                                                                                }
+                                                                            });
+                                                                        });
+                                                                    }} title="View Drive Results">
+                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E"/>
+                                                                        <path d="M7 12L10 15L17 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                    </svg>
+                                                                );
+                                                            }
                                                             
                                                             if (status === 'completed') {
                                                                 return (
@@ -939,19 +978,18 @@ function AdminCompanyDrive({ onLogout }) {
                                                             if (attendanceTaken) {
                                                                 // Show Play button if attendance is taken
                                                                 return (
-                                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={async () => {
-                                                                        setIsLoadingStudents(true);
-                                                                        // Small delay to show loading popup
-                                                                        await new Promise(resolve => setTimeout(resolve, 500));
-                                                                        
-                                                                        // Pass the current company object directly - it's already the specific drive from the table row
-                                                                        // No need to extract from drives array since table rows show individual drives
-                                                                        navigate('/admin/company-drive/details', { 
-                                                                            state: { 
-                                                                                company: company, 
-                                                                                driveId: company._id,
-                                                                                startingDate: company.startingDate
-                                                                            } 
+                                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={() => {
+                                                                        startNavigationLoading(() => {
+                                                                            // Pass the current company object directly - it's already the specific drive from the table row
+                                                                            // No need to extract from drives array since table rows show individual drives
+                                                                            navigate('/admin/company-drive/details', {
+                                                                                state: {
+                                                                                    company: company,
+                                                                                    driveId: company._id,
+                                                                                    startingDate: company.startingDate,
+                                                                                    isReadOnly: false  // Attendance taken but rounds not complete - editable mode
+                                                                                }
+                                                                            });
                                                                         });
                                                                     }} title="Start Drive">
                                                                         <circle cx="12" cy="12" r="10" fill="#4EA24E"/>
@@ -960,15 +998,14 @@ function AdminCompanyDrive({ onLogout }) {
                                                                 );
                                                             }
 
-                                                            // If eligible students not created yet, show an icon and navigate to eligible students selection page
+                                                            // If eligible students not created yet, show eligible students icon and navigate to eligible students selection page
                                                             if (!eligibleCreated) {
                                                                 return (
-                                                                    <svg
-                                                                        width="20"
-                                                                        height="20"
-                                                                        viewBox="0 0 24 24"
-                                                                        fill="none"
-                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                    <img
+                                                                        src={EligibleStudentsIcon}
+                                                                        alt="Select Eligible Students"
+                                                                        width="24"
+                                                                        height="22"
                                                                         style={{ cursor: 'pointer' }}
                                                                         onClick={() => {
                                                                             // Format dates to YYYY-MM-DD format
@@ -995,16 +1032,7 @@ function AdminCompanyDrive({ onLogout }) {
                                                                             });
                                                                         }}
                                                                         title="Select Eligible Students"
-                                                                    >
-                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E" />
-                                                                        <path
-                                                                            d="M9 12l2 2 4-4"
-                                                                            stroke="white"
-                                                                            strokeWidth="2"
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                        />
-                                                                    </svg>
+                                                                    />
                                                                 );
                                                             }
 
@@ -1051,7 +1079,12 @@ function AdminCompanyDrive({ onLogout }) {
                 exportType={exportType}
             />
             
-            <LoadingStudentsPopup isOpen={isLoadingStudents} />
+            <ExportProgressAlert
+                isOpen={navPopupState === 'progress'}
+                onClose={() => {}}
+                progress={navProgress}
+                exportType="Loading"
+            />
         </>
     );
 }

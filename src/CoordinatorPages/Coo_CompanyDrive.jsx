@@ -585,7 +585,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
                       onChange={(e) => handleCompanyChange(e.target.value)}
                       required
                     >
-                      <option value=""></option>
+                      <option value="">Search Company</option>
                       {uniqueCompanies.map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
@@ -604,7 +604,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
                       onChange={(e) => handleFilterChange('jobRole', e.target.value)}
                       required
                     >
-                      <option value=""></option>
+                      <option value="">Search Job Role</option>
                       {jobRolesForSelectedCompany.map(r => (
                         <option key={r} value={r}>{r}</option>
                       ))}
@@ -625,7 +625,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
                       onChange={(e) => handleStartDateChange(e.target.value)}
                       required
                     >
-                      <option value=""></option>
+                      <option value="">Start Date</option>
                       {uniqueStartDates.map(d => (
                         <option key={d} value={d}>{formatISODateToDisplay(d)}</option>
                       ))}
@@ -639,13 +639,13 @@ export default function App({ onLogout, currentView, onViewChange }) {
                   <div className={styles['co-cd-search-filter-card__input-wrapper']}>
                     <select
                       id="co-cd-search-end-date"
-                      className={styles['co-cd-search-filter-card__input']} 
+                      className={styles['co-cd-search-filter-card__input']}
                       value={filters.endDate}
                       onChange={(e) => handleFilterChange('endDate', e.target.value)}
                       disabled={!filters.startDate}
                       required
                     >
-                      <option value=""></option>
+                      <option value="">End Date</option>
                       {uniqueEndDatesForSelectedStart.map(d => (
                         <option key={d} value={d}>{formatISODateToDisplay(d)}</option>
                       ))}

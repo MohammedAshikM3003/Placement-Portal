@@ -3,7 +3,7 @@ import useCoordinatorAuth from "../utils/useCoordinatorAuth";
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
-import "./Coo_TrainAttendanceStuinfo.css";
+import styles from "./Coo_TrainAttendanceStuinfo.module.css";
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const getTodayDMY = () => {
@@ -49,7 +49,7 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
     nameOrRegNo: "",
     year: "",
     section: "",
-    date: getMostRecentDate(),
+    date: "",
   });
   const [statusFilter, setStatusFilter] = useState("all"); // all, present, absent
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
@@ -216,7 +216,7 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   const exportToPDF = () => {
     // Only print the table - no file download
     const printWindow = window.open("", "_blank");
-    const tableHTML = document.querySelector(".attendance-table").outerHTML;
+    const tableHTML = document.querySelector(`.${styles['attendance-table']}`).outerHTML;
 
     printWindow.document.write(`
       <html>
@@ -257,101 +257,104 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   };
 
   return (
-    <div className="coordinator-main-wrapper train-attendance-page">
+    <div className={`${styles['coordinator-main-wrapper']} ${styles['train-attendance-page']}`}>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="coordinator-main-layout">
+      <div className={styles['coordinator-main-layout']}>
         <Sidebar
           isOpen={isSidebarOpen}
           onLogout={onLogout}
           currentView="training"
           onViewChange={onViewChange}
         />
-        <div className="coordinator-content-area">
-          <div className="train-attendance-container">
+        <div className={styles['coordinator-content-area']}>
+          <div className={styles['train-attendance-container']}>
             {/* Top Row - Two Columns */}
-            <div className="top-row">
+            <div className={styles['top-row']}>
               {/* Left: Filter Section */}
-              <div className="filter-card">
-                <div className="ta-filter-tabs-container">
-                  <button className="ta-filter-tab-button" type="button">
+              <div className={styles['filter-card']}>
+                <div className={styles['ta-filter-tabs-container']}>
+                  <button className={styles['ta-filter-tab-button']} type="button">
                     Phase - I
                   </button>
                 </div>
 
-                <div className="ta-filter-fields-container">
-                  <div className="ta-filter-fields-row">
-                    <div className="ta-filter-input-wrapper">
+                <div className={styles['ta-filter-fields-container']}>
+                  <div className={styles['ta-filter-fields-row']}>
+                    <div className={styles['ta-filter-input-wrapper']}>
                       <input
                         id="ta-filter-name-regno"
-                        className="ta-filter-input"
+                        className={styles['ta-filter-input']}
                         type="text"
+                        placeholder="Name/Reg No"
                         required
                         value={filters.nameOrRegNo}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, nameOrRegNo: e.target.value }))
                         }
                       />
-                      <label className="ta-filter-label" htmlFor="ta-filter-name-regno">
+                      <label className={styles['ta-filter-label']} htmlFor="ta-filter-name-regno">
                         Name/Reg No
                       </label>
                     </div>
 
-                    <div className="ta-filter-input-wrapper">
+                    <div className={styles['ta-filter-input-wrapper']}>
                       <select
                         id="ta-filter-year"
-                        className="ta-filter-input"
+                        className={styles['ta-filter-input']}
                         required
                         value={filters.year}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, year: e.target.value }))
                         }
                       >
-                        <option value="" disabled></option>
+                        <option value="">Year</option>
                         <option value="I">I</option>
                         <option value="II">II</option>
                         <option value="III">III</option>
                         <option value="IV">IV</option>
                       </select>
-                      <label className="ta-filter-label" htmlFor="ta-filter-year">
+                      <label className={styles['ta-filter-label']} htmlFor="ta-filter-year">
                         Year
                       </label>
                     </div>
                   </div>
 
-                  <div className="ta-filter-fields-row">
-                    <div className="ta-filter-input-wrapper">
+                  <div className={styles['ta-filter-fields-row']}>
+                    <div className={styles['ta-filter-input-wrapper']}>
                       <select
                         id="ta-filter-section"
-                        className="ta-filter-input"
+                        className={styles['ta-filter-input']}
                         required
                         value={filters.section}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, section: e.target.value }))
                         }
                       >
-                        <option value="" disabled></option>
+                        <option value="">Section</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                       </select>
-                      <label className="ta-filter-label" htmlFor="ta-filter-section">
+                      <label className={styles['ta-filter-label']} htmlFor="ta-filter-section">
                         Section
                       </label>
                     </div>
 
-                    <div className="ta-filter-input-wrapper">
+                    <div className={styles['ta-filter-input-wrapper']}>
                       <select
                         id="ta-filter-date"
-                        className="ta-filter-input"
+                        className={styles['ta-filter-input']}
                         value={filters.date}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, date: e.target.value }))
                         }
+                        required
                       >
+                        <option value="">Date</option>
                         {[getTodayDMY(), ...Array.from(new Set(students.map((s) => s.date).filter(Boolean))).filter(d => d !== getTodayDMY()).sort()].map((d) => (
                           <option key={d} value={d}>{d}</option>
                         ))}
                       </select>
-                      <label className="ta-filter-label" htmlFor="ta-filter-date">
+                      <label className={styles['ta-filter-label']} htmlFor="ta-filter-date">
                         Date
                       </label>
                     </div>
@@ -360,72 +363,72 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
               </div>
 
               {/* Right: Buttons Section (no card) */}
-              <div className="buttons-section">
-                <div className="ta-buttons-white-card">
+              <div className={styles['buttons-section']}>
+                <div className={styles['ta-buttons-white-card']}>
                   {/* Training Sequence Buttons */}
-                  <div className="training-buttons-row">
+                  <div className={styles['training-buttons-row']}>
                     <button
-                      className={`training-seq-btn ${activeTraining === "R-Sequence" ? "active" : ""}`}
+                      className={`${styles['training-seq-btn']} ${activeTraining === "R-Sequence" ? styles['active'] : ""}`}
                       onClick={() => setActiveTraining("R-Sequence")}
                     >
                       R - Sequence
                     </button>
                     <button
-                      className={`training-seq-btn ${activeTraining === "X-Plore" ? "active" : ""}`}
+                      className={`${styles['training-seq-btn']} ${activeTraining === "X-Plore" ? styles['active'] : ""}`}
                       onClick={() => setActiveTraining("X-Plore")}
                     >
                       X - Plore
                     </button>
                     <button
-                      className={`training-seq-btn ${activeTraining === "Z-Sequence" ? "active" : ""}`}
+                      className={`${styles['training-seq-btn']} ${activeTraining === "Z-Sequence" ? styles['active'] : ""}`}
                       onClick={() => setActiveTraining("Z-Sequence")}
                     >
                       Z - Sequence
                     </button>
                     <button
-                      className={`training-seq-btn ${activeTraining === "A-Sequence" ? "active" : ""}`}
+                      className={`${styles['training-seq-btn']} ${activeTraining === "A-Sequence" ? styles['active'] : ""}`}
                       onClick={() => setActiveTraining("A-Sequence")}
                     >
                       A - Sequence
                     </button>
                     <button
-                      className={`training-seq-btn ${activeTraining === "B-Sequence" ? "active" : ""}`}
+                      className={`${styles['training-seq-btn']} ${activeTraining === "B-Sequence" ? styles['active'] : ""}`}
                       onClick={() => setActiveTraining("B-Sequence")}
                     >
                       B - Sequence
                     </button>
                   </div>
 
-                  <div className="ta-buttons-divider" />
+                  <div className={styles['ta-buttons-divider']} />
 
                   {/* Batch Buttons */}
-                  <div className="batch-buttons-row">
+                  <div className={styles['batch-buttons-row']}>
                     <button
-                      className={`batch-btn ${activeBatch === "Batch-1" ? "active" : ""}`}
+                      className={`${styles['batch-btn']} ${activeBatch === "Batch-1" ? styles['active'] : ""}`}
                       onClick={() => setActiveBatch("Batch-1")}
                     >
                       Batch - 1
                     </button>
                     <button
-                      className={`batch-btn ${activeBatch === "Batch-2" ? "active" : ""}`}
+                      className={`${styles['batch-btn']} ${activeBatch === "Batch-2" ? styles['active'] : ""}`}
                       onClick={() => setActiveBatch("Batch-2")}
                     >
                       Batch - 2
                     </button>
                     <button
-                      className={`batch-btn ${activeBatch === "Batch-3" ? "active" : ""}`}
+                      className={`${styles['batch-btn']} ${activeBatch === "Batch-3" ? styles['active'] : ""}`}
                       onClick={() => setActiveBatch("Batch-3")}
                     >
                       Batch - 3
                     </button>
                     <button
-                      className={`batch-btn ${activeBatch === "Batch-4" ? "active" : ""}`}
+                      className={`${styles['batch-btn']} ${activeBatch === "Batch-4" ? styles['active'] : ""}`}
                       onClick={() => setActiveBatch("Batch-4")}
                     >
                       Batch - 4
                     </button>
                     <button
-                      className={`batch-btn ${activeBatch === "Batch-5" ? "active" : ""}`}
+                      className={`${styles['batch-btn']} ${activeBatch === "Batch-5" ? styles['active'] : ""}`}
                       onClick={() => setActiveBatch("Batch-5")}
                     >
                       Batch - 5
@@ -434,21 +437,21 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="action-buttons-row">
-                  <button 
-                    className={`action-btn present-btn ${statusFilter === 'present' ? 'active' : ''}`} 
+                <div className={styles['action-buttons-row']}>
+                  <button
+                    className={`${styles['action-btn']} ${styles['present-btn']} ${statusFilter === 'present' ? styles['active'] : ''}`}
                     onClick={() => handleBatchStatusUpdate('Present')}
                   >
                     Present
                   </button>
-                  <button 
-                    className={`action-btn absent-btn ${statusFilter === 'absent' ? 'active' : ''}`} 
+                  <button
+                    className={`${styles['action-btn']} ${styles['absent-btn']} ${statusFilter === 'absent' ? styles['active'] : ''}`}
                     onClick={() => handleBatchStatusUpdate('Absent')}
                   >
                     Absent
                   </button>
-                  <button 
-                    className="action-btn remove-btn" 
+                  <button
+                    className={`${styles['action-btn']} ${styles['remove-btn']}`}
                     onClick={handleRemoveStudents}
                     disabled={selectedStudents.length === 0}
                   >
@@ -459,68 +462,72 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
             </div>
 
             {/* Bottom Row: Attendance Table Section */}
-            <div className="attendance-table-section">
-              <div className="table-header">
-                <h2 className="table-title">ATTENDANCE DETAILS</h2>
-                <div className="print-btn-container">
-                  <button className="print-btn" onClick={() => setShowExportDropdown(!showExportDropdown)}>Print</button>
+            <div className={styles['attendance-table-section']}>
+              <div className={styles['table-header']}>
+                <h2 className={styles['table-title']}>ATTENDANCE DETAILS</h2>
+                <div className={styles['print-btn-container']}>
+                  <button className={styles['print-btn']} onClick={() => setShowExportDropdown(!showExportDropdown)}>Print</button>
                   {showExportDropdown && (
-                    <div className="export-dropdown-menu">
-                      <div className="export-dropdown-item" onClick={handleExportExcel}>Export to Excel</div>
-                      <div className="export-dropdown-item" onClick={handleExportPDF}>Save as PDF</div>
+                    <div className={styles['export-dropdown-menu']}>
+                      <div className={styles['export-dropdown-item']} onClick={handleExportExcel}>Export to Excel</div>
+                      <div className={styles['export-dropdown-item']} onClick={handleExportPDF}>Save as PDF</div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="table-wrapper">
-                <table className="attendance-table">
+              <div className={styles['table-wrapper']}>
+                <table className={styles['attendance-table']}>
                   <thead>
                     <tr>
-                      <th className="col-select">Select</th>
-                      <th className="col-sno">S.No</th>
-                      <th className="col-name">Name</th>
-                      <th className="col-reg">Register Number</th>
-                      <th className="col-dept">Department</th>
-                      <th className="col-year">Year</th>
-                      <th className="col-section">Section</th>
-                      <th className="col-phone">Phone No</th>
-                      <th className="col-view">View</th>
-                      <th className="col-status">Status</th>
-                      <th className="col-action">Action</th>
+                      <th className={styles['col-select']}>Select</th>
+                      <th className={styles['col-sno']}>S.No</th>
+                      <th className={styles['col-name']}>Name</th>
+                      <th className={styles['col-reg']}>Register Number</th>
+                      <th className={styles['col-dept']}>Department</th>
+                      <th className={styles['col-year']}>Year</th>
+                      <th className={styles['col-section']}>Section</th>
+                      <th className={styles['col-phone']}>Phone No</th>
+                      <th className={styles['col-view']}>View</th>
+                      <th className={styles['col-status']}>Status</th>
+                      <th className={styles['col-action']}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredStudents.map((student, index) => {
                       const displayStatus = pendingChanges[student.id] || student.status;
                       return (
-                        <tr key={student.id} className={selectedStudents.includes(student.id) ? 'selected-row' : ''}>
-                          <td className="col-select">
+                        <tr key={student.id} className={selectedStudents.includes(student.id) ? styles['selected-row'] : ''}>
+                          <td className={styles['col-select']}>
                             <input
                               type="checkbox"
                               checked={selectedStudents.includes(student.id)}
                               onChange={() => handleCheckboxChange(student.id)}
                             />
                           </td>
-                          <td className="col-sno">{index + 1}</td>
-                          <td className="col-name">{student.name}</td>
-                          <td className="col-reg">{student.regNo}</td>
-                          <td className="col-dept">{student.dept}</td>
-                          <td className="col-year">{student.year}</td>
-                          <td className="col-section">{student.section}</td>
-                          <td className="col-phone">{student.phone}</td>
-                          <td className="col-view">
-                            <span className="view-icon"></span>
+                          <td className={styles['col-sno']}>{index + 1}</td>
+                          <td className={styles['col-name']}>{student.name}</td>
+                          <td className={styles['col-reg']}>{student.regNo}</td>
+                          <td className={styles['col-dept']}>{student.dept}</td>
+                          <td className={styles['col-year']}>{student.year}</td>
+                          <td className={styles['col-section']}>{student.section}</td>
+                          <td className={styles['col-phone']}>{student.phone}</td>
+                          <td className={styles['col-view']}>
+                            <span
+                              className={styles['view-icon']}
+                              onClick={() => onViewChange && onViewChange('coo-placed-stu-view-page')}
+                              style={{ cursor: 'pointer' }}
+                            ></span>
                           </td>
-                          <td className="col-status">
-                            <span className={`status-text ${displayStatus.toLowerCase()}`}>
+                          <td className={styles['col-status']}>
+                            <span className={`${styles['status-text']} ${styles[displayStatus.toLowerCase()]}`}>
                               {displayStatus}
                             </span>
                           </td>
-                          <td className="col-action">
-                            <div className="action-btns">
-                              <button className="present-small-btn" onClick={() => handleStatusUpdate(student.id, "Present")}>Present</button>
-                              <button className="absent-small-btn" onClick={() => handleStatusUpdate(student.id, "Absent")}>Absent</button>
+                          <td className={styles['col-action']}>
+                            <div className={styles['action-btns']}>
+                              <button className={styles['present-small-btn']} onClick={() => handleStatusUpdate(student.id, "Present")}>Present</button>
+                              <button className={styles['absent-small-btn']} onClick={() => handleStatusUpdate(student.id, "Absent")}>Absent</button>
                             </div>
                           </td>
                         </tr>
@@ -531,15 +538,15 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
               </div>
 
               {/* Footer Actions inside Table */}
-              <div className="bottom-actions">
-                <button 
-                  className="discard-btn" 
+              <div className={styles['bottom-actions']}>
+                <button
+                  className={styles['discard-btn']}
                   onClick={handleDiscard}
                 >
                   Discard
                 </button>
-                <button 
-                  className="update-btn" 
+                <button
+                  className={styles['update-btn']}
                   onClick={handleUpdateClick}
                 >
                   Update
@@ -552,13 +559,13 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
 
       {/* Success Popup - Exact copy from Achievements page */}
       {showSuccessPopup && (
-        <div className="Edit-popup-overlay">
-          <div className="Edit-popup-container">
-            <div className="Edit-popup-header">Update!</div>
-            <div className="Edit-popup-body">
-              <svg className="Edit-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle className="Edit-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
-                <path className="Edit-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        <div className={styles['Edit-popup-overlay']}>
+          <div className={styles['Edit-popup-container']}>
+            <div className={styles['Edit-popup-header']}>Update!</div>
+            <div className={styles['Edit-popup-body']}>
+              <svg className={styles['Edit-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className={styles['Edit-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+                <path className={styles['Edit-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
               </svg>
               <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
                 Attendance Updated ✓
@@ -567,8 +574,8 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
                 Changes are Updated
               </p>
             </div>
-            <div className="Edit-popup-footer">
-              <button onClick={() => setShowSuccessPopup(false)} className="Edit-popup-close-btn">
+            <div className={styles['Edit-popup-footer']}>
+              <button onClick={() => setShowSuccessPopup(false)} className={styles['Edit-popup-close-btn']}>
                 Close
               </button>
             </div>

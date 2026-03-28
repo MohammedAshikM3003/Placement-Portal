@@ -289,14 +289,41 @@ function AdminstudDB() {
         setFilterBatch(tempFilterBatch);
     };
 
+    const showLoadingThenNavigate = async (onNavigate) => {
+        setExportType('Loading');
+        setExportPopupState('progress');
+        setExportProgress(0);
+
+        const progressInterval = setInterval(() => {
+            setExportProgress(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prev + 15;
+            });
+        }, 200);
+
+        await new Promise(resolve => setTimeout(resolve, 900));
+        clearInterval(progressInterval);
+        setExportProgress(100);
+
+        await new Promise(resolve => setTimeout(resolve, 250));
+        setExportPopupState('none');
+        setExportProgress(0);
+
+        onNavigate();
+    };
+
     const handleViewProfile = (studentId) => {
         const studentToView = students.find(s => s.id === studentId);
         if (studentToView) {
-            navigate(`/admin-profile/${studentId}`, { 
-                state: { 
-                    mode: 'view', 
-                    isBlocked: studentToView.blocked 
-                } 
+            showLoadingThenNavigate(() => {
+                navigate(`/admin-student-view/${studentId}`, {
+                    state: {
+                        isBlocked: studentToView.blocked
+                    }
+                });
             });
         }
     };
@@ -316,11 +343,12 @@ function AdminstudDB() {
             const studentToEdit = students.find(s => s.id === studentId);
             
             if (studentToEdit) {
-                navigate(`/admin-profile/${studentId}`, { 
-                    state: { 
-                        mode: 'edit', 
-                        isBlocked: studentToEdit.blocked
-                    } 
+                showLoadingThenNavigate(() => {
+                    navigate(`/admin-student-edit/${studentId}`, {
+                        state: {
+                            isBlocked: studentToEdit.blocked
+                        }
+                    });
                 });
             }
         } else if (selectedStudentIds.size > 1) {
@@ -647,35 +675,46 @@ function AdminstudDB() {
                                 {/* <span className={styles['Admin-DB-filter-icon-container']}>☰</span> */}
                             </div>
                             <div className={styles['Admin-DB-filter-content']}>
-                                {/* Dynamic Class Name Update */}
-                                <div className={`${styles['Admin-DB-text-container']} ${tempFilterName ? styles['has-value'] : ''} ${nameFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-DB-floating-label']}>Name</label>
-                                    <input type="text" className={styles['Admin-DB-text']} value={tempFilterName} onChange={(e) => setTempFilterName(e.target.value)} onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)} />
+                                {/* Name Input with Static Label */}
+                                <div className={styles['Admin-DB-input-wrapper']}>
+                                    <label className={styles['Admin-DB-static-label']}>Name</label>
+                                    <div className={`${styles['Admin-DB-text-container']} ${nameFocused ? styles['is-focused'] : ''}`}>
+                                        <input type="text" className={styles['Admin-DB-text']} placeholder="Enter the Name" value={tempFilterName} onChange={(e) => setTempFilterName(e.target.value)} onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)} />
+                                    </div>
                                 </div>
-                                {/* Dynamic Class Name Update */}
-                                <div className={`${styles['Admin-DB-text-container']} ${tempFilterRegno ? styles['has-value'] : ''} ${regnoFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-DB-floating-label']}>Regno</label>
-                                    <input type="text" className={styles['Admin-DB-text']} value={tempFilterRegno} onChange={(e) => setTempFilterRegno(e.target.value)} onFocus={() => setRegnoFocused(true)} onBlur={() => setRegnoFocused(false)} />
+                                {/* Regno Input with Static Label */}
+                                <div className={styles['Admin-DB-input-wrapper']}>
+                                    <label className={styles['Admin-DB-static-label']}>Regno</label>
+                                    <div className={`${styles['Admin-DB-text-container']} ${regnoFocused ? styles['is-focused'] : ''}`}>
+                                        <input type="text" className={styles['Admin-DB-text']} placeholder="Enter the Regno" value={tempFilterRegno} onChange={(e) => setTempFilterRegno(e.target.value)} onFocus={() => setRegnoFocused(true)} onBlur={() => setRegnoFocused(false)} />
+                                    </div>
                                 </div>
-                                <div className={styles['Admin-DB-dropdown-container']}>
-                                    <select className={styles['Admin-DB-dropdown']} value={tempFilterDept} onChange={(e) => setTempFilterDept(e.target.value)}>
-                                        <option value="">Branch</option>
-                                        {branches.map((branch, index) => (
-                                            <option key={branch._id || branch.id || index} value={branch.branchAbbreviation}>
-                                                {branch.branchAbbreviation}
-                                            </option>
-                                        ))}
-                                    </select>
+                                {/* Branch Dropdown with Static Label */}
+                                <div className={styles['Admin-DB-input-wrapper']}>
+                                   
+                                    <div className={styles['Admin-DB-dropdown-container']}>
+                                        <select className={styles['Admin-DB-dropdown']} value={tempFilterDept} onChange={(e) => setTempFilterDept(e.target.value)}>
+                                            <option value="">Select Branch</option>
+                                            {branches.map((branch, index) => (
+                                                <option key={branch._id || branch.id || index} value={branch.branchAbbreviation}>
+                                                    {branch.branchAbbreviation}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className={styles['Admin-DB-dropdown-container']}>
-                                    <select className={styles['Admin-DB-dropdown']} value={tempFilterBatch} onChange={(e) => setTempFilterBatch(e.target.value)}>
-                                        <option value="">Batch</option>
-                                        {batches.map((batch) => (
-                                            <option key={batch} value={batch}>
-                                                {batch}
-                                            </option>
-                                        ))}
-                                    </select>
+                                {/* Batch Dropdown with Static Label */}
+                                <div className={styles['Admin-DB-input-wrapper']}>
+                                    <div className={styles['Admin-DB-dropdown-container']}>
+                                        <select className={styles['Admin-DB-dropdown']} value={tempFilterBatch} onChange={(e) => setTempFilterBatch(e.target.value)}>
+                                            <option value="">Select Batch</option>
+                                            {batches.map((batch) => (
+                                                <option key={batch} value={batch}>
+                                                    {batch}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className={styles['Admin-DB-button-group']}>
                                     <button className={`${styles['Admin-DB-button']} ${styles['Admin-DB-view-students-btn']}`} onClick={handleViewStudents}>View Students</button>

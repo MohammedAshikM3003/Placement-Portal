@@ -15,14 +15,12 @@
 }
 
 .Admin-Drive-AD-main-content {
-    flex: 1;
+    flex: 1 1;
     margin-left: 280px;
-    margin-top: 65px;
+    margin-top: 59px;
     padding: 20px;
     padding-right: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: calc(100vh - 65px);
+    height: calc(100vh - 50px);
     box-sizing: border-box;
     position: relative;
 }
@@ -59,7 +57,7 @@
     max-width: 1400px;
     background-color: transparent;
     margin-left: 0;
-    padding-right: 20px;
+    padding-right: 10px;
 }
 
 /* Left Section - Add Company Drive */
@@ -67,11 +65,11 @@
     flex: 1;
     background: #ffffff;
     border-radius: 12px;
-    padding: 20px 25px;
+    padding: 10px 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
+    height:647px;
 }
 
 .Admin-Drive-AD-header-section {
@@ -521,6 +519,8 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    height: 210px;
+    max-height: 210px;
     overflow: hidden;
 }
 
@@ -534,17 +534,18 @@
     text-align: center;
     letter-spacing: 0.5px;
     flex-shrink: 0;
+    height: 45px;
 }
 
 .Admin-Drive-AD-round-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-    max-height: 144px;
-    min-height: 50px; 
-    overflow-y: auto;
-    padding-right: 10px; 
+    overflow-y: scroll;
     overflow-x: hidden;
+    padding-right: 6px;
+    flex: 1;
+    align-content: start;
 }
 
 .Admin-Drive-AD-round-placeholder {
@@ -579,7 +580,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    overflow: hidden; 
+    overflow: hidden;
+    height: 48px;
 }
 
 .Admin-Drive-AD-round-item label {
@@ -588,6 +590,9 @@
     color: #000000;
     white-space: nowrap;
     min-width: 75px;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 .Admin-Drive-AD-round-input {
     flex: 1;
@@ -600,6 +605,7 @@
     transition: all 0.3s ease;
     box-sizing: border-box;
     min-width: 0;
+    height: 100%;
 }
 .Admin-Drive-AD-round-input:hover{
     border-color: #4EA24E;
@@ -623,8 +629,7 @@
     justify-content: center;
     flex-shrink: 0;
     flex-wrap: wrap;
-    margin-top: auto;
-    padding-top: 15px;
+    margin-top: -5px;
 }
 
 .Admin-Drive-AD-add-btn,
@@ -920,11 +925,13 @@
     .Admin-Drive-AD-round-section {
         padding: 18px 18px;
         margin-bottom: 15px;
+        max-height:230px;
     }
 
     .Admin-Drive-AD-round-title {
         font-size: 1.1rem;
         margin-bottom: 15px;
+        height:23px;
     }
 
     .Admin-Drive-AD-round-grid {
@@ -938,6 +945,7 @@
         align-items: flex-start;
         gap: 6px;
         width: 100%;
+        height:60px;
     }
 
     .Admin-Drive-AD-round-item label {
@@ -952,7 +960,6 @@
     }
 
     .Admin-Drive-AD-action-buttons {
-        flex-direction: column;
         gap: 10px;
         margin-top: 15px;
     }
@@ -981,8 +988,12 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
+        gap: 0px;
         width: 100%;
+        position:relative;
+        top:10px;
+        left:15px;
+
     }
 
     .Admin-Drive-AD-btn-title {
@@ -994,11 +1005,7 @@
 
     .Admin-Drive-AD-btn-subtitle,
     .Admin-Drive-AD-btn-subtitle1 {
-        white-space: nowrap;
-        line-height: 1.1;
-        font-size: 0.75rem;
-        font-weight: 400;
-        text-align: center;
+        display: none;
     }
     
     .Admin-Drive-AD-right-section {
@@ -1338,7 +1345,23 @@
     flex-direction: column;
     gap: 10px;
 }
+.Admin-Drive-AD-dept-popup-content::-webkit-scrollbar {
+        width: 10px;
+    }
 
+    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
 .Admin-Drive-AD-dept-item {
     display: flex;
     align-items: center;
@@ -1418,12 +1441,4 @@
 
 .Admin-Drive-AD-dept-btn-select:hover {
     background: #3d8a3d;
-}
-
-@media (max-width: 992px) {
-    .Admin-Drive-AD-main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
 }

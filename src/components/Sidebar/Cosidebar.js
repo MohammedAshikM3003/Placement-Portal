@@ -240,18 +240,6 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
     return coordinatorData?.username || localStorage.getItem('coordinatorUsername') || coordinatorData?.coordinatorId || 'Coordinator';
   }, [coordinatorData]);
 
-  // Background: cache profile image as blob for instant rendering on next mount
-  useEffect(() => {
-    if (!profilePhotoUrl || profilePhotoUrl.startsWith('blob:') || profilePhotoUrl.startsWith('data:')) return;
-    if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl === profilePhotoUrl) {
-      setProfilePhotoUrl(cachedCoordinatorBlobUrl);
-      return;
-    }
-    fetchAndCacheCoordinatorBlob(profilePhotoUrl).then(blobUrl => {
-      if (blobUrl && blobUrl.startsWith('blob:')) setProfilePhotoUrl(blobUrl);
-    });
-  }, [profilePhotoUrl]);
-
   useEffect(() => {
     const fetchCoordinatorProfile = async () => {
       // Skip if already fetched in this lifecycle and cache is still valid

@@ -19,6 +19,23 @@
   will-change: transform; /* Improve animation smoothness */
 }
 
+.adsidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.adsidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.adsidebar::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 8px;
+}
+
+.adsidebar::-webkit-scrollbar-thumb:hover {
+  background: #388e3c;
+}
+
 /* Responsive rules for mobile view */
 @media (max-width: 992px) {
   .adsidebar {
@@ -121,22 +138,14 @@
   display: flex;
   align-items: center;
   font-size: 1.2rem;
-  padding: 10px 25px;
+  padding: 7px 25px;
   color: #222;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  transition: all 0.18s;
   gap: 15px;
   border-left: 4px solid transparent;
-  border-top: none;
-  border-right: none;
-  border-bottom: none;
-  margin: 10px 0;
-  background: none;
-  width: 100%;
-  text-align: left;
-  position: relative;
-  box-sizing: border-box;
+  margin: 3px 0;
 }
 
 .adsidebar .ad-nav-text {
@@ -148,51 +157,58 @@
 
 /* --- SELECTED ITEM STYLES (Clicked) --- */
 .adsidebar .ad-nav-item.selected {
-  background: #f0f8f0;
-  border-left-color: #4ea24e;
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
   color: #4ea24e;
   font-weight: 600; /* Bold text for selected item */
 }
 
 .adsidebar .ad-nav-item.selected img {
-  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+}
+.adsidebar .ad-nav-item.selected img {
+  /* Remove the filter line */
+  fill: #eef0ee; /* Only works if 'img' is an SVG */
 }
 
 
 /* --- HOVER ITEM STYLES (Mouse over) --- */
 .adsidebar .ad-nav-item:hover:not(.selected) {
-  background: #f0f8f0;
-  border-left-color: #4ea24e;
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
   color: #4ea24e;
   /* No font-weight change on hover */
 }
 
 .adsidebar .ad-nav-item:hover:not(.selected) img {
   filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+
 }
 /* --- END OF FIX --- */
 
 
 .adsidebar .ad-nav-item img {
   width: 28px;
-  height: 28px;
-  transition: filter 0.2s, transform 0.2s;
-  flex-shrink: 0;
+  height: 23px;
+  transition: transform 0.2s;
 }
 
-.adsidebar .ad-nav-item:hover img,
-.adsidebar .ad-nav-item.selected img {
-  transform: scale(1.1);
+.adsidebar .ad-nav-item[data-view="admin-training"] img {
+  filter: none;
+}
+
+.adsidebar .ad-nav-item.selected[data-view="admin-training"] img,
+.adsidebar .ad-nav-item:hover:not(.selected)[data-view="admin-training"] img {
+  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
 }
 
 .adsidebar .ad-nav-divider {
   height: 1px;
   width: 85%;
   background: #e0e0e0;
-  margin: 8px auto;
+  margin: 4px auto;
   border-top: 1px dotted #ccc;
   flex-shrink: 0;
-  margin-top: 12px;
 }
 
 .adsidebar .ad-logout-btn {

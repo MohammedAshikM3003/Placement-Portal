@@ -71,28 +71,33 @@ function AdminEsstudapp () {
     };
   }, []);
 
-  const handleApplyLocalFilter = () => {
-    // If only branch is selected, show all students from that branch
-    if (localFilter.branch && !localFilter.name && !localFilter.registerNo && !localFilter.cgpa) {
-      const branchFiltered = students.filter(student => student.branch === localFilter.branch);
-      setFilteredStudents(branchFiltered);
-      return;
-    }
-    
-    // Apply local filters to the already filtered students
-    const baseStudents = filteredStudents.length > 0 ? filteredStudents : students;
-    const locallyFiltered = baseStudents.filter(student => {
-      const branchMatch = !localFilter.branch || student.branch === localFilter.branch;
-      const nameMatch = !localFilter.name || 
-        `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase().includes(localFilter.name.toLowerCase());
-      const regMatch = !localFilter.registerNo || 
-        (student.regNo || '').includes(localFilter.registerNo);
-      const cgpaMatch = !localFilter.cgpa || 
-        parseFloat(student.overallCGPA || 0) >= parseFloat(localFilter.cgpa);
-      return branchMatch && nameMatch && regMatch && cgpaMatch;
-    });
-    setFilteredStudents(locallyFiltered);
-  };
+  // Auto-apply filters when localFilter changes
+  useEffect(() => {
+    const applyLocalFilter = () => {
+      // If only branch is selected, show all students from that branch
+      if (localFilter.branch && !localFilter.name && !localFilter.registerNo && !localFilter.cgpa) {
+        const branchFiltered = students.filter(student => student.branch === localFilter.branch);
+        setFilteredStudents(branchFiltered);
+        return;
+      }
+      
+      // Apply local filters to the already filtered students
+      const baseStudents = students.length > 0 ? students : filteredStudents;
+      const locallyFiltered = baseStudents.filter(student => {
+        const branchMatch = !localFilter.branch || student.branch === localFilter.branch;
+        const nameMatch = !localFilter.name || 
+          `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase().includes(localFilter.name.toLowerCase());
+        const regMatch = !localFilter.registerNo || 
+          (student.regNo || '').includes(localFilter.registerNo);
+        const cgpaMatch = !localFilter.cgpa || 
+          parseFloat(student.overallCGPA || 0) >= parseFloat(localFilter.cgpa);
+        return branchMatch && nameMatch && regMatch && cgpaMatch;
+      });
+      setFilteredStudents(locallyFiltered);
+    };
+
+    applyLocalFilter();
+  }, [localFilter, students]);
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -466,60 +471,68 @@ function AdminEsstudapp () {
               
               <div className={`${styles['Admin-es-search-filters']} ${styles['Admin-es-company-profile-search']}`}>
                 <div className={styles['Admin-es-search-tab']}>
-                  {filterCriteria?.companyName || 'Company Drive'} : {filterCriteria?.jobs || filterCriteria?.jobRole || 'Job Role'}  {filterCriteria?.driveStartDate 
-                    ? (typeof filterCriteria.driveStartDate === 'string' 
-                        ? new Date(filterCriteria.driveStartDate).toLocaleDateString('en-GB').split('/').join('-')
-                        : new Date(filterCriteria.driveStartDate).toLocaleDateString('en-GB').split('/').join('-'))
-                    : 'DD-MM-YYYY'} to {filterCriteria?.driveEndDate 
-                    ? (typeof filterCriteria.driveEndDate === 'string' 
-                        ? new Date(filterCriteria.driveEndDate).toLocaleDateString('en-GB').split('/').join('-')
-                        : new Date(filterCriteria.driveEndDate).toLocaleDateString('en-GB').split('/').join('-'))
-                    : 'DD-MM-YYYY'}
+                  Eligible Students
                 </div>
                 <div className={styles['Admin-es-search-inputs']}>
-                  <div className={styles['Admin-es-search-input']}>
-                    <select 
-                      value={localFilter.branch} 
-                      onChange={(e) => handleLocalFilterChange('branch', e.target.value)}
-                      className={styles['Admin-es-select']}
-                    >
-                      <option value="">Branches</option>
-                      {filterCriteria?.department && filterCriteria.department.split(',').map((branch, index) => (
-                        <option key={index} value={branch.trim()}>{branch.trim()}</option>
-                      ))}
-                    </select>
+                  {/* Branch Dropdown - No Label */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <div className={styles['Admin-es-search-input']}>
+                      <select 
+                        value={localFilter.branch} 
+                        onChange={(e) => handleLocalFilterChange('branch', e.target.value)}
+                        className={styles['Admin-es-select']}
+                      >
+                        <option value="">Branches</option>
+                        {filterCriteria?.department && filterCriteria.department.split(',').map((branch, index) => (
+                          <option key={index} value={branch.trim()}>{branch.trim()}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className={styles['Admin-es-search-input']}>
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={localFilter.name}
-                      onChange={(e) => handleLocalFilterChange('name', e.target.value)}
-                      className={styles['Admin-es-input']}
-                    />
+                  
+                  {/* Name Input - With Label */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Name</label>
+                    <div className={styles['Admin-es-search-input']}>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={localFilter.name}
+                        onChange={(e) => handleLocalFilterChange('name', e.target.value)}
+                        className={styles['Admin-es-input']}
+                      />
+                    </div>
                   </div>
-                  <div className={styles['Admin-es-search-input']}>
-                    <input
-                      type="text"
-                      placeholder="Register No."
-                      value={localFilter.registerNo}
-                      onChange={(e) => handleLocalFilterChange('registerNo', e.target.value)}
-                      className={styles['Admin-es-input']}
-                    />
+                  
+                  {/* Register No Input - With Label */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Regno</label>
+                    <div className={styles['Admin-es-search-input']}>
+                      <input
+                        type="text"
+                        placeholder="Register No."
+                        value={localFilter.registerNo}
+                        onChange={(e) => handleLocalFilterChange('registerNo', e.target.value)}
+                        className={styles['Admin-es-input']}
+                      />
+                    </div>
                   </div>
-                  <div className={styles['Admin-es-search-input']}>
-                    <input
-                      type="text"
-                      placeholder="CGPA"
-                      value={localFilter.cgpa}
-                      onChange={(e) => handleLocalFilterChange('cgpa', e.target.value)}
-                      className={styles['Admin-es-input']}
-                    />
+                  
+                  {/* CGPA Input - With Label */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>CGPA</label>
+                    <div className={styles['Admin-es-search-input']}>
+                      <input
+                        type="text"
+                        placeholder="CGPA"
+                        value={localFilter.cgpa}
+                        onChange={(e) => handleLocalFilterChange('cgpa', e.target.value)}
+                        className={styles['Admin-es-input']}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className={styles['Admin-es-button-container']}>
-                  <button className={styles['Admin-es-search-btn-filter']} onClick={handleApplyLocalFilter}>Filter</button>
-                </div>
+
               </div>
               
               {/* Filtered Students Count Card - Green */}
@@ -604,7 +617,32 @@ function AdminEsstudapp () {
                             <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
                               const studentId = student._id || student.id;
                               if (studentId) {
-                                navigate(`/admin-profile/${studentId}`);
+                                // Show loading popup
+                                setExportType('Loading');
+                                setExportPopupState('progress');
+                                setExportProgress(0);
+                                
+                                // Simulate progress while backend fetches
+                                const progressInterval = setInterval(() => {
+                                  setExportProgress(prev => {
+                                    if (prev >= 90) {
+                                      clearInterval(progressInterval);
+                                      return 90;
+                                    }
+                                    return prev + 15;
+                                  });
+                                }, 200);
+                                
+                                // Navigate after a short delay to show the loading popup
+                                setTimeout(() => {
+                                  clearInterval(progressInterval);
+                                  setExportProgress(100);
+                                  setTimeout(() => {
+                                    setExportPopupState('none');
+                                    setExportProgress(0);
+                                    navigate(`/admin-student-view/${studentId}`, { state: { student: student } });
+                                  }, 300);
+                                }, 1000);
                               }
                             }}>
                               <EyeIcon />

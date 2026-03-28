@@ -17,6 +17,36 @@ import autoTable from "jspdf-autotable";
 
 const cx = (...classNames) => classNames.filter(Boolean).join(' ');
 
+const YEAR_OPTIONS = ['I', 'II', 'III', 'IV'];
+const SEM_OPTIONS_BY_YEAR = {
+    I: ['I', 'II'],
+    II: ['III', 'IV'],
+    III: ['V', 'VI'],
+    IV: ['VII', 'VIII'],
+};
+
+const normalizeYearRoman = (value) => {
+    const raw = (value ?? '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    if (YEAR_OPTIONS.includes(raw)) return raw;
+    const asNum = Number.parseInt(raw, 10);
+    if (asNum === 1) return 'I';
+    if (asNum === 2) return 'II';
+    if (asNum === 3) return 'III';
+    if (asNum === 4) return 'IV';
+    return raw;
+};
+
+const normalizeSemRoman = (value) => {
+    const raw = (value ?? '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+    if (roman.includes(raw)) return raw;
+    const asNum = Number.parseInt(raw, 10);
+    if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 8) return roman[asNum - 1];
+    return raw;
+};
+
 
 const readStoredCoordinatorData = () => {
     if (typeof window === 'undefined') return null;
@@ -290,35 +320,26 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     
     const [filterDept, setFilterDept] = useState(coordinatorDepartment);
     const [filterBatch, setFilterBatch] = useState('');
+    const [filterYear, setFilterYear] = useState('');
+    const [filterSem, setFilterSem] = useState('');
+    const [filterSection, setFilterSection] = useState('');
     
     // DROPDOWN SELECTION STATES (change instantly as user selects)
     // MODIFICATION 2: Removed selectedDept state
-    const [selectedBatch, setSelectedBatch] = useState('');
-    const [batchOptions, setBatchOptions] = useState([]);
-
-    useEffect(() => {
-        const currentYearValue = new Date().getFullYear();
-        const startYear = currentYearValue - 5;
-        const endYear = currentYearValue + 5;
-        const options = [];
-
-        for (let year = startYear; year <= endYear; year += 1) {
-            const batchEnd = year + 4;
-            options.push(`${year}-${batchEnd}`);
-        }
-
-        setBatchOptions(options);
-    }, []);
+    const [selectedBatch, setSelectedBatch] = useState(''); // active value used by filtering: "YYYY-YYYY"
+    const [selectedBatchStart, setSelectedBatchStart] = useState('');
+    const [selectedBatchEnd, setSelectedBatchEnd] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
+    const [selectedSem, setSelectedSem] = useState('');
+    const [selectedSection, setSelectedSection] = useState('');
 
     useEffect(() => {
         setFilterDept(coordinatorDepartment);
     }, [coordinatorDepartment]);
 
-    // NEW: Add filters and selections for Name and RegNo
-    const [filterName, setFilterName] = useState('');
-    const [filterRegNo, setFilterRegNo] = useState('');
-    const [selectedName, setSelectedName] = useState('');
-    const [selectedRegNo, setSelectedRegNo] = useState('');
+    // Search can be either Name or Reg No
+    const [filterSearch, setFilterSearch] = useState('');
+    const [selectedSearch, setSelectedSearch] = useState('');
 
     // 1. ADD NEW POPUP STATES
     const [isDeleteWarningOpen, setDeleteWarningOpen] = useState(false); // New state for delete warning
@@ -398,10 +419,11 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     const applyFilters = () => {
         // filterDept is already defaulted to 'CSE' and does not need to be updated from a selection state
         setFilterBatch(selectedBatch);
+        setFilterYear(selectedYear);
+        setFilterSem(selectedSem);
+        setFilterSection(selectedSection);
         
-        // NEW: SET ACTIVE FILTERS FOR NAME AND REG NO
-        setFilterName(selectedName.trim().toLowerCase()); // Trim and lower-case Name
-        setFilterRegNo(selectedRegNo.trim());              // Trim Reg No
+        setFilterSearch(selectedSearch.trim());
         
 
         setViewBlocklist(false);
@@ -587,17 +609,36 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     // Derived State (This is the active filtering logic)
     const normalizedStudents = students;
 
+    const sectionOptions = useMemo(() => {
+        const set = new Set();
+        for (const s of normalizedStudents) {
+            const sec = (s?.section ?? '').toString().trim();
+            if (sec) set.add(sec);
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [normalizedStudents]);
+
     const filteredStudents = useMemo(() => {
         const normalizedDeptFilter = (filterDept || '').toString().toUpperCase();
         return normalizedStudents.filter(student => {
             const studentDept = (student.department || '').toString().toUpperCase();
             const deptMatches = normalizedDeptFilter === '' || studentDept === normalizedDeptFilter;
             const batchMatches = filterBatch === '' || student.batch === filterBatch;
-            const nameMatches = filterName === '' || student.name.toLowerCase().includes(filterName);
-            const regNoMatches = filterRegNo === '' || (student.regNo || '').includes(filterRegNo);
-            return deptMatches && batchMatches && nameMatches && regNoMatches;
+            const yearMatches =
+                filterYear === '' || normalizeYearRoman(student.currentYear) === normalizeYearRoman(filterYear);
+            const semMatches =
+                filterSem === '' || normalizeSemRoman(student.currentSemester) === normalizeSemRoman(filterSem);
+            const sectionMatches =
+                filterSection === '' ||
+                (student.section || '').toString().trim().toLowerCase() === filterSection.toString().trim().toLowerCase();
+            const q = (filterSearch || '').toString().trim();
+            const qLower = q.toLowerCase();
+            const nameMatches = q === '' || (student.name || '').toLowerCase().includes(qLower);
+            const regNoMatches = q === '' || (student.regNo || '').toString().includes(q);
+            const searchMatches = q === '' || nameMatches || regNoMatches;
+            return deptMatches && batchMatches && yearMatches && semMatches && sectionMatches && searchMatches;
         });
-    }, [normalizedStudents, filterDept, filterBatch, filterName, filterRegNo]);
+    }, [normalizedStudents, filterDept, filterBatch, filterYear, filterSem, filterSection, filterSearch]);
       
     
     const blockedStudents = useMemo(() => filteredStudents.filter(s => s.blocked), [filteredStudents]);
@@ -734,61 +775,113 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={styles["co-ms-floating-input-container"]}>
                                 <input
                                     className={styles["co-ms-floating-input"]}
-                                    placeholder=" "
-                                    value={selectedName}
-                                    onChange={(e) => setSelectedName(e.target.value)}
+                                    placeholder="Name/RegNo"
+                                    value={selectedSearch}
+                                    onChange={(e) => setSelectedSearch(e.target.value)}
                                 />
-                                <label className={styles["co-ms-floating-label"]}>Name</label>
-                            </div>
-
-                            <div className={styles["co-ms-floating-input-container"]}>
-                                <input
-                                    className={styles["co-ms-floating-input"]}
-                                    placeholder=" "
-                                    value={selectedRegNo}
-                                    onChange={(e) => setSelectedRegNo(e.target.value)}
-                                />
-                                <label className={styles["co-ms-floating-label"]}>Reg No</label>
+                                <label className={styles["co-ms-floating-label"]}>Name/Reg No</label>
                             </div>
 
                             {/* MODIFICATION: Swapped position with Batch Dropdown */}
-                            <div
-                                className={cx(
-                                    styles["co-ms-floating-select-container"],
-                                    selectedBatch ? styles["co-ms-floating-select-has-value"] : ''
-                                )}
-                            >
+                            <div className={styles["co-ms-batch-range"]}>
+                                <div className={styles["co-ms-batch-range-label"]}>
+                                    Batch <span className={styles["co-ms-batch-range-required"]}>*</span>
+                                </div>
+                                <div className={styles["co-ms-batch-range-inputs"]}>
+                                    <div className={styles["co-ms-batch-range-field"]}>
+                                        <input
+                                            className={styles["co-ms-batch-range-input"]}
+                                            placeholder="Start"
+                                            inputMode="numeric"
+                                            value={selectedBatchStart}
+                                            onChange={(e) => {
+                                                const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
+                                                setSelectedBatchStart(start);
+
+                                                if (!start) {
+                                                    setSelectedBatchEnd('');
+                                                    setSelectedBatch('');
+                                                    return;
+                                                }
+
+                                                const startNum = Number.parseInt(start, 10);
+                                                const endNum = Number.isFinite(startNum) ? startNum + 4 : '';
+                                                const endStr = endNum ? `${endNum}` : '';
+                                                setSelectedBatchEnd(endStr);
+                                                setSelectedBatch(endStr ? `${start}-${endStr}` : start);
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className={styles["co-ms-batch-range-sep"]}>-</div>
+
+                                    <div className={styles["co-ms-batch-range-field"]}>
+                                        <input
+                                            className={styles["co-ms-batch-range-input"]}
+                                            placeholder="End"
+                                            value={selectedBatchEnd}
+                                            readOnly
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles["co-ms-section-filter"]}>
+                                <div className={styles["co-ms-section-filter-label"]}>Section</div>
                                 <select
-                                    className={styles["co-ms-floating-select"]}
-                                    value={selectedBatch}
-                                    onChange={(e) => setSelectedBatch(e.target.value)}
+                                    className={styles["co-ms-section-filter-select"]}
+                                    value={selectedSection}
+                                    onChange={(e) => setSelectedSection(e.target.value)}
                                 >
-                                    <option value="">Batch</option>
-                                    {batchOptions.map((batch) => (
-                                        <option key={batch} value={batch}>
-                                            {batch}
+                                    <option value="">Section</option>
+                                    {sectionOptions.map((sec) => (
+                                        <option key={sec} value={sec}>
+                                            {sec}
                                         </option>
                                     ))}
                                 </select>
-                                <label className={styles["co-ms-floating-label"]}>Batch</label>
                             </div>
                             
-                            {/* MODIFICATION: Swapped position with Batch Dropdown - This is the fixed Department Label */}
-                            <div className={styles["co-ms-dropdown-container-dept"]}>
-                                <p style={{
-                                    padding: '10px 15px',
-                                    fontWeight: '500',
-                                    color: '#999',
-                                    backgroundColor: '#ffffff',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '8px',
-                                    height: '45px',
-                                    width: '100%',
-                                    boxSizing: 'border-box',
-                                    margin: 0
-                                }}>
-                                    Department: {(filterDept || coordinatorDepartment || '').toUpperCase()}
-                                </p>
+                            <div className={styles["co-ms-yearsem-range"]}>
+                                <div className={styles["co-ms-yearsem-range-label"]}>Year-Sem</div>
+                                <div className={styles["co-ms-yearsem-range-inputs"]}>
+                                    <div className={styles["co-ms-yearsem-range-field"]}>
+                                        <select
+                                            className={styles["co-ms-yearsem-range-select"]}
+                                            value={selectedYear}
+                                            onChange={(e) => {
+                                                const year = (e.target.value || '').toString();
+                                                setSelectedYear(year);
+                                                setSelectedSem('');
+                                            }}
+                                        >
+                                            <option value="">Year</option>
+                                            {YEAR_OPTIONS.map((y) => (
+                                                <option key={y} value={y}>
+                                                    {y}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className={styles["co-ms-yearsem-range-sep"]}>-</div>
+
+                                    <div className={styles["co-ms-yearsem-range-field"]}>
+                                        <select
+                                            className={styles["co-ms-yearsem-range-select"]}
+                                            value={selectedSem}
+                                            disabled={!selectedYear}
+                                            onChange={(e) => setSelectedSem(e.target.value)}
+                                        >
+                                            <option value="">Sem</option>
+                                            {(SEM_OPTIONS_BY_YEAR[selectedYear] || []).map((s) => (
+                                                <option key={s} value={s}>
+                                                    {s}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -804,6 +897,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                         onClick={() => {
                                             // The department filter is already aligned with the coordinator's department
                                             setFilterBatch(selectedBatch);
+                                            setFilterYear(selectedYear);
+                                            setFilterSem(selectedSem);
+                                            setFilterSection(selectedSection);
                                             setViewBlocklist(true);
                                         }}
                                     > Blocklist</button>
@@ -987,7 +1083,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                                     className={cx(styles["co-ms-td"], styles["co-ms-profile"])}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        navigate(`/coo-manage-students/edit/${student.id}`, { state: { mode: 'view' } });
+                                                        navigate(`/coo-manage-students/view/${student.id}`, { state: { mode: 'view' } });
                                                     }}
                                                 >
                                                     <EyeIcon />

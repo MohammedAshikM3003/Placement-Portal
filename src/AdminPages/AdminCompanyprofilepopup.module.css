@@ -224,7 +224,7 @@
 .Admin-cp-popup-btn-submit {
     padding: 10px 24px;
     border: none;
-    border-radius: 25px;
+    border-radius: 10px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -379,17 +379,18 @@
 ----------------------------------------------
 */
 @media (max-width: 768px) {
-    /* --- FIX: Align popup to top for scrolling --- */
+    /* --- FIX: Center popup within viewport without page scroll --- */
     .Admin-cp-popup-overlay {
-        align-items: flex-start;
-        padding: 90px 10px;
-        overflow-y: auto; 
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        overflow: hidden;
         box-sizing: border-box;
     }
 
     .Admin-cp-popup-container {
-        max-width: 95vw; 
-        max-height: 90vh;
+        max-width: 90vw; 
+        max-height: 85vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -398,7 +399,8 @@
     /* Override desktop width logic */
     .Admin-cp-popup-container.is-form,
     .Admin-cp-popup-container.is-success {
-        max-width: 95vw;
+        max-width: 90vw;
+        max-height: 85vh;
         margin-top: 0;
     }
 
@@ -421,29 +423,33 @@
         overflow-y: auto;
         flex-grow: 1;
         flex-shrink: 1;
-        
-        /* Green Scrollbar */
-        scrollbar-width: thin;
-        scrollbar-color: #4EA24E #f1f1f1;
+    
     }
     
     .Admin-cp-popup-form::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
     .Admin-cp-popup-form::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
+        background: #f0f2f5;
+        border-radius: 12px;
     }
     .Admin-cp-popup-form::-webkit-scrollbar-thumb {
-        background: #4EA24E;
-        border-radius: 4px;
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
     }
     .Admin-cp-popup-form::-webkit-scrollbar-thumb:hover {
-        background: #459645;
+        background-color: #3d8a3d;
+    }
+
+    /* Remove scrollbar buttons for volume bar effect */
+    .Admin-cp-popup-form::-webkit-scrollbar-button {
+        display: none;
+        height: 0;
+        width: 0;
     }
 
     .Admin-cp-popup-form-actions {
-        flex-direction: column;
         flex-shrink: 0;
     }
 

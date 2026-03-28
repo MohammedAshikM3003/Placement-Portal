@@ -4,7 +4,6 @@
 .Admin-DB-layout {
     display: flex;
     height: 100vh;
-    overflow: hidden;
     background-color: #f6f8fb;
 }
 
@@ -53,6 +52,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height:250px;
 }
 
 .Admin-DB-filter-header-container {
@@ -67,10 +67,11 @@
     background-color: #4EA24E;
     color: white;
     padding: 6px 0px 9px 0px;
-    margin: 0 auto;
     border-radius: 30px;
     display: block;
     width: 228px;
+    margin-left: 100px;
+    margin-top:-12px;
 }
 
 .Admin-DB-filter-icon-container {
@@ -87,6 +88,24 @@
     grid-template-columns: 1fr 1fr;
     gap: 15px;
     flex-grow: 1;
+    position:relative;
+    top:-10px;
+}
+
+/* Input Wrapper for Label + Input */
+.Admin-DB-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Static Label (Fixed on Top Left) */
+.Admin-DB-static-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+    display: block;
 }
 
 .Admin-DB-dropdown-container {
@@ -108,7 +127,17 @@
     appearance: none;
     cursor: pointer;
     font-size: 0.95rem;
+    color: #333;
+}
+
+/* Show gray color for first option (placeholder) */
+.Admin-DB-dropdown option:first-child {
     color: #999;
+}
+
+/* Make other options black */
+.Admin-DB-dropdown option:not(:first-child) {
+    color: #333;
 }
 
 .Admin-DB-dropdown-container::after {
@@ -132,30 +161,6 @@
     transition: border-color 0.2s ease;
 }
 
-.Admin-DB-floating-label {
-    position: absolute;
-    left: 15px;
-    top: 45%;
-    transform: translateY(-50%);
-    padding: 0;
-    color: #999;
-    font-size: 0.95rem;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    z-index: 1;
-}
-
-.Admin-DB-text-container.has-value .Admin-DB-floating-label,
-.Admin-DB-text-container.is-focused .Admin-DB-floating-label {
-    top: -10px;
-    left: 10px;
-    font-size: 0.75rem;
-    color: #4EA24E;
-    font-weight: 600;
-    padding: 0 5px;
-    background-color: #fff;
-}
-
 .Admin-DB-text {
     width: 100%;
     height: 100%;
@@ -167,6 +172,16 @@
     color: #333;
     position: relative;
     z-index: 0;
+}
+
+.Admin-DB-text::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-DB-text:focus::placeholder,
+.Admin-DB-dropdown:focus::placeholder {
+    opacity: 0;
 }
 
 .Admin-DB-text:focus,
@@ -243,6 +258,7 @@
     border-radius: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 2px solid #808080;
+    height:250px;
 }
 
 .Admin-DB-action-header {
@@ -276,6 +292,7 @@
     max-width: 140px;
     transition: opacity 0.2s;
     font-size: 0.95rem;
+    border-radius: 8px;
 }
 
 .Admin-DB-action-btn:disabled {
@@ -378,29 +395,22 @@
     max-height: 100%;
 }
 
-/* --- GREEN SCROLLBARS (Company Drive style) --- */
+/* --- Table Scrollbar Styles (Desktop) --- */
 .Admin-DB-table-container::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
 }
 
 .Admin-DB-table-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
+    background: transparent;
 }
 
 .Admin-DB-table-container::-webkit-scrollbar-thumb {
-    background: #4EA24E; /* Green Thumb */
-    border-radius: 4px;
+    background: #4ea24e;
+    border-radius: 8px;
 }
 
 .Admin-DB-table-container::-webkit-scrollbar-thumb:hover {
-    background: #3d8a3d;
-}
-
-/* Remove up and down scroll buttons */
-.Admin-DB-table-container::-webkit-scrollbar-button {
-    display: none;
+    background: #4ea24e;
 }
 
 .Admin-DB-loading-cell {
@@ -588,29 +598,7 @@
 /* ---------------------------------------------------------------------- */
 /* --- LOCALIZED SCROLLBAR STYLING --- */
 /* ---------------------------------------------------------------------- */
-.Admin-DB-layout ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
 
-.Admin-DB-layout ::-webkit-scrollbar-track {
-    background: #f0f2f5;
-}
-
-.Admin-DB-layout ::-webkit-scrollbar-button {
-    display: none;
-}
-
-.Admin-DB-layout ::-webkit-scrollbar-thumb:vertical,
-.Admin-DB-layout ::-webkit-scrollbar-thumb:horizontal {
-    background-color: #4EA24E;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-}
-
-.Admin-DB-layout ::-webkit-scrollbar-thumb:hover {
-    background-color: #3d8a3d;
-}
 
 /* ---------------------------------------------------------------------- */
 /* --- MOBILE RESPONSIVENESS --- */
@@ -621,74 +609,145 @@
 .Admin-DB-filter-section { flex: 1 1 100%; }
 }
 
-@media (max-width: 768px) {
-.Admin-DB-layout { flex-direction: column; min-height: 100vh; overflow: visible; }
-.Admin-DB-main-content {
-	    padding: 15px;
-	    padding-top: 90px;
-	    padding-bottom: 80px;
-	    height: auto;
-	    overflow: visible;
-	}
-
-.Admin-DB-overlay { display: block; }
-.Admin-DB-top-card { margin-left: 0; margin-top: 0px; gap: 20px; flex-direction: column; }
-
-.Admin-DB-filter-section { border-radius: 25px; flex: 1 1 auto; width: 100%; }
-.Admin-DB-filter-content { grid-template-columns: 1fr; gap: 12px; }
-.Admin-DB-button-group { flex-direction: column; gap: 10px; }
-.Admin-DB-action-cards-section { flex-wrap: wrap; gap: 15px; }
-.Admin-DB-action-card { flex: 1 1 calc(50% - 10px); min-width: 140px; }
-.Admin-DB-bottom-card { margin-left: 0; padding: 15px; }
-.Admin-DB-table-header-row { flex-direction: column; align-items: flex-start; gap: 15px; }
-.Admin-DB-table-container { max-height: 380px; overflow-y: auto; position:relative; bottom:50px;}
-}
-
-
-.Admin-DB-table-actions{
-    position: relative;
-    left: 325px;
-    top: -70px;
-}
-/* Match green table scrollbar style used in Company Profile */
-.Admin-DB-table-container::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.Admin-DB-table-container::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 4px;
-}
-
-.Admin-DB-table-container::-webkit-scrollbar-thumb {
-    background-color: #4EA24E !important;
-    border-radius: 6px;
-}
-
-@media (max-width: 768px) {
-    /* Style the real page scrollbar (Edge/Chromium) on both html and body */
-    :global(html::-webkit-scrollbar),
-    :global(body::-webkit-scrollbar) {
-        width: 10px;
-        height: 10px;
+@media (max-width: 900px) {
+    .Admin-DB-layout {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        flex-direction: column;
     }
 
-    :global(html::-webkit-scrollbar-track),
-    :global(body::-webkit-scrollbar-track) {
+    .Admin-DB-overlay { display: block; }
+    
+    .Admin-DB-main-content {
+        margin-top: 64px;
+        width: 100% !important;
+        padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100% !important;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        gap: 15px;
+        min-height: calc(100vh - 64px);
+    }
+
+    .Admin-DB-top-card { 
+        margin-left: 0; 
+        margin-top: 0px; 
+        gap: 15px; 
+        flex-direction: column;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .Admin-DB-filter-section { 
+        border-radius: 25px; 
+        flex: 1 1 auto; 
+        width: 100%;
+        min-height: 390px;
+    }
+    
+    .Admin-DB-filter-content { grid-template-columns: 1fr; gap: 12px; }
+    .Admin-DB-button-group {  gap: 10px; }
+    .Admin-DB-action-cards-section { flex-wrap: wrap; gap: 15px; }
+    .Admin-DB-action-card { flex: 1 1 calc(50% - 10px); min-width: 140px; }
+    
+    .Admin-DB-bottom-card {
+        margin-left: 0;
+        padding: 15px;
+        flex: 1 1 auto;
+        min-height: 380px;
+        height: auto;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .Admin-DB-table-header-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .Admin-DB-table-container {
+        max-height: none;
+        min-height: 280px;
+        overflow-y: auto;
+        overflow-x: auto;
+        position: relative;
+        bottom: auto;
+        flex-grow: 1;
+    }
+
+    /* Ensure consistent button sizes on mobile */
+    .Admin-DB-action-btn {
+        height: 40px;
+        width: 100%;
+        max-width: 140px;
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Main content scrollbar (behind navbar) */
+    .Admin-DB-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Admin-DB-main-content::-webkit-scrollbar-track {
         background: #f0f2f5;
     }
 
-    :global(html::-webkit-scrollbar-thumb),
-    :global(body::-webkit-scrollbar-thumb) {
+    .Admin-DB-main-content::-webkit-scrollbar-thumb {
         background-color: #4EA24E;
         border-radius: 20px;
         border: 3px solid #f0f2f5;
     }
 
-    :global(html::-webkit-scrollbar-thumb:hover),
-    :global(body::-webkit-scrollbar-thumb:hover) {
+    .Admin-DB-main-content::-webkit-scrollbar-thumb:hover {
         background-color: #3d8a3d;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Table scrollbar on mobile */
+    .Admin-DB-table-container::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar-thumb {
+        background: #4ea24e;
+        border-radius: 8px;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar:horizontal {
+        height: 8px;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .Admin-DB-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
     }
 }
 
@@ -914,12 +973,4 @@
     margin: 0;
     font-size: 0.98rem;
     color: #6B6D74;
-}
-
-@media (max-width: 992px) {
-    .Admin-DB-top-card {
-        margin-left: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
 }

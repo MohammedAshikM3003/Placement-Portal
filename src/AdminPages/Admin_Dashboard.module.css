@@ -206,6 +206,7 @@
 }
 .admin-dashboard-page .ad-db-card-certificates .ad-db-card-title {
   margin-bottom: 8px;
+  
 }
 
 .admin-dashboard-page .ad-db-attendance-card {
@@ -389,13 +390,16 @@
 
 @media (max-width: 768px) {
     .Admin-cood-detail-layout {
-        height: 100vh;
-        overflow: hidden;
+        height: auto;
+        overflow: visible;
     }
     .Admin-cood-detail-main-content {
         overflow-y: auto !important;
-        height: calc(100vh - 65px) !important;
-        padding-bottom: 80px !important; /* Prevents content from being cut off on mobile */
+        height: auto !important;
+        max-height: calc(100vh - 70px) !important;
+        padding: 15px !important;
+        padding-top: 70px !important;
+        padding-bottom: 30px !important;
     }
 }
 
@@ -464,7 +468,10 @@
         flex-direction: column !important;
         height: auto !important;
     }
-
+.admin-dashboard-page .ad-db-card-certificates .ad-db-card-title {
+  margin-bottom: 8px;
+  text-align:center;
+}
     .admin-dashboard-page .ad-db-attendance-card-content {
         flex-direction: row !important;
         justify-content: center !important;

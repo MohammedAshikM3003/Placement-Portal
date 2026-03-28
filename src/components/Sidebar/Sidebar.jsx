@@ -102,9 +102,6 @@ export const updateCachedProfilePic = (url) => {
   if (cachedStudentData) {
     cachedStudentData.profilePicURL = url;
   }
-  // Pre-fetch new image as blob in background
-  const resolvedUrl = resolveProfileUrl(url);
-  if (resolvedUrl) fetchAndCacheAsBlob(resolvedUrl);
   console.log('📸 Sidebar: Profile pic cache updated', url);
 };
 
@@ -186,24 +183,6 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   // Only use profilePicUrl state to ensure stability
   const stableProfilePicUrl = useMemo(() => {
     return profilePicUrl;
-  }, [profilePicUrl]);
-
-  // Background: cache profile image as blob URL for instant rendering
-  // When profilePicUrl is an HTTP URL, fetch it as blob and switch to blob URL
-  // The blob→state transition is visually identical (same image) so no visible flicker
-  useEffect(() => {
-    if (!profilePicUrl || profilePicUrl.startsWith('blob:') || profilePicUrl.startsWith('data:')) return;
-    // If blob already exists for this exact URL, switch to it immediately
-    if (cachedProfileBlobUrl && cachedBlobSourceUrl === profilePicUrl) {
-      setProfilePicUrl(cachedProfileBlobUrl);
-      return;
-    }
-    // Fetch and create blob URL, then update state for instant rendering on future mounts
-    fetchAndCacheAsBlob(profilePicUrl).then(blobUrl => {
-      if (blobUrl && blobUrl.startsWith('blob:')) {
-        setProfilePicUrl(blobUrl);
-      }
-    });
   }, [profilePicUrl]);
 
   useEffect(() => {
@@ -455,13 +434,6 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
             <img 
               src={stableProfilePicUrl} 
               alt="Profile" 
-              onLoad={() => {
-                // Image loaded successfully — cache as blob for instant rendering on next mount
-                if (!cachedProfileBlobUrl && stableProfilePicUrl &&
-                    !stableProfilePicUrl.startsWith('blob:') && !stableProfilePicUrl.startsWith('data:')) {
-                  fetchAndCacheAsBlob(stableProfilePicUrl);
-                }
-              }}
               onError={() => {
                 console.warn('❌ Sidebar: Image load error');
                 setImageError(true);

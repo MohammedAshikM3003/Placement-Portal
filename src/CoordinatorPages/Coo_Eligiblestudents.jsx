@@ -345,64 +345,68 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                         <div className={styles['co-es-search-input']}>
                                             <select
                                                 id="co-es-company-name"
+                                                className={styles['co-es-select']}
                                                 value={filterData.companyName}
                                                 onChange={(e) => handleCompanyChange(e.target.value)}
                                                 required
                                             >
-                                                <option value="" />
+                                                <option value="">Search Company</option>
                                                 {companyOptions.map((name) => (
                                                     <option key={name} value={name}>{name}</option>
                                                 ))}
                                             </select>
-                                            <label htmlFor="co-es-company-name">Company Name</label>
+                                            <label htmlFor="co-es-company-name" className={styles['co-es-static-label']}>Search Company</label>
                                         </div>
 
                                         <div className={styles['co-es-search-input']}>
                                             <select
                                                 id="co-es-job-role"
+                                                className={styles['co-es-select']}
                                                 value={filterData.jobRole}
                                                 onChange={(e) => handleJobRoleChange(e.target.value)}
-                                                required
                                                 disabled={!filterData.companyName}
+                                                required
                                             >
-                                                <option value="" />
+                                                <option value="">Search Job Role</option>
                                                 {jobRoleOptions.map((role) => (
                                                     <option key={role} value={role}>{role}</option>
                                                 ))}
                                             </select>
-                                            <label htmlFor="co-es-job-role">Job role</label>
+                                            <label htmlFor="co-es-job-role" className={styles['co-es-static-label']}>Search Job Role</label>
                                         </div>
 
                                         <div className={styles['co-es-search-input']}>
                                             <select
                                                 id="co-es-start-date"
+                                                className={styles['co-es-select']}
                                                 value={filterData.startDate}
                                                 onChange={(e) => handleStartDateChange(e.target.value)}
-                                                required
                                                 disabled={!filterData.companyName}
+                                                required
                                             >
-                                                <option value="" />
+                                                <option value="">Search by Start Date</option>
                                                 {startDateOptions.map((date) => (
                                                     <option key={date} value={date}>{date}</option>
                                                 ))}
                                             </select>
-                                            <label htmlFor="co-es-start-date">Start Date</label>
+                                            <label htmlFor="co-es-start-date" className={styles['co-es-static-label']}>Search by Start Date</label>
                                         </div>
 
                                         <div className={styles['co-es-search-input']}>
                                             <select
                                                 id="co-es-end-date"
+                                                className={styles['co-es-select']}
                                                 value={filterData.endDate}
                                                 onChange={(e) => handleEndDateChange(e.target.value)}
-                                                required
                                                 disabled={!filterData.startDate}
+                                                required
                                             >
-                                                <option value="" />
+                                                <option value="">Search by End Date</option>
                                                 {endDateOptions.map((date) => (
                                                     <option key={date} value={date}>{date}</option>
                                                 ))}
                                             </select>
-                                            <label htmlFor="co-es-end-date">End date</label>
+                                            <label htmlFor="co-es-end-date" className={styles['co-es-static-label']}>Search by End Date</label>
                                         </div>
                                     </div>
                                 </div>

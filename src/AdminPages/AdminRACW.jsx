@@ -714,8 +714,8 @@ function AdminRACW() {
             </div>
 
             {/* UPDATED CLASSES: Admin-racw-data-table, Admin-racw-table-body-scroll, Admin-racw-status-cell-placed-green, Admin-racw-status-cell-rejected */}
-            <div className={styles['Admin-racw-table-body-scroll']}>
-              <table className={styles['Admin-racw-data-table']}>
+            <div className={`${styles['Admin-racw-table-body-scroll']} ${!isLoading && filteredData.length > 0 ? styles['Admin-racw-table-body-scroll-has-data'] : ''}`}>
+              <table className={`${styles['Admin-racw-data-table']} ${!isLoading && filteredData.length > 0 ? styles['Admin-racw-data-table-has-data'] : ''}`}>
                 <thead>
                   <tr>
                     <th>S.No</th>
@@ -749,8 +749,8 @@ function AdminRACW() {
                         <td>{student.Rounds}</td>
                         <td>{student["Mobile No."]}</td>
                         <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
-                          if (student.studentId) {
-                            navigate(`/admin-profile/${student.studentId}`);
+                          if (student["Register No."]) {
+                            navigate(`/admin-student-view/${student["Register No."]}`)
                           }
                         }}>
                           <EyeIcon />

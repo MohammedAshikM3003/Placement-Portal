@@ -275,6 +275,42 @@ class MongoDBService {
     return response;
   }
 
+  async createTraining(trainingData) {
+    return await this.apiCall('/trainings', {
+      method: 'POST',
+      body: JSON.stringify(trainingData)
+    });
+  }
+
+  async getTrainings() {
+    const response = await this.apiCall('/trainings', {
+      method: 'GET'
+    });
+    return response?.trainings || [];
+  }
+
+  async createScheduledTraining(scheduleData) {
+    return await this.apiCall('/scheduled-trainings', {
+      method: 'POST',
+      body: JSON.stringify(scheduleData)
+    });
+  }
+
+  async getScheduledTrainings() {
+    const response = await this.apiCall('/scheduled-trainings', {
+      method: 'GET'
+    });
+    return response?.schedules || [];
+  }
+
+  async getTrainingCoursesByYear(year) {
+    const query = year ? `?year=${encodeURIComponent(year)}` : '';
+    const response = await this.apiCall(`/training-courses${query}`, {
+      method: 'GET'
+    });
+    return response?.courses || [];
+  }
+
   async getCompanyDrives() {
     const response = await this.apiCall('/company-drives');
     const drives = response.drives || [];

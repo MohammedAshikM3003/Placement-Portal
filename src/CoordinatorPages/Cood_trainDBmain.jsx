@@ -171,26 +171,39 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
 
                 <div className={styles.filtersInfoBox}>
                   <div className={styles.filtersInfoLeft}>
-                    <div className={styles.infoRow}>
-                      <div className={styles.infoKey}>Total Students :</div>
-                      <div className={styles.infoVal}>100</div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.infoKey}>Department :</div>
-                      <div className={styles.infoVal}>CSE</div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.infoKey}>Course :</div>
-                      <div className={styles.infoVal}>Java FSD</div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.infoKey}>Present :</div>
-                      <div className={styles.infoVal}>59</div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.infoKey}>Absent :</div>
-                      <div className={styles.infoVal}>41</div>
-                    </div>
+                    {selectedCompany && selectedBatch ? (
+                      <>
+                        <div className={styles.infoRow}>
+                          <div className={styles.infoKey}>Total Students :</div>
+                          <div className={styles.infoVal}>100</div>
+                        </div>
+                        <div className={styles.infoRow}>
+                          <div className={styles.infoKey}>Department :</div>
+                          <div className={styles.infoVal}>CSE</div>
+                        </div>
+                        <div className={styles.infoRow}>
+                          <div className={styles.infoKey}>Course :</div>
+                          <div className={styles.infoVal}>Java FSD</div>
+                        </div>
+                        <div className={styles.infoRow}>
+                          <div className={styles.infoKey}>Present :</div>
+                          <div className={styles.infoVal}>59</div>
+                        </div>
+                        <div className={styles.infoRow}>
+                          <div className={styles.infoKey}>Absent :</div>
+                          <div className={styles.infoVal}>41</div>
+                        </div>
+                      </>
+                    ) : selectedCompany ? (
+                      <div className={styles.filtersPlaceholder}>
+                        <div className={styles.filtersPlaceholderLine}>SELECT BATCH</div>
+                      </div>
+                    ) : (
+                      <div className={styles.filtersPlaceholder}>
+                        <div className={styles.filtersPlaceholderLine}>SELECT COMPANY</div>
+                        <div className={styles.filtersPlaceholderLine}>SELECT BATCH</div>
+                      </div>
+                    )}
                   </div>
 
                   <div className={styles.filtersInfoRight}>
@@ -211,16 +224,7 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
                           {getSelectedBatch()?.name}
                         </div>
                       </div>
-                    ) : appliedCompany && getAppliedCompany() ? (
-                      <div className={styles.filtersPlaceholder}>
-                        <div className={styles.filtersPlaceholderLine}>Select Batch</div>
-                      </div>
-                    ) : (
-                      <div className={styles.filtersPlaceholder}>
-                        <div className={styles.filtersPlaceholderLine}>Select Company</div>
-                        <div className={styles.filtersPlaceholderLine}>Select Batch...</div>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>

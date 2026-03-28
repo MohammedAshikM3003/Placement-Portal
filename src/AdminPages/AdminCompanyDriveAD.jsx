@@ -18,7 +18,9 @@ const initialFormData = {
     branch: '',
     eligibleBranches: [],
     rounds: 0, 
-    cgpa: '',
+    package: '',
+    companyType: '',
+    bondPeriod: '',
     startingDate: null,
     endingDate: null,
     domain: '',
@@ -26,9 +28,7 @@ const initialFormData = {
     hrContact: '',
     status: '',
     visitDate: '',
-    package: '',
     location: '',
-    bondPeriod: '',
     roundDetails: [] 
 };
 
@@ -122,7 +122,9 @@ function Adcompanydrivead({ onLogout }) {
                         ? [drive.department]
                         : [],
             rounds: roundsFromData,
-            cgpa: drive.cgpa || '',
+            package: drive.package || '',
+            companyType: drive.companyType || '',
+            bondPeriod: drive.bondPeriod || '',
             startingDate: formatDateForInput(drive.startingDate),
             endingDate: formatDateForInput(drive.endingDate),
             domain: drive.domain || '',
@@ -130,9 +132,7 @@ function Adcompanydrivead({ onLogout }) {
             hrContact: drive.hrContact || '',
             status: drive.status || '',
             visitDate: formatDateForInput(drive.visitDate),
-            package: drive.package || '',
             location: drive.location || '',
-            bondPeriod: drive.bondPeriod || '',
             roundDetails
         };
     };
@@ -219,10 +219,11 @@ function Adcompanydrivead({ onLogout }) {
                     hrName: selectedCompany.hrName || '',
                     hrContact: selectedCompany.hrContact || '',
                     bondPeriod: selectedCompany.bondPeriod || '',
+                    companyType: selectedCompany.companyType || '',
                     rounds: numRounds,
                     roundDetails: roundDetailsArray,
                     eligibleBranches: selectedCompany.eligibleBranches || [],
-                    cgpa: selectedCompany.cgpa || '',
+                    package: selectedCompany.package || '',
                     status: selectedCompany.status || '',
                     visitDate: selectedCompany.visitDate ? (() => {
                         const date = new Date(selectedCompany.visitDate);
@@ -231,7 +232,6 @@ function Adcompanydrivead({ onLogout }) {
                         const year = date.getFullYear();
                         return `${day}-${month}-${year}`;
                     })() : '',
-                    package: selectedCompany.package || '',
                     location: selectedCompany.location || '',
                     companyId: selectedCompany._id || selectedCompany.id // Store ID for reference
                 }));
@@ -338,8 +338,14 @@ function Adcompanydrivead({ onLogout }) {
         if (!formData.rounds || formData.rounds === 0) {
             warnings.rounds = 'Please fill out this field.';
         }
-        if (!formData.cgpa) {
-            warnings.cgpa = 'Please fill out this field.';
+        if (!formData.package) {
+            warnings.package = 'Please fill out this field.';
+        }
+        if (!formData.companyType) {
+            warnings.companyType = 'Please fill out this field.';
+        }
+        if (!formData.bondPeriod) {
+            warnings.bondPeriod = 'Please fill out this field.';
         }
         if (!formData.startingDate) {
             warnings.startingDate = 'Please fill out this field.';
@@ -437,12 +443,14 @@ function Adcompanydrivead({ onLogout }) {
                                     className={styles['Admin-Drive-AD-back-button']}
                                     onClick={() => navigate('/admin-company-drive')}
                                     type="button"
+                                    disabled={isLoading}
+                                    style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
                                 >
-                                    ← Back To Company Drive
+                                    ← Back
                                 </button>
                             </div>
                             
-                            <div className={styles['Admin-Drive-AD-form-grid']}>
+                            <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <select
                                         name="companyName"
@@ -450,7 +458,7 @@ function Adcompanydrivead({ onLogout }) {
                                         onChange={handleInputChange}
                                         className={styles['Admin-Drive-AD-input']}
                                         required
-                                        disabled={viewMode}
+                                        disabled={viewMode || isLoading}
                                     >
                                         <option value="">Select Company</option>
                                         {companies.map((company) => (
@@ -501,9 +509,9 @@ function Adcompanydrivead({ onLogout }) {
                                         onChange={handleInputChange}
                                         placeholder="Job Role :"
                                         className={styles['Admin-Drive-AD-input']}
-                                        required                                        readOnly={viewMode}
-                                        disabled={viewMode}                                        readOnly={viewMode}
-                                        disabled={viewMode}
+                                        required
+                                        readOnly={viewMode}
+                                        disabled={viewMode} 
                                     />
                                     {validationWarnings.jobRole && (
                                         <>
@@ -578,21 +586,70 @@ function Adcompanydrivead({ onLogout }) {
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <input
-                                        type="text"
-                                        name="cgpa"
-                                        value={formData.cgpa}
+                                        type="number"
+                                        name="package"
+                                        value={formData.package}
                                         onChange={handleInputChange}
-                                        placeholder="CGPA :"
+                                        placeholder="Package :"
                                         className={styles['Admin-Drive-AD-input']}
                                         required
                                         readOnly={viewMode}
                                         disabled={viewMode}
                                     />
-                                    {validationWarnings.cgpa && (
+                                    {validationWarnings.package && (
                                         <>
                                             <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
                                             <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.cgpa}
+                                                {validationWarnings.package}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <select
+                                        name="companyType"
+                                        value={formData.companyType}
+                                        onChange={handleInputChange}
+                                        className={styles['Admin-Drive-AD-input']}
+                                        required
+                                        disabled={viewMode}
+                                    >
+                                        <option value="">Company Type :</option>
+                                        <option value="CORE">CORE</option>
+                                        <option value="IT">IT</option>
+                                        <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
+                                        <option value="Marketing & Sales">Marketing & Sales</option>
+                                        <option value="HR / Business analyst">HR / Business analyst</option>
+                                    </select>
+                                    {validationWarnings.companyType && (
+                                        <>
+                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
+                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
+                                                {validationWarnings.companyType}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <input
+                                        type="number"
+                                        name="bondPeriod"
+                                        value={formData.bondPeriod}
+                                        onChange={handleInputChange}
+                                        placeholder="Bond Period :"
+                                        className={styles['Admin-Drive-AD-input']}
+                                        min="0"
+                                        required
+                                        readOnly={viewMode}
+                                        disabled={viewMode}
+                                    />
+                                    {validationWarnings.bondPeriod && (
+                                        <>
+                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
+                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
+                                                {validationWarnings.bondPeriod}
                                             </div>
                                         </>
                                     )}
@@ -713,6 +770,7 @@ function Adcompanydrivead({ onLogout }) {
                                         className={styles['Admin-Drive-AD-add-btn']}
                                         onClick={handleAddDrive}
                                         disabled={isLoading}
+                                        style={isLoading ? { cursor: 'not-allowed' } : {}}
                                     >
                                         <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -731,6 +789,8 @@ function Adcompanydrivead({ onLogout }) {
                                         <button 
                                             className={styles['Admin-Drive-AD-discard-btn']}
                                             onClick={handleDiscard}
+                                            disabled={isLoading}
+                                            style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
                                         >
                                             <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>

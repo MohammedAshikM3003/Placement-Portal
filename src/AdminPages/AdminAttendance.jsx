@@ -2068,7 +2068,7 @@ export default function AdminAtt({ onLogout }) {
 
             <div className={styles['Admin-at-table-body-scroll']}>
 
-              <table className={styles['Admin-at-attendance-table-body']} style={{ width: '102%' }}>
+              <table className={styles['Admin-at-attendance-table-body']}>
 
                 <tbody>
 

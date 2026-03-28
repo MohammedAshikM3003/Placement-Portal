@@ -1,0 +1,845 @@
+/* Coordinator Semester Marksheet View Page Styles - Red Theme */
+
+.container {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.main {
+    display: flex;
+    margin-top: 55px;
+    height: calc(100vh - 55px);
+}
+
+.dashboardArea {
+    flex: 1;
+    margin-left: 290px;
+    height: 100%;
+    background: #fff;
+    position: relative;
+    width: calc(100% - 290px);
+    padding: 15px;
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+.contentWrapper {
+    display: flex;
+    gap: 1.5rem;
+    height: 100%;
+    width: 100%;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+/* Loading State */
+.initialLoaderOverlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.initialLoaderCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #D73D3D;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Left Side - Profile Card - RED THEME */
+.profileCard {
+    width: 330px;
+    background-color: #D73D3D;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(215, 61, 61, 0.3);
+    flex-shrink: 0;
+}
+
+.profileIconContainer {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+}
+
+.profileIcon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.profileInfo {
+    width: 100%;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.infoLabel {
+    width: 110px;
+    font-weight: 500;
+    opacity: 0.9;
+    font-size: 15px;
+}
+
+.infoColon {
+    margin: 0 0.5rem;
+    opacity: 0.9;
+}
+
+.infoValue {
+    flex: 1;
+    font-weight: 600;
+    font-size: 17px;
+}
+
+/* Right Side - Upload Section */
+.uploadSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Upload Drop Zone */
+.uploadDropZone {
+    background: white;
+    border: 2px dashed #dde6f4;
+    border-radius: 16px;
+    padding: 3.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    min-height: 120px;
+}
+
+.uploadActions {
+    position: absolute;
+    top: 18px;
+    right: 25px;
+    display: flex;
+    gap: 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: visible;
+    background: white;
+}
+
+.actionIconBtn {
+    border: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    white-space: nowrap;
+    min-width: 50px;
+    height: 44px;
+}
+
+.actionIconBtn:hover {
+    padding: 12px 20px;
+}
+
+.actionIconBtn:first-child {
+    border-right: 1px solid #ddd;
+    background: #D23B42;
+    border-radius: 8px 0 0 8px;
+}
+
+.actionIconBtn:first-child:hover {
+    background: #b83238;
+}
+
+.actionIconBtn:last-child {
+    background: #D73D3D;
+    border-radius: 0 8px 8px 0;
+}
+
+.actionIconBtn:last-child:hover {
+    background: #b53138;
+}
+
+.actionIconBtn span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.actionIconBtn:hover span,
+.actionIconBtn:first-child:hover span,
+.actionIconBtn:last-child:hover span {
+    display: inline;
+    opacity: 1;
+}
+
+.actionIcon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    flex-shrink: 0;
+}
+
+.actionIconPreview {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+}
+
+.uploadDropZone:hover {
+    border-color: #D73D3D;
+    background-color: #fff9f9;
+}
+
+.uploadDropZone.dragging {
+    border-color: #D73D3D;
+    background-color: #ffeded;
+}
+
+.uploadIconLarge {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.uploadHeading {
+    font-size: 25px;
+    font-weight: 600;
+    color: #1a2a4a;
+    margin: 0;
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.pdfIconLarge {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
+.fileUploadedView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uploadedFileName {
+    color: #1a2a4a;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* CGPA Info - RED THEME */
+.cgpaInfo {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.cgpaItem {
+    font-size: 0.95rem;
+}
+
+.cgpaLabel {
+    color: #898989;
+    font-weight: 500;
+}
+
+.cgpaValue {
+    color: #D73D3D;
+    font-weight: 700;
+}
+
+/* Table Outer Container */
+.tableOuter {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Table Scroll Container */
+.tableScroll {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Red scrollbar for coordinator theme */
+.tableScroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+    background: #D73D3D;
+    border-radius: 20px;
+    border: 2px solid #f0f2f5;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+    background: #b53138;
+}
+
+/* Table Header - RED THEME */
+.courseTableHeader {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    table-layout: fixed;
+}
+
+.courseTableHeader thead {
+    background-color: #D73D3D;
+    color: white;
+}
+
+.courseTableHeader th {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #D73D3D;
+}
+
+.courseTableHeader th:first-child {
+    text-align: center;
+    width: 60px;
+}
+
+.courseTableHeader th:nth-child(2) {
+    width: 120px;
+}
+
+.courseTableHeader th:nth-child(3) {
+    width: auto;
+    text-align: left;
+    padding-left: 1.5rem;
+}
+
+.courseTableHeader th:nth-child(4) {
+    width: 80px;
+}
+
+.courseTableHeader th:nth-child(5) {
+    width: 80px;
+}
+
+.courseTableHeader th:last-child {
+    text-align: center;
+    width: 80px;
+}
+
+/* Table Body */
+.courseTableBody {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.courseTableBody td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f2f5;
+    color: #333;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.courseTableBody td:first-child {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #333333;
+    width: 60px;
+}
+
+.courseTableBody td:nth-child(2) {
+    width: 120px;
+}
+
+.courseTableBody td:nth-child(3) {
+    width: auto;
+    text-align: left;
+    padding-left: 1.5rem;
+}
+
+.courseTableBody td:nth-child(4) {
+    width: 80px;
+}
+
+.courseTableBody td:nth-child(5) {
+    width: 80px;
+}
+
+.courseTableBody td:last-child {
+    text-align: center;
+    font-weight: 600;
+    width: 80px;
+}
+
+.courseTableBody tbody tr:hover {
+    background-color: #fff9f9;
+}
+
+.courseTableBody tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Result Colors */
+.passResult {
+    color: #16C098 !important;
+}
+
+.failResult {
+    color: #AD2C2C !important;
+}
+
+/* Bottom Action Buttons - RED THEME */
+.bottomActionButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 0.4rem;
+    padding-right: 0.5rem;
+}
+
+.discardTopBtn {
+    background-color: #808080;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.discardTopBtn:hover {
+    background-color: #a0a0a0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(160, 160, 160, 0.3);
+}
+
+.submitBtn {
+    background-color: #D73D3D;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submitBtn:hover {
+    background-color: #b53138;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(215, 61, 61, 0.3);
+}
+
+/* =================================== */
+/* ===== POPUP STYLES - RED THEME ==== */
+/* =================================== */
+
+/* Popup Overlay */
+.Semester-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: Semester-fadeIn 0.3s ease-out;
+    cursor: pointer;
+}
+
+/* Popup Container */
+.Semester-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: Semester-slideIn 0.3s ease-out;
+}
+
+/* Popup Header - RED THEME */
+.Semester-popup-header {
+    background-color: #D73D3D;
+    color: white;
+    padding: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+/* Popup Body */
+.Semester-popup-body {
+    padding: 2rem;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Status Icon Container */
+.Semester-status-icon {
+    width: auto;
+    height: auto;
+    margin: 0 auto 22px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Semester-status-icon svg {
+    width: 95px;
+    height: 95px;
+    margin-top: -15px;
+}
+
+/* Status Title */
+.Semester-status-title {
+    margin: -0.4rem 0 4px 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #1E1F24;
+}
+
+/* Status Text */
+.Semester-status-text {
+    margin: 0;
+    font-size: 0.98rem;
+    color: #6B6D74;
+}
+
+/* Popup Footer */
+.Semester-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+/* Close Button - RED THEME */
+.Semester-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Semester-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* Submit Button - RED THEME */
+.Semester-popup-submit-btn {
+    background-color: #D73D3D;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(215, 61, 61, 0.2);
+}
+
+.Semester-popup-submit-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(215, 61, 61, 0.3);
+}
+
+/* Success Icon Animations - GREEN */
+.Semester-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto 20px auto;
+    box-shadow: inset 0 0 0 #22C55E;
+    animation: Semester-fill 0.4s ease-in-out 0.4s forwards,
+               Semester-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Semester-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22C55E;
+    fill: none;
+    animation: Semester-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Semester-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: Semester-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes Semester-stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes Semester-scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+
+@keyframes Semester-fill {
+    100% { box-shadow: inset 0 0 0 40px #22C55E; }
+}
+
+/* Popup Animations */
+@keyframes Semester-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes Semester-slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .contentWrapper {
+        flex-direction: column;
+    }
+
+    .profileCard {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboardArea {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .dashboardArea {
+        --mobile-side-gap: 10px;
+        margin-left: 0;
+        padding: 1rem var(--mobile-side-gap);
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .uploadHeading {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboardArea {
+        --mobile-side-gap: 10px;
+        padding: 0.75rem var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 25px) var(--mobile-side-gap);
+        overflow-y: auto;
+        height: calc(100vh - 55px);
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .uploadDropZone {
+        padding: 2rem 1rem;
+        min-height: 100px;
+    }
+
+    .uploadIconLarge {
+        width: 40px;
+        height: 40px;
+    }
+
+    .uploadHeading {
+        font-size: 16px;
+    }
+
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        padding-right: 0;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    /* Red scrollbar for dashboard area */
+    .dashboardArea::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .dashboardArea::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .dashboardArea::-webkit-scrollbar-thumb {
+        background-color: #D73D3D;
+        border-radius: 20px;
+        border: 2px solid #f0f2f5;
+    }
+
+    .dashboardArea::-webkit-scrollbar-thumb:hover {
+        background-color: #b53138;
+    }
+}
+
+@media (max-width: 600px) {
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        gap: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    .discardTopBtn,
+    .submitBtn {
+        width: auto;
+        flex: 1;
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboardArea {
+        --mobile-side-gap: 10px;
+        padding: 0.25rem var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 25px) var(--mobile-side-gap);
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .uploadDropZone {
+        padding: 2rem 1rem;
+        min-height: 180px;
+    }
+
+    .uploadIconLarge {
+        width: 30px;
+        height: 30px;
+    }
+
+    .uploadHeading {
+        font-size: 13px;
+    }
+
+    .bottomActionButtons {
+        display: flex !important;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .discardTopBtn,
+    .submitBtn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        flex: 1;
+        max-width: 120px;
+    }
+}

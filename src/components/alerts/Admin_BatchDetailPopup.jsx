@@ -3,18 +3,18 @@ import styles from './Admin_BatchDetailPopup.module.css';
 
 const Admin_BatchDetailPopup = ({ isOpen, onClose, onSave }) => {
   const [batchName, setBatchName] = useState('');
-  const [courseName, setCourseName] = useState('');
+  const [applicableYear, setApplicableYear] = useState('');
  
 
 
 
   const isFormValid =
     Boolean(batchName.trim()) &&
-    Boolean(courseName) ;
+    Boolean(applicableYear) ;
 
   const handleDiscard = () => {
     setBatchName('');
-    setCourseName('');
+    setApplicableYear('');
     onClose();
   };
 
@@ -26,7 +26,7 @@ const Admin_BatchDetailPopup = ({ isOpen, onClose, onSave }) => {
     
     const batchData = {
       batchName,
-      courseName
+      applicableYear
     };
     
     onSave(batchData);
@@ -58,15 +58,15 @@ const Admin_BatchDetailPopup = ({ isOpen, onClose, onSave }) => {
             <div className={styles['form-group']}>
               <label>Applicable Years</label>
               <select
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
+                value={applicableYear}
+                onChange={(e) => setApplicableYear(e.target.value)}
                 className={styles['form-input']}
               >
                 <option value="">Select Year</option>
-                <option value="React Development">I</option>
-                <option value="Node.js">II</option>
-                <option value="JavaScript">III</option>
-                <option value="HTML/CSS">IV</option>
+                <option value="I">I</option>
+                <option value="II">II</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
               </select>
             </div>
 

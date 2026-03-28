@@ -710,6 +710,7 @@ function StuProfile({ onLogout, onViewChange }) {
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
+    const [preferredTrainingOptions, setPreferredTrainingOptions] = useState(PREFERRED_TRAINING_OPTIONS);
 
     // Crop Modal State
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
@@ -916,6 +917,33 @@ function StuProfile({ onLogout, onViewChange }) {
         () => parseMultiValue(studentData?.preferredTraining),
         [studentData?.preferredTraining]
     );
+
+    useEffect(() => {
+        const loadPreferredTrainingOptions = async () => {
+            const activeYear = (studentData?.currentYear || currentYear || '').toString().trim().toUpperCase();
+
+            if (!activeYear) {
+                setPreferredTrainingOptions(PREFERRED_TRAINING_OPTIONS);
+                return;
+            }
+
+            try {
+                const dynamicCourses = await mongoDBService.getTrainingCoursesByYear(activeYear);
+                const options = [...new Set(
+                    (Array.isArray(dynamicCourses) ? dynamicCourses : [])
+                        .map((item) => (item || '').toString().trim())
+                        .filter(Boolean)
+                )];
+
+                setPreferredTrainingOptions(options.length ? options : PREFERRED_TRAINING_OPTIONS);
+            } catch (error) {
+                console.error('Failed to load preferred training options:', error);
+                setPreferredTrainingOptions(PREFERRED_TRAINING_OPTIONS);
+            }
+        };
+
+        loadPreferredTrainingOptions();
+    }, [studentData?.currentYear, currentYear]);
 
     const handleTrainingToggle = (option) => {
         if (isSaving) return;
@@ -2877,7 +2905,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     <div className={styles.checkboxGroup}>
                                         <span className={styles.checkboxGroupLabel}>Preferred Training</span>
                                         <div className={styles.checkboxOptions}>
-                                            {PREFERRED_TRAINING_OPTIONS.map((option) => (
+                                            {preferredTrainingOptions.map((option) => (
                                                 <label key={option} className={styles.checkboxOption}>
                                                     <input
                                                         type="checkbox"

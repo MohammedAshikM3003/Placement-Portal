@@ -23,6 +23,18 @@
   background: #4EA24E;
 }
 
+/* Remove scrollbar buttons on desktop */
+.ad-tr-page::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.ad-tr-page::-webkit-scrollbar-button:start:decrement,
+.ad-tr-page::-webkit-scrollbar-button:end:increment {
+  display: none;
+}
+
 /* Firefox */
 .ad-tr-page {
   scrollbar-width: thin;
@@ -269,9 +281,15 @@
   border-radius: 12px;
   padding: 16px;
   display: grid;
-  grid-template-columns: 210px 210px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 210px));
   gap: 16px;
   min-height: 255px;
+}
+
+.ad-tr-training-empty {
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .ad-tr-training-card {
@@ -384,13 +402,57 @@
 
 /* ── Mobile: ≤ 768px ── */
 @media (max-width: 768px) {
-  .ad-tr-content {
-    margin-left: 0;           /* sidebar overlays, content uses full width */
-    padding: 12px 14px;
-    top: 64px;   
-    height: 98vh;             /* below navbar */
+  .ad-tr-page {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
   }
 
+  .ad-tr-content {
+    margin-left: 0;           /* sidebar overlays, content uses full width */
+    margin-top: 55px;
+    padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px;
+    top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 94vh;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #4EA24E #f0f2f5;
+  }
+
+   .ad-tr-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .ad-tr-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .ad-tr-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .ad-tr-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+
+    /* Remove scrollbar buttons */
+    .ad-tr-content::-webkit-scrollbar-button {
+        display: none;
+        height: 0;
+        width: 0;
+    }
+
+    .ad-tr-content::-webkit-scrollbar-button:start:decrement,
+    .ad-tr-content::-webkit-scrollbar-button:end:increment {
+        display: none;
+    }
   .ad-tr-top-grid {
     grid-template-columns: 1fr;
     gap: 12px;

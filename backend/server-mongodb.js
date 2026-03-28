@@ -724,6 +724,371 @@ app.post('/api/degrees', async (req, res) => {
 });
 
 // -------------------------------------------------
+// Admin Training APIs
+// -------------------------------------------------
+
+const sanitizeTrainingPayload = (payload = {}) => {
+    const companyName = (payload.companyName || '').toString().trim();
+    const companyHR = (payload.companyHR || '').toString().trim();
+    const companyInfo = (payload.companyInfo || '').toString().trim();
+
+    const courses = Array.isArray(payload.courses)
+        ? payload.courses
+            .map((course) => ({
+                name: (course?.name || '').toString().trim(),
+                syllabus: Array.isArray(course?.syllabus)
+                    ? course.syllabus
+                        .map((topic) => (topic || '').toString().trim())
+                        .filter(Boolean)
+                    : [],
+                durationStart: (course?.durationStart || '').toString().trim(),
+                durationEnd: (course?.durationEnd || '').toString().trim()
+            }))
+            .filter((course) => course.name)
+        : [];
+
+    const trainers = Array.isArray(payload.trainers)
+        ? payload.trainers
+            .map((trainer) => ({
+                name: (trainer?.name || '').toString().trim(),
+                mobile: (trainer?.mobile || '').toString().trim(),
+                email: (trainer?.email || '').toString().trim(),
+                gender: (trainer?.gender || '').toString().trim()
+            }))
+            .filter((trainer) => trainer.name)
+        : [];
+
+    return {
+        companyName,
+        companyHR,
+        companyInfo,
+        courses,
+        trainers
+    };
+};
+
+const createTrainingRecord = async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        const payload = sanitizeTrainingPayload(req.body || {});
+
+        if (!payload.companyName) {
+            return res.status(400).json({
+                success: false,
+                error: 'Company name is required'
+            });
+        }
+
+        const newTraining = new Training(payload);
+        await newTraining.save();
+
+        return res.status(201).json({
+            success: true,
+            message: 'Training details saved successfully',
+            training: newTraining
+        });
+    } catch (error) {
+        console.error('Create training error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to save training details',
+            details: error.message
+        });
+    }
+};
+
+app.post('/api/trainings', createTrainingRecord);
+app.post('/api/trainning', createTrainingRecord);
+
+app.get('/api/trainings', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected',
+                trainings: []
+            });
+        }
+
+        const trainings = await Training.find({}).sort({ createdAt: -1 }).lean();
+
+        return res.json({
+            success: true,
+            trainings
+        });
+    } catch (error) {
+        console.error('Get trainings error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch training details',
+            details: error.message,
+            trainings: []
+        });
+    }
+});
+
+const sanitizeScheduledTrainingPayload = (payload = {}) => {
+    const scheduleId = (payload.scheduleId || '').toString().trim();
+    const companyName = (payload.companyName || '').toString().trim();
+    const startDate = (payload.startDate || '').toString().trim();
+    const endDate = (payload.endDate || '').toString().trim();
+
+    // Robust phase processing with type validation - prevent "[Object Object]" strings
+    const phases = Array.isArray(payload.phases)
+        ? payload.phases
+            .filter((phase) => {
+                // Skip non-objects
+                if (!phase || typeof phase !== 'object') return false;
+                // Skip if phaseNumber is not a string
+                if (!phase.phaseNumber || typeof phase.phaseNumber !== 'string') return false;
+                // Skip if applicableCourses is not an array
+                if (!Array.isArray(phase.applicableCourses)) return false;
+                // Skip if any course is not a string (would stringify to [object Object])
+                if (!phase.applicableCourses.every((course) => typeof course === 'string')) return false;
+                return true;
+            })
+            .map((phase) => ({
+                phaseNumber: phase.phaseNumber.toString().trim(),
+                applicableCourses: phase.applicableCourses
+                    .map((course) => (course || '').toString().trim())
+                    .filter(Boolean)
+            }))
+            .filter((phase) => phase.phaseNumber && phase.applicableCourses.length > 0)
+        : [];
+
+    const batches = Array.isArray(payload.batches)
+        ? payload.batches
+            .map((batch) => ({
+                batchName: (batch?.batchName || '').toString().trim(),
+                applicableYear: (batch?.applicableYear || batch?.courseName || '').toString().trim()
+            }))
+            .filter((batch) => batch.batchName && batch.applicableYear)
+        : [];
+
+    return {
+        scheduleId,
+        companyName,
+        startDate,
+        endDate,
+        phases,
+        batches
+    };
+};
+
+app.post('/api/scheduled-trainings', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        console.log('\n=== SCHEDULED TRAINING REQUEST ===');
+        console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+        console.log('Phases from request:', req.body?.phases);
+        console.log('Phases type check:', req.body?.phases?.map(p => ({
+            phase: p,
+            type: typeof p,
+            phaseNumber: p?.phaseNumber,
+            phaseNumberType: typeof p?.phaseNumber,
+            applicableCourses: p?.applicableCourses,
+            isArray: Array.isArray(p?.applicableCourses)
+        })));
+
+        const payload = sanitizeScheduledTrainingPayload(req.body || {});
+
+        console.log('Sanitized payload:', JSON.stringify(payload, null, 2));
+        console.log('Sanitized phases:', payload.phases);
+
+        if (!payload.companyName) {
+            return res.status(400).json({
+                success: false,
+                error: 'Company name is required'
+            });
+        }
+
+        if (!payload.startDate || !payload.endDate) {
+            return res.status(400).json({
+                success: false,
+                error: 'Start date and end date are required'
+            });
+        }
+
+        if (!payload.batches.length) {
+            return res.status(400).json({
+                success: false,
+                error: 'At least one batch with applicable year is required'
+            });
+        }
+
+        let record;
+
+        if (payload.scheduleId) {
+            if (!mongoose.Types.ObjectId.isValid(payload.scheduleId)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid schedule id'
+                });
+            }
+
+            record = await ScheduledTraining.findByIdAndUpdate(
+                payload.scheduleId,
+                {
+                    companyName: payload.companyName,
+                    startDate: payload.startDate,
+                    endDate: payload.endDate,
+                    phases: payload.phases,
+                    batches: payload.batches
+                },
+                { new: true }
+            );
+
+            if (!record) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Scheduled training not found'
+                });
+            }
+        } else {
+            // Create a new record when scheduleId is not provided.
+            // This allows multiple schedules for the same company.
+            record = await ScheduledTraining.create({
+                companyName: payload.companyName,
+                startDate: payload.startDate,
+                endDate: payload.endDate,
+                phases: payload.phases,
+                batches: payload.batches
+            });
+        }
+
+        console.log('Saved record:', JSON.stringify(record, null, 2));
+        console.log('=== END REQUEST ===\n');
+
+        return res.status(201).json({
+            success: true,
+            message: 'Scheduled training saved successfully',
+            schedule: record
+        });
+    } catch (error) {
+        console.error('Create scheduled training error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to save scheduled training details',
+            details: error.message
+        });
+    }
+});
+
+app.get('/api/scheduled-trainings', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected',
+                schedules: []
+            });
+        }
+
+        const schedules = await ScheduledTraining.find({}).sort({ createdAt: -1 }).lean();
+
+        return res.json({
+            success: true,
+            schedules
+        });
+    } catch (error) {
+        console.error('Get scheduled trainings error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch scheduled training details',
+            details: error.message,
+            schedules: []
+        });
+    }
+});
+
+app.get('/api/training-courses', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected',
+                courses: []
+            });
+        }
+
+        const year = (req.query?.year || '').toString().trim();
+        const normalizedYear = year.toUpperCase();
+
+        let schedules = [];
+
+        if (normalizedYear) {
+            schedules = await ScheduledTraining.find({
+                'batches.applicableYear': normalizedYear
+            }).select({ companyName: 1 }).lean();
+        } else {
+            schedules = await ScheduledTraining.find({}).select({ companyName: 1 }).lean();
+        }
+
+        const companyNames = [...new Set(
+            schedules
+                .map((item) => (item?.companyName || '').toString().trim())
+                .filter(Boolean)
+        )];
+
+        if (!companyNames.length) {
+            return res.json({
+                success: true,
+                courses: []
+            });
+        }
+
+        const trainings = await Training.find({
+            companyName: { $in: companyNames }
+        }).select({ courses: 1 }).lean();
+
+        const courseNames = [...new Set(
+            trainings.flatMap((training) =>
+                Array.isArray(training?.courses)
+                    ? training.courses
+                        .map((course) => (course?.name || '').toString().trim())
+                        .filter(Boolean)
+                    : []
+            )
+        )];
+
+        return res.json({
+            success: true,
+            courses: courseNames
+        });
+    } catch (error) {
+        console.error('Get training courses error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch training courses',
+            details: error.message,
+            courses: []
+        });
+    }
+});
+
+// -------------------------------------------------
 // Admin Company Profile APIs
 // -------------------------------------------------
 
@@ -3260,6 +3625,42 @@ const degreeSchema = new mongoose.Schema({
 
 const Degree = mongoose.model('Degree', degreeSchema, 'degrees');
 
+const trainingSchema = new mongoose.Schema({
+    companyName: { type: String, required: true, trim: true },
+    companyHR: { type: String, trim: true },
+    companyInfo: { type: String, trim: true },
+    courses: [{
+        name: { type: String, required: true, trim: true },
+        syllabus: [{ type: String, trim: true }],
+        durationStart: { type: String, trim: true },
+        durationEnd: { type: String, trim: true }
+    }],
+    trainers: [{
+        name: { type: String, required: true, trim: true },
+        mobile: { type: String, trim: true },
+        email: { type: String, trim: true },
+        gender: { type: String, trim: true }
+    }]
+}, { timestamps: true });
+
+const Training = mongoose.model('Training', trainingSchema, 'trainning');
+
+const scheduledTrainingSchema = new mongoose.Schema({
+    companyName: { type: String, required: true, trim: true },
+    startDate: { type: String, required: true, trim: true },
+    endDate: { type: String, required: true, trim: true },
+    phases: [{
+        phaseNumber: { type: String, required: true, trim: true },
+        applicableCourses: [{ type: String, trim: true }]
+    }],
+    batches: [{
+        batchName: { type: String, required: true, trim: true },
+        applicableYear: { type: String, required: true, trim: true, uppercase: true }
+    }]
+}, { timestamps: true });
+
+const ScheduledTraining = mongoose.model('ScheduledTraining', scheduledTrainingSchema, 'trainning_schedule');
+
 // Attendance Schema
 const attendanceSchema = new mongoose.Schema({
     // Unique Drive Identifier
@@ -3530,7 +3931,11 @@ const startServer = async () => {
 // Request logging middleware - Log all incoming requests
 app.use((req, res, next) => {
     if (req.method !== 'OPTIONS') {
-        console.log(`\n🌐 ${req.method} ${req.path}`);
+        // Avoid noisy per-file stream logs; these can flood console during image rendering.
+        const isGridFsFileStream = req.method === 'GET' && req.path.startsWith('/api/file/');
+        if (!isGridFsFileStream) {
+            console.log(`\n🌐 ${req.method} ${req.path}`);
+        }
         if (req.body && Object.keys(req.body).length > 0) {
             // Log body but hide sensitive fields
             const sanitized = { ...req.body };

@@ -401,6 +401,8 @@
     padding: 48px 0;
     width: 100%;
     position: relative;
+    top: 50px;
+    position: relative;
     /* Ensures the row stays expanded while loading */
     min-height: 150px; 
   }
@@ -411,7 +413,7 @@
   
   .co-at-loading-wrapper {
     position: absolute;
-    top: 50%; /* Changed from 100% to 50% for vertical centering */
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -422,6 +424,7 @@
     background: rgba(255, 255, 255, 0.9);
     padding: 20px;
     border-radius: 12px;
+    z-index: 100;
   }
   
   .co-at-spinner {

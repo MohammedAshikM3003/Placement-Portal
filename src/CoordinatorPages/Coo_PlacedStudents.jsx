@@ -204,13 +204,20 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
         const mappedData = response.data.map((student, index) => ({
           sno: index + 1,
           name: student.name,
-          regNo: student.regNo,
-          dept: student.dept,
-          batch: student.batch,
-          company: student.company,
-          role: student.role,
-          pkg: student.pkg,
-          date: student.date,
+          regNo:
+            student.registrationNumber ||
+            student.regNo ||
+            student.regno ||
+            student.rollNo ||
+            student.rollNumber ||
+            student.studentId ||
+            student._id ||
+            '',
+          dept: student.dept || student.department || student.branch || '',
+          batch: student.batch || student.batchYear || '',
+          company: student.company || student.companyName || '',
+          role: student.role || student.jobRole || student.designation || '',
+          pkg: student.pkg || student.package || student.salary || student.ctc || '',
           status: student.status || 'Accepted'
         }));
         
@@ -341,10 +348,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
         student.company, 
         student.role, 
         student.pkg, 
-        student.date,
         student.status,
       ]);
-      const header = ["S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Date", "Status"];
+      const header = ["S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"];
       const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Placed Students");
@@ -359,7 +365,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     try {
       const doc = new jsPDF("landscape");
       const columns = [
-       " S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Date", "Status"
+       " S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"
       ];
     
       const rows = displayedStudents.map(student => [
@@ -371,7 +377,6 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
         student.company, 
         student.role, 
         student.pkg, 
-        student.date,
         student.status,
       ]);
     
@@ -516,20 +521,20 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                     <th>S.No</th>
                     <th> Name</th>
                     <th>Reg No.</th>
-                    <th style={{ width:"108px"}}>Department</th>
+                    <th>Department</th>
                     <th>Batch</th>
                     <th>Company</th>
                     <th>Job Role</th>
                     <th>Package</th>
-                    <th>Date</th>
                     <th>Offer</th>
                     <th>Action</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                           <div className={styles['co-ps-loading-spinner']}></div>
                           <span>Loading placed students...</span>
@@ -538,7 +543,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                     </tr>
                   ) : displayedStudents.length === 0 ? (
                     <tr>
-                      <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                         No placed students found
                       </td>
                     </tr>
@@ -553,7 +558,6 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                         <td>{student.company}</td>
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
-                        <td>{student.date}</td>
                         <td>
                           <span className={`${styles['co-ps-status-badge']} ${styles['ps-status-' + student.status.toLowerCase()]}`}>
                             {student.status}

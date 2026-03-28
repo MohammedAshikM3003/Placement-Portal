@@ -468,6 +468,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                     <input
                       id="search-company"
                       className={styles['co-cp-search-filter-card__input']}
+                      placeholder="Search Company"
                       value={filters.company}
                       onChange={(e) => handleFilterChange('company', e.target.value)}
                       required
@@ -482,6 +483,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                     <input
                       id="search-domain"
                       className={styles['co-cp-search-filter-card__input']}
+                      placeholder="Search by Domain"
                       value={filters.domain}
                       onChange={(e) => handleFilterChange('domain', e.target.value)}
                       required
@@ -498,6 +500,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                     <input
                       id="search-jobrole"
                       className={styles['co-cp-search-filter-card__input']}
+                      placeholder="Search Job Role"
                       value={filters.jobRole}
                       onChange={(e) => handleFilterChange('jobRole', e.target.value)}
                       required
@@ -517,7 +520,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
       onChange={(e) => handleFilterChange('mode', e.target.value)}
       required
     >
-      <option value=""></option>
+      <option value="" disabled>Search by Mode</option>
       <option value="Online">Online</option>
       <option value="Offline">Offline</option>
       <option value="Hybrid">Hybrid</option>

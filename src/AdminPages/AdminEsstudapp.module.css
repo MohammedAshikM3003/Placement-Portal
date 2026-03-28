@@ -15,7 +15,23 @@
     overflow: hidden;
 
 }
+.Admin-es-apk-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
 
+    .Admin-es-apk-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Admin-es-apk-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-es-apk-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
 
 
 /* Full-screen overlay for mobile sidebar (click to close) */
@@ -178,6 +194,7 @@
     width: 75px;
 
     height: 75px;
+    margin-top:20px;
 
 }
 
@@ -293,9 +310,37 @@
 
     width: 100%;
 
+    align-items: start;
+
 }
 
 
+
+/* Input Wrapper for Label + Input */
+.Admin-es-apk-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    height: 100%;
+    align-items: stretch;
+    padding-top: 25px;
+}
+
+/* Static Label (Fixed on Top Left) */
+.Admin-es-apk-static-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    line-height: 20px;
+}
 
 .Admin-es-apk-eligible-students-search .Admin-es-apk-search-input {
 
@@ -308,7 +353,6 @@
 
 
 .Admin-es-apk-eligible-students-search .Admin-es-apk-search-input input,
-
 .Admin-es-apk-eligible-students-search .Admin-es-apk-search-input select {
 
     width: 100%;
@@ -459,32 +503,6 @@
 
 
 
-.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input label {
-
-    position: absolute;
-
-    left: 12px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: #999;
-
-    pointer-events: none;
-
-    transition: none;
-
-    background: transparent;
-
-    padding: 0;
-
-    font-size: 0.95em;
-
-}
-
-
-
 .Admin-es-apk-eligible-students-search .Admin-es-apk-search-input input::placeholder,
 
 .Admin-es-apk-eligible-students-search .Admin-es-apk-search-input select::placeholder {
@@ -497,19 +515,11 @@
 
 
 
-/* Hide label when input has value or is focused */
+.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input input:focus::placeholder,
 
-.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input input:focus + label,
+.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input select:focus::placeholder {
 
-.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input select:focus + label,
-
-.Admin-es-apk-eligible-students-search .Admin-es-apk-search-input.filled label,
-
-.Admin-es-apk-eligible-students-search .Admin-es-apk-select-input select:not([value=""]) + label,
-
-.Admin-es-apk-eligible-students-search .Admin-es-apk-select-input select[value]:not([value=""]) + label {
-
-    display: none;
+    opacity: 0;
 
 }
 
@@ -949,37 +959,21 @@
 
 
 
-.Admin-es-apk-filter-input label {
-
-    position: absolute;
-
-    left: 15px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: #999;
-
-    pointer-events: none;
-
-    transition: none;
-
-    background: transparent;
-
-    padding: 0;
-
-    font-size: 0.95em;
-
-}
-
-
-
 .Admin-es-apk-filter-input input::placeholder {
 
     color: #999;
 
     opacity: 1;
+
+}
+
+
+
+.Admin-es-apk-filter-input input:focus::placeholder,
+
+.Admin-es-apk-filter-input select:focus::placeholder {
+
+    opacity: 0;
 
 }
 
@@ -996,22 +990,6 @@
 .Admin-es-apk-filter-input select option:first-child {
 
     color: #999;
-
-}
-
-
-
-/* Hide label when input/select has value or is focused */
-
-.Admin-es-apk-filter-input input:focus + label,
-
-.Admin-es-apk-filter-input.filled label,
-
-.Admin-es-apk-filter-input select:focus + label,
-
-.Admin-es-apk-filter-input select:not([value=""]) + label {
-
-    display: none;
 
 }
 
@@ -1149,9 +1127,11 @@
 
     background: #fff;
 
-    color: #666;
+    color: #f0f0f0;
 
     border: 2px solid #d1d5db;
+
+    background-color: #949292;
 
 }
 
@@ -1159,9 +1139,9 @@
 
 .Admin-es-apk-clear-bottom-btn:hover {
 
-    background: #f8f9fa;
+    background: #787878;
 
-    border-color: #999;
+   
 
 }
 
@@ -1297,7 +1277,7 @@
 
     .Admin-es-apk-main-content {
 
-        margin: 65px 10px 0 10px;
+        margin: 65px 0px 0 26px;
 
         padding: 5px;
 
@@ -1366,48 +1346,4 @@
 
 
 /* Green scrollbar for AdminEsstudapp page */
-
-.Admin-es-apk-main-content::-webkit-scrollbar {
-
-    width: 12px;
-
-    height: 12px;
-
-}
-
-.Admin-es-apk-main-content::-webkit-scrollbar-track {
-
-    background: transparent;
-
-}
-
-.Admin-es-apk-main-content::-webkit-scrollbar-thumb {
-
-    background-color: #4EA24E;
-
-    border-radius: 10px;
-
-    border: 3px solid transparent;
-
-    background-clip: padding-box;
-
-}
-
-.Admin-es-apk-main-content::-webkit-scrollbar-thumb:hover {
-
-    background-color: #3d8a3d;
-
-}
-
-
-
-/* Firefox scrollbar */
-
-.Admin-es-apk-main-content {
-
-    scrollbar-width: thin;
-
-    scrollbar-color: #4EA24E transparent;
-
-}
 

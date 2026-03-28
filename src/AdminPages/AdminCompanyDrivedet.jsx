@@ -94,6 +94,7 @@ function Admincdd() {
   const [allStudentsData, setAllStudentsData] = useState([]);
   const [originalAttendanceStudents, setOriginalAttendanceStudents] = useState([]); // Store Round 1 students
   const [allRoundResults, setAllRoundResults] = useState(null);
+  const [isReadOnly, setIsReadOnly] = useState(false); // Read-only mode when viewing completed drive results
   const tableRef = useRef(null);
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -109,8 +110,10 @@ function Admincdd() {
       try {
         setIsLoading(true);
         
-        // Get company data from navigation state
+        // Get company data and read-only flag from navigation state
         const companyData = location.state?.company;
+        const readOnlyMode = location.state?.isReadOnly || false;
+        setIsReadOnly(readOnlyMode);
         
         if (!companyData) {
           console.error('No company data found');
@@ -1081,25 +1084,27 @@ function Admincdd() {
                 </table>
               </div>
 
-              {/* Action Buttons */}
-              <div className={styles['Admin-cdd-action-buttons']}>
-                <button 
-                  className={styles['Admin-cdd-save-btn']} 
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-                <button 
-                  className={styles['Admin-cdd-action-clear-btn']} 
-                  onClick={handleClearStatuses}
-                  disabled={isSaving}
-                  style={{ opacity: isSaving ? 0.5 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
-                >
-                  Clear
-                </button>
-              </div>
+              {/* Action Buttons - Hidden in Read-Only Mode */}
+              {!isReadOnly && (
+                <div className={styles['Admin-cdd-action-buttons']}>
+                  <button 
+                    className={styles['Admin-cdd-save-btn']} 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button 
+                    className={styles['Admin-cdd-action-clear-btn']} 
+                    onClick={handleClearStatuses}
+                    disabled={isSaving}
+                    style={{ opacity: isSaving ? 0.5 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

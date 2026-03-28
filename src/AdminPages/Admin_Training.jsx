@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar.js';
 import AdSidebar from '../components/Sidebar/Adsidebar.js';
@@ -6,39 +6,21 @@ import AddTrainingIcon from '../assets/ad_addtrainingicon.svg';
 import ScheduleTrainingIcon from '../assets/ad_scheduletrainingicon.svg';
 import AttendanceTrainingIcon from '../assets/ad_at_attendance.svg';
 import styles from './Admin_Training.module.css';
+import mongoDBService from '../services/mongoDBService';
 
 function AdminTraining({ onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const companies = ['TCS', 'Infosys', 'Wipro', 'Zoho'];
-  const batches = ['Batch - I', 'Batch - II', 'Batch - III'];
-
-  const summaryDataByFilter = {
-    'TCS|Batch - I': { totalStudents: 100, departments: 'CSE, ECE, IT', course: 'Java FSD', present: 59, absent: 41 },
-    'TCS|Batch - II': { totalStudents: 80, departments: 'CSE, IT', course: 'React', present: 52, absent: 28 },
-    'TCS|Batch - III': { totalStudents: 60, departments: 'ECE, IT', course: 'Python', present: 45, absent: 15 },
-    'Infosys|Batch - I': { totalStudents: 90, departments: 'CSE, EEE', course: 'Node.js', present: 64, absent: 26 },
-    'Infosys|Batch - II': { totalStudents: 120, departments: 'CSE, ECE, IT', course: 'Java FSD', present: 88, absent: 32 },
-    'Infosys|Batch - III': { totalStudents: 70, departments: 'IT', course: 'HTML/CSS', present: 49, absent: 21 },
-    'Wipro|Batch - I': { totalStudents: 110, departments: 'CSE, IT', course: 'JavaScript', present: 77, absent: 33 },
-    'Wipro|Batch - II': { totalStudents: 95, departments: 'CSE, ECE', course: 'Java FSD', present: 60, absent: 35 },
-    'Wipro|Batch - III': { totalStudents: 75, departments: 'ECE', course: 'Python', present: 50, absent: 25 },
-    'Zoho|Batch - I': { totalStudents: 85, departments: 'CSE, IT', course: 'React', present: 55, absent: 30 },
-    'Zoho|Batch - II': { totalStudents: 105, departments: 'CSE, ECE, IT', course: 'Java FSD', present: 70, absent: 35 },
-    'Zoho|Batch - III': { totalStudents: 65, departments: 'IT, ECE', course: 'Node.js', present: 40, absent: 25 },
-  };
+  const [companies, setCompanies] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [trainingCards, setTrainingCards] = useState([]);
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
 
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
 
-  const appliedSummary =
-    selectedCompany && selectedBatch
-      ? (summaryDataByFilter[`${selectedCompany}|${selectedBatch}`] || null)
-      : null;
-
   const getPlaceholderText = () => {
-    if (appliedSummary) return null;
     if (selectedCompany && !selectedBatch) return 'Select the Batch';
     if (!selectedCompany && selectedBatch) return 'Select the Company';
     return 'Select Company and Batch';
@@ -72,6 +54,116 @@ function AdminTraining({ onLogout }) {
     return () => window.removeEventListener('closeSidebar', handleCloseSidebar);
   }, []);
 
+  useEffect(() => {
+    const loadTrainingDashboardData = async () => {
+      setIsLoadingCards(true);
+      try {
+        const [schedules, trainings] = await Promise.all([
+          mongoDBService.getScheduledTrainings(),
+          mongoDBService.getTrainings()
+        ]);
+
+        const normalizedSchedules = Array.isArray(schedules) ? schedules : [];
+        const normalizedTrainings = Array.isArray(trainings) ? trainings : [];
+
+        const companyList = [...new Set(
+          normalizedSchedules
+            .map((item) => (item?.companyName || '').toString().trim())
+            .filter(Boolean)
+        )];
+        setCompanies(companyList);
+
+        const batchList = [...new Set(
+          normalizedSchedules.flatMap((item) =>
+            Array.isArray(item?.batches)
+              ? item.batches
+                  .map((batch) => (batch?.batchName || '').toString().trim())
+                  .filter(Boolean)
+              : []
+          )
+        )];
+        setBatches(batchList);
+
+        const trainingByCompany = new Map(
+          normalizedTrainings.map((item) => [
+            (item?.companyName || '').toString().trim(),
+            item
+          ])
+        );
+
+        const cards = normalizedSchedules.map((schedule) => {
+          const companyName = (schedule?.companyName || '').toString().trim() || 'Training';
+          const trainingInfo = trainingByCompany.get(companyName);
+          const trainerCount = Array.isArray(trainingInfo?.trainers) ? trainingInfo.trainers.length : 0;
+          const firstCourse = Array.isArray(trainingInfo?.courses) && trainingInfo.courses[0]?.name
+            ? trainingInfo.courses[0].name
+            : '-';
+
+          const batchNames = Array.isArray(schedule?.batches)
+            ? schedule.batches
+                .map((batch) => (batch?.batchName || '').toString().trim())
+                .filter(Boolean)
+            : [];
+
+          const batchCount = batchNames.length;
+          const phaseCount = Array.isArray(schedule?.phases) ? schedule.phases.length : 0;
+
+          let durationText = 'Duration: -';
+          const start = new Date(schedule?.startDate);
+          const end = new Date(schedule?.endDate);
+          if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+            const diffMs = end.getTime() - start.getTime();
+            const days = Math.max(1, Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1);
+            durationText = `Duration: ${days} Day${days > 1 ? 's' : ''}`;
+          }
+
+          return {
+            id: schedule?._id || `${companyName}-${schedule?.startDate || ''}`,
+            scheduleId: schedule?._id || '',
+            companyName,
+            logoText: companyName.charAt(0).toUpperCase() || 'T',
+            trainerCount,
+            firstCourse,
+            batchNames,
+            batchCount,
+            phaseCount,
+            durationText
+          };
+        });
+
+        setTrainingCards(cards);
+      } catch (error) {
+        console.error('Failed to load admin training dashboard data:', error);
+        setCompanies([]);
+        setBatches([]);
+        setTrainingCards([]);
+      } finally {
+        setIsLoadingCards(false);
+      }
+    };
+
+    loadTrainingDashboardData();
+  }, []);
+
+  const filteredTrainingCards = useMemo(() => {
+    return trainingCards.filter((card) => {
+      if (selectedCompany && card.companyName !== selectedCompany) {
+        return false;
+      }
+
+      if (selectedBatch && !card.batchNames.includes(selectedBatch)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [trainingCards, selectedCompany, selectedBatch]);
+
+  const appliedSummary = useMemo(() => {
+    if (!selectedCompany || !selectedBatch) return null;
+    return filteredTrainingCards[0] || null;
+  }, [filteredTrainingCards, selectedCompany, selectedBatch]);
+
   const toggleSidebar = () => {
     setIsSidebarOpen((v) => !v);
   };
@@ -101,7 +193,7 @@ function AdminTraining({ onLogout }) {
           <button
             type="button"
             className={styles['ad-tr-action-card']}
-            onClick={() => navigate('/admin-schedule-training')}
+            onClick={() => navigate('/admin-schedule-training?mode=new')}
           >
             <div className={styles['ad-tr-action-icon']}>
               <img src={ScheduleTrainingIcon} alt="Schedule Training" />
@@ -148,11 +240,11 @@ function AdminTraining({ onLogout }) {
               <div className={styles['ad-tr-summary-text']}>
                 {appliedSummary ? (
                   <>
-                    <div className={styles['ad-tr-summary-line']}><span>Total Students :</span><strong>{appliedSummary.totalStudents}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Departments :</span><strong>{appliedSummary.departments}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Course :</span><strong>{appliedSummary.course}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Present :</span><strong>{appliedSummary.present}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Absent :</span><strong>{appliedSummary.absent}</strong></div>
+                    <div className={styles['ad-tr-summary-line']}><span>Company :</span><strong>{appliedSummary.companyName}</strong></div>
+                    <div className={styles['ad-tr-summary-line']}><span>Batches :</span><strong>{appliedSummary.batchCount}</strong></div>
+                    <div className={styles['ad-tr-summary-line']}><span>Phases :</span><strong>{appliedSummary.phaseCount}</strong></div>
+                    <div className={styles['ad-tr-summary-line']}><span>Course :</span><strong>{appliedSummary.firstCourse}</strong></div>
+                    <div className={styles['ad-tr-summary-line']}><span>Trainers :</span><strong>{appliedSummary.trainerCount}</strong></div>
                   </>
                 ) : (
                   <div className={styles['ad-tr-summary-placeholder']}>{getPlaceholderText()}</div>
@@ -212,19 +304,40 @@ function AdminTraining({ onLogout }) {
         <div className={styles['ad-tr-section-header']}>Trainings</div>
 
         <div className={styles['ad-tr-training-grid']}>
-          <div className={styles['ad-tr-training-card']}>
-            <div className={styles['ad-tr-training-logo']}>R</div>
-            <div className={styles['ad-tr-training-name']}>R - Sequence</div>
-            <div className={styles['ad-tr-training-meta']}>Trainers: 8</div>
-            <div className={styles['ad-tr-training-meta']}>Duration: 21 Days</div>
-          </div>
+          {isLoadingCards ? (
+            <div className={styles['ad-tr-training-empty']}>Loading scheduled trainings...</div>
+          ) : filteredTrainingCards.length === 0 ? (
+            <div className={styles['ad-tr-training-empty']}>No scheduled trainings found.</div>
+          ) : (
+            filteredTrainingCards.map((card, index) => {
+              const cardClass = index % 2 === 0 ? styles['ad-tr-training-card'] : styles['ad-tr-training-card-alt'];
+              const logoClass = index % 2 === 0 ? styles['ad-tr-training-logo'] : styles['ad-tr-training-logo-alt'];
 
-          <div className={styles['ad-tr-training-card-alt']}>
-            <div className={styles['ad-tr-training-logo-alt']}>X</div>
-            <div className={styles['ad-tr-training-name']}>X - Plore</div>
-            <div className={styles['ad-tr-training-meta']}>Trainers: 3</div>
-            <div className={styles['ad-tr-training-meta']}>Duration: 2 Days</div>
-          </div>
+              const handleCardClick = () => {
+                const query = new URLSearchParams({
+                  mode: 'edit',
+                  company: card.companyName
+                });
+
+                if (card.scheduleId) {
+                  query.set('scheduleId', card.scheduleId);
+                }
+
+                navigate(`/admin-schedule-training?${query.toString()}`);
+              };
+
+              return (
+                <div key={card.id} className={cardClass} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+                  <div className={logoClass}>{card.logoText}</div>
+                  <div className={styles['ad-tr-training-name']}>{card.companyName}</div>
+                  <div className={styles['ad-tr-training-meta']}>Batches: {card.batchCount}</div>
+                  <div className={styles['ad-tr-training-meta']}>Phases: {card.phaseCount}</div>
+                  <div className={styles['ad-tr-training-meta']}>Trainers: {card.trainerCount}</div>
+                  <div className={styles['ad-tr-training-meta']}>{card.durationText}</div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

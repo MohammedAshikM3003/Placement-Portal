@@ -1,0 +1,722 @@
+/* ============================================
+   Base Layout
+   ============================================ */
+.co-ms-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f6fb;
+  padding-top: 70px; /* Account for fixed navbar height */
+}
+
+/* ============================================
+   Main Content Container
+   ============================================ */
+.marks-main-content {
+  flex-grow: 1;
+  padding: 30px 20px 20px 20px;
+  background: #f4f6fb;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow: hidden;
+  max-height: calc(100vh - 70px);
+}
+
+/* ============================================
+   Filter Section
+   ============================================ */
+.marks-filter-card-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.marks-filter-header {
+  width: 100%;
+  max-width: 1150px;
+  background: #d9d9d9;
+  border-radius: 26px;
+  padding: 20px 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  margin-top: -10px;
+  margin-left: 293px;
+}
+
+.marks-filter-header-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: -8px;
+}
+
+/* Semester Badge Button */
+.marks-semester-btn {
+  align-self: center;
+  padding: 8px 32px;
+  border-radius: 999px;
+  background: #d23b42;
+  color: #fff;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+  transition: box-shadow 0.2s ease;
+  margin-bottom: 6px;
+}
+
+.marks-semester-btn:hover {
+  box-shadow: 0 6px 16px rgba(210, 59, 66, 0.4);
+}
+
+/* Filter Inputs Grid - 2x3 Layout */
+.marks-filters-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+/* Compact Bordered Input Field */
+.marks-floating-field,
+.marks-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+  height: 48px;
+}
+
+.marks-floating-input,
+.marks-dropdown {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid #c8a2d0;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #4b5563;
+  padding: 10px 40px 10px 14px;
+  box-sizing: border-box;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.marks-floating-input:hover,
+.marks-dropdown:hover {
+  border: 1px solid #d23b42;
+}
+
+.marks-floating-input:focus,
+.marks-dropdown:focus {
+  border: 2px solid #d23b42;
+  outline: none;
+}
+
+.marks-floating-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.marks-dropdown {
+  appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+/* Dropdown Arrow */
+.marks-dropdown-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 40%;
+  right: 18px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #888;
+  border-bottom: 2px solid #888;
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+  transition: border-color 0.2s ease;
+}
+
+.marks-dropdown-wrapper:focus-within::after {
+  border-right-color: #d23b42;
+  border-bottom-color: #d23b42;
+}
+
+/* Search Icon in Text Inputs */
+.marks-search-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.marks-floating-field:focus-within .marks-search-icon {
+  color: #d23b42;
+}
+
+/* Label Above Dropdown (Small Red Text) */
+.marks-floating-label {
+  position: absolute;
+  left: 14px;
+  top: -8px;
+  font-size: 0.7rem;
+  color: #d23b42;
+  pointer-events: none;
+  background: #d9d9d9;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Filter Action Buttons - Centered in Grid */
+.marks-filter-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  width: 100%;
+}
+
+.marks-filter-btn,
+.marks-filter-btn-clear {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+  height: 100%;
+}
+
+/* Apply Filters Button */
+.marks-filter-btn {
+  background: #d23b42;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.marks-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(210, 59, 66, 0.4);
+  background: #b32d34;
+}
+
+/* Clear Filters Button */
+.marks-filter-btn-clear {
+  background: #ffffff;
+  color: #d23b42;
+  border: 2px solid #d23b42;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.marks-filter-btn-clear:hover {
+  background: #fff5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.2);
+}
+
+/* ============================================
+   Table Section
+   ============================================ */
+.marks-table-section {
+  width: 80.5%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-left: 290px;
+  flex-shrink: 0;
+  max-height: calc(100vh - 320px);
+  display: flex;
+  flex-direction: column;
+}
+
+.marks-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.marks-table-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+}
+
+/* Print Button */
+.marks-print-btn {
+  background: #d23b42;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.3);
+}
+
+.marks-print-btn:hover {
+  background: #b32d34;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.4);
+}
+
+/* Print Menu Container */
+.marks-print-menu-container {
+  position: relative;
+}
+
+/* Print Dropdown Menu */
+.marks-print-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.marks-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  color: #333;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.marks-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.marks-dropdown-item:hover {
+  background: #f8f9fa;
+  color: #d23b42;
+}
+
+/* Table Wrapper */
+.marks-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  flex-grow: 1;
+  overflow-y: hidden;
+}
+
+.marks-table-wrapper::-webkit-scrollbar {
+  width: 0px;
+  height: 12px;
+}
+
+.marks-table-wrapper::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.marks-table-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.marks-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* Table Styles */
+.marks-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.9rem;
+}
+
+.marks-table th,
+.marks-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  white-space: nowrap;
+}
+
+/* Table Header */
+.marks-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #ffffff;
+  border-bottom: 2px solid #e0e0e0;
+  display: table;
+  width: calc(100% - 8px);
+  table-layout: fixed;
+}
+
+.marks-table thead tr {
+  background: #ffffff;
+  border-bottom: 2px solid #e0e0e0;
+  display: table-row;
+  width: 100%;
+}
+
+.marks-table th {
+  background: #ffffff;
+  color: #999;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 16px 16px;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  display: table-cell;
+}
+
+/* Table Body */
+.marks-table tbody {
+  display: block;
+  max-height: 270px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 100%;
+  scroll-behavior: smooth;
+}
+
+.marks-table tbody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.marks-table tbody::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 10px;
+}
+
+.marks-table tbody::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 10px;
+  border: 2px solid #f0f2f5;
+}
+
+.marks-table tbody::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+/* Table Body Rows - Fixed Width to match header */
+.marks-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  transition: background 0.2s ease;
+}
+
+.marks-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.marks-table tbody td {
+  color: #2f2f2f;
+  font-weight: 400;
+  display: table-cell;
+}
+
+/* View Button */
+.marks-view-btn {
+  background: transparent;
+  border: none;
+  color: #d23b42;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.marks-view-btn:hover {
+  background: #fff5f5;
+  transform: scale(1.1);
+}
+
+.marks-view-btn:active {
+  transform: scale(0.95);
+}
+
+/* Loading and No Data States */
+.marks-loading,
+.marks-no-data {
+  text-align: center;
+  padding: 40px 20px !important;
+  color: #888;
+  font-size: 1rem;
+}
+
+.marks-loading {
+  color: #d23b42;
+  font-weight: 500;
+}
+
+/* Column Widths */
+.marks-table th:nth-child(1),
+.marks-table td:nth-child(1) { width: 60px; text-align: center !important; }
+
+.marks-table th:nth-child(2),
+.marks-table td:nth-child(2) { width: 140px; text-align: center !important; padding-left: 8px !important; padding-right: 8px !important; }
+
+.marks-table th:nth-child(3),
+.marks-table td:nth-child(3) { width: 100px; text-align: center !important; }
+
+.marks-table th:nth-child(4),
+.marks-table td:nth-child(4) { width: 80px; text-align: center; }
+
+.marks-table th:nth-child(5),
+.marks-table td:nth-child(5) { width: 90px; text-align: center; }
+
+.marks-table th:nth-child(6),
+.marks-table td:nth-child(6) { width: 80px; text-align: center; }
+
+.marks-table th:nth-child(7),
+.marks-table td:nth-child(7) { width: 90px; text-align: center; }
+
+.marks-table th:nth-child(8),
+.marks-table td:nth-child(8) { width: 120px; text-align: center; }
+
+.marks-table th:nth-child(9),
+.marks-table td:nth-child(9) { width: 80px; text-align: center; }
+
+.marks-table th:nth-child(10),
+.marks-table td:nth-child(10) { width: 110px; text-align: center; }
+
+.marks-table th:nth-child(11),
+.marks-table td:nth-child(11) { width: 70px; text-align: center; }
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+  .marks-filter-card-container,
+  .marks-print-btn,
+  .marks-print-dropdown {
+    display: none !important;
+  }
+
+  .co-ms-layout {
+    padding-top: 0 !important;
+    min-height: auto !important;
+  }
+
+  .marks-main-content {
+    padding: 20px !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .marks-table-section {
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .marks-table-header {
+    margin-bottom: 20px;
+  }
+
+  .marks-table-wrapper {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .marks-table {
+    page-break-inside: auto;
+    width: 100%;
+    display: table !important;
+    border-collapse: collapse !important;
+  }
+
+  .marks-table thead {
+    display: table-header-group !important;
+    width: 100% !important;
+  }
+
+  .marks-table tbody {
+    display: table-row-group !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  .marks-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+    display: table-row !important;
+    width: 100% !important;
+  }
+
+  .marks-table th,
+  .marks-table td {
+    display: table-cell !important;
+    padding: 10px 8px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .marks-table th {
+    background: #949494 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: white !important;
+  }
+
+  /* Print Column Widths */
+  .marks-table th:nth-child(1),
+  .marks-table td:nth-child(1) { width: 50px !important; }
+
+  .marks-table th:nth-child(2),
+  .marks-table td:nth-child(2) { width: 120px !important; }
+
+  .marks-table th:nth-child(3),
+  .marks-table td:nth-child(3) { width: 90px !important; }
+
+  .marks-table th:nth-child(4),
+  .marks-table td:nth-child(4) { width: 60px !important; }
+
+  .marks-table th:nth-child(5),
+  .marks-table td:nth-child(5) { width: 80px !important; }
+
+  .marks-table th:nth-child(6),
+  .marks-table td:nth-child(6) { width: 70px !important; }
+
+  .marks-table th:nth-child(7),
+  .marks-table td:nth-child(7) { width: 80px !important; }
+
+  .marks-table th:nth-child(8),
+  .marks-table td:nth-child(8) { width: 100px !important; }
+
+  .marks-table th:nth-child(9),
+  .marks-table td:nth-child(9) { width: 70px !important; }
+
+  .marks-table th:nth-child(10),
+  .marks-table td:nth-child(10) { width: 100px !important; }
+
+  .marks-table th:nth-child(11),
+  .marks-table td:nth-child(11) { width: 60px !important; }
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 900px) {
+  .co-ms-layout {
+    padding-top: 60px;
+  }
+
+  .marks-filter-card-container {
+    padding: 0;
+  }
+
+  .marks-filter-header {
+    padding: 22px 24px;
+    border-radius: 20px;
+  }
+
+  .marks-main-content {
+    padding: 20px 15px;
+  }
+
+  .marks-table-section {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 640px) {
+  .co-ms-layout {
+    padding-top: 60px;
+  }
+
+  .marks-main-content {
+    padding: 15px 10px;
+  }
+
+  .marks-filters-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .marks-filter-actions {
+    flex-direction: row;
+    justify-content: center;
+    height: auto;
+    padding: 8px 0;
+  }
+
+  .marks-filter-btn,
+  .marks-filter-btn-clear {
+    min-width: 130px;
+  }
+
+  .marks-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .marks-table-title {
+    font-size: 1.1rem;
+  }
+
+  .marks-print-btn {
+    width: 100%;
+  }
+
+  .marks-table {
+    font-size: 0.8rem;
+  }
+
+  .marks-table th,
+  .marks-table td {
+    padding: 10px 8px;
+  }
+}

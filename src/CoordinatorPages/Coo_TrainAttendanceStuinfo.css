@@ -1275,15 +1275,45 @@
     order: 3;
   }
 
-  /* Remove table scrollbar on mobile, use page scrollbar instead */
+  /* Limit table to 4 rows with vertical scrolling on mobile */
   .table-wrapper {
-    max-height: none;
+    max-height: 300px;
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: auto;
+    width: 100%;
+    position: relative;
+    flex: 1;
   }
 
+  /* Add vertical scrolling with red scrollbar for mobile table */
   .table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-button {
     display: none;
+  }
+
+  .table-wrapper::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 20px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 2px solid #f0f2f5;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
+  }
+
+  /* Set max-height to show only 4 rows */
+  .attendance-table {
+    max-height: calc(4 * 40px);
+    overflow-y: auto;
   }
 
   .table-header {
@@ -1296,7 +1326,7 @@
 
   .table-title {
     font-size: 1rem;
-    text-align: center;
+    text-align: justify;
     flex: 1;
   }
 
@@ -1317,10 +1347,21 @@
     order: 4;
   }
 
-  .discard-btn,
-  .update-btn {
-    width: 100%;
+  .discard-btn {
+    width: 37%;
     padding: 12px;
+    position: relative;
+    top: 28px;
+    margin-left: 31px;
+  }
+
+  
+  .update-btn {
+    width: 37%;
+    padding: 12px;
+    margin-left: 255px;
+    position: relative;
+    bottom: 23px;
   }
 }
 

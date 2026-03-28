@@ -748,8 +748,8 @@ function AdminRADW() {
             </div>
 
             {/* UPDATED CLASSES for table structure, headers, body, and status cells */}
-            <div className={styles['Admin-radw-table-body-scroll']}>
-              <table className={styles['Admin-radw-data-table']}>
+            <div className={`${styles['Admin-radw-table-body-scroll']} ${!isLoading && filteredData.length > 0 ? styles['Admin-radw-table-body-scroll-has-data'] : ''}`}>
+              <table className={`${styles['Admin-radw-data-table']} ${!isLoading && filteredData.length > 0 ? styles['Admin-radw-data-table-has-data'] : ''}`}>
                 <thead>
                   <tr>
                     <th>S.No</th>
@@ -783,8 +783,8 @@ function AdminRADW() {
                         <td>{student.Rounds}</td>
                         <td>{student["Mobile No."]}</td>
                         <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
-                          if (student.studentId) {
-                            navigate(`/admin-profile/${student.studentId}`);
+                          if (student["Register No."]) {
+                            navigate(`/admin-student-view/${student["Register No."]}`)
                           }
                         }}>
                           <EyeIcon />

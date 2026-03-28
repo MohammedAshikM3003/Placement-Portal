@@ -457,7 +457,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('');
-  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const filteredStudents = useMemo(() => {
     const deptQ = (filters.dept || "").trim().toLowerCase();
@@ -576,7 +576,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
   };
 
   const simulateExport = async (type, exportFn) => {
-    setShowExportMenu(false);
+    setOpen(false);
     setExportType(type);
     setExportProgress(0);
     setExportPopupState('progress');
@@ -713,8 +713,6 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         <Sidebar
           isOpen={isSidebarOpen}
           onLogout={onLogout}
-          currentView="training"
-          onViewChange={onViewChange}
         />
         <div className={styles["ad-train-att-content-area"]}>
           <div className={styles["ad-train-att-container"]}>
@@ -731,8 +729,11 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                 <div className={styles["ad-train-att-filter-fields-container"]}>
                   {/* First Row: Department and Name */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Department Dropdown */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    {/* Department Dropdown with Static Label */}
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-dept" style={{ color: '#d3d3d3' }}>
+                        Department
+                      </label>
                       <select
                         id="ad-train-att-filter-dept"
                         className={styles["ad-train-att-filter-input"]}
@@ -748,50 +749,53 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                         <option value="EEE">EEE</option>
                         <option value="MECH">MECH</option>
                         <option value="CIVIL">CIVIL</option>
-                        {/* Add more departments as needed */}
                       </select>
-                      
                     </div>
 
-                    {/* Name Input with green floating label and border */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    {/* Name Input with Static Label */}
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-name">
+                        Name
+                      </label>
                       <input
                         id="ad-train-att-filter-name"
                         className={styles["ad-train-att-filter-input"] + " " + styles["ad-train-att-filter-input-green"]}
                         type="text"
+                        placeholder="Name"
                         required
                         value={filters.name || ""}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, name: e.target.value }))
                         }
                       />
-                      <label className={styles["ad-train-att-filter-label"] + " " + styles["ad-train-att-filter-label-green"]} htmlFor="ad-train-att-filter-name">
-                        Name
-                      </label>
                     </div>
                   </div>
 
                   {/* Second Row: Register No and Section Dropdown */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Register No Input */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    {/* Register No Input with Static Label */}
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-regno">
+                        Register No
+                      </label>
                       <input
                         id="ad-train-att-filter-regno"
                         className={styles["ad-train-att-filter-input"]}
                         type="text"
+                        placeholder="Register No"
                         required
                         value={filters.regNo || ""}
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, regNo: e.target.value }))
                         }
                       />
-                      <label className={styles["ad-train-att-filter-label"]} htmlFor="ad-train-att-filter-regno">
-                        Register No
-                      </label>
                     </div>
 
-                    {/* Section Dropdown */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    {/* Section Dropdown with Static Label */}
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-section">
+                        Section
+                      </label>
                       <select
                         id="ad-train-att-filter-section"
                         className={styles["ad-train-att-filter-input"]}
@@ -806,14 +810,16 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                         <option value="B">B</option>
                         <option value="C">C</option>
                       </select>
-                     
                     </div>
                   </div>
 
                   {/* Third Row: Date Picker and Filter Button */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Date Picker */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    {/* Date Picker with Static Label */}
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-date">
+                        Date
+                      </label>
                       <input
                         id="ad-train-att-filter-date"
                         className={styles["ad-train-att-filter-input"]}
@@ -823,10 +829,12 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                           setFilters((prev) => ({ ...prev, date: e.target.value }))
                         }
                       />
-                      
                     </div>
                     {/* Filter Button */}
-                    <div className={styles["ad-train-att-filter-input-wrapper"]}>
+                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
+                      <label className={styles["ad-train-att-static-label"]} style={{ visibility: 'hidden' }}>
+                        Button
+                      </label>
                       <button
                         type="button"
                         className={styles["ad-train-att-filter-btn-green"]}
@@ -949,18 +957,17 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
             <div className={styles["ad-train-att-table-section"]}>
               <div className={styles["ad-train-att-table-header"]}>
                 <h2 className={styles["ad-train-att-table-title"]}>ATTENDANCE DETAILS</h2>
-                <div className={styles["ad-train-att-print-button-container"]}>
+                <div className={styles['Admin-DB-print-button-container']}>
                   <button
-                    type="button"
-                    className={styles["ad-train-att-print-btn"]}
-                    onClick={() => setShowExportMenu((prev) => !prev)}
+                    className={styles['Admin-DB-print-btn']}
+                    onClick={() => setOpen(!open)}
                   >
                     Print
                   </button>
-                  {showExportMenu && (
-                    <div className={styles["ad-train-att-export-menu"]}>
-                      <button type="button" onClick={handleExportExcel}>Export to Excel</button>
-                      <button type="button" onClick={handleExportPDF}>Export to PDF</button>
+                  {open && (
+                    <div className={styles['Admin-DB-export-menu']}>
+                      <button onClick={handleExportExcel}>Export to Excel</button>
+                      <button onClick={handleExportPDF}>Export to PDF</button>
                     </div>
                   )}
                 </div>

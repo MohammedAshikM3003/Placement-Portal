@@ -4,13 +4,18 @@ import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import Admin_CourseDetailsPopup from '../components/alerts/Admin_CourseDetailsPopup';
 import Admin_TrainerDetailsPopup from '../components/alerts/Admin_TrainerDetailsPopup';
+import useAdminAuth from '../utils/useAdminAuth';
+import mongoDBService from '../services/mongoDBService';
 
 const Admin_Add_Training = () => {
+  useAdminAuth(); // JWT authentication verification
+
   const [companyName, setCompanyName] = useState('');
   const [companyHR, setCompanyHR] = useState('');
   const [companyInfo, setCompanyInfo] = useState('');
   const [courses, setCourses] = useState([]);
   const [trainers, setTrainers] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // track sidebar visibility so hamburger toggle works
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -53,9 +58,31 @@ const Admin_Add_Training = () => {
     setTrainers([]);
   };
 
-  const handleSave = () => {
-    // Save logic here
-    alert('Training details saved!');
+  const handleSave = async () => {
+    if (!companyName.trim()) {
+      alert('Please enter company name');
+      return;
+    }
+
+    const payload = {
+      companyName: companyName.trim(),
+      companyHR: companyHR.trim(),
+      companyInfo: companyInfo.trim(),
+      courses,
+      trainers
+    };
+
+    setIsSaving(true);
+    try {
+      await mongoDBService.createTraining(payload);
+      alert('Training details saved successfully');
+      handleDiscard();
+    } catch (error) {
+      console.error('Failed to save training details:', error);
+      alert(error.message || 'Failed to save training details');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -204,7 +231,9 @@ const Admin_Add_Training = () => {
 
       <div className={styles['Admin-aat-actions']}>
         <button className={styles['Admin-aat-discard-btn']} onClick={handleDiscard}>Discard</button>
-        <button className={styles['Admin-aat-save-btn']} onClick={handleSave}>Save</button>
+        <button className={styles['Admin-aat-save-btn']} onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
       </div>
         </div>
       </div>

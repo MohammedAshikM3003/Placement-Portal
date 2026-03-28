@@ -18,15 +18,12 @@ body {
 .Admin-cdd-dashboard-area {
   flex: 1;
   padding: 20px 30px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 60px);
   margin-top: 70px;
   margin-left: 290px;
   max-width: calc(100vw - 260px);
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: #4EA24E #e8f3e8;
+  
 }
 
 .Admin-cdd-dashboard-area::-webkit-scrollbar {
@@ -416,6 +413,7 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 2px solid #e0e0e0;
   margin-top: 20px;
+  height:315px;
 }
 
 .Admin-cdd-profile-header {
@@ -497,35 +495,33 @@ body {
 
  /* Table Container */
 .Admin-cdd-table-container {
-  height: 400px;
+  height: 185px;
   overflow-y: scroll;
   overflow-x: auto;
   position: relative;
   width: 100%;
-  -webkit-overflow-scrolling: touch;
   border: none;
   border-radius: 0;
 }
 
-/* --- GREEN SCROLLBARS --- */
 .Admin-cdd-table-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+        width: 12px;
+    }
 
-.Admin-cdd-table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
+    .Admin-cdd-table-container::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
 
-.Admin-cdd-table-container::-webkit-scrollbar-thumb {
-  background: #4EA24E; /* Green Thumb */
-  border-radius: 4px;
-}
+    .Admin-cdd-table-container::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
 
-.Admin-cdd-table-container::-webkit-scrollbar-thumb:hover {
-  background: #3d8a3d;
-}
+    .Admin-cdd-table-container::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+/* --- GREEN SCROLLBARS --- */
 
 .Admin-cdd-profile-table {
   width: 100%;
@@ -737,7 +733,7 @@ body {
 
 .Admin-cdd-action-clear-btn {
   background: #808080;
-  color: rgb(223, 221, 221);
+  color: #f0f0f0;
   border: none;
   padding: 12px 40px;
   border-radius: 30px;
@@ -748,7 +744,7 @@ body {
 }
 
 .Admin-cdd-action-clear-btn:hover {
-  background: #4EA24E;
+  background: #808080;
   color: white;
 }
 
@@ -974,13 +970,9 @@ body {
     vertical-align: middle;
   }
 
-  .Admin-cdd-table-container {
-    overflow-x: auto;
-    max-width: 100%;
-  }
+ 
 
   .Admin-cdd-company-profile {
-    overflow-x: hidden;
     margin: 20px 10px;
   }
 }
@@ -989,8 +981,31 @@ body {
   .Admin-cdd-dashboard-area {
     margin-left: 0;
     padding: 15px;
+    padding-top: 30px;
+    padding-bottom: 30px;
     overflow-x: hidden;
-    max-width: 500px;
+    overflow-y: auto;
+    max-width: 100%;
+    max-height: calc(100vh - 70px);
+  }
+
+  .Admin-cdd-dashboard-area::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .Admin-cdd-dashboard-area::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 12px;
+  }
+
+  .Admin-cdd-dashboard-area::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .Admin-cdd-dashboard-area::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
   }
 
   .Admin-cdd-top-section {
@@ -1095,17 +1110,46 @@ body {
   .Admin-cdd-table-container {
     overflow-x: auto;
     max-width: 100%;
-    -webkit-overflow-scrolling: touch;
+    min-height:230px;
   }
 
+  .Admin-cdd-table-container::-webkit-scrollbar {
+        width: 12px;
+        background: transparent;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar-thumb {
+        background: #4ea24e;
+        border-radius: 8px;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar:horizontal {
+        height: 10px;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .Admin-cdd-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
+    }
   .Admin-cdd-company-profile {
     padding: 15px;
-    overflow-x: hidden;
     margin: 15px 0;
+    min-height:360px;
   }
 
   .Admin-cdd-action-buttons {
-    flex-direction: column;
     gap: 10px;
   }
 
