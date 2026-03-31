@@ -730,7 +730,7 @@ app.post('/api/degrees', async (req, res) => {
 const sanitizeTrainingPayload = (payload = {}) => {
     const companyName = (payload.companyName || '').toString().trim();
     const companyHR = (payload.companyHR || '').toString().trim();
-    const companyInfo = (payload.companyInfo || '').toString().trim();
+    const location = (payload.location || payload.companyLocation || '').toString().trim();
 
     const courses = Array.isArray(payload.courses)
         ? payload.courses
@@ -761,7 +761,7 @@ const sanitizeTrainingPayload = (payload = {}) => {
     return {
         companyName,
         companyHR,
-        companyInfo,
+        location,
         courses,
         trainers
     };
@@ -789,6 +789,12 @@ const createTrainingRecord = async (req, res) => {
 
         const newTraining = new Training(payload);
         await newTraining.save();
+
+        // Clean legacy field names if they arrive in old clients or existing docs.
+        await Training.updateOne(
+            { _id: newTraining._id },
+            { $unset: { companyInfo: 1, companyLocation: 1 } }
+        );
 
         return res.status(201).json({
             success: true,
@@ -837,6 +843,60 @@ app.get('/api/trainings', async (req, res) => {
     }
 });
 
+app.put('/api/trainings/:id', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        const payload = sanitizeTrainingPayload(req.body || {});
+
+        if (!payload.companyName) {
+            return res.status(400).json({
+                success: false,
+                error: 'Company name is required'
+            });
+        }
+
+        const updatedTraining = await Training.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: payload,
+                $unset: {
+                    companyInfo: 1,
+                    companyLocation: 1
+                }
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedTraining) {
+            return res.status(404).json({
+                success: false,
+                error: 'Training not found'
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: 'Training details updated successfully',
+            training: updatedTraining
+        });
+    } catch (error) {
+        console.error('Update training error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to update training details',
+            details: error.message
+        });
+    }
+});
+
 const sanitizeScheduledTrainingPayload = (payload = {}) => {
     const scheduleId = (payload.scheduleId || '').toString().trim();
     const companyName = (payload.companyName || '').toString().trim();
@@ -859,6 +919,11 @@ const sanitizeScheduledTrainingPayload = (payload = {}) => {
             })
             .map((phase) => ({
                 phaseNumber: phase.phaseNumber.toString().trim(),
+                trainer: (phase.trainer || '').toString().trim(),
+                applicableYear: (phase.applicableYear || '').toString().trim(),
+                startDate: (phase.startDate || '').toString().trim(),
+                endDate: (phase.endDate || '').toString().trim(),
+                duration: (phase.duration || '').toString().trim(),
                 applicableCourses: phase.applicableCourses
                     .map((course) => (course || '').toString().trim())
                     .filter(Boolean)
@@ -924,13 +989,6 @@ app.post('/api/scheduled-trainings', async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'Start date and end date are required'
-            });
-        }
-
-        if (!payload.batches.length) {
-            return res.status(400).json({
-                success: false,
-                error: 'At least one batch with applicable year is required'
             });
         }
 
@@ -3628,7 +3686,7 @@ const Degree = mongoose.model('Degree', degreeSchema, 'degrees');
 const trainingSchema = new mongoose.Schema({
     companyName: { type: String, required: true, trim: true },
     companyHR: { type: String, trim: true },
-    companyInfo: { type: String, trim: true },
+    location: { type: String, trim: true },
     courses: [{
         name: { type: String, required: true, trim: true },
         syllabus: [{ type: String, trim: true }],
@@ -3643,7 +3701,8 @@ const trainingSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-const Training = mongoose.model('Training', trainingSchema, 'trainning');
+const TRAINING_COLLECTION = 'training_companies';
+const Training = mongoose.model('Training', trainingSchema, TRAINING_COLLECTION);
 
 const scheduledTrainingSchema = new mongoose.Schema({
     companyName: { type: String, required: true, trim: true },
@@ -3651,11 +3710,16 @@ const scheduledTrainingSchema = new mongoose.Schema({
     endDate: { type: String, required: true, trim: true },
     phases: [{
         phaseNumber: { type: String, required: true, trim: true },
+        trainer: { type: String, trim: true },
+        applicableYear: { type: String, trim: true },
+        startDate: { type: String, trim: true },
+        endDate: { type: String, trim: true },
+        duration: { type: String, trim: true },
         applicableCourses: [{ type: String, trim: true }]
     }],
     batches: [{
-        batchName: { type: String, required: true, trim: true },
-        applicableYear: { type: String, required: true, trim: true, uppercase: true }
+        batchName: { type: String, trim: true },
+        applicableYear: { type: String, trim: true, uppercase: true }
     }]
 }, { timestamps: true });
 
@@ -3703,6 +3767,57 @@ attendanceSchema.index({ 'students.regNo': 1 });
 const Attendance = mongoose.model('Attendance', attendanceSchema, 'attendance');
 
 let branchIndexCleanupDone = false;
+let trainingCollectionMigrationDone = false;
+
+const migrateTrainingCollection = async () => {
+    if (trainingCollectionMigrationDone) {
+        return;
+    }
+
+    if (!mongoose.connection?.readyState || mongoose.connection.readyState !== 1) {
+        return;
+    }
+
+    try {
+        const db = mongoose.connection.db;
+        const targetCollection = db.collection(TRAINING_COLLECTION);
+        const sourceCollections = ['trainning', 'training', 'training_compnaies'];
+        let totalMigrated = 0;
+
+        for (const sourceName of sourceCollections) {
+            if (sourceName === TRAINING_COLLECTION) {
+                continue;
+            }
+
+            const sourceExists = await db.listCollections({ name: sourceName }, { nameOnly: true }).toArray();
+            if (!sourceExists.length) {
+                continue;
+            }
+
+            const docs = await db.collection(sourceName).find({}).toArray();
+            if (!docs.length) {
+                continue;
+            }
+
+            const operations = docs.map((doc) => ({
+                updateOne: {
+                    filter: { _id: doc._id },
+                    update: { $set: doc },
+                    upsert: true
+                }
+            }));
+
+            const result = await targetCollection.bulkWrite(operations, { ordered: false });
+            totalMigrated += (result.upsertedCount || 0) + (result.modifiedCount || 0);
+        }
+
+        trainingCollectionMigrationDone = true;
+        console.log(`✅ Training collection ready: ${TRAINING_COLLECTION} (migrated ${totalMigrated} docs from legacy collections if present)`);
+    } catch (error) {
+        console.error('⚠️ Training collection migration skipped:', error.message);
+    }
+};
+
 const ensureBranchIndexes = async () => {
     if (branchIndexCleanupDone) {
         return;
@@ -3918,6 +4033,7 @@ const startServer = async () => {
         
         // Warm up login indexes for faster first login (admin, coordinator, student)
         if (isMongoConnected) {
+            await migrateTrainingCollection();
             setTimeout(() => warmupLoginIndexes(), 2000); // Run after 2s delay
         }
         
@@ -6599,6 +6715,7 @@ if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
         Promise.resolve().then(async () => {
             try {
                 await ensureConnection();
+                await migrateTrainingCollection();
                 dbInitialized = true;
                 console.log('✅ MongoDB connection initialized in serverless mode');
             } catch (error) {

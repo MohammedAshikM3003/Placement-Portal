@@ -3,7 +3,7 @@
   width: 100vw;
   display: flex;
   flex-direction: column;
-  background: #f7f7f7;
+  background: #f0f2f5;
   overflow: hidden;
 }
 
@@ -14,227 +14,408 @@
   overflow: auto;
   padding: 32px 24px;
   box-sizing: border-box;
-  position:relative;
-  top:10px;
+  position: relative;
+  top: 10px;
 }
 
+/* Custom Scrollbar - Green Theme */
 .content::-webkit-scrollbar {
-  width: 4px;
+  width: 10px;
 }
 
 .content::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f0f2f5;
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: #388e3c;
-  border-radius: 8px;
+  background-color: #4EA24E;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: #388e3c;
+  background-color: #3d8a3d;
 }
 
+/* Card Styling - matches AdminStuProfileEdit */
 .card {
-     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-    margin-bottom: 13px;
-    padding: 12px 32px 24px 32px;
-    min-width: 0;
+  background-color: #fff;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .cardTitle {
-  font-size: 20px;
-    font-weight: 600;
-    color: #222;
-    margin-bottom: 28px;
-    position: relative;
-    text-align: justify;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2d3d;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
 }
 
-.cardTitle:after 
-{
+.cardTitle::after {
   content: '';
-  display: block;
-  width: 80px;
-  height: 5px;
-  background: #4caf50;
-  border-radius: 3px;
-  margin-top: 8px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #4EA24E;
+  border-radius: 2px;
 }
 
-.cardContent 
-{
+.cardContent {
   margin-bottom: 0;
 }
 
 .formRow {
   display: flex;
-  gap: 50px;
-  margin-bottom: 0;
-  margin-right: 45px;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
 .dynamicRow {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .buttonRow {
-  margin-top: 20px;
+  margin-top: 1.5rem;
 }
 
 .formGroup {
-  flex: 0 0 auto;
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.4rem;
 }
 
-.fieldLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2e7d32;
-}
-
-.control {
-  width: 322.4px;
+.formGroup [data-ad-calendar-field="true"] {
+  width: 100%;
+  height: 53.6px;
   box-sizing: border-box;
-  padding: 12px 16px;
-  border: 1.5px solid #c2e0c6;
+}
+
+.calendarField {
+  width: 100%;
+}
+
+/* Field Label - Green Theme */
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+/* Required Star */
+.requiredStar {
+  color: #dc3545;
+}
+
+/* Input Controls - matches AdminStuProfileEdit */
+.control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.9rem;
+  border: 1px solid #def4dd;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 0.95rem;
   outline: none;
-  background: #f9f9f9;
-  transition: border-color 0.2s;
-  height: 45px;
+  background-color: #f9fff9;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  height: 53.6px;
 }
 
+.control:hover {
+  border-color: #4EA24E;
+}
+
+.control:focus {
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.control::placeholder {
+  color: #9ca3af;
+}
+
+/* Date Control */
 .dateControl {
-  accent-color: #4caf50;
-}
-
-.dateControl:hover {
-  border-color: #4caf50;
-}
-
-.dateControl::placeholder {
-  color: #6b7280;
+  accent-color: #4EA24E;
 }
 
 .dateControl::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  filter: invert(35%) sepia(87%) saturate(389%) hue-rotate(76deg) brightness(94%) contrast(92%);
+  filter: invert(45%) sepia(75%) saturate(400%) hue-rotate(80deg) brightness(95%) contrast(90%);
 }
 
-.control:focus {
-  border-color: #4caf50;
+/* Select Dropdown */
+select.control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234EA24E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
 }
 
-/* Used for both add and batch buttons */
+/* Add Button - Green Theme */
 .addBtn {
-  background: #4caf50;
+  background: linear-gradient(135deg, #4EA24E, #3f9346);
   color: #fff;
   font-weight: 600;
   border: none;
   border-radius: 8px;
-  padding: 0 0;
+  padding: 0;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 0;
-  height: 45px;
-  width: 320px;
+  height: 53.6px;
+  width: 100%;
+  max-width: 350px;
   min-width: 180px;
-  min-height: 45px;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
 }
 
 .addBtn:disabled {
   cursor: default;
-  opacity: 1;
-  background: #4caf50;
-  color: #fff;
+  opacity: 0.7;
+  background: #a5d6a7;
 }
 
-.addBtn:hover {
-  background: #388e3c;
+.addBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3f9346, #2e7d32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
 }
 
 .addIcon {
-  font-size: 26px;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-right: 6px;
 }
 
+/* Phase Input Wrapper */
 .phaseInputWrapper {
   position: relative;
-  flex: 0 0 auto;
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
 }
 
 .removePhaseBtn {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: none;
-  background: white;
-  color: grey;
-  font-size: 16px;
+  background: #fee2e2;
+  color: #dc3545;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  height:15px;
-  width:15px;
+  transition: all 0.2s;
 }
 
+.removePhaseBtn:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* Actions */
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 24px;
-  padding-right: 45px;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .discardBtn {
-  background: #444;
+  background: #6b7280;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 14px 38px;
-  font-size: 17px;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-}
-
-.saveBtn {
-  background: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 14px 38px;
-  font-size: 17px;
-  cursor: pointer;
-}
-
-.saveBtn:hover {
-  background: #388e3c;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
 }
 
 .discardBtn:hover {
-  background: #222;
+  background: #4b5563;
+}
+
+.saveBtn {
+  background: linear-gradient(135deg, #4EA24E, #3f9346);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.saveBtn:hover {
+  background: linear-gradient(135deg, #3f9346, #2e7d32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+/* Preferred Training - Courses Grid */
+.coursesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.courseItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fff9;
+  border: 1px solid #def4dd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.courseItem:hover {
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.courseCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #4EA24E;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  border: 2px solid #4EA24E;
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.courseCheckbox:checked {
+  background-color: #4EA24E;
+}
+
+.courseCheckbox:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.courseName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  font-family: 'Poppins', sans-serif;
+}
+
+.noDataText {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 1.5rem 0;
+}
+
+/* Add Phase Section */
+.addPhaseSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #def4dd;
+}
+
+.addPhaseBtn {
+  background: linear-gradient(135deg, #4EA24E, #3f9346);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.addPhaseBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3f9346, #2e7d32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+.addPhaseBtn:disabled {
+  background: #a5d6a7;
+  cursor: not-allowed;
+}
+
+/* Batch Button */
+.batchBtn {
+  background: linear-gradient(135deg, #4EA24E, #3f9346);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 53.6px;
+  width: 200px;
+  min-width: 150px;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.batchBtn:hover {
+  background: linear-gradient(135deg, #3f9346, #2e7d32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
 }
 
 /* --------------------------------------------------
    Responsive adjustments for tablet and mobile
-   sidebar toggle handled via Navbar/Sidebar components
    -------------------------------------------------- */
 
 /* tablet and small desktops */
@@ -244,39 +425,57 @@
     padding: 24px 16px;
   }
 
+  .card {
+    padding: 1.5rem;
+  }
+
   .formRow {
     flex-direction: column;
-    gap: 16px;
-    margin-right: 0;
+    gap: 1rem;
+  }
+
+  .formGroup {
+    max-width: 100%;
+  }
+
+  .phaseInputWrapper {
+    max-width: 100%;
   }
 
   .control {
     width: 100%;
   }
 
-  .addBtn {
+  .calendarField {
     width: 100%;
-    min-width: auto;
   }
 
-  .actions {
-    padding-right: 0;
-    flex-direction: column;
+  .formGroup [data-ad-calendar-field="true"] {
+    width: 100%;
+  }
+
+  .addBtn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .batchBtn {
+    width: 100%;
+  }
+
+  .coursesGrid {
     gap: 12px;
   }
 
-  .discardBtn{
-     width: 200px;
-    padding: 12px 0;
+  .courseItem {
+    min-width: calc(50% - 12px);
+    flex: 1 1 calc(50% - 12px);
   }
-  .saveBtn {
-    width: 200px;
-    padding: 12px 0;
-    position: relative;
-    left: 265px;
-    margin-top: -52px;
+
+  .actions {
+    flex-direction: row;
+    justify-content: flex-end;
   }
-  
 }
 
 /* mobile phones */
@@ -286,11 +485,27 @@
   }
 
   .card {
-    padding: 12px 16px 24px 16px;
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+
+  .courseItem {
+    min-width: 100%;
+    flex: 1 1 100%;
   }
 
   .actions {
+    flex-direction: column;
     gap: 10px;
   }
-}
 
+  .discardBtn,
+  .saveBtn {
+    width: 100%;
+    padding: 0.9rem;
+  }
+}

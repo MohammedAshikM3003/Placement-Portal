@@ -71,7 +71,7 @@ const viewToPath = (view) => `/` + view;
 
 
 
-const Adsidebar = ({ isOpen, onLogout }) => {
+const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
   const { logout: authLogout } = useAuth();
 
@@ -594,6 +594,10 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
   const isAdminSemesterMarksheetViewPage = window.location.pathname.startsWith('/admin-semester-marksheet-view/');
 
+  // Check if current path is active zip page (student database zip view)
+
+  const isActiveZipPage = window.location.pathname.startsWith('/admin/active-zip/') || window.location.pathname.startsWith('/admin/zipped-batch') || window.location.pathname === '/admin/zipped-batches';
+
   // Check if current path is add branch pages (both main and form)
 
   const isAddBranchPage = window.location.pathname === '/admin-add-branch' ||
@@ -627,7 +631,11 @@ const Adsidebar = ({ isOpen, onLogout }) => {
                          window.location.pathname === '/admin-schedule-training' ||
                          window.location.pathname === '/admin-schedule-training-batch' ||
                          window.location.pathname === '/admin-attendance-stdinfo' ||
-                         window.location.pathname === '/admin-train-attendance-stuinfo';
+                         window.location.pathname === '/admin-train-attendance-stuinfo' ||
+                         window.location.pathname === '/admin-training-history' ||
+                         window.location.pathname === '/admin-training-company' ||
+                         window.location.pathname.startsWith('/admin-training-history/') ||
+                         window.location.pathname.startsWith('/admin-training-company/');
 
 
 
@@ -765,7 +773,7 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
                 if (item.view === 'admin-student-database') {
 
-                  const shouldHighlight = isActive || isAdminProfilePage || isCertificateViewPage || isAdminStudentViewPage || isAdminStudentEditPage || isAdminSemesterMarksheetViewPage;
+                  const shouldHighlight = isActive || isAdminProfilePage || isCertificateViewPage || isAdminStudentViewPage || isAdminStudentEditPage || isAdminSemesterMarksheetViewPage || isActiveZipPage;
 
                   return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
 
@@ -820,7 +828,11 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
               }}
 
-              onClick={() => {
+              onClick={(e) => {
+                if (onViewChange) {
+                  e.preventDefault();
+                  onViewChange(item.view);
+                }
 
                 // Auto-close sidebar on mobile after navigation
 
@@ -856,7 +868,11 @@ const Adsidebar = ({ isOpen, onLogout }) => {
 
           className={({ isActive }) => `${styles['ad-nav-item']} ${isActive ? styles.selected : ''}`}
 
-          onClick={() => {
+          onClick={(e) => {
+            if (onViewChange) {
+              e.preventDefault();
+              onViewChange('admin-profile-main');
+            }
 
             if (window.innerWidth <= 992 && isOpen) {
 

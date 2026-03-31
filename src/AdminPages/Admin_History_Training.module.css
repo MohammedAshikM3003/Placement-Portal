@@ -1,11 +1,11 @@
 /* --- Base Layout --- */
-.Admin-tc-layout {
+.Admin-ht-layout {
     display: flex;
     min-height: 100vh;
     background-color: #f6f8fb;
 }
 
-.Admin-tc-main-content {
+.Admin-ht-main-content {
     flex-grow: 1;
     padding: 10px;
     margin: 65px 2px 0px 286px;
@@ -16,7 +16,7 @@
 }
 
 /* Mobile sidebar overlay */
-.Admin-tc-overlay {
+.Admin-ht-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -28,7 +28,7 @@
 
 /* ---------------------------------------------------------------------- */
 /* Top Card (Filter and Actions) */
-.Admin-tc-top-card {
+.Admin-ht-top-card {
     background-color: transparent;
     display: flex;
     gap: 20px;
@@ -39,7 +39,7 @@
 }
 
 /* Filter Section */
-.Admin-tc-filter-section {
+.Admin-ht-filter-section {
     flex: 1;
     background-color: #e8e8e8;
     padding: 20px;
@@ -50,12 +50,12 @@
     max-width: 750px;
 }
 
-.Admin-tc-filter-header-container {
+.Admin-ht-filter-header-container {
     position: relative;
     margin-bottom: 15px;
 }
 
-.Admin-tc-filter-header {
+.Admin-ht-filter-header {
     text-align: center;
     font-size: 1rem;
     font-weight: 500;
@@ -68,16 +68,7 @@
     width: 228px;
 }
 
-.Admin-tc-filter-icon-container {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    color: #4EA24E;
-}
-
-.Admin-tc-filter-content {
+.Admin-ht-filter-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -87,7 +78,7 @@
 }
 
 /* Input Wrapper for Label + Input */
-.Admin-tc-input-wrapper {
+.Admin-ht-input-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -98,7 +89,7 @@
 }
 
 /* Static Label */
-.Admin-tc-static-label {
+.Admin-ht-static-label {
     font-size: 0.85rem;
     font-weight: 600;
     color: #666;
@@ -112,53 +103,7 @@
     line-height: 20px;
 }
 
-/* Dropdown styling */
-.Admin-tc-dropdown-container {
-    position: relative;
-    border: 3px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 45px;
-    background-color: #ffffff;
-    transition: border-color 0.2s ease, border-width 0.2s ease;
-}
-
-.Admin-tc-dropdown-with-label {
-    overflow: visible;
-}
-
-.Admin-tc-dropdown {
-    width: 100%;
-    height: 100%;
-    padding: 8px 15px 0;
-    border: none;
-    background-color: transparent;
-    appearance: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: #333;
-}
-
-.Admin-tc-dropdown option:first-child {
-    color: #999;
-}
-
-.Admin-tc-dropdown option:not(:first-child) {
-    color: #333;
-}
-
-.Admin-tc-dropdown-container::after {
-    content: '▼';
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    color: #888;
-    pointer-events: none;
-}
-
-.Admin-tc-text-container {
+.Admin-ht-text-container {
     position: relative;
     border: 3px solid #ccc;
     border-radius: 8px;
@@ -168,7 +113,7 @@
     transition: border-color 0.2s ease, border-width 0.2s ease;
 }
 
-.Admin-tc-text {
+.Admin-ht-text {
     width: 89%;
     height: 100%;
     padding: 8px 15px 0;
@@ -182,91 +127,40 @@
     bottom: 3px;
 }
 
-.Admin-tc-text::placeholder {
+.Admin-ht-text::placeholder {
     color: #999;
     opacity: 1;
 }
 
-.Admin-tc-text:focus::placeholder,
-.Admin-tc-dropdown:focus::placeholder {
+.Admin-ht-text:focus::placeholder {
     opacity: 0;
 }
 
-.Admin-tc-text:focus,
-.Admin-tc-dropdown:focus {
+.Admin-ht-text:focus {
     outline: none;
     cursor: default;
 }
 
-.Admin-tc-text-container:hover {
+.Admin-ht-text-container:hover {
     border-color: #4EA24E;
 }
 
-.Admin-tc-text-container.is-focused,
-.Admin-tc-dropdown-with-label.is-focused {
+.Admin-ht-text-container.is-focused {
     border-color: #4EA24E;
 }
 
-.Admin-tc-dropdown-container:hover {
-    border-color: #4EA24E;
-}
-
-.Admin-tc-button-group {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: center;
-    margin-top: 0px;
-    gap: 45px;
-    border-radius: 10px;
-}
-
-.Admin-tc-button {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 25px;
-    font-size: 1rem;
+/* For date inputs */
+.Admin-ht-text[type="date"] {
     cursor: pointer;
-    font-weight: 700;
-    flex: 1;
-    transition: opacity 0.2s;
-    max-width: 150px;
 }
 
-.Admin-tc-search-btn {
-    background-color: #4EA24E;
-    color: white;
-    border: 2px solid transparent;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+.Admin-ht-text[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    color: #4EA24E;
 }
 
-.Admin-tc-search-btn:hover {
-    background-color: #3d8a3d;
-}
-
-/* Action Cards Section */
-.Admin-tc-action-cards-section {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 12px;
-    flex-wrap: nowrap;
-    margin-left: 0px;
-}
-
-.Admin-tc-action-card {
-    flex: 0 0 140px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    padding: 12px 15px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #808080;
-}
-
-.Admin-tc-action-addcard {
+/* Training Companies Card */
+.Admin-ht-action-addcard {
     text-align: center;
     width: 211px;
     flex-shrink: 0;
@@ -282,23 +176,29 @@
 }
 
 /* Add Company Card Special Styling */
-.Admin-tc-add-card {
+.Admin-ht-add-card {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     border: 2px solid #808088;
 }
 
-.Admin-tc-add-card:hover {
+.Admin-ht-add-card:hover {
     box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
     border-color: #4EA24E;
 }
 
-.Admin-tc-add-icon {
+.Admin-ht-add-icon {
     margin-bottom: 10px;
     margin-top: 10px;
 }
 
-.Admin-tc-add-header {
+.Admin-ht-add-icon img {
+    width: 65px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.Admin-ht-add-header {
     font-size: 1.9rem;
     font-weight: 720;
     margin-bottom: 10px;
@@ -308,7 +208,7 @@
     line-height: 30px;
 }
 
-.Admin-tc-add-description {
+.Admin-ht-add-description {
     font-size: 1.2rem;
     color: #666;
     margin-top: 8px;
@@ -316,13 +216,44 @@
     line-height: 1.3;
 }
 
-/* Edit/Delete Card Styling */
-.Admin-tc-action-card:nth-child(2),
-.Admin-tc-action-card:nth-child(3) {
+/* Action Cards Section */
+.Admin-ht-action-cards-section {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+    flex-wrap: nowrap;
+    margin-left: 0px;
+}
+
+.Admin-ht-action-card {
+    flex: 0 0 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 12px 15px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 2px solid #808080;
 }
 
-.Admin-tc-action-header {
+.Admin-ht-icon-container {
+    margin-bottom: 10px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-ht-icon-container img {
+    width: 65px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.Admin-ht-action-header {
     font-size: 1.4rem;
     font-weight: 500;
     margin-bottom: 5px;
@@ -330,15 +261,7 @@
     color: #4EA24E;
 }
 
-.Admin-tc-action-card:nth-child(2) .Admin-tc-action-header {
-    color: #4EA24E;
-}
-
-.Admin-tc-action-card:nth-child(3) .Admin-tc-action-header {
-    color: #4EA24E;
-}
-
-.Admin-tc-action-description {
+.Admin-ht-action-description {
     font-size: 1.2rem;
     color: #666;
     margin-bottom: 15px;
@@ -354,7 +277,7 @@
     min-height: 70px;
 }
 
-.Admin-tc-action-btn {
+.Admin-ht-action-btn {
     padding: 8px 25px;
     border: none;
     border-radius: 5px;
@@ -365,27 +288,27 @@
     font-size: 0.9rem;
 }
 
-.Admin-tc-action-btn:disabled {
+.Admin-ht-action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 /* Specific Action Button Colors */
-.Admin-tc-edit-btn {
+.Admin-ht-edit-btn {
     background-color: #5932EA;
     color: white;
     border-radius: 8px;
 }
 
-.Admin-tc-delete-btn {
+.Admin-ht-delete-btn {
     background-color: #ff0000;
     color: white;
     border-radius: 8px;
 }
 
 /* ---------------------------------------------------------------------- */
-/* Bottom Card (Company Table) */
-.Admin-tc-bottom-card {
+/* Bottom Card (History Table) */
+.Admin-ht-bottom-card {
     background-color: #ffffff;
     border-radius: 15px;
     padding: 8px 20px;
@@ -393,7 +316,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.Admin-tc-table-header-row {
+.Admin-ht-table-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -404,25 +327,25 @@
     top: -17px;
 }
 
-.Admin-tc-table-title {
+.Admin-ht-table-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: #333;
 }
 
-.Admin-tc-table-actions {
+.Admin-ht-table-actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.Admin-tc-print-button-container {
+.Admin-ht-print-button-container {
     position: relative;
     display: inline-block;
     z-index: 15;
 }
 
-.Admin-tc-print-btn {
+.Admin-ht-print-btn {
     background-color: #4EA24E;
     color: white;
     border: none;
@@ -434,12 +357,12 @@
     margin-left: 40px;
 }
 
-.Admin-tc-print-btn:hover {
+.Admin-ht-print-btn:hover {
     background-color: #3d8a3d;
 }
 
 /* Export Menu Styles */
-.Admin-tc-export-menu {
+.Admin-ht-export-menu {
     position: absolute;
     top: 40px;
     right: 0;
@@ -454,7 +377,7 @@
     overflow: hidden;
 }
 
-.Admin-tc-export-menu button {
+.Admin-ht-export-menu button {
     padding: 10px 15px;
     border: none;
     background: none;
@@ -465,12 +388,12 @@
     transition: background-color 0.2s;
 }
 
-.Admin-tc-export-menu button:hover {
+.Admin-ht-export-menu button:hover {
     background-color: #f0f0f0;
 }
 
 /* Table Styles */
-.Admin-tc-table-container {
+.Admin-ht-table-container {
     height: 300px;
     overflow-y: scroll;
     overflow-x: auto;
@@ -479,38 +402,38 @@
 }
 
 /* --- GREEN SCROLLBARS --- */
-.Admin-tc-table-container::-webkit-scrollbar {
+.Admin-ht-table-container::-webkit-scrollbar {
     width: 8px;
     background: transparent;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar-track {
+.Admin-ht-table-container::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar-thumb {
+.Admin-ht-table-container::-webkit-scrollbar-thumb {
     background: #4ea24e;
     border-radius: 8px;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar-thumb:hover {
+.Admin-ht-table-container::-webkit-scrollbar-thumb:hover {
     background: #3d8a3d;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar:horizontal {
+.Admin-ht-table-container::-webkit-scrollbar:horizontal {
     height: 6px;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar-track:horizontal {
+.Admin-ht-table-container::-webkit-scrollbar-track:horizontal {
     background: transparent;
 }
 
-.Admin-tc-table-container::-webkit-scrollbar-thumb:horizontal {
+.Admin-ht-table-container::-webkit-scrollbar-thumb:horizontal {
     background: #afadad;
     border-radius: 8px;
 }
 
-.Admin-tc-students-table {
+.Admin-ht-history-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
@@ -518,7 +441,7 @@
 }
 
 /* TABLE HEAD */
-.Admin-tc-table-head-row {
+.Admin-ht-table-head-row {
     position: sticky;
     top: 0;
     background-color: #ffffff;
@@ -526,7 +449,7 @@
     z-index: 11;
 }
 
-.Admin-tc-th {
+.Admin-ht-th {
     padding: 12px 15px;
     text-align: center;
     font-weight: 600;
@@ -537,22 +460,22 @@
     border-bottom: none;
 }
 
-.Admin-tc-table-row {
+.Admin-ht-table-row {
     cursor: pointer;
     transition: background-color 0.1s;
     border-bottom: 1px solid #eee;
     height: 47px;
 }
 
-.Admin-tc-table-row:hover {
+.Admin-ht-table-row:hover {
     background-color: #f6f6f6;
 }
 
-.Admin-tc-selected-row {
+.Admin-ht-selected-row {
     background-color: #e0ffe0 !important;
 }
 
-.Admin-tc-td {
+.Admin-ht-td {
     padding: 12px 15px;
     text-align: left;
     color: #2e2e2e;
@@ -561,78 +484,70 @@
 }
 
 /* Specific Column Width/Alignment adjustments */
-.Admin-tc-checkbox {
+.Admin-ht-sno {
     width: 60px;
     text-align: center;
 }
 
-.Admin-tc-sno {
-    width: 60px;
-    text-align: center;
-}
-
-.Admin-tc-company {
-    width: 180px;
-    text-align: center;
-}
-
-.Admin-tc-hr {
+.Admin-ht-course {
     width: 150px;
     text-align: center;
 }
 
-.Admin-tc-location {
+.Admin-ht-startdate {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-ht-enddate {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-ht-trainer {
     width: 150px;
     text-align: center;
 }
 
-.Admin-tc-courses {
+.Admin-ht-phase {
     width: 100px;
     text-align: center;
 }
 
-.Admin-tc-trainers {
+.Admin-ht-batch {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-ht-duration {
     width: 100px;
     text-align: center;
 }
 
-.Admin-tc-history {
+.Admin-ht-view {
     width: 80px;
     text-align: center;
-}
-
-.Admin-tc-view {
-    width: 80px;
-    text-align: center;
-}
-
-/* Checkbox Styles */
-.Admin-tc-checkbox-input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #4EA24E;
 }
 
 /* --- ICON ANIMATION KEYFRAMES --- */
-@keyframes Admin-tc-stroke {
+@keyframes Admin-ht-stroke {
     100% { stroke-dashoffset: 0; }
 }
 
-@keyframes Admin-tc-scale {
+@keyframes Admin-ht-scale {
     0%, 100% { transform: none; }
     50% { transform: scale3d(1.1, 1.1, 1); }
 }
 
-@keyframes Admin-tc-warning-fill {
+@keyframes Admin-ht-warning-fill {
     100% { box-shadow: inset 0 0 0 40px #FF9800; }
 }
 
-@keyframes Admin-tc-delete-fill {
+@keyframes Admin-ht-delete-fill {
     100% { box-shadow: inset 0 0 0 40px #D23B42; }
 }
 
-@keyframes Admin-tc-popup-enter {
+@keyframes Admin-ht-popup-enter {
     from {
         opacity: 0;
         transform: translateY(-20px);
@@ -644,7 +559,7 @@
 }
 
 /* Popup Styles */
-.Admin-tc-popup-overlay {
+.Admin-ht-popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -659,7 +574,7 @@
     box-sizing: border-box;
 }
 
-.Admin-tc-popup-container {
+.Admin-ht-popup-container {
     background-color: #fff;
     border-radius: 12px;
     width: 400px;
@@ -668,10 +583,10 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    animation: Admin-tc-popup-enter 0.3s ease-out forwards;
+    animation: Admin-ht-popup-enter 0.3s ease-out forwards;
 }
 
-.Admin-tc-popup-header {
+.Admin-ht-popup-header {
     background-color: #4EA24E;
     color: white;
     padding: 1.2rem;
@@ -680,11 +595,11 @@
     letter-spacing: 0.02em;
 }
 
-.Admin-tc-popup-body {
+.Admin-ht-popup-body {
     padding: 2rem;
 }
 
-.Admin-tc-popup-footer {
+.Admin-ht-popup-footer {
     padding: 1.5rem;
     background-color: #f7f7f7;
     display: flex;
@@ -692,9 +607,9 @@
     justify-content: center;
 }
 
-.Admin-tc-popup-cancel-btn,
-.Admin-tc-popup-delete-btn,
-.Admin-tc-popup-close-btn {
+.Admin-ht-popup-cancel-btn,
+.Admin-ht-popup-delete-btn,
+.Admin-ht-popup-close-btn {
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 8px;
@@ -704,47 +619,47 @@
     transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-.Admin-tc-popup-cancel-btn {
+.Admin-ht-popup-cancel-btn {
     background: #d2d2d2;
     color: #333;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.Admin-tc-popup-cancel-btn:hover {
+.Admin-ht-popup-cancel-btn:hover {
     background: #bbb;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.Admin-tc-popup-delete-btn {
+.Admin-ht-popup-delete-btn {
     background: #D23B42;
     color: #fff;
     box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
 }
 
-.Admin-tc-popup-delete-btn:hover {
+.Admin-ht-popup-delete-btn:hover {
     background: #b52e35;
     box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
-.Admin-tc-popup-close-btn {
+.Admin-ht-popup-close-btn {
     background-color: #D23B42;
     color: white;
     box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
 }
 
-.Admin-tc-popup-close-btn:hover {
+.Admin-ht-popup-close-btn:hover {
     background-color: #b53138;
     box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
-.Admin-tc-popup-cancel-btn:disabled,
-.Admin-tc-popup-delete-btn:disabled {
+.Admin-ht-popup-cancel-btn:disabled,
+.Admin-ht-popup-delete-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
 /* Warning Icon */
-.Admin-tc-warning-icon {
+.Admin-ht-warning-icon {
     width: 80px;
     height: 80px;
     margin: 0 auto;
@@ -753,26 +668,26 @@
     border-radius: 50%;
     padding: 15px;
     box-shadow: 0 0 0 0 #FF9800;
-    animation: Admin-tc-warning-fill 0.4s ease-in-out 0.4s forwards, Admin-tc-scale 0.3s ease-in-out 0.9s both;
+    animation: Admin-ht-warning-fill 0.4s ease-in-out 0.4s forwards, Admin-ht-scale 0.3s ease-in-out 0.9s both;
 }
 
-.Admin-tc-warning-icon--circle {
+.Admin-ht-warning-icon--circle {
     stroke: transparent;
     stroke-width: 0;
     fill: none;
 }
 
-.Admin-tc-warning-icon--exclamation {
+.Admin-ht-warning-icon--exclamation {
     stroke: #ffffff;
     stroke-width: 4;
     stroke-linecap: round;
     stroke-dasharray: 20;
     stroke-dashoffset: 20;
-    animation: Admin-tc-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    animation: Admin-ht-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
 
 /* Icon Wrapper for Delete Success */
-.Admin-tc-icon-wrapper {
+.Admin-ht-icon-wrapper {
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -782,11 +697,11 @@
     justify-content: center;
     background-color: #D23B42;
     box-shadow: 0 0 0 0 #D23B42;
-    animation: Admin-tc-delete-fill 0.4s ease-in-out 0.4s forwards, Admin-tc-scale 0.3s ease-in-out 0.9s both;
+    animation: Admin-ht-delete-fill 0.4s ease-in-out 0.4s forwards, Admin-ht-scale 0.3s ease-in-out 0.9s both;
 }
 
 /* Loading Spinner Styles */
-.Admin-tc-loading-cell {
+.Admin-ht-loading-cell {
     text-align: center;
     padding: 48px 0;
     width: 100%;
@@ -794,11 +709,11 @@
     position: relative;
 }
 
-.Admin-tc-loading-row {
+.Admin-ht-loading-row {
     height: 100%;
 }
 
-.Admin-tc-loading-wrapper {
+.Admin-ht-loading-wrapper {
     position: absolute;
     top: 100%;
     left: 50%;
@@ -814,23 +729,23 @@
     text-align: center;
 }
 
-.Admin-tc-spinner {
+.Admin-ht-spinner {
     width: 34px;
     margin-top: 50px;
     height: 34px;
     border-radius: 50%;
     border: 4px solid rgba(78, 162, 78, 0.25);
     border-top-color: #4EA24E;
-    animation: adminTrainingCompanySpin 0.7s linear infinite;
+    animation: adminHistoryTrainingSpin 0.7s linear infinite;
 }
 
-@keyframes adminTrainingCompanySpin {
+@keyframes adminHistoryTrainingSpin {
     to {
         transform: rotate(360deg);
     }
 }
 
-.Admin-tc-loading-text {
+.Admin-ht-loading-text {
     color: #1f2937;
     font-weight: 600;
     font-size: 0.95rem;
@@ -842,13 +757,13 @@
 
 /* Tablet View */
 @media screen and (max-width: 1024px) {
-    .Admin-tc-main-content {
+    .Admin-ht-main-content {
         margin: 65px 0px 0px 10px;
         padding: 15px;
         box-sizing: border-box;
     }
 
-    .Admin-tc-top-card {
+    .Admin-ht-top-card {
         flex-direction: column;
         height: auto;
         gap: 20px;
@@ -858,14 +773,14 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-filter-section {
+    .Admin-ht-filter-section {
         flex: 1 1 auto;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-action-cards-section {
+    .Admin-ht-action-cards-section {
         flex-direction: row;
         justify-content: space-between;
         margin-left: 0;
@@ -875,14 +790,13 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-action-addcard,
-    .Admin-tc-action-card {
-        flex: 1 1 calc(33.33% - 10px);
+    .Admin-ht-action-card {
+        flex: 1 1 calc(50% - 10px);
         max-width: 250px;
         box-sizing: border-box;
     }
 
-    .Admin-tc-bottom-card {
+    .Admin-ht-bottom-card {
         margin-left: 0;
         margin-right: 0;
         width: 100%;
@@ -890,7 +804,7 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-table-container {
+    .Admin-ht-table-container {
         overflow-x: auto;
         width: 100%;
         box-sizing: border-box;
@@ -899,7 +813,7 @@
 
 /* Mobile Landscape and Small Tablets */
 @media screen and (max-width: 768px) {
-    .Admin-tc-main-content {
+    .Admin-ht-main-content {
         margin: 70px 0px 0px 15px;
         padding: 12px;
         padding-bottom: 30px;
@@ -912,26 +826,25 @@
         overflow-x: hidden;
     }
 
-    .Admin-tc-main-content::-webkit-scrollbar {
+    .Admin-ht-main-content::-webkit-scrollbar {
         width: 10px;
     }
 
-    .Admin-tc-main-content::-webkit-scrollbar-track {
+    .Admin-ht-main-content::-webkit-scrollbar-track {
         background: #f0f2f5;
     }
 
-    .Admin-tc-main-content::-webkit-scrollbar-thumb {
+    .Admin-ht-main-content::-webkit-scrollbar-thumb {
         background-color: #4EA24E;
         border-radius: 20px;
         border: 3px solid #f0f2f5;
     }
 
-    .Admin-tc-main-content::-webkit-scrollbar-thumb:hover {
+    .Admin-ht-main-content::-webkit-scrollbar-thumb:hover {
         background-color: #3d8a3d;
     }
 
-    /* Top Card - Stack everything vertically */
-    .Admin-tc-top-card {
+    .Admin-ht-top-card {
         flex-direction: column;
         height: auto;
         gap: 20px;
@@ -941,8 +854,7 @@
         box-sizing: border-box;
     }
 
-    /* Filter Section */
-    .Admin-tc-filter-section {
+    .Admin-ht-filter-section {
         flex: 1 1 auto;
         width: 100%;
         padding: 15px;
@@ -950,7 +862,7 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-filter-header {
+    .Admin-ht-filter-header {
         margin: 0 auto;
         width: 100%;
         max-width: 228px;
@@ -959,33 +871,36 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-filter-content {
+    .Admin-ht-filter-content {
         grid-template-columns: 1fr;
         gap: 12px;
         width: 100%;
     }
 
-    .Admin-tc-dropdown-container,
-    .Admin-tc-text-container {
+    .Admin-ht-text-container {
         height: 50px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-button-group {
-        margin-top: 10px;
-        gap: 20px;
+    .Admin-ht-action-addcard {
         width: 100%;
-    }
-
-    .Admin-tc-button {
-        padding: 10px 20px;
-        font-size: 0.95rem;
+        max-width: 100%;
+        padding: 20px 15px;
         box-sizing: border-box;
+        max-height: 236.5px;
     }
 
-    /* Action Cards Section */
-    .Admin-tc-action-cards-section {
+    .Admin-ht-add-header {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+    }
+
+    .Admin-ht-add-description {
+        font-size: 1.1rem;
+    }
+
+    .Admin-ht-action-cards-section {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
@@ -995,39 +910,24 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-action-addcard {
-        width: 100%;
-        max-width: 100%;
-        padding: 20px 15px;
-        box-sizing: border-box;
-        max-height: 236.5px;
-    }
-
-    .Admin-tc-action-card {
+    .Admin-ht-action-card {
         flex: 1 1 auto;
         width: 100%;
         max-width: none;
-        height: 236.19px;
+        height: 200px;
         padding: 20px 15px;
         box-sizing: border-box;
     }
 
-    .Admin-tc-add-header {
-        font-size: 1.6rem;
-        margin-bottom: 8px;
-    }
-
-    .Admin-tc-add-description,
-    .Admin-tc-action-description {
-        font-size: 1.1rem;
-    }
-
-    .Admin-tc-action-header {
+    .Admin-ht-action-header {
         font-size: 1.3rem;
     }
 
-    /* Bottom Card - Table */
-    .Admin-tc-bottom-card {
+    .Admin-ht-action-description {
+        font-size: 1.1rem;
+    }
+
+    .Admin-ht-bottom-card {
         margin-left: 0;
         margin-right: 0;
         width: 100%;
@@ -1036,7 +936,7 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-print-button-container {
+    .Admin-ht-print-button-container {
         position: relative;
         display: inline-block;
         z-index: 15;
@@ -1044,7 +944,7 @@
         top: -65px;
     }
 
-    .Admin-tc-table-header-row {
+    .Admin-ht-table-header-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
@@ -1052,21 +952,21 @@
         top: 0;
     }
 
-    .Admin-tc-table-title {
+    .Admin-ht-table-title {
         font-size: 1.3rem;
     }
 
-    .Admin-tc-table-actions {
+    .Admin-ht-table-actions {
         width: 100%;
         justify-content: space-between;
     }
 
-    .Admin-tc-print-btn {
+    .Admin-ht-print-btn {
         padding: 8px 20px;
         font-size: 0.9rem;
     }
 
-    .Admin-tc-table-container {
+    .Admin-ht-table-container {
         height: 330px;
         overflow-x: auto;
         width: 100%;
@@ -1075,61 +975,27 @@
         bottom: 40px;
     }
 
-    .Admin-tc-students-table {
+    .Admin-ht-history-table {
         font-size: 0.85rem;
         width: 100%;
     }
 
-    .Admin-tc-th,
-    .Admin-tc-td {
+    .Admin-ht-th,
+    .Admin-ht-td {
         padding: 10px 8px;
         font-size: 0.8rem;
-    }
-
-    /* Table Scrollbar */
-    .Admin-tc-table-wrapper,
-    .Admin-tc-students-table {
-        overflow-x: auto;
-        overflow-y: auto;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar-thumb {
-        background: #4ea24e;
-        border-radius: 8px;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar-thumb:hover {
-        background: #4ea24e;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar-thumb:horizontal {
-        background: #888;
-        border-radius: 8px;
-    }
-
-    .Admin-tc-table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
-        background: #666;
     }
 }
 
 @media screen and (max-width: 420px) {
-    .Admin-tc-action-cards-section {
+    .Admin-ht-action-cards-section {
         grid-template-columns: 1fr;
     }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
-    .Admin-tc-main-content {
+    .Admin-ht-main-content {
         margin: 55px 12px 0 12px;
         padding: 10px;
         gap: 15px;
@@ -1138,8 +1004,7 @@
         overflow-x: hidden;
     }
 
-    /* Top Card with proper spacing */
-    .Admin-tc-top-card {
+    .Admin-ht-top-card {
         margin-left: 0;
         margin-right: 0;
         gap: 15px;
@@ -1147,15 +1012,14 @@
         box-sizing: border-box;
     }
 
-    /* Filter Section */
-    .Admin-tc-filter-section {
+    .Admin-ht-filter-section {
         padding: 15px;
         border-radius: 15px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-filter-header {
+    .Admin-ht-filter-header {
         font-size: 0.9rem;
         padding: 8px 15px;
         border-radius: 20px;
@@ -1165,56 +1029,48 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-filter-icon-container {
-        font-size: 1rem;
-        right: 15px;
-    }
-
-    .Admin-tc-filter-content {
+    .Admin-ht-filter-content {
         gap: 12px;
         width: 100%;
     }
 
-    .Admin-tc-dropdown-container,
-    .Admin-tc-text-container {
+    .Admin-ht-text-container {
         height: 45px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-dropdown,
-    .Admin-tc-text {
+    .Admin-ht-text {
         font-size: 0.85rem;
         padding: 0 10px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-floating-label {
-        font-size: 0.85rem;
-        left: 10px;
-    }
-
-    .Admin-tc-text-container.has-value .Admin-tc-floating-label,
-    .Admin-tc-text-container.is-focused .Admin-tc-floating-label {
-        font-size: 0.7rem;
-    }
-
-    .Admin-tc-button-group {
-        gap: 15px;
-        margin-top: 10px;
+    .Admin-ht-action-addcard {
+        padding: 5px 15px;
         width: 100%;
-    }
-
-    .Admin-tc-button {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        max-width: 48%;
+        margin-top: 15px;
         box-sizing: border-box;
     }
 
-    /* Action Cards with proper spacing */
-    .Admin-tc-action-cards-section {
+    .Admin-ht-add-icon {
+        margin-bottom: 10px;
+        margin-top: 0;
+    }
+
+    .Admin-ht-add-header {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .Admin-ht-add-description {
+        font-size: 1.05rem;
+        margin-top: 5px;
+    }
+
+    .Admin-ht-action-cards-section {
         margin-left: 0;
         margin-right: 0;
         width: 100%;
@@ -1222,52 +1078,28 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-action-addcard {
-        padding: 5px 15px;
-        width: 100%;
-        margin-top: 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-tc-add-icon {
-        margin-bottom: 10px;
-        margin-top: 0;
-    }
-
-    .Admin-tc-add-header {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .Admin-tc-add-description {
-        font-size: 1.05rem;
-        margin-top: 5px;
-    }
-
-    .Admin-tc-action-card {
+    .Admin-ht-action-card {
         padding: 5px 15px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-action-header {
+    .Admin-ht-action-header {
         font-size: 1.3rem;
     }
 
-    .Admin-tc-action-description {
+    .Admin-ht-action-description {
         font-size: 1.05rem;
         min-height: 60px;
     }
 
-    .Admin-tc-action-btn {
+    .Admin-ht-action-btn {
         padding: 10px 25px;
         font-size: 0.9rem;
         min-width: 100px;
     }
 
-    /* Table Section with proper spacing */
-    .Admin-tc-bottom-card {
+    .Admin-ht-bottom-card {
         padding: 15px;
         border-radius: 12px;
         margin-left: 0;
@@ -1276,156 +1108,83 @@
         box-sizing: border-box;
     }
 
-    .Admin-tc-table-header-row {
+    .Admin-ht-table-header-row {
         gap: 12px;
         padding-bottom: 12px;
     }
 
-    .Admin-tc-table-title {
+    .Admin-ht-table-title {
         font-size: 1.2rem;
-        margin-left: 65px;
+        margin-left: 0;
     }
 
-    .Admin-tc-print-btn {
+    .Admin-ht-print-btn {
         padding: 8px 20px;
         font-size: 0.9rem;
-        margin-left: 115px;
+        margin-left: 0;
     }
 
-    .Admin-tc-export-menu {
+    .Admin-ht-export-menu {
         min-width: 150px;
         right: 0;
     }
 
-    .Admin-tc-export-menu button {
+    .Admin-ht-export-menu button {
         padding: 10px 15px;
         font-size: 0.9rem;
     }
 
-    .Admin-tc-table-container {
+    .Admin-ht-table-container {
         height: 350px;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .Admin-tc-students-table {
+    .Admin-ht-history-table {
         font-size: 0.8rem;
         width: 100%;
     }
 
-    .Admin-tc-th {
+    .Admin-ht-th {
         padding: 10px 6px;
         font-size: 0.75rem;
     }
 
-    .Admin-tc-td {
+    .Admin-ht-td {
         padding: 10px 6px;
         font-size: 0.8rem;
     }
 
-    .Admin-tc-checkbox-input {
-        width: 18px;
-        height: 18px;
-    }
-
     /* Adjust column widths for mobile */
-    .Admin-tc-checkbox {
-        width: 45px;
-    }
-
-    .Admin-tc-sno {
+    .Admin-ht-sno {
         width: 40px;
     }
 
-    .Admin-tc-company {
-        min-width: 130px;
-    }
-
-    .Admin-tc-hr {
+    .Admin-ht-course {
         min-width: 120px;
     }
 
-    .Admin-tc-location {
+    .Admin-ht-startdate {
         min-width: 100px;
     }
 
-    .Admin-tc-courses {
+    .Admin-ht-enddate {
+        min-width: 100px;
+    }
+
+    .Admin-ht-trainer {
+        min-width: 120px;
+    }
+
+    .Admin-ht-phase {
         min-width: 80px;
     }
 
-    .Admin-tc-trainers {
+    .Admin-ht-batch {
+        min-width: 100px;
+    }
+
+    .Admin-ht-duration {
         min-width: 80px;
-    }
-
-    .Admin-tc-history {
-        min-width: 70px;
-    }
-
-    .Admin-tc-view {
-        min-width: 70px;
-    }
-
-    /* Popup Styles for Mobile */
-    .Admin-tc-popup-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .Admin-tc-popup-container {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        width: 100%;
-    }
-
-    .Admin-tc-popup-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #eee;
-    }
-
-    .Admin-tc-popup-body {
-        margin-bottom: 1.5rem;
-    }
-
-    .Admin-tc-popup-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .Admin-tc-popup-cancel-btn,
-    .Admin-tc-popup-delete-btn,
-    .Admin-tc-popup-close-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    .Admin-tc-popup-cancel-btn {
-        background-color: #f0f0f0;
-    }
-
-    .Admin-tc-popup-delete-btn {
-        background-color: #d9534f;
-        color: white;
-    }
-
-    .Admin-tc-popup-close-btn {
-        background-color: #0275d8;
-        color: white;
     }
 }

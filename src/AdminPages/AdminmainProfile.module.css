@@ -81,13 +81,41 @@
 }
 
 .Admin-main-profile-section-header {
-    font-size: 1.40em;
-    font-weight: 649;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: #333;
-    margin-bottom: 40px;
-    padding-bottom: 10px;
-    border-bottom: 3px solid #4EA24E;
-    width: fit-content;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.Admin-main-profile-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
+}
+
+/* --- Split Cards Grid Layout --- */
+.Admin-main-profile-cards-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* --- Individual Card --- */
+.Admin-main-profile-card {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
 }
 
 /* --- Input Grid Layout --- */
@@ -572,26 +600,6 @@
         margin-left: 0;
         margin-top: 0;
         height: calc(100vh - 60px);
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    .Admin-main-profile-main-content::-webkit-scrollbar { 
-      width: 10px; 
-    }
-
-    .Admin-main-profile-main-content::-webkit-scrollbar-track { 
-      background: #f0f2f5; 
-    }
-
-    .Admin-main-profile-main-content::-webkit-scrollbar-thumb {
-      background-color: #4EA24E; 
-      border-radius: 20px; 
-      border: 3px solid #f0f2f5; 
-    }
-
-    .Admin-main-profile-main-content::-webkit-scrollbar-thumb:hover { 
-      background-color: #3d8a3d; 
     }
     
     .Admin-main-profile-master-card {
@@ -611,6 +619,7 @@
     
     .Admin-main-profile-action-buttons {
         justify-content: center;
+        flex-direction: column;
         margin-left: 0;
     }
 

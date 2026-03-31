@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './Admin_CourseDetailsPopup.module.css';
 
-const Admin_CourseDetailsPopup = ({ isOpen, onClose, onSave }) => {
+const Admin_CourseDetailsPopup = ({ isOpen, onClose, onSave, initialData = null, submitLabel = 'Save' }) => {
   const [courseName, setCourseName] = useState('');
   const [syllabusDetails, setSyllabusDetails] = useState([]);
   const [draftTopic, setDraftTopic] = useState('');
   const [durationStart, setDurationStart] = useState('');
   const [durationEnd, setDurationEnd] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialData) {
+      setCourseName((initialData?.name || '').toString());
+      setSyllabusDetails(Array.isArray(initialData?.syllabus) ? initialData.syllabus : []);
+      setDraftTopic('');
+      setDurationStart((initialData?.durationStart || '').toString());
+      setDurationEnd((initialData?.durationEnd || '').toString());
+      return;
+    }
+
+    setCourseName('');
+    setSyllabusDetails([]);
+    setDraftTopic('');
+    setDurationStart('');
+    setDurationEnd('');
+  }, [isOpen, initialData]);
 
   const hasValidDates =
     Boolean(durationStart) &&
@@ -151,7 +170,7 @@ const Admin_CourseDetailsPopup = ({ isOpen, onClose, onSave }) => {
             Discard
           </button>
           <button onClick={handleSave} className={styles['save-btn']} disabled={!isFormValid}>
-            Save
+            {submitLabel}
           </button>
         </div>
       </div>

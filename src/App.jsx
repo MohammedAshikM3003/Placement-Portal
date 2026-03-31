@@ -32,6 +32,8 @@ const AdminRASW = lazy(() => import("./AdminPages/AdminRASW.jsx"));
 const AdminABM = lazy(() => import("./AdminPages/AdAddBranchMainPage.jsx"));
 const AdminABN = lazy(() => import("./AdminPages/AdAddBranchPage.jsx"));
 const AdminTraining = lazy(() => import("./AdminPages/Admin_Training.jsx"));
+const AdminTrainingCompany = lazy(() => import("./AdminPages/Admin_Training_Company.jsx"));
+const AdminHistoryTraining = lazy(() => import("./AdminPages/Admin_History_Training.jsx"));
 const AdminAddTraining = lazy(() => import("./AdminPages/Admin_Add_Training.jsx"));
 const AdminScheduleTraining = lazy(() => import("./AdminPages/Admin_Schedule_Training.jsx"));
 const AdminScheduleTrainingBatch = lazy(() => import("./AdminPages/Admin_schedule_training_batch.jsx"));
@@ -47,6 +49,11 @@ const AdminCoDet = lazy(() => import("./AdminPages/AdAddCoordinatorform.jsx"));
 const AdExistingCoordinator = lazy(() => import("./AdminPages/AdExistingCoordinator.jsx"));
 const AdminABcoodet = lazy(() => import("./AdminPages/AdminABviewcoo.jsx"));
 const AdStuDBCertificateView = lazy(() => import("./AdminPages/AdStuDBCertificateView.jsx"));
+const AdActiveZip = lazy(() => import("./AdminPages/Ad_ActiveZip.jsx"));
+const AdZipActiveBatchesDepartment = lazy(() => import("./AdminPages/Ad_ZipActive_Batches_Department.jsx"));
+const AdZippedBatches = lazy(() => import("./AdminPages/Ad_Zipped_Batches.jsx"));
+const AdZippedBatchDepartmentsView = lazy(() => import("./AdminPages/Ad_Zipped_Batch_Departments_View.jsx"));
+const AdZippedBatchDepartmentStudents = lazy(() => import("./AdminPages/Ad_Zipped_Batch_Department_Students.jsx"));
 
 // --- LAZY LOAD COORDINATOR PAGES (only loaded when coordinator navigates to them) ---
 const CoordinatorDashboard = lazy(() => import("./CoordinatorPages/Coo_Dashboard.jsx"));
@@ -248,6 +255,8 @@ function AppContent() {
       <Route path="/admin-student-database" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminstudDB onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-placement-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-training-company" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainingCompany onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-training-history" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminHistoryTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-add-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAddTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-schedule-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-schedule-training-batch" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTrainingBatch onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
@@ -258,6 +267,11 @@ function AppContent() {
       <Route path="/admin-company-drive" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrive onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/company-drive/add" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDriveAD onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/company-drive/details" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrivedet onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin/active-zip/:driveId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdActiveZip onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin/active-zip/department/:deptId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZipActiveBatchesDepartment onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin/zipped-batches" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippedBatches onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin/zipped-batch/departments/:archiveId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippedBatchDepartmentsView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin/zipped-batch/department/:deptId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippedBatchDepartmentStudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-eligible-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminEligiblestudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-attendance" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAtt onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-placed-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPlacedStudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

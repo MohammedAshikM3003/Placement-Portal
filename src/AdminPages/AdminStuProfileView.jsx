@@ -17,6 +17,10 @@ import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
+import {
+    DownloadSuccessAlert,
+    DownloadFailedAlert
+} from '../components/alerts/DownloadPreviewAlerts';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -177,14 +181,116 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 };
 
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
+    const [downloadPopupState, setDownloadPopupState] = useState('none');
+    const shouldShowPreviewPopup = downloadPopupState === 'none' || downloadPopupState === 'progress';
+
     if (!isOpen) return null;
+
+    const handleSuccessClose = () => {
+        setDownloadPopupState('none');
+        onClose();
+    };
+
+    const handleDownload = async () => {
+        if (downloadPopupState !== 'none') return;
+
+        setDownloadPopupState('progress');
+
+        try {
+            if (!src) {
+                throw new Error('Profile image not available');
+            }
+
+            let resolvedUrl = src;
+            const backendBaseUrl = API_BASE_URL.replace('/api', '');
+
+            if (/^[a-f0-9]{24}$/i.test(resolvedUrl)) {
+                resolvedUrl = `${backendBaseUrl}/file/${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/api/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl.replace('/api', '')}`;
+            } else if (resolvedUrl.startsWith('/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            }
+
+            let hrefForDownload = resolvedUrl;
+            let revokeObjectUrl = null;
+
+            if (!resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch(resolvedUrl, {
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Download failed with status ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                revokeObjectUrl = window.URL.createObjectURL(blob);
+                hrefForDownload = revokeObjectUrl;
+            }
+
+            const link = document.createElement('a');
+            link.href = hrefForDownload;
+            link.download = 'profile-image.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if (revokeObjectUrl) {
+                setTimeout(() => window.URL.revokeObjectURL(revokeObjectUrl), 1000);
+            }
+
+            setDownloadPopupState('success');
+        } catch (error) {
+            console.error('Image download failed:', error);
+            setDownloadPopupState('error');
+        }
+    };
+
     return (
-        <div className={styles.imagePreviewOverlay} onClick={onClose}>
-            <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                <img src={src} alt="Profile Preview" className={styles.profilePreviewImg} />
-                <button onClick={onClose} className={styles.imagePreviewCloseBtn}>&times;</button>
+        <>
+        {shouldShowPreviewPopup && (
+            <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
+                <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.imagePreviewHeader}>Preview Image</div>
+                    <div className={styles.imagePreviewBody}>
+                        <img src={src} alt="Profile Preview" />
+                    </div>
+                    <div className={styles.imagePreviewFooter}>
+                        <button
+                            onClick={onClose}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                        >
+                            {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+        )}
+        <DownloadSuccessAlert
+            isOpen={downloadPopupState === 'success'}
+            onClose={handleSuccessClose}
+            fileLabel="image"
+            title="Downloaded !"
+            description="The image has been successfully downloaded to your device."
+        />
+        <DownloadFailedAlert
+            isOpen={downloadPopupState === 'error'}
+            onClose={() => setDownloadPopupState('none')}
+            color="#4EA24E"
+        />
+        </>
     );
 };
 
@@ -337,7 +443,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [studentData, setStudentData] = useState(null);
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isInitialLoading, setIsInitialLoading] = useState(false); // Loading handled by popup, no need for page loading
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
@@ -590,14 +696,27 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             }
         }
         
+        // Handle profile image loading with debugging
+        console.log('🔍 Profile Image Debug (View):', {
+            hasProfilePicURL: !!merged.profilePicURL,
+            profilePicURL: merged.profilePicURL,
+            profileUploadDate: merged.profileUploadDate
+        });
+
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
+            console.log('✅ Profile Image Resolved (View):', resolvedUrl);
             setProfileImage(resolvedUrl);
             setUploadInfo({
                 name: 'profile.jpg',
                 date: merged.profileUploadDate || new Date().toLocaleDateString('en-GB')
             });
+        } else {
+            // Clear profile image if no profilePicURL is present
+            console.log('⚠️ No profilePicURL found (View), clearing profile image');
+            setProfileImage(null);
+            setUploadInfo({ name: '', date: '' });
         }
 
         setIsInitialLoading(false);
@@ -608,6 +727,12 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
         try {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
+            console.log('🔍 API Response - completeData (View):', {
+                exists: !!completeData,
+                hasStudent: !!completeData?.student,
+                hasProfilePicURL: !!completeData?.student?.profilePicURL,
+                profilePicURL: completeData?.student?.profilePicURL
+            });
 
             if (completeData && completeData.student) {
                 populateFormFields(completeData.student);
@@ -618,50 +743,83 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     }, [studentId]);
 
     useEffect(() => {
-        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData && storedStudentData._id) {
-            populateFormFields(storedStudentData);
-            const instantData = fastDataService.getInstantData(storedStudentData._id);
-            if (instantData && instantData.student) populateFormFields(instantData.student);
-            
-            if (storedStudentData.profilePicURL) {
-                window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                    detail: { profilePicURL: storedStudentData.profilePicURL, studentData: storedStudentData } 
-                }));
+        // ADMIN VIEW FIX: When admin is viewing a student's profile, we should ONLY
+        // load data from the API using the studentId from URL params, NOT from localStorage.
+        // localStorage.studentData contains the logged-in admin's data, not the viewed student's data.
+
+        // CLEAR OLD DATA FIRST - prevents showing previous student's data when switching
+        setStudentData(null);
+        setProfileImage(null);
+        setDob(null);
+        setCurrentYear('');
+        setCurrentSemester('');
+        setSelectedSection('');
+        setSkills([]);
+        setUploadInfo({ name: '', date: '' });
+        setStudyCategory('12th');
+
+        if (studentId) {
+            // Check if data is already cached from the loading popup
+            const cachedData = fastDataService.getInstantData(studentId);
+            if (cachedData && cachedData.student) {
+                console.log('⚡ Using cached data from loading popup (View) - skipping loading state');
+                populateFormFields(cachedData.student);
+                // Still fetch fresh data in background to ensure it's up-to-date
+                loadStudentData();
+            } else {
+                // No cached data - show loading and fetch
+                console.log('🔍 Admin viewing student (View):', studentId, '- Loading fresh data from API');
+                loadStudentData();
             }
-            
-            // Set initial sync time
-            setLastSyncTime(storedStudentData.updatedAt || new Date().toISOString());
+        } else {
+            // Fallback to localStorage (shouldn't happen in admin view, but keeping for safety)
+            const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+            console.log('⚠️ No studentId in URL (View) - falling back to localStorage:', {
+                exists: !!storedStudentData,
+                hasId: !!storedStudentData?._id,
+                hasProfilePicURL: !!storedStudentData?.profilePicURL
+            });
+
+            if (storedStudentData && storedStudentData._id) {
+                populateFormFields(storedStudentData);
+            }
         }
-        loadStudentData();
-        
+
         return () => {
             // Cleanup handled globally in AuthContext
         };
-    }, [loadStudentData]);
+    }, [studentId, loadStudentData]);
 
     // Auto-sync mechanism: Check for profile updates every 30 seconds
     useEffect(() => {
+        // ADMIN VIEW FIX: Disable auto-sync for admin viewing students
+        // Auto-sync should only run for students viewing their own profile
+        // Admin should manually refresh if they want updated data
+        if (studentId) {
+            console.log('🔍 Admin view (View) - auto-sync disabled (use manual refresh to see updates)');
+            return; // Don't run auto-sync for admin viewing students
+        }
+
         const checkForUpdates = async () => {
             try {
                 const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
                 if (!storedStudentData || !storedStudentData._id) return;
-                
-                const studentId = storedStudentData._id || storedStudentData.id;
-                
+
+                const currentStudentId = storedStudentData._id || storedStudentData.id;
+
                 // Use the lightweight status endpoint instead of full student fetch
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/students/${studentId}/status`, {
+                const response = await fetch(`${API_BASE_URL}/students/${currentStudentId}/status`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     }
                 });
                 if (!response.ok) return;
-                
+
                 const statusData = await response.json();
                 if (!statusData.success) return;
-                
+
                 // If blocked status changed, handle it
                 if (statusData.student?.blocked) {
                     console.warn('Account blocked by admin');
@@ -670,13 +828,13 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 // Silently ignore sync errors to avoid console spam
             }
         };
-        
+
         // Check for updates every 30 seconds (reduced from 10s)
         const syncInterval = setInterval(checkForUpdates, 30000);
-        
+
         // Cleanup interval on unmount
         return () => clearInterval(syncInterval);
-    }, []); // Fixed: Removed lastSyncTime dependency to prevent interval recreation
+    }, [studentId]); // Added studentId dependency
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -978,7 +1136,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             if (afterSaveNavRef.current) {
                 const navTarget = afterSaveNavRef.current;
                 afterSaveNavRef.current = null;
-                onViewChange(navTarget);
+                performViewChange(navTarget);
             }
         } catch (error) {
             if (error.message.includes('permission')) { alert('Permission denied.'); }
@@ -1030,6 +1188,18 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     };
 
     const closePopup = () => setPopupOpen(false);
+
+    const performViewChange = useCallback((view) => {
+        if (!view) return;
+
+        if (typeof onViewChange === 'function') {
+            onViewChange(view);
+            return;
+        }
+
+        const targetPath = view.startsWith('/') ? view : `/${view}`;
+        navigate(targetPath);
+    }, [onViewChange, navigate]);
     
     const getChangedFields = () => {
         if (!savedDataRef.current || !studentData) return [];
@@ -1051,7 +1221,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
     const handleViewChange = (view) => {
         if (!isEditMode) {
-            onViewChange(view);
+            performViewChange(view);
             setIsSidebarOpen(false);
             return;
         }
@@ -1062,7 +1232,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             setShowUnsavedModal(true);
             setIsSidebarOpen(false);
         } else {
-            onViewChange(view);
+            performViewChange(view);
             setIsSidebarOpen(false);
         }
     };
@@ -1136,8 +1306,9 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                         {/* --- PERSONAL INFO --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Personal Information</h3>
-                            <div className={styles.formGrid}>
+                            <div className={styles.contentGrid}>
                                 <div className={styles.personalInfoFields}>
+                                    <div className={styles.inputGrid}>
                                     <div className={styles.field}>
                                         <label>First Name <RequiredStar /></label>
                                         <input type="text" name="firstName" placeholder="Enter First Name" value={studentData?.firstName || ''} readOnly className={styles.readOnlyInput} />
@@ -1344,10 +1515,48 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
                                     </div>
+                                    </div>
+
+                                    {/* --- LOGIN DETAILS (Inside Personal Information) --- */}
+                                    <div className={styles.loginDetailsSection}>
+                                        <h4 className={styles.loginHeader}>Login Details</h4>
+                                        <div className={styles.loginInputGrid}>
+                                            <div className={styles.field}>
+                                                <label>Registration Number</label>
+                                                <input
+                                                    type="text"
+                                                    name="loginRegNo"
+                                                    value={studentData?.regNo || ''}
+                                                    readOnly
+                                                    className={styles.readOnlyInput}
+                                                />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>Login Password</label>
+                                                <input
+                                                    type="text"
+                                                    name="loginPassword"
+                                                    value={studentData?.loginPassword || ''}
+                                                    readOnly
+                                                    className={styles.readOnlyInput}
+                                                />
+                                            </div>
+                                            <div className={styles.field}>
+                                                <label>Confirm Password</label>
+                                                <input
+                                                    type="text"
+                                                    name="confirmPassword"
+                                                    value={studentData?.confirmPassword || studentData?.loginPassword || ''}
+                                                    readOnly
+                                                    className={styles.readOnlyInput}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className={styles.profilePhotoWrapper}>
-                                    <div className={styles.profilePhotoBox} style={{ height: '709px' }}>
-                                        <h3 className={styles.sectionHeader}>Profile Photo</h3>
+                                <div className={styles.profilePhotoCard}>
+                                    <div className={styles.profilePhotoBox}>
+                                        <h3 className={styles.photoHeader}>Profile Photo</h3>
                                         <div className={styles.profileIconContainer}>
                                             {profileImage ? (
                                                 <img
@@ -1355,6 +1564,13 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                     alt="Profile Preview"
                                                     className={styles.profilePreviewImg}
                                                     onClick={() => setImagePreviewOpen(true)}
+                                                    onError={(e) => {
+                                                        console.error('❌ Profile image failed to load (View):', profileImage);
+                                                        console.error('Image error event:', e);
+                                                    }}
+                                                    onLoad={() => {
+                                                        console.log('✅ Profile image loaded successfully (View):', profileImage);
+                                                    }}
                                                 />
                                             ) : (
                                                 <GraduationCapIcon />
@@ -2247,7 +2463,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
                             </div>
                         </div>
-                        
+
                         {isEditMode && (
                             <div className={styles.actionButtons}>
                                 <button
@@ -2289,7 +2505,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                     changedFields={getChangedFields()}
                     onDiscard={() => {
                         setShowUnsavedModal(false);
-                        onViewChange(pendingNavView);
+                        performViewChange(pendingNavView);
                     }}
                     onSave={() => {
                         afterSaveNavRef.current = pendingNavView;

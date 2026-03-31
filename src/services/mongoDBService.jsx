@@ -282,6 +282,17 @@ class MongoDBService {
     });
   }
 
+  async updateTraining(trainingId, trainingData) {
+    if (!trainingId) {
+      throw new Error('Training ID is required for update');
+    }
+
+    return await this.apiCall(`/trainings/${trainingId}`, {
+      method: 'PUT',
+      body: JSON.stringify(trainingData)
+    });
+  }
+
   async getTrainings() {
     const response = await this.apiCall('/trainings', {
       method: 'GET'

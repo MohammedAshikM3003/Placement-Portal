@@ -1,0 +1,542 @@
+/* --- Base Layout --- */
+.Ad-zb-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+}
+
+.Ad-zb-main-content {
+    flex-grow: 1;
+    padding: 20px 25px;
+    margin: 65px 2px 0px 286px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-x: hidden;
+}
+
+/* Mobile sidebar overlay */
+.Ad-zb-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 900;
+}
+
+/* Tab Navigation - Pill Style */
+.Ad-zb-tab-container {
+    display: inline-flex;
+    background-color: #ffffff;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    padding: 5px;
+}
+
+.Ad-zb-tab-btn {
+    padding: 12px 40px;
+    border: none;
+    background-color: transparent;
+    color: #666;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+}
+
+.Ad-zb-tab-btn:hover {
+    color: #4EA24E;
+}
+
+.Ad-zb-tab-active {
+    background-color: #4EA24E;
+    color: white;
+}
+
+.Ad-zb-tab-active:hover {
+    background-color: #3d8a3d;
+    color: white;
+}
+
+/* Table Card */
+.Ad-zb-table-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.Ad-zb-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.Ad-zb-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+/* Print Button */
+.Ad-zb-print-button-container {
+    position: relative;
+    display: inline-block;
+    z-index: 15;
+}
+
+.Ad-zb-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 10px 35px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Ad-zb-print-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Ad-zb-print-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Export Menu */
+.Ad-zb-export-menu {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Ad-zb-export-menu button {
+    padding: 12px 18px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Ad-zb-export-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Table Container */
+.Ad-zb-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+/* Green Scrollbars */
+.Ad-zb-table-container::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.Ad-zb-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Ad-zb-table-container::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+}
+
+.Ad-zb-table-container::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+/* Table Styles */
+.Ad-zb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.Ad-zb-table-head-row {
+    background-color: #f8f9fa;
+}
+
+.Ad-zb-th {
+    padding: 12px 15px;
+    text-align: center;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border-bottom: 2px solid #eee;
+}
+
+.Ad-zb-table-row {
+    transition: background-color 0.1s;
+    border-bottom: 1px solid #eee;
+}
+
+.Ad-zb-table-row:hover {
+    background-color: #f6f6f6;
+}
+
+.Ad-zb-td {
+    padding: 12px 15px;
+    text-align: center;
+    color: #333;
+    font-weight: 450;
+}
+
+.Ad-zb-td-name {
+    text-align: left;
+    font-weight: 500;
+}
+
+/* Action Buttons in Table */
+.Ad-zb-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: transform 0.2s;
+}
+
+.Ad-zb-action-btn:hover {
+    transform: scale(1.15);
+}
+
+/* No Data */
+.Ad-zb-no-data {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Loading Cell */
+.Ad-zb-loading-cell {
+    text-align: center;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.Ad-zb-spinner {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adZbSpin 0.7s linear infinite;
+}
+
+@keyframes adZbSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Note Section */
+.Ad-zb-note {
+    margin-top: 15px;
+    padding: 10px 0;
+    font-size: 0.9rem;
+}
+
+.Ad-zb-note-label {
+    font-weight: 700;
+    color: #333;
+    margin-right: 5px;
+}
+
+.Ad-zb-note-text {
+    color: #666;
+}
+
+/* Action Buttons at Bottom */
+.Ad-zb-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+}
+
+.Ad-zb-discard-btn {
+    padding: 12px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #6c757d;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zb-discard-btn:hover {
+    background-color: #5a6268;
+}
+
+.Ad-zb-archive-btn {
+    padding: 12px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #4EA24E;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zb-archive-btn:hover {
+    background-color: #3d8a3d;
+}
+
+/* Popup Styles */
+.Ad-zb-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+}
+
+.Ad-zb-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: adZbPopupEnter 0.3s ease-out forwards;
+}
+
+@keyframes adZbPopupEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.Ad-zb-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.Ad-zb-popup-body {
+    padding: 1.5rem;
+}
+
+.Ad-zb-warning-icon,
+.Ad-zb-info-icon {
+    margin-bottom: 10px;
+}
+
+.Ad-zb-popup-footer {
+    padding: 1rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.Ad-zb-popup-cancel-btn,
+.Ad-zb-popup-delete-btn,
+.Ad-zb-popup-confirm-btn {
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Ad-zb-popup-cancel-btn {
+    background: #d2d2d2;
+    color: #333;
+}
+
+.Ad-zb-popup-cancel-btn:hover {
+    background: #bbb;
+}
+
+.Ad-zb-popup-delete-btn {
+    background: #EF4444;
+    color: #fff;
+}
+
+.Ad-zb-popup-delete-btn:hover {
+    background: #DC2626;
+}
+
+.Ad-zb-popup-confirm-btn {
+    background: #4EA24E;
+    color: #fff;
+}
+
+.Ad-zb-popup-confirm-btn:hover {
+    background: #3d8a3d;
+}
+
+.Ad-zb-popup-cancel-btn:disabled,
+.Ad-zb-popup-delete-btn:disabled,
+.Ad-zb-popup-confirm-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ============================================ */
+/* RESPONSIVE STYLES */
+/* ============================================ */
+
+/* Tablet View */
+@media screen and (max-width: 1024px) {
+    .Ad-zb-main-content {
+        margin: 65px 10px 0 10px;
+        padding: 15px;
+    }
+}
+
+/* Mobile View */
+@media screen and (max-width: 768px) {
+    .Ad-zb-main-content {
+        margin: 70px 15px 0 15px;
+        padding: 12px;
+        padding-bottom: 30px;
+        gap: 15px;
+        width: calc(100% - 30px);
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .Ad-zb-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Ad-zb-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Ad-zb-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Ad-zb-tab-container {
+        width: 100%;
+        padding: 4px;
+    }
+
+    .Ad-zb-tab-btn {
+        flex: 1;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .Ad-zb-table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .Ad-zb-th,
+    .Ad-zb-td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .Ad-zb-action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .Ad-zb-discard-btn,
+    .Ad-zb-archive-btn {
+        width: 100%;
+        padding: 12px 20px;
+    }
+}
+
+/* Mobile Portrait View */
+@media screen and (max-width: 480px) {
+    .Ad-zb-main-content {
+        margin: 55px 12px 0 12px;
+        padding: 10px;
+        width: calc(100% - 24px);
+    }
+
+    .Ad-zb-tab-btn {
+        padding: 10px 12px;
+        font-size: 0.75rem;
+    }
+
+    .Ad-zb-table-card {
+        padding: 15px;
+    }
+
+    .Ad-zb-table-title {
+        font-size: 1.1rem;
+    }
+
+    .Ad-zb-print-btn {
+        padding: 8px 25px;
+        font-size: 0.9rem;
+    }
+
+    .Ad-zb-note {
+        font-size: 0.8rem;
+    }
+
+    .Ad-zb-popup-container {
+        width: 95%;
+    }
+}

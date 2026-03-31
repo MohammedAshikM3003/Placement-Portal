@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import { API_BASE_URL } from '../utils/apiConfig';
 import useAdminAuth from '../utils/useAdminAuth';
 
@@ -16,6 +17,10 @@ import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
+import {
+    DownloadSuccessAlert,
+    DownloadFailedAlert
+} from '../components/alerts/DownloadPreviewAlerts';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -93,6 +98,20 @@ const CalendarIcon = () => (
         <line x1="16" y1="2" x2="16" y2="6"></line>
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
     </svg>
 );
 
@@ -176,16 +195,280 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 };
 
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
+    const [downloadPopupState, setDownloadPopupState] = useState('none');
+    const shouldShowPreviewPopup = downloadPopupState === 'none' || downloadPopupState === 'progress';
+
     if (!isOpen) return null;
+
+    const handleSuccessClose = () => {
+        setDownloadPopupState('none');
+        onClose();
+    };
+
+    const handleDownload = async () => {
+        if (downloadPopupState !== 'none') return;
+
+        setDownloadPopupState('progress');
+
+        try {
+            if (!src) {
+                throw new Error('Profile image not available');
+            }
+
+            let resolvedUrl = src;
+            const backendBaseUrl = API_BASE_URL.replace('/api', '');
+
+            if (/^[a-f0-9]{24}$/i.test(resolvedUrl)) {
+                resolvedUrl = `${backendBaseUrl}/file/${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/api/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl.replace('/api', '')}`;
+            } else if (resolvedUrl.startsWith('/file/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            } else if (resolvedUrl.startsWith('/')) {
+                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
+            }
+
+            let hrefForDownload = resolvedUrl;
+            let revokeObjectUrl = null;
+
+            if (!resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch(resolvedUrl, {
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Download failed with status ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                revokeObjectUrl = window.URL.createObjectURL(blob);
+                hrefForDownload = revokeObjectUrl;
+            }
+
+            const link = document.createElement('a');
+            link.href = hrefForDownload;
+            link.download = 'profile-image.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if (revokeObjectUrl) {
+                setTimeout(() => window.URL.revokeObjectURL(revokeObjectUrl), 1000);
+            }
+
+            setDownloadPopupState('success');
+        } catch (error) {
+            console.error('Image download failed:', error);
+            setDownloadPopupState('error');
+        }
+    };
+
     return (
-        <div className={styles.imagePreviewOverlay} onClick={onClose}>
-            <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                <img src={src} alt="Profile Preview" className={styles.profilePreviewImg} />
-                <button onClick={onClose} className={styles.imagePreviewCloseBtn}>&times;</button>
+        <>
+        {shouldShowPreviewPopup && (
+            <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
+                <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.imagePreviewHeader}>Preview Image</div>
+                    <div className={styles.imagePreviewBody}>
+                        <img src={src} alt="Profile Preview" />
+                    </div>
+                    <div className={styles.imagePreviewFooter}>
+                        <button
+                            onClick={onClose}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloadPopupState === 'progress'}
+                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                        >
+                            {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        <DownloadSuccessAlert
+            isOpen={downloadPopupState === 'success'}
+            onClose={handleSuccessClose}
+            fileLabel="image"
+            title="Downloaded !"
+            description="The image has been successfully downloaded to your device."
+        />
+        <DownloadFailedAlert
+            isOpen={downloadPopupState === 'error'}
+            onClose={() => setDownloadPopupState('none')}
+            color="#4EA24E"
+        />
+        </>
+    );
+};
+
+const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [rotation, setRotation] = useState(0);
+    const [aspect, setAspect] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    const onCropComplete = useCallback((croppedArea, areaPixels) => {
+        setCroppedAreaPixels(areaPixels);
+    }, []);
+
+    const createCroppedImage = useCallback(async () => {
+        if (!imageSrc || !croppedAreaPixels) {
+            console.error('Missing imageSrc or croppedAreaPixels');
+            return null;
+        }
+
+        try {
+            const image = await createImage(imageSrc);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                console.error('Failed to get canvas context');
+                return null;
+            }
+
+            const { width, height, x, y } = croppedAreaPixels;
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.save();
+
+            if (rotation !== 0) {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                ctx.translate(centerX, centerY);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.translate(-centerX, -centerY);
+            }
+
+            ctx.drawImage(image, x, y, width, height, 0, 0, width, height);
+            ctx.restore();
+
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.error('Canvas is empty');
+                        resolve(null);
+                        return;
+                    }
+                    resolve(blob);
+                }, 'image/jpeg', 0.95);
+            });
+        } catch (error) {
+            console.error('Error creating cropped image:', error);
+            return null;
+        }
+    }, [imageSrc, croppedAreaPixels, rotation]);
+
+    const handleSaveCrop = async () => {
+        try {
+            const croppedBlob = await createCroppedImage();
+            if (croppedBlob) {
+                onCrop(croppedBlob);
+                onClose();
+            }
+        } catch (err) {
+            console.error('Crop save error:', err);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles.cropOverlay} onClick={onClose}>
+            <div className={styles.cropContainer} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.cropHeader}>Crop Image</div>
+
+                <div className={styles.cropContent}>
+                    <div className={styles.cropPreviewArea}>
+                        {imageSrc && (
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                rotation={rotation}
+                                aspect={aspect}
+                                onCropChange={setCrop}
+                                onZoomChange={setZoom}
+                                onRotationChange={setRotation}
+                                onCropComplete={onCropComplete}
+                                cropShape="rect"
+                                restrictPosition={true}
+                                showGrid={true}
+                            />
+                        )}
+                    </div>
+
+                    <div className={styles.cropControls}>
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Rotate</label>
+                            <div className={styles.rotateControl}>
+                                <button onClick={() => setRotation((r) => (r - 10 + 360) % 360)} className={styles.rotateBtn} title="Rotate left">↺</button>
+                                <span className={styles.angleValue}>{rotation}°</span>
+                                <button onClick={() => setRotation((r) => (r + 10) % 360)} className={styles.rotateBtn} title="Rotate right">↻</button>
+                            </div>
+                            <input
+                                type="range"
+                                min="-180"
+                                max="180"
+                                value={rotation}
+                                onChange={(e) => setRotation(Number(e.target.value))}
+                                className={styles.angleSlider}
+                            />
+                            <button onClick={() => setRotation(0)} className={styles.resetBtn}>Reset</button>
+                        </div>
+
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Aspect Ratio</label>
+                            <div className={styles.aspectRatioButtons}>
+                                <button onClick={() => setAspect(null)} className={`${styles.aspectBtn} ${aspect === null ? styles.active : ''}`} title="Custom">Custom</button>
+                                <button onClick={() => setAspect(1)} className={`${styles.aspectBtn} ${aspect === 1 ? styles.active : ''}`} title="1:1">1:1</button>
+                                <button onClick={() => setAspect(4 / 3)} className={`${styles.aspectBtn} ${aspect === 4 / 3 ? styles.active : ''}`} title="4:3">4:3</button>
+                                <button onClick={() => setAspect(3 / 4)} className={`${styles.aspectBtn} ${aspect === 3 / 4 ? styles.active : ''}`} title="3:4">3:4</button>
+                            </div>
+                        </div>
+
+                        <div className={styles.controlGroup}>
+                            <label className={styles.controlLabel}>Zoom</label>
+                            <input
+                                type="range"
+                                min="1"
+                                max="3"
+                                step="0.1"
+                                value={zoom}
+                                onChange={(e) => setZoom(Number(e.target.value))}
+                                className={styles.zoomSlider}
+                            />
+                            <span className={styles.zoomValue}>{(zoom * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.cropFooter}>
+                    <button onClick={onDiscard} className={`${styles.cropBtn} ${styles.cropDiscardBtn}`}>Discard</button>
+                    <button onClick={handleSaveCrop} className={`${styles.cropBtn} ${styles.cropUploadBtn}`}>Upload</button>
+                </div>
             </div>
         </div>
     );
 };
+
+const createImage = (url) =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener('load', () => resolve(image));
+        image.addEventListener('error', (error) => reject(error));
+        image.setAttribute('crossOrigin', 'anonymous');
+        image.src = url;
+    });
 
 const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
     if (!isOpen) return null;
@@ -261,6 +544,14 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
 };
 
 const EDITABLE_FIELD_LABELS = {
+    firstName: 'First Name', lastName: 'Last Name', regNo: 'Register Number',
+    batch: 'Batch', dob: 'Date of Birth', degree: 'Degree', branch: 'Branch',
+    gender: 'Gender', fatherName: "Father's Name", motherName: "Mother's Name",
+    domainEmail: 'Domain Email', aadhaarNo: 'Aadhaar Number', community: 'Community',
+    mediumOfStudy: 'Medium of Study', department: 'Department',
+    tenthBoard: '10th Board', tenthInstitution: '10th Institution', tenthPercentage: '10th Percentage', tenthYear: '10th Year',
+    twelfthBoard: '12th Board', twelfthInstitution: '12th Institution', twelfthPercentage: '12th Percentage', twelfthYear: '12th Year', twelfthCutoff: '12th Cutoff',
+    diplomaBoard: 'Diploma Board', diplomaInstitution: 'Diploma Institution', diplomaPercentage: 'Diploma Percentage', diplomaYear: 'Diploma Year',
     address: 'Address', city: 'City', primaryEmail: 'Primary Email',
     mobileNo: 'Mobile Number', fatherOccupation: "Father's Occupation",
     fatherMobile: "Father's Mobile", motherOccupation: "Mother's Occupation",
@@ -284,30 +575,146 @@ const EDITABLE_FIELD_LABELS = {
     portfolioLink: 'Portfolio Link', companyTypes: 'Company Types',
     preferredJobLocation: 'Preferred Job Location',
     preferredTraining: 'Preferred Training',
+    loginPassword: 'Login Password',
     skills: 'Skills', profilePicURL: 'Profile Photo',
 };
 
-function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
-    const fieldText = changedFields.length > 2
-        ? `${changedFields.slice(0, 2).join(', ')},....... have successfully changed`
-        : `${changedFields.join(', ')} have successfully changed`;
+const IGNORED_CHANGE_KEYS = new Set([
+    '_id',
+    '__v',
+    'createdAt',
+    'updatedAt',
+    'profileUploadDate'
+]);
+
+const toLabel = (key) => {
+    if (EDITABLE_FIELD_LABELS[key]) return EDITABLE_FIELD_LABELS[key];
+    return key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (char) => char.toUpperCase())
+        .trim();
+};
+
+const normalizeValue = (value) => {
+    if (value === null || value === undefined) return '';
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => String(item).trim())
+            .filter(Boolean)
+            .join(',');
+    }
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value).trim();
+};
+
+function AdminFieldUpdateBanner({ isVisible, updatedFields = [] }) {
+    if (!isVisible || updatedFields.length === 0) return null;
+
+    const fieldText = updatedFields.join('  •  ');
+    const shouldScroll = updatedFields.length > 1;
+
     return (
-        <div className={styles.popupOverlay}>
-            <div className={styles['ad-stu-edit-Achievement-popup-container']} onClick={e => e.stopPropagation()}>
-                <div className={styles['ad-stu-edit-Achievement-popup-header']}>Details Changed!</div>
-                <div className={styles['ad-stu-edit-Achievement-popup-body']}>
-                    <div className={styles.unsavedIconWrap}>
-                        <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="7" x2="12" y2="14"/>
-                            <circle cx="12" cy="18" r="0.5" fill="#333" stroke="#333"/>
+        <div className={styles.adminBannerContainer}>
+            <div className={styles.adminBanner}>
+                <div className={styles.adminBannerIconWrapper}>
+                    <svg
+                        className={styles.adminBannerSaveIcon}
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <path
+                            d="M17 21V13H7V21"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <path
+                            d="M7 3V8H15"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div className={styles.adminBannerContent}>
+                    <p className={styles.adminBannerHeader}>Unsaved Changes</p>
+                    <div className={`${styles.adminBannerFieldNamesWrapper} ${shouldScroll ? styles.adminBannerScrolling : ''}`}>
+                        <div className={`${styles.adminBannerFieldNames} ${shouldScroll ? styles.adminBannerMarquee : ''}`}>
+                            <span>{fieldText}</span>
+                            {shouldScroll && <span>{fieldText}</span>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function UnsavedChangesModal({ isOpen, changedFields, onClose, onDiscard, onSave, isSaving = false }) {
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles.adminUnsavedOverlay} onClick={isSaving ? undefined : onClose}>
+            <div className={styles.adminUnsavedContainer} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.adminUnsavedHeader}>Details Changed !</div>
+
+                <div className={styles.adminUnsavedBody}>
+                    <div className={styles.adminUnsavedIconWrap}>
+                        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="6" x2="12" y2="14" />
+                            <circle cx="12" cy="18" r="0.75" fill="#fff" stroke="#fff" />
                         </svg>
                     </div>
-                    <h2 className={styles.unsavedTitle}>Save Changes!</h2>
-                    <p className={styles.unsavedFieldText}>{fieldText}</p>
+
+                    <h2 className={styles.adminUnsavedTitle}>Modified Fields !</h2>
+
+                    {changedFields.length > 0 && (
+                        <div className={styles.adminUnsavedFieldsContainer}>
+                            <div className={styles.adminUnsavedFieldsList}>
+                                {changedFields.map((field, index) => (
+                                    <span key={`${field}-${index}`} className={styles.adminUnsavedFieldChip}>
+                                        {field}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <p className={styles.adminUnsavedMessage}>
+                        Do you want to save these changes before leaving?
+                    </p>
                 </div>
-                <div className={styles['ad-stu-edit-Achievement-popup-footer']}>
-                    <button className={styles['ad-stu-edit-Achievement-popup-cancel-btn']} onClick={onDiscard}>Discard</button>
-                    <button className={styles.unsavedSaveBtn} onClick={onSave}>Save</button>
+
+                <div className={styles.adminUnsavedFooter}>
+                    <button
+                        type="button"
+                        className={styles.adminUnsavedDiscardButton}
+                        onClick={onDiscard}
+                        disabled={isSaving}
+                    >
+                        Discard
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.adminUnsavedSaveButton}
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -332,11 +739,11 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const [isImagePreviewOpen, setImagePreviewOpen] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dob, setDob] = useState(null);
+    const [dob, setDob] = useState(''); // Ad_Calendar expects string in "YYYY-MM-DD" format
     const [studentData, setStudentData] = useState(null);
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isInitialLoading, setIsInitialLoading] = useState(false); // Loading handled by popup, no need for page loading
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
@@ -355,6 +762,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loginPassword, setLoginPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 600);
@@ -388,6 +801,24 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         // Toggle off if already selected, otherwise select only this one
         const updated = current.includes(option) ? [] : [option];
         setStudentData(prev => ({ ...prev, preferredTraining: updated.join(', ') }));
+    };
+
+    const handleCompanyTypeToggle = (option) => {
+        if (isSaving) return;
+        const current = parseMultiValue(studentData?.companyTypes);
+        const updated = current.includes(option)
+            ? current.filter(item => item !== option)
+            : [...current, option];
+        setStudentData(prev => ({ ...prev, companyTypes: updated.join(', ') }));
+    };
+
+    const handleJobLocationToggle = (option) => {
+        if (isSaving) return;
+        const current = parseMultiValue(studentData?.preferredJobLocation);
+        const updated = current.includes(option)
+            ? current.filter(item => item !== option)
+            : [...current, option];
+        setStudentData(prev => ({ ...prev, preferredJobLocation: updated.join(', ') }));
     };
 
     const jobLocationsHiddenValue = useMemo(
@@ -577,26 +1008,47 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         setCurrentSemester(merged.currentSemester ? String(merged.currentSemester) : '');
         setSelectedSection(merged.section ? String(merged.section) : '');
         setSkills(processedSkills);
+
+        // Initialize password fields
+        if (merged.loginPassword) {
+            setLoginPassword(merged.loginPassword);
+            setConfirmPassword(merged.loginPassword);
+        }
+
         savedDataRef.current = { ...merged, skills: processedSkills };
-        
+
         if (merged.dob) {
             const dobStr = merged.dob.toString();
             if (dobStr.length === 8) {
                 const day = dobStr.substring(0, 2);
                 const month = dobStr.substring(2, 4);
                 const year = dobStr.substring(4, 8);
-                setDob(new Date(year, month - 1, day));
+                // Ad_Calendar expects "YYYY-MM-DD" format
+                setDob(`${year}-${month}-${day}`);
             }
         }
         
+        // Handle profile image loading with debugging
+        console.log('🔍 Profile Image Debug:', {
+            hasProfilePicURL: !!merged.profilePicURL,
+            profilePicURL: merged.profilePicURL,
+            profileUploadDate: merged.profileUploadDate
+        });
+
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
+            console.log('✅ Profile Image Resolved:', resolvedUrl);
             setProfileImage(resolvedUrl);
             setUploadInfo({
                 name: 'profile.jpg',
                 date: merged.profileUploadDate || new Date().toLocaleDateString('en-GB')
             });
+        } else {
+            // Clear profile image if no profilePicURL is present
+            console.log('⚠️ No profilePicURL found, clearing profile image');
+            setProfileImage(null);
+            setUploadInfo({ name: '', date: '' });
         }
 
         setIsInitialLoading(false);
@@ -607,6 +1059,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
         try {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
+            console.log('🔍 API Response - completeData:', {
+                exists: !!completeData,
+                hasStudent: !!completeData?.student,
+                hasProfilePicURL: !!completeData?.student?.profilePicURL,
+                profilePicURL: completeData?.student?.profilePicURL
+            });
 
             if (completeData && completeData.student) {
                 populateFormFields(completeData.student);
@@ -617,50 +1075,83 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     }, [studentId]);
 
     useEffect(() => {
-        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (storedStudentData && storedStudentData._id) {
-            populateFormFields(storedStudentData);
-            const instantData = fastDataService.getInstantData(storedStudentData._id);
-            if (instantData && instantData.student) populateFormFields(instantData.student);
-            
-            if (storedStudentData.profilePicURL) {
-                window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                    detail: { profilePicURL: storedStudentData.profilePicURL, studentData: storedStudentData } 
-                }));
+        // ADMIN VIEW FIX: When admin is viewing a student's profile, we should ONLY
+        // load data from the API using the studentId from URL params, NOT from localStorage.
+        // localStorage.studentData contains the logged-in admin's data, not the viewed student's data.
+
+        // CLEAR OLD DATA FIRST - prevents showing previous student's data when switching
+        setStudentData(null);
+        setProfileImage(null);
+        setDob('');
+        setCurrentYear('');
+        setCurrentSemester('');
+        setSelectedSection('');
+        setSkills([]);
+        setUploadInfo({ name: '', date: '' });
+        setStudyCategory('12th');
+
+        if (studentId) {
+            // Check if data is already cached from the loading popup
+            const cachedData = fastDataService.getInstantData(studentId);
+            if (cachedData && cachedData.student) {
+                console.log('⚡ Using cached data from loading popup - skipping loading state');
+                populateFormFields(cachedData.student);
+                // Still fetch fresh data in background to ensure it's up-to-date
+                loadStudentData();
+            } else {
+                // No cached data - show loading and fetch
+                console.log('🔍 Admin viewing student:', studentId, '- Loading fresh data from API');
+                loadStudentData();
             }
-            
-            // Set initial sync time
-            setLastSyncTime(storedStudentData.updatedAt || new Date().toISOString());
+        } else {
+            // Fallback to localStorage (shouldn't happen in admin view, but keeping for safety)
+            const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+            console.log('⚠️ No studentId in URL - falling back to localStorage:', {
+                exists: !!storedStudentData,
+                hasId: !!storedStudentData?._id,
+                hasProfilePicURL: !!storedStudentData?.profilePicURL
+            });
+
+            if (storedStudentData && storedStudentData._id) {
+                populateFormFields(storedStudentData);
+            }
         }
-        loadStudentData();
-        
+
         return () => {
             // Cleanup handled globally in AuthContext
         };
-    }, [loadStudentData]);
+    }, [studentId, loadStudentData]);
 
     // Auto-sync mechanism: Check for profile updates every 30 seconds
     useEffect(() => {
+        // ADMIN VIEW FIX: Disable auto-sync for admin viewing students
+        // Auto-sync should only run for students viewing their own profile
+        // Admin should manually refresh if they want updated data
+        if (studentId) {
+            console.log('🔍 Admin view - auto-sync disabled (use manual refresh to see updates)');
+            return; // Don't run auto-sync for admin viewing students
+        }
+
         const checkForUpdates = async () => {
             try {
                 const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
                 if (!storedStudentData || !storedStudentData._id) return;
-                
-                const studentId = storedStudentData._id || storedStudentData.id;
-                
+
+                const currentStudentId = storedStudentData._id || storedStudentData.id;
+
                 // Use the lightweight status endpoint instead of full student fetch
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/students/${studentId}/status`, {
+                const response = await fetch(`${API_BASE_URL}/students/${currentStudentId}/status`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     }
                 });
                 if (!response.ok) return;
-                
+
                 const statusData = await response.json();
                 if (!statusData.success) return;
-                
+
                 // If blocked status changed, handle it
                 if (statusData.student?.blocked) {
                     console.warn('Account blocked by admin');
@@ -669,13 +1160,13 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 // Silently ignore sync errors to avoid console spam
             }
         };
-        
+
         // Check for updates every 30 seconds (reduced from 10s)
         const syncInterval = setInterval(checkForUpdates, 30000);
-        
+
         // Cleanup interval on unmount
         return () => clearInterval(syncInterval);
-    }, []); // Fixed: Removed lastSyncTime dependency to prevent interval recreation
+    }, [studentId]); // Added studentId dependency
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -722,17 +1213,10 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             return;
         }
         
-        // Store raw File for GridFS upload on Save
+        const blobUrl = URL.createObjectURL(file);
+        setImageToCrop(blobUrl);
         setProfilePhotoFile(file);
-        setProfileImage(URL.createObjectURL(file));
-        setUploadInfo({ 
-            name: file.name, 
-            date: new Date().toLocaleDateString('en-GB'),
-            size: fileSizeKB,
-            type: fileType
-        });
-        setUploadSuccess(true);
-        setTimeout(() => setUploadSuccess(false), 5000);
+        setIsCropModalOpen(true);
         
         console.log('✅ File selected:', {
             name: file.name,
@@ -742,8 +1226,64 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         });
     };
 
+    const handleCropComplete = (croppedBlob) => {
+        if (profileImage && profileImage.startsWith('blob:')) {
+            URL.revokeObjectURL(profileImage);
+        }
+
+        const croppedUrl = URL.createObjectURL(croppedBlob);
+        setProfileImage(croppedUrl);
+
+        const fileName = profilePhotoFile?.name || 'profile.jpg';
+        const croppedFile = new File([croppedBlob], fileName, {
+            type: croppedBlob.type || 'image/jpeg',
+            lastModified: Date.now()
+        });
+        setProfilePhotoFile(croppedFile);
+
+        setUploadInfo({
+            name: fileName,
+            date: new Date().toLocaleDateString('en-GB'),
+            size: (croppedBlob.size / 1024).toFixed(1),
+            type: 'cropped'
+        });
+
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 5000);
+
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+    };
+
+    const handleCropModalClose = () => {
+        setIsCropModalOpen(false);
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
+    };
+
+    const handleCropDiscard = () => {
+        setIsCropModalOpen(false);
+        if (imageToCrop) {
+            URL.revokeObjectURL(imageToCrop);
+        }
+        setImageToCrop(null);
+        setProfilePhotoFile(null);
+        setProfileImage(null);
+        setUploadInfo({ name: '', date: '' });
+        setUploadSuccess(false);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
     const handleImageRemove = (e) => {
         e.preventDefault();
+        if (profileImage && profileImage.startsWith('blob:')) {
+            URL.revokeObjectURL(profileImage);
+        }
         setProfileImage(null);
         setProfilePhotoFile(null);
         setUploadInfo({ name: '', date: '' });
@@ -769,6 +1309,14 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             setInvalidUrl(linkedinVal);
             setURLErrorPopupOpen(true);
             return;
+        }
+
+        // Validate password fields if entered
+        if (loginPassword || confirmPassword) {
+            if (loginPassword !== confirmPassword) {
+                alert('Password and Confirm Password do not match');
+                return;
+            }
         }
 
         setIsSaving(true);
@@ -907,8 +1455,9 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 willingToSignBond: formData.get('willingToSignBond') || studentData?.willingToSignBond || '',
                 preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '', 
                 githubLink: formData.get('githubLink') || studentData?.githubLink || '',
-                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '', 
-                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '', 
+                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '',
+                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '',
+                loginPassword: loginPassword || studentData?.loginPassword || '',
                 companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '', 
                 preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
                 profilePicURL: (() => {
@@ -996,7 +1545,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             if (afterSaveNavRef.current) {
                 const navTarget = afterSaveNavRef.current;
                 afterSaveNavRef.current = null;
-                onViewChange(navTarget);
+                performViewChange(navTarget);
             }
         } catch (error) {
             if (error.message.includes('permission')) { alert('Permission denied.'); }
@@ -1048,39 +1597,70 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     };
 
     const closePopup = () => setPopupOpen(false);
-    
-    const getChangedFields = () => {
+
+    const getChangedFields = useCallback(() => {
         if (!savedDataRef.current || !studentData) return [];
         const saved = savedDataRef.current;
-        const changed = [];
-        for (const [key, label] of Object.entries(EDITABLE_FIELD_LABELS)) {
-            if (key === 'skills') {
-                const savedSkills = Array.isArray(saved.skills) ? saved.skills.filter(s => s).join(',') : '';
-                const curSkills = skills.filter(s => s.trim()).join(',');
-                if (savedSkills !== curSkills) changed.push(label);
-            } else if (key === 'profilePicURL') {
-                if (profilePhotoFile) changed.push(label);
-            } else {
-                if (String(saved[key] || '') !== String(studentData[key] || '')) changed.push(label);
+        const changedSet = new Set();
+
+        for (const key of Object.keys(studentData)) {
+            if (IGNORED_CHANGE_KEYS.has(key)) continue;
+
+            const currentValue = normalizeValue(studentData[key]);
+            const savedValue = normalizeValue(saved[key]);
+
+            if (currentValue !== savedValue) {
+                changedSet.add(toLabel(key));
             }
         }
-        return changed;
-    };
+
+        const savedSkills = Array.isArray(saved.skills)
+            ? saved.skills.map((s) => String(s).trim()).filter(Boolean).join(',')
+            : normalizeValue(saved.skillSet || '');
+        const currentSkills = skills.map((s) => String(s).trim()).filter(Boolean).join(',');
+        if (savedSkills !== currentSkills) {
+            changedSet.add(EDITABLE_FIELD_LABELS.skills);
+        }
+
+        if (profilePhotoFile) {
+            changedSet.add(EDITABLE_FIELD_LABELS.profilePicURL);
+        }
+
+        if (normalizeValue(saved.loginPassword) !== normalizeValue(loginPassword)) {
+            changedSet.add(EDITABLE_FIELD_LABELS.loginPassword);
+        }
+
+        return Array.from(changedSet);
+    }, [studentData, skills, profilePhotoFile]);
+
+    const changedFields = useMemo(() => getChangedFields(), [getChangedFields]);
+
+    const performViewChange = useCallback((view) => {
+        if (!view) return;
+
+        if (typeof onViewChange === 'function') {
+            onViewChange(view);
+            return;
+        }
+
+        const targetPath = view.startsWith('/') ? view : `/${view}`;
+        navigate(targetPath);
+    }, [onViewChange, navigate]);
 
     const handleViewChange = (view) => {
         if (!isEditMode) {
-            onViewChange(view);
+            performViewChange(view);
             setIsSidebarOpen(false);
             return;
         }
 
-        const changed = getChangedFields();
+        const changed = changedFields;
         if (changed.length > 0) {
             setPendingNavView(view);
             setShowUnsavedModal(true);
             setIsSidebarOpen(false);
         } else {
-            onViewChange(view);
+            performViewChange(view);
             setIsSidebarOpen(false);
         }
     };
@@ -1141,6 +1721,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             )}
             
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+
+            <AdminFieldUpdateBanner
+                isVisible={changedFields.length > 0}
+                updatedFields={changedFields}
+            />
+
             <div className={styles.main}>
                 <Sidebar
                     isOpen={isSidebarOpen}
@@ -1158,15 +1744,36 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                 <div className={styles.personalInfoFields}>
                                     <div className={styles.field}>
                                         <label>First Name <RequiredStar /></label>
-                                        <input type="text" name="firstName" placeholder="Enter First Name" value={studentData?.firstName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            placeholder="Enter First Name"
+                                            value={studentData?.firstName || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, firstName: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Last Name <RequiredStar /></label>
-                                        <input type="text" name="lastName" placeholder="Enter Last Name" value={studentData?.lastName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            placeholder="Enter Last Name"
+                                            value={studentData?.lastName || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, lastName: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Register Number <RequiredStar /></label>
-                                        <input type="text" name="regNo" placeholder="Enter Register Number" value={studentData?.regNo || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="regNo"
+                                            placeholder="Enter Register Number"
+                                            value={studentData?.regNo || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, regNo: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Batch <RequiredStar /></label>
@@ -1175,8 +1782,11 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                                 type="text"
                                                 value={studentData?.batch ? (studentData.batch.split('-')[0] || '') : ''}
                                                 placeholder="Start"
-                                                readOnly
-                                                className={styles.readOnlyInput}
+                                                onChange={(e) => {
+                                                    const endYear = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+                                                    setStudentData(prev => ({ ...prev, batch: `${e.target.value}-${endYear}` }));
+                                                }}
+                                                disabled={isSaving}
                                                 style={{ flex: 1 }}
                                             />
                                             <span style={{ fontWeight: '600', color: '#333' }}>-</span>
@@ -1184,8 +1794,11 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                                 type="text"
                                                 value={studentData?.batch ? (studentData.batch.split('-')[1] || '') : ''}
                                                 placeholder="End"
-                                                readOnly
-                                                className={styles.readOnlyInput}
+                                                onChange={(e) => {
+                                                    const startYear = studentData?.batch ? (studentData.batch.split('-')[0] || '') : '';
+                                                    setStudentData(prev => ({ ...prev, batch: `${startYear}-${e.target.value}` }));
+                                                }}
+                                                disabled={isSaving}
                                                 style={{ flex: 1 }}
                                             />
                                         </div>
@@ -1194,24 +1807,36 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     <div className={styles.field}>
                                         <label>Date of Birth <RequiredStar /></label>
                                         <div className={styles.datepickerWrapper}>
-                                            <DatePicker
-                                                selected={dob}
-                                                onChange={() => {}}
-                                                dateFormat="dd-MM-yyyy"
-                                                placeholderText="Enter DOB"
-                                                className={`${styles.datepickerInput} ${styles.readOnlyInput}`}
-                                                wrapperClassName="StuProfile-datepicker-wrapper-inner"
-                                                showPopperArrow={false}
-                                                readOnly
-                                                disabled
+                                            <Ad_Calendar
+                                                value={dob}
+                                                onChange={(dateStr) => {
+                                                    // dateStr is in "YYYY-MM-DD" format
+                                                    setDob(dateStr);
+                                                    if (dateStr) {
+                                                        // Convert YYYY-MM-DD to DDMMYYYY for studentData
+                                                        const [year, month, day] = dateStr.split('-');
+                                                        const dobString = `${day}${month}${year}`;
+                                                        setStudentData(prev => ({ ...prev, dob: dobString }));
+                                                    }
+                                                }}
                                             />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
+                                        <select
+                                            name="degree"
+                                            value={studentData?.degree || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, degree: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
                                             <option value="" disabled>Degree</option>
-                                            <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
+                                            <option value="B.E.">B.E.</option>
+                                            <option value="B.Tech">B.Tech</option>
+                                            <option value="M.E.">M.E.</option>
+                                            <option value="M.Tech">M.Tech</option>
+                                            <option value="MCA">MCA</option>
+                                            <option value="MBA">MBA</option>
                                         </select>
                                     </div>
                                     <div className={styles.field}>
@@ -1219,11 +1844,20 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                         <select
                                             name="branch"
                                             value={studentData?.branch || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, branch: e.target.value }))}
+                                            disabled={isSaving}
                                         >
                                             <option value="" disabled>Branch</option>
-                                            <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
+                                            <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                                            <option value="Information Technology">Information Technology</option>
+                                            <option value="Electronics and Communication Engineering">Electronics and Communication Engineering</option>
+                                            <option value="Electrical and Electronics Engineering">Electrical and Electronics Engineering</option>
+                                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                            <option value="Civil Engineering">Civil Engineering</option>
+                                            <option value="Artificial Intelligence and Data Science">Artificial Intelligence and Data Science</option>
+                                            <option value="Computer Science and Business Systems">Computer Science and Business Systems</option>
+                                            <option value="Cyber Security">Cyber Security</option>
+                                            <option value="Others">Others</option>
                                         </select>
                                     </div>
                                     <div className={styles.field}>
@@ -1276,8 +1910,11 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             <select
                                                 name="section"
                                                 value={selectedSection}
-                                                disabled
-                                                className={styles.readOnlyInput}
+                                                onChange={(e) => {
+                                                    setSelectedSection(e.target.value);
+                                                    setStudentData((prev) => ({ ...(prev || {}), section: e.target.value }));
+                                                }}
+                                                disabled={isSaving}
                                             >
                                                 <option value="" disabled>
                                                     Section *
@@ -1292,7 +1929,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Gender <RequiredStar /></label>
-                                        <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
+                                        <select
+                                            name="gender"
+                                            value={studentData?.gender || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, gender: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
                                             <option value="" disabled>Gender</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
@@ -1312,7 +1954,14 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Domain Email <RequiredStar /></label>
-                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="email"
+                                            name="domainEmail"
+                                            placeholder="Enter Domain Email"
+                                            value={studentData?.domainEmail || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, domainEmail: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mobile No. <RequiredStar /></label>
@@ -1323,7 +1972,14 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Name <RequiredStar /></label>
-                                        <input type="text" name="fatherName" placeholder="Enter Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="fatherName"
+                                            placeholder="Enter Father Name"
+                                            value={studentData?.fatherName || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, fatherName: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Occupation</label>
@@ -1338,7 +1994,14 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Name <RequiredStar /></label>
-                                        <input type="text" name="motherName" placeholder="Enter Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="motherName"
+                                            placeholder="Enter Mother Name"
+                                            value={studentData?.motherName || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, motherName: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Occupation</label>
@@ -1373,6 +2036,15 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                                     alt="Profile Preview"
                                                     className={styles.profilePreviewImg}
                                                     onClick={() => setImagePreviewOpen(true)}
+                                                    onError={(e) => {
+                                                        console.error('❌ Profile image failed to load:', profileImage);
+                                                        console.error('Image error event:', e);
+                                                        // Don't clear the image on error - let user see the broken image icon
+                                                        // or keep trying to load it
+                                                    }}
+                                                    onLoad={() => {
+                                                        console.log('✅ Profile image loaded successfully:', profileImage);
+                                                    }}
                                                 />
                                             ) : (
                                                 <GraduationCapIcon />
@@ -1418,7 +2090,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Community <RequiredStar /></label>
-                                        <select name="community" value={studentData?.community || ''} disabled className={styles.readOnlyInput}>
+                                        <select
+                                            name="community"
+                                            value={studentData?.community || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, community: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
                                             <option value="" disabled>
                                                 Community
                                             </option>
@@ -1433,7 +2110,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Medium of Study <RequiredStar /></label>
-                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} disabled className={styles.readOnlyInput}>
+                                        <select
+                                            name="mediumOfStudy"
+                                            value={studentData?.mediumOfStudy || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, mediumOfStudy: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
                                             <option value="" disabled>
                                                 Medium
                                             </option>
@@ -1448,7 +2130,15 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Aadhaar Number <RequiredStar /></label>
-                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="aadhaarNo"
+                                            placeholder="Enter Aadhaar Number (12 digits)"
+                                            value={studentData?.aadhaarNo || ''}
+                                            maxLength="12"
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Portfolio Link</label>
@@ -1463,20 +2153,56 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                           <h3 className={styles.sectionHeader}>Academic Background</h3>
                             <div className={styles.formGrid}>
                                 <div className={styles.studyCategory} style={{ gridColumn: '1 / -1' }}>
-                                    <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} disabled />
+                                    <input
+                                        type="radio"
+                                        id="12th"
+                                        name="study_category"
+                                        value="12th"
+                                        checked={studyCategory === '12th'}
+                                        onChange={(e) => setStudyCategory(e.target.value)}
+                                        disabled={isSaving}
+                                    />
                                     <label htmlFor="12th">12th</label>
-                                    <input type="radio" id="diploma" name="study_category" value="diploma" checked={studyCategory === 'diploma'} disabled />
+                                    <input
+                                        type="radio"
+                                        id="diploma"
+                                        name="study_category"
+                                        value="diploma"
+                                        checked={studyCategory === 'diploma'}
+                                        onChange={(e) => setStudyCategory(e.target.value)}
+                                        disabled={isSaving}
+                                    />
                                     <label htmlFor="diploma">Diploma</label>
-                                    <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} disabled />
+                                    <input
+                                        type="radio"
+                                        id="both"
+                                        name="study_category"
+                                        value="both"
+                                        checked={studyCategory === 'both'}
+                                        onChange={(e) => setStudyCategory(e.target.value)}
+                                        disabled={isSaving}
+                                    />
                                     <label htmlFor="both">Both</label>
                                 </div>
                                     <div className={styles.field}>
                                         <label>10th Institution Name <RequiredStar /></label>
-                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="tenthInstitution"
+                                            placeholder="Enter 10th Institution Name"
+                                            value={studentData?.tenthInstitution || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, tenthInstitution: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Board / University <RequiredStar /></label>
-                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
+                                        <select
+                                            name="tenthBoard"
+                                            value={studentData?.tenthBoard || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, tenthBoard: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
                                             <option value="" disabled>10th Board/University</option>
                                             <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
                                             <option value="CBSE">CBSE</option>
@@ -1486,21 +2212,47 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
-                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="tenthPercentage"
+                                            placeholder="Enter 10th Percentage"
+                                            value={studentData?.tenthPercentage || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Year of Passing <RequiredStar /></label>
-                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
+                                        <input
+                                            type="text"
+                                            name="tenthYear"
+                                            placeholder="Enter 10th Year of Passing"
+                                            value={studentData?.tenthYear || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, tenthYear: e.target.value }))}
+                                            disabled={isSaving}
+                                        />
                                     </div>
                                     {(studyCategory === '12th' || studyCategory === 'both') && (
                                         <>
                                             <div className={styles.field}>
                                                 <label>12th Institution Name <RequiredStar /></label>
-                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="twelfthInstitution"
+                                                    placeholder="Enter 12th Institution Name"
+                                                    value={studentData?.twelfthInstitution || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthInstitution: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Board / University <RequiredStar /></label>
-                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}>
+                                                <select
+                                                    name="twelfthBoard"
+                                                    value={studentData?.twelfthBoard || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthBoard: e.target.value }))}
+                                                    disabled={isSaving}
+                                                >
                                                     <option value="" disabled>12th Board/University</option>
                                                     <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
                                                     <option value="CBSE">CBSE</option>
@@ -1510,15 +2262,36 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
-                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="twelfthPercentage"
+                                                    placeholder="Enter 12th Percentage"
+                                                    value={studentData?.twelfthPercentage || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="twelfthYear"
+                                                    placeholder="Enter 12th Year of Passing"
+                                                    value={studentData?.twelfthYear || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthYear: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="twelfthCutoff"
+                                                    placeholder="Enter 12th Cut-off Marks"
+                                                    value={studentData?.twelfthCutoff || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                         </>
                                     )}
@@ -1526,19 +2299,47 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                         <>
                                             <div className={styles.field}>
                                                 <label>Diploma Institution <RequiredStar /></label>
-                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="diplomaInstitution"
+                                                    placeholder="Enter Diploma Institution"
+                                                    value={studentData?.diplomaInstitution || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, diplomaInstitution: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Branch <RequiredStar /></label>
-                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="diplomaBranch"
+                                                    placeholder="Enter Diploma Branch"
+                                                    value={studentData?.diplomaBranch || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, diplomaBranch: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Percentage <RequiredStar /></label>
-                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="diplomaPercentage"
+                                                    placeholder="Enter Diploma Percentage"
+                                                    value={studentData?.diplomaPercentage || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput} />
+                                                <input
+                                                    type="text"
+                                                    name="diplomaYear"
+                                                    placeholder="Enter Diploma Year of Passing"
+                                                    value={studentData?.diplomaYear || ''}
+                                                    onChange={(e) => setStudentData(prev => ({ ...prev, diplomaYear: e.target.value }))}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                         </>
                                     )}
@@ -2037,19 +2838,16 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Quota <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="quota"
-                                                value={studentData?.quota || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Quota</option>
-                                                <option value="Management">Management</option>
-                                                <option value="Counselling">Counselling</option>
-                                            </select>
-                                            <input type="hidden" name="quota" value={studentData?.quota || ''} />
-                                        </>
+                                        <select
+                                            name="quota"
+                                            value={studentData?.quota || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, quota: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="" disabled>Quota</option>
+                                            <option value="Management">Management</option>
+                                            <option value="Counselling">Counselling</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Spoken Languages</label>
@@ -2064,19 +2862,16 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>First Graduate <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="firstGraduate"
-                                                value={studentData?.firstGraduate || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>First Graduate</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
-                                        </>
+                                        <select
+                                            name="firstGraduate"
+                                            value={studentData?.firstGraduate || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, firstGraduate: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="" disabled>First Graduate</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Passport No.</label>
@@ -2129,8 +2924,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             name="rationCardNo"
                                             placeholder="Enter Ration Card No."
                                             value={studentData?.rationCardNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, rationCardNo: e.target.value }))}
                                             disabled={isSaving}
                                         />
                                     </div>
@@ -2152,42 +2946,36 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             name="panNo"
                                             placeholder="Enter PAN No."
                                             value={studentData?.panNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, panNo: e.target.value }))}
+                                            disabled={isSaving}
                                         />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Willing to Sign Bond <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="willingToSignBond"
-                                                value={studentData?.willingToSignBond || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Willing to Sign Bond</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
-                                        </>
+                                        <select
+                                            name="willingToSignBond"
+                                            value={studentData?.willingToSignBond || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, willingToSignBond: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="" disabled>Willing to Sign Bond</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Preferred Mode of Drive <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="preferredModeOfDrive"
-                                                value={studentData?.preferredModeOfDrive || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Preferred Mode of Drive</option>
-                                                <option value="On-Campus">On-Campus</option>
-                                                <option value="Off-Campus">Off-Campus</option>
-                                                <option value="Hybrid">Hybrid</option>
-                                            </select>
-                                            <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
-                                        </>
+                                        <select
+                                            name="preferredModeOfDrive"
+                                            value={studentData?.preferredModeOfDrive || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, preferredModeOfDrive: e.target.value }))}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="" disabled>Preferred Mode of Drive</option>
+                                            <option value="On-Campus">On-Campus</option>
+                                            <option value="Off-Campus">Off-Campus</option>
+                                            <option value="Hybrid">Hybrid</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>GitHub Link</label>
@@ -2261,11 +3049,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                                 <label key={option} className={styles.checkboxOption}>
                                                     <input
                                                         type="checkbox"
-                                                        name="companyTypesReadonly"
                                                         checked={selectedCompanyTypes.includes(option)}
-                                                        disabled
+                                                        onChange={() => handleCompanyTypeToggle(option)}
+                                                        disabled={isSaving}
+                                                        style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
                                                     />
-                                                    <span>{option}</span>
+                                                    <span style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>{option}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -2277,11 +3066,12 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                                 <label key={option} className={styles.checkboxOption}>
                                                     <input
                                                         type="checkbox"
-                                                        name="jobLocationsReadonly"
                                                         checked={selectedJobLocations.includes(option)}
-                                                        disabled
+                                                        onChange={() => handleJobLocationToggle(option)}
+                                                        disabled={isSaving}
+                                                        style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
                                                     />
-                                                    <span>{option}</span>
+                                                    <span style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>{option}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -2290,7 +3080,95 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
                             </div>
                         </div>
-                        
+
+                        {/* --- LOGIN DETAILS --- */}
+                        <div className={styles.profileSectionContainer}>
+                            <h3 className={styles.sectionHeader}>Login Details</h3>
+                            <div className={styles.formGrid}>
+                                <div className={styles.field}>
+                                    <label>Registration No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="loginRegNo"
+                                        placeholder="Enter Register No"
+                                        value={studentData?.regNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, regNo: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Password <RequiredStar /></label>
+                                    <div style={{ position: "relative" }}>
+                                        <input
+                                            type={showLoginPassword ? "text" : "password"}
+                                            name="loginPassword"
+                                            placeholder="Enter Password (DDMMYYYY)"
+                                            value={loginPassword}
+                                            onChange={(e) => setLoginPassword(e.target.value)}
+                                            style={{ paddingRight: "40px" }}
+                                            disabled={isSaving}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={styles.passwordToggleBtn}
+                                            onClick={() => setShowLoginPassword((prev) => !prev)}
+                                            tabIndex={-1}
+                                        >
+                                            {showLoginPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                        </button>
+                                    </div>
+                                    {dob && (
+                                        <p style={{
+                                            fontSize: '0.85rem',
+                                            color: '#4EA24E',
+                                            marginTop: '6px',
+                                            fontWeight: 500,
+                                            fontFamily: "'Poppins', sans-serif"
+                                        }}>
+                                            Password should be: <strong>{(() => {
+                                                // dob is "YYYY-MM-DD", convert to "DDMMYYYY"
+                                                const [year, month, day] = dob.split('-');
+                                                return `${day}${month}${year}`;
+                                            })()}</strong> (based on DOB)
+                                        </p>
+                                    )}
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Confirm Password <RequiredStar /></label>
+                                    <div style={{ position: "relative" }}>
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            name="confirmPassword"
+                                            placeholder="Enter Confirm Password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            style={{ paddingRight: "40px" }}
+                                            disabled={isSaving}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={styles.passwordToggleBtn}
+                                            onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                        </button>
+                                    </div>
+                                    {loginPassword && confirmPassword && loginPassword !== confirmPassword && (
+                                        <p style={{
+                                            fontSize: '0.85rem',
+                                            color: '#dc3545',
+                                            marginTop: '6px',
+                                            fontWeight: 500,
+                                            fontFamily: "'Poppins', sans-serif"
+                                        }}>
+                                            Passwords do not match
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         {isEditMode && (
                             <div className={styles.actionButtons}>
                                 <button
@@ -2326,19 +3204,37 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 urlType={urlErrorType}
                 invalidUrl={invalidUrl}
             />
+            <CropImageModal
+                isOpen={isCropModalOpen}
+                imageSrc={imageToCrop}
+                onCrop={handleCropComplete}
+                onClose={handleCropModalClose}
+                onDiscard={handleCropDiscard}
+            />
             <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
             {showUnsavedModal && (
                 <UnsavedChangesModal
-                    changedFields={getChangedFields()}
-                    onDiscard={() => {
+                    isOpen={showUnsavedModal}
+                    changedFields={changedFields}
+                    onClose={() => {
+                        if (isSaving) return;
                         setShowUnsavedModal(false);
-                        onViewChange(pendingNavView);
+                        setPendingNavView(null);
                     }}
                     onSave={() => {
                         afterSaveNavRef.current = pendingNavView;
                         setShowUnsavedModal(false);
                         formRef.current?.requestSubmit();
                     }}
+                    onDiscard={() => {
+                        if (isSaving) return;
+                        setShowUnsavedModal(false);
+                        if (pendingNavView) {
+                            performViewChange(pendingNavView);
+                            setPendingNavView(null);
+                        }
+                    }}
+                    isSaving={isSaving}
                 />
             )}
         </div>

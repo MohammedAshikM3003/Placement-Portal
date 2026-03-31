@@ -357,6 +357,20 @@
 
 .Admin-DB-print-btn:hover { background-color: #2ea730; }
 
+.Admin-DB-zip-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-right: 10px;
+}
+
+.Admin-DB-zip-btn:hover { background-color: #5a6268; }
+
 .Admin-DB-export-menu {
     position: absolute;
     top: 100%;

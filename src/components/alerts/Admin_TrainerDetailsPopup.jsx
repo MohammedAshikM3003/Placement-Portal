@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './Admin_TrainerDetailsPopup.module.css';
 
-const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave }) => {
+const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null, submitLabel = 'Save' }) => {
   const [trainerName, setTrainerName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialData) {
+      setTrainerName((initialData?.name || '').toString());
+      setMobile((initialData?.mobile || '').toString());
+      setEmail((initialData?.email || '').toString());
+      setGender((initialData?.gender || '').toString());
+      return;
+    }
+
+    setTrainerName('');
+    setMobile('');
+    setEmail('');
+    setGender('');
+  }, [isOpen, initialData]);
 
   const isFormValid =
     Boolean(trainerName.trim()) &&
@@ -101,7 +118,7 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave }) => {
             Discard
           </button>
           <button onClick={handleSave} className={styles['save-btn']} disabled={!isFormValid}>
-            Save
+            {submitLabel}
           </button>
         </div>
       </div>

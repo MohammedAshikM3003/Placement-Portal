@@ -132,29 +132,56 @@ function AdminTrainingCompany({ onLogout }) {
             const schedules = await mongoDBService.getScheduledTrainings();
             const normalizedSchedules = Array.isArray(schedules) ? schedules : [];
 
-            // Also fetch trainings for additional info
+            // Fetch trainings for company details (HR, location, courses, trainers) - this is the source of truth
             const trainings = await mongoDBService.getTrainings();
             const normalizedTrainings = Array.isArray(trainings) ? trainings : [];
 
-            // Create a map of training info by company name
-            const trainingByCompany = new Map(
-                normalizedTrainings.map((item) => [
-                    (item?.companyName || '').toString().trim(),
-                    item
-                ])
-            );
+            // Create a map of training companies data (source of truth for company details)
+            const trainingDataMap = new Map();
+            normalizedTrainings.forEach((training) => {
+                const companyName = (training?.companyName || '').toString().trim().toLowerCase();
+                if (companyName) {
+                    trainingDataMap.set(companyName, training);
+                }
+            });
 
-            // Build the training companies list from schedules
-            const companiesList = [];
+            // Create a map to store unique companies
+            const companyMap = new Map();
             const companySet = new Set();
             const branchSet = new Set();
             const trainingSet = new Set();
             const phaseSet = new Set();
 
+            // First, add all companies from training_companies collection (source of truth)
+            normalizedTrainings.forEach((training) => {
+                const companyName = (training?.companyName || '').toString().trim();
+                if (!companyName) return;
+
+                const courses = Array.isArray(training?.courses) ? training.courses : [];
+                const trainers = Array.isArray(training?.trainers) ? training.trainers : [];
+
+                companySet.add(companyName);
+                trainingSet.add(companyName);
+
+                companyMap.set(companyName, {
+                    _id: training._id,
+                    scheduleId: '',
+                    companyName,
+                    companyHR: training?.companyHR || training?.hrName || '-',
+                    location: training?.location || '-',
+                    coursesCount: courses.length,
+                    trainersCount: trainers.length,
+                    branch: '-',
+                    trainingData: training,
+                    courses: courses,
+                    trainers: trainers
+                });
+            });
+
+            // Then, update with schedule info but keep training_companies data for HR, location, courses, trainers
             normalizedSchedules.forEach((schedule) => {
                 const companyName = (schedule?.companyName || '').toString().trim();
-                const trainingInfo = trainingByCompany.get(companyName);
-                const trainingName = trainingInfo?.trainingName || companyName;
+                if (!companyName) return;
 
                 // Get branches from batches
                 const branches = [];
@@ -174,40 +201,41 @@ function AdminTrainingCompany({ onLogout }) {
                     phaseSet.add(phaseName);
                 });
 
-                if (companyName) {
-                    companySet.add(companyName);
-                    trainingSet.add(trainingName);
+                companySet.add(companyName);
+                trainingSet.add(companyName);
 
-                    // Create an entry for each phase
-                    if (phases.length > 0) {
-                        phases.forEach((phase, idx) => {
-                            companiesList.push({
-                                _id: `${schedule._id}-phase-${idx}`,
-                                scheduleId: schedule._id,
-                                companyName,
-                                branch: branches.length > 0 ? branches.join(', ') : '-',
-                                trainingName,
-                                phaseName: phase?.phaseName || `Phase ${idx + 1}`,
-                                phaseIndex: idx,
-                                startDate: phase?.startDate || schedule.startDate,
-                                endDate: phase?.endDate || schedule.endDate
-                            });
-                        });
-                    } else {
-                        companiesList.push({
-                            _id: schedule._id,
-                            scheduleId: schedule._id,
-                            companyName,
-                            branch: branches.length > 0 ? branches.join(', ') : '-',
-                            trainingName,
-                            phaseName: '-',
-                            phaseIndex: 0,
-                            startDate: schedule.startDate,
-                            endDate: schedule.endDate
-                        });
+                // Get training data from training_companies collection
+                const trainingData = trainingDataMap.get(companyName.toLowerCase());
+
+                if (companyMap.has(companyName)) {
+                    // Update existing entry with schedule ID and branch, keep training_companies data
+                    const existing = companyMap.get(companyName);
+                    existing.scheduleId = schedule._id;
+                    if (branches.length > 0) {
+                        existing.branch = branches.join(', ');
                     }
+                } else {
+                    // Company only in schedule but not in training_companies - use training data if available
+                    const courses = trainingData?.courses || [];
+                    const trainers = trainingData?.trainers || [];
+
+                    companyMap.set(companyName, {
+                        _id: schedule._id,
+                        scheduleId: schedule._id,
+                        companyName,
+                        companyHR: trainingData?.companyHR || schedule?.companyHR || schedule?.hrName || '-',
+                        location: trainingData?.location || schedule?.location || '-',
+                        coursesCount: courses.length,
+                        trainersCount: trainers.length,
+                        branch: branches.length > 0 ? branches.join(', ') : '-',
+                        trainingData: trainingData || schedule,
+                        courses: courses,
+                        trainers: trainers
+                    });
                 }
             });
+
+            const companiesList = Array.from(companyMap.values());
 
             setTrainingCompanies(companiesList);
             setCompanyOptions(['', ...Array.from(companySet).sort()]);
@@ -258,11 +286,15 @@ function AdminTrainingCompany({ onLogout }) {
                 return;
             }
 
-            // Navigate to edit page (you may need to create this route)
-            navigate('/admin-training-company/add', {
+            navigate('/admin-add-training', {
                 state: {
-                    editingCompanyId: company.scheduleId,
-                    editingCompany: company
+                    editMode: true,
+                    editingTraining: company.trainingData || {
+                        _id: company.trainingId,
+                        companyName: company.companyName,
+                        courses: [],
+                        trainers: []
+                    }
                 }
             });
         } else if (selectedCompanyIds.size === 0) {
@@ -314,7 +346,7 @@ function AdminTrainingCompany({ onLogout }) {
     };
 
     const handleAddCompany = () => {
-        navigate('/admin-training-company/add');
+        navigate('/admin-add-training');
     };
 
     const handleViewCompany = (company) => {
@@ -361,11 +393,12 @@ function AdminTrainingCompany({ onLogout }) {
 
             const data = filteredCompanies.map(company => [
                 company.companyName,
-                company.branch,
-                company.trainingName,
-                company.phaseName
+                company.companyHR || '-',
+                company.location || '-',
+                company.coursesCount || 0,
+                company.trainersCount || 0
             ]);
-            const header = ["Company Name", "Branch", "Training", "Phase"];
+            const header = ["Company Name", "Company HR", "Location", "Courses", "Trainers"];
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Training Companies");
@@ -407,12 +440,13 @@ function AdminTrainingCompany({ onLogout }) {
             await new Promise((resolve) => setTimeout(resolve, 300));
 
             const doc = new jsPDF('landscape');
-            const columns = ["Company Name", "Branch", "Training", "Phase"];
+            const columns = ["Company Name", "Company HR", "Location", "Courses", "Trainers"];
             const rows = filteredCompanies.map(company => [
                 company.companyName,
-                company.branch,
-                company.trainingName,
-                company.phaseName
+                company.companyHR || '-',
+                company.location || '-',
+                company.coursesCount || 0,
+                company.trainersCount || 0
             ]);
             doc.text("Training Companies Report", 14, 15);
             autoTable(doc, { head: [columns], body: rows, startY: 20, styles: { fontSize: 8 } });
@@ -605,19 +639,21 @@ function AdminTrainingCompany({ onLogout }) {
                             <table className={styles['Admin-tc-students-table']}>
                                 <thead>
                                     <tr className={styles['Admin-tc-table-head-row']}>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-checkbox']}`}>Select</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-checkbox']}`}>SELECT</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-sno']}`}>S.No</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-company']}`}>Company Name</th>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-branch']}`}>Branch</th>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-training']}`}>Training</th>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-phase']}`}>Phase</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-hr']}`}>Company HR</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-location']}`}>Location</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-courses']}`}>courses</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-trainers']}`}>Trainers</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-history']}`}>History</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-view']}`}>View</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {isInitialLoading ? (
                                         <tr className={styles['Admin-tc-loading-row']}>
-                                            <td colSpan="7" className={styles['Admin-tc-loading-cell']}>
+                                            <td colSpan="9" className={styles['Admin-tc-loading-cell']}>
                                                 <div className={styles['Admin-tc-loading-wrapper']}>
                                                     <div className={styles['Admin-tc-spinner']}></div>
                                                     <span className={styles['Admin-tc-loading-text']}>Loading training companies...</span>
@@ -626,7 +662,7 @@ function AdminTrainingCompany({ onLogout }) {
                                         </tr>
                                     ) : filteredCompanies.length === 0 ? (
                                         <tr className={styles['Admin-tc-table-row']}>
-                                            <td colSpan="7" className={styles['Admin-tc-td']} style={{ textAlign: 'center' }}>
+                                            <td colSpan="9" className={styles['Admin-tc-td']} style={{ textAlign: 'center' }}>
                                                 No companies found matching your criteria.
                                             </td>
                                         </tr>
@@ -647,9 +683,27 @@ function AdminTrainingCompany({ onLogout }) {
                                                 </td>
                                                 <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-sno']}`}>{index + 1}</td>
                                                 <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-company']}`}>{company.companyName}</td>
-                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-branch']}`}>{company.branch}</td>
-                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-training']}`}>{company.trainingName}</td>
-                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-phase']}`}>{company.phaseName}</td>
+                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-hr']}`}>{company.companyHR || '-'}</td>
+                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-location']}`}>{company.location || '-'}</td>
+                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-courses']}`}>{company.coursesCount || 0}</td>
+                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-trainers']}`}>{company.trainersCount || 0}</td>
+                                                <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-history']}`}>
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="24"
+                                                        height="24"
+                                                        viewBox="0 0 24 24"
+                                                        style={{ cursor: 'pointer', margin: '0 auto', display: 'block' }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate('/admin-training-history', {
+                                                                state: { companyName: company.companyName }
+                                                            });
+                                                        }}
+                                                    >
+                                                        <path fill="#4EA24E" fillRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12m11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586z" clipRule="evenodd"/>
+                                                    </svg>
+                                                </td>
                                                 <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-view']}`}>
                                                     <svg
                                                         width="24"
@@ -658,7 +712,10 @@ function AdminTrainingCompany({ onLogout }) {
                                                         fill="none"
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         style={{ cursor: 'pointer', margin: '0 auto', display: 'block' }}
-                                                        onClick={() => handleViewCompany(company)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleViewCompany(company);
+                                                        }}
                                                     >
                                                         <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3"/>
                                                         <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E"/>

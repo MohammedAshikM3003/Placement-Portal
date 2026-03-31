@@ -22,6 +22,8 @@ import styles from "./MainRegistration.module.css";
 import mongoDBService from './services/mongoDBService';
 import gridfsService from './services/gridfsService';
 import DOBDatePicker from './components/Calendar/DOBDatePicker';
+import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
+import Confetti from './components/Confetti';
 
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
@@ -703,6 +705,7 @@ function MainRegistration() {
   const [currentYear, setCurrentYear] = useState("");
   const [currentSemester, setCurrentSemester] = useState("");
   const [isPopupOpen, setPopupOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [uploadInfo, setUploadInfo] = useState({ name: "", date: "" });
@@ -750,6 +753,11 @@ function MainRegistration() {
       window.matchMedia("(hover: hover) and (pointer: fine)").matches
     );
   });
+
+  // Change favicon to student blue
+  useEffect(() => {
+    changeFavicon(FAVICON_TYPES.STUDENT);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
@@ -1165,7 +1173,10 @@ function MainRegistration() {
   );
 
   /* ── Popup Close Handlers ── */
-  const closePopup = useCallback(() => setPopupOpen(false), []);
+  const closePopup = useCallback(() => {
+    setPopupOpen(false);
+    setShowConfetti(false);
+  }, []);
   const closeExistingRegNoPopup = useCallback(() => setExistingRegNoPopupOpen(false), []);
   const closeMismatchedRegNoPopup = useCallback(() => setMismatchedRegNoPopupOpen(false), []);
   const closeFileSizeErrorPopup = useCallback(() => setIsFileSizeErrorOpen(false), []);
@@ -1614,10 +1625,14 @@ function MainRegistration() {
           URL.revokeObjectURL(profileImage);
         }
 
+        // Start confetti immediately
+        setShowConfetti(true);
+
+        // Show popup after short delay so confetti starts first
         setTimeout(() => {
           setPopupOpen(true);
           setIsRegistering(false);
-        }, 1000);
+        }, 400);
       } catch (error) {
         console.error("Error saving student data:", error);
         setValidationErrorMessage(`Error saving data: ${error.message}. Check console for details.`);
@@ -2274,6 +2289,28 @@ function MainRegistration() {
                         {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
                     </div>
+                    {dob && (
+                      <p style={{
+                        fontSize: '0.85rem',
+                        color: '#2085f6',
+                        marginTop: '6px',
+                        fontWeight: 500,
+                        fontFamily: "'Poppins', sans-serif"
+                      }}>
+                        Your password should be: <strong>{dob.split('-').reverse().join('')}</strong> (based on your DOB: {dob.split('-').reverse().join('-')})
+                      </p>
+                    )}
+                    {!dob && (
+                      <p style={{
+                        fontSize: '0.85rem',
+                        color: '#D23B42',
+                        marginTop: '6px',
+                        fontWeight: 500,
+                        fontFamily: "'Poppins', sans-serif"
+                      }}>
+                        ⚠ Please select your Date of Birth in Personal Information section first
+                      </p>
+                    )}
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Confirm Password <RequiredStar /></label>
@@ -2398,6 +2435,7 @@ function MainRegistration() {
       {isSidebarOpen && <div className={cx("mr-overlay")} onClick={() => setIsSidebarOpen(false)} />}
 
       <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
+      <Confetti isActive={showConfetti} />
       <ConfirmDiscardPopup isOpen={isDiscardPopupOpen} onConfirm={handleConfirmDiscard} onCancel={handleCancelDiscard} />
       <ExistingRegNoPopup isOpen={isExistingRegNoPopupOpen} onClose={closeExistingRegNoPopup} regNo={existingRegNo} />
       <MismatchedRegNoPopup isOpen={isMismatchedRegNoPopupOpen} onClose={closeMismatchedRegNoPopup} personalRegNo={personalRegNo} loginRegNo={loginRegNo} />

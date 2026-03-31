@@ -182,7 +182,7 @@ function AdminTraining({ onLogout }) {
         </div>
 
         <div className={styles['ad-tr-top-grid']}>
-          <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-add-training')}>
+          <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-training-company')}>
             <div className={styles['ad-tr-action-icon']}>
               <img src={AddTrainingIcon} alt="Add Training" />
             </div>

@@ -765,6 +765,12 @@ function AdminstudDB() {
                                 {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${visibleStudents.length}`}
                             </h3>
                             <div className={styles['Admin-DB-table-actions']}>
+                                <button
+                                    className={styles['Admin-DB-zip-btn']}
+                                    onClick={() => navigate('/admin/active-zip/student-database', { state: { driveData: null, source: 'student-database' } })}
+                                >
+                                    Zip
+                                </button>
                                 <div className={styles['Admin-DB-print-button-container']}>
                                     <button className={styles['Admin-DB-print-btn']} onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}>Print</button>
                                     {showExportMenu && (
