@@ -7,6 +7,7 @@ import navbarStyles from './components/Navbar/LandingNavbar.module.css';
 import { fetchAllLandingData, clearCollegeImagesCache, fetchCollegeImagesPublic, getCachedLandingData } from './services/landingPageCacheService';
 import { PlacedStudentsSkeleton, DrivesSkeleton, BannerSkeleton, FooterBannerSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
+import { API_BASE_URL } from './utils/apiConfig';
 
 // --- Assets (Fallback images) ---
 import StudentIcon from './assets/LandingStudentIcon.png';
@@ -232,6 +233,28 @@ const StudentCard = ({ name, branch, company, pkg, role, profilePhoto }) => (
   </div>
 );
 
+const resolveStudentPhotoUrl = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  const source = value.trim();
+  if (!source) return null;
+
+  if (source.startsWith('data:')) return source;
+  if (source.startsWith('http')) {
+    const filePathMatch = source.match(/\/api\/file\/([a-f0-9]{24})/i);
+    if (filePathMatch) return `${API_BASE_URL}/file/${filePathMatch[1].toLowerCase()}`;
+    return source;
+  }
+
+  if (source.startsWith('/api/file/')) return `${API_BASE_URL}${source.replace('/api', '')}`;
+  if (source.startsWith('/file/')) return `${API_BASE_URL}${source}`;
+
+  const embeddedPathMatch = source.match(/\/api\/file\/([a-f0-9]{24})/i);
+  if (embeddedPathMatch) return `${API_BASE_URL}/file/${embeddedPathMatch[1].toLowerCase()}`;
+
+  if (/^[a-f0-9]{24}$/i.test(source)) return `${API_BASE_URL}/file/${source.toLowerCase()}`;
+  return source;
+};
+
 const PlacementPage = ({ placedStudentsData }) => {
   // Derive state from pre-fetched data (no separate API call needed)
   const { students, stats, isLoading } = useMemo(() => {
@@ -247,7 +270,7 @@ const PlacementPage = ({ placedStudentsData }) => {
         company: student.company,
         pkg: student.pkg,
         role: student.role,
-        profilePhoto: student.profilePicURL || student.profilePhoto || null
+        profilePhoto: resolveStudentPhotoUrl(student.profilePicURL || student.profilePhoto)
       }));
 
       const packages = mappedStudents.map(s => parseFloat(s.pkg) || 0);

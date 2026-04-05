@@ -7,7 +7,7 @@ import Cosidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminCompanyDrive.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
-import EligibleStudentsIcon from '../assets/Ad_cd_Eligiblestu.svg';
+import EligibleStudentsIcon from '../assets/ad_cd_eligiblestu.svg';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
