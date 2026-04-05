@@ -473,6 +473,53 @@ select.ta-filter-input {
   border-color: #1e88e5;
 }
 
+.date-buttons-row {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-start;
+  margin-top: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+}
+
+.date-buttons-row::-webkit-scrollbar {
+  display: none;
+}
+
+.date-box {
+  padding: 10px 22px;
+  border: 2px solid #999;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+  color: #666;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 140px;
+  flex: 0 0 auto;
+}
+
+.date-box:hover {
+  background-color: #e8e8e8;
+}
+
+.date-box-active {
+  background-color: #1e88e5;
+  color: #fff;
+  border-color: #1e88e5;
+}
+
+.date-placeholder {
+  color: #7b7b7b;
+  font-weight: 600;
+  align-self: center;
+  padding: 10px 6px;
+}
+
 /* Action Buttons Row */
 .action-buttons-row {
   display: flex;
@@ -1271,14 +1318,16 @@ select.ta-filter-input {
 
   /* Training and batch buttons - horizontal scroll */
   .training-buttons-row,
-  .batch-buttons-row {
+  .batch-buttons-row,
+  .date-buttons-row {
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 10px;
   }
 
   .training-seq-btn,
-  .batch-btn {
+  .batch-btn,
+  .date-box {
     flex: 0 0 auto;
     min-width: 100px;
     padding: 8px 14px;

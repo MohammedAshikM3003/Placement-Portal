@@ -8,7 +8,8 @@ import Adminicon from '../assets/Adminicon.png';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import mongoDBService from '../services/mongoDBService.jsx';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, UnzippingProgressAlert, UnzippedSuccessAlert } from '../components/alerts';
 
 // Delete Confirmation Popup
 const DeleteConfirmationPopup = ({ onClose, onConfirm, archiveName, isDeleting }) => (
@@ -22,8 +23,8 @@ const DeleteConfirmationPopup = ({ onClose, onConfirm, archiveName, isDeleting }
                         <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" />
                     </svg>
                 </div>
-                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 20, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
-                <p style={{ margin: 0, color: '#888', fontSize: 14 }}>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16, lineHeight: 1.45 }}>
                     You are about to delete <strong>"{archiveName}"</strong>. This action cannot be undone.
                 </p>
             </div>
@@ -46,13 +47,13 @@ const UnzipConfirmationPopup = ({ onClose, onConfirm, archiveName, isUnzipping }
             <div className={styles['Ad-zb-popup-header']}>Unzip Archive</div>
             <div className={styles['Ad-zb-popup-body']}>
                 <div className={styles['Ad-zb-info-icon']}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="50" height="50">
-                        <circle cx="26" cy="26" r="25" fill="#4EA24E" />
-                        <path d="M26 18v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" />
+                    <svg className={styles['Ad-zb-warning-icon-animated']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle className={styles['Ad-zb-warning-icon-animated-circle']} cx="26" cy="26" r="25" fill="none" />
+                        <path className={styles['Ad-zb-warning-icon-animated-exclamation']} d="M26 16v12M26 34v2" strokeWidth="3" fill="none" strokeLinecap="round" />
                     </svg>
                 </div>
-                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 20, color: '#333', fontWeight: 600 }}>Restore Archive?</h2>
-                <p style={{ margin: 0, color: '#888', fontSize: 14 }}>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Restore Archive?</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16, lineHeight: 1.45 }}>
                     Unzipping <strong>"{archiveName}"</strong> will restore all students from ALL departments in this batch to active status.
                 </p>
             </div>
@@ -80,14 +81,9 @@ const Ad_Zipped_Batches = () => {
     const [activeTab, setActiveTab] = useState('zipped');
 
     // State for zipped batches data
-    const [zippedBatches, setZippedBatches] = useState([
-        { id: 1, archiveName: 'Batch_2021_2025_Zip_Mar2026', year: '2021 - 2025', totalDept: 4, totalStudents: 224, placedStudents: 20 },
-        { id: 2, archiveName: 'Batch_2024_2028_Zip_Mar2026', year: '2024 - 2028', totalDept: 2, totalStudents: 189, placedStudents: 10 },
-        { id: 3, archiveName: 'Batch_2022_2026_Zip_Mar2026', year: '2022 - 2026', totalDept: 2, totalStudents: 127, placedStudents: 25 },
-        { id: 4, archiveName: 'Batch_2020_2024_Zip_Mar2026', year: '2020 - 2024', totalDept: 1, totalStudents: 45, placedStudents: 15 },
-        { id: 5, archiveName: 'Batch_2023_2027_Zip_Mar2026', year: '2023 - 2027', totalDept: 2, totalStudents: 112, placedStudents: 19 },
-    ]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [zippedBatches, setZippedBatches] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Popup states
     const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -96,16 +92,44 @@ const Ad_Zipped_Batches = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUnzipping, setIsUnzipping] = useState(false);
 
+    // Unzipping progress states
+    const [showUnzippingProgress, setShowUnzippingProgress] = useState(false);
+    const [unzippingProgress, setUnzippingProgress] = useState(0);
+    const [showUnzippedSuccess, setShowUnzippedSuccess] = useState(false);
+
     // Export states
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [exportProgress, setExportProgress] = useState(null);
-    const [exportSuccess, setExportSuccess] = useState(null);
+    const [exportPopupState, setExportPopupState] = useState('none');
+    const [exportProgress, setExportProgress] = useState(0);
+    const [exportType, setExportType] = useState('Excel');
     const [exportFailed, setExportFailed] = useState(null);
 
     // Toggle sidebar
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const handleOverlayClick = () => setIsSidebarOpen(false);
+
+    // Fetch archived batches from MongoDB
+    const fetchArchivedBatches = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const batches = await mongoDBService.getArchivedBatches();
+            setZippedBatches(batches);
+        } catch (err) {
+            console.error('Error fetching archived batches:', err);
+            setError('Failed to load archived batches');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // Load data on mount
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchArchivedBatches();
+        }
+    }, [isAuthenticated, fetchArchivedBatches]);
 
     // Handle tab change
     const handleTabChange = (tab) => {
@@ -113,8 +137,7 @@ const Ad_Zipped_Batches = () => {
         if (tab === 'active') {
             navigate('/admin/active-zip/student-database', { state: { source: 'student-database' } });
         } else if (tab === 'history') {
-            // Navigate to history page when created
-            console.log('Navigate to Zipping History');
+            navigate('/admin/zipping-history');
         }
     };
 
@@ -134,24 +157,44 @@ const Ad_Zipped_Batches = () => {
     };
 
     const handleUnzipConfirm = async () => {
-        setIsUnzipping(true);
+        setShowUnzipPopup(false);
+        setShowUnzippingProgress(true);
+        setUnzippingProgress(0);
+
+        // Progress animation
+        const progressInterval = setInterval(() => {
+            setUnzippingProgress(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prev + 10;
+            });
+        }, 150);
+
         try {
-            // Simulate unzip operation
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Call API to unzip batch
+            await mongoDBService.unzipBatch(selectedBatch.id, 'Admin');
+
+            clearInterval(progressInterval);
+            setUnzippingProgress(100);
+
+            // Brief pause at 100% before showing success
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             // Remove from zipped batches
             setZippedBatches(prev => prev.filter(b => b.id !== selectedBatch.id));
 
-            setShowUnzipPopup(false);
-            setSelectedBatch(null);
-            setExportSuccess({ message: 'Batch unzipped successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            setShowUnzippingProgress(false);
+            setShowUnzippedSuccess(true);
         } catch (err) {
             console.error('Unzip error:', err);
+            clearInterval(progressInterval);
+            setShowUnzippingProgress(false);
             setExportFailed({ message: 'Failed to unzip batch' });
             setTimeout(() => setExportFailed(null), 3000);
         } finally {
-            setIsUnzipping(false);
+            setSelectedBatch(null);
         }
     };
 
@@ -164,16 +207,16 @@ const Ad_Zipped_Batches = () => {
     const handleDeleteConfirm = async () => {
         setIsDeleting(true);
         try {
-            // Simulate delete operation
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Call API to delete archived batch
+            await mongoDBService.deleteArchivedBatch(selectedBatch.id, 'Admin');
 
             // Remove from zipped batches
             setZippedBatches(prev => prev.filter(b => b.id !== selectedBatch.id));
 
             setShowDeletePopup(false);
             setSelectedBatch(null);
-            setExportSuccess({ message: 'Archive deleted successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            setExportPopupState('success');
+            setTimeout(() => setExportPopupState('none'), 3000);
         } catch (err) {
             console.error('Delete error:', err);
             setExportFailed({ message: 'Failed to delete archive' });
@@ -190,10 +233,25 @@ const Ad_Zipped_Batches = () => {
 
     // Export functions
     const handleExportExcel = async () => {
+        let progressInterval;
         try {
             setIsExporting(true);
             setShowExportMenu(false);
-            setExportProgress({ message: 'Preparing Excel export...' });
+            setExportType('Excel');
+            setExportPopupState('progress');
+            setExportProgress(0);
+
+            progressInterval = setInterval(() => {
+                setExportProgress((prev) => {
+                    if (prev >= 90) {
+                        clearInterval(progressInterval);
+                        return 90;
+                    }
+                    return prev + 15;
+                });
+            }, 100);
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
 
             const exportData = zippedBatches.map((batch, index) => ({
                 'S.No': index + 1,
@@ -210,24 +268,39 @@ const Ad_Zipped_Batches = () => {
 
             XLSX.writeFile(workbook, 'Zipped_Batches.xlsx');
 
-            setExportProgress(null);
-            setExportSuccess({ message: 'Excel file exported successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
         } catch (err) {
+            clearInterval(progressInterval);
             console.error('Export error:', err);
-            setExportProgress(null);
-            setExportFailed({ message: 'Failed to export Excel file' });
-            setTimeout(() => setExportFailed(null), 3000);
+            setExportPopupState('failed');
         } finally {
             setIsExporting(false);
         }
     };
 
     const handleExportPDF = async () => {
+        let progressInterval;
         try {
             setIsExporting(true);
             setShowExportMenu(false);
-            setExportProgress({ message: 'Preparing PDF export...' });
+            setExportType('PDF');
+            setExportPopupState('progress');
+            setExportProgress(0);
+
+            progressInterval = setInterval(() => {
+                setExportProgress((prev) => {
+                    if (prev >= 90) {
+                        clearInterval(progressInterval);
+                        return 90;
+                    }
+                    return prev + 15;
+                });
+            }, 100);
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
 
             const doc = new jsPDF('landscape');
 
@@ -253,14 +326,14 @@ const Ad_Zipped_Batches = () => {
 
             doc.save('Zipped_Batches.pdf');
 
-            setExportProgress(null);
-            setExportSuccess({ message: 'PDF file exported successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
         } catch (err) {
+            clearInterval(progressInterval);
             console.error('Export error:', err);
-            setExportProgress(null);
-            setExportFailed({ message: 'Failed to export PDF file' });
-            setTimeout(() => setExportFailed(null), 3000);
+            setExportPopupState('failed');
         } finally {
             setIsExporting(false);
         }
@@ -478,9 +551,38 @@ const Ad_Zipped_Batches = () => {
             )}
 
             {/* Export Alerts */}
-            {exportProgress && <ExportProgressAlert message={exportProgress.message} />}
-            {exportSuccess && <ExportSuccessAlert message={exportSuccess.message} onClose={() => setExportSuccess(null)} />}
-            {exportFailed && <ExportFailedAlert message={exportFailed.message} onClose={() => setExportFailed(null)} />}
+            <ExportProgressAlert
+                isOpen={exportPopupState === 'progress'}
+                onClose={() => {}}
+                progress={exportProgress}
+                exportType={exportType}
+            />
+            <ExportSuccessAlert
+                isOpen={exportPopupState === 'success'}
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+            />
+            <ExportFailedAlert
+                isOpen={exportPopupState === 'failed' || !!exportFailed}
+                onClose={() => {
+                    setExportPopupState('none');
+                    setExportFailed(null);
+                }}
+                exportType={exportType}
+            />
+
+            {/* Unzipping Progress Alert */}
+            <UnzippingProgressAlert
+                isOpen={showUnzippingProgress}
+                progress={unzippingProgress}
+                batchName={selectedBatch?.year || 'Batch'}
+            />
+
+            {/* Unzipped Success Alert */}
+            <UnzippedSuccessAlert
+                isOpen={showUnzippedSuccess}
+                onClose={() => setShowUnzippedSuccess(false)}
+            />
         </div>
     );
 };

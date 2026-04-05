@@ -1330,20 +1330,35 @@ select:disabled {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background: #d4edda;
-    color: #1a7f3c;
     font-size: 0.78rem;
     font-weight: 600;
     padding: 4px 12px;
     border-radius: 999px;
 }
 
+.anlsPlacedBadgePlaced {
+    background: #d4edda;
+    color: #1a7f3c;
+}
+
+.anlsPlacedBadgeNotPlaced {
+    background: #ffd7d7;
+    color: #b4232c;
+}
+
 .anlsPlacedDot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #28a745;
     display: inline-block;
+}
+
+.anlsPlacedDotPlaced {
+    background: #28a745;
+}
+
+.anlsPlacedDotNotPlaced {
+    background: #e05252;
 }
 
 /* Main 2-column grid: pie | right section */
@@ -1430,6 +1445,23 @@ select:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.anlsLegendItem:hover {
+    background: #f3f7ff;
+}
+
+.anlsLegendItem:focus-visible {
+    outline: 2px solid #2085f6;
+    outline-offset: 2px;
+}
+
+.anlsLegendItemActive {
+    background: #e9f2ff;
 }
 
 .anlsLegendCircle {
@@ -1452,9 +1484,9 @@ select:disabled {
     color: #222;
     font-size: 0.84rem;
     line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .anlsLegendPct {
@@ -1477,7 +1509,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-self: stretch;
+    align-self: start;
 }
 
 .anlsStatCard {
@@ -1551,6 +1583,11 @@ select:disabled {
     justify-content: space-between;
     box-shadow: 0 6px 20px rgba(37,99,235,0.35);
     min-height: 110px;
+}
+
+.anlsAchievBannerNotPlaced {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    box-shadow: 0 6px 18px rgba(51, 65, 85, 0.32);
 }
 
 .anlsAchievMeta {
@@ -1847,8 +1884,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 /* Bad Card */
@@ -1860,8 +1896,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 .anlsGoodBadHeader {
@@ -1896,6 +1931,12 @@ select:disabled {
     font-size: 0.76rem;
     color: #374151;
     line-height: 1.4;
+}
+
+.anlsGoodItem span:last-child,
+.anlsBadItem span:last-child {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .anlsCheckIcon {

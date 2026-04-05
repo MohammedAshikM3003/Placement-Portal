@@ -142,126 +142,26 @@
     border-radius: 2px;
 }
 
-/* Content Grid Layout (Personal Info + Profile Photo) */
-.contentGrid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-    align-items: start;
-}
-
-/* Personal Info Fields Container */
+/* Personal info + profile photo layout (same structure as edit page) */
 .personalInfoFields {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-/* Input Grid for personal info fields */
-.inputGrid {
+    grid-column: 1 / span 2;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 2rem;
-}
-
-/* Login Details Section Inside Personal Information */
-.loginDetailsSection {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #e6f4dd;
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.loginHeader {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-}
-
-.loginInputGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-}
-
-/* Profile Photo Card (Right Column) */
-.profilePhotoCard {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid #e6f4dd;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
     gap: 1.5rem;
-    height: fit-content;
-}
-
-.photoHeader {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    margin: 0 0 1rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #4EA24E;
-}
-
-/* Field Styles for Input Grids */
-.inputGrid .field,
-.loginInputGrid .field {
-    display: flex;
-    flex-direction: column;
-}
-
-.inputGrid .field label,
-.loginInputGrid .field label,
-.profilePhotoCard .field label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
-
-.inputGrid input,
-.inputGrid select,
-.loginInputGrid input,
-.loginInputGrid select,
-.profilePhotoCard input,
-.profilePhotoCard select {
+    align-content: start;
     width: 100%;
-    padding: 0.9rem;
-    border: 1px solid #def4dd;
-    border-radius: 8px;
-    background-color: #f9fff9;
-    font-size: 0.95rem;
+    max-width: 100%;
     box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    overflow: visible;
 }
 
-.inputGrid input:focus,
-.inputGrid select:focus,
-.loginInputGrid input:focus,
-.loginInputGrid select:focus,
-.profilePhotoCard input:focus,
-.profilePhotoCard select:focus {
-    outline: none;
-    border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+.profilePhotoWrapper {
+    grid-column: 3 / 4;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+    min-width: 0;
 }
 
 .formGrid {
@@ -312,6 +212,12 @@
     background-color: #f9fff9 !important;
     cursor: default !important;
     pointer-events: none;
+}
+
+.readOnlyInput:disabled {
+    color: #1f2d3d !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #1f2d3d;
 }
 
 /* Make ALL inputs in admin view read-only */
@@ -413,13 +319,15 @@
 
 /* Profile Photo Box */
 .profilePhotoBox {
-    background-color: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0;
+    background-color: #fff;
+    border: 1px solid #def4dd;
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-height: 709px;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    justify-content: space-between;
 }
 
 
@@ -437,14 +345,8 @@
     height: 250px;
     object-fit: cover;
     border-radius: 12px;
-    border: 4px solid #e0f4dd;
+    border: 4px solid #e9f1fc;
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-}
-
-.profilePreviewImg:hover {
-    transform: scale(1.02);
-    border-color: #4EA24E;
 }
 
 .uploadActionArea { margin-top: auto; }
@@ -705,18 +607,19 @@
     gap: 0.6rem;
     color: #333;
     font-weight: 500;
+    pointer-events: none;
 }
 
 .checkboxOption input[type='checkbox'] {
     width: 18px;
     height: 18px;
     accent-color: #4EA24E;
-    cursor: not-allowed;
+    cursor: default;
 }
 
 .checkboxOption span {
     flex: 1;
-    cursor: not-allowed;
+    cursor: default;
 }
 
 /* --- ACADEMIC RADIO GROUP FIX --- */
@@ -1121,31 +1024,23 @@ select:disabled {
         box-sizing: border-box;
     }
 
-    /* Content Grid - Stack vertically on mobile */
-    .contentGrid {
+    .formGrid {
+        display: grid;
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 0.75rem;
     }
-
-    /* Input Grid - Stack vertically on mobile */
-    .inputGrid {
+    .personalInfoFields {
+        grid-column: 1 / -1;
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
     }
-
-    /* Login Input Grid - Stack vertically on mobile */
-    .loginInputGrid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .profilePhotoWrapper {
+        grid-column: 1 / -1;
+        order: -1;
     }
-
-    /* Profile Photo Card */
-    .profilePhotoCard {
-        order: -1; /* Show profile photo first on mobile */
+    .profilePhotoBox {
+        min-height: auto;
     }
-
-    .formGrid { display: block; gap: 0; }
-    .personalInfoFields { display: flex; flex-direction: column; }
     .profileSectionContainer { padding: 1rem; }
     .profileSectionContainer input, .profileSectionContainer select { margin-bottom: 1rem; }
     .formGrid input, .formGrid select { width: 100%; }
@@ -1629,6 +1524,23 @@ select:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.anlsLegendItem:hover {
+    background: #f3f7ff;
+}
+
+.anlsLegendItem:focus-visible {
+    outline: 2px solid #4EA24E;
+    outline-offset: 2px;
+}
+
+.anlsLegendItemActive {
+    background: #eaf6ea;
 }
 
 .anlsLegendCircle {
@@ -1651,6 +1563,9 @@ select:disabled {
     color: #222;
     font-size: 0.84rem;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .anlsLegendPct {
@@ -1673,7 +1588,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-self: stretch;
+    align-self: start;
 }
 
 .anlsStatCard {
@@ -2043,8 +1958,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 /* Bad Card */
@@ -2056,8 +1970,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 .anlsGoodBadHeader {
@@ -2092,6 +2005,12 @@ select:disabled {
     font-size: 0.76rem;
     color: #374151;
     line-height: 1.4;
+}
+
+.anlsGoodItem span:last-child,
+.anlsBadItem span:last-child {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .anlsCheckIcon {

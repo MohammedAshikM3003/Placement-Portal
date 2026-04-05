@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar/Adnavbar.js";
 import Sidebar from "../components/Sidebar/Adsidebar.js";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts/index.js';
+import mongoDBService from '../services/mongoDBService';
 import styles from "./Admin_Attendance_Stdinfo.module.css";
 import eyeicon from "../assets/training-eyeicon.svg";
 import DatePicker from 'react-datepicker';
@@ -128,6 +130,18 @@ const formatDateToISO = (date) => {
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+};
+
+const formatDateToDisplay = (date) => {
+  if (!date || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
 };
 
 const AttenTrainProfilePopup = ({ isOpen, onClose, onSubmit, editingCompany, viewingCompany }) => {
@@ -428,30 +442,112 @@ const DeleteSuccessPopup = ({ onClose }) => (
   </div>
 );
 
-
-const studentData = [
-  { id: 1, name: "Kiruthika", regNo: "73152313038", dept: "CSE", year: "III", section: "A", phone: "9898986547", date: "25-02-2025", status: "-" },
-  { id: 2, name: "Donald Trump", regNo: "73152313049", dept: "CSE", year: "III", section: "B", phone: "9788657300", date: "25-02-2025", status: "-" },
-  { id: 3, name: "Ravinder Singh", regNo: "73152313052", dept: "CSE", year: "III", section: "B", phone: "7845014685", date: "25-02-2025", status: "-" },
-  { id: 4, name: "Divam Balwal", regNo: "73152313061", dept: "CSE", year: "III", section: "B", phone: "6369123456", date: "25-02-2025", status: "-" },
-  { id: 5, name: "Mohammed Ashik M", regNo: "73152313075", dept: "CSE", year: "III", section: "A", phone: "9380171449", date: "25-02-2025", status: "-" },
-  { id: 6, name: "Gowrinath", regNo: "73152313088", dept: "CSE", year: "III", section: "B", phone: "7812845645", date: "25-02-2025", status: "-" },
-];
-
 export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) {
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [activeTraining, setActiveTraining] = useState("R-Sequence");
-  const [activeBatch, setActiveBatch] = useState("Batch-1");
-  const [students, setStudents] = useState(studentData);
+  const [activeBatch, setActiveBatch] = useState("");
+  const [activeBatchDate, setActiveBatchDate] = useState('');
+  const [availableBatches, setAvailableBatches] = useState([]);
+  const [batchAssignments, setBatchAssignments] = useState([]);
+  const [students, setStudents] = useState([]);
   const [pendingChanges, setPendingChanges] = useState({});
 
+  const getBatchLabel = (batchItem) => {
+    const batchNumber = Number.parseInt(batchItem?.batchNumber, 10);
+    if (Number.isFinite(batchNumber) && batchNumber > 0) {
+      return `Batch - ${batchNumber}`;
+    }
+
+    const fallbackName = (batchItem?.batchName || '').toString().trim();
+    return fallbackName || 'Batch';
+  };
+
+  const activeAssignment = useMemo(() => {
+    return batchAssignments.find(
+      (assignment) => (assignment?.batchName || '').toString().trim() === activeBatch
+    ) || null;
+  }, [batchAssignments, activeBatch]);
+
+  const activePhaseNumber = useMemo(() => {
+    const phases = Array.isArray(activeAssignment?.phases) ? activeAssignment.phases : [];
+    const phaseEntry = phases.find((phase) => (phase?.phaseNumber || '').toString().trim());
+    const phaseNumber = (phaseEntry?.phaseNumber || '').toString().trim();
+
+    if (!phaseNumber) return 'I';
+    return phaseNumber;
+  }, [activeAssignment]);
+
+  const activeBatchDates = useMemo(() => {
+    const startRaw = activeAssignment?.startDate || '';
+    const endRaw = activeAssignment?.endDate || startRaw;
+
+    if (!startRaw) return [];
+
+    const startDate = new Date(startRaw);
+    const endDate = new Date(endRaw);
+
+    if (Number.isNaN(startDate.getTime())) return [];
+
+    const safeEndDate = Number.isNaN(endDate.getTime()) ? startDate : endDate;
+    const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const finalDate = new Date(safeEndDate.getFullYear(), safeEndDate.getMonth(), safeEndDate.getDate());
+
+    const dates = [];
+    let dayIndex = 1;
+    while (currentDate <= finalDate) {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+
+      dates.push({
+        value: `${day}-${month}-${year}`,
+        label: `Day ${dayIndex}`
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+      dayIndex += 1;
+    }
+
+    return dates;
+  }, [activeAssignment]);
+
+  const buildAttendanceStudents = (sourceAssignment, statusMap = {}) => {
+    if (!sourceAssignment || !Array.isArray(sourceAssignment.students)) {
+      return [];
+    }
+
+    return sourceAssignment.students.map((student, index) => ({
+      id: (student?.studentId || `student-${index}`).toString(),
+      name: (student?.name || '').toString().trim(),
+      regNo: (student?.regNo || '').toString().trim(),
+      dept: (student?.dept || '').toString().trim(),
+      year: (student?.year || '').toString().trim(),
+      section: (student?.section || '').toString().trim(),
+      mobile: (student?.mobile || '').toString().trim(),
+      status: statusMap[(student?.regNo || '').toString().trim()] || '-'
+    }));
+  };
+
+  useEffect(() => {
+    if (!activeBatchDates.length) {
+      setActiveBatchDate('');
+      return;
+    }
+
+    const todayDate = formatDateToDisplay(new Date());
+    const preferredDate = activeBatchDates.some((dateItem) => dateItem.value === todayDate)
+      ? todayDate
+      : activeBatchDates[0].value;
+
+    setActiveBatchDate(preferredDate);
+  }, [activeBatchDates]);
+
   const [filters, setFilters] = useState({
+    search: "",
     dept: "",
-    name: "",
-    regNo: "",
     section: "",
-    date: "",
+    mobile: "",
   });
   const [statusFilter, setStatusFilter] = useState("all"); // all, present, absent
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
@@ -459,29 +555,158 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
   const [exportType, setExportType] = useState('');
   const [open, setOpen] = useState(false);
 
+  // Fetch batches from training_batch_assignments collection
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const state = location.state || {};
+        const companyName = state.companyName || '';
+        const courseName = state.courseName || '';
+
+        if (!companyName || !courseName) {
+          setAvailableBatches([]);
+          setActiveBatch('');
+          setBatchAssignments([]);
+          setStudents([]);
+          return;
+        }
+
+        const filters = {
+          companyName,
+          courseName
+        };
+
+        const assignments = await mongoDBService.getScheduledTrainingBatchAssignments(filters);
+        const normalizedAssignments = Array.isArray(assignments) ? assignments : [];
+        
+        // Store all batch assignments
+        setBatchAssignments(normalizedAssignments);
+        
+        // Extract unique batch assignments
+        const uniqueBatches = Array.from(
+          new Map(
+            normalizedAssignments
+              .filter((assignment) => (assignment?.batchName || '').toString().trim())
+              .map((assignment) => [
+                (assignment?.batchName || '').toString().trim(),
+                {
+                  batchName: (assignment?.batchName || '').toString().trim(),
+                  batchNumber: assignment?.batchNumber
+                }
+              ])
+          ).values()
+        );
+        
+        setAvailableBatches(uniqueBatches);
+        
+        // Set first batch as active
+        if (uniqueBatches.length > 0) {
+          setActiveBatch(uniqueBatches[0].batchName);
+        } else {
+          setActiveBatch('');
+        }
+      } catch (error) {
+        console.error('Failed to fetch batches:', error);
+        setAvailableBatches([]);
+        setActiveBatch('');
+        setBatchAssignments([]);
+        setStudents([]);
+      }
+    };
+
+    fetchBatches();
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!activeAssignment) {
+      setStudents([]);
+      setPendingChanges({});
+      return;
+    }
+
+    const initialStudents = buildAttendanceStudents(activeAssignment);
+    setStudents(initialStudents);
+    setPendingChanges({});
+  }, [activeAssignment]);
+
+  useEffect(() => {
+    const loadSavedAttendance = async () => {
+      if (!activeAssignment || !activeBatchDate) {
+        return;
+      }
+
+      try {
+        const attendances = await mongoDBService.getTrainingAttendance({
+          scheduleId: activeAssignment.scheduleId || '',
+          companyName: activeAssignment.companyName || '',
+          courseName: activeAssignment.courseName || '',
+          batchName: activeAssignment.batchName || '',
+          phaseNumber: activePhaseNumber,
+          attendanceDateKey: activeBatchDate
+        });
+
+        const savedAttendance = Array.isArray(attendances) ? attendances[0] : null;
+        if (!savedAttendance || !Array.isArray(savedAttendance.students)) {
+          setStudents(buildAttendanceStudents(activeAssignment));
+          setPendingChanges({});
+          return;
+        }
+
+        const statusMap = savedAttendance.students.reduce((accumulator, student) => {
+          const regNo = (student?.regNo || '').toString().trim();
+          if (regNo) {
+            accumulator[regNo] = student?.status || '-';
+          }
+          return accumulator;
+        }, {});
+
+        setStudents(buildAttendanceStudents(activeAssignment, statusMap));
+        setPendingChanges({});
+      } catch (error) {
+        console.error('Failed to load saved training attendance:', error);
+        setStudents(buildAttendanceStudents(activeAssignment));
+        setPendingChanges({});
+      }
+    };
+
+    loadSavedAttendance();
+  }, [activeAssignment, activeBatchDate, activePhaseNumber]);
+
+  // Update students when active batch changes
   const filteredStudents = useMemo(() => {
+    const searchQ = (filters.search || "").trim().toLowerCase();
     const deptQ = (filters.dept || "").trim().toLowerCase();
-    const nameQ = (filters.name || "").trim().toLowerCase();
-    const regNoQ = (filters.regNo || "").trim().toLowerCase();
     const sectionQ = (filters.section || "").trim().toLowerCase();
-    const dateQ = (filters.date || "").trim().toLowerCase();
+    const mobileQ = (filters.mobile || "").trim().toLowerCase();
 
     return students.filter((s) => {
-      // Department filter
-      const deptMatch = !deptQ || (s.dept || "").toLowerCase() === deptQ;
-      // Name filter
-      const nameMatch = !nameQ || (s.name || "").toLowerCase().includes(nameQ);
-      // Register No filter
-      const regNoMatch = !regNoQ || (s.regNo || "").toLowerCase().includes(regNoQ);
-      // Section filter
-      const sectionMatch = !sectionQ || (s.section || "").toLowerCase() === sectionQ;
-      // Date filter
-      const dateMatch = !dateQ || (s.date && s.date.includes(dateQ));
+      const nameValue = (s.name || '').toLowerCase();
+      const regNoValue = (s.regNo || '').toLowerCase();
+      const mobileValue = (s.mobile || '').toLowerCase();
+
+      const searchMatch = !searchQ || nameValue.includes(searchQ) || regNoValue.includes(searchQ);
+      const deptMatch = !deptQ || (s.dept || '').toLowerCase() === deptQ;
+      const sectionMatch = !sectionQ || (s.section || '').toLowerCase() === sectionQ;
+      const mobileMatch = !mobileQ || mobileValue.includes(mobileQ);
       // Status filter
       const statusMatch = statusFilter === "all" || s.status.toLowerCase() === statusFilter;
-      return deptMatch && nameMatch && regNoMatch && sectionMatch && dateMatch && statusMatch;
+      return searchMatch && deptMatch && sectionMatch && mobileMatch && statusMatch;
     });
-  }, [students, filters.dept, filters.name, filters.regNo, filters.section, filters.date, statusFilter]);
+  }, [students, filters.search, filters.dept, filters.section, filters.mobile, statusFilter]);
+
+  const attendanceStatusCounts = useMemo(() => {
+    return students.reduce((accumulator, student) => {
+      const resolvedStatus = (pendingChanges[student.id] || student.status || '').toString().trim().toLowerCase();
+      if (resolvedStatus === 'present') {
+        accumulator.present += 1;
+      } else if (resolvedStatus === 'absent') {
+        accumulator.absent += 1;
+      }
+      return accumulator;
+    }, { present: 0, absent: 0 });
+  }, [students, pendingChanges]);
+
+  const formatAttendanceCount = (count) => (count > 0 ? String(count) : '-');
 
   const handleCheckboxChange = (id) => {
     setSelectedStudents((prev) =>
@@ -501,35 +726,83 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
     setPendingChanges((prev) => ({ ...prev, [id]: status }));
   };
 
-  const handleBatchStatusUpdate = (status) => {
-    if (selectedStudents.length === 0) return;
-    const updates = {};
-    selectedStudents.forEach((id) => {
-      updates[id] = status;
-    });
-    setPendingChanges((prev) => ({ ...prev, ...updates }));
-  };
-
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showDeleteSuccessPopup, setShowDeleteSuccessPopup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddSuccessPopup, setShowAddSuccessPopup] = useState(false);
   const [showUpdateSuccessPopup, setShowUpdateSuccessPopup] = useState(false);
-  // Filter button logic
-  const handleFilterClick = () => {
-    // No-op: filteredStudents is already reactive to filters
-    // Optionally, you can add feedback or animation here
-  };
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
-  const handleUpdateClick = () => {
-    if (Object.keys(pendingChanges).length === 0) return;
-    setStudents((prev) =>
-      prev.map((s) =>
-        pendingChanges[s.id] ? { ...s, status: pendingChanges[s.id] } : s
-      )
-    );
-    setPendingChanges({});
-    setTimeout(() => setShowUpdateSuccessPopup(true), 50);
+  const departmentOptions = useMemo(() => {
+    return [...new Set(
+      students
+        .map((student) => (student?.dept || '').toString().trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [students]);
+
+  const sectionOptions = useMemo(() => {
+    return [...new Set(
+      students
+        .map((student) => (student?.section || '').toString().trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [students]);
+
+  const handleUpdateClick = async () => {
+    if (Object.keys(pendingChanges).length === 0 || !activeAssignment || !activeBatchDate || isSavingAttendance) return;
+
+    const updatedStudents = students.map((student) => (
+      pendingChanges[student.id] ? { ...student, status: pendingChanges[student.id] } : student
+    ));
+
+    const totalPresent = updatedStudents.reduce((count, student) => (
+      (student.status || '').toString().trim().toLowerCase() === 'present' ? count + 1 : count
+    ), 0);
+    const totalAbsent = updatedStudents.reduce((count, student) => (
+      (student.status || '').toString().trim().toLowerCase() === 'absent' ? count + 1 : count
+    ), 0);
+    const percentage = updatedStudents.length > 0
+      ? Number(((totalPresent / updatedStudents.length) * 100).toFixed(2))
+      : 0;
+
+    const attendancePayload = {
+      scheduleId: activeAssignment.scheduleId || '',
+      companyName: activeAssignment.companyName || '',
+      courseName: activeAssignment.courseName || '',
+      batchNumber: Number.parseInt(activeAssignment.batchNumber, 10) || 1,
+      batchName: activeAssignment.batchName || activeBatch,
+      phaseNumber: activePhaseNumber,
+      attendanceDateKey: activeBatchDate,
+      attendanceDate: activeBatchDate,
+      totalStudents: updatedStudents.length,
+      totalPresent,
+      totalAbsent,
+      percentage,
+      students: updatedStudents.map((student) => ({
+        studentId: student.id,
+        name: student.name,
+        regNo: student.regNo,
+        dept: student.dept,
+        year: student.year,
+        section: student.section,
+        mobile: student.mobile,
+        status: student.status
+      }))
+    };
+
+    try {
+      setIsSavingAttendance(true);
+      await mongoDBService.submitTrainingAttendance(attendancePayload);
+      setStudents(updatedStudents);
+      setPendingChanges({});
+      setShowUpdateSuccessPopup(true);
+    } catch (error) {
+      console.error('Failed to save training attendance:', error);
+      alert(error?.message || 'Failed to save training attendance');
+    } finally {
+      setIsSavingAttendance(false);
+    }
   };
 
   const handleCloseUpdateSuccess = () => {
@@ -625,8 +898,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         "Department": student.dept,
         "Year": student.year,
         "Section": student.section,
-        "Phone No": student.phone,
-        "Date": student.date,
+        "Mobile": student.mobile,
         "Status": student.status
       }));
 
@@ -642,8 +914,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         { wch: 12 },  // Department
         { wch: 5 },   // Year
         { wch: 8 },   // Section
-        { wch: 12 },  // Phone No
-        { wch: 12 },  // Date
+        { wch: 12 },  // Mobile
         { wch: 10 }   // Status
       ];
 
@@ -665,8 +936,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         'Department',
         'Year',
         'Section',
-        'Phone No',
-        'Date',
+        'Mobile',
         'Status',
       ]];
 
@@ -677,8 +947,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         student.dept,
         student.year,
         student.section,
-        student.phone,
-        student.date,
+        student.mobile,
         student.status,
       ]);
 
@@ -722,126 +991,96 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
               <div className={styles["ad-train-att-filter-card"]}>
                 <div className={styles["ad-train-att-filter-tabs-container"]}>
                   <button className={styles["ad-train-att-filter-tab-button"]} type="button">
-                    Phase - I
+                    Phase - {activePhaseNumber}
                   </button>
                 </div>
 
                 <div className={styles["ad-train-att-filter-fields-container"]}>
-                  {/* First Row: Department and Name */}
+                  {/* First Row: Search and Department */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Department Dropdown with Static Label */}
+                    {/* Search Input with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-dept" style={{ color: '#d3d3d3' }}>
-                        Department
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-search">
+                        Enter Name / Registration No.
                       </label>
-                      <select
-                        id="ad-train-att-filter-dept"
-                        className={styles["ad-train-att-filter-input"]}
-                        required
-                        value={filters.dept || ""}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, dept: e.target.value }))
-                        }
-                      >
-                        <option value="" disabled>Select Department</option>
-                        <option value="CSE">CSE</option>
-                        <option value="ECE">ECE</option>
-                        <option value="EEE">EEE</option>
-                        <option value="MECH">MECH</option>
-                        <option value="CIVIL">CIVIL</option>
-                      </select>
+                      <div className={styles["ad-train-att-text-container"]}>
+                        <input
+                          id="ad-train-att-filter-search"
+                          className={styles["ad-train-att-text"]}
+                          type="text"
+                          placeholder="Enter Name / Registration No."
+                          value={filters.search || ""}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, search: e.target.value }))
+                          }
+                        />
+                      </div>
                     </div>
 
-                    {/* Name Input with Static Label */}
+                    {/* Department Dropdown with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-name">
-                        Name
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-dept">
+                        Department
                       </label>
-                      <input
-                        id="ad-train-att-filter-name"
-                        className={styles["ad-train-att-filter-input"] + " " + styles["ad-train-att-filter-input-green"]}
-                        type="text"
-                        placeholder="Name"
-                        required
-                        value={filters.name || ""}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                      />
+                      <div className={styles["ad-train-att-dropdown-container"]}>
+                        <select
+                          id="ad-train-att-filter-dept"
+                          className={styles["ad-train-att-dropdown"]}
+                          value={filters.dept || ""}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, dept: e.target.value }))
+                          }
+                        >
+                          <option value="">Select Department</option>
+                          {departmentOptions.map((dept) => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Second Row: Register No and Section Dropdown */}
+                  {/* Second Row: Section and Mobile */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Register No Input with Static Label */}
-                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-regno">
-                        Register No
-                      </label>
-                      <input
-                        id="ad-train-att-filter-regno"
-                        className={styles["ad-train-att-filter-input"]}
-                        type="text"
-                        placeholder="Register No"
-                        required
-                        value={filters.regNo || ""}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, regNo: e.target.value }))
-                        }
-                      />
-                    </div>
-
                     {/* Section Dropdown with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
                       <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-section">
                         Section
                       </label>
-                      <select
-                        id="ad-train-att-filter-section"
-                        className={styles["ad-train-att-filter-input"]}
-                        required
-                        value={filters.section || ""}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, section: e.target.value }))
-                        }
-                      >
-                        <option value="" disabled>Select Section</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                      </select>
+                      <div className={styles["ad-train-att-dropdown-container"]}>
+                        <select
+                          id="ad-train-att-filter-section"
+                          className={styles["ad-train-att-dropdown"]}
+                          value={filters.section || ""}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, section: e.target.value }))
+                          }
+                        >
+                          <option value="">Select Section</option>
+                          {sectionOptions.map((section) => (
+                            <option key={section} value={section}>{section}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Third Row: Date Picker and Filter Button */}
-                  <div className={styles["ad-train-att-filter-fields-row"]}>
-                    {/* Date Picker with Static Label */}
+                    {/* Mobile Input with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-date">
-                        Date
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-mobile">
+                        Enter Mobile Number
                       </label>
-                      <input
-                        id="ad-train-att-filter-date"
-                        className={styles["ad-train-att-filter-input"]}
-                        type="date"
-                        value={filters.date || ""}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, date: e.target.value }))
-                        }
-                      />
-                    </div>
-                    {/* Filter Button */}
-                    <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} style={{ visibility: 'hidden' }}>
-                        Button
-                      </label>
-                      <button
-                        type="button"
-                        className={styles["ad-train-att-filter-btn-green"]}
-                        onClick={handleFilterClick}
-                      >
-                        Filter
-                      </button>
+                      <div className={styles["ad-train-att-text-container"]}>
+                        <input
+                          id="ad-train-att-filter-mobile"
+                          className={styles["ad-train-att-text"]}
+                          type="text"
+                          placeholder="Enter Mobile Number"
+                          value={filters.mobile || ""}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, mobile: e.target.value }))
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -850,100 +1089,57 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
               {/* Right: Buttons Section (no card) */}
               <div className={styles["ad-train-att-buttons-section"]}>
                 <div className={styles["ad-train-att-buttons-white-card"]}>
-                  {/* Training Sequence Buttons */}
-                  <div className={styles["ad-train-att-training-buttons-row"]}>
-                    <button
-                      className={`${styles["ad-train-att-training-seq-btn"]} ${activeTraining === "R-Sequence" ? styles.active : ""}`}
-                      onClick={() => setActiveTraining("R-Sequence")}
-                    >
-                      R - Sequence
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-training-seq-btn"]} ${activeTraining === "X-Plore" ? styles.active : ""}`}
-                      onClick={() => setActiveTraining("X-Plore")}
-                    >
-                      X - Plore
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-training-seq-btn"]} ${activeTraining === "Z-Sequence" ? styles.active : ""}`}
-                      onClick={() => setActiveTraining("Z-Sequence")}
-                    >
-                      Z - Sequence
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-training-seq-btn"]} ${activeTraining === "A-Sequence" ? styles.active : ""}`}
-                      onClick={() => setActiveTraining("A-Sequence")}
-                    >
-                      A - Sequence
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-training-seq-btn"]} ${activeTraining === "B-Sequence" ? styles.active : ""}`}
-                      onClick={() => setActiveTraining("B-Sequence")}
-                    >
-                      B - Sequence
-                    </button>
+                  {/* Batch Buttons */}
+                  <div className={styles["ad-train-att-batch-buttons-row"]}>
+                    {availableBatches.length > 0 ? (
+                      availableBatches.map((batchItem) => (
+                        <button
+                          key={batchItem.batchName}
+                          className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === batchItem.batchName ? styles.active : ""}`}
+                          onClick={() => setActiveBatch(batchItem.batchName)}
+                        >
+                          {getBatchLabel(batchItem)}
+                        </button>
+                      ))
+                    ) : (
+                      <div style={{ color: '#999', padding: '0.5rem' }}>No batches found</div>
+                    )}
                   </div>
 
                   <div className={styles["ad-train-att-buttons-divider"]} />
 
-                  {/* Batch Buttons */}
-                  <div className={styles["ad-train-att-batch-buttons-row"]}>
-                    <button
-                      className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === "Batch-1" ? styles.active : ""}`}
-                      onClick={() => setActiveBatch("Batch-1")}
-                    >
-                      Batch - 1
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === "Batch-2" ? styles.active : ""}`}
-                      onClick={() => setActiveBatch("Batch-2")}
-                    >
-                      Batch - 2
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === "Batch-3" ? styles.active : ""}`}
-                      onClick={() => setActiveBatch("Batch-3")}
-                    >
-                      Batch - 3
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === "Batch-4" ? styles.active : ""}`}
-                      onClick={() => setActiveBatch("Batch-4")}
-                    >
-                      Batch - 4
-                    </button>
-                    <button
-                      className={`${styles["ad-train-att-batch-btn"]} ${activeBatch === "Batch-5" ? styles.active : ""}`}
-                      onClick={() => setActiveBatch("Batch-5")}
-                    >
-                      Batch - 5
-                    </button>
+                  <div className={styles["ad-train-att-date-strip"]}>
+                    {activeBatchDates.length > 0 ? (
+                      activeBatchDates.map((dateItem) => (
+                        <button
+                          key={dateItem.value}
+                          type="button"
+                          className={`${styles["ad-train-att-date-box"]} ${activeBatchDate === dateItem.value ? styles["ad-train-att-date-box-active"] : ''}`}
+                          onClick={() => setActiveBatchDate(dateItem.value)}
+                          title={dateItem.label}
+                        >
+                          {dateItem.value}
+                        </button>
+                      ))
+                    ) : (
+                      <div className={styles["ad-train-att-date-empty"]}>No dates found</div>
+                    )}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Attendance Status Summary */}
                 <div className={styles["ad-train-att-action-buttons-row"]}>
-                  <button 
-                    className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-present-btn"]} ${statusFilter === 'present' ? styles.active : ''}`} 
-                    onClick={() => handleBatchStatusUpdate('Present')}
-                  >
-                    Present
-                  </button>
-                  <button 
-                    className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-absent-btn"]} ${statusFilter === 'absent' ? styles.active : ''}`} 
-                    onClick={() => handleBatchStatusUpdate('Absent')}
-                  >
-                    Absent
-                  </button>
-                  <button 
-                    className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-add-btn"]} ${statusFilter === 'add' ? styles.active : ''}`} 
-                    onClick={handleOpenAddPopup}
-                    disabled={selectedStudents.length === 0}
-                  >
-                    Add
-                  </button>
-                  <button 
-                    className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-remove-btn"]}`} 
+                  <div className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-present-btn"]} ${styles["ad-train-att-status-box"]}`}>
+                    <span className={styles["ad-train-att-status-label"]}>Present :</span>
+                    <span className={styles["ad-train-att-status-value"]}>{formatAttendanceCount(attendanceStatusCounts.present)}</span>
+                  </div>
+                  <div className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-absent-btn"]} ${styles["ad-train-att-status-box"]}`}>
+                    <span className={styles["ad-train-att-status-label"]}>Absent :</span>
+                    <span className={styles["ad-train-att-status-value"]}>{formatAttendanceCount(attendanceStatusCounts.absent)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={`${styles["ad-train-att-action-btn"]} ${styles["ad-train-att-remove-btn"]}`}
                     onClick={handleRemoveStudents}
                     disabled={selectedStudents.length === 0}
                   >
@@ -956,7 +1152,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
             {/* Bottom Row: Attendance Table Section */}
             <div className={styles["ad-train-att-table-section"]}>
               <div className={styles["ad-train-att-table-header"]}>
-                <h2 className={styles["ad-train-att-table-title"]}>ATTENDANCE DETAILS</h2>
+                <h2 className={styles["ad-train-att-table-title"]}>{activeBatch || 'ATTENDANCE DETAILS'}</h2>
                 <div className={styles['Admin-DB-print-button-container']}>
                   <button
                     className={styles['Admin-DB-print-btn']}
@@ -984,8 +1180,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                       <th className={styles["ad-train-att-col-dept"]}>Department</th>
                       <th className={styles["ad-train-att-col-year"]}>Year</th>
                       <th className={styles["ad-train-att-col-section"]}>Section</th>
-                      <th className={styles["ad-train-att-col-phone"]}>Phone No</th>
-                      <th className={styles["ad-train-att-col-date"]}>Date</th>
+                      <th className={styles["ad-train-att-col-phone"]}>Mobile</th>
                       <th className={styles["ad-train-att-col-view"]}>View</th>
                       <th className={styles["ad-train-att-col-status"]}>Status</th>
                       <th className={styles["ad-train-att-col-action"]}>Action</th>
@@ -1009,8 +1204,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                           <td className={styles["ad-train-att-col-dept"]}>{student.dept}</td>
                           <td className={styles["ad-train-att-col-year"]}>{student.year}</td>
                           <td className={styles["ad-train-att-col-section"]}>{student.section}</td>
-                          <td className={styles["ad-train-att-col-phone"]}>{student.phone}</td>
-                          <td className={styles["ad-train-att-col-date"]}>{student.date || '-'}</td>
+                          <td className={styles["ad-train-att-col-phone"]}>{student.mobile}</td>
                           <td className={styles["ad-train-att-col-view"]}>
                             <img src={eyeicon} alt="View Details" className={styles["ad-train-att-eye-icon"]} />
                           </td>
@@ -1043,9 +1237,9 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                 <button 
                   className={styles["ad-train-att-update-btn"]} 
                   onClick={handleUpdateClick}
-                  disabled={!hasPendingChanges}
+                  disabled={!hasPendingChanges || isSavingAttendance}
                 >
-                  Update
+                  {isSavingAttendance ? 'Saving...' : 'Update'}
                 </button>
               </div>
             </div>

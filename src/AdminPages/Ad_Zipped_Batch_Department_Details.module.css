@@ -1,11 +1,11 @@
 /* --- Base Layout --- */
-.Ad-zbds-layout {
+.Ad-zbdd-layout {
     display: flex;
     min-height: 100vh;
     background-color: #f6f8fb;
 }
 
-.Ad-zbds-main-content {
+.Ad-zbdd-main-content {
     flex-grow: 1;
     padding: 20px 25px;
     margin: 65px 2px 0px 286px;
@@ -16,7 +16,7 @@
 }
 
 /* Mobile sidebar overlay */
-.Ad-zbds-overlay {
+.Ad-zbdd-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -27,22 +27,22 @@
 }
 
 /* Top Section - Filter and Stats side by side */
-.Ad-zbds-top-section {
+.Ad-zbdd-top-section {
     display: flex;
     gap: 20px;
     align-items: stretch;
 }
 
 /* Filter Card */
-.Ad-zbds-filter-card {
+.Ad-zbdd-filter-card {
     flex: 1;
     background-color: #e8e8e8;
     border-radius: 15px;
     overflow: hidden;
-    max-width: 450px;
+    max-width: 550px;
 }
 
-.Ad-zbds-filter-header {
+.Ad-zbdd-filter-header {
     background-color: #4EA24E;
     color: white;
     padding: 12px 20px;
@@ -54,20 +54,20 @@
     margin-bottom: 10px;
 }
 
-.Ad-zbds-filter-content {
+.Ad-zbdd-filter-content {
     padding: 15px 20px 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.Ad-zbds-filter-row {
+.Ad-zbdd-filter-row {
     display: flex;
     gap: 12px;
     align-items: center;
 }
 
-.Ad-zbds-input {
+.Ad-zbdd-input {
     flex: 1;
     padding: 12px 15px;
     border: 2px solid #ccc;
@@ -77,21 +77,21 @@
     transition: border-color 0.2s;
 }
 
-.Ad-zbds-input:focus {
+.Ad-zbdd-input:focus {
     outline: none;
     border-color: #4EA24E;
 }
 
-.Ad-zbds-input::placeholder {
+.Ad-zbdd-input::placeholder {
     color: #999;
 }
 
-.Ad-zbds-select-wrapper {
+.Ad-zbdd-select-wrapper {
     flex: 1;
     position: relative;
 }
 
-.Ad-zbds-select {
+.Ad-zbdd-select {
     width: 100%;
     padding: 12px 35px 12px 15px;
     border: 2px solid #ccc;
@@ -105,17 +105,19 @@
     background-position: right 12px center;
 }
 
-.Ad-zbds-select:focus {
+.Ad-zbdd-select:focus {
     outline: none;
     border-color: #4EA24E;
 }
 
-.Ad-zbds-filter-buttons {
+.Ad-zbdd-filter-buttons {
     display: flex;
     gap: 10px;
+    width: 100%;
+    justify-content: flex-end;
 }
 
-.Ad-zbds-filter-btn {
+.Ad-zbdd-filter-btn {
     padding: 12px 25px;
     border: none;
     border-radius: 8px;
@@ -127,11 +129,11 @@
     transition: background-color 0.2s;
 }
 
-.Ad-zbds-filter-btn:hover {
+.Ad-zbdd-filter-btn:hover {
     background-color: #3d8a3d;
 }
 
-.Ad-zbds-discard-btn {
+.Ad-zbdd-discard-btn {
     padding: 12px 25px;
     border: none;
     border-radius: 8px;
@@ -143,12 +145,12 @@
     transition: background-color 0.2s;
 }
 
-.Ad-zbds-discard-btn:hover {
+.Ad-zbdd-discard-btn:hover {
     background-color: #5a6268;
 }
 
 /* Stats Card */
-.Ad-zbds-stats-card {
+.Ad-zbdd-stats-card {
     flex: 0 0 350px;
     background-color: #4EA24E;
     border-radius: 15px;
@@ -158,7 +160,7 @@
     flex-direction: column;
 }
 
-.Ad-zbds-stats-title {
+.Ad-zbdd-stats-title {
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0 0 20px 0;
@@ -166,43 +168,43 @@
     line-height: 1.4;
 }
 
-.Ad-zbds-stats-content {
+.Ad-zbdd-stats-content {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.Ad-zbds-stat-row {
+.Ad-zbdd-stat-row {
     display: flex;
     align-items: center;
     font-size: 0.95rem;
 }
 
-.Ad-zbds-stat-label {
+.Ad-zbdd-stat-label {
     flex: 0 0 130px;
     font-weight: 500;
 }
 
-.Ad-zbds-stat-colon {
+.Ad-zbdd-stat-colon {
     flex: 0 0 20px;
     text-align: center;
 }
 
-.Ad-zbds-stat-value {
+.Ad-zbdd-stat-value {
     flex: 1;
     font-weight: 700;
     word-break: break-word;
 }
 
 /* Table Card */
-.Ad-zbds-table-card {
+.Ad-zbdd-table-card {
     background-color: #ffffff;
     border-radius: 15px;
     padding: 20px 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.Ad-zbds-table-header {
+.Ad-zbdd-table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -211,7 +213,7 @@
     border-bottom: 1px solid #eee;
 }
 
-.Ad-zbds-table-title {
+.Ad-zbdd-table-title {
     font-size: 1.2rem;
     font-weight: 700;
     color: #333;
@@ -219,13 +221,13 @@
 }
 
 /* Print Button */
-.Ad-zbds-print-button-container {
+.Ad-zbdd-print-button-container {
     position: relative;
     display: inline-block;
     z-index: 15;
 }
 
-.Ad-zbds-print-btn {
+.Ad-zbdd-print-btn {
     background-color: #4EA24E;
     color: white;
     border: none;
@@ -236,17 +238,17 @@
     font-size: 1rem;
 }
 
-.Ad-zbds-print-btn:hover {
+.Ad-zbdd-print-btn:hover {
     background-color: #3d8a3d;
 }
 
-.Ad-zbds-print-btn:disabled {
+.Ad-zbdd-print-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
 /* Export Menu */
-.Ad-zbds-export-menu {
+.Ad-zbdd-export-menu {
     position: absolute;
     top: 40px;
     right: 0;
@@ -261,7 +263,7 @@
     overflow: hidden;
 }
 
-.Ad-zbds-export-menu button {
+.Ad-zbdd-export-menu button {
     padding: 10px 15px;
     border: none;
     background: none;
@@ -272,12 +274,12 @@
     transition: background-color 0.2s;
 }
 
-.Ad-zbds-export-menu button:hover {
+.Ad-zbdd-export-menu button:hover {
     background-color: #f0f0f0;
 }
 
 /* Table Container */
-.Ad-zbds-table-container {
+.Ad-zbdd-table-container {
     height: 300px;
     overflow-y: scroll;
     overflow-x: auto;
@@ -286,46 +288,46 @@
 }
 
 /* Green Scrollbars */
-.Ad-zbds-table-container::-webkit-scrollbar {
+.Ad-zbdd-table-container::-webkit-scrollbar {
     width: 8px;
     background: transparent;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar-track {
+.Ad-zbdd-table-container::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar-thumb {
+.Ad-zbdd-table-container::-webkit-scrollbar-thumb {
     background: #4ea24e;
     border-radius: 8px;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar-thumb:hover {
+.Ad-zbdd-table-container::-webkit-scrollbar-thumb:hover {
     background: #3d8a3d;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar:horizontal {
+.Ad-zbdd-table-container::-webkit-scrollbar:horizontal {
     height: 6px;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar-track:horizontal {
+.Ad-zbdd-table-container::-webkit-scrollbar-track:horizontal {
     background: transparent;
 }
 
-.Ad-zbds-table-container::-webkit-scrollbar-thumb:horizontal {
+.Ad-zbdd-table-container::-webkit-scrollbar-thumb:horizontal {
     background: #afadad;
     border-radius: 8px;
 }
 
 /* Table Styles */
-.Ad-zbds-table {
+.Ad-zbdd-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
     white-space: nowrap;
 }
 
-.Ad-zbds-table-head-row {
+.Ad-zbdd-table-head-row {
     position: sticky;
     top: 0;
     background-color: #ffffff;
@@ -333,7 +335,7 @@
     z-index: 11;
 }
 
-.Ad-zbds-th {
+.Ad-zbdd-th {
     padding: 12px 15px;
     text-align: center;
     font-weight: 600;
@@ -344,30 +346,30 @@
     border-bottom: none;
 }
 
-.Ad-zbds-table-row {
+.Ad-zbdd-table-row {
     transition: background-color 0.1s;
     border-bottom: 1px solid #eee;
     height: 47px;
 }
 
-.Ad-zbds-table-row:hover {
+.Ad-zbdd-table-row:hover {
     background-color: #f6f6f6;
 }
 
-.Ad-zbds-td {
+.Ad-zbdd-td {
     padding: 12px 15px;
     text-align: center;
     color: #2e2e2e;
     font-weight: 450;
 }
 
-.Ad-zbds-td-name {
+.Ad-zbdd-td-name {
     text-align: left;
     font-weight: 500;
 }
 
 /* Status Tags */
-.Ad-zbds-status-tag {
+.Ad-zbdd-status-tag {
     display: inline-block;
     padding: 5px 15px;
     border-radius: 20px;
@@ -376,18 +378,18 @@
     text-align: center;
 }
 
-.Ad-zbds-status-placed {
+.Ad-zbdd-status-placed {
     background-color: #d4edda;
     color: #155724;
 }
 
-.Ad-zbds-status-unplaced {
+.Ad-zbdd-status-unplaced {
     background-color: #e9ecef;
     color: #6c757d;
 }
 
 /* View Button */
-.Ad-zbds-view-btn {
+.Ad-zbdd-view-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -399,12 +401,12 @@
     transition: transform 0.2s;
 }
 
-.Ad-zbds-view-btn:hover {
+.Ad-zbdd-view-btn:hover {
     transform: scale(1.1);
 }
 
 /* No Data */
-.Ad-zbds-no-data {
+.Ad-zbdd-no-data {
     text-align: center;
     padding: 40px;
     color: #888;
@@ -412,7 +414,7 @@
 }
 
 /* Loading Cell */
-.Ad-zbds-loading-cell {
+.Ad-zbdd-loading-cell {
     text-align: center;
     padding: 40px;
     display: flex;
@@ -421,42 +423,43 @@
     gap: 10px;
 }
 
-.Ad-zbds-spinner {
+.Ad-zbdd-spinner {
     width: 35px;
     height: 35px;
     border-radius: 50%;
     border: 4px solid rgba(78, 162, 78, 0.25);
     border-top-color: #4EA24E;
-    animation: adZbdsSpin 0.7s linear infinite;
+    animation: adZbddSpin 0.7s linear infinite;
 }
 
-@keyframes adZbdsSpin {
+@keyframes adZbddSpin {
     to {
         transform: rotate(360deg);
     }
 }
 
 /* Back Button Container */
-.Ad-zbds-back-container {
+.Ad-zbdd-back-container {
     display: flex;
     justify-content: flex-end;
     margin-top: 10px;
 }
 
-.Ad-zbds-back-btn {
+/* Red Back Button as shown in screenshot */
+.Ad-zbdd-back-btn {
     padding: 12px 50px;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    background-color: #6c757d;
+    background-color: #E55353;
     color: white;
     transition: background-color 0.2s;
 }
 
-.Ad-zbds-back-btn:hover {
-    background-color: #5a6268;
+.Ad-zbdd-back-btn:hover {
+    background-color: #d43f3f;
 }
 
 /* ============================================ */
@@ -465,27 +468,27 @@
 
 /* Tablet View */
 @media screen and (max-width: 1024px) {
-    .Ad-zbds-main-content {
+    .Ad-zbdd-main-content {
         margin: 65px 10px 0 10px;
         padding: 15px;
     }
 
-    .Ad-zbds-top-section {
+    .Ad-zbdd-top-section {
         flex-direction: column;
     }
 
-    .Ad-zbds-filter-card {
+    .Ad-zbdd-filter-card {
         max-width: 100%;
     }
 
-    .Ad-zbds-stats-card {
+    .Ad-zbdd-stats-card {
         flex: 1;
     }
 }
 
 /* Mobile View */
 @media screen and (max-width: 768px) {
-    .Ad-zbds-main-content {
+    .Ad-zbdd-main-content {
         margin: 70px 15px 0 15px;
         padding: 12px;
         padding-bottom: 30px;
@@ -496,51 +499,51 @@
         overflow-x: hidden;
     }
 
-    .Ad-zbds-main-content::-webkit-scrollbar {
+    .Ad-zbdd-main-content::-webkit-scrollbar {
         width: 10px;
     }
 
-    .Ad-zbds-main-content::-webkit-scrollbar-track {
+    .Ad-zbdd-main-content::-webkit-scrollbar-track {
         background: #f0f2f5;
     }
 
-    .Ad-zbds-main-content::-webkit-scrollbar-thumb {
+    .Ad-zbdd-main-content::-webkit-scrollbar-thumb {
         background-color: #4EA24E;
         border-radius: 20px;
         border: 3px solid #f0f2f5;
     }
 
-    .Ad-zbds-filter-row {
+    .Ad-zbdd-filter-row {
         flex-direction: column;
     }
 
-    .Ad-zbds-input,
-    .Ad-zbds-select-wrapper {
+    .Ad-zbdd-input,
+    .Ad-zbdd-select-wrapper {
         width: 100%;
     }
 
-    .Ad-zbds-filter-buttons {
+    .Ad-zbdd-filter-buttons {
         width: 100%;
         justify-content: center;
     }
 
-    .Ad-zbds-table-header {
+    .Ad-zbdd-table-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
 
-    .Ad-zbds-th,
-    .Ad-zbds-td {
+    .Ad-zbdd-th,
+    .Ad-zbdd-td {
         padding: 10px 8px;
         font-size: 0.8rem;
     }
 
-    .Ad-zbds-back-container {
+    .Ad-zbdd-back-container {
         justify-content: center;
     }
 
-    .Ad-zbds-back-btn {
+    .Ad-zbdd-back-btn {
         width: 100%;
         max-width: 300px;
     }
@@ -548,58 +551,58 @@
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
-    .Ad-zbds-main-content {
+    .Ad-zbdd-main-content {
         margin: 55px 12px 0 12px;
         padding: 10px;
         width: calc(100% - 24px);
     }
 
-    .Ad-zbds-filter-header {
+    .Ad-zbdd-filter-header {
         font-size: 0.9rem;
         padding: 10px 15px;
     }
 
-    .Ad-zbds-filter-content {
+    .Ad-zbdd-filter-content {
         padding: 12px 15px 15px;
     }
 
-    .Ad-zbds-input,
-    .Ad-zbds-select {
+    .Ad-zbdd-input,
+    .Ad-zbdd-select {
         padding: 10px 12px;
         font-size: 0.9rem;
     }
 
-    .Ad-zbds-filter-btn,
-    .Ad-zbds-discard-btn {
+    .Ad-zbdd-filter-btn,
+    .Ad-zbdd-discard-btn {
         padding: 10px 20px;
         font-size: 0.9rem;
     }
 
-    .Ad-zbds-stats-card {
+    .Ad-zbdd-stats-card {
         padding: 15px 20px;
     }
 
-    .Ad-zbds-stats-title {
+    .Ad-zbdd-stats-title {
         font-size: 1rem;
     }
 
-    .Ad-zbds-stat-row {
+    .Ad-zbdd-stat-row {
         font-size: 0.85rem;
     }
 
-    .Ad-zbds-stat-label {
+    .Ad-zbdd-stat-label {
         flex: 0 0 110px;
     }
 
-    .Ad-zbds-table-card {
+    .Ad-zbdd-table-card {
         padding: 15px;
     }
 
-    .Ad-zbds-table-title {
+    .Ad-zbdd-table-title {
         font-size: 1rem;
     }
 
-    .Ad-zbds-print-btn {
+    .Ad-zbdd-print-btn {
         padding: 8px 25px;
         font-size: 0.9rem;
     }

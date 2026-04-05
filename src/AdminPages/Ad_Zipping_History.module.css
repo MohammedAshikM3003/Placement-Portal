@@ -1,11 +1,11 @@
 /* --- Base Layout --- */
-.Ad-az-layout {
+.Ad-zh-layout {
     display: flex;
     min-height: 100vh;
     background-color: #f6f8fb;
 }
 
-.Ad-az-main-content {
+.Ad-zh-main-content {
     flex-grow: 1;
     padding: 20px 25px;
     margin: 65px 2px 0px 286px;
@@ -16,7 +16,7 @@
 }
 
 /* Mobile sidebar overlay */
-.Ad-az-overlay {
+.Ad-zh-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -27,7 +27,7 @@
 }
 
 /* Tab Navigation - Style like Academic Background 12th/Diploma/Both */
-.Ad-az-tab-container {
+.Ad-zh-tab-container {
     display: inline-flex;
     gap: 0.5rem;
     align-items: center;
@@ -37,7 +37,7 @@
     border: 1px solid #dde6f4;
 }
 
-.Ad-az-tab-btn {
+.Ad-zh-tab-btn {
     flex: 1;
     text-align: center;
     padding: 8px 24px;
@@ -51,114 +51,147 @@
     font-size: 0.95rem;
 }
 
-.Ad-az-tab-btn:hover {
+.Ad-zh-tab-btn:hover {
     color: #4EA24E;
 }
 
-.Ad-az-tab-active {
+.Ad-zh-tab-active {
     background-color: #4EA24E;
     color: white;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(78, 162, 78, 0.3);
 }
 
-.Ad-az-tab-active:hover {
+.Ad-zh-tab-active:hover {
     background-color: #4EA24E;
     color: white;
 }
 
 /* Filter Row */
-.Ad-az-filter-row {
+.Ad-zh-filter-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 30px;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
-.Ad-az-select-wrapper {
-    position: relative;
-}
-
-.Ad-az-select {
-    padding: 12px 40px 12px 15px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    color: #333;
-    background-color: #fff;
-    cursor: pointer;
-    min-width: 180px;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-}
-
-.Ad-az-select:focus {
-    outline: none;
-    border-color: #4EA24E;
-}
-
-.Ad-az-archive-name-wrapper {
+.Ad-zh-filter-section {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.Ad-az-archive-label {
+.Ad-zh-filter-label {
+    background-color: #4EA24E;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #333;
     white-space: nowrap;
 }
 
-.Ad-az-archive-input {
-    padding: 12px 15px;
+.Ad-zh-input {
+    padding: 10px 15px;
     border: 2px solid #ddd;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 0.95rem;
-    color: #333;
     background-color: #fff;
-    min-width: 280px;
+    min-width: 150px;
+    transition: border-color 0.2s;
 }
 
-.Ad-az-archive-input:focus {
+.Ad-zh-input:focus {
     outline: none;
     border-color: #4EA24E;
 }
 
-/* Batch Card */
-.Ad-az-batch-card {
+.Ad-zh-input::placeholder {
+    color: #999;
+}
+
+.Ad-zh-filter-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #4EA24E;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-filter-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Ad-zh-discard-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #E55353;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-discard-btn:hover {
+    background-color: #d43f3f;
+}
+
+.Ad-zh-back-btn {
+    padding: 10px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #E55353;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-back-btn:hover {
+    background-color: #d43f3f;
+}
+
+/* Table Card */
+.Ad-zh-table-card {
     background-color: #ffffff;
     border-radius: 15px;
     padding: 20px 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.Ad-az-batch-header {
+.Ad-zh-table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
 }
 
-.Ad-az-batch-title {
-    font-size: 1.3rem;
+.Ad-zh-table-title {
+    font-size: 1.2rem;
     font-weight: 700;
     color: #333;
     margin: 0;
 }
 
 /* Print Button */
-.Ad-az-print-button-container {
+.Ad-zh-print-button-container {
     position: relative;
     display: inline-block;
     z-index: 15;
 }
 
-.Ad-az-print-btn {
+.Ad-zh-print-btn {
     background-color: #4EA24E;
     color: white;
     border: none;
@@ -169,17 +202,17 @@
     font-size: 1rem;
 }
 
-.Ad-az-print-btn:hover {
+.Ad-zh-print-btn:hover {
     background-color: #3d8a3d;
 }
 
-.Ad-az-print-btn:disabled {
+.Ad-zh-print-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
 /* Export Menu */
-.Ad-az-export-menu {
+.Ad-zh-export-menu {
     position: absolute;
     top: 40px;
     right: 0;
@@ -194,7 +227,7 @@
     overflow: hidden;
 }
 
-.Ad-az-export-menu button {
+.Ad-zh-export-menu button {
     padding: 10px 15px;
     border: none;
     background: none;
@@ -205,60 +238,60 @@
     transition: background-color 0.2s;
 }
 
-.Ad-az-export-menu button:hover {
+.Ad-zh-export-menu button:hover {
     background-color: #f0f0f0;
 }
 
 /* Table Container */
-.Ad-az-table-container {
+.Ad-zh-table-container {
     height: 300px;
     overflow-y: scroll;
     overflow-x: auto;
     border: none;
     border-radius: 0;
-    margin-bottom: 20px;
 }
 
 /* Green Scrollbars */
-.Ad-az-table-container::-webkit-scrollbar {
+.Ad-zh-table-container::-webkit-scrollbar {
     width: 8px;
     background: transparent;
 }
 
-.Ad-az-table-container::-webkit-scrollbar-track {
+.Ad-zh-table-container::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.Ad-az-table-container::-webkit-scrollbar-thumb {
+.Ad-zh-table-container::-webkit-scrollbar-thumb {
     background: #4ea24e;
     border-radius: 8px;
 }
 
-.Ad-az-table-container::-webkit-scrollbar-thumb:hover {
+.Ad-zh-table-container::-webkit-scrollbar-thumb:hover {
     background: #3d8a3d;
 }
 
-.Ad-az-table-container::-webkit-scrollbar:horizontal {
+.Ad-zh-table-container::-webkit-scrollbar:horizontal {
     height: 6px;
 }
 
-.Ad-az-table-container::-webkit-scrollbar-track:horizontal {
+.Ad-zh-table-container::-webkit-scrollbar-track:horizontal {
     background: transparent;
 }
 
-.Ad-az-table-container::-webkit-scrollbar-thumb:horizontal {
+.Ad-zh-table-container::-webkit-scrollbar-thumb:horizontal {
     background: #afadad;
     border-radius: 8px;
 }
 
 /* Table Styles */
-.Ad-az-table {
+.Ad-zh-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
-.Ad-az-table-head-row {
+.Ad-zh-table-head-row {
     position: sticky;
     top: 0;
     background-color: #ffffff;
@@ -266,58 +299,68 @@
     z-index: 11;
 }
 
-.Ad-az-th {
-    padding: 14px 15px;
+.Ad-zh-th {
+    padding: 12px 15px;
     text-align: center;
     font-weight: 600;
     color: #666;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     background-color: #ffffff;
     border-bottom: none;
 }
 
-.Ad-az-table-row {
+.Ad-zh-table-row {
     transition: background-color 0.1s;
     border-bottom: 1px solid #eee;
     height: 47px;
 }
 
-.Ad-az-table-row:hover {
+.Ad-zh-table-row:hover {
     background-color: #f6f6f6;
 }
 
-.Ad-az-td {
-    padding: 14px 15px;
+.Ad-zh-td {
+    padding: 12px 15px;
     text-align: center;
     color: #2e2e2e;
-    font-weight: 500;
+    font-weight: 450;
 }
 
-.Ad-az-td-dept {
+.Ad-zh-td-batch {
     text-align: left;
+    font-weight: 500;
+    color: #4A90E2;
+}
+
+/* Action Tags */
+.Ad-zh-action-tag {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
     font-weight: 600;
+    font-size: 0.8rem;
+    text-align: center;
+    white-space: nowrap;
 }
 
-/* View Button */
-.Ad-az-view-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    transition: transform 0.2s;
+.Ad-zh-action-zipped {
+    background-color: #d4edda;
+    color: #155724;
 }
 
-.Ad-az-view-btn:hover {
-    transform: scale(1.1);
+.Ad-zh-action-unzipped {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.Ad-zh-action-deleted {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
 /* No Data */
-.Ad-az-no-data {
+.Ad-zh-no-data {
     text-align: center;
     padding: 40px;
     color: #888;
@@ -325,7 +368,7 @@
 }
 
 /* Loading Cell */
-.Ad-az-loading-cell {
+.Ad-zh-loading-cell {
     text-align: center;
     padding: 40px;
     display: flex;
@@ -334,65 +377,19 @@
     gap: 10px;
 }
 
-.Ad-az-spinner {
+.Ad-zh-spinner {
     width: 35px;
     height: 35px;
     border-radius: 50%;
     border: 4px solid rgba(78, 162, 78, 0.25);
     border-top-color: #4EA24E;
-    animation: adAzSpin 0.7s linear infinite;
+    animation: adZhSpin 0.7s linear infinite;
 }
 
-@keyframes adAzSpin {
+@keyframes adZhSpin {
     to {
         transform: rotate(360deg);
     }
-}
-
-/* Action Buttons */
-.Ad-az-action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-.Ad-az-discard-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #6c757d;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-az-discard-btn:hover {
-    background-color: #5a6268;
-}
-
-.Ad-az-archive-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #4EA24E;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-az-archive-btn:hover {
-    background-color: #3d8a3d;
-}
-
-.Ad-az-archive-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 /* ============================================ */
@@ -401,33 +398,28 @@
 
 /* Tablet View */
 @media screen and (max-width: 1024px) {
-    .Ad-az-main-content {
+    .Ad-zh-main-content {
         margin: 65px 10px 0 10px;
         padding: 15px;
     }
 
-    .Ad-az-filter-row {
+    .Ad-zh-filter-row {
         flex-direction: column;
         align-items: flex-start;
-        gap: 15px;
     }
 
-    .Ad-az-archive-name-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    .Ad-zh-filter-section {
         width: 100%;
     }
 
-    .Ad-az-archive-input {
-        width: 100%;
-        min-width: auto;
+    .Ad-zh-back-btn {
+        align-self: flex-end;
     }
 }
 
 /* Mobile View */
 @media screen and (max-width: 768px) {
-    .Ad-az-main-content {
+    .Ad-zh-main-content {
         margin: 70px 15px 0 15px;
         padding: 12px;
         padding-bottom: 30px;
@@ -438,84 +430,114 @@
         overflow-x: hidden;
     }
 
-    .Ad-az-main-content::-webkit-scrollbar {
+    .Ad-zh-main-content::-webkit-scrollbar {
         width: 10px;
     }
 
-    .Ad-az-main-content::-webkit-scrollbar-track {
+    .Ad-zh-main-content::-webkit-scrollbar-track {
         background: #f0f2f5;
     }
 
-    .Ad-az-main-content::-webkit-scrollbar-thumb {
+    .Ad-zh-main-content::-webkit-scrollbar-thumb {
         background-color: #4EA24E;
         border-radius: 20px;
         border: 3px solid #f0f2f5;
     }
 
-    .Ad-az-tab-container {
+    .Ad-zh-tab-container {
         width: 100%;
         padding: 0.4rem;
         gap: 0.3rem;
     }
 
-    .Ad-az-tab-btn {
+    .Ad-zh-tab-btn {
         flex: 1;
         padding: 8px 10px;
         font-size: 0.85rem;
         text-align: center;
     }
 
-    .Ad-az-select {
+    .Ad-zh-filter-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .Ad-zh-filter-label {
+        text-align: center;
+    }
+
+    .Ad-zh-input {
         width: 100%;
         min-width: auto;
     }
 
-    .Ad-az-batch-header {
+    .Ad-zh-filter-btn,
+    .Ad-zh-discard-btn {
+        width: 48%;
+    }
+
+    .Ad-zh-back-btn {
+        width: 100%;
+    }
+
+    .Ad-zh-table-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
 
-    .Ad-az-batch-title {
-        font-size: 1.1rem;
-    }
-
-    .Ad-az-th,
-    .Ad-az-td {
+    .Ad-zh-th,
+    .Ad-zh-td {
         padding: 10px 8px;
         font-size: 0.8rem;
     }
 
-    .Ad-az-action-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .Ad-az-discard-btn,
-    .Ad-az-archive-btn {
-        width: 100%;
-        padding: 12px 20px;
+    .Ad-zh-action-tag {
+        padding: 4px 10px;
+        font-size: 0.7rem;
     }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
-    .Ad-az-main-content {
+    .Ad-zh-main-content {
         margin: 55px 12px 0 12px;
         padding: 10px;
         width: calc(100% - 24px);
     }
 
-    .Ad-az-tab-btn {
+    .Ad-zh-tab-btn {
         padding: 8px 8px;
         font-size: 0.75rem;
     }
 
-    .Ad-az-batch-card {
+    .Ad-zh-filter-label {
+        font-size: 0.85rem;
+        padding: 8px 15px;
+    }
+
+    .Ad-zh-input {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .Ad-zh-filter-btn,
+    .Ad-zh-discard-btn,
+    .Ad-zh-back-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+    }
+
+    .Ad-zh-table-card {
         padding: 15px;
     }
 
-    .Ad-az-print-btn {
+    .Ad-zh-table-title {
+        font-size: 1rem;
+    }
+
+    .Ad-zh-print-btn {
         padding: 8px 25px;
         font-size: 0.9rem;
     }

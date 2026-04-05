@@ -1079,6 +1079,49 @@ app.get('/api/scheduled-trainings', async (req, res) => {
     }
 });
 
+app.delete('/api/scheduled-trainings/:id', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1;
+
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        const { id } = req.params;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid scheduled training id'
+            });
+        }
+
+        const deletedSchedule = await ScheduledTraining.findByIdAndDelete(id);
+
+        if (!deletedSchedule) {
+            return res.status(404).json({
+                success: false,
+                error: 'Scheduled training not found'
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: 'Scheduled training deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete scheduled training error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to delete scheduled training',
+            details: error.message
+        });
+    }
+});
+
 app.get('/api/training-courses', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
@@ -1092,43 +1135,81 @@ app.get('/api/training-courses', async (req, res) => {
         }
 
         const year = (req.query?.year || '').toString().trim();
-        const normalizedYear = year.toUpperCase();
 
-        let schedules = [];
+        const normalizeYearToken = (value = '') => {
+            const raw = value.toString().trim().toUpperCase();
+            if (!raw) return '';
 
-        if (normalizedYear) {
-            schedules = await ScheduledTraining.find({
-                'batches.applicableYear': normalizedYear
-            }).select({ companyName: 1 }).lean();
-        } else {
-            schedules = await ScheduledTraining.find({}).select({ companyName: 1 }).lean();
-        }
+            const compact = raw.replace(/[^A-Z0-9]/g, '');
+            if (!compact) return '';
 
-        const companyNames = [...new Set(
-            schedules
-                .map((item) => (item?.companyName || '').toString().trim())
-                .filter(Boolean)
-        )];
+            const yearAliases = {
+                '1': 'I',
+                '01': 'I',
+                '1ST': 'I',
+                '1STYEAR': 'I',
+                'FIRST': 'I',
+                'FIRSTYEAR': 'I',
+                'I': 'I',
+                '2': 'II',
+                '02': 'II',
+                '2ND': 'II',
+                '2NDYEAR': 'II',
+                'SECOND': 'II',
+                'SECONDYEAR': 'II',
+                'II': 'II',
+                '3': 'III',
+                '03': 'III',
+                '3RD': 'III',
+                '3RDYEAR': 'III',
+                'THIRD': 'III',
+                'THIRDYEAR': 'III',
+                'III': 'III',
+                '4': 'IV',
+                '04': 'IV',
+                '4TH': 'IV',
+                '4THYEAR': 'IV',
+                'FOURTH': 'IV',
+                'FOURTHYEAR': 'IV',
+                'IV': 'IV'
+            };
 
-        if (!companyNames.length) {
-            return res.json({
-                success: true,
-                courses: []
-            });
-        }
+            return yearAliases[compact] || compact;
+        };
 
-        const trainings = await Training.find({
-            companyName: { $in: companyNames }
-        }).select({ courses: 1 }).lean();
+        const requestedYear = normalizeYearToken(year);
+        const schedules = await ScheduledTraining.find({}).select({ phases: 1, batches: 1 }).lean();
 
         const courseNames = [...new Set(
-            trainings.flatMap((training) =>
-                Array.isArray(training?.courses)
-                    ? training.courses
-                        .map((course) => (course?.name || '').toString().trim())
-                        .filter(Boolean)
-                    : []
-            )
+            (schedules || []).flatMap((schedule) => {
+                const scheduleBatches = Array.isArray(schedule?.batches) ? schedule.batches : [];
+                const scheduleHasMatchingBatch = requestedYear
+                    ? scheduleBatches.some((batch) => normalizeYearToken(batch?.applicableYear) === requestedYear)
+                    : true;
+
+                const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+
+                return phases.flatMap((phase) => {
+                    const phaseCourses = Array.isArray(phase?.applicableCourses) ? phase.applicableCourses : [];
+                    if (!phaseCourses.length) return [];
+
+                    if (!requestedYear) {
+                        return phaseCourses
+                            .map((course) => (course || '').toString().trim())
+                            .filter(Boolean);
+                    }
+
+                    const phaseYear = normalizeYearToken(phase?.applicableYear);
+                    const matchesPhaseYear = phaseYear === requestedYear;
+                    const includePhase = matchesPhaseYear || (!phaseYear && scheduleHasMatchingBatch);
+
+                    if (!includePhase) return [];
+
+                    return phaseCourses
+                        .map((course) => (course || '').toString().trim())
+                        .filter(Boolean);
+                });
+            })
         )];
 
         return res.json({
@@ -1142,6 +1223,308 @@ app.get('/api/training-courses', async (req, res) => {
             error: 'Failed to fetch training courses',
             details: error.message,
             courses: []
+        });
+    }
+});
+
+app.post('/api/scheduled-training-batches/assign', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        const normalizeYearToken = (value = '') => {
+            const raw = value.toString().trim().toUpperCase();
+            if (!raw) return '';
+
+            const compact = raw.replace(/[^A-Z0-9]/g, '');
+            if (!compact) return '';
+
+            const yearAliases = {
+                '1': 'I', '01': 'I', '1ST': 'I', '1STYEAR': 'I', 'FIRST': 'I', 'FIRSTYEAR': 'I', 'I': 'I',
+                '2': 'II', '02': 'II', '2ND': 'II', '2NDYEAR': 'II', 'SECOND': 'II', 'SECONDYEAR': 'II', 'II': 'II',
+                '3': 'III', '03': 'III', '3RD': 'III', '3RDYEAR': 'III', 'THIRD': 'III', 'THIRDYEAR': 'III', 'III': 'III',
+                '4': 'IV', '04': 'IV', '4TH': 'IV', '4THYEAR': 'IV', 'FOURTH': 'IV', 'FOURTHYEAR': 'IV', 'IV': 'IV'
+            };
+
+            return yearAliases[compact] || compact;
+        };
+
+        const scheduleId = (req.body?.scheduleId || '').toString().trim();
+        const companyName = (req.body?.companyName || '').toString().trim();
+        const courseName = (req.body?.courseName || '').toString().trim();
+        const trainer = (req.body?.trainer || '').toString().trim();
+        const applicableYear = normalizeYearToken(req.body?.applicableYear || '');
+        const startDate = (req.body?.startDate || '').toString().trim();
+        const endDate = (req.body?.endDate || '').toString().trim();
+        const requestedBatchNumber = Number.parseInt(req.body?.batchNumber, 10);
+        const requestedBatchName = (req.body?.batchName || '').toString().trim();
+
+        const students = Array.isArray(req.body?.students)
+            ? req.body.students
+                .map((student) => ({
+                    studentId: (student?.studentId || '').toString().trim(),
+                    regNo: (student?.regNo || '').toString().trim(),
+                    name: (student?.name || '').toString().trim(),
+                    dept: (student?.dept || '').toString().trim(),
+                    year: normalizeYearToken(student?.year || ''),
+                    section: (student?.section || '').toString().trim(),
+                    mobile: (student?.mobile || '').toString().trim(),
+                    cgpa: (student?.cgpa || '').toString().trim()
+                }))
+                .filter((student) => student.regNo)
+            : [];
+
+        if (!companyName || !courseName) {
+            return res.status(400).json({ success: false, error: 'Company name and course name are required' });
+        }
+
+        if (!students.length) {
+            return res.status(400).json({ success: false, error: 'At least one selected student is required' });
+        }
+
+        let batchNumber = Number.isFinite(requestedBatchNumber) && requestedBatchNumber > 0 ? requestedBatchNumber : null;
+        let batchName = requestedBatchName;
+
+        if (!batchNumber && batchName) {
+            const hyphenMatch = batchName.match(/-(\d+)$/);
+            const batchWordMatch = batchName.match(/batch\s*(\d+)/i);
+            const extractedNumber = hyphenMatch?.[1] || batchWordMatch?.[1] || '';
+            const parsedFromName = Number.parseInt(extractedNumber, 10);
+            if (Number.isFinite(parsedFromName) && parsedFromName > 0) {
+                batchNumber = parsedFromName;
+            }
+        }
+
+        if (!batchName || !batchNumber) {
+            const existingCount = await TrainingBatchAssignment.countDocuments({
+                ...(scheduleId ? { scheduleId } : {}),
+                companyName,
+                courseName,
+                applicableYear
+            });
+
+            if (!batchNumber) {
+                batchNumber = existingCount + 1;
+            }
+
+            if (!batchName) {
+                batchName = `Batch ${batchNumber}`;
+            }
+        }
+
+        const assignmentFilter = {
+            companyName,
+            courseName,
+            batchName,
+            applicableYear
+        };
+
+        if (scheduleId) {
+            assignmentFilter.scheduleId = scheduleId;
+        }
+
+        let phaseSnapshot = [];
+        if (scheduleId && mongoose.Types.ObjectId.isValid(scheduleId)) {
+            const schedule = await ScheduledTraining.findById(scheduleId).select({ phases: 1 }).lean();
+            const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+            const normalizedCourse = courseName.toLowerCase();
+
+            phaseSnapshot = phases
+                .filter((phase) => {
+                    const phaseCourses = Array.isArray(phase?.applicableCourses) ? phase.applicableCourses : [];
+                    const matchesCourse = phaseCourses.some((course) => (course || '').toString().trim().toLowerCase() === normalizedCourse);
+                    if (!matchesCourse) return false;
+
+                    if (!applicableYear) return true;
+                    const phaseYear = normalizeYearToken(phase?.applicableYear || '');
+                    return !phaseYear || phaseYear === applicableYear;
+                })
+                .map((phase) => ({
+                    phaseNumber: (phase?.phaseNumber || '').toString().trim(),
+                    trainer: (phase?.trainer || '').toString().trim(),
+                    applicableYear: normalizeYearToken(phase?.applicableYear || ''),
+                    startDate: (phase?.startDate || '').toString().trim(),
+                    endDate: (phase?.endDate || '').toString().trim(),
+                    duration: (phase?.duration || '').toString().trim()
+                }))
+                .filter((phase) => phase.phaseNumber);
+        }
+
+        const existingAssignment = await TrainingBatchAssignment.findOne(assignmentFilter);
+
+        if (!existingAssignment) {
+            const createdAssignment = await TrainingBatchAssignment.create({
+                scheduleId,
+                companyName,
+                courseName,
+                trainer,
+                applicableYear,
+                startDate,
+                endDate,
+                batchNumber,
+                batchName,
+                phases: phaseSnapshot,
+                students
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'Students assigned to training batch successfully',
+                addedCount: students.length,
+                totalStudents: students.length,
+                assignment: createdAssignment
+            });
+        }
+
+        const mergedStudentsMap = new Map();
+        (existingAssignment.students || []).forEach((student) => {
+            const key = (student?.regNo || student?.studentId || '').toString().trim();
+            if (key) mergedStudentsMap.set(key, student);
+        });
+
+        let addedCount = 0;
+        students.forEach((student) => {
+            const key = (student.regNo || student.studentId || '').toString().trim();
+            if (!key) return;
+            if (!mergedStudentsMap.has(key)) {
+                addedCount += 1;
+            }
+            mergedStudentsMap.set(key, student);
+        });
+
+        existingAssignment.scheduleId = scheduleId || existingAssignment.scheduleId;
+        existingAssignment.companyName = companyName;
+        existingAssignment.courseName = courseName;
+        existingAssignment.trainer = trainer;
+        existingAssignment.applicableYear = applicableYear;
+        existingAssignment.startDate = startDate;
+        existingAssignment.endDate = endDate;
+        existingAssignment.batchNumber = batchNumber;
+        existingAssignment.batchName = batchName;
+        if (phaseSnapshot.length) {
+            existingAssignment.phases = phaseSnapshot;
+        }
+        existingAssignment.students = Array.from(mergedStudentsMap.values());
+        await existingAssignment.save();
+
+        return res.json({
+            success: true,
+            message: 'Training batch assignment updated successfully',
+            addedCount,
+            totalStudents: existingAssignment.students.length,
+            assignment: existingAssignment
+        });
+    } catch (error) {
+        console.error('Save scheduled training batch assignment error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to save training batch assignment',
+            details: error.message
+        });
+    }
+});
+
+app.get('/api/scheduled-training-batches', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected',
+                assignments: []
+            });
+        }
+
+        const normalizeYearToken = (value = '') => {
+            const raw = value.toString().trim().toUpperCase();
+            if (!raw) return '';
+            const compact = raw.replace(/[^A-Z0-9]/g, '');
+            if (!compact) return '';
+            const yearAliases = {
+                '1': 'I', '01': 'I', '1ST': 'I', '1STYEAR': 'I', 'FIRST': 'I', 'FIRSTYEAR': 'I', 'I': 'I',
+                '2': 'II', '02': 'II', '2ND': 'II', '2NDYEAR': 'II', 'SECOND': 'II', 'SECONDYEAR': 'II', 'II': 'II',
+                '3': 'III', '03': 'III', '3RD': 'III', '3RDYEAR': 'III', 'THIRD': 'III', 'THIRDYEAR': 'III', 'III': 'III',
+                '4': 'IV', '04': 'IV', '4TH': 'IV', '4THYEAR': 'IV', 'FOURTH': 'IV', 'FOURTHYEAR': 'IV', 'IV': 'IV'
+            };
+            return yearAliases[compact] || compact;
+        };
+
+        const scheduleId = (req.query?.scheduleId || '').toString().trim();
+        const companyName = (req.query?.companyName || '').toString().trim();
+        const courseName = (req.query?.courseName || '').toString().trim();
+        const applicableYear = normalizeYearToken(req.query?.applicableYear || '');
+
+        const query = {};
+        if (scheduleId) query.scheduleId = scheduleId;
+        if (companyName) query.companyName = companyName;
+        if (courseName) query.courseName = courseName;
+        if (applicableYear) query.applicableYear = applicableYear;
+
+        const assignments = await TrainingBatchAssignment.find(query).sort({ createdAt: 1 }).lean();
+
+        return res.json({
+            success: true,
+            assignments
+        });
+    } catch (error) {
+        console.error('Get scheduled training batches error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch scheduled training batches',
+            details: error.message,
+            assignments: []
+        });
+    }
+});
+
+app.get('/api/students/:regNo/training-assignment', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not connected'
+            });
+        }
+
+        const regNo = (req.params?.regNo || '').toString().trim();
+        if (!regNo) {
+            return res.status(400).json({
+                success: false,
+                error: 'Registration number is required'
+            });
+        }
+
+        const assignment = await TrainingBatchAssignment
+            .findOne({ 'students.regNo': regNo })
+            .sort({ updatedAt: -1, createdAt: -1 })
+            .lean();
+
+        if (!assignment) {
+            return res.json({
+                success: true,
+                assignment: null
+            });
+        }
+
+        const studentEntry = (assignment.students || []).find((student) => (student?.regNo || '').toString().trim() === regNo) || null;
+
+        return res.json({
+            success: true,
+            assignment: {
+                ...assignment,
+                student: studentEntry,
+                totalStudentsInBatch: Array.isArray(assignment.students) ? assignment.students.length : 0
+            }
+        });
+    } catch (error) {
+        console.error('Get student training assignment error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch student training assignment',
+            details: error.message
         });
     }
 });
@@ -1678,6 +2061,185 @@ app.post('/api/sync-student-applications', async (req, res) => {
 
 // ============ ATTENDANCE ROUTES ============
 
+const parseAttendanceDateKey = (value) => {
+    const rawValue = (value || '').toString().trim();
+    if (!rawValue) return '';
+
+    const ddmmyyyyMatch = rawValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (ddmmyyyyMatch) {
+        return rawValue;
+    }
+
+    const parsedDate = new Date(rawValue);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return rawValue;
+    }
+
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const year = parsedDate.getFullYear();
+    return `${day}-${month}-${year}`;
+};
+
+const parseAttendanceDate = (value) => {
+    const attendanceDateKey = parseAttendanceDateKey(value);
+    const match = attendanceDateKey.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+
+    if (!match) {
+        const fallbackDate = new Date(value);
+        return Number.isNaN(fallbackDate.getTime()) ? new Date() : fallbackDate;
+    }
+
+    const [, day, month, year] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0);
+};
+
+const buildTrainingAttendanceSummary = (students = []) => {
+    return (Array.isArray(students) ? students : []).reduce((summary, student) => {
+        const status = (student?.status || '').toString().trim().toLowerCase();
+        if (status === 'present') {
+            summary.totalPresent += 1;
+        } else if (status === 'absent') {
+            summary.totalAbsent += 1;
+        }
+        return summary;
+    }, { totalPresent: 0, totalAbsent: 0 });
+};
+
+app.post('/api/training-attendance/submit', authenticateToken, checkRole('coordinator', 'admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, error: 'Database not connected. Cannot submit training attendance.' });
+        }
+
+        const attendanceData = req.body || {};
+        const companyName = (attendanceData.companyName || '').toString().trim();
+        const courseName = (attendanceData.courseName || '').toString().trim();
+        const batchName = (attendanceData.batchName || '').toString().trim();
+        const phaseNumber = (attendanceData.phaseNumber || '').toString().trim();
+        const attendanceDateKey = parseAttendanceDateKey(attendanceData.attendanceDateKey || attendanceData.attendanceDate);
+        const batchNumber = Number.parseInt(attendanceData.batchNumber, 10);
+        const students = Array.isArray(attendanceData.students) ? attendanceData.students : [];
+
+        if (!companyName || !courseName || !batchName || !attendanceDateKey) {
+            return res.status(400).json({
+                success: false,
+                error: 'Company name, course name, batch name and attendance date are required'
+            });
+        }
+
+        if (!Number.isFinite(batchNumber) || batchNumber < 1) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valid batch number is required'
+            });
+        }
+
+        if (!students.length) {
+            return res.status(400).json({
+                success: false,
+                error: 'At least one student is required to save training attendance'
+            });
+        }
+
+        const summary = buildTrainingAttendanceSummary(students);
+        const totalStudents = students.length;
+        const percentage = totalStudents > 0 ? Number(((summary.totalPresent / totalStudents) * 100).toFixed(2)) : 0;
+        const attendanceDate = parseAttendanceDate(attendanceData.attendanceDate || attendanceDateKey);
+
+        const normalizedStudents = students.map((student, index) => ({
+            studentId: (student?.studentId || student?.id || `student-${index}`).toString().trim(),
+            name: (student?.name || '').toString().trim(),
+            regNo: (student?.regNo || '').toString().trim(),
+            dept: (student?.dept || '').toString().trim(),
+            year: (student?.year || '').toString().trim(),
+            section: (student?.section || '').toString().trim(),
+            mobile: (student?.mobile || '').toString().trim(),
+            status: ['Present', 'Absent'].includes((student?.status || '').toString().trim()) ? student.status : '-'
+        }));
+
+        const savedAttendance = await TrainingAttendance.findOneAndUpdate(
+            {
+                companyName,
+                courseName,
+                batchName,
+                phaseNumber,
+                attendanceDateKey
+            },
+            {
+                $set: {
+                    scheduleId: (attendanceData.scheduleId || '').toString().trim(),
+                    companyName,
+                    courseName,
+                    batchNumber,
+                    batchName,
+                    phaseNumber,
+                    attendanceDateKey,
+                    attendanceDate,
+                    totalStudents,
+                    totalPresent: summary.totalPresent,
+                    totalAbsent: summary.totalAbsent,
+                    percentage,
+                    students: normalizedStudents,
+                    submittedBy: (attendanceData.submittedBy || req.user?.name || req.user?.username || 'Admin').toString().trim() || 'Admin'
+                }
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        return res.status(201).json({
+            success: true,
+            message: 'Training attendance saved successfully',
+            attendance: savedAttendance
+        });
+    } catch (error) {
+        console.error('Save training attendance error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to save training attendance',
+            details: error.message
+        });
+    }
+});
+
+app.get('/api/training-attendance', authenticateToken, checkRole('coordinator', 'admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, error: 'Database not connected', attendances: [] });
+        }
+
+        const query = {};
+        const scheduleId = (req.query?.scheduleId || '').toString().trim();
+        const companyName = (req.query?.companyName || '').toString().trim();
+        const courseName = (req.query?.courseName || '').toString().trim();
+        const batchName = (req.query?.batchName || '').toString().trim();
+        const phaseNumber = (req.query?.phaseNumber || '').toString().trim();
+        const attendanceDateKey = parseAttendanceDateKey(req.query?.attendanceDateKey || req.query?.attendanceDate);
+
+        if (scheduleId) query.scheduleId = scheduleId;
+        if (companyName) query.companyName = companyName;
+        if (courseName) query.courseName = courseName;
+        if (batchName) query.batchName = batchName;
+        if (phaseNumber) query.phaseNumber = phaseNumber;
+        if (attendanceDateKey) query.attendanceDateKey = attendanceDateKey;
+
+        const attendances = await TrainingAttendance.find(query).sort({ attendanceDate: -1, createdAt: -1 }).lean();
+
+        return res.json({
+            success: true,
+            attendances
+        });
+    } catch (error) {
+        console.error('Get training attendance error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch training attendance',
+            details: error.message,
+            attendances: []
+        });
+    }
+});
+
 // Submit attendance - Protected
 app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', 'admin'), async (req, res) => {
     try {
@@ -1871,6 +2433,54 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
         });
     }
 });
+
+    app.get('/api/training-attendance/student/regNo/:regNo', async (req, res) => {
+        try {
+            if (mongoose.connection.readyState !== 1) {
+                return res.status(503).json({ error: 'Database not connected' });
+            }
+
+            const { regNo } = req.params;
+            const normalizedRegNo = (regNo || '').toString().trim();
+
+            if (!normalizedRegNo) {
+                return res.status(400).json({ error: 'Registration number is required' });
+            }
+
+            const attendances = await TrainingAttendance.find({
+                'students.regNo': normalizedRegNo
+            }).sort({ attendanceDate: -1, createdAt: -1 }).lean();
+
+            const studentAttendances = attendances.map((attendance) => {
+                const studentData = Array.isArray(attendance.students)
+                    ? attendance.students.find((student) => (student?.regNo || '').toString().trim() === normalizedRegNo)
+                    : null;
+
+                return {
+                    _id: attendance._id,
+                    companyName: attendance.companyName,
+                    courseName: attendance.courseName,
+                    batchName: attendance.batchName,
+                    batchNumber: attendance.batchNumber,
+                    phaseNumber: attendance.phaseNumber,
+                    attendanceDate: attendance.attendanceDate,
+                    attendanceDateKey: attendance.attendanceDateKey,
+                    status: studentData?.status || '-'
+                };
+            });
+
+            return res.json({
+                success: true,
+                data: studentAttendances
+            });
+        } catch (error) {
+            console.error('Error fetching training attendance by regNo:', error);
+            return res.status(500).json({
+                error: 'Failed to fetch training attendance',
+                details: error.message
+            });
+        }
+    });
 
 // Update attendance record
 app.put('/api/attendance/:id', async (req, res) => {
@@ -2761,6 +3371,318 @@ app.get('/api/placed-students', async (req, res) => {
 
 // ============ END PLACED STUDENTS ENDPOINTS ============
 
+// ============ ARCHIVED BATCHES ENDPOINTS ============
+
+// GET all archived batches
+app.get('/api/archived-batches', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const archivedBatches = await ArchivedBatch.find({})
+            .select('-archivedStudents') // Exclude student data for list view
+            .sort({ archivedAt: -1 });
+
+        res.json({
+            success: true,
+            batches: archivedBatches.map(batch => ({
+                id: batch._id,
+                archiveName: batch.archiveName,
+                year: batch.batch,
+                totalDept: batch.totalDept,
+                totalStudents: batch.totalStudents,
+                placedStudents: batch.placedStudents,
+                archivedAt: batch.archivedAt,
+                archivedBy: batch.archivedBy
+            }))
+        });
+    } catch (error) {
+        console.error('Get archived batches error:', error);
+        res.status(500).json({ error: 'Failed to fetch archived batches', details: error.message });
+    }
+});
+
+// GET single archived batch with departments
+app.get('/api/archived-batches/:id', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { id } = req.params;
+        const archivedBatch = await ArchivedBatch.findById(id).select('-archivedStudents');
+
+        if (!archivedBatch) {
+            return res.status(404).json({ error: 'Archived batch not found' });
+        }
+
+        res.json({
+            success: true,
+            batch: archivedBatch
+        });
+    } catch (error) {
+        console.error('Get archived batch error:', error);
+        res.status(500).json({ error: 'Failed to fetch archived batch', details: error.message });
+    }
+});
+
+// GET archived batch students by department
+app.get('/api/archived-batches/:id/department/:deptName/students', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { id, deptName } = req.params;
+        const archivedBatch = await ArchivedBatch.findById(id);
+
+        if (!archivedBatch) {
+            return res.status(404).json({ error: 'Archived batch not found' });
+        }
+
+        // Filter students by department
+        const decodedDept = decodeURIComponent(deptName);
+        const students = (archivedBatch.archivedStudents || []).filter(
+            s => (s.branch || s.department) === decodedDept
+        );
+
+        res.json({
+            success: true,
+            students: students,
+            total: students.length
+        });
+    } catch (error) {
+        console.error('Get archived batch students error:', error);
+        res.status(500).json({ error: 'Failed to fetch archived batch students', details: error.message });
+    }
+});
+
+// POST - Archive (zip) a batch
+app.post('/api/archived-batches', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { archiveName, batch, departments, adminName } = req.body;
+
+        if (!archiveName || !batch) {
+            return res.status(400).json({ error: 'Archive name and batch are required' });
+        }
+
+        // Check if archive name already exists
+        const existing = await ArchivedBatch.findOne({ archiveName });
+        if (existing) {
+            return res.status(409).json({ error: 'Archive name already exists' });
+        }
+
+        // Fetch all students for the batch
+        const students = await Student.find({ batch }).lean();
+
+        // Group by department
+        const deptMap = {};
+        students.forEach(student => {
+            const dept = student.branch || student.department || 'Unknown';
+            if (!deptMap[dept]) {
+                deptMap[dept] = {
+                    name: dept,
+                    sections: new Set(),
+                    totalStudents: 0,
+                    placedStudents: 0
+                };
+            }
+            deptMap[dept].totalStudents++;
+            if (student.section) {
+                deptMap[dept].sections.add(student.section);
+            }
+            if (student.placementStatus === 'Placed' || student.isPlaced) {
+                deptMap[dept].placedStudents++;
+            }
+        });
+
+        const departmentsArray = Object.values(deptMap).map(dept => ({
+            name: dept.name,
+            sections: dept.sections.size || 1,
+            totalStudents: dept.totalStudents,
+            placedStudents: dept.placedStudents
+        }));
+
+        const totalStudents = students.length;
+        const placedStudents = students.filter(s => s.placementStatus === 'Placed' || s.isPlaced).length;
+
+        // Create archive
+        const archivedBatch = new ArchivedBatch({
+            archiveName,
+            batch,
+            departments: departmentsArray,
+            totalDept: departmentsArray.length,
+            totalStudents,
+            placedStudents,
+            archivedStudents: students,
+            archivedBy: adminName || 'Admin'
+        });
+
+        await archivedBatch.save();
+
+        // Mark students as archived (add isArchived flag)
+        await Student.updateMany(
+            { batch },
+            { $set: { isArchived: true, archivedAt: new Date(), archiveName } }
+        );
+
+        // Log to zipping history
+        await new ZippingHistory({
+            action: 'Zipped Batch',
+            batch: archiveName,
+            batchYear: batch,
+            implementedBy: adminName || 'Admin',
+            details: `Zipped ${totalStudents} Students`,
+            affectedStudents: totalStudents,
+            affectedDepartments: departmentsArray.length
+        }).save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Batch archived successfully',
+            batch: {
+                id: archivedBatch._id,
+                archiveName: archivedBatch.archiveName,
+                year: archivedBatch.batch,
+                totalDept: archivedBatch.totalDept,
+                totalStudents: archivedBatch.totalStudents,
+                placedStudents: archivedBatch.placedStudents
+            }
+        });
+    } catch (error) {
+        console.error('Archive batch error:', error);
+        res.status(500).json({ error: 'Failed to archive batch', details: error.message });
+    }
+});
+
+// PUT - Unzip a batch (restore students)
+app.put('/api/archived-batches/:id/unzip', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { id } = req.params;
+        const { adminName } = req.body;
+
+        const archivedBatch = await ArchivedBatch.findById(id);
+        if (!archivedBatch) {
+            return res.status(404).json({ error: 'Archived batch not found' });
+        }
+
+        // Restore students (remove isArchived flag)
+        await Student.updateMany(
+            { batch: archivedBatch.batch, archiveName: archivedBatch.archiveName },
+            { $unset: { isArchived: 1, archivedAt: 1, archiveName: 1 } }
+        );
+
+        // Log to zipping history
+        await new ZippingHistory({
+            action: 'Unzipped Batch',
+            batch: archivedBatch.archiveName,
+            batchYear: archivedBatch.batch,
+            implementedBy: adminName || 'Admin',
+            details: `Unzipped ${archivedBatch.totalStudents} Students`,
+            affectedStudents: archivedBatch.totalStudents,
+            affectedDepartments: archivedBatch.totalDept
+        }).save();
+
+        // Delete the archive
+        await ArchivedBatch.findByIdAndDelete(id);
+
+        res.json({
+            success: true,
+            message: 'Batch unzipped successfully',
+            restoredStudents: archivedBatch.totalStudents
+        });
+    } catch (error) {
+        console.error('Unzip batch error:', error);
+        res.status(500).json({ error: 'Failed to unzip batch', details: error.message });
+    }
+});
+
+// DELETE - Delete an archived batch permanently
+app.delete('/api/archived-batches/:id', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { id } = req.params;
+        const { adminName } = req.body;
+
+        const archivedBatch = await ArchivedBatch.findById(id);
+        if (!archivedBatch) {
+            return res.status(404).json({ error: 'Archived batch not found' });
+        }
+
+        // Log to zipping history before deletion
+        await new ZippingHistory({
+            action: 'Deleted Batch',
+            batch: archivedBatch.archiveName,
+            batchYear: archivedBatch.batch,
+            implementedBy: adminName || 'Admin',
+            details: `Deleted ${archivedBatch.totalStudents} Students`,
+            affectedStudents: archivedBatch.totalStudents,
+            affectedDepartments: archivedBatch.totalDept
+        }).save();
+
+        // Delete the archived batch and its students permanently
+        await ArchivedBatch.findByIdAndDelete(id);
+
+        // Also delete the students from the students collection
+        await Student.deleteMany({ batch: archivedBatch.batch, archiveName: archivedBatch.archiveName });
+
+        res.json({
+            success: true,
+            message: 'Archive deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete archived batch error:', error);
+        res.status(500).json({ error: 'Failed to delete archive', details: error.message });
+    }
+});
+
+// GET zipping history
+app.get('/api/zipping-history', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { batch, action } = req.query;
+        const query = {};
+
+        if (batch) query.batch = { $regex: batch, $options: 'i' };
+        if (action) query.action = action;
+
+        const history = await ZippingHistory.find(query).sort({ date: -1 });
+
+        res.json({
+            success: true,
+            history: history.map(h => ({
+                id: h._id,
+                date: h.date,
+                action: h.action,
+                batch: h.batch,
+                batchYear: h.batchYear,
+                implementedBy: h.implementedBy,
+                details: h.details
+            }))
+        });
+    } catch (error) {
+        console.error('Get zipping history error:', error);
+        res.status(500).json({ error: 'Failed to fetch zipping history', details: error.message });
+    }
+});
+
+// ============ END ARCHIVED BATCHES ENDPOINTS ============
+
 // Delete student application by ID
 app.delete('/api/student-applications/:id', async (req, res) => {
     try {
@@ -2820,34 +3742,42 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
         const studentDrives = await Promise.all(eligibleEntries.map(async (entry) => {
             const startDate = entry.driveStartDate || entry.companyDriveDate;
             const endDate = entry.driveEndDate || entry.driveStartDate || entry.companyDriveDate;
+            let matchedDrive = null;
             
             // Fetch roundDetails from companies drives collection
             let roundDetails = [];
             let totalRounds = 0;
             try {
-                // Try to find company drive by company name (case-insensitive) and date
-                const companyDrive = await CompanyDrive.findOne({
-                    $and: [
-                        {
-                            $or: [
-                                { companyName: { $regex: new RegExp(`^${entry.companyName}$`, 'i') } },
-                                { companyName: entry.companyName }
-                            ]
-                        },
-                        {
-                            $or: [
-                                { startingDate: startDate },
-                                { visitDate: startDate },
-                                { startingDate: startDate?.split('-').reverse().join('-') }
-                            ]
-                        }
-                    ]
-                }).sort({ createdAt: -1 });
+                // Prefer direct driveId match when available to avoid mismatches.
+                if (entry.driveId && mongoose.Types.ObjectId.isValid(entry.driveId)) {
+                    matchedDrive = await CompanyDrive.findById(entry.driveId);
+                }
 
-                if (companyDrive) {
-                    if (companyDrive.roundDetails && Array.isArray(companyDrive.roundDetails)) {
-                        roundDetails = companyDrive.roundDetails;
-                        totalRounds = companyDrive.roundDetails.length;
+                // Try to find company drive by company name (case-insensitive) and date
+                if (!matchedDrive) {
+                    matchedDrive = await CompanyDrive.findOne({
+                        $and: [
+                            {
+                                $or: [
+                                    { companyName: { $regex: new RegExp(`^${entry.companyName}$`, 'i') } },
+                                    { companyName: entry.companyName }
+                                ]
+                            },
+                            {
+                                $or: [
+                                    { startingDate: startDate },
+                                    { visitDate: startDate },
+                                    { startingDate: startDate?.split('-').reverse().join('-') }
+                                ]
+                            }
+                        ]
+                    }).sort({ createdAt: -1 });
+                }
+
+                if (matchedDrive) {
+                    if (matchedDrive.roundDetails && Array.isArray(matchedDrive.roundDetails)) {
+                        roundDetails = matchedDrive.roundDetails;
+                        totalRounds = matchedDrive.roundDetails.length;
                     }
                     console.log(`Found drive for ${entry.companyName}: ${totalRounds} rounds`);
                 } else {
@@ -2859,9 +3789,13 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
                         ]
                     }).sort({ createdAt: -1 });
                     
-                    if (fallbackDrive && fallbackDrive.roundDetails && Array.isArray(fallbackDrive.roundDetails)) {
-                        roundDetails = fallbackDrive.roundDetails;
-                        totalRounds = fallbackDrive.roundDetails.length;
+                    if (fallbackDrive) {
+                        matchedDrive = fallbackDrive;
+                    }
+
+                    if (matchedDrive && matchedDrive.roundDetails && Array.isArray(matchedDrive.roundDetails)) {
+                        roundDetails = matchedDrive.roundDetails;
+                        totalRounds = matchedDrive.roundDetails.length;
                         console.log(`Found fallback drive for ${entry.companyName}: ${totalRounds} rounds`);
                     } else {
                         console.log(`No drive found for ${entry.companyName} with startDate ${startDate}`);
@@ -2870,6 +3804,10 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
             } catch (err) {
                 console.log('Could not fetch roundDetails:', err.message);
             }
+
+            const driveMode = matchedDrive?.mode || matchedDrive?.driveMode || entry.filterCriteria?.mode || '';
+            const drivePackage = matchedDrive?.package || matchedDrive?.packageOffer || matchedDrive?.ctc || matchedDrive?.salaryPackage || entry.filterCriteria?.package || '';
+            const driveBondPeriod = matchedDrive?.bondPeriod || matchedDrive?.bondperiod || matchedDrive?.bond || '';
             
             return {
                 _id: entry._id,
@@ -2879,6 +3817,9 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
                 companyDriveDate: entry.companyDriveDate, // Keep for backward compatibility
                 jobRole: entry.jobRole,
                 jobs: entry.filterCriteria?.jobs || entry.jobRole,
+                mode: driveMode,
+                package: drivePackage,
+                bondPeriod: driveBondPeriod,
                 roundDetails: roundDetails,
                 totalRounds: totalRounds,
                 createdAt: entry.createdAt
@@ -2893,6 +3834,183 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
 });
 
 // Get all eligible students (for attendance/admin)
+app.get('/api/eligible-students/coordinator', authenticateToken, checkRole('coordinator', 'admin'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected. Cannot fetch eligible students.' });
+        }
+
+        const normalizeBranch = (value) => (value || '').toString().trim().toUpperCase();
+        const branchKey = (value) => normalizeBranch(value).replace(/[^A-Z0-9]/g, '');
+        const branchMatches = (candidate, allowedBranches) => {
+            const candidateKey = branchKey(candidate);
+            if (!candidateKey) return false;
+            return allowedBranches.some((allowed) => {
+                const allowedKey = branchKey(allowed);
+                return allowedKey && (candidateKey === allowedKey || candidateKey.includes(allowedKey) || allowedKey.includes(candidateKey));
+            });
+        };
+
+        let coordinatorDoc = null;
+        const requestedCoordinatorId = (req.query?.coordinatorId || '').toString().trim();
+
+        if (req.user.role === 'coordinator') {
+            const coordinatorId = req.user.coordinatorId;
+            if (!coordinatorId) {
+                return res.status(400).json({ error: 'Coordinator ID not found in token.' });
+            }
+            coordinatorDoc = await Coordinator.findOne({ coordinatorId }).lean();
+        } else if (requestedCoordinatorId) {
+            coordinatorDoc = await Coordinator.findOne({ coordinatorId: requestedCoordinatorId }).lean();
+        }
+
+        const requestedBranch = (req.query?.branch || '').toString().trim();
+        const branchCandidates = [];
+
+        if (requestedBranch) {
+            branchCandidates.push(requestedBranch);
+        }
+
+        if (coordinatorDoc) {
+            if (coordinatorDoc.branch) branchCandidates.push(coordinatorDoc.branch);
+            if (coordinatorDoc.department) branchCandidates.push(coordinatorDoc.department);
+        }
+
+        const uniqueBranches = Array.from(new Set(branchCandidates.map(normalizeBranch).filter(Boolean)));
+        if (!uniqueBranches.length) {
+            return res.json({
+                success: true,
+                coordinator: coordinatorDoc
+                    ? {
+                        coordinatorId: coordinatorDoc.coordinatorId,
+                        branch: coordinatorDoc.branch || '',
+                        department: coordinatorDoc.department || ''
+                    }
+                    : null,
+                eligibleStudents: [],
+                totalEntries: 0,
+                totalStudents: 0,
+                message: 'No coordinator branch/department found to filter eligible students.'
+            });
+        }
+
+        const eligibleEntries = await EligibleStudent.find({}).sort({ createdAt: -1 }).lean();
+
+        const studentIdSet = new Set();
+        const regNoSet = new Set();
+        for (const entry of eligibleEntries) {
+            for (const student of (entry.students || [])) {
+                if (student?.studentId) studentIdSet.add(String(student.studentId));
+                if (student?.regNo) regNoSet.add(String(student.regNo));
+            }
+        }
+
+        const idCandidates = Array.from(studentIdSet)
+            .filter((id) => mongoose.Types.ObjectId.isValid(id))
+            .map((id) => new mongoose.Types.ObjectId(id));
+
+        const regNoCandidates = Array.from(regNoSet).filter(Boolean);
+
+        const studentQuery = [];
+        if (idCandidates.length) studentQuery.push({ _id: { $in: idCandidates } });
+        if (regNoCandidates.length) studentQuery.push({ regNo: { $in: regNoCandidates } });
+
+        const studentDocs = studentQuery.length
+            ? await Student.find({ $or: studentQuery })
+                .select('_id regNo firstName lastName branch department section batch overallCGPA skillSet skills currentSkills')
+                .lean()
+            : [];
+
+        const studentsById = new Map();
+        const studentsByRegNo = new Map();
+        for (const student of studentDocs) {
+            if (student?._id) studentsById.set(String(student._id), student);
+            if (student?.regNo) studentsByRegNo.set(String(student.regNo), student);
+        }
+
+        const filteredEntries = eligibleEntries
+            .map((entry) => {
+                const filteredStudents = (entry.students || [])
+                    .map((student) => {
+                        const byId = student?.studentId ? studentsById.get(String(student.studentId)) : null;
+                        const byRegNo = student?.regNo ? studentsByRegNo.get(String(student.regNo)) : null;
+                        const studentDoc = byId || byRegNo;
+
+                        const resolvedBranch =
+                            student?.branch ||
+                            studentDoc?.branch ||
+                            studentDoc?.department ||
+                            '';
+
+                        if (!branchMatches(resolvedBranch, uniqueBranches)) {
+                            return null;
+                        }
+
+                        const resolvedName = (student?.name && String(student.name).trim())
+                            || `${studentDoc?.firstName || ''} ${studentDoc?.lastName || ''}`.trim()
+                            || 'N/A';
+
+                        const resolvedSkills =
+                            studentDoc?.skillSet ||
+                            studentDoc?.skills ||
+                            (Array.isArray(studentDoc?.currentSkills) ? studentDoc.currentSkills.join(', ') : studentDoc?.currentSkills) ||
+                            '';
+
+                        return {
+                            ...student,
+                            name: resolvedName,
+                            regNo: student?.regNo || studentDoc?.regNo || '',
+                            studentId: student?.studentId || (studentDoc?._id ? String(studentDoc._id) : ''),
+                            branch: resolvedBranch,
+                            batch: student?.batch || studentDoc?.batch || '',
+                            section: studentDoc?.section || '',
+                            cgpa: studentDoc?.overallCGPA || '',
+                            skills: resolvedSkills,
+                            status: student?.status || 'Unplaced'
+                        };
+                    })
+                    .filter(Boolean);
+
+                if (!filteredStudents.length) return null;
+
+                return {
+                    _id: entry._id,
+                    driveId: entry.driveId,
+                    companyName: entry.companyName,
+                    driveStartDate: entry.driveStartDate,
+                    driveEndDate: entry.driveEndDate,
+                    companyDriveDate: entry.companyDriveDate,
+                    jobRole: entry.jobRole,
+                    filterCriteria: entry.filterCriteria || {},
+                    students: filteredStudents,
+                    createdAt: entry.createdAt,
+                    updatedAt: entry.updatedAt
+                };
+            })
+            .filter(Boolean);
+
+        const totalStudents = filteredEntries.reduce((sum, entry) => sum + (entry.students?.length || 0), 0);
+
+        return res.json({
+            success: true,
+            coordinator: coordinatorDoc
+                ? {
+                    coordinatorId: coordinatorDoc.coordinatorId,
+                    branch: coordinatorDoc.branch || '',
+                    department: coordinatorDoc.department || ''
+                }
+                : null,
+            branchesApplied: uniqueBranches,
+            totalEntries: filteredEntries.length,
+            totalStudents,
+            eligibleStudents: filteredEntries
+        });
+    } catch (error) {
+        console.error('Coordinator eligible students fetch error:', error);
+        return res.status(500).json({ error: 'Failed to fetch coordinator eligible students', details: error.message });
+    }
+});
+
 app.get('/api/eligible-students', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -3725,6 +4843,76 @@ const scheduledTrainingSchema = new mongoose.Schema({
 
 const ScheduledTraining = mongoose.model('ScheduledTraining', scheduledTrainingSchema, 'trainning_schedule');
 
+const trainingBatchAssignmentSchema = new mongoose.Schema({
+    scheduleId: { type: String, trim: true },
+    companyName: { type: String, required: true, trim: true },
+    courseName: { type: String, required: true, trim: true },
+    trainer: { type: String, trim: true },
+    applicableYear: { type: String, trim: true, uppercase: true },
+    startDate: { type: String, trim: true },
+    endDate: { type: String, trim: true },
+    batchNumber: { type: Number, min: 1 },
+    batchName: { type: String, required: true, trim: true },
+    phases: [{
+        phaseNumber: { type: String, trim: true },
+        trainer: { type: String, trim: true },
+        applicableYear: { type: String, trim: true },
+        startDate: { type: String, trim: true },
+        endDate: { type: String, trim: true },
+        duration: { type: String, trim: true }
+    }],
+    students: [{
+        studentId: { type: String, trim: true },
+        regNo: { type: String, required: true, trim: true },
+        name: { type: String, trim: true },
+        dept: { type: String, trim: true },
+        year: { type: String, trim: true },
+        section: { type: String, trim: true },
+        mobile: { type: String, trim: true },
+        cgpa: { type: String, trim: true }
+    }]
+}, { timestamps: true });
+
+trainingBatchAssignmentSchema.index({ scheduleId: 1, courseName: 1, batchName: 1 });
+trainingBatchAssignmentSchema.index({ companyName: 1, courseName: 1, batchName: 1, applicableYear: 1 });
+trainingBatchAssignmentSchema.index({ 'students.regNo': 1 });
+
+const TrainingBatchAssignment = mongoose.model('TrainingBatchAssignment', trainingBatchAssignmentSchema, 'training_batch_assignments');
+
+const trainingAttendanceSchema = new mongoose.Schema({
+    scheduleId: { type: String, trim: true },
+    companyName: { type: String, required: true, trim: true },
+    courseName: { type: String, required: true, trim: true },
+    batchNumber: { type: Number, required: true, min: 1 },
+    batchName: { type: String, required: true, trim: true },
+    phaseNumber: { type: String, trim: true },
+    attendanceDateKey: { type: String, required: true, trim: true },
+    attendanceDate: { type: Date, required: true },
+
+    totalStudents: { type: Number, required: true, default: 0 },
+    totalPresent: { type: Number, required: true, default: 0 },
+    totalAbsent: { type: Number, required: true, default: 0 },
+    percentage: { type: Number, required: true, default: 0 },
+
+    students: [{
+        studentId: { type: String, required: true, trim: true },
+        name: { type: String, required: true, trim: true },
+        regNo: { type: String, required: true, trim: true },
+        dept: { type: String, trim: true },
+        year: { type: String, trim: true },
+        section: { type: String, trim: true },
+        mobile: { type: String, trim: true },
+        status: { type: String, required: true, enum: ['Present', 'Absent', '-'] }
+    }],
+
+    submittedBy: { type: String, trim: true, default: 'Admin' }
+}, { timestamps: true });
+
+trainingAttendanceSchema.index({ companyName: 1, courseName: 1, batchName: 1, phaseNumber: 1, attendanceDateKey: 1 }, { unique: true });
+trainingAttendanceSchema.index({ scheduleId: 1, companyName: 1, courseName: 1, batchName: 1 });
+
+const TrainingAttendance = mongoose.model('TrainingAttendance', trainingAttendanceSchema, 'training_attendance');
+
 // Attendance Schema
 const attendanceSchema = new mongoose.Schema({
     // Unique Drive Identifier
@@ -3765,6 +4953,48 @@ attendanceSchema.index({ 'students.studentId': 1 });
 attendanceSchema.index({ 'students.regNo': 1 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema, 'attendance');
+
+// Archived Batch Schema - stores zipped/archived batches
+const archivedBatchSchema = new mongoose.Schema({
+    archiveName: { type: String, required: true, unique: true },
+    batch: { type: String, required: true }, // e.g., "2021 - 2025"
+    departments: [{
+        name: { type: String, required: true },
+        sections: { type: Number, default: 1 },
+        totalStudents: { type: Number, default: 0 },
+        placedStudents: { type: Number, default: 0 }
+    }],
+    totalDept: { type: Number, default: 0 },
+    totalStudents: { type: Number, default: 0 },
+    placedStudents: { type: Number, default: 0 },
+    archivedStudents: [{ type: mongoose.Schema.Types.Mixed }], // Store the actual student data
+    archivedBy: { type: String, required: true }, // Admin who archived
+    archivedAt: { type: Date, default: Date.now }
+}, { timestamps: true, strict: false });
+
+archivedBatchSchema.index({ batch: 1 });
+archivedBatchSchema.index({ archiveName: 1 });
+archivedBatchSchema.index({ archivedAt: -1 });
+
+const ArchivedBatch = mongoose.model('ArchivedBatch', archivedBatchSchema, 'archived_batches');
+
+// Zipping History Schema - logs all archive operations
+const zippingHistorySchema = new mongoose.Schema({
+    date: { type: Date, default: Date.now },
+    action: { type: String, required: true, enum: ['Zipped Batch', 'Unzipped Batch', 'Deleted Batch'] },
+    batch: { type: String, required: true }, // Archive name
+    batchYear: { type: String }, // e.g., "2021 - 2025"
+    implementedBy: { type: String, required: true }, // Admin name
+    details: { type: String, required: true }, // e.g., "Zipped 894 Students"
+    affectedStudents: { type: Number, default: 0 },
+    affectedDepartments: { type: Number, default: 0 }
+}, { timestamps: true });
+
+zippingHistorySchema.index({ date: -1 });
+zippingHistorySchema.index({ action: 1 });
+zippingHistorySchema.index({ batch: 1 });
+
+const ZippingHistory = mongoose.model('ZippingHistory', zippingHistorySchema, 'zipping_history');
 
 let branchIndexCleanupDone = false;
 let trainingCollectionMigrationDone = false;
@@ -5275,7 +6505,10 @@ app.get('/api/students', async (req, res) => {
         if (isMongoConnected) {
             console.log('✅ Using MongoDB for students query');
             const query = {};
-            
+
+            // IMPORTANT: Exclude archived students by default
+            query.isArchived = { $ne: true };
+
             // Build optimized query
             if (regNo) query.regNo = { $regex: regNo, $options: 'i' };
             if (department) query.department = department;
@@ -5332,6 +6565,8 @@ app.get('/api/students', async (req, res) => {
         } else {
             // Fallback for when MongoDB is not connected
             let list = students.slice();
+            // Filter out archived students
+            list = list.filter(s => !s.isArchived);
             if (regNo) list = list.filter(s => String(s.regNo).toLowerCase().includes(String(regNo).toLowerCase()));
             if (department) list = list.filter(s => (s.department || s.branch) === department);
             if (branch) list = list.filter(s => s.branch === branch);

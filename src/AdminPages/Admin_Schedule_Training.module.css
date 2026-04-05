@@ -353,6 +353,31 @@ select.control {
   padding: 1.5rem 0;
 }
 
+.batchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.batchCard {
+  background: #f9fff9;
+  border: 1px solid #def4dd;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.batchName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2d3d;
+  margin-bottom: 6px;
+}
+
+.batchMeta {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
 /* Add Phase Section */
 .addPhaseSection {
   margin-top: 1.5rem;
@@ -472,6 +497,10 @@ select.control {
     flex: 1 1 calc(50% - 12px);
   }
 
+  .batchGrid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
   .actions {
     flex-direction: row;
     justify-content: flex-end;
@@ -496,6 +525,10 @@ select.control {
   .courseItem {
     min-width: 100%;
     flex: 1 1 100%;
+  }
+
+  .batchGrid {
+    grid-template-columns: 1fr;
   }
 
   .actions {

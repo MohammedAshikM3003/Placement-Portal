@@ -61,12 +61,14 @@ class MongoDBService {
             errorMessage = 'Student not found. Please check your registration number and date of birth.';
           }
         } else if (response.status === 404) {
-          if (endpoint.includes('/certificates/')) {
+          if (endpoint.includes('/students/') || endpoint.includes('/students?')) {
+            errorMessage = 'Student not found. Please register first.';
+          } else if (endpoint.includes('/certificates/')) {
             errorMessage = 'Certificate not found.';
           } else if (endpoint.includes('/resume/')) {
             errorMessage = 'Resume not found.';
           } else {
-            errorMessage = 'Student not found. Please register first.';
+            errorMessage = data?.error || data?.message || `Resource not found: ${endpoint}`;
           }
         } else {
           const backendMessage = data?.message || data?.error || data?.details;
@@ -314,12 +316,53 @@ class MongoDBService {
     return response?.schedules || [];
   }
 
+  async deleteScheduledTraining(scheduleId) {
+    if (!scheduleId) {
+      throw new Error('Scheduled training ID is required for deletion');
+    }
+
+    return await this.apiCall(`/scheduled-trainings/${scheduleId}`, {
+      method: 'DELETE'
+    });
+  }
+
   async getTrainingCoursesByYear(year) {
     const query = year ? `?year=${encodeURIComponent(year)}` : '';
     const response = await this.apiCall(`/training-courses${query}`, {
       method: 'GET'
     });
     return response?.courses || [];
+  }
+
+  async saveScheduledTrainingBatchAssignment(assignmentData) {
+    return await this.apiCall('/scheduled-training-batches/assign', {
+      method: 'POST',
+      body: JSON.stringify(assignmentData)
+    });
+  }
+
+  async getScheduledTrainingBatchAssignments(filters = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+
+    const response = await this.apiCall(`/scheduled-training-batches${query.toString() ? `?${query.toString()}` : ''}`, {
+      method: 'GET'
+    });
+
+    return response?.assignments || [];
+  }
+
+  async getStudentTrainingAssignment(regNo) {
+    if (!regNo) return null;
+    const response = await this.apiCall(`/students/${encodeURIComponent(regNo)}/training-assignment`, {
+      method: 'GET'
+    });
+    return response?.assignment || null;
   }
 
   async getCompanyDrives() {
@@ -791,8 +834,50 @@ class MongoDBService {
     });
   }
 
+  async getCoordinatorEligibleStudents(filters = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+
+    const queryString = query.toString();
+    const endpoint = queryString
+      ? `/eligible-students/coordinator?${queryString}`
+      : '/eligible-students/coordinator';
+
+    return await this.apiCall(endpoint, {
+      method: 'GET'
+    });
+  }
+
   // ============ ATTENDANCE OPERATIONS ============
   
+  async submitTrainingAttendance(attendanceData) {
+    return await this.apiCall('/training-attendance/submit', {
+      method: 'POST',
+      body: JSON.stringify(attendanceData)
+    });
+  }
+
+  async getTrainingAttendance(filters = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+
+    const response = await this.apiCall(`/training-attendance${query.toString() ? `?${query.toString()}` : ''}`, {
+      method: 'GET'
+    });
+
+    return response?.attendances || [];
+  }
+
   async submitAttendance(attendanceData) {
     // Ensure driveId is included
     if (!attendanceData.driveId) {
@@ -825,6 +910,12 @@ class MongoDBService {
 
   async getStudentAttendanceByRegNo(regNo) {
     return await this.apiCall(`/attendance/student/regNo/${regNo}`, {
+      method: 'GET'
+    });
+  }
+
+  async getStudentTrainingAttendanceByRegNo(regNo) {
+    return await this.apiCall(`/training-attendance/student/regNo/${encodeURIComponent(regNo)}`, {
       method: 'GET'
     });
   }
@@ -994,7 +1085,7 @@ class MongoDBService {
   }
 
   // ============ USER AUTHENTICATION ============
-  
+
   async loginUser(email, password) {
     return await this.apiCall('/auth/login', {
       method: 'POST',
@@ -1009,8 +1100,72 @@ class MongoDBService {
     });
   }
 
+  // ============ ARCHIVED BATCHES ============
+
+  async getArchivedBatches() {
+    const response = await this.apiCall('/archived-batches', {
+      method: 'GET'
+    });
+    return response?.batches || [];
+  }
+
+  async getArchivedBatchById(batchId) {
+    const response = await this.apiCall(`/archived-batches/${batchId}`, {
+      method: 'GET'
+    });
+    return response?.batch || null;
+  }
+
+  async getArchivedBatchStudents(batchId, departmentName) {
+    const response = await this.apiCall(`/archived-batches/${batchId}/department/${encodeURIComponent(departmentName)}/students`, {
+      method: 'GET'
+    });
+    return response?.students || [];
+  }
+
+  async archiveBatch(archiveData) {
+    return await this.apiCall('/archived-batches', {
+      method: 'POST',
+      body: JSON.stringify(archiveData)
+    });
+  }
+
+  async unzipBatch(batchId, adminName) {
+    return await this.apiCall(`/archived-batches/${batchId}/unzip`, {
+      method: 'PUT',
+      body: JSON.stringify({ adminName })
+    });
+  }
+
+  async deleteArchivedBatch(batchId, adminName) {
+    return await this.apiCall(`/archived-batches/${batchId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ adminName })
+    });
+  }
+
+  // ============ ZIPPING HISTORY ============
+
+  async getZippingHistory(filters = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+
+    const qs = query.toString();
+    const endpoint = qs ? `/zipping-history?${qs}` : '/zipping-history';
+
+    const response = await this.apiCall(endpoint, {
+      method: 'GET'
+    });
+    return response?.history || [];
+  }
+
   // ============ HEALTH CHECK ============
-  
+
   async healthCheck() {
     return await this.apiCall('/health');
   }

@@ -17,6 +17,7 @@
     "framer-motion": "^12.23.11",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
+    "jszip": "^3.10.1",
     "node": "^24.9.0",
     "pdf-parse": "^2.1.7",
     "pdfjs-dist": "^5.4.296",

@@ -304,11 +304,24 @@ export default function Company({ onLogout, onViewChange }) {
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('allDataPreloaded', handleProfileUpdate);
+
+    const refreshInterval = setInterval(handleProfileUpdate, 30000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleProfileUpdate();
+      }
+    };
+
+    window.addEventListener('focus', handleProfileUpdate);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener('allDataPreloaded', handleProfileUpdate);
+      window.removeEventListener('focus', handleProfileUpdate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(refreshInterval);
     };
   }, []);
 
@@ -513,6 +526,9 @@ export default function Company({ onLogout, onViewChange }) {
                         const selectedApp = {
                           company: drive.companyName,
                           jobRole: drive.jobs || drive.jobRole || 'Job Role',
+                          mode: drive.mode || drive.driveMode || '',
+                          package: drive.package || drive.ctc || drive.salaryPackage || '',
+                          bondPeriod: drive.bondPeriod || drive.bond || '',
                           startDate: drive.driveStartDate || drive.companyDriveDate,
                           endDate: drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate,
                           driveId: drive.driveId || drive._id,

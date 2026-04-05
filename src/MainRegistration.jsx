@@ -867,32 +867,37 @@ function MainRegistration() {
     if (!formRef.current) return;
 
     let field = null;
+    let groupContainer = null;
 
     if (fieldName === 'dob') {
       field = formRef.current.querySelector('[data-dob-field]');
     } else if (fieldName === 'batch') {
       field = formRef.current.querySelector('[data-batch-start]') || formRef.current.querySelector('[name="batch"]');
     } else if (fieldName === 'companyTypes') {
-      field = formRef.current.querySelector('input[name="companyTypes"]');
+      groupContainer = formRef.current.querySelector('[data-field-group="companyTypes"]');
+      field = groupContainer?.querySelector('input[type="checkbox"][name="companyTypes"]') || null;
     } else if (fieldName === 'preferredJobLocation') {
-      field = formRef.current.querySelector('input[name="preferredJobLocation"]');
+      groupContainer = formRef.current.querySelector('[data-field-group="preferredJobLocation"]');
+      field = groupContainer?.querySelector('input[type="checkbox"][name="preferredJobLocation"]') || null;
     } else {
       field = formRef.current.querySelector(`[name="${fieldName}"]`);
     }
 
-    if (field) {
-      const section = field.closest('[class*="mr-profile-section-container"]');
+    if (field || groupContainer) {
+      const targetElement = groupContainer || field;
+      const section = targetElement.closest('[class*="mr-profile-section-container"]');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
-        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
       setTimeout(() => {
         if (fieldName === 'companyTypes' || fieldName === 'preferredJobLocation') {
-          const container = field.closest('.mr-checkbox-group') || field.closest('[class*="checkbox"]') || field.parentElement;
+          const container = groupContainer || field?.closest('.mr-checkbox-group') || field?.closest('[class*="checkbox"]') || field?.parentElement;
           if (container) {
             container.classList.add('field-blink');
+            if (field) field.focus();
             setTimeout(() => container.classList.remove('field-blink'), 3000);
           }
         } else if (fieldName === 'batch') {
@@ -2215,7 +2220,7 @@ function MainRegistration() {
                   <input type="hidden" name="companyTypes" value={selectedCompanyTypes.join(", ")} />
                   <input type="hidden" name="preferredJobLocation" value={selectedJobLocations.join(", ")} />
                   
-                  <div className={cx("mr-checkbox-group")}>
+                  <div className={cx("mr-checkbox-group")} data-field-group="companyTypes">
                     <span className={cx("mr-checkbox-group__label")}>Company Types <RequiredStar /></span>
                     <div className={cx("mr-checkbox-group__options")}>
                       {COMPANY_TYPE_OPTIONS.map((option, index) => {
@@ -2236,7 +2241,7 @@ function MainRegistration() {
                       })}
                     </div>
                   </div>
-                  <div className={cx("mr-checkbox-group")}>
+                  <div className={cx("mr-checkbox-group")} data-field-group="preferredJobLocation">
                     <span className={cx("mr-checkbox-group__label")}>Preferred Job Locations <RequiredStar /></span>
                     <div className={cx("mr-checkbox-group__options")}>
                       {JOB_LOCATION_OPTIONS.map((option, index) => {

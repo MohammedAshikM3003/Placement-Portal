@@ -19,6 +19,14 @@ function AdminTraining({ onLogout }) {
 
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
+  const [isAttendancePopupOpen, setIsAttendancePopupOpen] = useState(false);
+  const [attendancePopupLoading, setAttendancePopupLoading] = useState(false);
+  const [attendanceSearchLoading, setAttendanceSearchLoading] = useState(false);
+  const [attendancePopupSchedules, setAttendancePopupSchedules] = useState([]);
+  const [attendanceSelectedCompany, setAttendanceSelectedCompany] = useState('');
+  const [attendanceSelectedCourse, setAttendanceSelectedCourse] = useState('');
+  const [attendanceSelectedStartDate, setAttendanceSelectedStartDate] = useState('');
+  const [attendanceSelectedEndDate, setAttendanceSelectedEndDate] = useState('');
 
   const getPlaceholderText = () => {
     if (selectedCompany && !selectedBatch) return 'Select the Batch';
@@ -58,29 +66,27 @@ function AdminTraining({ onLogout }) {
     const loadTrainingDashboardData = async () => {
       setIsLoadingCards(true);
       try {
-        const [schedules, trainings] = await Promise.all([
+        const [batchAssignments, schedules, trainings] = await Promise.all([
+          mongoDBService.getScheduledTrainingBatchAssignments(),
           mongoDBService.getScheduledTrainings(),
           mongoDBService.getTrainings()
         ]);
 
+        const normalizedBatchAssignments = Array.isArray(batchAssignments) ? batchAssignments : [];
         const normalizedSchedules = Array.isArray(schedules) ? schedules : [];
         const normalizedTrainings = Array.isArray(trainings) ? trainings : [];
 
         const companyList = [...new Set(
-          normalizedSchedules
+          normalizedBatchAssignments
             .map((item) => (item?.companyName || '').toString().trim())
             .filter(Boolean)
         )];
         setCompanies(companyList);
 
         const batchList = [...new Set(
-          normalizedSchedules.flatMap((item) =>
-            Array.isArray(item?.batches)
-              ? item.batches
-                  .map((batch) => (batch?.batchName || '').toString().trim())
-                  .filter(Boolean)
-              : []
-          )
+          normalizedBatchAssignments
+            .map((item) => (item?.batchName || '').toString().trim())
+            .filter(Boolean)
         )];
         setBatches(batchList);
 
@@ -124,6 +130,8 @@ function AdminTraining({ onLogout }) {
             logoText: companyName.charAt(0).toUpperCase() || 'T',
             trainerCount,
             firstCourse,
+            startDate: schedule?.startDate || '',
+            endDate: schedule?.endDate || '',
             batchNames,
             batchCount,
             phaseCount,
@@ -168,6 +176,228 @@ function AdminTraining({ onLogout }) {
     setIsSidebarOpen((v) => !v);
   };
 
+  const formatDateForDisplay = (rawDate) => {
+    if (!rawDate) return '-';
+    const parsed = new Date(rawDate);
+    if (Number.isNaN(parsed.getTime())) return '-';
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const parseScheduleCourses = (scheduleRecord) => {
+    // Handle batch assignments (courseName field)
+    if (scheduleRecord?.courseName) {
+      return [(scheduleRecord.courseName || '').toString().trim()].filter(Boolean);
+    }
+
+    // Handle schedules (phases with applicableCourses)
+    const phases = Array.isArray(scheduleRecord?.phases) ? scheduleRecord.phases : [];
+    const courses = phases.flatMap((phase) => {
+      const applicableCourses = Array.isArray(phase?.applicableCourses) ? phase.applicableCourses : [];
+      return applicableCourses.map((course) => (course || '').toString().trim()).filter(Boolean);
+    });
+
+    return [...new Set(courses)];
+  };
+
+  const normalizeDateKey = (rawDate) => {
+    if (!rawDate) return '';
+    const parsed = new Date(rawDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return rawDate.toString().trim();
+    }
+
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+  };
+
+  const getSelectedAttendanceSchedule = () => {
+    const companyKey = attendanceSelectedCompany.toString().trim().toLowerCase();
+    const courseKey = attendanceSelectedCourse.toString().trim().toLowerCase();
+    const startKey = normalizeDateKey(attendanceSelectedStartDate);
+
+    return attendancePopupSchedules.find((schedule) => {
+      const scheduleCompany = (schedule?.companyName || '').toString().trim().toLowerCase();
+      if (scheduleCompany !== companyKey) return false;
+
+      if (courseKey) {
+        const scheduleCourses = parseScheduleCourses(schedule).map((course) => course.toLowerCase());
+        if (!scheduleCourses.includes(courseKey)) return false;
+      }
+
+      if (startKey) {
+        return normalizeDateKey(schedule?.startDate) === startKey;
+      }
+
+      return true;
+    }) || null;
+  };
+
+  const attendanceCompanyOptions = useMemo(() => {
+    return [...new Set(
+      attendancePopupSchedules
+        .map((schedule) => (schedule?.companyName || '').toString().trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [attendancePopupSchedules]);
+
+  const attendanceCourseOptions = useMemo(() => {
+    if (!attendanceSelectedCompany) return [];
+
+    return [...new Set(
+      attendancePopupSchedules
+        .filter((schedule) => (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany)
+        .flatMap((schedule) => parseScheduleCourses(schedule))
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [attendancePopupSchedules, attendanceSelectedCompany]);
+
+  const attendanceStartDateOptions = useMemo(() => {
+    if (!attendanceSelectedCompany || !attendanceSelectedCourse) return [];
+
+    return [...new Set(
+      attendancePopupSchedules
+        .filter((schedule) => {
+          const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
+          const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
+          return companyMatch && courseMatch;
+        })
+        .map((schedule) => schedule?.startDate || '')
+        .filter(Boolean)
+    )].sort((a, b) => new Date(a) - new Date(b));
+  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse]);
+
+  const todayInfo = useMemo(() => {
+    const now = new Date();
+    const dateOnlyToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const selectedSchedule = getSelectedAttendanceSchedule();
+
+    if (!selectedSchedule?.startDate) {
+      return {
+        todayDate: formatDateForDisplay(dateOnlyToday),
+        trainingDayLabel: 'Training Day -'
+      };
+    }
+
+    const start = new Date(selectedSchedule.startDate);
+    const end = new Date(selectedSchedule.endDate || selectedSchedule.startDate);
+    const dateOnlyStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const dateOnlyEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const diffFromStart = Math.floor((dateOnlyToday.getTime() - dateOnlyStart.getTime()) / oneDayMs) + 1;
+    const totalDays = Math.max(1, Math.floor((dateOnlyEnd.getTime() - dateOnlyStart.getTime()) / oneDayMs) + 1);
+
+    const clampedDay = Math.min(Math.max(diffFromStart, 1), totalDays);
+
+    return {
+      todayDate: formatDateForDisplay(dateOnlyToday),
+      trainingDayLabel: `Training Day ${clampedDay}`
+    };
+  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedStartDate]);
+
+  const handleOpenAttendancePopup = async () => {
+    if (attendancePopupLoading) {
+      return;
+    }
+
+    setAttendancePopupLoading(true);
+    try {
+      const batchAssignments = await mongoDBService.getScheduledTrainingBatchAssignments();
+      const normalizedAssignments = Array.isArray(batchAssignments) ? batchAssignments : [];
+      setAttendancePopupSchedules(normalizedAssignments);
+      setAttendanceSelectedCompany('');
+      setAttendanceSelectedCourse('');
+      setAttendanceSelectedStartDate('');
+      setAttendanceSelectedEndDate('');
+      setIsAttendancePopupOpen(true);
+    } catch (error) {
+      console.error('Failed to load attendance popup data:', error);
+      alert(error.message || 'Failed to load attendance info');
+      setIsAttendancePopupOpen(false);
+    } finally {
+      setAttendancePopupLoading(false);
+    }
+  };
+
+  const handleSearchAttendance = async () => {
+    if (attendanceSearchLoading) {
+      return;
+    }
+
+    const selectedSchedule = getSelectedAttendanceSchedule();
+    if (!selectedSchedule) {
+      alert('Please select Company, Course, and Start Date.');
+      return;
+    }
+
+    setAttendanceSearchLoading(true);
+    try {
+      // Fetch batch assignments for the selected company and course
+      const filters = {
+        companyName: attendanceSelectedCompany,
+        courseName: attendanceSelectedCourse
+      };
+
+      const batchAssignments = await mongoDBService.getScheduledTrainingBatchAssignments(filters);
+      const normalizedAssignments = Array.isArray(batchAssignments) ? batchAssignments : [];
+
+      if (normalizedAssignments.length === 0) {
+        alert('No batch assignments found for the selected company and course.');
+        setAttendanceSearchLoading(false);
+        return;
+      }
+
+      // Navigate to attendance page with the selected data
+      navigate('/admin-attendance-stdinfo', {
+        state: {
+          companyName: attendanceSelectedCompany,
+          courseName: attendanceSelectedCourse,
+          batchName: selectedBatch || '-',
+          scheduleId: selectedSchedule._id || '',
+          startDate: selectedSchedule.startDate || '',
+          endDate: attendanceSelectedEndDate || selectedSchedule.endDate || '',
+          todayDate: todayInfo.todayDate,
+          trainingDay: todayInfo.trainingDayLabel
+        }
+      });
+
+      setIsAttendancePopupOpen(false);
+    } catch (error) {
+      console.error('Failed to fetch batch assignments:', error);
+      alert(error.message || 'Failed to fetch attendance data. Please try again.');
+    } finally {
+      setAttendanceSearchLoading(false);
+    }
+  };
+
+  const handleAttendanceCompanyChange = (value) => {
+    setAttendanceSelectedCompany(value);
+    setAttendanceSelectedCourse('');
+    setAttendanceSelectedStartDate('');
+    setAttendanceSelectedEndDate('');
+  };
+
+  const handleAttendanceCourseChange = (value) => {
+    setAttendanceSelectedCourse(value);
+    setAttendanceSelectedStartDate('');
+    setAttendanceSelectedEndDate('');
+  };
+
+  const handleAttendanceStartDateChange = (value) => {
+    setAttendanceSelectedStartDate(value);
+    const selectedSchedule = attendancePopupSchedules.find((schedule) => {
+      const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
+      const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
+      const startMatch = normalizeDateKey(schedule?.startDate) === normalizeDateKey(value);
+      return companyMatch && courseMatch && startMatch;
+    });
+
+    setAttendanceSelectedEndDate(selectedSchedule?.endDate || '');
+  };
+
   return (
     <div className={styles['ad-tr-page']}>
       <AdNavbar onToggleSidebar={toggleSidebar} />
@@ -202,14 +432,19 @@ function AdminTraining({ onLogout }) {
             <div className={styles['ad-tr-action-sub']}>Click to Schedule Training programs to develop Students skill</div>
           </button>
 
-          <button type="button" className={styles['ad-tr-action-card']}
-          onClick={() => navigate('/admin-attendance-stdinfo')}
+          <button
+            type="button"
+            className={`${styles['ad-tr-action-card']} ${attendancePopupLoading ? styles['ad-tr-action-card-loading'] : ''}`}
+            onClick={handleOpenAttendancePopup}
+            disabled={attendancePopupLoading}
           >
             <div className={styles['ad-tr-action-icon']}>
               <img src={AttendanceTrainingIcon} alt="Attendance and Student Info" />
             </div>
             <div className={styles['ad-tr-action-title']}>Attendance & Student Info</div>
-            <div className={styles['ad-tr-action-sub']}>Click to take Attendance and to view Student info</div>
+            <div className={styles['ad-tr-action-sub']}>
+              {attendancePopupLoading ? 'Loading schedule data...' : 'Click to take Attendance and to view Student info'}
+            </div>
           </button>
 
           <div className={styles['ad-tr-summary-card']}>
@@ -340,6 +575,113 @@ function AdminTraining({ onLogout }) {
           )}
         </div>
       </div>
+
+      {isAttendancePopupOpen && (
+        <div className={styles['ad-tr-att-popup-overlay']}>
+          <div className={styles['ad-tr-att-popup-container']}>
+            <div className={styles['ad-tr-att-popup-header']}>Attendance & Student Info</div>
+
+            <div className={styles['ad-tr-att-popup-body']}>
+              <div className={styles['ad-tr-att-popup-grid']}>
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Company</label>
+                  <div className={styles['ad-tr-att-dropdown-container']}>
+                    <select
+                      className={styles['ad-tr-att-dropdown']}
+                      value={attendanceSelectedCompany}
+                      onChange={(e) => handleAttendanceCompanyChange(e.target.value)}
+                    >
+                      <option value="">Select Company</option>
+                      {attendanceCompanyOptions.map((companyName) => (
+                        <option key={companyName} value={companyName}>{companyName}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Course</label>
+                  <div className={styles['ad-tr-att-dropdown-container']}>
+                    <select
+                      className={styles['ad-tr-att-dropdown']}
+                      value={attendanceSelectedCourse}
+                      onChange={(e) => handleAttendanceCourseChange(e.target.value)}
+                      disabled={!attendanceSelectedCompany}
+                    >
+                      <option value="">Select Course</option>
+                      {attendanceCourseOptions.map((courseName) => (
+                        <option key={courseName} value={courseName}>{courseName}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Start Date</label>
+                  <div className={styles['ad-tr-att-dropdown-container']}>
+                    <select
+                      className={styles['ad-tr-att-dropdown']}
+                      value={attendanceSelectedStartDate}
+                      onChange={(e) => handleAttendanceStartDateChange(e.target.value)}
+                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse}
+                    >
+                      <option value="">Select Start Date</option>
+                      {attendanceStartDateOptions.map((startDate) => (
+                        <option key={startDate} value={startDate}>{formatDateForDisplay(startDate)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>End Date</label>
+                  <div className={styles['ad-tr-att-text-container']}>
+                    <input
+                      className={styles['ad-tr-att-text']}
+                      value={formatDateForDisplay(attendanceSelectedEndDate)}
+                      readOnly
+                      placeholder="Auto fetched"
+                    />
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Today Date</label>
+                  <div className={styles['ad-tr-att-text-container']}>
+                    <input className={styles['ad-tr-att-text']} value={todayInfo.todayDate} readOnly />
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Training Day</label>
+                  <div className={styles['ad-tr-att-text-container']}>
+                    <input className={styles['ad-tr-att-text']} value={todayInfo.trainingDayLabel} readOnly />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles['ad-tr-att-popup-footer']}>
+              <button
+                type="button"
+                className={styles['ad-tr-att-popup-close-btn']}
+                onClick={() => setIsAttendancePopupOpen(false)}
+                disabled={attendanceSearchLoading}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className={styles['ad-tr-att-popup-search-btn']}
+                onClick={handleSearchAttendance}
+                disabled={attendanceSearchLoading}
+              >
+                {attendanceSearchLoading ? 'Search...' : 'Search'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

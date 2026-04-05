@@ -12,7 +12,7 @@ import autoTable from 'jspdf-autotable';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
-const DeleteConfirmationPopup = ({ onClose, onConfirm, isDeleting }) => (
+const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
     <div className={styles['Admin-ht-popup-overlay']}>
         <div className={styles['Admin-ht-popup-container']}>
             <div className={styles['Admin-ht-popup-header']}>Delete Training History</div>
@@ -25,7 +25,7 @@ const DeleteConfirmationPopup = ({ onClose, onConfirm, isDeleting }) => (
                 </div>
                 <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
                 <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
-                    Delete this training history?
+                    Delete {selectedCount} selected training history entr{selectedCount === 1 ? 'y' : 'ies'}?
                 </p>
             </div>
             <div className={styles['Admin-ht-popup-footer']}>
@@ -108,6 +108,34 @@ function AdminHistoryTraining({ onLogout }) {
     const [trainingHistory, setTrainingHistory] = useState([]);
     const [selectedHistoryIds, setSelectedHistoryIds] = useState(new Set());
 
+    const normalizeDateValue = (date) => {
+        if (date === null || date === undefined || date === '') {
+            return '-';
+        }
+
+        if (typeof date === 'string') {
+            const trimmed = date.trim();
+            if (!trimmed) {
+                return '-';
+            }
+
+            const isoMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
+            if (isoMatch) {
+                return isoMatch[0].slice(0, 10);
+            }
+        }
+
+        const parsedDate = new Date(date);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return String(date).trim() || '-';
+        }
+
+        const year = parsedDate.getFullYear();
+        const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(parsedDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
     };
@@ -159,8 +187,8 @@ function AdminHistoryTraining({ onLogout }) {
                     const phaseNumber = phase?.phaseNumber || `Phase ${phaseIdx + 1}`;
                     const trainer = phase?.trainer || '-';
                     const applicableYear = phase?.applicableYear || '-';
-                    const phaseStartDate = phase?.startDate || schedule?.startDate || '-';
-                    const phaseEndDate = phase?.endDate || schedule?.endDate || '-';
+                    const phaseStartDate = normalizeDateValue(phase?.startDate || schedule?.startDate);
+                    const phaseEndDate = normalizeDateValue(phase?.endDate || schedule?.endDate);
                     const phaseDuration = phase?.duration || '-';
                     const applicableCourses = Array.isArray(phase?.applicableCourses) ? phase.applicableCourses : [];
 
@@ -239,6 +267,7 @@ function AdminHistoryTraining({ onLogout }) {
     };
 
     const isHistorySelected = selectedHistoryIds.size > 0;
+    const selectedHistoryCount = selectedHistoryIds.size;
 
     const handleEdit = () => {
         if (companyFromState) {
@@ -306,8 +335,8 @@ function AdminHistoryTraining({ onLogout }) {
     const filteredHistory = trainingHistory.filter(history => {
         const courseMatch = filterCourse === '' || history.courseName.toLowerCase().includes(filterCourse.toLowerCase());
         const batchMatch = filterBatch === '' || history.batch.toLowerCase().includes(filterBatch.toLowerCase());
-        const startDateMatch = filterStartDate === '' || history.startDate === filterStartDate;
-        const endDateMatch = filterEndDate === '' || history.endDate === filterEndDate;
+        const startDateMatch = filterStartDate === '' || normalizeDateValue(history.startDate) === filterStartDate;
+        const endDateMatch = filterEndDate === '' || normalizeDateValue(history.endDate) === filterEndDate;
 
         return courseMatch && batchMatch && startDateMatch && endDateMatch;
     });
@@ -423,6 +452,7 @@ function AdminHistoryTraining({ onLogout }) {
                 <DeleteConfirmationPopup
                     onClose={closePopup}
                     onConfirm={confirmDelete}
+                    selectedCount={selectedHistoryCount}
                     isDeleting={deleteInProgress}
                 />
             )}
@@ -555,6 +585,7 @@ function AdminHistoryTraining({ onLogout }) {
                                 <button
                                     className={`${styles['Admin-ht-action-btn']} ${styles['Admin-ht-delete-btn']}`}
                                     onClick={handleDeleteClick}
+                                    disabled={!isHistorySelected}
                                 >
                                     Delete
                                 </button>
@@ -588,6 +619,7 @@ function AdminHistoryTraining({ onLogout }) {
                             <table className={styles['Admin-ht-history-table']}>
                                 <thead>
                                     <tr className={styles['Admin-ht-table-head-row']}>
+                                        <th className={`${styles['Admin-ht-th']} ${styles['Admin-ht-checkbox']}`}>Select</th>
                                         <th className={`${styles['Admin-ht-th']} ${styles['Admin-ht-sno']}`}>S.No</th>
                                         <th className={`${styles['Admin-ht-th']} ${styles['Admin-ht-course']}`}>Course</th>
                                         <th className={`${styles['Admin-ht-th']} ${styles['Admin-ht-startdate']}`}>Start Date</th>
@@ -602,7 +634,7 @@ function AdminHistoryTraining({ onLogout }) {
                                 <tbody>
                                     {isInitialLoading ? (
                                         <tr className={styles['Admin-ht-loading-row']}>
-                                            <td colSpan="9" className={styles['Admin-ht-loading-cell']}>
+                                            <td colSpan="10" className={styles['Admin-ht-loading-cell']}>
                                                 <div className={styles['Admin-ht-loading-wrapper']}>
                                                     <div className={styles['Admin-ht-spinner']}></div>
                                                     <span className={styles['Admin-ht-loading-text']}>Loading training history...</span>
@@ -611,7 +643,7 @@ function AdminHistoryTraining({ onLogout }) {
                                         </tr>
                                     ) : filteredHistory.length === 0 ? (
                                         <tr className={styles['Admin-ht-table-row']}>
-                                            <td colSpan="9" className={styles['Admin-ht-td']} style={{ textAlign: 'center' }}>
+                                            <td colSpan="10" className={styles['Admin-ht-td']} style={{ textAlign: 'center' }}>
                                                 No training history found.
                                             </td>
                                         </tr>
@@ -621,6 +653,15 @@ function AdminHistoryTraining({ onLogout }) {
                                                 key={history._id}
                                                 className={`${styles['Admin-ht-table-row']} ${selectedHistoryIds.has(history._id) ? styles['Admin-ht-selected-row'] : ''}`}
                                             >
+                                                <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-checkbox']}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className={styles['Admin-ht-checkbox-input']}
+                                                        checked={selectedHistoryIds.has(history._id)}
+                                                        onChange={() => handleHistorySelect(history._id)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-sno']}`}>{index + 1}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-course']}`}>{history.courseName}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-startdate']}`}>{history.startDate}</td>

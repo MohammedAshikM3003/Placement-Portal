@@ -1,12 +1,71 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar';
 import AdSidebar from '../components/Sidebar/Adsidebar';
 import styles from './Admin_Schedule_Training.module.css';
 import Ad_Calendar from '../components/Calendar/Ad_Calendar';
 import mongoDBService from '../services/mongoDBService';
 
+const parseMultiValue = (value) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (item || '').toString().trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const normalizeYearToken = (value = '') => {
+  const raw = value.toString().trim().toUpperCase();
+  if (!raw) return '';
+
+  const compact = raw.replace(/[^A-Z0-9]/g, '');
+  if (!compact) return '';
+
+  const yearAliases = {
+    '1': 'I',
+    '01': 'I',
+    '1ST': 'I',
+    '1STYEAR': 'I',
+    'FIRST': 'I',
+    'FIRSTYEAR': 'I',
+    'I': 'I',
+    '2': 'II',
+    '02': 'II',
+    '2ND': 'II',
+    '2NDYEAR': 'II',
+    'SECOND': 'II',
+    'SECONDYEAR': 'II',
+    'II': 'II',
+    '3': 'III',
+    '03': 'III',
+    '3RD': 'III',
+    '3RDYEAR': 'III',
+    'THIRD': 'III',
+    'THIRDYEAR': 'III',
+    'III': 'III',
+    '4': 'IV',
+    '04': 'IV',
+    '4TH': 'IV',
+    '4THYEAR': 'IV',
+    'FOURTH': 'IV',
+    'FOURTHYEAR': 'IV',
+    'IV': 'IV'
+  };
+
+  return yearAliases[compact] || compact;
+};
+
 const AdminScheduleTraining = ({ onLogout }) => {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const scheduleMode = (searchParams.get('mode') || 'new').toLowerCase();
@@ -36,6 +95,8 @@ const AdminScheduleTraining = ({ onLogout }) => {
   // Preferred Training state
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [scheduledBatches, setScheduledBatches] = useState([]);
+  const [coursesWithStudents, setCoursesWithStudents] = useState({});
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -80,6 +141,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
       setTrainers([]);
       setAvailableCourses([]);
       setSelectedCourses([]);
+      setScheduledBatches([]);
       setSelectedTrainer('');
       return;
     }
@@ -143,6 +205,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
         setEndDate('');
         setDuration('');
         setSelectedCourses([]);
+        setScheduledBatches([]);
         return;
       }
 
@@ -155,6 +218,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
         setEndDate('');
         setDuration('');
         setSelectedCourses([]);
+        setScheduledBatches([]);
         return;
       }
 
@@ -182,6 +246,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
           setEndDate(firstPhase.endDate || '');
           setDuration(firstPhase.duration || '');
           setSelectedCourses(Array.isArray(firstPhase.applicableCourses) ? firstPhase.applicableCourses : []);
+          setScheduledBatches(Array.isArray(existingSchedule.batches) ? existingSchedule.batches : []);
         } else {
           setCurrentScheduleId('');
           setPhaseNumber('');
@@ -191,6 +256,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
           setEndDate('');
           setDuration('');
           setSelectedCourses([]);
+          setScheduledBatches([]);
         }
       } catch (error) {
         console.error('Failed to load schedule for company:', error);
@@ -202,6 +268,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
         setEndDate('');
         setDuration('');
         setSelectedCourses([]);
+        setScheduledBatches([]);
       } finally {
         setIsLoadingSchedule(false);
       }
@@ -224,6 +291,101 @@ const AdminScheduleTraining = ({ onLogout }) => {
     });
   };
 
+  useEffect(() => {
+    const loadCourseAvailability = async () => {
+      const normalizedCourses = [...new Set(
+        (Array.isArray(selectedCourses) ? selectedCourses : [])
+          .map((course) => (course || '').toString().trim())
+          .filter(Boolean)
+      )];
+
+      if (!isEditMode || !company || normalizedCourses.length === 0) {
+        setCoursesWithStudents({});
+        return;
+      }
+
+      const targetYear = normalizeYearToken(applicableYear);
+
+      try {
+        const allStudents = [];
+        const pageSize = 200;
+        let page = 1;
+
+        while (page <= 30) {
+          const response = await mongoDBService.getStudentsPaginated({
+            page,
+            limit: pageSize,
+            includeImages: 'false'
+          });
+
+          const rows = Array.isArray(response?.students) ? response.students : [];
+          allStudents.push(...rows);
+
+          if (!response?.pagination?.hasMore || rows.length < pageSize) {
+            break;
+          }
+
+          page += 1;
+        }
+
+        const counts = {};
+        normalizedCourses.forEach((course) => {
+          counts[course] = 0;
+        });
+
+        allStudents.forEach((student) => {
+          const studentYear = normalizeYearToken(student?.currentYear || student?.year || '');
+          if (targetYear && studentYear !== targetYear) {
+            return;
+          }
+
+          const preferredTrainings = parseMultiValue(student?.preferredTraining)
+            .map((course) => course.toLowerCase());
+
+          normalizedCourses.forEach((course) => {
+            if (preferredTrainings.includes(course.toLowerCase())) {
+              counts[course] += 1;
+            }
+          });
+        });
+
+        setCoursesWithStudents(counts);
+      } catch (error) {
+        console.error('Failed to load course-wise student availability:', error);
+        setCoursesWithStudents({});
+      }
+    };
+
+    loadCourseAvailability();
+  }, [selectedCourses, applicableYear, isEditMode, company]);
+
+  const effectiveBatchCourses = useMemo(() => {
+    const normalized = [...new Set(
+      (Array.isArray(selectedCourses) ? selectedCourses : [])
+        .map((course) => (course || '').toString().trim())
+        .filter(Boolean)
+    )];
+
+    return normalized.filter((course) => (coursesWithStudents[course] || 0) > 0);
+  }, [selectedCourses, coursesWithStudents]);
+
+  const openBatchStudentsPage = (courseName) => {
+    if (!courseName) return;
+
+    navigate('/admin-schedule-training-batch', {
+      state: {
+        scheduleId: currentScheduleId || scheduleIdParam || '',
+        companyName: company,
+        selectedCourse: courseName,
+        applicableYear,
+        trainer: selectedTrainer,
+        scheduleStartDate: startDate,
+        scheduleEndDate: endDate,
+        availableCourses: effectiveBatchCourses
+      }
+    });
+  };
+
   const handleDiscard = () => {
     setCurrentScheduleId('');
     setCompany('');
@@ -236,6 +398,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
     setEndDate('');
     setDuration('');
     setSelectedCourses([]);
+    setScheduledBatches([]);
   };
 
   const handleSave = async () => {
@@ -292,7 +455,8 @@ const AdminScheduleTraining = ({ onLogout }) => {
       location: companyLocation,
       startDate: startDate,
       endDate: endDate,
-      phases: phasesToSave
+      phases: phasesToSave,
+      batches: scheduledBatches
     };
 
     console.log('Final payload being sent:', JSON.stringify(payload, null, 2));
@@ -462,6 +626,32 @@ const AdminScheduleTraining = ({ onLogout }) => {
             )}
           </div>
         </div>
+
+        {isEditMode && company && (
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>Batch</h2>
+            <div className={styles.cardContent}>
+              {isLoadingSchedule ? (
+                <p className={styles.noDataText}>Loading batches...</p>
+              ) : effectiveBatchCourses.length === 0 ? (
+                <p className={styles.noDataText}>No preferred training courses found for this schedule</p>
+              ) : (
+                <div className={styles.batchGrid}>
+                  {effectiveBatchCourses.map((course, idx) => (
+                    <button
+                      key={`${course}-${idx}`}
+                      type="button"
+                      className={styles.batchBtn}
+                      onClick={() => openBatchStudentsPage(course)}
+                    >
+                      {course}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className={styles.actions}>
           <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving}>Discard</button>

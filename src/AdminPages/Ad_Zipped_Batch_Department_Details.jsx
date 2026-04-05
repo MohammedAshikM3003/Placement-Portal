@@ -3,15 +3,14 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
-import styles from './Ad_Zipped_Batch_Department_Students.module.css';
+import styles from './Ad_Zipped_Batch_Department_Details.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
-const Ad_Zipped_Batch_Department_Students = () => {
+const Ad_Zipped_Batch_Department_Details = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { deptId } = useParams();
@@ -39,11 +38,10 @@ const Ad_Zipped_Batch_Department_Students = () => {
     // Department stats
     const [deptStats, setDeptStats] = useState({
         name: deptName,
-        batch: batchData.archiveName || '',
-        year: batchData.year || '',
-        totalSections: deptData.sections || 0,
-        totalStudents: deptData.totalStudents || 0,
-        placedStudents: deptData.placedStudents || 0
+        batch: batchData.year || '2023 - 2027',
+        totalSections: deptData.sections || 3,
+        totalStudents: deptData.totalStudents || 67,
+        placedStudents: deptData.placedStudents || 12
     });
 
     // Available sections for dropdown
@@ -67,14 +65,15 @@ const Ad_Zipped_Batch_Department_Students = () => {
             setError(null);
 
             // Sample data for zipped batch department students
-            // In production, this would fetch from API based on deptId and archiveId
             const sampleStudents = [
-                { id: 1, registerNumber: '21CS001', name: 'John Doe', section: 'A', phone: '9876543210', email: 'john@example.com', placementStatus: 'Placed' },
-                { id: 2, registerNumber: '21CS002', name: 'Jane Smith', section: 'A', phone: '9876543211', email: 'jane@example.com', placementStatus: 'Unplaced' },
-                { id: 3, registerNumber: '21CS003', name: 'Mike Johnson', section: 'B', phone: '9876543212', email: 'mike@example.com', placementStatus: 'Placed' },
-                { id: 4, registerNumber: '21CS004', name: 'Sarah Williams', section: 'B', phone: '9876543213', email: 'sarah@example.com', placementStatus: 'Unplaced' },
-                { id: 5, registerNumber: '21CS005', name: 'David Brown', section: 'C', phone: '9876543214', email: 'david@example.com', placementStatus: 'Placed' },
-                { id: 6, registerNumber: '21CS006', name: 'Emily Davis', section: 'C', phone: '9876543215', email: 'emily@example.com', placementStatus: 'Unplaced' },
+                { id: 1, registerNumber: '727823TUCS001', name: 'Aakash Kumar', section: 'A', phone: '9876543210', email: 'aakash@example.com', placementStatus: 'Placed' },
+                { id: 2, registerNumber: '727823TUCS002', name: 'Bharath Raj', section: 'A', phone: '9876543211', email: 'bharath@example.com', placementStatus: 'Unplaced' },
+                { id: 3, registerNumber: '727823TUCS003', name: 'Chitra Devi', section: 'B', phone: '9876543212', email: 'chitra@example.com', placementStatus: 'Placed' },
+                { id: 4, registerNumber: '727823TUCS004', name: 'Deepak Singh', section: 'B', phone: '9876543213', email: 'deepak@example.com', placementStatus: 'Unplaced' },
+                { id: 5, registerNumber: '727823TUCS005', name: 'Ezhil Arasi', section: 'C', phone: '9876543214', email: 'ezhil@example.com', placementStatus: 'Placed' },
+                { id: 6, registerNumber: '727823TUCS006', name: 'Fathima Banu', section: 'C', phone: '9876543215', email: 'fathima@example.com', placementStatus: 'Unplaced' },
+                { id: 7, registerNumber: '727823TUCS007', name: 'Ganesh Murthy', section: 'A', phone: '9876543216', email: 'ganesh@example.com', placementStatus: 'Placed' },
+                { id: 8, registerNumber: '727823TUCS008', name: 'Harini Priya', section: 'B', phone: '9876543217', email: 'harini@example.com', placementStatus: 'Unplaced' },
             ];
 
             setStudents(sampleStudents);
@@ -184,7 +183,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
 
-            const fileName = `${deptStats.name}_${batchData.archiveName || 'Archive'}_Students.xlsx`;
+            const fileName = `${deptStats.name}_Students.xlsx`;
             XLSX.writeFile(workbook, fileName);
 
             clearInterval(progressInterval);
@@ -224,7 +223,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
             const doc = new jsPDF('landscape');
 
             doc.setFontSize(16);
-            doc.text(`${deptStats.name} - ${batchData.archiveName || 'Archive'}`, 14, 20);
+            doc.text(`${deptStats.name}`, 14, 20);
 
             const tableData = filteredStudents.map((student, index) => [
                 index + 1,
@@ -244,7 +243,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
                 headStyles: { fillColor: [78, 162, 78] }
             });
 
-            const fileName = `${deptStats.name}_${batchData.archiveName || 'Archive'}_Students.pdf`;
+            const fileName = `${deptStats.name}_Students.pdf`;
             doc.save(fileName);
 
             clearInterval(progressInterval);
@@ -263,7 +262,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
     // Close export menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (showExportMenu && !e.target.closest(`.${styles['Ad-zbds-print-button-container']}`)) {
+            if (showExportMenu && !e.target.closest(`.${styles['Ad-zbdd-print-button-container']}`)) {
                 setShowExportMenu(false);
             }
         };
@@ -272,7 +271,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
     }, [showExportMenu]);
 
     if (authLoading) {
-        return <div className={styles['Ad-zbds-layout']}>Loading...</div>;
+        return <div className={styles['Ad-zbdd-layout']}>Loading...</div>;
     }
 
     if (!isAuthenticated) {
@@ -280,7 +279,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
     }
 
     return (
-        <div className={styles['Ad-zbds-layout']}>
+        <div className={styles['Ad-zbdd-layout']}>
             {/* Navbar */}
             <Adnavbar
                 onMenuClick={toggleSidebar}
@@ -294,32 +293,32 @@ const Ad_Zipped_Batch_Department_Students = () => {
             {/* Overlay for mobile */}
             {isSidebarOpen && (
                 <div
-                    className={styles['Ad-zbds-overlay']}
+                    className={styles['Ad-zbdd-overlay']}
                     onClick={handleOverlayClick}
                 />
             )}
 
             {/* Main Content */}
-            <main className={styles['Ad-zbds-main-content']}>
+            <main className={styles['Ad-zbdd-main-content']}>
                 {/* Top Section - Filter and Stats */}
-                <div className={styles['Ad-zbds-top-section']}>
+                <div className={styles['Ad-zbdd-top-section']}>
                     {/* Filter Card */}
-                    <div className={styles['Ad-zbds-filter-card']}>
-                        <div className={styles['Ad-zbds-filter-header']}>
+                    <div className={styles['Ad-zbdd-filter-card']}>
+                        <div className={styles['Ad-zbdd-filter-header']}>
                             <span>Filter & Sort</span>
                         </div>
-                        <div className={styles['Ad-zbds-filter-content']}>
-                            <div className={styles['Ad-zbds-filter-row']}>
+                        <div className={styles['Ad-zbdd-filter-content']}>
+                            <div className={styles['Ad-zbdd-filter-row']}>
                                 <input
                                     type="text"
-                                    className={styles['Ad-zbds-input']}
+                                    className={styles['Ad-zbdd-input']}
                                     placeholder="Name"
                                     value={nameFilter}
                                     onChange={(e) => setNameFilter(e.target.value)}
                                 />
-                                <div className={styles['Ad-zbds-select-wrapper']}>
+                                <div className={styles['Ad-zbdd-select-wrapper']}>
                                     <select
-                                        className={styles['Ad-zbds-select']}
+                                        className={styles['Ad-zbdd-select']}
                                         value={sectionFilter}
                                         onChange={(e) => setSectionFilter(e.target.value)}
                                     >
@@ -329,24 +328,24 @@ const Ad_Zipped_Batch_Department_Students = () => {
                                         ))}
                                     </select>
                                 </div>
-                            </div>
-                            <div className={styles['Ad-zbds-filter-row']}>
                                 <input
                                     type="text"
-                                    className={styles['Ad-zbds-input']}
+                                    className={styles['Ad-zbdd-input']}
                                     placeholder="Regno"
                                     value={regnoFilter}
                                     onChange={(e) => setRegnoFilter(e.target.value)}
                                 />
-                                <div className={styles['Ad-zbds-filter-buttons']}>
+                            </div>
+                            <div className={styles['Ad-zbdd-filter-row']}>
+                                <div className={styles['Ad-zbdd-filter-buttons']}>
                                     <button
-                                        className={styles['Ad-zbds-filter-btn']}
+                                        className={styles['Ad-zbdd-filter-btn']}
                                         onClick={applyFilters}
                                     >
                                         Filter
                                     </button>
                                     <button
-                                        className={styles['Ad-zbds-discard-btn']}
+                                        className={styles['Ad-zbdd-discard-btn']}
                                         onClick={discardFilters}
                                     >
                                         Discard
@@ -357,47 +356,47 @@ const Ad_Zipped_Batch_Department_Students = () => {
                     </div>
 
                     {/* Department Stats Card */}
-                    <div className={styles['Ad-zbds-stats-card']}>
-                        <h2 className={styles['Ad-zbds-stats-title']}>{deptStats.name}</h2>
-                        <div className={styles['Ad-zbds-stats-content']}>
-                            <div className={styles['Ad-zbds-stat-row']}>
-                                <span className={styles['Ad-zbds-stat-label']}>Archive</span>
-                                <span className={styles['Ad-zbds-stat-colon']}>:</span>
-                                <span className={styles['Ad-zbds-stat-value']}>{deptStats.batch}</span>
+                    <div className={styles['Ad-zbdd-stats-card']}>
+                        <h2 className={styles['Ad-zbdd-stats-title']}>{deptStats.name || 'Computer Science and Engineering'}</h2>
+                        <div className={styles['Ad-zbdd-stats-content']}>
+                            <div className={styles['Ad-zbdd-stat-row']}>
+                                <span className={styles['Ad-zbdd-stat-label']}>Batch</span>
+                                <span className={styles['Ad-zbdd-stat-colon']}>:</span>
+                                <span className={styles['Ad-zbdd-stat-value']}>{deptStats.batch}</span>
                             </div>
-                            <div className={styles['Ad-zbds-stat-row']}>
-                                <span className={styles['Ad-zbds-stat-label']}>Year</span>
-                                <span className={styles['Ad-zbds-stat-colon']}>:</span>
-                                <span className={styles['Ad-zbds-stat-value']}>{deptStats.year}</span>
+                            <div className={styles['Ad-zbdd-stat-row']}>
+                                <span className={styles['Ad-zbdd-stat-label']}>Total Sections</span>
+                                <span className={styles['Ad-zbdd-stat-colon']}>:</span>
+                                <span className={styles['Ad-zbdd-stat-value']}>{deptStats.totalSections}</span>
                             </div>
-                            <div className={styles['Ad-zbds-stat-row']}>
-                                <span className={styles['Ad-zbds-stat-label']}>Total Students</span>
-                                <span className={styles['Ad-zbds-stat-colon']}>:</span>
-                                <span className={styles['Ad-zbds-stat-value']}>{deptStats.totalStudents}</span>
+                            <div className={styles['Ad-zbdd-stat-row']}>
+                                <span className={styles['Ad-zbdd-stat-label']}>Total Students</span>
+                                <span className={styles['Ad-zbdd-stat-colon']}>:</span>
+                                <span className={styles['Ad-zbdd-stat-value']}>{deptStats.totalStudents}</span>
                             </div>
-                            <div className={styles['Ad-zbds-stat-row']}>
-                                <span className={styles['Ad-zbds-stat-label']}>Placed Students</span>
-                                <span className={styles['Ad-zbds-stat-colon']}>:</span>
-                                <span className={styles['Ad-zbds-stat-value']}>{deptStats.placedStudents}</span>
+                            <div className={styles['Ad-zbdd-stat-row']}>
+                                <span className={styles['Ad-zbdd-stat-label']}>Placed Students</span>
+                                <span className={styles['Ad-zbdd-stat-colon']}>:</span>
+                                <span className={styles['Ad-zbdd-stat-value']}>{deptStats.placedStudents}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Table Section */}
-                <div className={styles['Ad-zbds-table-card']}>
-                    <div className={styles['Ad-zbds-table-header']}>
-                        <h3 className={styles['Ad-zbds-table-title']}>{deptStats.name.toUpperCase()}</h3>
-                        <div className={styles['Ad-zbds-print-button-container']}>
+                <div className={styles['Ad-zbdd-table-card']}>
+                    <div className={styles['Ad-zbdd-table-header']}>
+                        <h3 className={styles['Ad-zbdd-table-title']}>{(deptStats.name || 'COMPUTER SCIENCE & ENGINEERING').toUpperCase()}</h3>
+                        <div className={styles['Ad-zbdd-print-button-container']}>
                             <button
-                                className={styles['Ad-zbds-print-btn']}
+                                className={styles['Ad-zbdd-print-btn']}
                                 onClick={() => setShowExportMenu(!showExportMenu)}
                                 disabled={isExporting}
                             >
                                 Print
                             </button>
                             {showExportMenu && (
-                                <div className={styles['Ad-zbds-export-menu']}>
+                                <div className={styles['Ad-zbdd-export-menu']}>
                                     <button onClick={handleExportExcel}>Export to Excel</button>
                                     <button onClick={handleExportPDF}>Export as PDF</button>
                                 </div>
@@ -405,55 +404,55 @@ const Ad_Zipped_Batch_Department_Students = () => {
                         </div>
                     </div>
 
-                    <div className={styles['Ad-zbds-table-container']}>
-                        <table className={styles['Ad-zbds-table']}>
+                    <div className={styles['Ad-zbdd-table-container']}>
+                        <table className={styles['Ad-zbdd-table']}>
                             <thead>
-                                <tr className={styles['Ad-zbds-table-head-row']}>
-                                    <th className={styles['Ad-zbds-th']}>S.No</th>
-                                    <th className={styles['Ad-zbds-th']}>Register Number</th>
-                                    <th className={styles['Ad-zbds-th']}>Name</th>
-                                    <th className={styles['Ad-zbds-th']}>Section</th>
-                                    <th className={styles['Ad-zbds-th']}>Phone</th>
-                                    <th className={styles['Ad-zbds-th']}>Email</th>
-                                    <th className={styles['Ad-zbds-th']}>Status</th>
-                                    <th className={styles['Ad-zbds-th']}>Profile</th>
+                                <tr className={styles['Ad-zbdd-table-head-row']}>
+                                    <th className={styles['Ad-zbdd-th']}>S.No</th>
+                                    <th className={styles['Ad-zbdd-th']}>Register Number</th>
+                                    <th className={styles['Ad-zbdd-th']}>Name</th>
+                                    <th className={styles['Ad-zbdd-th']}>Section</th>
+                                    <th className={styles['Ad-zbdd-th']}>Phone</th>
+                                    <th className={styles['Ad-zbdd-th']}>Email</th>
+                                    <th className={styles['Ad-zbdd-th']}>Status</th>
+                                    <th className={styles['Ad-zbdd-th']}>Profile</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan="8" className={styles['Ad-zbds-loading-cell']}>
-                                            <div className={styles['Ad-zbds-spinner']}></div>
+                                        <td colSpan="8" className={styles['Ad-zbdd-loading-cell']}>
+                                            <div className={styles['Ad-zbdd-spinner']}></div>
                                             <span>Loading...</span>
                                         </td>
                                     </tr>
                                 ) : filteredStudents.length === 0 ? (
                                     <tr>
-                                        <td colSpan="8" className={styles['Ad-zbds-no-data']}>
+                                        <td colSpan="8" className={styles['Ad-zbdd-no-data']}>
                                             No students found
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredStudents.map((student, index) => (
-                                        <tr key={student.id || index} className={styles['Ad-zbds-table-row']}>
-                                            <td className={styles['Ad-zbds-td']}>{index + 1}</td>
-                                            <td className={styles['Ad-zbds-td']}>{student.registerNumber}</td>
-                                            <td className={`${styles['Ad-zbds-td']} ${styles['Ad-zbds-td-name']}`}>{student.name}</td>
-                                            <td className={styles['Ad-zbds-td']}>{student.section}</td>
-                                            <td className={styles['Ad-zbds-td']}>{student.phone}</td>
-                                            <td className={styles['Ad-zbds-td']}>{student.email}</td>
-                                            <td className={styles['Ad-zbds-td']}>
-                                                <span className={`${styles['Ad-zbds-status-tag']} ${
+                                        <tr key={student.id || index} className={styles['Ad-zbdd-table-row']}>
+                                            <td className={styles['Ad-zbdd-td']}>{index + 1}</td>
+                                            <td className={styles['Ad-zbdd-td']}>{student.registerNumber}</td>
+                                            <td className={`${styles['Ad-zbdd-td']} ${styles['Ad-zbdd-td-name']}`}>{student.name}</td>
+                                            <td className={styles['Ad-zbdd-td']}>{student.section}</td>
+                                            <td className={styles['Ad-zbdd-td']}>{student.phone}</td>
+                                            <td className={styles['Ad-zbdd-td']}>{student.email}</td>
+                                            <td className={styles['Ad-zbdd-td']}>
+                                                <span className={`${styles['Ad-zbdd-status-tag']} ${
                                                     student.placementStatus === 'Placed'
-                                                        ? styles['Ad-zbds-status-placed']
-                                                        : styles['Ad-zbds-status-unplaced']
+                                                        ? styles['Ad-zbdd-status-placed']
+                                                        : styles['Ad-zbdd-status-unplaced']
                                                 }`}>
                                                     {student.placementStatus}
                                                 </span>
                                             </td>
-                                            <td className={styles['Ad-zbds-td']}>
+                                            <td className={styles['Ad-zbdd-td']}>
                                                 <button
-                                                    className={styles['Ad-zbds-view-btn']}
+                                                    className={styles['Ad-zbdd-view-btn']}
                                                     onClick={() => handleViewProfile(student)}
                                                 >
                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -471,8 +470,8 @@ const Ad_Zipped_Batch_Department_Students = () => {
                 </div>
 
                 {/* Back Button */}
-                <div className={styles['Ad-zbds-back-container']}>
-                    <button className={styles['Ad-zbds-back-btn']} onClick={handleBack}>
+                <div className={styles['Ad-zbdd-back-container']}>
+                    <button className={styles['Ad-zbdd-back-btn']} onClick={handleBack}>
                         Back
                     </button>
                 </div>
@@ -499,4 +498,4 @@ const Ad_Zipped_Batch_Department_Students = () => {
     );
 };
 
-export default Ad_Zipped_Batch_Department_Students;
+export default Ad_Zipped_Batch_Department_Details;

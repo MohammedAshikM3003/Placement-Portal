@@ -574,12 +574,15 @@ function Admincdd() {
         // Don't fail the entire save if application update fails
       }
 
-      // Show success popup
+      // Show success popup based on both round position and remaining students.
       const totalRounds = companyInfo.rounds || 1;
-      const willAdvance = activeRound < totalRounds;
-      const lastRound = activeRound === totalRounds;
+      const hasMoreRounds = activeRound < totalRounds;
+      const passedStudentsForNextRound = roundResults.filter((student) => student.status === 'Passed');
+      const hasStudentsForNextRound = passedStudentsForNextRound.length > 0;
+      const willAdvance = hasMoreRounds && hasStudentsForNextRound;
+      const lastRound = !hasMoreRounds || !hasStudentsForNextRound;
       
-      // Set last round state
+      // Set final/completed state
       setIsLastRound(lastRound);
       setIsLastRoundSaved(false); // Reset before attempting save
       
@@ -602,7 +605,7 @@ function Admincdd() {
       
       console.log('Updated round results after save:', updatedResults);
 
-      // If this is the last round, save passed students to PlacedStudent collection
+      // If completed (final round or no students left for next round), save passed students to PlacedStudent collection
       if (lastRound) {
         try {
           const passedStudents = roundResults.filter(student => student.status === 'Passed');
@@ -956,7 +959,7 @@ function Admincdd() {
               {/* Right Card - Report Analysis */}
               <div 
                 className={`${styles['Admin-cdd-summary-card1']} ${styles['Admin-cdd-placed-students-card']}`}
-                onClick={() => navigate('/report-analysis')}
+                onClick={() => navigate('/admin-report-analysis-rarw')}
               >
                 <div className={`${styles['Admin-cdd-summary-card-icon']} ${styles['Admin-cdd-report-icon-wrapper']}`}>
                   <img src={PlacedStudentsCap} alt="Report Analysis" className={styles['Admin-cdd-report-icon-img']} />

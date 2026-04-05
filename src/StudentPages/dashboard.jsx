@@ -151,11 +151,11 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
     return null;
   });
 
-  // Attendance data state - Initialize from cache immediately
+  // Training attendance data state - Initialize from cache immediately
   const [attendanceData, setAttendanceData] = React.useState(() => {
     try {
-      const cachedAttendance = localStorage.getItem('studentAttendanceCache');
-      const cacheTime = localStorage.getItem('studentAttendanceCacheTime');
+      const cachedAttendance = localStorage.getItem('studentTrainingAttendanceCache');
+      const cacheTime = localStorage.getItem('studentTrainingAttendanceCacheTime');
       
       if (cachedAttendance && cacheTime) {
         const cacheAge = Date.now() - parseInt(cacheTime, 10);
@@ -163,12 +163,12 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
         
         if (cacheAge < cacheExpiry) {
           const cached = JSON.parse(cachedAttendance);
-          console.log('⚡ Dashboard: Loaded attendance from cache', cached);
+          console.log('⚡ Dashboard: Loaded training attendance from cache', cached);
           return cached;
         }
       }
     } catch (error) {
-      console.error('❌ Dashboard: Error loading cached attendance:', error);
+      console.error('❌ Dashboard: Error loading cached training attendance:', error);
     }
     return { present: 0, absent: 0 };
   });
@@ -231,18 +231,18 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
     };
   }, [studentData]);
 
-  // Fetch attendance data from MongoDB (ONCE per session, in background)
+  // Fetch training attendance data from MongoDB (ONCE per session, in background)
   React.useEffect(() => {
     const fetchAttendanceData = async () => {
       // Check cache first
-      const cachedAttendance = localStorage.getItem('studentAttendanceCache');
-      const cacheTime = localStorage.getItem('studentAttendanceCacheTime');
+      const cachedAttendance = localStorage.getItem('studentTrainingAttendanceCache');
+      const cacheTime = localStorage.getItem('studentTrainingAttendanceCacheTime');
       const cacheExpiry = 5 * 60 * 1000; // 5 minutes
       
       if (cachedAttendance && cacheTime) {
         const cacheAge = Date.now() - parseInt(cacheTime, 10);
         if (cacheAge < cacheExpiry) {
-          console.log('✅ Dashboard: Using cached attendance, no fetch needed');
+          console.log('✅ Dashboard: Using cached training attendance, no fetch needed');
           attendanceFetchedRef.current = true;
           return; // Cache is fresh, don't fetch
         }
@@ -250,7 +250,7 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
       
       // Prevent multiple concurrent fetches
       if (attendanceFetchedRef.current) {
-        console.log('⏭️ Dashboard: Attendance already fetched, skipping...');
+        console.log('⏭️ Dashboard: Training attendance already fetched, skipping...');
         return;
       }
       
@@ -260,29 +260,28 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
         
         const storedStudentData = studentData || JSON.parse(localStorage.getItem('studentData') || 'null');
         if (storedStudentData && storedStudentData.regNo) {
-          console.log('📊 Dashboard: Fetching attendance for', storedStudentData.regNo);
+          console.log('📊 Dashboard: Fetching training attendance for', storedStudentData.regNo);
           
-          // Fetch attendance from database
-          const response = await mongoDBService.getStudentAttendanceByRegNo(storedStudentData.regNo);
+          // Fetch training attendance from database
+          const response = await mongoDBService.getStudentTrainingAttendanceByRegNo(storedStudentData.regNo);
           
-          if (response.success && response.data) {
+          if (Array.isArray(response?.data)) {
             const records = response.data;
-            // Count present and absent drives
-            const present = records.filter(r => r.status === 'Present').length;
-            const absent = records.filter(r => r.status === 'Absent').length;
+            const present = records.filter((record) => (record?.status || '').toString().trim().toLowerCase() === 'present').length;
+            const absent = records.filter((record) => (record?.status || '').toString().trim().toLowerCase() === 'absent').length;
             
             const newAttendanceData = { present, absent };
             
-            console.log('✅ Dashboard: Attendance loaded', newAttendanceData);
+            console.log('✅ Dashboard: Training attendance loaded', newAttendanceData);
             setAttendanceData(newAttendanceData);
             
-            // Cache the attendance data
-            localStorage.setItem('studentAttendanceCache', JSON.stringify(newAttendanceData));
-            localStorage.setItem('studentAttendanceCacheTime', Date.now().toString());
+            // Cache training attendance data
+            localStorage.setItem('studentTrainingAttendanceCache', JSON.stringify(newAttendanceData));
+            localStorage.setItem('studentTrainingAttendanceCacheTime', Date.now().toString());
           }
         }
       } catch (error) {
-        console.error('❌ Dashboard: Error fetching attendance data:', error);
+        console.error('❌ Dashboard: Error fetching training attendance data:', error);
         // Reset ref on error so user can retry
         attendanceFetchedRef.current = false;
       } finally {

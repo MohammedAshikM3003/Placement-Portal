@@ -33,7 +33,11 @@ export {
 export {
   ExportProgressAlert,
   ExportSuccessAlert,
-  ExportFailedAlert
+  ExportFailedAlert,
+  ZippingProgressAlert,
+  UnzippingProgressAlert,
+  ZippedSuccessAlert,
+  UnzippedSuccessAlert
 } from './AdminDownloadPreviewAlerts';
 
 export const useAlert = () => {

@@ -49,9 +49,9 @@ const Ad_ZipActive_Batches_Department = () => {
     // Export states
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [exportProgress, setExportProgress] = useState(null);
-    const [exportSuccess, setExportSuccess] = useState(null);
-    const [exportFailed, setExportFailed] = useState(null);
+    const [exportPopupState, setExportPopupState] = useState('none');
+    const [exportProgress, setExportProgress] = useState(0);
+    const [exportType, setExportType] = useState('Excel');
 
     // Toggle sidebar
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -150,10 +150,25 @@ const Ad_ZipActive_Batches_Department = () => {
 
     // Export functions
     const handleExportExcel = async () => {
+        let progressInterval;
         try {
             setIsExporting(true);
             setShowExportMenu(false);
-            setExportProgress({ message: 'Preparing Excel export...' });
+            setExportType('Excel');
+            setExportPopupState('progress');
+            setExportProgress(0);
+
+            progressInterval = setInterval(() => {
+                setExportProgress((prev) => {
+                    if (prev >= 90) {
+                        clearInterval(progressInterval);
+                        return 90;
+                    }
+                    return prev + 15;
+                });
+            }, 100);
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
 
             const exportData = filteredStudents.map((student, index) => ({
                 'S.No': index + 1,
@@ -172,24 +187,39 @@ const Ad_ZipActive_Batches_Department = () => {
             const fileName = `${deptStats.name}_Students.xlsx`;
             XLSX.writeFile(workbook, fileName);
 
-            setExportProgress(null);
-            setExportSuccess({ message: 'Excel file exported successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
         } catch (err) {
+            clearInterval(progressInterval);
             console.error('Export error:', err);
-            setExportProgress(null);
-            setExportFailed({ message: 'Failed to export Excel file' });
-            setTimeout(() => setExportFailed(null), 3000);
+            setExportPopupState('failed');
         } finally {
             setIsExporting(false);
         }
     };
 
     const handleExportPDF = async () => {
+        let progressInterval;
         try {
             setIsExporting(true);
             setShowExportMenu(false);
-            setExportProgress({ message: 'Preparing PDF export...' });
+            setExportType('PDF');
+            setExportPopupState('progress');
+            setExportProgress(0);
+
+            progressInterval = setInterval(() => {
+                setExportProgress((prev) => {
+                    if (prev >= 90) {
+                        clearInterval(progressInterval);
+                        return 90;
+                    }
+                    return prev + 15;
+                });
+            }, 100);
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
 
             const doc = new jsPDF('landscape');
 
@@ -217,14 +247,14 @@ const Ad_ZipActive_Batches_Department = () => {
             const fileName = `${deptStats.name}_Students.pdf`;
             doc.save(fileName);
 
-            setExportProgress(null);
-            setExportSuccess({ message: 'PDF file exported successfully!' });
-            setTimeout(() => setExportSuccess(null), 3000);
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
         } catch (err) {
+            clearInterval(progressInterval);
             console.error('Export error:', err);
-            setExportProgress(null);
-            setExportFailed({ message: 'Failed to export PDF file' });
-            setTimeout(() => setExportFailed(null), 3000);
+            setExportPopupState('failed');
         } finally {
             setIsExporting(false);
         }
@@ -449,9 +479,22 @@ const Ad_ZipActive_Batches_Department = () => {
             </main>
 
             {/* Export Alerts */}
-            {exportProgress && <ExportProgressAlert message={exportProgress.message} />}
-            {exportSuccess && <ExportSuccessAlert message={exportSuccess.message} onClose={() => setExportSuccess(null)} />}
-            {exportFailed && <ExportFailedAlert message={exportFailed.message} onClose={() => setExportFailed(null)} />}
+            <ExportProgressAlert
+                isOpen={exportPopupState === 'progress'}
+                onClose={() => {}}
+                progress={exportProgress}
+                exportType={exportType}
+            />
+            <ExportSuccessAlert
+                isOpen={exportPopupState === 'success'}
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+            />
+            <ExportFailedAlert
+                isOpen={exportPopupState === 'failed'}
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+            />
         </div>
     );
 };

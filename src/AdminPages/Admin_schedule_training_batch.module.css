@@ -7,7 +7,7 @@
   padding: 18px 22px;
   margin-left: 290px;
   position: relative;
-  top: 64px;
+  top: 55px;
 }
 
 .ad-stb-training-pill {
@@ -25,7 +25,6 @@
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 16px;
-  margin-bottom: 18px;
 }
 
 .ad-stb-filters-card {
@@ -41,6 +40,18 @@
   column-gap: 12px;
 }
 
+.ad-stb-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ad-stb-filter-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5f5f5f;
+}
+
 .ad-stb-input {
   height: 45px;
   border-radius: 12px;
@@ -54,6 +65,20 @@
 .ad-stb-input:hover,
 .ad-stb-input:focus {
   border-color: #4ea24e;
+}
+
+.ad-stb-cgpa-range {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.ad-stb-cgpa-separator {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5f5f5f;
+  line-height: 1;
 }
 
 .ad-stb-search-group,
@@ -89,6 +114,63 @@
   min-width: 230px;
 }
 
+.ad-stb-batch-tabs {
+  display: flex;
+  gap: 15px;
+  margin: 14px 0 0 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 80px;
+  -ms-overflow-style: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4EA24E #e0e0e0;
+}
+
+.ad-stb-batch-tabs::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ad-stb-batch-tabs::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 10px;
+}
+
+.ad-stb-batch-tabs::-webkit-scrollbar-thumb {
+  background: #4EA24E;
+  border-radius: 10px;
+}
+
+.ad-stb-batch-tabs::-webkit-scrollbar-thumb:hover {
+  background: #469146;
+}
+
+.ad-stb-batch-tab {
+  background: #e0e0e0;
+  color: #666;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+  min-width: 120px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ad-stb-batch-tab-active {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.ad-stb-batch-tab:hover:not(.ad-stb-batch-tab-active) {
+  background: #4EA24E;
+  color: white;
+}
+
 .ad-stb-batch-header {
   font-weight: 800;
   font-size: 20px;
@@ -116,7 +198,7 @@
 }
 
 .ad-stb-table-card {
-  margin-top: 16px;
+  margin-top: 10px;
   background: #ffffff;
   border-radius: 18px;
   padding: 16px 20px 14px 20px;
@@ -149,8 +231,8 @@
 
 
 .ad-stb-table-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   margin-bottom: 8px;
 }
@@ -159,6 +241,7 @@
   font-weight: 800;
   font-size: 18px;
   text-align: justify;
+  justify-self: start;
 }
 
 .ad-stb-export-wrapper {
@@ -251,7 +334,7 @@
 }
 
 .ad-stb-table tbody tr {
-  cursor: pointer;
+  cursor: default;
 }
 
 .ad-stb-row-selected td {
@@ -262,55 +345,55 @@
 .ad-stb-table thead th:nth-child(1),
 .ad-stb-table tbody td:nth-child(1) {
   text-align: center;
-  width: 5%;   /* S.No */
+  width: 5%;   /* Checkbox */
 }
 
 .ad-stb-table thead th:nth-child(2),
 .ad-stb-table tbody td:nth-child(2) {
   text-align: center;
-  width: 20%;  /* Student Name */
+  width: 5%;   /* S.No */
 }
 
 .ad-stb-table thead th:nth-child(3),
 .ad-stb-table tbody td:nth-child(3) {
   text-align: center;
-  width: 18%;  /* Register Number */
+  width: 20%;  /* Student Name */
 }
 
 .ad-stb-table thead th:nth-child(4),
 .ad-stb-table tbody td:nth-child(4) {
   text-align: center;
-  width: 10%;  /* Department */
+  width: 18%;  /* Register Number */
 }
 
 .ad-stb-table thead th:nth-child(5),
 .ad-stb-table tbody td:nth-child(5) {
   text-align: center;
-  width: 7%;   /* Year */
+  width: 10%;  /* Department */
 }
 
 .ad-stb-table thead th:nth-child(6),
 .ad-stb-table tbody td:nth-child(6) {
   text-align: center;
-  width: 7%;   /* Section */
+  width: 7%;   /* Year */
 }
 
 .ad-stb-table thead th:nth-child(7),
 .ad-stb-table tbody td:nth-child(7) {
   text-align: center;
-  width: 8%;   /* CGPA */
+  width: 7%;   /* Section */
 }
 
 .ad-stb-table thead th:nth-child(8),
 .ad-stb-table tbody td:nth-child(8) {
   text-align: center;
-  width: 15%;  /* Mobile */
+  width: 8%;   /* CGPA */
 }
 
 .ad-stb-table thead th:nth-child(9),
 .ad-stb-table tbody td:nth-child(9) {
   text-align: center;
-  width: 10%;  /* Action */
+  width: 15%;  /* Mobile */
 }
 
 .ad-stb-action-cell {
@@ -318,23 +401,11 @@
   font-weight: 700;
 }
 
-.ad-stb-action-tick-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #d4d4d4;
-  border-radius: 6px;
-  background: #f9f9f9;
-  color: transparent;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.ad-stb-action-tick-box--selected {
-  color: #27b46d;
-  border-color: #27b46d;
+.ad-stb-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4EA24E;
 }
 
 .ad-stb-inner-actions-row {
@@ -342,6 +413,18 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.ad-stb-selected-count {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2f2f2f;
+  justify-self: center;
+}
+
+.ad-stb-print-button-container {
+  justify-self: end;
 }
 
 .ad-stb-actions-right {

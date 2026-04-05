@@ -260,7 +260,7 @@
     background-color: #fff;
     border: 1px solid #def4dd;
     border-radius: 12px;
-    padding: 3.75rem;
+    padding: 1.75rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     height: 100%;
     display: flex;
@@ -1757,6 +1757,23 @@ select:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.anlsLegendItem:hover {
+    background: #f3f7ff;
+}
+
+.anlsLegendItem:focus-visible {
+    outline: 2px solid #4EA24E;
+    outline-offset: 2px;
+}
+
+.anlsLegendItemActive {
+    background: #eaf6ea;
 }
 
 .anlsLegendCircle {
@@ -1804,7 +1821,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-self: stretch;
+    align-self: start;
 }
 
 .anlsStatCard {
@@ -2174,8 +2191,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 /* Bad Card */
@@ -2187,8 +2203,7 @@ select:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 
 .anlsGoodBadHeader {
@@ -2223,6 +2238,12 @@ select:disabled {
     font-size: 0.76rem;
     color: #374151;
     line-height: 1.4;
+}
+
+.anlsGoodItem span:last-child,
+.anlsBadItem span:last-child {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .anlsCheckIcon {

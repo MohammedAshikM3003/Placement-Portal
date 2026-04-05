@@ -483,6 +483,18 @@
     white-space: nowrap;
 }
 
+.Admin-ht-checkbox {
+    width: 60px;
+    text-align: center;
+}
+
+.Admin-ht-checkbox-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4EA24E;
+}
+
 /* Specific Column Width/Alignment adjustments */
 .Admin-ht-sno {
     width: 60px;

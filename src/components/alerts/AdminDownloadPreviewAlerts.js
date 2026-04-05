@@ -514,14 +514,22 @@ export const ExportProgressAlert = ({ isOpen, progress = 25, exportType = 'Excel
 };
 
 // Export Success Alert
-export const ExportSuccessAlert = ({ isOpen, onClose, exportType = 'Excel', color = '#4ea24e' }) => {
+export const ExportSuccessAlert = ({
+  isOpen,
+  onClose,
+  exportType = 'Excel',
+  color = '#4ea24e',
+  headerText,
+  titleText,
+  descriptionText,
+}) => {
   if (!isOpen) return null;
 
   return (
     <div className="alert-overlay">
       <div className="achievement-popup-container">
         <div className="achievement-popup-header" style={{ backgroundColor: color }}>
-          Export Complete!
+          {headerText || 'Export Complete!'}
         </div>
         <div className="achievement-popup-body">
           <svg className="achievement-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -529,10 +537,14 @@ export const ExportSuccessAlert = ({ isOpen, onClose, exportType = 'Excel', colo
             <path className="achievement-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
           <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-            {exportType} Exported!
+            {titleText || `${exportType} Exported!`}
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-            Your {exportType} file has been<br />downloaded successfully
+            {descriptionText || (
+              <>
+                Your {exportType} file has been<br />downloaded successfully
+              </>
+            )}
           </p>
         </div>
         <div className="achievement-popup-footer">
@@ -572,6 +584,222 @@ export const ExportFailedAlert = ({ isOpen, onClose, exportType = 'Excel', color
         </div>
         <div className="achievement-popup-footer">
           <button type="button" onClick={onClose} className="achievement-popup-close-btn">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// Zipping/Unzipping Alerts for Batch Archive Operations
+// ============================================================
+
+// Zipping Progress Alert
+export const ZippingProgressAlert = ({ isOpen, progress = 25 }) => {
+  if (!isOpen) return null;
+
+  const messages = {
+    initial: `Preparing zip archive...`,
+    mid: `Archiving batch records...`,
+    final: `Finalizing zip archive...`,
+  };
+
+  return (
+    <div className="alert-overlay">
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#4ea24e' }}>
+          Zipping
+        </div>
+        <div className="achievement-popup-body">
+          <div className="preview-progress-icon-container">
+            <svg className="preview-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle className="preview-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
+              <circle
+                className="preview-progress-icon--progress"
+                cx="26"
+                cy="26"
+                r="20"
+                fill="none"
+                stroke="#4ea24e"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={`${progress * 1.256} 125.6`}
+                transform="rotate(-90 26 26)"
+              />
+            </svg>
+          </div>
+          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+            Zipping {Math.round(progress)}%
+          </h2>
+          <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+            {progress < 40
+              ? messages.initial
+              : progress < 85
+                ? messages.mid
+                : messages.final}
+          </p>
+          <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
+            Please wait...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Unzipping Progress Alert
+export const UnzippingProgressAlert = ({ isOpen, progress = 25 }) => {
+  if (!isOpen) return null;
+
+  const messages = {
+    initial: `Preparing unzip archive...`,
+    mid: `Restoring batch records...`,
+    final: `Finalizing restore process...`,
+  };
+
+  return (
+    <div className="alert-overlay">
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#4ea24e' }}>
+          Unzipping
+        </div>
+        <div className="achievement-popup-body">
+          <div className="preview-progress-icon-container">
+            <svg className="preview-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle className="preview-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
+              <circle
+                className="preview-progress-icon--progress"
+                cx="26"
+                cy="26"
+                r="20"
+                fill="none"
+                stroke="#4ea24e"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={`${progress * 1.256} 125.6`}
+                transform="rotate(-90 26 26)"
+              />
+            </svg>
+          </div>
+          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+            Unzipping {Math.round(progress)}%
+          </h2>
+          <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+            {progress < 40
+              ? messages.initial
+              : progress < 85
+                ? messages.mid
+                : messages.final}
+          </p>
+          <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
+            Please wait...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Zipped Success Alert
+export const ZippedSuccessAlert = ({ isOpen, onClose, batchName = 'Batch' }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="alert-overlay">
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#4ea24e' }}>
+          Zipped!
+        </div>
+        <div className="achievement-popup-body">
+          <div className="zip-success-icon-container" aria-hidden="true">
+            <svg className="zip-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                className="zip-file-outline"
+                d="M7 2h7l4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+              />
+              <path
+                className="zip-file-fold"
+                d="M14 2v4h4"
+              />
+              <path
+                className="zipper-track"
+                d="M12 6v12"
+              />
+              <path
+                className="zipper-teeth"
+                d="M10.5 7.5h1.5M12 9h1.5M10.5 10.5h1.5M12 12h1.5M10.5 13.5h1.5"
+              />
+              <g className="zipper-slider-group">
+                <rect className="zipper-slider" x="10.4" y="9.5" width="3.2" height="3.2" rx="0.6" />
+                <path className="zipper-slider-pull" d="M12 12.8v2.4" />
+              </g>
+            </svg>
+          </div>
+          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+            {batchName} Zipped !
+          </h2>
+          <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+            Batch archive has been<br />
+            completed successfully
+          </p>
+        </div>
+        <div className="achievement-popup-footer">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Unzipped Success Alert
+export const UnzippedSuccessAlert = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="alert-overlay">
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: '#4ea24e' }}>
+          Unzipped!
+        </div>
+        <div className="achievement-popup-body">
+          <div className="unzip-success-icon-container" aria-hidden="true">
+            <svg className="unzip-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                className="unzip-file-outline"
+                d="M7 2h7l4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+              />
+              <path
+                className="unzip-file-fold"
+                d="M14 2v4h4"
+              />
+              <path
+                className="unzipper-track"
+                d="M12 6v12"
+              />
+              <path
+                className="unzipper-teeth"
+                d="M10.5 7.5h1.5M12 9h1.5M10.5 10.5h1.5M12 12h1.5M10.5 13.5h1.5"
+              />
+              <g className="unzipper-slider-group">
+                <rect className="unzipper-slider" x="10.4" y="9.5" width="3.2" height="3.2" rx="0.6" />
+                <path className="unzipper-slider-pull" d="M12 12.8v2.4" />
+              </g>
+            </svg>
+          </div>
+          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+            Unzipped Successfully ✓
+          </h2>
+          <p style={{ margin: 0, color: "#888", fontSize: "14px", lineHeight: "1.5" }}>
+            Unzip operation completed. Batch<br />
+            data restored to active database
+          </p>
+        </div>
+        <div className="achievement-popup-footer">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn" style={{ backgroundColor: '#E55353' }}>
             Close
           </button>
         </div>

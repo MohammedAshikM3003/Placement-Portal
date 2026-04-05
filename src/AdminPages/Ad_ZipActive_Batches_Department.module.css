@@ -228,7 +228,7 @@
     background-color: #4EA24E;
     color: white;
     border: none;
-    padding: 10px 35px;
+    padding: 8px 30px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
@@ -247,12 +247,12 @@
 /* Export Menu */
 .Ad-zd-export-menu {
     position: absolute;
-    top: 45px;
+    top: 40px;
     right: 0;
     z-index: 2000;
     background: white;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 180px;
     display: flex;
@@ -261,7 +261,7 @@
 }
 
 .Ad-zd-export-menu button {
-    padding: 12px 18px;
+    padding: 10px 15px;
     border: none;
     background: none;
     text-align: left;
@@ -277,10 +277,11 @@
 
 /* Table Container */
 .Ad-zd-table-container {
-    max-height: 400px;
-    overflow-y: auto;
+    height: 300px;
+    overflow-y: scroll;
     overflow-x: auto;
-    border-radius: 8px;
+    border: none;
+    border-radius: 0;
 }
 
 /* Green Scrollbars */
@@ -302,6 +303,19 @@
     background: #3d8a3d;
 }
 
+.Ad-zd-table-container::-webkit-scrollbar:horizontal {
+    height: 6px;
+}
+
+.Ad-zd-table-container::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+}
+
+.Ad-zd-table-container::-webkit-scrollbar-thumb:horizontal {
+    background: #afadad;
+    border-radius: 8px;
+}
+
 /* Table Styles */
 .Ad-zd-table {
     width: 100%;
@@ -311,22 +325,28 @@
 }
 
 .Ad-zd-table-head-row {
-    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    border-bottom: none;
+    z-index: 11;
 }
 
 .Ad-zd-th {
     padding: 12px 15px;
     text-align: center;
     font-weight: 600;
-    color: #555;
+    color: #666;
     text-transform: uppercase;
     font-size: 0.8rem;
-    border-bottom: 2px solid #eee;
+    background-color: #ffffff;
+    border-bottom: none;
 }
 
 .Ad-zd-table-row {
     transition: background-color 0.1s;
     border-bottom: 1px solid #eee;
+    height: 47px;
 }
 
 .Ad-zd-table-row:hover {
@@ -336,7 +356,7 @@
 .Ad-zd-td {
     padding: 12px 15px;
     text-align: center;
-    color: #333;
+    color: #2e2e2e;
     font-weight: 450;
 }
 

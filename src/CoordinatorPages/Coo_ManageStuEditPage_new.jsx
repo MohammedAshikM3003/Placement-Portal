@@ -71,6 +71,35 @@ const parseMultiValue = (value) => {
     return [];
 };
 
+const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
+
+const normalizeDate = (value) => {
+    if (!value) return '';
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+            return trimmed.slice(0, 10);
+        }
+
+        const ddmmyyyy = trimmed.match(/^(\d{2})-(\d{2})-(\d{4})/);
+        if (ddmmyyyy) {
+            const [, dd, mm, yyyy] = ddmmyyyy;
+            return `${yyyy}-${mm}-${dd}`;
+        }
+    }
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value.toString().split('T')[0];
+    }
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const normalizeProfilePicValue = (value) => {
     const raw = (value || '').toString().trim();
     if (!raw) return '';
@@ -705,6 +734,9 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [hoveredRound, setHoveredRound] = useState(null);
     const [selectedRound, setSelectedRound] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 600);
+    const [eligibleDrives, setEligibleDrives] = useState([]);
+    const [studentApplications, setStudentApplications] = useState([]);
+    const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
     const savedDataRef = useRef(null);
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -929,125 +961,259 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         [selectedJobLocations]
     );
 
-    // Company Details — merge real studentData with mock fallbacks
+    const findApplicationForDrive = useCallback((drive) => {
+        const driveId = (drive?.driveId || drive?._id || '').toString();
+        const driveRole = normalizeText(drive?.jobs || drive?.jobRole);
+
+        return studentApplications.find((app) => {
+            const appDriveId = (app?.driveId || '').toString();
+            if (driveId && appDriveId && appDriveId === driveId) {
+                return true;
+            }
+
+            return normalizeText(app?.companyName) === normalizeText(drive?.companyName) &&
+                normalizeText(app?.jobRole) === driveRole;
+        });
+    }, [studentApplications]);
+
+    const fetchStudentAttendanceRecords = useCallback(async (student) => {
+        const regNo = student?.regNo || student?.registerNumber || student?.registerNo || '';
+        if (regNo) {
+            const attendanceByRegNo = await mongoDBService.getStudentAttendanceByRegNo(regNo);
+            if (attendanceByRegNo?.success) return attendanceByRegNo;
+        }
+        if (student?._id) {
+            const attendanceByStudentId = await mongoDBService.getStudentAttendance(student._id);
+            if (attendanceByStudentId?.success) return attendanceByStudentId;
+        }
+        return { success: true, data: [] };
+    }, []);
+
+    const isAttendanceAbsentForDrive = useCallback((drive) => {
+        const driveCompany = normalizeText(drive?.companyName);
+        const driveRole = normalizeText(drive?.jobs || drive?.jobRole);
+        const driveStart = normalizeDate(drive?.driveStartDate || drive?.companyDriveDate);
+        const driveEnd = normalizeDate(drive?.driveEndDate || drive?.driveStartDate || drive?.companyDriveDate);
+
+        const matched = studentAttendanceRecords.some((record) => {
+            if (normalizeText(record?.status) !== 'absent') return false;
+            if (normalizeText(record?.companyName) !== driveCompany) return false;
+            const recordRole = normalizeText(record?.jobRole);
+            if (recordRole && driveRole && recordRole !== driveRole) return false;
+
+            const recStart = normalizeDate(record?.startDate);
+            const recEnd = normalizeDate(record?.endDate);
+            const hasDriveDates = Boolean(driveStart || driveEnd);
+            const hasRecordDates = Boolean(recStart || recEnd);
+            if (!hasDriveDates || !hasRecordDates) return true;
+
+            return (
+                driveStart === recStart ||
+                driveEnd === recEnd ||
+                driveStart === recEnd ||
+                driveEnd === recStart ||
+                (!driveEnd && driveStart && driveStart === recStart) ||
+                (!recEnd && recStart && recStart === driveStart)
+            );
+        });
+
+        if (matched) return true;
+        return studentAttendanceRecords.some((record) => normalizeText(record?.status) === 'absent' && normalizeText(record?.companyName) === driveCompany);
+    }, [studentAttendanceRecords]);
+
+    const driveAnalytics = useMemo(() => {
+        const colorPalette = ['#6C7A89', '#197AFF', '#FF9F43', '#F4C542', '#3DDAD7', '#FF7A9E', '#10B981', '#8B5CF6'];
+        const roundBuckets = new Map();
+
+        const ensureRoundBucket = (roundLabel) => {
+            const safeLabel = (roundLabel || '').toString().trim();
+            if (!safeLabel) return null;
+            const key = normalizeText(safeLabel);
+            if (!roundBuckets.has(key)) {
+                roundBuckets.set(key, { name: safeLabel, attempted: 0, passed: 0, failed: 0, absent: 0, companies: new Map() });
+            }
+            return key;
+        };
+
+        const updateCompanyStatus = (companiesMap, companyName, status) => {
+            if (!companyName) return;
+            const rank = { 'IN PROGRESS': 1, PASSED: 2, FAILED: 3 };
+            const current = companiesMap.get(companyName);
+            if (!current || rank[status] > rank[current]) companiesMap.set(companyName, status);
+        };
+
+        let totalRoundsCleared = 0;
+        let shortlistedCount = 0;
+        let highestPackageLpa = 0;
+        let highestPackageCompany = '';
+        let lastDriveDate = '';
+        let lastDriveAttended = '';
+        let lastDriveRole = '';
+        let lastDriveResult = '';
+
+        (eligibleDrives || []).forEach((drive) => {
+            const companyName = (drive?.companyName || '').toString().trim();
+            const application = findApplicationForDrive(drive);
+            const attendanceAbsent = isAttendanceAbsentForDrive(drive);
+
+            const normalizedStatus = normalizeText(application?.status);
+            const overallStatus = attendanceAbsent ? 'Absent'
+                : normalizedStatus === 'placed' || normalizedStatus === 'selected' ? 'Placed'
+                : normalizedStatus === 'rejected' || normalizedStatus === 'failed' ? 'Rejected'
+                : application?.rounds?.some((round) => normalizeText(round?.status) === 'failed') ? 'Rejected'
+                : application?.rounds?.some((round) => normalizeText(round?.status) === 'absent') ? 'Absent'
+                : application?.rounds?.some((round) => normalizeText(round?.status) === 'passed') ? `Passed-${application.rounds.filter((round) => normalizeText(round?.status) === 'passed').length}`
+                : 'Pending';
+
+            if (overallStatus === 'Placed' || overallStatus.startsWith('Passed-')) shortlistedCount += 1;
+
+            const driveDate = normalizeDate(drive?.driveEndDate || drive?.driveStartDate || drive?.companyDriveDate);
+            if (driveDate && (!lastDriveDate || driveDate > lastDriveDate)) {
+                lastDriveDate = driveDate;
+                lastDriveAttended = companyName;
+                lastDriveRole = (drive?.jobs || drive?.jobRole || '').toString();
+                lastDriveResult = overallStatus;
+            }
+
+            for (const candidate of [drive?.packageLpa, drive?.highestPackage, drive?.salaryPackage, drive?.ctc, drive?.package]) {
+                const value = Number(candidate);
+                if (Number.isFinite(value) && value > highestPackageLpa) {
+                    highestPackageLpa = value;
+                    highestPackageCompany = companyName;
+                }
+            }
+
+            const rounds = Array.isArray(application?.rounds) ? application.rounds : [];
+            const plannedRounds = Array.isArray(drive?.roundDetails) ? drive.roundDetails.map((item) => (item || '').toString().trim()).filter(Boolean) : [];
+
+            const applyRoundStatus = (bucketKey, roundStatusRaw) => {
+                if (!bucketKey) return;
+                const bucket = roundBuckets.get(bucketKey);
+                if (!bucket) return;
+
+                const roundStatus = normalizeText(roundStatusRaw);
+                const normalizedCompanyName = companyName || 'Unknown Company';
+                if (roundStatus && roundStatus !== 'pending' && roundStatus !== 'not eligible') bucket.attempted += 1;
+
+                if (roundStatus === 'passed') {
+                    bucket.passed += 1;
+                    totalRoundsCleared += 1;
+                    updateCompanyStatus(bucket.companies, normalizedCompanyName, 'PASSED');
+                } else if (roundStatus === 'failed' || roundStatus === 'absent') {
+                    if (roundStatus === 'failed') bucket.failed += 1; else bucket.absent += 1;
+                    updateCompanyStatus(bucket.companies, normalizedCompanyName, 'FAILED');
+                } else {
+                    updateCompanyStatus(bucket.companies, normalizedCompanyName, 'IN PROGRESS');
+                }
+            };
+
+            if (plannedRounds.length > 0) {
+                plannedRounds.forEach((plannedRoundName, index) => {
+                    const bucketKey = ensureRoundBucket(plannedRoundName);
+                    const matchedRound = rounds.find((round) => normalizeText(round?.name || round?.roundName || round?.roundType || round?.type) === normalizeText(plannedRoundName) || Number(round?.roundNumber) === index + 1);
+                    applyRoundStatus(bucketKey, matchedRound?.status);
+                });
+            } else {
+                rounds.forEach((round, index) => {
+                    const roundLabel = round?.name || round?.roundName || round?.roundType || round?.type || `Round ${Number(round?.roundNumber) || index + 1}`;
+                    const bucketKey = ensureRoundBucket(roundLabel);
+                    applyRoundStatus(bucketKey, round?.status);
+                });
+            }
+        });
+
+        const orderedBuckets = Array.from(roundBuckets.values());
+        const totalAttempted = orderedBuckets.reduce((sum, bucket) => sum + bucket.attempted, 0);
+        const pieData = orderedBuckets.map((bucket, index) => ({ name: bucket.name, value: totalAttempted > 0 ? Math.round((bucket.attempted / totalAttempted) * 100) : 0, color: colorPalette[index % colorPalette.length] }));
+
+        const roundDetails = orderedBuckets.reduce((acc, bucket) => {
+            const passRate = bucket.attempted > 0 ? Math.round((bucket.passed / bucket.attempted) * 100) : 0;
+            const good = [];
+            const bad = [];
+
+            if (bucket.attempted === 0) {
+                good.push('No completed rounds yet for this category.');
+                bad.push('Attempt more drives to unlock insight quality.');
+            } else {
+                if (passRate >= 60) good.push(`Healthy conversion rate at ${passRate}% for this category.`); else bad.push(`Conversion is ${passRate}%. Focus improvement in this category.`);
+                if (bucket.absent > 0) bad.push(`${bucket.absent} round(s) marked absent. Attendance impact detected.`);
+                if (bucket.passed > 0) good.push(`${bucket.passed} round(s) cleared successfully.`);
+            }
+
+            acc[bucket.name] = { companies: Array.from(bucket.companies.entries()).map(([name, status]) => ({ name, status })), good, bad };
+            return acc;
+        }, {});
+
+        const sortable = orderedBuckets.map((bucket) => ({ category: bucket.name, attempted: bucket.attempted, passRate: bucket.attempted > 0 ? Math.round((bucket.passed / bucket.attempted) * 100) : 0 })).filter((item) => item.attempted > 0);
+        const bestAt = sortable.slice().sort((a, b) => b.passRate - a.passRate).slice(0, 3).map((item) => item.category);
+        const workOn = sortable.slice().sort((a, b) => a.passRate - b.passRate).slice(0, 4).map((item) => item.category);
+
+        return {
+            totalCompaniesAttended: new Set((eligibleDrives || []).map((drive) => (drive?.companyName || '').toString().trim().toLowerCase()).filter(Boolean)).size,
+            totalDrivesAttended: eligibleDrives.length,
+            shortlistedCount,
+            highestPackageLpa,
+            highestPackageCompany,
+            totalRoundsCleared,
+            lastDriveAttended,
+            lastDriveRole,
+            lastDriveResult,
+            pieData,
+            roundDetails,
+            bestAt: bestAt.length > 0 ? bestAt : ['No round data'],
+            workOn: workOn.length > 0 ? workOn : ['No round data']
+        };
+    }, [eligibleDrives, findApplicationForDrive, isAttendanceAbsentForDrive]);
+
     const companyStats = useMemo(() => ({
-        totalCompaniesAttended: studentData?.totalCompaniesAttended ?? 10,
-        totalDrivesAttended:    studentData?.totalDrivesAttended    ?? 14,
-        shortlistedCount:       studentData?.shortlistedCount       ?? 11,
-        preferredModeOfDrive:   studentData?.preferredModeOfDrive   || 'Hybrid',
-        lastDriveAttended:      studentData?.lastDriveAttended      || '',
-        lastDriveResult:        studentData?.lastDriveResult        || '',
-        highestPackageDrive:    studentData?.highestPackageDrive    ?? 24,
-        totalRoundsCleared:     studentData?.totalRoundsCleared     ?? 19,
-    }), [studentData]);
+        totalCompaniesAttended: driveAnalytics.totalCompaniesAttended,
+        totalDrivesAttended: driveAnalytics.totalDrivesAttended,
+        shortlistedCount: driveAnalytics.shortlistedCount,
+        preferredModeOfDrive: studentData?.preferredModeOfDrive || 'Hybrid',
+        lastDriveAttended: driveAnalytics.lastDriveAttended || '',
+        lastDriveResult: driveAnalytics.lastDriveResult || '',
+        highestPackageDrive: driveAnalytics.highestPackageLpa,
+        totalRoundsCleared: driveAnalytics.totalRoundsCleared,
+    }), [driveAnalytics, studentData?.preferredModeOfDrive]);
 
-    const PIE_DATA = [
-        { name: 'GD Round',      value: 20, color: '#FF9F43' },
-        { name: 'Aptitude',      value: 26, color: '#F4C542' },
-        { name: 'Technical',     value: 15, color: '#3DDAD7' },
-        { name: 'HR Round',      value: 28, color: '#FF7A9E' },
-        { name: 'Communication', value: 36, color: '#6C7A89' },
-        { name: 'Coding',        value: 31, color: '#197AFF' },
-    ];
+    const PIE_DATA = driveAnalytics.pieData;
+    const ROUND_DETAILS = driveAnalytics.roundDetails;
 
-    const ROUND_DETAILS = {
-        'GD Round': {
-            companies: [
-                { name: 'TCS',           status: 'PASSED'      },
-                { name: 'Infosys',       status: 'FAILED'      },
-                { name: 'Wipro',         status: 'IN PROGRESS' },
-                { name: 'Accenture',     status: 'PASSED'      },
-                { name: 'Capgemini',     status: 'PASSED'      },
-                { name: 'HCL',           status: 'FAILED'      },
-                { name: 'Tech Mahindra', status: 'PASSED'      },
-                { name: 'L&T Infotech',  status: 'IN PROGRESS' },
-                { name: 'Cognizant',     status: 'PASSED'      },
-                { name: 'Mphasis',       status: 'FAILED'      },
-            ],
-            good: ['Strong articulation of points during the debate.', 'Active listening and building on others\' ideas.'],
-            bad:  ['Tended to interrupt occasionally when excited.', 'Eye contact could be more balanced across group.'],
-        },
-        'Aptitude': {
-            companies: [
-                { name: 'TCS',           status: 'PASSED'      },
-                { name: 'Wipro',         status: 'PASSED'      },
-                { name: 'Infosys',       status: 'FAILED'      },
-                { name: 'HCL',           status: 'PASSED'      },
-                { name: 'Capgemini',     status: 'IN PROGRESS' },
-                { name: 'Accenture',     status: 'PASSED'      },
-                { name: 'IBM',           status: 'FAILED'      },
-                { name: 'Cognizant',     status: 'PASSED'      },
-                { name: 'Oracle',        status: 'IN PROGRESS' },
-                { name: 'Mphasis',       status: 'PASSED'      },
-            ],
-            good: ['Consistently strong in quantitative reasoning.', 'Completed all sections within time limits.'],
-            bad:  ['Occasional errors in data interpretation.', 'Verbal reasoning scores could be improved.'],
-        },
-        'Technical': {
-            companies: [
-                { name: 'Google',        status: 'PASSED'      },
-                { name: 'Microsoft',     status: 'IN PROGRESS' },
-                { name: 'Amazon',        status: 'FAILED'      },
-                { name: 'Flipkart',      status: 'PASSED'      },
-                { name: 'Zoho',          status: 'PASSED'      },
-                { name: 'Freshworks',    status: 'FAILED'      },
-                { name: 'Adobe',         status: 'PASSED'      },
-                { name: 'Salesforce',    status: 'IN PROGRESS' },
-                { name: 'SAP',           status: 'PASSED'      },
-                { name: 'Qualcomm',      status: 'FAILED'      },
-            ],
-            good: ['Strong knowledge of data structures and algorithms.', 'Explained approach clearly before coding.'],
-            bad:  ['Struggled with on-the-spot system design questions.', 'Edge cases missed in a few solutions.'],
-        },
-        'HR Round': {
-            companies: [
-                { name: 'Deloitte',      status: 'PASSED'      },
-                { name: 'EY',            status: 'PASSED'      },
-                { name: 'KPMG',          status: 'FAILED'      },
-                { name: 'Accenture',     status: 'PASSED'      },
-                { name: 'TCS',           status: 'IN PROGRESS' },
-                { name: 'Infosys',       status: 'PASSED'      },
-                { name: 'Wipro',         status: 'FAILED'      },
-                { name: 'HCL',           status: 'PASSED'      },
-                { name: 'Capgemini',     status: 'PASSED'      },
-                { name: 'Cognizant',     status: 'IN PROGRESS' },
-            ],
-            good: ['Confident and well-structured answers.', 'Good alignment of career goals with company values.'],
-            bad:  ['Salary negotiation needs improvement.', 'Answers were occasionally too long-winded.'],
-        },
-        'Communication': {
-            companies: [
-                { name: 'TCS',           status: 'PASSED'      },
-                { name: 'Infosys',       status: 'PASSED'      },
-                { name: 'Wipro',         status: 'FAILED'      },
-                { name: 'Accenture',     status: 'PASSED'      },
-                { name: 'L&T Infotech',  status: 'IN PROGRESS' },
-                { name: 'Capgemini',     status: 'PASSED'      },
-                { name: 'HCL',           status: 'PASSED'      },
-                { name: 'Tech Mahindra', status: 'FAILED'      },
-                { name: 'Mphasis',       status: 'IN PROGRESS' },
-                { name: 'Cognizant',     status: 'PASSED'      },
-            ],
-            good: ['Clear and confident verbal communication.', 'Excellent email and written communication skills.'],
-            bad:  ['Pace of speech becomes fast under pressure.', 'Could improve active listening in panel discussions.'],
-        },
-        'Coding': {
-            companies: [
-                { name: 'Google',        status: 'PASSED'      },
-                { name: 'Microsoft',     status: 'PASSED'      },
-                { name: 'Amazon',        status: 'IN PROGRESS' },
-                { name: 'Adobe',         status: 'PASSED'      },
-                { name: 'Flipkart',      status: 'FAILED'      },
-                { name: 'Zoho',          status: 'PASSED'      },
-                { name: 'Freshworks',    status: 'PASSED'      },
-                { name: 'Oracle',        status: 'FAILED'      },
-                { name: 'SAP',           status: 'IN PROGRESS' },
-                { name: 'Qualcomm',      status: 'PASSED'      },
-            ],
-            good: ['Efficient solutions with optimal time complexity.', 'Strong command of multiple programming languages.'],
-            bad:  ['Occasionally skipped writing test cases.', 'Dynamic programming approach needs more practice.'],
-        },
-    };
+    const hasCompanyData = useMemo(() => eligibleDrives.length > 0 || studentApplications.length > 0 || studentAttendanceRecords.length > 0, [eligibleDrives.length, studentApplications.length, studentAttendanceRecords.length]);
+
+    useEffect(() => {
+        const studentIdForSync = studentData?._id || studentId;
+        if (!studentIdForSync) return;
+
+        const syncCompanyData = async () => {
+            try {
+                const [eligibleResponse, appsResponse, attendanceResponse] = await Promise.all([
+                    mongoDBService.getEligibleStudentsForStudent(studentIdForSync),
+                    mongoDBService.getStudentApplications(studentIdForSync),
+                    fetchStudentAttendanceRecords(studentData)
+                ]);
+
+                setEligibleDrives(eligibleResponse?.drives || []);
+                setStudentApplications(appsResponse?.applications || []);
+                setStudentAttendanceRecords(attendanceResponse?.data || []);
+            } catch (error) {
+                console.error('Failed to load company analysis data (Coordinator Edit):', error);
+                setEligibleDrives([]);
+                setStudentApplications([]);
+                setStudentAttendanceRecords([]);
+            }
+        };
+
+        syncCompanyData();
+    }, [fetchStudentAttendanceRecords, studentData, studentId]);
+
+    useEffect(() => {
+        if (!selectedRound) return;
+        if (!PIE_DATA.some((item) => item.name === selectedRound)) {
+            setSelectedRound(null);
+            setHoveredRound(null);
+        }
+    }, [PIE_DATA, selectedRound]);
 
     const successRate = useMemo(() => {
         const attended   = companyStats.totalDrivesAttended;
@@ -2224,6 +2390,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                         </div>
                         
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
+                        {hasCompanyData && (
                         <div className={styles.profileSectionContainer}>
                             {!showAnalysis ? (
                                 <>
@@ -2280,7 +2447,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             <h4 className={styles.insightsTitle}>Top performance Insights</h4>
                                             <div className={styles.insightRow}>
                                                 <span className={styles.insightLabel}>Highest Package Drive :</span>
-                                                <span className={styles.insightValue}>{companyStats.highestPackageDrive} LPA</span>
+                                                <span className={styles.insightValue}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
                                             </div>
                                             <div className={styles.insightRow}>
                                                 <span className={styles.insightLabel}>Total Rounds Cleared :</span>
@@ -2343,9 +2510,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                             if (rot > 180) rot -= 360;
                                                             if (rot > 90) rot -= 180;
                                                             if (rot < -90) rot += 180;
-                                                            const label = name === 'HR Round' ? 'HR'
-                                                                        : name === 'GD Round' ? 'GD'
-                                                                        : name;
+                                                            const label = name.length > 12 ? `${name.slice(0, 12)}..` : name;
                                                             const fs = isMobile ? 11 : 11;
                                                             return (
                                                                 <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
@@ -2412,7 +2577,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 </svg>
                                                                 <span className={styles.anlsStatLabel}>Attended</span>
                                                             </div>
-                                                            <div className={styles.anlsStatValue}>38</div>
+                                                            <div className={styles.anlsStatValue}>{companyStats.totalDrivesAttended}</div>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
                                                             <div className={styles.anlsStatTop}>
@@ -2422,7 +2587,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 </svg>
                                                                 <span className={styles.anlsStatLabel}>Shortlisted</span>
                                                             </div>
-                                                            <div className={styles.anlsStatValue}>12</div>
+                                                            <div className={styles.anlsStatValue}>{companyStats.shortlistedCount}</div>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
                                                             <div className={styles.anlsStatTop}>
@@ -2434,7 +2599,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Work On</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {['Group Discussion','Aptitude','HR Round','Technical'].map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
                                                             </ul>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
@@ -2445,7 +2610,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Best</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {['Communication','Coding','HR Round'].map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -2485,12 +2650,12 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                             <div>
                                                                 <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
                                                                 <div className={styles.anlsAchievMain}>
-                                                                    <span className={styles.anlsAchievLPA}>24 LPA</span>
+                                                                    <span className={styles.anlsAchievLPA}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
                                                                     <span className={styles.anlsAchievSub}>Highest Package</span>
                                                                 </div>
                                                                 <div className={styles.anlsAchievCompany}>
                                                                     <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z"/></svg>
-                                                                    <span>Google</span>
+                                                                    <span>{driveAnalytics.highestPackageCompany || 'N/A'}</span>
                                                                 </div>
                                                             </div>
                                                             <div className={styles.anlsAchievBadge}>
@@ -2499,9 +2664,9 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                         </div>
                                                         <div className={styles.anlsLastActivity}>
                                                             <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
-                                                            <p className={styles.anlsLastCompany}>Microsoft</p>
-                                                            <p className={styles.anlsLastRole}>SDE Intern</p>
-                                                            <span className={styles.anlsLastBadge}>Interviewing</span>
+                                                            <p className={styles.anlsLastCompany}>{companyStats.lastDriveAttended || 'N/A'}</p>
+                                                            <p className={styles.anlsLastRole}>{driveAnalytics.lastDriveRole || 'N/A'}</p>
+                                                            <span className={styles.anlsLastBadge}>{companyStats.lastDriveResult || 'Pending'}</span>
                                                         </div>
                                                     </div>
                                                 )}
@@ -2510,17 +2675,27 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             {/* Legend always visible */}
                                             <div className={styles.anlsLegendBox}>
                                                 <div className={styles.anlsLegend}>
-                                                    {[
-                                                        { n:'Communication', c:'#6C7A89', p:26 },
-                                                        { n:'Coding',        c:'#197AFF', p:24 },
-                                                        { n:'GD Round',      c:'#FF9F43', p:8  },
-                                                        { n:'Aptitude',      c:'#F4C542', p:12 },
-                                                        { n:'Technical',     c:'#3DDAD7', p:15 },
-                                                        { n:'HR round',      c:'#FF7A9E', p:15 },
-                                                    ].map(d => (
-                                                        <div key={d.n} className={styles.anlsLegendItem}>
-                                                            <span className={styles.anlsLegendCircle} style={{ background: d.c }}>{d.p}%</span>
-                                                            <span className={styles.anlsLegendName}>{d.n}</span>
+                                                    {PIE_DATA.map((d) => (
+                                                        <div
+                                                            key={d.name}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            className={`${styles.anlsLegendItem} ${selectedRound === d.name ? styles.anlsLegendItemActive : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedRound(d.name);
+                                                                setHoveredRound(d.name);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                                    e.preventDefault();
+                                                                    setSelectedRound(d.name);
+                                                                    setHoveredRound(d.name);
+                                                                }
+                                                            }}
+                                                            aria-label={`Open ${d.name} round details`}
+                                                        >
+                                                            <span className={styles.anlsLegendCircle} style={{ background: d.color }}>{d.value}%</span>
+                                                            <span className={styles.anlsLegendName}>{d.name}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -2556,6 +2731,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                 </>
                             )}
                         </div>
+                        )}
 
                         {/* --- SKILLS --- */}
                         <div className={styles.profileSectionContainer}>

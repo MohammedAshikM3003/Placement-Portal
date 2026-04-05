@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Viewicon from "../assets/Viewicon.png";
@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import * as XLSX from 'xlsx';
+import mongoDBService from '../services/mongoDBService.jsx';
 import styles from './Coo_EligibleStudents.module.css';
 
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
@@ -31,33 +32,194 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         startDate: '',
         endDate: ''
     });
+    const [isLoading, setIsLoading] = useState(true);
+    const [coordinatorBranchLabel, setCoordinatorBranchLabel] = useState('Students');
+    const [companyDrives, setCompanyDrives] = useState([]);
+    const [studentsData, setStudentsData] = useState([]);
     const tableRef = useRef(null);
 
-    const companyDrives = [
-        {
-            companyName: 'Zoho',
-            jobRoles: [
-                { jobRole: 'Software Engineer', startDate: '2026-02-01', endDate: '2026-02-10' },
-                { jobRole: 'QA Engineer', startDate: '2026-03-05', endDate: '2026-03-15' }
-            ]
-        },
-        {
-            companyName: 'TCS',
-            jobRoles: [
-                { jobRole: 'Developer', startDate: '2026-02-12', endDate: '2026-02-20' },
-                { jobRole: 'Support Engineer', startDate: '2026-04-01', endDate: '2026-04-10' }
-            ]
+    const formatDateDisplay = (value) => {
+        const raw = (value || '').toString().trim();
+        if (!raw) return '';
+
+        const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoMatch) {
+            const [, y, m, d] = isoMatch;
+            return `${d}-${m}-${y}`;
         }
-    ];
+
+        const ddmmyyyyMatch = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (ddmmyyyyMatch) {
+            return raw;
+        }
+
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return raw;
+        const day = String(parsed.getDate()).padStart(2, '0');
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const year = parsed.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
+    useEffect(() => {
+        const parseCoordinatorData = () => {
+            try {
+                const raw = localStorage.getItem('coordinatorData');
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                console.error('Failed to parse coordinatorData:', error);
+                return null;
+            }
+        };
+
+        const toNormalized = (value) => (value || '').toString().trim().toUpperCase();
+
+        const statusFromStudent = (student) => {
+            const raw = (student?.status || '').toString().trim().toLowerCase();
+            if (!raw) return 'Unplaced';
+            if (raw === 'placed' || raw === 'selected') return 'Placed';
+            if (raw === 'unplaced' || raw === 'pending' || raw === 'rejected' || raw === 'failed') return 'Unplaced';
+            return 'Unplaced';
+        };
+
+        const normalizeDate = (value) => {
+            const trimmed = (value || '').toString().trim();
+            if (!trimmed) return '';
+            if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10);
+            const parsed = new Date(trimmed);
+            if (Number.isNaN(parsed.getTime())) return trimmed;
+            const y = parsed.getFullYear();
+            const m = String(parsed.getMonth() + 1).padStart(2, '0');
+            const d = String(parsed.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        const fetchCoordinatorEligibleStudents = async () => {
+            try {
+                setIsLoading(true);
+
+                const coordinatorData = parseCoordinatorData();
+                const fallbackBranch = toNormalized(
+                    coordinatorData?.branch ||
+                    coordinatorData?.department ||
+                    coordinatorData?.dept
+                );
+
+                const [eligibleResponse, allStudents] = await Promise.all([
+                    mongoDBService.getCoordinatorEligibleStudents(),
+                    mongoDBService.getStudents()
+                ]);
+
+                const branchFromApi = toNormalized(
+                    eligibleResponse?.coordinator?.branch ||
+                    eligibleResponse?.coordinator?.department
+                );
+                const branchLabel = branchFromApi || fallbackBranch;
+                if (branchLabel) {
+                    setCoordinatorBranchLabel(`${branchLabel} Students`);
+                }
+
+                const studentList = Array.isArray(allStudents) ? allStudents : [];
+                const studentById = new Map();
+                const studentByRegNo = new Map();
+                studentList.forEach((student) => {
+                    if (student?._id) studentById.set(String(student._id), student);
+                    if (student?.regNo) studentByRegNo.set(String(student.regNo), student);
+                });
+
+                const eligibleEntries = Array.isArray(eligibleResponse?.eligibleStudents)
+                    ? eligibleResponse.eligibleStudents
+                    : [];
+
+                const companyMap = new Map();
+                const flatRows = [];
+
+                eligibleEntries.forEach((entry) => {
+                    const startDate = normalizeDate(entry.driveStartDate || entry.companyDriveDate || '');
+                    const endDate = normalizeDate(entry.driveEndDate || entry.driveStartDate || entry.companyDriveDate || '');
+                    const companyName = entry.companyName || 'N/A';
+                    const roleKey = `${entry.driveId || entry._id || ''}::${entry.jobRole || 'N/A'}::${startDate}::${endDate}`;
+
+                    if (!companyMap.has(companyName)) {
+                        companyMap.set(companyName, {
+                            companyName,
+                            jobRoles: []
+                        });
+                    }
+
+                    const companyRecord = companyMap.get(companyName);
+                    if (!companyRecord.jobRoles.some((r) => r.roleKey === roleKey)) {
+                        companyRecord.jobRoles.push({
+                            roleKey,
+                            driveId: entry.driveId || entry._id || '',
+                            jobRole: entry.jobRole || 'N/A',
+                            startDate,
+                            endDate
+                        });
+                    }
+
+                    (entry.students || []).forEach((student) => {
+                        const resolved = (student?.studentId && studentById.get(String(student.studentId)))
+                            || (student?.regNo && studentByRegNo.get(String(student.regNo)))
+                            || null;
+
+                        const fullName = `${resolved?.firstName || ''} ${resolved?.lastName || ''}`.trim();
+                        const skillsValue =
+                            resolved?.skillSet ||
+                            resolved?.skills ||
+                            (Array.isArray(resolved?.currentSkills) ? resolved.currentSkills.join(', ') : resolved?.currentSkills) ||
+                            student?.skills ||
+                            'N/A';
+
+                        flatRows.push({
+                            id: `${entry.driveId || entry._id || 'drive'}-${student.studentId || student.regNo || Math.random()}`,
+                            studentId: student?.studentId || (resolved?._id ? String(resolved._id) : ''),
+                            driveId: entry.driveId || entry._id || '',
+                            companyName: entry.companyName || 'N/A',
+                            jobRole: entry.jobRole || 'N/A',
+                            startDate,
+                            endDate,
+                            name: student?.name || fullName || 'N/A',
+                            registerNo: student?.regNo || resolved?.regNo || 'N/A',
+                            batch: student?.batch || resolved?.batch || 'N/A',
+                            section: student?.section || resolved?.section || 'N/A',
+                            cgpa: student?.cgpa || resolved?.overallCGPA || 'N/A',
+                            skills: skillsValue,
+                            status: statusFromStudent(student),
+                            branch: student?.branch || resolved?.branch || resolved?.department || ''
+                        });
+                    });
+                });
+
+                setCompanyDrives(
+                    Array.from(companyMap.values()).map((company) => ({
+                        companyName: company.companyName,
+                        jobRoles: company.jobRoles
+                            .map(({ roleKey, ...role }) => role)
+                            .sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''))
+                    }))
+                );
+                setStudentsData(flatRows);
+            } catch (error) {
+                console.error('Failed to fetch coordinator eligible students:', error);
+                setCompanyDrives([]);
+                setStudentsData([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCoordinatorEligibleStudents();
+    }, []);
 
     const companyOptions = useMemo(() => {
-        return companyDrives.map(d => d.companyName);
+        return Array.from(new Set(companyDrives.map((d) => d.companyName))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives]);
 
     const jobRoleOptions = useMemo(() => {
         const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
         if (!selectedCompany) return [];
-        return selectedCompany.jobRoles.map(j => j.jobRole);
+        return Array.from(new Set(selectedCompany.jobRoles.map((j) => j.jobRole))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives, filterData.companyName]);
 
     const startDateOptions = useMemo(() => {
@@ -67,7 +229,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         const relevant = selectedJobRole
             ? selectedCompany.jobRoles.filter(j => j.jobRole === selectedJobRole)
             : selectedCompany.jobRoles;
-        return relevant.map(j => j.startDate);
+        return Array.from(new Set(relevant.map((j) => j.startDate).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives, filterData.companyName, filterData.jobRole]);
 
     const endDateOptions = useMemo(() => {
@@ -80,22 +242,8 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             if (selectedStartDate && j.startDate !== selectedStartDate) return false;
             return true;
         });
-        return relevant.map(j => j.endDate);
+        return Array.from(new Set(relevant.map((j) => j.endDate).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives, filterData.companyName, filterData.jobRole, filterData.startDate]);
-
-    // Sample student data
-    const studentData = [
-        { id: 1, name: 'Student-1', registerNo: '73151929345', batch: '2023-2027', section: 'A', cgpa: '9.1', skills: 'Python', status: 'Unplaced' },
-        { id: 2, name: 'Student-2', registerNo: '73153498762', batch: '2022-2026', section: 'B', cgpa: '8.5', skills: 'Java', status: 'Unplaced' },
-        { id: 3, name: 'Student-3', registerNo: '73153456789', batch: '2023-2027', section: 'A', cgpa: '8.1', skills: 'Java', status: 'Placed' },
-        { id: 4, name: 'Student-4', registerNo: '73159876543', batch: '2022-2026', section: 'B', cgpa: '9.0', skills: 'Javascript', status: 'Placed' },
-        { id: 5, name: 'Student-5', registerNo: '73152313132', batch: '2023-2027', section: 'A', cgpa: '7.9', skills: 'Data Analysis', status: 'Placed' },
-        { id: 6, name: 'Student-6', registerNo: '73152378906', batch: '2024-2028', section: 'C', cgpa: '6.8', skills: 'Python', status: 'Unplaced' },
-        { id: 7, name: 'Student-7', registerNo: '73152345678', batch: '2024-2028', section: 'A', cgpa: '8.6', skills: 'Frontend', status: 'Placed' },
-        { id: 8, name: 'Student-8', registerNo: '73152316545', batch: '2022-2028', section: 'A', cgpa: '8.1', skills: 'Blockchain', status: 'Unplaced' },
-        { id: 9, name: 'Student-9', registerNo: '73152316783', batch: '2025-2029', section: 'A', cgpa: '7.2', skills: 'Java', status: 'Unplaced' },
-        { id: 10, name: 'Student-10', registerNo: '73152318908', batch: '2023-2027', section: 'B', cgpa: '6.9', skills: 'Python', status: 'Unplaced' }
-    ];
 
     const handleCompanyChange = (value) => {
         setFilterData(prev => ({
@@ -138,27 +286,37 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         }));
     };
 
+    const hasCompleteFilterSelection = useMemo(() => (
+        Boolean(filterData.companyName && filterData.jobRole && filterData.startDate && filterData.endDate)
+    ), [filterData.companyName, filterData.jobRole, filterData.startDate, filterData.endDate]);
+
     const displayStudents = useMemo(() => {
-        return studentData.filter(student => {
+        if (!hasCompleteFilterSelection) return [];
+
+        const filtered = studentsData.filter(student => {
             const companyMatch =
                 !filterData.companyName ||
-                !student.companyName ||
-                (student.companyName ?? '').toLowerCase().includes(filterData.companyName.toLowerCase().trim());
+                (student.companyName ?? '').toLowerCase() === filterData.companyName.toLowerCase().trim();
             const jobRoleMatch =
                 !filterData.jobRole ||
-                !student.jobRole ||
-                (student.jobRole ?? '').toLowerCase().includes(filterData.jobRole.toLowerCase().trim());
+                (student.jobRole ?? '').toLowerCase() === filterData.jobRole.toLowerCase().trim();
             const startDateMatch =
                 !filterData.startDate ||
-                !student.startDate ||
-                (student.startDate ?? '').toLowerCase().includes(filterData.startDate.toLowerCase().trim());
+                (student.startDate ?? '').toLowerCase() === filterData.startDate.toLowerCase().trim();
             const endDateMatch =
                 !filterData.endDate ||
-                !student.endDate ||
-                (student.endDate ?? '').toLowerCase().includes(filterData.endDate.toLowerCase().trim());
+                (student.endDate ?? '').toLowerCase() === filterData.endDate.toLowerCase().trim();
             return companyMatch && jobRoleMatch && startDateMatch && endDateMatch;
         });
-    }, [studentData, filterData]);
+
+        const seen = new Set();
+        return filtered.filter((student) => {
+            const dedupeKey = `${student.driveId || ''}|${student.companyName || ''}|${student.jobRole || ''}|${student.startDate || ''}|${student.registerNo || ''}`;
+            if (seen.has(dedupeKey)) return false;
+            seen.add(dedupeKey);
+            return true;
+        });
+    }, [studentsData, filterData, hasCompleteFilterSelection]);
 
     const [activeItem, setActiveItem] = useState("Eligible Students");
 
@@ -320,8 +478,39 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             onViewChange(view);
         }
     };
-    const placedCount = studentData.filter(s => s.status === 'Placed').length;
-    const eligibleCount = studentData.length;
+
+    const handleViewStudent = (student) => {
+        const targetStudentId = student?.studentId || '';
+        if (!targetStudentId) {
+            console.warn('Unable to open student view: studentId missing', student);
+            return;
+        }
+
+        navigate(`/coo-manage-students/view/${targetStudentId}`, {
+            state: {
+                mode: 'view',
+                studentId: targetStudentId,
+                studentData: {
+                    _id: targetStudentId,
+                    regNo: student.registerNo,
+                    firstName: (student.name || '').split(' ').slice(0, -1).join(' ') || student.name,
+                    lastName: (student.name || '').split(' ').slice(-1).join(' ') || '',
+                    batch: student.batch,
+                    branch: student.branch,
+                    section: student.section,
+                    overallCGPA: student.cgpa,
+                    skillSet: student.skills
+                }
+            }
+        });
+    };
+    const totalRoundsCount = useMemo(() => {
+        const keySet = new Set(
+            displayStudents.map((student) => `${student.companyName}|${student.jobRole}|${student.startDate}`)
+        );
+        return keySet.size;
+    }, [displayStudents]);
+    const eligibleCount = displayStudents.length;
     return (
         <div className={styles['coordinator-main-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
@@ -340,7 +529,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                 </div>
 
                                 <div className={`${styles['co-es-search-filters']} ${styles['co-es-company-profile-search']}`}>
-                                    <div className={styles['co-es-search-tab']}>CSE Students</div>
+                                    <div className={styles['co-es-search-tab']}>{coordinatorBranchLabel}</div>
                                     <div className={styles['co-es-search-inputs']}>
                                         <div className={styles['co-es-search-input']}>
                                             <select
@@ -386,7 +575,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                             >
                                                 <option value="">Search by Start Date</option>
                                                 {startDateOptions.map((date) => (
-                                                    <option key={date} value={date}>{date}</option>
+                                                    <option key={date} value={date}>{formatDateDisplay(date)}</option>
                                                 ))}
                                             </select>
                                             <label htmlFor="co-es-start-date" className={styles['co-es-static-label']}>Search by Start Date</label>
@@ -403,7 +592,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                             >
                                                 <option value="">Search by End Date</option>
                                                 {endDateOptions.map((date) => (
-                                                    <option key={date} value={date}>{date}</option>
+                                                    <option key={date} value={date}>{formatDateDisplay(date)}</option>
                                                 ))}
                                             </select>
                                             <label htmlFor="co-es-end-date" className={styles['co-es-static-label']}>Search by End Date</label>
@@ -416,13 +605,13 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                         <img src={CoodEligibleStudentPlacestudicon} alt="Placed Students" className={styles['co-es-stat-card__image']} />
                                         <span className={styles['co-es-stat-card__label']}>Number of 
                                             Rounds</span>
-                                        <span className={styles['co-es-stat-card__value']}>{placedCount}</span>
+                                        <span className={styles['co-es-stat-card__value']}>{hasCompleteFilterSelection ? totalRoundsCount : 0}</span>
                                     </div>
                                     <div className={`${styles['co-es-summary-card']} ${styles['co-es-stat-card']}`}>
                                         <img src={CoodEligibleStudestudicon} alt="Eligible Students" className={styles['co-es-stat-card__image']} />
                                         <span className={styles['co-es-stat-card__label']}>Eligible
                                             Students</span>
-                                        <span className={styles['co-es-stat-card__value']}>{eligibleCount}</span>
+                                        <span className={styles['co-es-stat-card__value']}>{hasCompleteFilterSelection ? eligibleCount : 0}</span>
                                     </div>
                                 </div>
                             </div>
@@ -456,7 +645,19 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {displayStudents.map((student, index) => (
+                                            {isLoading ? (
+                                                <tr>
+                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>Loading eligible students...</td>
+                                                </tr>
+                                            ) : !hasCompleteFilterSelection ? (
+                                                <tr>
+                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>Select Company, Job Role, Start Date and End Date to view students.</td>
+                                                </tr>
+                                            ) : displayStudents.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>No eligible students found for this coordinator branch.</td>
+                                                </tr>
+                                            ) : displayStudents.map((student, index) => (
                                                 <tr key={student.id}>
                                                     <td>{index + 1}</td>
                                                     <td>{student.name}</td>
@@ -470,7 +671,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                                             {student.status}
                                                         </span>
                                                     </td>
-                                                    <td onClick={() => handleCardClick('coo-view-page')}>
+                                                    <td onClick={() => handleViewStudent(student)}>
                                                         <EyeIcon />
                                                     </td>
                                                 </tr>

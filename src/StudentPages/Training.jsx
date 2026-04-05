@@ -14,68 +14,186 @@ function Training({ onLogout, onViewChange }) {
             return null;
         }
     });
-    // Generate mock attendance data
-    const generateMockData = () => {
-        const mockRecords = [
-            { date: '2025-07-12', status: 'Present' },
-            { date: '2025-07-13', status: 'Present' },
-            { date: '2025-07-14', status: 'Absent' },
-            { date: '2025-07-15', status: 'Present' },
-            { date: '2025-07-16', status: 'Present' },
-            { date: '2025-07-17', status: 'Present' },
-            { date: '2025-07-18', status: 'Present' },
-            { date: '2025-07-19', status: 'Present' },
-            { date: '2025-07-20', status: 'Absent' },
-            { date: '2025-07-21', status: 'Present' }
-        ];
-        const present = mockRecords.filter(r => r.status === 'Present').length;
-        const absent = mockRecords.filter(r => r.status === 'Absent').length;
-        return { present, absent, records: mockRecords };
-    };
-
-    const [attendanceData, setAttendanceData] = useState(generateMockData());
+    const [attendanceData, setAttendanceData] = useState({ present: 0, absent: 0, records: [] });
     const [isLoading, setIsLoading] = useState(true);
     const [selectedPhase, setSelectedPhase] = useState('');
+    const [availablePhases, setAvailablePhases] = useState([]);
     const [trainingData, setTrainingData] = useState({
-        company: 'R - Sequence',
-        batch: 'Batch - II',
-        course: 'Java FSD',
-        startDate: '12-07-2025',
-        endDate: '02-08-2025',
-        totalDays: 22,
-        completedDays: 11
+        company: '-',
+        batch: '-',
+        course: '-',
+        startDate: '-',
+        endDate: '-',
+        totalDays: 0,
+        completedDays: 0
     });
     
     const attendancePercentage = attendanceData.present + attendanceData.absent > 0 
         ? Math.round((attendanceData.present / (attendanceData.present + attendanceData.absent)) * 100) 
         : 0;
-    const absentPercentage = 100 - attendancePercentage;
 
     const trainingProgressPercent = trainingData.totalDays > 0
         ? Math.round((trainingData.completedDays / trainingData.totalDays) * 100)
         : 0;
 
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
+    const getTotalDays = (startDate, endDate) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+        const diff = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+        return diff >= 0 ? diff + 1 : 0;
+    };
+
+    const getCompletedDays = (startDate, endDate) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const today = new Date();
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+        const effectiveEnd = today < end ? today : end;
+        const diff = Math.floor((effectiveEnd.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+        return diff >= 0 ? diff + 1 : 0;
+    };
+
     useEffect(() => {
-        setIsLoading(false);
-    }, []);
+        let isActive = true;
+
+        const loadTrainingData = async () => {
+            setIsLoading(true);
+            try {
+                const regNo = (studentData?.regNo || '').toString().trim();
+                if (!regNo) {
+                    if (isActive) {
+                        setAttendanceData({ present: 0, absent: 0, records: [] });
+                        setTrainingData({
+                            company: '-',
+                            batch: '-',
+                            course: '-',
+                            startDate: '-',
+                            endDate: '-',
+                            totalDays: 0,
+                            completedDays: 0
+                        });
+                        setAvailablePhases([]);
+                        setSelectedPhase('');
+                    }
+                    return;
+                }
+
+                const [assignment, attendanceResponse] = await Promise.all([
+                    mongoDBService.getStudentTrainingAssignment(regNo),
+                    mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] }))
+                ]);
+
+                if (!isActive) return;
+
+                if (assignment) {
+                    const startDate = assignment?.startDate || '';
+                    const endDate = assignment?.endDate || '';
+                    const totalDays = getTotalDays(startDate, endDate);
+                    const completedDays = getCompletedDays(startDate, endDate);
+
+                    const attendanceRowsRaw = Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : [];
+                    const batchNumberFromAttendance = attendanceRowsRaw
+                        .map((entry) => (entry?.batchNumber ?? '').toString().trim())
+                        .find(Boolean);
+
+                    setTrainingData({
+                        company: assignment?.companyName || '-',
+                        batch: batchNumberFromAttendance || (assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-',
+                        course: assignment?.courseName || '-',
+                        startDate: formatDate(startDate),
+                        endDate: formatDate(endDate),
+                        totalDays,
+                        completedDays: Math.min(completedDays, totalDays)
+                    });
+
+                    const phaseOptions = Array.isArray(assignment?.phases)
+                        ? assignment.phases
+                            .map((phase) => (phase?.phaseNumber || '').toString().trim())
+                            .filter(Boolean)
+                        : [];
+
+                    setAvailablePhases(phaseOptions);
+                    setSelectedPhase((prev) => (prev && phaseOptions.includes(prev) ? prev : (phaseOptions[0] || '')));
+                } else {
+                    setTrainingData({
+                        company: '-',
+                        batch: '-',
+                        course: '-',
+                        startDate: '-',
+                        endDate: '-',
+                        totalDays: 0,
+                        completedDays: 0
+                    });
+                    setAvailablePhases([]);
+                    setSelectedPhase('');
+                }
+
+                const attendanceRows = Array.isArray(attendanceResponse?.data)
+                    ? attendanceResponse.data.map((entry) => {
+                        const statusRaw = (entry?.status || '-').toString().trim().toLowerCase();
+                        let normalizedStatus = '-';
+                        if (statusRaw === 'present') normalizedStatus = 'Present';
+                        if (statusRaw === 'absent') normalizedStatus = 'Absent';
+
+                        return {
+                            date: entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '',
+                            status: normalizedStatus
+                        };
+                    })
+                    : [];
+
+                const present = attendanceRows.filter((item) => item.status === 'Present').length;
+                const absent = attendanceRows.filter((item) => item.status === 'Absent').length;
+                setAttendanceData({ present, absent, records: attendanceRows });
+            } catch (error) {
+                console.error('Failed to load training data for student:', error);
+                if (!isActive) return;
+                setAttendanceData({ present: 0, absent: 0, records: [] });
+                setTrainingData({
+                    company: '-',
+                    batch: '-',
+                    course: '-',
+                    startDate: '-',
+                    endDate: '-',
+                    totalDays: 0,
+                    completedDays: 0
+                });
+                setAvailablePhases([]);
+                setSelectedPhase('');
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        loadTrainingData();
+
+        return () => {
+            isActive = false;
+        };
+    }, [studentData?.regNo]);
 
     const handleViewChange = (view) => {
         onViewChange(view);
         setIsSidebarOpen(false);
     };
 
-    const handleBackClick = () => {
-        onViewChange('dashboard');
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-    };
+    const studentName = `${(studentData?.firstName || '').toString().trim()} ${(studentData?.lastName || '').toString().trim()}`.trim() || (studentData?.name || '-');
+    const studentEmail = (studentData?.primaryEmail || studentData?.email || '-').toString().trim() || '-';
+    const studentMobile = (studentData?.mobileNo || studentData?.mobile || studentData?.phone || '-').toString().trim() || '-';
 
     const pieData = [
         { name: 'Present', value: attendanceData.present, color: '#16C098' },
@@ -98,14 +216,14 @@ function Training({ onLogout, onViewChange }) {
                     <div className={styles.profileHeaderCard}>
                         <div className={styles.profileHeaderContent}>
                             <div className={styles.studentNameSection}>
-                                <h1 className={styles.studentName}>Ravinder Singh</h1>
+                                <h1 className={styles.studentName}>{studentName}</h1>
                             </div>
                             <div className={styles.infoBox}>
                                 <div className={styles.infoRow}>
                                     <div className={styles.infoItem}>
                                         <span className={styles.infoLabel}>Email</span>
                                         <span className={styles.infoColon}>:</span>
-                                        <span className={styles.infoValue}>singhravinder4560@gmial.com</span>
+                                        <span className={styles.infoValue}>{studentEmail}</span>
                                     </div>
                                     <div className={styles.infoItem}>
                                         <span className={styles.infoLabel}>Company</span>
@@ -122,7 +240,7 @@ function Training({ onLogout, onViewChange }) {
                                     <div className={styles.infoItem}>
                                         <span className={styles.infoLabel}>Mobile No</span>
                                         <span className={styles.infoColon}>:</span>
-                                        <span className={styles.infoValue}>7006540212</span>
+                                        <span className={styles.infoValue}>{studentMobile}</span>
                                     </div>
                                     <div className={styles.infoItem}>
                                         <span className={styles.infoLabel}>Batch</span>
@@ -164,12 +282,11 @@ function Training({ onLogout, onViewChange }) {
                                 value={selectedPhase} 
                                 onChange={(e) => setSelectedPhase(e.target.value)}
                                 className={styles.phaseSelect}
-                                required
                             >
-                                <option value="" disabled>Select Phase</option>
-                                <option value="Phase-I">Phase-I</option>
-                                <option value="Phase-II">Phase-II</option>
-                                <option value="Phase-III">Phase-III</option>
+                                <option value="" disabled>{availablePhases.length ? 'Select Phase' : 'No Phases Assigned'}</option>
+                                {availablePhases.map((phase) => (
+                                    <option key={phase} value={phase}>{phase}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -256,27 +373,35 @@ function Training({ onLogout, onViewChange }) {
                         <div className={styles.overviewCard}>
                             <h3 className={styles.overviewTitle}>Attendance Overview</h3>
                             <div className={styles.chartSection}>
-                                <div className={styles.chartContainer}>
-                                    <ResponsiveContainer width="100%" height={180}>
-                                        <PieChart>
-                                            <Pie
-                                                data={pieData}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={50}
-                                                outerRadius={70}
-                                                fill="#8884d8"
-                                                dataKey="value"
-                                                stroke="none"
-                                            >
-                                                <Cell fill="#16C098" />
-                                                <Cell fill="#F65C5F" />
-                                            </Pie>
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                    <div className={styles.chartLabels}>
-                                        <div className={styles.absentLabel}>A {absentPercentage}%</div>
-                                        <div className={styles.presentLabel}>P {attendancePercentage}%</div>
+                                <div className={styles.overviewChartContent}>
+                                    <div className={styles.chartContainer}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={pieData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={55}
+                                                    outerRadius={75}
+                                                    startAngle={90}
+                                                    endAngle={-270}
+                                                    paddingAngle={0}
+                                                    dataKey="value"
+                                                    animationBegin={0}
+                                                    animationDuration={800}
+                                                    animationEasing="ease-out"
+                                                    stroke="none"
+                                                >
+                                                    {pieData.map((entry, index) => (
+                                                        <Cell key={`attendance-overview-cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div className={styles.chartCenterText}>
+                                            <div className={styles.chartCenterValue}>{attendancePercentage}%</div>
+                                            <div className={styles.chartCenterLabel}>Present</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
