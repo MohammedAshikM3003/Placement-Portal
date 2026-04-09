@@ -136,6 +136,72 @@ const UnblockSuccessPopup = ({ onClose }) => (
     </div>
 );
 
+const AI_EXTRA_COLUMNS = {
+    driveCount: {
+        label: 'Drives Attended',
+        value: (student) => Number(student.driveCount || 0),
+    },
+    lastDriveDate: {
+        label: 'Last Drive',
+        value: (student) => (student.lastDriveDate ? new Date(student.lastDriveDate).toLocaleDateString() : '-'),
+    },
+    blocked: {
+        label: 'Blocked',
+        value: (student) => (student.blocked ? 'Yes' : 'No'),
+    },
+    cgpa: {
+        label: 'CGPA',
+        value: (student) => student.cgpa || '-',
+    },
+    skills: {
+        label: 'Skills',
+        value: (student) => {
+            const skills = student.skills || '';
+            return skills.length > 30 ? skills.substring(0, 30) + '...' : (skills || '-');
+        },
+    },
+    backlogs: {
+        label: 'Backlogs',
+        value: (student) => student.backlogs || '0',
+    },
+    tenthPercentage: {
+        label: '10th %',
+        value: (student) => student.tenthPercentage || '-',
+    },
+    twelfthPercentage: {
+        label: '12th %',
+        value: (student) => student.twelfthPercentage || '-',
+    },
+    placementStatus: {
+        label: 'Placement',
+        value: (student) => student.isPlaced ? 'Placed' : 'Not Placed',
+        render: (student) => (
+            <span style={{
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                backgroundColor: student.isPlaced ? '#d4edda' : '#fff3cd',
+                color: student.isPlaced ? '#155724' : '#856404',
+            }}>
+                {student.isPlaced ? 'Placed' : 'Not Placed'}
+            </span>
+        ),
+    },
+    placedCompany: {
+        label: 'Company',
+        value: (student) => student.placedCompany || '-',
+    },
+    package: {
+        label: 'Package',
+        value: (student) => student.package || '-',
+    },
+    eligibleDrives: {
+        label: 'Eligible Drives',
+        value: (student) => Number(student.eligibleDriveCount || 0),
+    },
+};
+
 // Clear mock data
 const initialStudents = [];
 
@@ -149,6 +215,14 @@ function AdminstudDB() {
     const [tempFilterDept, setTempFilterDept] = useState('');
     const [tempFilterRegno, setTempFilterRegno] = useState('');
     const [tempFilterBatch, setTempFilterBatch] = useState('');
+    const [isAIFilterMode, setIsAIFilterMode] = useState(false);
+    const [aiFilterText, setAiFilterText] = useState('');
+    const [aiFilteredStudents, setAiFilteredStudents] = useState([]);
+    const [aiFilterColumns, setAiFilterColumns] = useState([]);
+    const [aiFilterActive, setAiFilterActive] = useState(false);
+    const [aiFilterLoading, setAiFilterLoading] = useState(false);
+    const [aiFilterReason, setAiFilterReason] = useState('');
+    const [aiTooltip, setAiTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [nameFocused, setNameFocused] = useState(false);
     const [regnoFocused, setRegnoFocused] = useState(false);
     const [filterName, setFilterName] = useState('');
@@ -201,6 +275,49 @@ function AdminstudDB() {
         if (yearDiff === 2) return 'III';
         if (yearDiff >= 3) return 'IV';
         return 'I';
+    };
+
+    const normalizeStudentRecord = (student, index = 0) => {
+        const batch = student.batch || student.year || '';
+
+        return {
+            id: normalizeId(student._id || student.id) || student.regNo || `${index}`,
+            regNo: student.regNo || student.regno || '',
+            name: `${student.firstName || student.firstname || ''} ${student.lastName || student.lastname || ''}`.trim() || student.name || '',
+            section: student.section || student.Section || student.sec || student.sectionName || student.classSection || '',
+            department: student.department || student.branch || student.degree || '',
+            batch,
+            currentYear: student.currentYear || student.currentyear || calculateCurrentYear(batch),
+            currentSemester: student.currentSemester || student.currentsemester || student.semester || student.sem || '',
+            phone: student.phone || student.mobile || student.phoneNo || student.mobileNo || '',
+            email: student.primaryEmail || student.primaryemail || student.email || '',
+            profilePicURL: student.profilePicURL || student.profilepicurl || student.photoURL || student.photo || student.image || '',
+            resume: Boolean(student.resumeURL || student.resumeData),
+            placement: student.placement || '',
+            blocked: Boolean(student.isBlocked || student.blocked),
+            // Attendance data
+            driveCount: Number(student.driveCount || 0),
+            lastDriveDate: student.lastDriveDate || '',
+            attendedCompanies: student.attendedCompanies || [],
+            attendedRoles: student.attendedRoles || [],
+            // Academic data
+            cgpa: student.cgpa || student.overallCGPA || '',
+            skills: student.skills || student.skillSet || '',
+            backlogs: student.backlogs || student.currentBacklogs || '0',
+            tenthPercentage: student.tenthPercentage || '',
+            twelfthPercentage: student.twelfthPercentage || '',
+            gender: student.gender || '',
+            city: student.city || '',
+            // Placement data
+            isPlaced: Boolean(student.isPlaced),
+            placedCompany: student.placedCompany || '',
+            placedRole: student.placedRole || '',
+            package: student.package || '',
+            placedDate: student.placedDate || '',
+            // Eligibility data
+            eligibleDriveCount: Number(student.eligibleDriveCount || 0),
+            eligibleCompanies: student.eligibleCompanies || [],
+        };
     };
 
     // --- Fetch branches from MongoDB and generate batch options ---
@@ -283,10 +400,70 @@ function AdminstudDB() {
     // ... (Filter, View Profile, Select, Action handlers - No logic change) ...
     const handleViewStudents = () => {
         setViewBlocklist(false); // Reset blocklist view when viewing all students
+        setAiFilteredStudents([]);
+        setAiFilterColumns([]);
+        setAiFilterActive(false);
         setFilterName(tempFilterName);
         setFilterDept(tempFilterDept);
         setFilterRegno(tempFilterRegno);
         setFilterBatch(tempFilterBatch);
+    };
+
+    const handleToggleFilterMode = () => {
+        setViewBlocklist(false);
+        setIsAIFilterMode(prev => !prev);
+    };
+
+    const handleApplyAIFilter = () => {
+        const prompt = aiFilterText.trim();
+        if (!prompt) {
+            return;
+        }
+
+        setViewBlocklist(false);
+        setAiFilterLoading(true);
+        setAiFilterReason('');
+
+        mongoDBService.aiFilterStudents(prompt)
+            .then((response) => {
+                const mappedStudents = (Array.isArray(response?.students) ? response.students : []).map((student, index) => normalizeStudentRecord(student, index));
+                setAiFilteredStudents(mappedStudents);
+                setAiFilterColumns(Array.isArray(response?.columns) ? response.columns.filter((column) => AI_EXTRA_COLUMNS[column]) : []);
+                setAiFilterActive(true);
+                setAiFilterReason(response?.reason || '');
+            })
+            .catch((error) => {
+                console.error('AI filter failed:', error);
+                alert(error.message || 'AI filter failed. Please make sure Ollama is running and try again.');
+                setAiFilteredStudents([]);
+                setAiFilterColumns([]);
+                setAiFilterActive(false);
+                setAiFilterReason('');
+            })
+            .finally(() => {
+                setAiFilterLoading(false);
+            });
+    };
+
+    const handleDiscardAIFilter = () => {
+        setAiFilterText('');
+        setAiFilteredStudents([]);
+        setAiFilterColumns([]);
+        setAiFilterActive(false);
+        setAiFilterReason('');
+    };
+
+    const handleAiTooltipMove = (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setAiTooltip({
+            visible: true,
+            x: rect.left + (rect.width / 2),
+            y: rect.bottom + 10,
+        });
+    };
+
+    const handleAiTooltipLeave = () => {
+        setAiTooltip(prev => (prev.visible ? { ...prev, visible: false } : prev));
     };
 
     const showLoadingThenNavigate = async (onNavigate) => {
@@ -327,7 +504,7 @@ function AdminstudDB() {
             });
         }
     };
-    
+
     const handleStudentSelect = (id) => {
         setSelectedStudentIds(prevIds => {
             const newIds = new Set(prevIds);
@@ -543,13 +720,19 @@ function AdminstudDB() {
         setActivePopup(null);
     };
 
-    const filteredStudents = students.filter(student => {
-        const nameMatch = filterName === '' || student.name.toLowerCase().includes(filterName.toLowerCase());
-        const branchMatch = filterDept === '' || (student.department && student.department.toUpperCase() === filterDept.toUpperCase());
-        const regnoMatch = filterRegno === '' || student.regNo.toLowerCase().includes(filterRegno.toLowerCase());
-        const batchMatch = filterBatch === '' || student.batch === filterBatch;
-        return nameMatch && branchMatch && regnoMatch && batchMatch;
-    }).sort((a, b) => {
+    const activeStudentSource = aiFilterActive ? aiFilteredStudents : students;
+    const isTableLoading = isInitialLoading || aiFilterLoading;
+
+    const filteredStudents = aiFilterActive
+        ? activeStudentSource
+        : activeStudentSource.filter(student => {
+            const nameMatch = filterName === '' || student.name.toLowerCase().includes(filterName.toLowerCase());
+            const branchMatch = filterDept === '' || (student.department && student.department.toUpperCase() === filterDept.toUpperCase());
+            const regnoMatch = filterRegno === '' || student.regNo.toLowerCase().includes(filterRegno.toLowerCase());
+            const batchMatch = filterBatch === '' || student.batch === filterBatch;
+
+            return nameMatch && branchMatch && regnoMatch && batchMatch;
+        }).sort((a, b) => {
         // Sort by register number in ascending order
         const regNoA = a.regNo || '';
         const regNoB = b.regNo || '';
@@ -558,6 +741,35 @@ function AdminstudDB() {
     
     const blockedStudents = filteredStudents.filter(s => s.blocked);
     const visibleStudents = viewBlocklist ? blockedStudents : filteredStudents;
+    const aiColumns = aiFilterActive ? aiFilterColumns.filter((column) => AI_EXTRA_COLUMNS[column]) : [];
+    const tableColumnCount = 9 + aiColumns.length;
+
+    const getExportColumns = () => {
+        const baseColumns = [
+            { key: 'regNo', label: 'Reg No' },
+            { key: 'name', label: 'Name' },
+            { key: 'department', label: 'Branch' },
+            { key: 'batch', label: 'Batch' },
+            { key: 'section', label: 'Section' },
+            { key: 'phone', label: 'Phone' },
+            { key: 'email', label: 'Email' },
+        ];
+
+        const extraColumns = aiColumns.map((columnKey) => ({
+            key: columnKey,
+            label: AI_EXTRA_COLUMNS[columnKey].label,
+        }));
+
+        return [...baseColumns, ...extraColumns];
+    };
+
+    const getExportValue = (student, columnKey) => {
+        if (AI_EXTRA_COLUMNS[columnKey]) {
+            return AI_EXTRA_COLUMNS[columnKey].value(student);
+        }
+
+        return student[columnKey] ?? '';
+    };
     
     // Check if all selected students are already blocked or unblocked
     const selectedStudents = students.filter(s => selectedStudentIds.has(s.id));
@@ -585,8 +797,9 @@ function AdminstudDB() {
             
             // Generate Excel
             await new Promise(resolve => setTimeout(resolve, 300));
-            const data = visibleStudents.map(student => [student.regNo, student.name, student.department, student.batch, student.section, student.phone, student.email]);
-            const header = ["Reg No", "Name", "Branch", "Batch", "Section", "Phone", "Email"];
+            const exportColumns = getExportColumns();
+            const header = exportColumns.map((column) => column.label);
+            const data = visibleStudents.map((student) => exportColumns.map((column) => getExportValue(student, column.key)));
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Students");
@@ -630,8 +843,9 @@ function AdminstudDB() {
             // Generate PDF
             await new Promise(resolve => setTimeout(resolve, 300));
             const doc = new jsPDF('landscape');
-            const columns = ["Reg No", "Name", "Branch", "Batch", "Section", "Phone", "Email"];
-            const rows = visibleStudents.map(student => [student.regNo, student.name, student.department, student.batch, student.section, student.phone, student.email]);
+            const exportColumns = getExportColumns();
+            const columns = exportColumns.map((column) => column.label);
+            const rows = visibleStudents.map((student) => exportColumns.map((column) => getExportValue(student, column.key)));
 
             doc.text("Students Report", 14, 15);
             
@@ -669,13 +883,44 @@ function AdminstudDB() {
                 <div className={styles['Admin-DB-main-content']}>
                     <div className={styles['Admin-DB-top-card']}>
                         {/* Filter Section */}
-                        <div className={styles['Admin-DB-filter-section']}>
+                        <div className={`${styles['Admin-DB-filter-section']} ${isAIFilterMode ? styles['Admin-DB-filter-section-ai-mode'] : ''}`}>
                             <div className={styles['Admin-DB-filter-header-container']}>
-                                <div className={styles['Admin-DB-filter-header']}>Filter & Sort</div>
-                                {/* <span className={styles['Admin-DB-filter-icon-container']}>☰</span> */}
+                                <div className={styles['Admin-DB-filter-header']}>
+                                    {isAIFilterMode ? 'AI-Filter' : 'Filter & Sort'}
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-DB-ai-toggle-btn']}
+                                    onClick={handleToggleFilterMode}
+                                    aria-label="AI Filter"
+                                    onMouseEnter={handleAiTooltipMove}
+                                    onMouseMove={handleAiTooltipMove}
+                                    onMouseLeave={handleAiTooltipLeave}
+                                >
+                                    {isAIFilterMode ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="1.5" d="M21.25 12H8.895m-4.361 0H2.75m18.5 6.607h-5.748m-4.361 0H2.75m18.5-13.214h-3.105m-4.361 0H2.75m13.214 2.18a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm-9.25 6.607a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm6.607 6.608a2.18 2.18 0 1 0 0-4.361a2.18 2.18 0 0 0 0 4.36Z"/>
+                                        </svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <g fill="none">
+                                                <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/>
+                                                <path fill="currentColor" d="M9.107 5.448c.598-1.75 3.016-1.803 3.725-.159l.06.16l.807 2.36a4 4 0 0 0 2.276 2.411l.217.081l2.36.806c1.75.598 1.803 3.016.16 3.725l-.16.06l-2.36.807a4 4 0 0 0-2.412 2.276l-.081.216l-.806 2.361c-.598 1.75-3.016 1.803-3.724.16l-.062-.16l-.806-2.36a4 4 0 0 0-2.276-2.412l-.216-.081l-2.36-.806c-1.751-.598-1.804-3.016-.16-3.724l.16-.062l2.36-.806A4 4 0 0 0 8.22 8.025l.081-.216zM11 6.094l-.806 2.36a6 6 0 0 1-3.49 3.649l-.25.091l-2.36.806l2.36.806a6 6 0 0 1 3.649 3.49l.091.25l.806 2.36l.806-2.36a6 6 0 0 1 3.49-3.649l.25-.09l2.36-.807l-2.36-.806a6 6 0 0 1-3.649-3.49l-.09-.25zM19 2a1 1 0 0 1 .898.56l.048.117l.35 1.026l1.027.35a1 1 0 0 1 .118 1.845l-.118.048l-1.026.35l-.35 1.027a1 1 0 0 1-1.845.117l-.048-.117l-.35-1.026l-1.027-.35a1 1 0 0 1-.118-1.845l.118-.048l1.026-.35l.35-1.027A1 1 0 0 1 19 2"/>
+                                            </g>
+                                        </svg>
+                                    )}
+                                </button>
+                                {aiTooltip.visible && (
+                                    <div
+                                        className={styles['Admin-DB-ai-pointer-tooltip']}
+                                        style={{ left: `${aiTooltip.x}px`, top: `${aiTooltip.y}px`, transform: 'translateX(-50%)' }}
+                                    >
+                                        {isAIFilterMode ? 'Filter & Sort' : 'AI Filter'}
+                                    </div>
+                                )}
                             </div>
+                            {!isAIFilterMode ? (
                             <div className={styles['Admin-DB-filter-content']}>
-                                {/* Name Input with Static Label */}
                                 <div className={styles['Admin-DB-input-wrapper']}>
                                     <label className={styles['Admin-DB-static-label']}>Name</label>
                                     <div className={`${styles['Admin-DB-text-container']} ${nameFocused ? styles['is-focused'] : ''}`}>
@@ -721,6 +966,39 @@ function AdminstudDB() {
                                     <button className={`${styles['Admin-DB-button']} ${styles['Admin-DB-blocklist-btn']}`} onClick={() => setViewBlocklist(true)}>Blocklist</button>
                                 </div>
                             </div>
+                            ) : (
+                            <div className={styles['Admin-DB-ai-filter-content']}>
+                                <textarea
+                                    className={styles['Admin-DB-ai-filter-input']}
+                                    placeholder="Try: 'show me placed students from TCS', 'CSE students with CGPA above 8', 'unplaced final year students', 'students who attended Infosys drive', 'students who know Python'"
+                                    value={aiFilterText}
+                                    onChange={(e) => setAiFilterText(e.target.value)}
+                                />
+                                <div className={styles['Admin-DB-ai-button-group']}>
+                                    <button
+                                        type="button"
+                                        className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-apply-btn']}`}
+                                        onClick={handleApplyAIFilter}
+                                        disabled={aiFilterLoading}
+                                    >
+                                        {aiFilterLoading ? 'Searching...' : 'Search'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-discard-btn']}`}
+                                        onClick={handleDiscardAIFilter}
+                                    >
+                                        Discard
+                                    </button>
+                                </div>
+                                {aiFilterActive && aiFilterReason && (
+                                    <div className={styles['Admin-DB-ai-reason']}>
+                                        <span className={styles['Admin-DB-ai-reason-icon']}>✨</span>
+                                        <span className={styles['Admin-DB-ai-reason-text']}>{aiFilterReason}</span>
+                                    </div>
+                                )}
+                            </div>
+                            )}
                         </div>
 
                         {/* Action Cards */}
@@ -795,22 +1073,29 @@ function AdminstudDB() {
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-year-sec']}`}>Year-Sec</th>
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-sem']}`}>Sem</th>
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-batch']}`}>Batch</th>
+                                        {aiColumns.map((columnKey) => (
+                                            <th key={columnKey} className={`${styles['Admin-DB-th']} ${styles['Admin-DB-ai-column']}`}>
+                                                {AI_EXTRA_COLUMNS[columnKey].label}
+                                            </th>
+                                        ))}
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-profile']}`}>Profile</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {isInitialLoading ? (
+                                    {isTableLoading ? (
                                         <tr className={styles['Admin-DB-loading-row']}>
-                                            <td colSpan="9" className={styles['Admin-DB-loading-cell']}>
+                                            <td colSpan={tableColumnCount} className={styles['Admin-DB-loading-cell']}>
                                                 <div className={styles['Admin-DB-loading-wrapper']}>
                                                     <div className={styles['Admin-DB-spinner']}></div>
-                                                    <span className={styles['Admin-DB-loading-text']}>Loading students…</span>
+                                                    <span className={styles['Admin-DB-loading-text']}>
+                                                        {aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                                                    </span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : visibleStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="9" style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", padding: "20px" }}>
+                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", padding: "20px" }}>
                                                 {viewBlocklist ? "No blocked students available" : "No data available"}
                                             </td>
                                         </tr>
@@ -839,6 +1124,13 @@ function AdminstudDB() {
                                                 </td>
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-sem']}`}>{student.currentSemester || '--'}</td>
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-batch']}`}>{student.batch}</td>
+                                                {aiColumns.map((columnKey) => (
+                                                    <td key={`${student.id}-${columnKey}`} className={`${styles['Admin-DB-td']} ${styles['Admin-DB-ai-column']}`}>
+                                                        {AI_EXTRA_COLUMNS[columnKey].render
+                                                            ? AI_EXTRA_COLUMNS[columnKey].render(student)
+                                                            : AI_EXTRA_COLUMNS[columnKey].value(student)}
+                                                    </td>
+                                                ))}
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-profile']}`} onClick={(e) => { e.stopPropagation(); handleViewProfile(student.id); }}><EyeIcon /></td>
                                             </tr>
                                         ))

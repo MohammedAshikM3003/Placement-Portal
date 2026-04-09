@@ -189,6 +189,17 @@ class MongoDBService {
     }
   }
 
+  async aiFilterStudents(prompt) {
+    if (!prompt || !prompt.trim()) {
+      throw new Error('Prompt is required');
+    }
+
+    return await this.apiCall('/admin/students/ai-filter', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: prompt.trim() })
+    });
+  }
+
   // Get single student by ID
   async getStudentById(studentId) {
     const authToken = localStorage.getItem('authToken');
@@ -969,6 +980,38 @@ class MongoDBService {
     return await this.apiCall('/student-applications/update-rounds', {
       method: 'POST',
       body: JSON.stringify(roundData)
+    });
+  }
+
+  async generateAdminFeedback(payload) {
+    return await this.apiCall('/feedback/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async saveAdminFeedback(payload) {
+    return await this.apiCall('/feedback/save', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getFeedbackByDrive(driveId, filters = {}) {
+    const params = new URLSearchParams();
+    if (driveId !== undefined && driveId !== null && String(driveId).trim() !== '') {
+      params.append('driveId', String(driveId).trim());
+    }
+    if (filters.companyName) params.append('companyName', String(filters.companyName).trim());
+    if (filters.jobRole) params.append('jobRole', String(filters.jobRole).trim());
+    if (filters.startingDate) params.append('startingDate', String(filters.startingDate).trim());
+    if (filters.roundNumber !== undefined && filters.roundNumber !== null && String(filters.roundNumber).trim() !== '') {
+      params.append('roundNumber', String(filters.roundNumber).trim());
+    }
+    if (filters.feedbackType) params.append('feedbackType', String(filters.feedbackType).trim());
+
+    return await this.apiCall(`/feedback?${params.toString()}`, {
+      method: 'GET'
     });
   }
 

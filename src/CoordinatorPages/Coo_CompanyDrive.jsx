@@ -540,6 +540,16 @@ export default function App({ onLogout, currentView, onViewChange }) {
     }
   };
 
+  const handleDriveView = (drive) => {
+    navigate('/coo-company-drive/view', {
+      state: {
+        viewMode: true,
+        editingDriveId: drive.id || drive._id,
+        editingDrive: drive
+      }
+    });
+  };
+
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
@@ -743,7 +753,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
             <td>{item.package || item.pkg || item.ctc || item.salaryPackage || '—'}</td>
             <td>{item.rounds || '—'}</td>
             <td>{item.mode || '—'}</td>
-            <td>
+            <td onClick={() => handleDriveView(item)} style={{ cursor: 'pointer' }}>
               <EyeIcon />
             </td>
           </tr>

@@ -429,15 +429,21 @@
   word-wrap: break-word;
 }
 
-/* Column widths for the table (8 columns: S.No, Name, RegNo, Year-Sec, Sem, Mobile, Result, View) */
-.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 8%; flex-shrink: 0; }  /* S.No */
-.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 20%; flex-shrink: 0; } /* Name */
-.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 18%; flex-shrink: 0; } /* Register Number */
-.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 12%; flex-shrink: 0; } /* Year-Sec */
-.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 8%; flex-shrink: 0; }  /* Sem */
-.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 16%; flex-shrink: 0; } /* Mobile */
+/* Column widths for the table (9 columns: S.No, Name, RegNo, Year-Sec, Sem, Mobile, Result, Feedback, View) */
+.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 7%; flex-shrink: 0; }  /* S.No */
+.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 18%; flex-shrink: 0; } /* Name */
+.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 15%; flex-shrink: 0; } /* Register Number */
+.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 11%; flex-shrink: 0; } /* Year-Sec */
+.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 7%; flex-shrink: 0; }  /* Sem */
+.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 14%; flex-shrink: 0; } /* Mobile */
 .co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 10%; flex-shrink: 0; } /* Result */
-.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 8%; flex-shrink: 0; }  /* View */
+.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 10%; flex-shrink: 0; } /* Feedback */
+.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 8%; flex-shrink: 0; }  /* View */
+
+.co-ram-data-table th:nth-child(8) {
+  text-align: left;
+  padding-left: 18px;
+}
 
 /* Loading styles */
 .co-ram-loading-cell {

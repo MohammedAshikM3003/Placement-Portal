@@ -10,7 +10,6 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
 import styles from './Coo_ManageStuEditPage_new.module.css'; // Module Import
-import achievementStyles from '../StudentPages/Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/Adminicon.png';
 import BestAchievement from '../assets/BestAchievementicon.svg';
 import StuEyeIcon from '../assets/Coordviewicon.svg';
@@ -19,7 +18,9 @@ import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
 import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
-import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
+import CoordinatorUnsavedChangesAlert from '../components/alerts/CoordinatorUnsavedChangesAlert';
+import CoordinatorSaveSuccessAlert from '../components/alerts/CoordinatorSaveSuccessAlert';
+import CoordinatorLoadingPopup from '../components/alerts/CoordinatorLoadingPopup';
 import {
     DownloadSuccessAlert,
     DownloadFailedAlert
@@ -150,35 +151,12 @@ const CalendarIcon = () => (
     </svg>
 );
 
-const SuccessPopup = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-    return (
-        <div className={styles.popupOverlay} onClick={onClose}>
-            {/* Reuse Achievements-style animated success card */}
-            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
-                <div className={achievementStyles['Achievement-popup-header']}>Saved!</div>
-                <div className={achievementStyles['Achievement-popup-body']}>
-                    <svg className={achievementStyles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className={achievementStyles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                        <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                    </svg>
-                    <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-                        Changes Saved ✓
-                    </h2>
-                    <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                        Your Details have been
-                    </p>
-                    <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                        Successfully saved in the Portal
-                    </p>
-                </div>
-                <div className={achievementStyles['Achievement-popup-footer']}>
-                    <button onClick={onClose} className={achievementStyles['Achievement-popup-close-btn']}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
+const SuccessPopup = ({ isOpen, onClose }) => (
+    <CoordinatorSaveSuccessAlert
+        isOpen={isOpen}
+        onClose={onClose}
+    />
+);
 
 const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     if (!isOpen) return null;
@@ -210,7 +188,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                             </g>
                         </svg>
                     </div>
-                    <h2>Image Size Exceeded ✗</h2>
+                    <h2>Image Size Exceeded âœ—</h2>
                     <p className={styles.imageSizePopupLine}>
                         Maximum allowed: <strong>500KB</strong>
                     </p>
@@ -333,6 +311,7 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
             fileLabel="image"
             title="Downloaded !"
             description="The image has been successfully downloaded to your device."
+            color="#D23B42"
         />
         <DownloadFailedAlert
             isOpen={downloadPopupState === 'error'}
@@ -410,7 +389,7 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                         console.error('Canvas is empty');
                         return;
                     }
-                    console.log('✅ Cropped blob created:', blob.size, 'bytes');
+                    console.log('âœ… Cropped blob created:', blob.size, 'bytes');
                     resolve(blob);
                 }, 'image/jpeg', 0.95);
             });
@@ -470,15 +449,15 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                                     className={styles.rotateBtn}
                                     title="Rotate left"
                                 >
-                                    ↺
+                                    â†º
                                 </button>
-                                <span className={styles.angleValue}>{rotation}°</span>
+                                <span className={styles.angleValue}>{rotation}Â°</span>
                                 <button
                                     onClick={() => setRotation((r) => (r + 10) % 360)}
                                     className={styles.rotateBtn}
                                     title="Rotate right"
                                 >
-                                    ↻
+                                    â†»
                                 </button>
                             </div>
                             <input
@@ -622,7 +601,7 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
                 <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
                 <div className={styles.imageSizePopupBody}>
                     {renderIcon()}
-                    <h2>Invalid {urlType} Link ✗</h2>
+                    <h2>Invalid {urlType} Link âœ—</h2>
                     {invalidUrl && (
                         <p className={styles.imageSizePopupLine} style={{ wordBreak: 'break-all' }}>
                             You entered: <strong>{invalidUrl}</strong>
@@ -669,33 +648,6 @@ const EDITABLE_FIELD_LABELS = {
     preferredTraining: 'Preferred Training',
     skills: 'Skills', profilePicURL: 'Profile Photo',
 };
-
-function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
-    const fieldText = changedFields.length > 2
-        ? `${changedFields.slice(0, 2).join(', ')},....... have successfully changed`
-        : `${changedFields.join(', ')} have successfully changed`;
-    return (
-        <div className={styles.popupOverlay}>
-            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
-                <div className={achievementStyles['Achievement-popup-header']}>Details Changed!</div>
-                <div className={achievementStyles['Achievement-popup-body']}>
-                    <div className={styles.unsavedIconWrap}>
-                        <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="7" x2="12" y2="14"/>
-                            <circle cx="12" cy="18" r="0.5" fill="#333" stroke="#333"/>
-                        </svg>
-                    </div>
-                    <h2 className={styles.unsavedTitle}>Save Changes!</h2>
-                    <p className={styles.unsavedFieldText}>{fieldText}</p>
-                </div>
-                <div className={achievementStyles['Achievement-popup-footer']}>
-                    <button className={achievementStyles['Achievement-popup-cancel-btn']} onClick={onDiscard}>Discard</button>
-                    <button className={styles.unsavedSaveBtn} onClick={onSave}>Save</button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const { studentId } = useParams(); // Get studentId from URL params
@@ -1283,7 +1235,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         setSkills(processedSkills);
         setOriginalSkills([...processedSkills]); // Track original skills for banner
         savedDataRef.current = { ...merged, skills: processedSkills };
-        
+
         if (merged.dob) {
             const dobStr = merged.dob.toString();
             if (dobStr.length === 8) {
@@ -1293,7 +1245,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 setDob(new Date(year, month - 1, day));
             }
         }
-        
+
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
@@ -1389,7 +1341,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         setProfilePhotoFile(file);
         setIsCropModalOpen(true);
 
-        console.log('✅ File selected for cropping:', {
+        console.log('âœ… File selected for cropping:', {
             name: file.name,
             mimeType: file.type || 'unknown',
             size: `${fileSizeKB}KB`,
@@ -1471,7 +1423,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        
+
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
         const linkedinVal = studentData?.linkedinLink?.trim() || '';
@@ -1489,7 +1441,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         }
 
         setIsSaving(true);
-        
+
         try {
             if (!studentId) {
                 alert('No student ID provided');
@@ -1500,20 +1452,20 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             let profilePhotoUrl = studentData?.profilePicURL || '';
             // Initialize finalResolvedUrl with existing profile URL (in case no new photo uploaded)
             let finalResolvedUrl = studentData?.profilePicURL ? gridfsService.getFileUrl(studentData.profilePicURL) : '';
-            
+
             if (profilePhotoFile) {
                 try {
-                    console.log('🔄 Uploading profile photo to GridFS...');
+                    console.log('ðŸ”„ Uploading profile photo to GridFS...');
                     const result = await gridfsService.uploadProfileImage(profilePhotoFile, studentId, 'student');
                     if (result && result.url) {
                         profilePhotoUrl = result.url; // relative GridFS path e.g. /api/file/xxx
                         finalResolvedUrl = gridfsService.getFileUrl(result.url); // full URL
-                        
+
                         // Don't update UI yet - keep old image visible until save completes
-                        // This prevents sidebar flicker (old → placeholder → new)
+                        // This prevents sidebar flicker (old â†’ placeholder â†’ new)
                         setProfilePhotoFile(null);
-                        
-                        console.log('✅ Profile photo uploaded to GridFS:', profilePhotoUrl);
+
+                        console.log('âœ… Profile photo uploaded to GridFS:', profilePhotoUrl);
                     }
                 } catch (uploadErr) {
                     console.error('Failed to upload profile photo:', uploadErr);
@@ -1524,7 +1476,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             }
 
             const formData = new FormData(e.target);
-            
+
             const updateData = {
                 // Include all readonly fields to preserve complete profile data
                 firstName: formData.get('firstName') || studentData?.firstName || '',
@@ -1542,7 +1494,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 aadhaarNo: formData.get('aadhaarNo') || studentData?.aadhaarNo || '',
                 community: formData.get('community') || studentData?.community || '',
                 mediumOfStudy: formData.get('mediumOfStudy') || studentData?.mediumOfStudy || '',
-                
+
                 // Academic background (readonly)
                 tenthBoard: formData.get('tenthBoard') || studentData?.tenthBoard || '',
                 tenthInstitution: formData.get('tenthInstitution') || studentData?.tenthInstitution || '',
@@ -1557,53 +1509,53 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 diplomaInstitution: formData.get('diplomaInstitution') || studentData?.diplomaInstitution || '',
                 diplomaPercentage: formData.get('diplomaPercentage') || studentData?.diplomaPercentage || '',
                 diplomaYear: formData.get('diplomaYear') || studentData?.diplomaYear || '',
-                
+
                 // Editable fields - preserve existing data if field not on current form view
-                address: formData.get('address') || studentData?.address || '', 
+                address: formData.get('address') || studentData?.address || '',
                 city: formData.get('city') || studentData?.city || '',
-                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '', 
+                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '',
                 mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
-                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '', 
+                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '',
                 fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
-                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '', 
+                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '',
                 motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
                 section: formData.get('section') || studentData?.section || '',
-                guardianName: formData.get('guardianName') || studentData?.guardianName || '', 
+                guardianName: formData.get('guardianName') || studentData?.guardianName || '',
                 guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
-                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '', 
+                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '',
                 studyCategory: studyCategory || studentData?.studyCategory || '',
-                currentYear: formData.get('currentYear') || studentData?.currentYear || '', 
+                currentYear: formData.get('currentYear') || studentData?.currentYear || '',
                 currentSemester: formData.get('currentSemester') || studentData?.currentSemester || '',
-                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '', 
+                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '',
                 semester2GPA: formData.get('semester2GPA') || studentData?.semester2GPA || '',
-                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '', 
+                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '',
                 semester4GPA: formData.get('semester4GPA') || studentData?.semester4GPA || '',
-                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '', 
+                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '',
                 semester6GPA: formData.get('semester6GPA') || studentData?.semester6GPA || '',
-                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '', 
+                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '',
                 semester8GPA: formData.get('semester8GPA') || studentData?.semester8GPA || '',
-                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '', 
+                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '',
                 clearedBacklogs: formData.get('clearedBacklogs') || studentData?.clearedBacklogs || '',
-                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '', 
-                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '', 
+                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '',
+                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '',
                 gapReason: formData.get('gapReason') || studentData?.gapReason || '',
-                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '', 
-                quota: formData.get('quota') || studentData?.quota || '', 
+                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '',
+                quota: formData.get('quota') || studentData?.quota || '',
                 languagesKnown: formData.get('languagesKnown') || studentData?.languagesKnown || '',
-                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
-                passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
+                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '',
+                passportNo: formData.get('passportNo') || studentData?.passportNo || '',
                 skillSet: formData.get('skillSet') || studentData?.skillSet || '',
                 skills: skills.filter(s => s.trim()),
-                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
-                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
+                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '',
+                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '',
                 rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
-                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '', 
+                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '',
                 willingToSignBond: formData.get('willingToSignBond') || studentData?.willingToSignBond || '',
-                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '', 
+                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '',
                 githubLink: formData.get('githubLink') || studentData?.githubLink || '',
-                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '', 
-                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '', 
-                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '', 
+                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '',
+                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '',
+                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '',
                 preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
                 profilePicURL: (() => {
                     // Store relative GridFS path in DB, not full URL or Base64
@@ -1628,32 +1580,32 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             const result = await fastDataService.updateProfile(studentId, updateData);
             console.log('StuProfile handleSave result.student:', result?.student);
 
-            const updatedStudentData = { 
-                ...(studentData || {}), 
-                ...(result?.student || {}), 
+            const updatedStudentData = {
+                ...(studentData || {}),
+                ...(result?.student || {}),
                 ...updateData,
                 // Ensure we use the resolved GridFS URL for display
                 profilePicURL: finalResolvedUrl || updateData.profilePicURL || studentData?.profilePicURL
             };
-            
+
             // If we have a new profile image, preload it before updating UI (prevents placeholder flash)
             if (finalResolvedUrl && finalResolvedUrl !== studentData?.profilePicURL) {
                 try {
                     await new Promise((resolve, reject) => {
                         const img = new Image();
                         const timeout = setTimeout(() => {
-                            console.log('⚠️ Image preload timeout, continuing anyway');
+                            console.log('âš ï¸ Image preload timeout, continuing anyway');
                             resolve();
                         }, 3000); // 3 second max wait
-                        
+
                         img.onload = () => {
                             clearTimeout(timeout);
-                            console.log('✅ New profile image preloaded successfully');
+                            console.log('âœ… New profile image preloaded successfully');
                             resolve();
                         };
                         img.onerror = () => {
                             clearTimeout(timeout);
-                            console.log('⚠️ Image preload failed, continuing anyway');
+                            console.log('âš ï¸ Image preload failed, continuing anyway');
                             resolve(); // Don't reject, just continue
                         };
                         img.src = finalResolvedUrl;
@@ -1662,18 +1614,18 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     console.warn('Image preload error:', preloadErr);
                 }
             }
-            
+
             // Clean up blob URLs to prevent memory leaks (after preload completes)
             if (profileImage && profileImage.startsWith('blob:')) {
                 URL.revokeObjectURL(profileImage);
             }
-            
+
             // Update local state with new data including new profile pic
             setStudentData(updatedStudentData);
             setCurrentYear(String(updatedStudentData.currentYear || ''));
             setCurrentSemester(String(updatedStudentData.currentSemester || ''));
             setSelectedSection(String(updatedStudentData.section || ''));
-            
+
             // Update profile image preview to new image (seamless transition - image already preloaded)
             if (finalResolvedUrl) {
                 setProfileImage(finalResolvedUrl);
@@ -1761,7 +1713,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             onViewChange(navTarget);
         }
     };
-    
+
     const getChangedFields = () => {
         if (!savedDataRef.current || !studentData) return [];
         const saved = savedDataRef.current;
@@ -1805,12 +1757,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                         studentData={studentData}
                     />
                     <div className={styles.dashboardArea}>
-                        <div className={styles.initialLoaderOverlay}>
-                            <div className={styles.initialLoaderCard}>
-                                <div className={styles.loadingSpinner}></div>
-                                <p>Loading student profile...</p>
-                            </div>
-                        </div>
+                        <CoordinatorLoadingPopup isOpen={true} title="Loading..." message="Loading student profile..." />
                     </div>
                 </div>
             </div>
@@ -1857,7 +1804,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             />
 
             {/* Unsaved Changes Alert */}
-            <UnsavedChangesAlert
+            <CoordinatorUnsavedChangesAlert
                 isOpen={showUnsavedModal}
                 onClose={() => {
                     if (isSaving) return;
@@ -2290,7 +2237,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     )}
                             </div>
                         </div>
-                        
+
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Semester</h3>
@@ -2308,7 +2255,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         </div>
                                     ));
                                 })()}
-                                
+
                                 {/* Upload button for current semester */}
                                 {(() => {
                                     const currentSem = parseInt(currentSemester) || 1;
@@ -2326,10 +2273,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     );
                                 })()}
                             </div>
-                            
+
                             {/* Separator line */}
                             <div className={styles.semesterSeparator}></div>
-                            
+
                             <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <div className={styles.field}>
                                     <label>CGPA</label>
@@ -2388,7 +2335,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (
                         <div className={styles.profileSectionContainer}>
@@ -2464,12 +2411,12 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                 </>
                             ) : (
                                 <>
-                                    {/* ── Analysis Panel (inline) ── */}
+                                    {/* â”€â”€ Analysis Panel (inline) â”€â”€ */}
                                     <div className={styles.anlsHeader}>
                                         <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
                                         <div className={styles.anlsTitleRow}>
                                             <span className={styles.anlsPlacedBadge}><span className={styles.anlsPlacedDot} />Placed</span>
-                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back ↩</button>
+                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
                                         </div>
                                     </div>
 
@@ -2540,7 +2487,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                         className={styles.anlsClearBtn}
                                                         onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
                                                     >
-                                                        ✕ Clear Selection
+                                                        âœ• Clear Selection
                                                     </button>
                                                 </div>
                                             )}
@@ -2599,7 +2546,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Work On</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
                                                             </ul>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
@@ -2610,7 +2557,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Best</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -2621,24 +2568,24 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                     <div className={styles.anlsAchievCol}>
                                                         <div className={styles.anlsGoodCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👍</span>
+                                                                <span className={styles.anlsGoodIcon}>ðŸ‘</span>
                                                                 <span className={styles.anlsGoodLabel}>GOOD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].good.map((g, i) => (
                                                                 <div key={i} className={styles.anlsGoodItem}>
-                                                                    <span className={styles.anlsCheckIcon}>✅</span>
+                                                                    <span className={styles.anlsCheckIcon}>âœ…</span>
                                                                     <span>{g}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                         <div className={styles.anlsBadCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👎</span>
+                                                                <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
                                                                 <span className={styles.anlsBadLabel}>BAD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
                                                                 <div key={i} className={styles.anlsBadItem}>
-                                                                    <span className={styles.anlsCheckIcon}>❌</span>
+                                                                    <span className={styles.anlsCheckIcon}>âŒ</span>
                                                                     <span>{b}</span>
                                                                 </div>
                                                             ))}
@@ -3068,10 +3015,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             </div>
             {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
             <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
-            <FileSizeErrorPopup 
-                isOpen={isFileSizeErrorOpen} 
-                onClose={() => setIsFileSizeErrorOpen(false)} 
-                fileSizeKB={fileSizeErrorKB} 
+            <FileSizeErrorPopup
+                isOpen={isFileSizeErrorOpen}
+                onClose={() => setIsFileSizeErrorOpen(false)}
+                fileSizeKB={fileSizeErrorKB}
             />
             <URLValidationErrorPopup
                 isOpen={isURLErrorPopupOpen}

@@ -1,0 +1,67 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+}
+
+.container {
+  width: 400px;
+  max-width: 90vw;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+}
+
+.header {
+  background: #D23B42;
+  color: #fff;
+  padding: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.body {
+  padding: 2rem;
+}
+
+.spinner {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 6px solid rgba(210, 59, 66, 0.18);
+  border-top-color: #D23B42;
+  margin: 0 auto 16px;
+  animation: spin 0.85s linear infinite;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+}
+
+.message {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.subMessage {
+  margin: 10px 0 0;
+  color: #888;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

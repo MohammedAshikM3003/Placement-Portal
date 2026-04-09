@@ -481,10 +481,6 @@
     gap: 0.75rem;
 }
 
-.checkboxGroup + .checkboxGroup {
-
-}
-
 .checkboxGroupLabel {
     font-weight: 600;
     color: #1a2a4a;
@@ -721,7 +717,7 @@
 }
 
 .imagePreviewHeader {
-  background: linear-gradient(135deg, #D73D3D, #1565c0);
+    background: #D23B42;
   color: white;
     padding: 1rem;
     font-size: 1.75rem;
@@ -777,14 +773,14 @@
 }
 
 .imagePreviewDownloadBtn {
-  background: #D73D3D;
+    background: #D23B42;
   color: white;
 }
 
 .imagePreviewDownloadBtn:hover {
-  background: #1565c0;
+    background: #b53138;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(215, 61, 61, 0.3);
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
 .imagePreviewFooterBtn:disabled {
@@ -912,7 +908,7 @@
     box-shadow: 0 2px 8px rgba(215, 61, 61, 0.3);
 }
 
-.unsavedSaveBtn:hover { background: #1168e0; }
+.unsavedSaveBtn:hover { background: #b53138; }
 
 .stu-profile-saving-overlay {
     position: fixed;
@@ -2168,7 +2164,7 @@ select:disabled {
 }
 
 .cropHeader {
-  background: linear-gradient(135deg, #D73D3D, #1565c0);
+    background: #D23B42;
   color: white;
   padding: 20px 24px;
   font-size: 20px;
@@ -2250,7 +2246,9 @@ select:disabled {
 }
 
 .rotateBtn:hover {
-  background: #e8eaed;
+    background: #D23B42;
+    color: #fff;
+    border-color: #D23B42;
   transform: translateY(-1px);
 }
 
@@ -2285,8 +2283,8 @@ select:disabled {
 }
 
 .angleSlider::-webkit-slider-thumb:hover {
-  background: #1565c0;
-  box-shadow: 0 0 8px rgba(215, 61, 61, 0.3);
+    background: #D23B42;
+    box-shadow: 0 0 8px rgba(210, 59, 66, 0.35);
 }
 
 .angleSlider::-moz-range-thumb {
@@ -2300,8 +2298,8 @@ select:disabled {
 }
 
 .angleSlider::-moz-range-thumb:hover {
-  background: #1565c0;
-  box-shadow: 0 0 8px rgba(215, 61, 61, 0.3);
+    background: #D23B42;
+    box-shadow: 0 0 8px rgba(210, 59, 66, 0.35);
 }
 
 .resetBtn {
@@ -2374,8 +2372,8 @@ select:disabled {
 }
 
 .zoomSlider::-webkit-slider-thumb:hover {
-  background: #1565c0;
-  box-shadow: 0 0 8px rgba(215, 61, 61, 0.3);
+    background: #D23B42;
+    box-shadow: 0 0 8px rgba(210, 59, 66, 0.35);
 }
 
 .zoomSlider::-moz-range-thumb {
@@ -2389,8 +2387,8 @@ select:disabled {
 }
 
 .zoomSlider::-moz-range-thumb:hover {
-  background: #1565c0;
-  box-shadow: 0 0 8px rgba(215, 61, 61, 0.3);
+    background: #D23B42;
+    box-shadow: 0 0 8px rgba(210, 59, 66, 0.35);
 }
 
 .zoomValue {
@@ -2437,9 +2435,9 @@ select:disabled {
 }
 
 .uploadBtn:hover {
-  background: #1565c0;
+    background: #b53138;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(215, 61, 61, 0.3);
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
 /* Responsive Design for Crop Modal */

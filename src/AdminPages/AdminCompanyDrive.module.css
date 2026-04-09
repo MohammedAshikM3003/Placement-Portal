@@ -579,8 +579,33 @@
 }
 
 .Admin-cd-domain {
-    width: 120px;
+    width: 170px;
+    max-width: 170px;
     text-align: center;
+    white-space: normal;
+}
+
+.Admin-cd-domain-single-line {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Admin-cd-domain-two-lines {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admin-cd-domain-line {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .Admin-cd-job-role {

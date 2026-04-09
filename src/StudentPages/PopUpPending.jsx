@@ -5,9 +5,10 @@ import scrollStyles from './PopupScrollbar.module.css';
 import companyfeedbackicon from '../assets/companyfeedbackicon.svg';
 import CopmanyviewFeedbackicon from '../assets/CopmanyviewFeedbackicon.svg';
 import DOBDatePicker from '../components/Calendar/DOBDatePicker.jsx';
+import mongoDBService from '../services/mongoDBService';
 
-// ── Custom volume-bar scrollbox (no native browser arrows) ─────────────────
-function FeedbackScrollBox({ text, bg }) {
+// â”€â”€ Custom volume-bar scrollbox (no native browser arrows) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function FeedbackScrollBox({ text }) {
   const contentRef = React.useRef(null);
   const [thumb, setThumb] = React.useState({ height: 40, top: 0 });
   const [showBar, setShowBar] = React.useState(false);
@@ -53,7 +54,7 @@ function FeedbackScrollBox({ text, bg }) {
 
   return (
     <div style={{ display: 'flex', gap: '6px', maxHeight: '180px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-      {/* Content — native scrollbar hidden */}
+      {/* Content â€” native scrollbar hidden */}
       <div
         ref={contentRef}
         onScroll={updateThumb}
@@ -98,17 +99,35 @@ function FeedbackScrollBox({ text, bg }) {
   );
 }
 
-// ── Admin Feedback Popup ────────────────────────────────────────────────────
-function AdminFeedbackPopup({ isPassed, onClose }) {
-  const [rating] = useState(isPassed ? 4 : 1);
+// â”€â”€ Admin Feedback Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function AdminFeedbackPopup({ feedbackRecord, roundLabel, feedbackType = 'passed', onClose }) {
+  const parsedRating = Number(feedbackRecord?.rating);
+  const rating = Number.isFinite(parsedRating) && parsedRating > 0 ? Math.min(5, parsedRating) : 0;
   const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 480;
 
-  const headerBg   = isPassed ? '#197AFF' : '#5C5C5C';
-  const assessBg   = isPassed ? '#4A5BB3' : '#404040';
-  const messageBg  = isPassed ? '#999999' : '#999999';
-  const feedbackText = isPassed
-    ? 'Congratulations on your outstanding performance in the technical round! Your problem-solving approach demonstrated exceptional analytical thinking.\n\nParticularly impressed by:\n• Clean, well-documented code structure\n• Efficient algorithm optimization (O(n) solution)\n• Clear communication of your thought process\n• Strong debugging skills under time\nYour ability to break down complex problems manageable components reflects maturity beyond your academic years.'
-    : 'Thank you for your participation in the group discussion round. While you demonstrated subject knowledge, certain areas require development for success in collaborative environments.\n\nAreas observed during the session:\n• Limited active participation in team dialogue\n• Missed opportunities to build on peers\' ideas\n• Communication remained mostly reactive rather than proactive\n• Time management affected conclusion quality';
+  const isPassed = feedbackType === 'passed';
+  const headerBg = isPassed ? '#197AFF' : '#5C5C5C';
+  const assessBg = isPassed ? '#4A5BB3' : '#404040';
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const raw = String(dateString);
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      const [y, m, d] = raw.slice(0, 10).split('-');
+      return `${d}-${m}-${y}`;
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const feedbackText = (feedbackRecord?.feedback || '').toString().trim() || 'No admin feedback available for this round.';
+  const studentCount = Number(feedbackRecord?.studentCount) || 0;
+  const countLabel = isPassed ? 'Passed Students' : 'Failed Students';
+  const scheduledOn = formatDisplayDate(feedbackRecord?.selectedDate);
 
   return (
     <div style={{
@@ -153,102 +172,49 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
             }
             .afp-hide-native::-webkit-scrollbar { display: none; }
           `}</style>
-          {/* Overall Assessment + Next Round / Scheduled On */}
           <div style={{ display: 'flex', gap: isMobileView ? '12px' : '16px', alignItems: 'flex-start', marginBottom: '14px', flexDirection: isMobileView ? 'column' : 'row' }}>
-            {/* Left: assessment box + stars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: isMobileView ? '100%' : '160px', width: isMobileView ? '100%' : 'auto' }}>
-              <div style={{
-                backgroundColor: assessBg,
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                textAlign: 'center'
-              }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: isMobileView ? '100%' : '170px', width: isMobileView ? '100%' : 'auto' }}>
+              <div style={{ backgroundColor: assessBg, color: '#fff', borderRadius: '8px', padding: '8px 14px', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center' }}>
                 Overall Assessment
               </div>
               <div style={{ display: 'flex', gap: '4px', paddingLeft: '4px' }}>
                 {[1,2,3,4,5].map(star => (
-                  <span
-                    key={star}
-                    style={{ cursor: 'default', fontSize: '1.3rem' }}
-                  >
-                    {rating >= star
-                      ? <FaStar color="#FFE817" />
-                      : <FaRegStar color="#ccc" />}
+                  <span key={star} style={{ cursor: 'default', fontSize: '1.3rem' }}>
+                    {rating >= star ? <FaStar color="#FFE817" /> : <FaRegStar color="#ccc" />}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Right: Next Round + Scheduled On */}
             <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* Next Round */}
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
-                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '74px' : '78px', flexShrink: 0 }}>
-                  {isPassed ? 'Next round' : 'Next Round'}
-                </span>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>Round</span>
                 <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
-                <div style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '0.5rem 0.75rem',
-                  border: '1px solid #dde6f4',
-                  borderRadius: '8px',
-                  backgroundColor: '#f9fbff',
-                  fontSize: isMobileView ? '0.76rem' : '0.8rem',
-                  fontFamily: "'Poppins', sans-serif",
-                  color: '#555',
-                  boxSizing: 'border-box',
-                  overflowWrap: 'anywhere'
-                }}>
-                  {isPassed ? 'HR Round' : 'Closed'}
+                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                  {roundLabel || feedbackRecord?.roundName || 'Round'}
                 </div>
               </div>
 
-              {/* Scheduled On / Better luck */}
-              {isPassed ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
-                  <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '74px' : '78px', flexShrink: 0 }}>Scheduled On</span>
-                  <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
-                  <div style={{
-                    flex: 1,
-                    minWidth: 0,
-                    padding: '0.5rem 0.75rem',
-                    border: '1px solid #dde6f4',
-                    borderRadius: '8px',
-                    backgroundColor: '#f9fbff',
-                    fontSize: isMobileView ? '0.76rem' : '0.8rem',
-                    fontFamily: "'Poppins', sans-serif",
-                    color: '#555',
-                    boxSizing: 'border-box',
-                    overflowWrap: 'anywhere'
-                  }}>
-                    19-07-2026
-                  </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>{countLabel}</span>
+                <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
+                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                  {studentCount}
                 </div>
-              ) : (
-                <div style={{
-                  backgroundColor: assessBg,
-                  color: '#fff',
-                  borderRadius: '8px',
-                  padding: '10px 14px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap'
-                }}>
-                  <span className="afp-marquee-inner">
-                    {'\u00A0\u00A0'}Better luck next time ! – we encourage you
-                  </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>Scheduled On</span>
+                <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
+                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                  {scheduledOn}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
           {/* Feedback message box */}
-          <FeedbackScrollBox text={feedbackText} bg={messageBg} />
+          <FeedbackScrollBox text={feedbackText} />
         </div>
 
         {/* Footer */}
@@ -275,7 +241,7 @@ function AdminFeedbackPopup({ isPassed, onClose }) {
   );
 }
 
-// ── Editable textarea with custom volume-bar scrollbar ─────────────────────
+// â”€â”€ Editable textarea with custom volume-bar scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SFPScrollTextarea({ value, onChange, readOnly, height = 110 }) {
   const textareaRef = React.useRef(null);
   const trackRef    = React.useRef(null);
@@ -354,7 +320,7 @@ function SFPScrollTextarea({ value, onChange, readOnly, height = 110 }) {
   );
 }
 
-// ── Student Feedback Popup ───────────────────────────────────────────────────
+// â”€â”€ Student Feedback Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
   const [aiEnabled, setAiEnabled]     = useState(true);
   const [difficulty, setDifficulty]   = useState('');
@@ -439,7 +405,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
     document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
   };
 
-  /* ── Inline submit success popup ─────────────────────────────────────── */
+  /* â”€â”€ Inline submit success popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   if (showSubmitSuccess) return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -462,7 +428,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             <circle cx="26" cy="26" r="25" fill="none"/>
             <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
-          <h2 style={{ margin:'1rem 0 0.5rem', fontSize:'24px', color:'#333', fontWeight:600 }}>Submitted ✓</h2>
+          <h2 style={{ margin:'1rem 0 0.5rem', fontSize:'24px', color:'#333', fontWeight:600 }}>Submitted âœ“</h2>
           <p style={{ margin:0, color:'#888', fontSize:'16px' }}>Your feedback has been submitted</p>
         </div>
         <div style={{ padding:'1.5rem', backgroundColor:'#f7f7f7' }}>
@@ -503,7 +469,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             borderRadius: '12px', pointerEvents: 'none'
           }} />
         )}
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div style={{
           backgroundColor: '#197AFF',
           color: '#fff',
@@ -516,7 +482,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
           {viewOnly ? 'View Feedback' : 'Student Feedback'}
         </div>
 
-        {/* ── HR Round badge ── */}
+        {/* â”€â”€ HR Round badge â”€â”€ */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 16px 0' }}>
           <div style={{
             backgroundColor: '#D7E8FF',
@@ -530,7 +496,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
           </div>
         </div>
 
-        {/* ── Body ── */}
+        {/* â”€â”€ Body â”€â”€ */}
         <div
           ref={isPopupMobile ? mobileScrollRef : null}
           onScroll={isPopupMobile ? updateMobileThumb : null}
@@ -562,12 +528,12 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             }
           `}</style>
 
-          {/* AI Integration + Overall Assessment — mobile/desktop layouts */}
+          {/* AI Integration + Overall Assessment â€” mobile/desktop layouts */}
           {isPopupMobile ? (
-            /* ── MOBILE: flat column, no gap below stars ── */
+            /* â”€â”€ MOBILE: flat column, no gap below stars â”€â”€ */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
 
-              {/* Row 1: AI Integration — full width */}
+              {/* Row 1: AI Integration â€” full width */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
                 <div style={{ flex: 1, display: 'flex', gap: '0.35rem', alignItems: 'center', padding: '0.32rem', backgroundColor: '#f9fbff', borderRadius: '8px', border: '1px solid #dde6f4', height: '50px', boxSizing: 'border-box', minWidth: 0 }}>
@@ -578,7 +544,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                 </div>
               </div>
 
-              {/* Row 2: Overall Assessment + Stars — side by side in one row */}
+              {/* Row 2: Overall Assessment + Stars â€” side by side in one row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
                   backgroundColor: '#4A5BB3', color: '#fff', borderRadius: '8px',
@@ -638,7 +604,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
               </div>
             </div>
           ) : (
-            /* ── DESKTOP: two-column layout ── */
+            /* â”€â”€ DESKTOP: two-column layout â”€â”€ */
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '14px' }}>
               {/* Left column: AI toggle + Difficulty + Date */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -880,7 +846,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
           </div>
         )}
 
-        {/* ── Footer ── */}
+        {/* â”€â”€ Footer â”€â”€ */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', padding: isPopupMobile ? '14px 24px calc(env(safe-area-inset-bottom, 20px) + 25px)' : '14px 24px 20px', position: 'sticky', bottom: 0, background: '#fff', borderTop: '1px solid #eef1f7', zIndex: 2 }}>
           {viewOnly ? (
             <button
@@ -949,21 +915,21 @@ export const generateRounds = (app) => {
   const isApplicationAbsent = normalizedAppStatus === 'absent';
   // Keep backward compatibility for round-level absence from existing data.
   const hasAbsent = app?.rounds?.some(r => r.status === 'Absent');
-  
+
   // Check if Round 1 is failed - if yes, mark subsequent rounds as Not Eligible
-  const isRound1Failed = app?.rounds?.[0]?.status === 'Failed' || 
+  const isRound1Failed = app?.rounds?.[0]?.status === 'Failed' ||
                          (app?.roundDetails && app?.rounds?.find(r => r.roundNumber === 1 || r.name === app.roundDetails[0])?.status === 'Failed');
-  
+
   // If roundDetails exist, use them as the base and merge with student rounds
   if (app?.roundDetails && app.roundDetails.length > 0) {
     return app.roundDetails.map((roundName, index) => {
       // Find corresponding student round by name or round number
       const studentRound = app.rounds?.find(
-        r => r.name === roundName || 
-             r.roundName === roundName || 
+        r => r.name === roundName ||
+             r.roundName === roundName ||
              r.roundNumber === (index + 1)
       );
-      
+
       let status;
       if (isApplicationAbsent) {
         // Attendance-level absent: show first round absent and remaining rounds not eligible.
@@ -977,11 +943,11 @@ export const generateRounds = (app) => {
       } else {
         status = studentRound?.status || "Pending";
       }
-      
+
       return {
         name: roundName || `Round ${index + 1}`,
         status: status,
-        icon: status === "Passed" 
+        icon: status === "Passed"
           ? <FaCheckCircle color="#197AFF" size={28} />
           : status === "Failed"
           ? <FaTimes color="#D23B42" size={28} />
@@ -990,7 +956,7 @@ export const generateRounds = (app) => {
           : status === "Not Eligible"
           ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
           : <FaExclamationCircle color="#949494" size={28} />,
-        statusColor: status === "Passed" ? "#197AFF" : 
+        statusColor: status === "Passed" ? "#197AFF" :
                      status === "Failed" ? "#D23B42" :
                      status === "Absent" ? "#ff2800" :
                      status === "Not Eligible" ? "#f39c12" : "#717070",
@@ -998,14 +964,14 @@ export const generateRounds = (app) => {
       };
     });
   }
-  
+
   // Fallback: If only student rounds exist without roundDetails
   if (app?.rounds && app.rounds.length > 0) {
     // Check if any round has Absent status
     const hasAbsent = app.rounds.some(r => r.status === 'Absent');
     // Check if first round is failed
     const isFirstRoundFailed = app.rounds[0]?.status === 'Failed';
-    
+
     return app.rounds.map((round, index) => {
       let status;
       if (isApplicationAbsent) {
@@ -1017,11 +983,11 @@ export const generateRounds = (app) => {
       } else {
         status = round.status || "Pending";
       }
-      
+
       return {
         name: round.name || round.roundName || `Round ${round.roundNumber}`,
         status: status,
-        icon: status === "Passed" 
+        icon: status === "Passed"
           ? <FaCheckCircle color="#197AFF" size={28} />
           : status === "Failed"
           ? <FaTimes color="#D23B42" size={28} />
@@ -1030,7 +996,7 @@ export const generateRounds = (app) => {
           : status === "Not Eligible"
           ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
           : <FaExclamationCircle color="#949494" size={28} />,
-        statusColor: status === "Passed" ? "#197AFF" : 
+        statusColor: status === "Passed" ? "#197AFF" :
                      status === "Failed" ? "#D23B42" :
                      status === "Absent" ? "#ff2800" :
                      status === "Not Eligible" ? "#f39c12" : "#717070",
@@ -1038,7 +1004,7 @@ export const generateRounds = (app) => {
       };
     });
   }
-  
+
   // Final fallback: build placeholder rounds from totalRounds when names/statuses are unavailable.
   const inferredTotalRounds = Number(app?.totalRounds) || 0;
   if (inferredTotalRounds > 0) {
@@ -1098,7 +1064,11 @@ export default function PopUpPending({ app, onBack }) {
   const { status: overallStatus, color: overallStatusColor } = getOverallStatus(app);
   const [selectedRole, setSelectedRole] = useState('Student');
   const [showAdminFeedback, setShowAdminFeedback] = useState(false);
-  const [adminFeedbackRoundPassed, setAdminFeedbackRoundPassed] = useState(false);
+  const [adminFeedbackRecords, setAdminFeedbackRecords] = useState([]);
+  const [roundEligibilityMap, setRoundEligibilityMap] = useState({});
+  const [selectedAdminFeedback, setSelectedAdminFeedback] = useState(null);
+  const [selectedAdminFeedbackType, setSelectedAdminFeedbackType] = useState('passed');
+  const [selectedAdminRoundLabel, setSelectedAdminRoundLabel] = useState('');
   const [showStudentFeedback, setShowStudentFeedback] = useState(false);
   const [selectedRoundName, setSelectedRoundName] = useState('');
   const [feedbackViewMode, setFeedbackViewMode] = useState('edit'); // 'edit' | 'view'
@@ -1177,10 +1147,129 @@ export default function PopUpPending({ app, onBack }) {
     document.addEventListener('touchend', onUp);
   };
 
+  const getStudentIdentity = () => {
+    try {
+      const student = JSON.parse(localStorage.getItem('studentData') || 'null') || {};
+      return {
+        studentId: String(student?._id || student?.id || '').trim(),
+        regNo: String(student?.regNo || student?.registerNo || student?.registerNumber || '').trim().toLowerCase()
+      };
+    } catch (error) {
+      return { studentId: '', regNo: '' };
+    }
+  };
+
+  const buildEligibilityMap = (driveReport) => {
+    const { studentId, regNo } = getStudentIdentity();
+    const roundsData = Array.isArray(driveReport?.rounds) ? driveReport.rounds : [];
+
+    const isSameStudent = (record = {}) => {
+      const recordId = String(record?.studentId || record?.id || '').trim();
+      const recordRegNo = String(record?.registerNo || record?.regNo || '').trim().toLowerCase();
+      if (studentId && recordId && recordId === studentId) return true;
+      if (regNo && recordRegNo && recordRegNo === regNo) return true;
+      return false;
+    };
+
+    const eligibility = {};
+    roundsData.forEach((roundItem) => {
+      const roundNumber = Number(roundItem?.roundNumber);
+      if (!Number.isFinite(roundNumber) || roundNumber < 1) return;
+
+      const passed = Array.isArray(roundItem?.passedStudents) && roundItem.passedStudents.some(isSameStudent);
+      const failed = Array.isArray(roundItem?.failedStudents) && roundItem.failedStudents.some(isSameStudent);
+
+      eligibility[roundNumber] = { passed, failed };
+    });
+
+    return eligibility;
+  };
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadDriveFeedback = async () => {
+      const driveId = (app?.driveId || '').toString().trim();
+      if (!driveId) {
+        setAdminFeedbackRecords([]);
+        setRoundEligibilityMap({});
+        return;
+      }
+
+      try {
+        const [feedbackResponse, roundResultsResponse] = await Promise.all([
+          mongoDBService.getFeedbackByDrive(driveId, {
+            companyName: app?.company,
+            jobRole: app?.jobRole,
+            startingDate: app?.startDate
+          }),
+          mongoDBService.getAllRoundResults('', '', '', driveId)
+        ]);
+        if (!isActive) return;
+
+        const records = Array.isArray(feedbackResponse?.data) ? feedbackResponse.data : [];
+        const eligibility = buildEligibilityMap(roundResultsResponse?.data || {});
+
+        setAdminFeedbackRecords(records);
+        setRoundEligibilityMap(eligibility);
+      } catch (error) {
+        console.error('Failed to fetch admin feedback for drive:', error);
+        if (isActive) {
+          setAdminFeedbackRecords([]);
+          setRoundEligibilityMap({});
+        }
+      }
+    };
+
+    loadDriveFeedback();
+    return () => {
+      isActive = false;
+    };
+  }, [app?.driveId]);
+
+  const resolveFeedbackTypeForRound = (roundStatusText = '') => {
+    const normalized = String(roundStatusText).trim().toLowerCase();
+    if (normalized === 'failed' || normalized === 'rejected' || normalized === 'absent') {
+      return 'failed';
+    }
+    return 'passed';
+  };
+
+  const getFeedbackRecordForRound = (roundNumber, feedbackType) => {
+    const typedRecords = adminFeedbackRecords.filter((record) => {
+      return Number(record?.roundNumber) === Number(roundNumber) &&
+        String(record?.feedbackType || '').toLowerCase() === String(feedbackType).toLowerCase();
+    });
+
+    if (typedRecords.length === 0) return null;
+
+    return typedRecords.sort((a, b) => new Date(b?.updatedAt || b?.createdAt || 0) - new Date(a?.updatedAt || a?.createdAt || 0))[0];
+  };
+
+  const isEligibleForAdminFeedback = (roundNumber, feedbackType, roundStatusText) => {
+    const normalizedType = String(feedbackType || '').toLowerCase();
+    const mapEntry = roundEligibilityMap?.[Number(roundNumber)];
+
+    if (mapEntry && typeof mapEntry === 'object') {
+      const eligibleFromMap = Boolean(mapEntry?.[normalizedType]);
+      if (eligibleFromMap) return true;
+    }
+
+    // Fallback: rely on this student's own round status from application history.
+    const normalizedStatus = String(roundStatusText || '').trim().toLowerCase();
+    if (normalizedType === 'passed') {
+      return normalizedStatus === 'passed' || normalizedStatus === 'selected' || normalizedStatus === 'cleared';
+    }
+    if (normalizedType === 'failed') {
+      return normalizedStatus === 'failed' || normalizedStatus === 'rejected' || normalizedStatus === 'absent';
+    }
+    return false;
+  };
+
   // Get total rounds from roundDetails or rounds array
   const displayTotalRounds = app?.totalRounds || app?.roundDetails?.length || rounds.length || 'N/A';
   const isFirstRoundAbsent = rounds[0]?.status === 'Absent';
-  
+
   // Mobile rounds pane should stay scrollable for consistent UX.
   const useMobileRoundsScroll = isMobile;
 
@@ -1242,13 +1331,19 @@ export default function PopUpPending({ app, onBack }) {
           </div>
         </div>
       </div>
-      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Admin' && overallStatus !== "Pending" && (
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Admin' && overallStatus !== "Pending" && (() => {
+        const feedbackType = resolveFeedbackTypeForRound(round.statusText);
+        const isEligible = isEligibleForAdminFeedback(index + 1, feedbackType, round.statusText);
+        if (!isEligible) return null;
+        const feedbackRecord = getFeedbackRecordForRound(index + 1, feedbackType);
+        return (
         <div style={{ display: 'flex', flexShrink: 0 }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const isPassed = ['Passed', 'Selected', 'Cleared'].includes(round.statusText);
-              setAdminFeedbackRoundPassed(isPassed);
+              setSelectedAdminFeedback(feedbackRecord);
+              setSelectedAdminFeedbackType(feedbackType);
+              setSelectedAdminRoundLabel(`Round ${index + 1} (${round.name})`);
               setShowAdminFeedback(true);
             }}
             style={{
@@ -1262,7 +1357,8 @@ export default function PopUpPending({ app, onBack }) {
             <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
           </button>
         </div>
-      )}
+        );
+      })()}
       {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && overallStatus !== "Pending" && (
         <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '112px' : 'auto' }}>
           <button
@@ -1358,7 +1454,7 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
               </div>
             </div>
-            
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row', marginBottom: isMobile ? 0 : 0 }}>
               <div style={{ width: 'auto', minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
                 <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
@@ -1375,7 +1471,7 @@ export default function PopUpPending({ app, onBack }) {
                 </span>
               </div>
               <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: isMobile ? '9px 15px' : "8px 32px", fontWeight: isMobile ? 600 : 600, fontSize: isMobile ? 16 : 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>↩</span>
+                <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>â†©</span>
               </button>
             </div>
             <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
@@ -1461,7 +1557,9 @@ export default function PopUpPending({ app, onBack }) {
         </div>
         {showAdminFeedback && (
           <AdminFeedbackPopup
-            isPassed={adminFeedbackRoundPassed}
+            feedbackRecord={selectedAdminFeedback}
+            feedbackType={selectedAdminFeedbackType}
+            roundLabel={selectedAdminRoundLabel}
             onClose={() => { setShowAdminFeedback(false); }}
           />
         )}

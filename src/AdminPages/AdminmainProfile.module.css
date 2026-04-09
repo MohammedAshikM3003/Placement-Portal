@@ -33,8 +33,9 @@
     flex-grow: 1;
     padding: 10px 25px 10px 50px;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     overflow-y: auto;
     overflow-x: hidden;
     height: calc(100vh - 75px);
@@ -45,18 +46,18 @@
 
 /* --- Master Card Container --- */
 .Admin-main-profile-master-card {
-    background-color: #ffffff;
-    border-radius: 17px;
+    background-color: transparent;
+    border-radius: 0;
     width: 100%;
     max-width: 1400px; 
     height: fit-content;
-    padding: 35px 40px 40px 40px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e0e0e0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
     display: flex;
     flex-direction: column;
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
 /* --- Content Grid (Forms + Photo) --- */
@@ -77,6 +78,7 @@
 
 /* --- Section Styling --- */
 .Admin-main-profile-section {
+    padding-top: 8px;
     padding-bottom: 15px;
 }
 
@@ -129,6 +131,19 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
+}
+
+.Admin-main-profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.Admin-main-profile-field-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #4b4b4b;
+    letter-spacing: 0.02em;
 }
 
 /* --- Form Inputs --- */
@@ -495,6 +510,10 @@
     cursor: pointer;
 }
 
+.Admin-main-profile-date-wrapper {
+    width: 100%;
+}
+
 /* --- Form Select --- */
 .Admin-main-profile-form-select {
     cursor: pointer;
@@ -548,9 +567,12 @@
 /* --- Action Buttons --- */
 .Admin-main-profile-action-buttons {
     display: flex;
+    width: 100%;
+    max-width: 1400px;
     justify-content: flex-end; 
     gap: 1rem;
     margin-top: 2rem;
+    margin-bottom: 20px;
 }
 
 .Admin-main-profile-action-buttons button {
@@ -585,6 +607,455 @@
 .Admin-main-profile-discard-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* --- Photo Crop Popup --- */
+.cropOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.cropContainer {
+    width: min(980px, 94vw);
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    animation: adminPopupEnter 0.25s ease-out;
+}
+
+.cropHeader {
+    background: #4ea24e;
+    color: #fff;
+    text-align: center;
+    padding: 1.1rem 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cropContent {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.8fr);
+    gap: 0;
+}
+
+.cropPreviewArea {
+    position: relative;
+    min-height: 420px;
+    background: #111;
+}
+
+.cropControls {
+    padding: 1.4rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: #fff;
+}
+
+.controlGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.controlLabel {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #4b4b4b;
+}
+
+.rotateControl {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.rotateBtn,
+.resetBtn,
+.aspectBtn,
+.cropBtn,
+.imagePreviewFooterBtn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.rotateBtn {
+    width: 88px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f3f5;
+    color: #444;
+    font-size: 1.15rem;
+}
+
+.angleValue {
+    min-width: 42px;
+    text-align: center;
+    font-weight: 700;
+    color: #4ea24e;
+}
+
+.angleSlider,
+.zoomSlider {
+    width: 100%;
+    accent-color: #4ea24e;
+}
+
+.resetBtn {
+    height: 34px;
+    border-radius: 6px;
+    background: #f94a3d;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.aspectRatioButtons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.aspectBtn {
+    height: 38px;
+    border-radius: 7px;
+    background: #f2f4f7;
+    color: #444;
+    font-weight: 700;
+}
+
+.active {
+    background: #4ea24e;
+    color: #fff;
+}
+
+.zoomValue {
+    align-self: flex-end;
+    font-weight: 700;
+    color: #4ea24e;
+    margin-top: -0.15rem;
+}
+
+.cropFooter {
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.9rem;
+    border-top: 1px solid #eef2ee;
+    background: #fff;
+}
+
+.cropBtn {
+    min-width: 120px;
+    padding: 0.85rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.cropDiscardBtn {
+    background: #8f8f8f;
+}
+
+.cropUploadBtn {
+    background: #4ea24e;
+}
+
+/* --- College Banner/Logo Crop Popup --- */
+.collegeCropOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.collegeCropContainer {
+    width: min(980px, 94vw);
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    animation: adminPopupEnter 0.25s ease-out;
+}
+
+.collegeCropHeader {
+    background: #4ea24e;
+    color: #fff;
+    text-align: center;
+    padding: 1.1rem 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.collegeCropBannerCanvasWrap {
+    padding: 14px 18px 10px;
+}
+
+.collegeCropBannerCanvasInner {
+    position: relative;
+    min-height: 310px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #58ad58;
+    background: #cfe5d1;
+}
+
+.collegeCropBannerControlsStrip {
+    margin: 0 18px;
+    background: #3eb857;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 14px 16px;
+    align-items: center;
+}
+
+.collegeCropStripBlock {
+    min-width: 0;
+}
+
+.collegeCropStripTitle {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.collegeCropSlider {
+    width: 100%;
+    accent-color: #f3d313;
+}
+
+.collegeCropStripValue {
+    color: #fff;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.collegeCropRatioRow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.collegeCropRatioBtn,
+.collegeCropResetBtn {
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+}
+
+.collegeCropRatioBtn {
+    min-width: 74px;
+    background: #f2f2f2;
+    color: #3a3a3a;
+    border: 3px solid #d5d5d5;
+}
+
+.collegeCropRatioActive {
+    background: #fff;
+    border-color: #3f9f46;
+    color: #2a2a2a;
+}
+
+.customAspectEditor {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.customAspectField {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f5f7f6;
+    border: 1px solid #cfd8cf;
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #2f2f2f;
+    font-weight: 700;
+}
+
+.customAspectField input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #2f2f2f;
+    font: inherit;
+}
+
+.customAspectField input::-webkit-outer-spin-button,
+.customAspectField input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.customAspectField input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.collegeCropResetBtn {
+    background: transparent;
+    color: #fff;
+    border: 2px solid #ffffff;
+}
+
+.collegeCropLogoLayout {
+    margin: 12px 14px 0;
+    background: #cfe5d1;
+    border: 1px solid #58ad58;
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.collegeCropLogoCanvasWrap {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #58ad58;
+    background: #cfe5d1;
+}
+
+.collegeCropLogoCanvasInner {
+    position: relative;
+    min-height: 280px;
+}
+
+.collegeCropLogoControlsPanel {
+    background: #3eb857;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.collegeCropFooter {
+    padding: 14px 16px 16px;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.collegeCropDiscardBtn,
+.collegeCropSaveBtn {
+    border: none;
+    border-radius: 12px;
+    padding: 0.7rem 1.6rem;
+    min-width: 110px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.collegeCropDiscardBtn {
+    background: #8b8b8b;
+}
+
+.collegeCropSaveBtn {
+    background: #4ea24e;
+}
+
+/* --- Image Preview Popup --- */
+.imagePreviewOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.imagePreviewContainer {
+    width: min(400px, 92vw);
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: adminPopupEnter 0.25s ease-out;
+}
+
+.imagePreviewHeader {
+    background: #4ea24e;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.imagePreviewBody {
+    padding: 1.5rem;
+}
+
+.imagePreviewBody img {
+    max-width: 100%;
+    max-height: 62vh;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.imagePreviewFooter {
+    padding: 1.2rem 1.5rem 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.imagePreviewFooterBtn {
+    min-width: 110px;
+    padding: 0.8rem 1.3rem;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.imagePreviewCloseBtn {
+    background-color: #8c8c8c;
+}
+
+.imagePreviewDownloadBtn {
+    background-color: #4ea24e;
+}
+
+@keyframes adminPopupEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* --- Responsive Adjustments --- */
@@ -639,6 +1110,14 @@
     .Admin-main-profile-college-cards-grid {
         grid-template-columns: 1fr;
         gap: 20px;
+    }
+
+    .collegeCropHeader {
+        font-size: 1.25rem;
+    }
+
+    .collegeCropLogoLayout {
+        grid-template-columns: 1fr;
     }
 }
 /* --- Popup Styles (from MainRegistration) --- */
@@ -748,6 +1227,327 @@
 .Admin-main-profile-save-btn:disabled {
     background-color: #a8d5a8 !important;
     cursor: not-allowed !important;
+}
+
+/* --- Admin Local Unsaved Banner --- */
+.adminBannerContainer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    animation: adminBannerSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminBannerSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.adminBanner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: #4a4a4a;
+    padding: 14px 16px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    gap: 12px;
+    min-width: 260px;
+    max-width: 340px;
+}
+
+.adminBannerIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+}
+
+.adminBannerSaveIcon {
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+}
+
+.adminBannerContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.adminBannerHeader {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+    margin: 0;
+    padding: 0;
+}
+
+.adminBannerFieldNamesWrapper {
+    overflow: hidden;
+    max-width: 240px;
+    position: relative;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before,
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before {
+    left: 0;
+    background: linear-gradient(to right, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    right: 0;
+    background: linear-gradient(to left, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNames {
+    font-size: 13px;
+    font-weight: 400;
+    color: #b0b0b0;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    gap: 30px;
+}
+
+.adminBannerFieldNames span {
+    display: inline-block;
+    padding-right: 30px;
+}
+
+.adminBannerMarquee {
+    animation: adminBannerMarqueeScroll 15s linear infinite;
+}
+
+.adminBannerFieldNamesWrapper:hover .adminBannerMarquee {
+    animation-play-state: paused;
+}
+
+@keyframes adminBannerMarqueeScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* --- Admin Unsaved Changes Popup --- */
+.adminUnsavedOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.adminUnsavedContainer {
+    width: 90%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.2s ease-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedHeader {
+    background: #4EA24E;
+    color: #fff;
+    text-align: center;
+    padding: 20px 24px 16px;
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.adminUnsavedBody {
+    padding: 24px;
+    text-align: center;
+}
+
+.adminUnsavedIconWrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: #ffa500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: warningFill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.adminUnsavedTitle {
+    margin: 16px 0 8px;
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.adminUnsavedFieldsContainer {
+    margin: 20px 0;
+    padding: 16px;
+    background: #fff3e0;
+    border-radius: 8px;
+    border: 1px solid #ffe0b2;
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.adminUnsavedFieldsList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.adminUnsavedFieldChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #ffb74d;
+    color: #e26a00;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.adminUnsavedMessage {
+    margin: 16px 0 0;
+    color: #555;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.adminUnsavedFooter {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.adminUnsavedDiscardButton,
+.adminUnsavedSaveButton {
+    min-width: 120px;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedDiscardButton {
+    background: #9d9d9d;
+    color: #fff;
+}
+
+.adminUnsavedDiscardButton:hover {
+    background: #8c8c8c;
+}
+
+.adminUnsavedSaveButton {
+    background: #4EA24E;
+    color: #fff;
+}
+
+.adminUnsavedSaveButton:hover {
+    background: #3f9346;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.4);
+}
+
+.adminUnsavedDiscardButton:disabled,
+.adminUnsavedSaveButton:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+@keyframes warningFill {
+    100% {
+        box-shadow: inset 0 0 0 40px #ffa500;
+    }
+}
+
+@media (max-width: 768px) {
+    .adminBannerContainer {
+        top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
+        right: 12px;
+    }
+
+    .adminBanner {
+        padding: 12px 14px;
+        min-width: 220px;
+        max-width: 300px;
+        gap: 10px;
+    }
+
+    .adminBannerHeader {
+        font-size: 13px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 200px;
+    }
+
+    .adminBannerFieldNames {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adminBannerContainer {
+        right: 10px;
+    }
+
+    .adminBanner {
+        min-width: 240px;
+        max-width: 280px;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 170px;
+    }
 }
 
 .Admin-main-profile-discard-btn-disabled {

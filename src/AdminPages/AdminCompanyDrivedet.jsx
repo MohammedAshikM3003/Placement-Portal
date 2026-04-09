@@ -11,6 +11,8 @@ import Sidebar from "../components/Sidebar/Adsidebar.js";
 import mongoDBService from '../services/mongoDBService';
 import * as XLSX from 'xlsx';
 import styles from './AdminCompanyDrivedet.module.css';
+import { AdminFeedbackPopup } from './AdminFeedbackPopup';
+import { AdminFailedPopup } from './AdminFailedPopup';
 
 // Success Popup Component
 const RoundSaveSuccessPopup = ({ onClose, nextRound }) => {
@@ -28,7 +30,7 @@ const RoundSaveSuccessPopup = ({ onClose, nextRound }) => {
             </svg>
           </div>
           <h3 className={styles['Admin-Drive-AD-Success-title']}>
-            Round Results Saved ✓
+            Round Results Saved âœ“
           </h3>
           <p className={styles['Admin-Drive-AD-Success-text']}>
             {nextRound ? `Moving to Round ${nextRound}...` : 'Round results have been successfully saved'}
@@ -95,6 +97,11 @@ function Admincdd() {
   const [originalAttendanceStudents, setOriginalAttendanceStudents] = useState([]); // Store Round 1 students
   const [allRoundResults, setAllRoundResults] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(false); // Read-only mode when viewing completed drive results
+  const [showAdminFeedback, setShowAdminFeedback] = useState(false);
+  const [adminFeedbackIsPassed, setAdminFeedbackIsPassed] = useState(false);
+  const [eligibleStudentsCount, setEligibleStudentsCount] = useState(0);
+  const [failedStudentsCount, setFailedStudentsCount] = useState(0);
+  const [showAdminFailedPopup, setShowAdminFailedPopup] = useState(false);
   const tableRef = useRef(null);
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -109,12 +116,12 @@ function Admincdd() {
     const fetchDriveData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Get company data and read-only flag from navigation state
         const companyData = location.state?.company;
         const readOnlyMode = location.state?.isReadOnly || false;
         setIsReadOnly(readOnlyMode);
-        
+
         if (!companyData) {
           console.error('No company data found');
           navigate('/admin-company-drive');
@@ -128,40 +135,40 @@ function Admincdd() {
         // Handle case where companyData has a drives array (grouped data structure)
         let actualCompanyData = companyData;
         if (companyData.drives && Array.isArray(companyData.drives) && companyData.drives.length > 0) {
-          console.log('⚠️ Detected drives array in company data');
-          
+          console.log('âš ï¸ Detected drives array in company data');
+
           // Try to find the specific drive based on additional navigation state
           const targetDriveId = location.state?.driveId;
           const targetStartDate = location.state?.startingDate || companyData.startingDate;
-          
+
           if (targetDriveId) {
             // If driveId was passed, find by ID
             const foundDrive = companyData.drives.find(d => d._id === targetDriveId);
             if (foundDrive) {
               actualCompanyData = foundDrive;
-              console.log('✅ Found drive by ID:', targetDriveId);
+              console.log('âœ… Found drive by ID:', targetDriveId);
             } else {
-              console.warn('⚠️ Could not find drive with ID:', targetDriveId, '- using first drive');
+              console.warn('âš ï¸ Could not find drive with ID:', targetDriveId, '- using first drive');
               actualCompanyData = companyData.drives[0];
             }
           } else if (targetStartDate) {
             // If startingDate was passed, find by date
-            const foundDrive = companyData.drives.find(d => 
+            const foundDrive = companyData.drives.find(d =>
               d.startingDate && new Date(d.startingDate).toDateString() === new Date(targetStartDate).toDateString()
             );
             if (foundDrive) {
               actualCompanyData = foundDrive;
-              console.log('✅ Found drive by date:', targetStartDate);
+              console.log('âœ… Found drive by date:', targetStartDate);
             } else {
-              console.warn('⚠️ Could not find drive with date:', targetStartDate, '- using first drive');
+              console.warn('âš ï¸ Could not find drive with date:', targetStartDate, '- using first drive');
               actualCompanyData = companyData.drives[0];
             }
           } else {
             // Fallback to first drive
-            console.warn('⚠️ No driveId or startingDate specified - extracting first drive');
+            console.warn('âš ï¸ No driveId or startingDate specified - extracting first drive');
             actualCompanyData = companyData.drives[0];
           }
-          
+
           console.log('Extracted drive data:', actualCompanyData);
         }
 
@@ -170,13 +177,13 @@ function Admincdd() {
         let fullDriveData = actualCompanyData;
         try {
           const allDrives = await mongoDBService.getCompanyDrives();
-          const matchingDrive = allDrives.find(drive => 
+          const matchingDrive = allDrives.find(drive =>
             drive._id === actualCompanyData._id || // Use unique _id for exact match
-            (drive.companyName === actualCompanyData.companyName && 
+            (drive.companyName === actualCompanyData.companyName &&
              drive.jobRole === actualCompanyData.jobRole &&
              drive.startingDate === actualCompanyData.startingDate) // Include date check as fallback
           );
-          
+
           if (matchingDrive) {
             console.log('Found matching drive from database:', matchingDrive);
             fullDriveData = matchingDrive;
@@ -188,21 +195,21 @@ function Admincdd() {
 
         // Validate that we have a driveId
         if (!fullDriveData._id) {
-          console.error('❌ No driveId found in company data');
+          console.error('âŒ No driveId found in company data');
           console.error('Full drive data:', fullDriveData);
           alert('Error: Drive ID is missing. Please try selecting the drive again from the Company Drive page.');
           navigate('/admin-company-drive');
           return;
         }
-        
-        console.log('✅ Drive ID found:', fullDriveData._id);
+
+        console.log('âœ… Drive ID found:', fullDriveData._id);
 
         // Set company info - ensure we get the actual number of rounds from the drive
         const numberOfRounds = parseInt(fullDriveData.rounds) || parseInt(fullDriveData.numberOfRounds) || parseInt(fullDriveData.round) || 1;
         const roundNames = fullDriveData.roundDetails || [];
         const currentRoundNumber = parseInt(fullDriveData.currentRound) || 1;
         const currentRoundName = roundNames[currentRoundNumber - 1] || `Round ${currentRoundNumber}`;
-        
+
         console.log('Company data rounds:', {
           fullDriveData,
           rounds: fullDriveData.rounds,
@@ -212,7 +219,7 @@ function Admincdd() {
           roundNames: roundNames,
           roundDetailsLength: roundNames.length
         });
-        
+
         setCompanyInfo({
           companyName: fullDriveData.companyName || 'N/A',
           rounds: numberOfRounds,
@@ -224,7 +231,7 @@ function Admincdd() {
           startingDate: fullDriveData.startingDate
         });
 
-        console.log('✅ Company info set with rounds:', numberOfRounds, 'round names:', roundNames);
+        console.log('âœ… Company info set with rounds:', numberOfRounds, 'round names:', roundNames);
 
         // Fetch attendance data for this company and job role
         const attendanceResponse = await mongoDBService.getAllAttendances();
@@ -233,9 +240,9 @@ function Admincdd() {
           companyName: fullDriveData.companyName,
           jobRole: fullDriveData.jobRole
         });
-        
-        const attendanceData = Array.isArray(attendanceResponse) 
-          ? attendanceResponse 
+
+        const attendanceData = Array.isArray(attendanceResponse)
+          ? attendanceResponse
           : (attendanceResponse.data || attendanceResponse.attendances || []);
 
         console.log('Attendance data array:', attendanceData);
@@ -252,13 +259,13 @@ function Admincdd() {
             targetStartDate: fullDriveData.startingDate,
             companyMatch: att.companyName === fullDriveData.companyName,
             jobRoleMatch: att.jobRole === fullDriveData.jobRole,
-            dateMatch: att.startDate && fullDriveData.startingDate ? 
+            dateMatch: att.startDate && fullDriveData.startingDate ?
               new Date(att.startDate).toDateString() === new Date(fullDriveData.startingDate).toDateString() : true
           });
           // Match by company, job role, AND starting date
-          return att.companyName === fullDriveData.companyName && 
+          return att.companyName === fullDriveData.companyName &&
                  att.jobRole === fullDriveData.jobRole &&
-                 (!att.startDate || !fullDriveData.startingDate || 
+                 (!att.startDate || !fullDriveData.startingDate ||
                   new Date(att.startDate).toDateString() === new Date(fullDriveData.startingDate).toDateString());
         });
 
@@ -284,7 +291,7 @@ function Admincdd() {
         if (companyAttendances.length > 0) {
           // Get the latest attendance record
           const latestAttendance = companyAttendances[0];
-          const presentStudents = (latestAttendance.students || []).filter(s => 
+          const presentStudents = (latestAttendance.students || []).filter(s =>
             s.status && (s.status.toLowerCase() === 'present' || s.status === 'Present')
           );
 
@@ -344,36 +351,17 @@ function Admincdd() {
 
             setAllStudentsData(studentsData);
             setOriginalAttendanceStudents(studentsData); // Store original Round 1 students
-            
-            // Load saved statuses for Round 1 if exists (NEW NESTED STRUCTURE)
-            if (roundResultsResponse && roundResultsResponse.data) {
-              const driveData = roundResultsResponse.data;
-              const round1Data = driveData.rounds?.find(r => r.roundNumber === 1);
-              
-              if (round1Data) {
-                const savedStatuses = {};
-                
-                // Load from passed students
-                round1Data.passedStudents?.forEach(student => {
-                  savedStatuses[student.studentId] = {
-                    passed: true,
-                    failed: false,
-                    confirmed: true
-                  };
-                });
-                
-                // Load from failed students
-                round1Data.failedStudents?.forEach(student => {
-                  savedStatuses[student.studentId] = {
-                    passed: false,
-                    failed: true,
-                    confirmed: true
-                  };
-                });
-                
-                setStudentStatuses(prev => ({ ...prev, ...savedStatuses }));
-              }
-            }
+
+            // Keep selections blank on load so admin chooses pass/fail manually.
+            const resetStatuses = {};
+            studentsData.forEach(student => {
+              resetStatuses[student.id] = {
+                passed: false,
+                failed: false,
+                confirmed: false
+              };
+            });
+            setStudentStatuses(resetStatuses);
           } else {
             setAllStudentsData([]);
           }
@@ -404,21 +392,7 @@ function Admincdd() {
 
   const studentData = getCurrentRoundData();
 
-  const [studentStatuses, setStudentStatuses] = useState(() => {
-    const allStatuses = {};
-    Object.keys(allRoundsData).forEach(round => {
-      allRoundsData[round].forEach(student => {
-        if (!allStatuses[student.id]) {
-          allStatuses[student.id] = {
-            passed: student.passed,
-            failed: student.failed,
-            confirmed: student.confirmed
-          };
-        }
-      });
-    });
-    return allStatuses;
-  });
+  const [studentStatuses, setStudentStatuses] = useState({});
 
   const handleFilterChange = (field, value) => {
     setFilterData(prev => ({
@@ -480,7 +454,7 @@ function Admincdd() {
 
       // Use the driveId from companyInfo state (already validated during initial load)
       const driveId = companyInfo.driveId;
-      
+
       if (!driveId) {
         alert('Error: Drive ID is missing. Please refresh the page and try again.');
         return;
@@ -496,14 +470,14 @@ function Admincdd() {
       let fullDriveData = actualCompanyData;
       try {
         const allDrives = await mongoDBService.getCompanyDrives();
-        const matchingDrive = allDrives.find(drive => 
+        const matchingDrive = allDrives.find(drive =>
           drive._id === driveId || // Use the validated driveId
-          drive._id === actualCompanyData._id || 
-          (drive.companyName === actualCompanyData.companyName && 
+          drive._id === actualCompanyData._id ||
+          (drive.companyName === actualCompanyData.companyName &&
            drive.jobRole === actualCompanyData.jobRole &&
            drive.startingDate === actualCompanyData.startingDate)
         );
-        
+
         if (matchingDrive) {
           fullDriveData = matchingDrive;
           console.log('Full drive data for saving:', fullDriveData);
@@ -534,32 +508,88 @@ function Admincdd() {
       // Validation: Check if ALL students have been marked
       const totalStudents = displayStudents.length;
       const markedStudents = roundResults.length;
-      
+
       if (markedStudents < totalStudents) {
         // Some students are not marked - show validation popup
         setShowValidationPopup(true);
         return;
       }
 
-      // Only set saving state after validation passes
-      setIsSaving(true);
+      // Route popup flow by selected status on save.
+      // Flow order requirement:
+      // 1) Passed popup (if any passed students)
+      // 2) Failed popup (if any failed students)
+      // 3) Loading/success popup
+      const passedStudentsCount = roundResults.filter(student => student.status === 'Passed').length;
+      const failedStudentsCount = roundResults.filter(student => student.status === 'Failed').length;
+      const hasPassedStudents = passedStudentsCount > 0;
+      const hasFailedStudents = failedStudentsCount > 0;
 
-      const roundName = companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`;
-      
-      const roundData = {
-        driveId: driveId, // Use the validated driveId from companyInfo
-        companyName: actualCompanyData.companyName || companyInfo.companyName,
-        jobRole: actualCompanyData.jobRole || companyInfo.jobRole,
-        startingDate: actualCompanyData.startingDate || companyInfo.startingDate,
-        endingDate: actualCompanyData.endingDate || companyInfo.endingDate,
-        roundNumber: activeRound,
-        roundName: roundName,
-        totalRounds: companyInfo.rounds,
-        students: roundResults,
-        date: new Date().toISOString()
+      // Popup counts should reflect the current selected results, not total students.
+      setEligibleStudentsCount(passedStudentsCount);
+      setFailedStudentsCount(failedStudentsCount);
+
+      // Ensure only one popup route is active at a time.
+      setShowAdminFeedback(false);
+      setShowAdminFailedPopup(false);
+
+      if (hasPassedStudents) {
+        setAdminFeedbackIsPassed(true);
+        setShowAdminFeedback(true);
+      } else if (hasFailedStudents) {
+        setShowAdminFailedPopup(true);
+      }
+
+      // Store data for later when user submits from feedback popup
+      window.adminFeedbackData = {
+        driveId,
+        actualCompanyData,
+        fullDriveData,
+        roundResults,
+        passedStudentsCount,
+        failedStudentsCount,
+        requiresPassedFeedback: hasPassedStudents,
+        requiresFailedFeedback: hasFailedStudents,
+        passedFeedbackSubmitted: false,
+        failedFeedbackSubmitted: false,
+        passedFeedback: null,
+        failedFeedback: null,
+        roundData: {
+          driveId: driveId,
+          companyName: actualCompanyData.companyName || companyInfo.companyName,
+          jobRole: actualCompanyData.jobRole || companyInfo.jobRole,
+          startingDate: actualCompanyData.startingDate || companyInfo.startingDate,
+          endingDate: actualCompanyData.endingDate || companyInfo.endingDate,
+          roundNumber: activeRound,
+          roundName: companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`,
+          totalRounds: companyInfo.rounds,
+          students: roundResults,
+          date: new Date().toISOString()
+        }
       };
 
-      console.log('💾 Saving round data with driveId:', roundData.driveId);
+    } catch (error) {
+      console.error('Error in save validation:', error);
+      alert('Failed to prepare save. Please try again.');
+      setIsSaving(false);
+    }
+  };
+
+  const saveRoundResultsAfterFeedback = async () => {
+    try {
+      setShowAdminFeedback(false);
+      setShowAdminFailedPopup(false);
+      setIsSaving(true);
+
+      const {
+        driveId,
+        actualCompanyData,
+        fullDriveData,
+        roundResults,
+        roundData
+      } = window.adminFeedbackData;
+
+      console.log('ðŸ’¾ Saving round data with driveId:', roundData.driveId);
 
       // Save round results to Reports collection (NEW NESTED STRUCTURE)
       const result = await mongoDBService.saveRoundResults(roundData);
@@ -581,19 +611,19 @@ function Admincdd() {
       const hasStudentsForNextRound = passedStudentsForNextRound.length > 0;
       const willAdvance = hasMoreRounds && hasStudentsForNextRound;
       const lastRound = !hasMoreRounds || !hasStudentsForNextRound;
-      
+
       // Set final/completed state
       setIsLastRound(lastRound);
       setIsLastRoundSaved(false); // Reset before attempting save
-      
+
       if (willAdvance) {
         setNextRoundNumber(activeRound + 1);
       } else {
         setNextRoundNumber(null);
       }
-      
+
       setShowSuccessPopup(true);
-      
+
       // Refresh all round results after save
       const updatedResults = await mongoDBService.getAllRoundResults(
         actualCompanyData.companyName || companyInfo.companyName,
@@ -602,19 +632,19 @@ function Admincdd() {
         driveId // Use the validated driveId
       );
       setAllRoundResults(updatedResults);
-      
+
       console.log('Updated round results after save:', updatedResults);
 
       // If completed (final round or no students left for next round), save passed students to PlacedStudent collection
       if (lastRound) {
         try {
           const passedStudents = roundResults.filter(student => student.status === 'Passed');
-          
+
           if (passedStudents.length > 0) {
             // Get package from multiple possible field names
             const packageValue = fullDriveData.package || fullDriveData.pkg || fullDriveData.packageOffered || fullDriveData.salary || 'N/A';
             console.log('Package value for placed students:', packageValue);
-            
+
             const placedStudentsData = {
               companyName: fullDriveData.companyName,
               jobRole: fullDriveData.jobRole,
@@ -649,7 +679,7 @@ function Admincdd() {
           setIsLastRoundSaved(true); // Still set to true so redirect works
         }
       }
-      
+
       // Auto-advance to next round if not the last round
       if (willAdvance) {
         // Wait a moment for user to see the popup, then load next round
@@ -667,12 +697,90 @@ function Admincdd() {
         // Last round - DON'T auto-close, let user click Close to redirect
         setIsSaving(false);
       }
-      
+
+      // Clean up temporary data
+      delete window.adminFeedbackData;
+
     } catch (error) {
       console.error('Error saving round results:', error);
       alert('Failed to save round results. Please try again.');
       setIsSaving(false);
+      delete window.adminFeedbackData;
     }
+  };
+
+  // New function to handle actual save after feedback popup submit
+  const handleFeedbackSubmit = async (feedbackPayload) => {
+    const flowData = window.adminFeedbackData;
+    if (!flowData) return;
+
+    flowData.passedFeedback = feedbackPayload || null;
+    flowData.passedFeedbackSubmitted = true;
+
+    try {
+      await mongoDBService.saveAdminFeedback({
+        driveId: flowData.driveId,
+        companyName: flowData.roundData.companyName,
+        jobRole: flowData.roundData.jobRole,
+        startingDate: flowData.roundData.startingDate,
+        endingDate: flowData.roundData.endingDate,
+        roundNumber: flowData.roundData.roundNumber,
+        roundName: flowData.roundData.roundName,
+        feedbackType: 'passed',
+        studentCount: flowData.passedStudentsCount || 0,
+        totalStudents: flowData.roundData.students?.length || 0,
+        feedback: feedbackPayload?.feedback || '',
+        selectedDate: feedbackPayload?.selectedDate || null,
+        rating: feedbackPayload?.rating || 0,
+        aiEnabled: feedbackPayload?.aiEnabled || false,
+        aiGenerated: feedbackPayload?.aiGenerated || false
+      });
+    } catch (saveFeedbackError) {
+      console.error('Failed to save passed feedback:', saveFeedbackError);
+    }
+
+    setShowAdminFeedback(false);
+
+    // If failed students exist, enforce failed popup after passed popup.
+    if (flowData.requiresFailedFeedback) {
+      setShowAdminFailedPopup(true);
+      return;
+    }
+
+    await saveRoundResultsAfterFeedback();
+  };
+
+  // New function to handle submit from failed popup
+  const handleFailedSubmit = async (feedbackPayload) => {
+    const flowData = window.adminFeedbackData;
+    if (!flowData) return;
+
+    flowData.failedFeedback = feedbackPayload || null;
+    flowData.failedFeedbackSubmitted = true;
+
+    try {
+      await mongoDBService.saveAdminFeedback({
+        driveId: flowData.driveId,
+        companyName: flowData.roundData.companyName,
+        jobRole: flowData.roundData.jobRole,
+        startingDate: flowData.roundData.startingDate,
+        endingDate: flowData.roundData.endingDate,
+        roundNumber: flowData.roundData.roundNumber,
+        roundName: flowData.roundData.roundName,
+        feedbackType: 'failed',
+        studentCount: flowData.failedStudentsCount || 0,
+        totalStudents: flowData.roundData.students?.length || 0,
+        feedback: feedbackPayload?.feedback || '',
+        selectedDate: feedbackPayload?.selectedDate || null,
+        rating: feedbackPayload?.rating || 0,
+        aiEnabled: feedbackPayload?.aiEnabled || false,
+        aiGenerated: feedbackPayload?.aiGenerated || false
+      });
+    } catch (saveFeedbackError) {
+      console.error('Failed to save failed feedback:', saveFeedbackError);
+    }
+
+    await saveRoundResultsAfterFeedback();
   };
 
   const handleClearStatuses = () => {
@@ -694,17 +802,17 @@ function Admincdd() {
     setIsFiltered(false);
     setFilteredStudents([]);
     setIsLoading(true);
-    
+
     try {
       const companyData = location.state?.company;
       if (!companyData) {
         setIsLoading(false);
         return;
       }
-      
+
       // Use passed results or state results
       const roundResults = updatedRoundResults || allRoundResults;
-      
+
       if (!roundResults) {
         console.log('No round results available yet');
         setIsLoading(false);
@@ -724,43 +832,23 @@ function Admincdd() {
       console.log('Drive data for round change:', driveData);
       console.log('Looking for round:', round);
       console.log('Available rounds:', driveData?.rounds);
-      
-      const currentRoundData = driveData?.rounds?.find(r => r.roundNumber === round);
 
       // For Round 1, load from attendance. For Round 2+, load from previous round's passed students
       if (round === 1) {
-        // Round 1 - always reload the original attendance students
+        // Round 1 - always reload the original attendance students with blank selections
         setAllStudentsData(originalAttendanceStudents);
-        
-        // Then restore saved statuses if they exist
-        if (currentRoundData) {
-          const savedStatuses = {};
-          
-          // Load from passed students
-          currentRoundData.passedStudents?.forEach(student => {
-            savedStatuses[student.studentId] = {
-              passed: true,
-              failed: false,
-              confirmed: true
-            };
-          });
-          
-          // Load from failed students
-          currentRoundData.failedStudents?.forEach(student => {
-            savedStatuses[student.studentId] = {
-              passed: false,
-              failed: true,
-              confirmed: true
-            };
-          });
-          
-          setStudentStatuses(savedStatuses);
-        } else {
-          setStudentStatuses({});
-        }
+        const resetStatuses = {};
+        originalAttendanceStudents.forEach(student => {
+          resetStatuses[student.id] = {
+            passed: false,
+            failed: false,
+            confirmed: false
+          };
+        });
+        setStudentStatuses(resetStatuses);
       } else if (round > 1) {
         const previousRoundData = driveData?.rounds?.find(r => r.roundNumber === round - 1);
-        
+
         console.log('Previous round data:', previousRoundData);
         console.log('Passed students from previous round:', previousRoundData?.passedStudents);
 
@@ -818,42 +906,17 @@ function Admincdd() {
 
             // Update the allStudentsData for this round
             setAllStudentsData(studentsToShow);
-            
-            // Load saved statuses for this round if exists
-            if (currentRoundData) {
-              const savedStatuses = {};
-              
-              // Load from passed students
-              currentRoundData.passedStudents?.forEach(student => {
-                savedStatuses[student.studentId] = {
-                  passed: true,
-                  failed: false,
-                  confirmed: true
-                };
-              });
-              
-              // Load from failed students
-              currentRoundData.failedStudents?.forEach(student => {
-                savedStatuses[student.studentId] = {
-                  passed: false,
-                  failed: true,
-                  confirmed: true
-                };
-              });
-              
-              setStudentStatuses(savedStatuses);
-            } else {
-              // Reset statuses for new round
-              const resetStatuses = {};
-              studentsToShow.forEach(student => {
-                resetStatuses[student.id] = {
-                  passed: false,
-                  failed: false,
-                  confirmed: false
-                };
-              });
-              setStudentStatuses(resetStatuses);
-            }
+
+            // Always reset selections when loading a round; admin must choose manually.
+            const resetStatuses = {};
+            studentsToShow.forEach(student => {
+              resetStatuses[student.id] = {
+                passed: false,
+                failed: false,
+                confirmed: false
+              };
+            });
+            setStudentStatuses(resetStatuses);
           } else {
             setAllStudentsData([]);
           }
@@ -911,7 +974,7 @@ function Admincdd() {
           <Sidebar />
           <div className={`${styles['Admin-cdd-container']} ${styles['Admin-cdd-content-wrapper']}`}>
             <div className={styles['Admin-cdd-dashboard-area']}>
-            
+
             {/* Top Section with 3 Cards */}
             <div className={styles['Admin-cdd-top-section']}>
               {/* Left Card - Dynamic Round Total Students */}
@@ -957,7 +1020,7 @@ function Admincdd() {
               </div>
 
               {/* Right Card - Report Analysis */}
-              <div 
+              <div
                 className={`${styles['Admin-cdd-summary-card1']} ${styles['Admin-cdd-placed-students-card']}`}
                 onClick={() => navigate('/admin-report-analysis-rarw')}
               >
@@ -976,7 +1039,7 @@ function Admincdd() {
                   key={round}
                   className={`${styles['Admin-cdd-round-tab']} ${activeRound === round ? styles.active : ''} ${round >= 8 && round <= 9 ? styles['high-volume'] : ''}`}
                   onClick={() => handleRoundChange(round)}
-                  style={round >= 8 && round <= 9 ? { 
+                  style={round >= 8 && round <= 9 ? {
                     position: 'relative',
                     overflow: 'visible'
                   } : {}}
@@ -999,7 +1062,7 @@ function Admincdd() {
                       fontWeight: 'bold',
                       color: 'white'
                     }}>
-                      ⚡
+                      âš¡
                     </span>
                   )}
                 </button>
@@ -1011,7 +1074,7 @@ function Admincdd() {
               <div className={styles['Admin-cdd-profile-header']}>
                 <div className={styles['Admin-cdd-profile-title']}>COMPANY DRIVE</div>
                 <div className={styles['Admin-cdd-print-btn-container']}>
-                  <button 
+                  <button
                     className={styles['Admin-cdd-print-btn']}
                     onClick={() => setShowDropdown(!showDropdown)}
                   >
@@ -1029,7 +1092,7 @@ function Admincdd() {
                   )}
                 </div>
               </div>
-              
+
               <div className={styles['Admin-cdd-table-container']}>
                 <table className={styles['Admin-cdd-profile-table']} ref={tableRef}>
                   <thead>
@@ -1064,13 +1127,13 @@ function Admincdd() {
                         <td>{student.batch}</td>
                         <td>{student.phone}</td>
                         <td>
-                          <div 
+                          <div
                             className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.passed ? styles.passed : ''}`}
                             onClick={() => handleStatusChange(student.id, 'passed')}
                           />
                         </td>
                         <td>
-                          <div 
+                          <div
                             className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.failed ? styles.failed : ''}`}
                             onClick={() => handleStatusChange(student.id, 'failed')}
                           />
@@ -1090,16 +1153,16 @@ function Admincdd() {
               {/* Action Buttons - Hidden in Read-Only Mode */}
               {!isReadOnly && (
                 <div className={styles['Admin-cdd-action-buttons']}>
-                  <button 
-                    className={styles['Admin-cdd-save-btn']} 
+                  <button
+                    className={styles['Admin-cdd-save-btn']}
                     onClick={handleSave}
                     disabled={isSaving}
                     style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
                   >
                     {isSaving ? 'Saving...' : 'Save'}
                   </button>
-                  <button 
-                    className={styles['Admin-cdd-action-clear-btn']} 
+                  <button
+                    className={styles['Admin-cdd-action-clear-btn']}
                     onClick={handleClearStatuses}
                     disabled={isSaving}
                     style={{ opacity: isSaving ? 0.5 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
@@ -1113,36 +1176,36 @@ function Admincdd() {
         </div>
       </div>
     </div>
-      
+
       {/* Success Popup */}
       {showSuccessPopup && (
-        <RoundSaveSuccessPopup 
+        <RoundSaveSuccessPopup
           onClose={() => {
             if (!nextRoundNumber) {
               setShowSuccessPopup(false);
               setIsSaving(false);
-              
+
               // If this is the last round, redirect to Placed Students page
               if (isLastRound) {
                 console.log('Redirecting to placed students page...');
                 navigate('/admin-placed-students');
               }
             }
-          }} 
+          }}
           nextRound={nextRoundNumber}
         />
       )}
 
       {/* Validation Popup */}
       {showValidationPopup && (
-        <NoStatusMarkedPopup 
+        <NoStatusMarkedPopup
           onShow={() => {
             setShowValidationPopup(false);
             // Scroll to first UNMARKED student row and highlight it
             setTimeout(() => {
               const rows = document.querySelectorAll('tbody tr');
               let firstUnmarkedRow = null;
-              
+
               // Find the first row where the student is not marked
               rows.forEach((row, index) => {
                 if (!firstUnmarkedRow) {
@@ -1152,7 +1215,7 @@ function Admincdd() {
                   }
                 }
               });
-              
+
               if (firstUnmarkedRow) {
                 firstUnmarkedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstUnmarkedRow.style.backgroundColor = '#fff3cd';
@@ -1163,6 +1226,37 @@ function Admincdd() {
               }
             }, 100);
           }}
+        />
+      )}
+
+      {/* Admin Feedback Popup */}
+      {showAdminFeedback && (
+        <AdminFeedbackPopup
+          isPassed={adminFeedbackIsPassed}
+          roundName={companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`}
+          roundNumber={activeRound}
+          eligibleStudentsCount={eligibleStudentsCount}
+          totalStudentsCount={displayStudents.length}
+          onClose={() => {
+            setShowAdminFeedback(false);
+            delete window.adminFeedbackData;
+          }}
+          onSubmit={handleFeedbackSubmit}
+        />
+      )}
+
+      {/* Admin Failed Popup */}
+      {showAdminFailedPopup && (
+        <AdminFailedPopup
+          roundName={companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`}
+          roundNumber={activeRound}
+          ineligibleStudentsCount={failedStudentsCount}
+          totalStudentsCount={displayStudents.length}
+          onClose={() => {
+            setShowAdminFailedPopup(false);
+            delete window.adminFeedbackData;
+          }}
+          onSubmit={handleFailedSubmit}
         />
       )}
     </>

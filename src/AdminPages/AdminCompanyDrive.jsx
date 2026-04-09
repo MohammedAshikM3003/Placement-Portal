@@ -919,9 +919,36 @@ function AdminCompanyDrive({ onLogout }) {
                                                 </td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-mode']}`}>{company.mode}</td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-domain']}`}>
-                                                    {Array.isArray(company.eligibleBranches) && company.eligibleBranches.length > 0
-                                                        ? company.eligibleBranches.join(', ')
-                                                        : company.department || '—'}
+                                                    {(() => {
+                                                        const branches = Array.isArray(company.eligibleBranches)
+                                                            ? company.eligibleBranches
+                                                                .map((branch) => String(branch || '').trim())
+                                                                .filter(Boolean)
+                                                            : [];
+
+                                                        if (branches.length === 0) {
+                                                            return company.department || '—';
+                                                        }
+
+                                                        if (branches.length <= 4) {
+                                                            return (
+                                                                <span className={styles['Admin-cd-domain-single-line']}>
+                                                                    {branches.join(', ')}
+                                                                </span>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div className={styles['Admin-cd-domain-two-lines']}>
+                                                                <span className={styles['Admin-cd-domain-line']}>
+                                                                    {branches.slice(0, 4).join(', ')}
+                                                                </span>
+                                                                <span className={styles['Admin-cd-domain-line']}>
+                                                                    {branches.slice(4).join(', ')}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-view']}`}>
                                                     <svg 

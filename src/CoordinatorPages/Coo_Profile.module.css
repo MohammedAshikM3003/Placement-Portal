@@ -99,6 +99,19 @@
     gap: 20px;
 }
 
+.co-profile-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.co-profile-field-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #444;
+    line-height: 1.2;
+}
+
 /* --- Form Inputs --- */
 .co-profile-form-input {
     width: 100%;
@@ -1077,6 +1090,222 @@ input:disabled {
 .co-profile-disabled {
     cursor: not-allowed !important;
     opacity: 0.6;
+}
+
+/* Profile Image Preview Popup */
+.imagePreviewOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+}
+
+.imagePreviewContainer {
+    width: 520px;
+    max-width: 92vw;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.imagePreviewHeader {
+    background: #d23b42;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.imagePreviewBody {
+    padding: 1rem;
+    max-height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+}
+
+.imagePreviewBody img {
+    max-width: 100%;
+    max-height: 54vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.imagePreviewFooter {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 1rem;
+    background: #f7f7f7;
+}
+
+.imagePreviewFooterBtn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.imagePreviewFooterBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.imagePreviewCloseBtn {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.imagePreviewDownloadBtn {
+    background: #d23b42;
+    color: #fff;
+}
+
+/* Crop Popup */
+.cropOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 13000;
+}
+
+.cropContainer {
+    width: 900px;
+    max-width: 95vw;
+    max-height: 95vh;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.cropHeader {
+    background: #d23b42;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cropContent {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    padding: 18px;
+    min-height: 460px;
+}
+
+.cropPreviewArea {
+    position: relative;
+    background: #101010;
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 420px;
+}
+
+.cropControls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.controlGroup {
+    padding: 12px;
+    border: 1px solid #f4dddd;
+    border-radius: 10px;
+    background: #fff9f9;
+}
+
+.controlLabel {
+    display: block;
+    font-weight: 700;
+    color: #444;
+    margin-bottom: 8px;
+}
+
+.rotateControl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.rotateBtn,
+.resetBtn,
+.aspectBtn {
+    border: 1px solid #efb7bb;
+    background: #fff;
+    color: #d23b42;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.angleValue,
+.zoomValue {
+    font-weight: 700;
+    color: #555;
+}
+
+.angleSlider,
+.zoomSlider {
+    width: 100%;
+}
+
+.aspectRatioButtons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.aspectBtn.active {
+    background: #d23b42;
+    color: #fff;
+    border-color: #d23b42;
+}
+
+.cropFooter {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 1rem;
+    border-top: 1px solid #f1d7d9;
+    background: #fff;
+}
+
+.cropBtn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.discardBtn {
+    background: #6b7280;
+    color: #fff;
+}
+
+.uploadBtn {
+    background: #d23b42;
+    color: #fff;
 }
 
  .co-profile-success-overlay .CoProfile-popup-container {

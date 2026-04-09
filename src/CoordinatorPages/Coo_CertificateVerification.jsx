@@ -482,7 +482,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             }
             try {
                 const updated = await certificateService.updateCertificateStatus(certificateId, payload);
-                // Backend automatically sets notificationRead: false when status → approved/rejected
+                // Backend automatically sets notificationRead: false when status â†’ approved/rejected
                 // GlobalNotificationChecker on student side will pick it up within 5 seconds
 
                 setCertData((prev) =>
@@ -521,7 +521,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         }
 
         // --- Try GridFS first: open directly as a streaming URL (no base64 download) ---
-        const gridfsUrl = certificateRecord.gridfsFileUrl || 
+        const gridfsUrl = certificateRecord.gridfsFileUrl ||
             (certificateRecord.gridfsFileId ? `/api/file/${certificateRecord.gridfsFileId}` : null);
 
         if (gridfsUrl) {
@@ -802,6 +802,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                                 id="co-cert-search-term"
                                                 className={styles["co-cert-filter-input"]}
                                                 type="text"
+                                                placeholder="Enter Name / Reg.No"
                                                 value={filterInputs.searchTerm}
                                                 onChange={handleInputChange("searchTerm")}
                                                 required
@@ -810,7 +811,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                                 htmlFor="co-cert-search-term"
                                                 className={styles["co-cert-filter-label"]}
                                             >
-                                                Name/Reg.No
+                                                Name/Reg.no
                                             </label>
                                         </div>
                                         {filterInputs.searchTerm && (
@@ -821,6 +822,34 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                         )}
                                     </div>
                                     <div className={styles["co-cert-input-group"]}>
+                                        <FaWindowMaximize className={styles["co-cert-input-icon"]} />
+                                        <div className={styles["co-cert-input-wrapper"]}>
+                                            <input
+                                                id="co-cert-filter-comp-prize"
+                                                className={styles["co-cert-filter-input"]}
+                                                type="text"
+                                                placeholder="Enter Competition/Prize"
+                                                value={filterInputs.compPrize}
+                                                onChange={handleInputChange("compPrize")}
+                                                required
+                                            />
+                                            <label
+                                                htmlFor="co-cert-filter-comp-prize"
+                                                className={styles["co-cert-filter-label"]}
+                                            >
+                                                Competion/prize
+                                            </label>
+                                        </div>
+                                        {filterInputs.compPrize && (
+                                            <IoClose
+                                                className={styles["co-cert-clear-icon"]}
+                                                onClick={() => clearFilterField("compPrize")}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                                <div className={styles["co-cert-filter-row"]}>
+                                    <div className={styles["co-cert-input-group"]}>
                                         <FaImage className={styles["co-cert-input-icon"]} />
                                         <div className={styles["co-cert-input-wrapper"]}>
                                             <select
@@ -830,18 +859,14 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                                 onChange={handleInputChange("year")}
                                                 required
                                             >
-                                                <option value="" />
+                                                <option value="" disabled>
+                                                    Search by Select Year
+                                                </option>
                                                 <option value="I">I</option>
                                                 <option value="II">II</option>
                                                 <option value="III">III</option>
                                                 <option value="IV">IV</option>
                                             </select>
-                                            <label
-                                                htmlFor="co-cert-filter-year"
-                                                className={styles["co-cert-filter-label"]}
-                                            >
-                                                Year
-                                            </label>
                                         </div>
                                         {filterInputs.year && (
                                             <IoClose
@@ -850,8 +875,6 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                             />
                                         )}
                                     </div>
-                                </div>
-                                <div className={styles["co-cert-filter-row"]}>
                                     <div className={styles["co-cert-input-group"]}>
                                         <FaMapMarkerAlt className={styles["co-cert-input-icon"]} />
                                         <div className={styles["co-cert-input-wrapper"]}>
@@ -862,48 +885,19 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                                 onChange={handleInputChange("section")}
                                                 required
                                             >
-                                                <option value="" />
+                                                <option value="" disabled>
+                                                    Search by Select Section
+                                                </option>
                                                 <option value="A">A</option>
                                                 <option value="B">B</option>
                                                 <option value="C">C</option>
                                                 <option value="D">D</option>
                                             </select>
-                                            <label
-                                                htmlFor="co-cert-filter-section"
-                                                className={styles["co-cert-filter-label"]}
-                                            >
-                                                Section
-                                            </label>
                                         </div>
                                         {filterInputs.section && (
                                             <IoClose
                                                 className={styles["co-cert-clear-icon"]}
                                                 onClick={() => clearFilterField("section")}
-                                            />
-                                        )}
-                                    </div>
-                                    <div className={styles["co-cert-input-group"]}>
-                                        <FaWindowMaximize className={styles["co-cert-input-icon"]} />
-                                        <div className={styles["co-cert-input-wrapper"]}>
-                                            <input
-                                                id="co-cert-filter-comp-prize"
-                                                className={styles["co-cert-filter-input"]}
-                                                type="text"
-                                                value={filterInputs.compPrize}
-                                                onChange={handleInputChange("compPrize")}
-                                                required
-                                            />
-                                            <label
-                                                htmlFor="co-cert-filter-comp-prize"
-                                                className={styles["co-cert-filter-label"]}
-                                            >
-                                                Competition/Prize
-                                            </label>
-                                        </div>
-                                        {filterInputs.compPrize && (
-                                            <IoClose
-                                                className={styles["co-cert-clear-icon"]}
-                                                onClick={() => clearFilterField("compPrize")}
                                             />
                                         )}
                                     </div>

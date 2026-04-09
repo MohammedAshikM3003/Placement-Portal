@@ -12,6 +12,8 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 
 import styles from './Coo_ReportAnalysisRW.module.css';
 import Adminicon from "../assets/Adminicon.png";
+import CoordFeedbackIcon from "../assets/CoordFeedbackicon.svg";
+import CooRAFeedbackView from './Coo_RA_FeedbackView';
 
 const cx = (...classNames) => classNames.filter(Boolean).join(' ');
 
@@ -80,6 +82,9 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
   const [exportType, setExportType] = useState('Excel');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [coordinatorBranch, setCoordinatorBranch] = useState('');
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [selectedStudentFeedback, setSelectedStudentFeedback] = useState(null);
+  const [feedbackRoundName, setFeedbackRoundName] = useState('');
 
   const exportMenuRef = useRef(null);
 
@@ -566,13 +571,13 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
 
       const header = [
           "S.No", "Name", "RegNo", "Year-Sec", "Sem",
-          "Mobile", "Result"
+          "Mobile", "Result", "Feedback"
       ];
       
       const data = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo,
           item["Year-Sec"], item.Sem,
-          item.Mobile, item.Result
+          item.Mobile, item.Result, item.Feedback || ''
       ]);
       
       setExportProgress(60);
@@ -607,14 +612,14 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
       
       const tableColumn = [
           "S.No", "Name", "RegNo", "Year-Sec", "Sem",
-          "Mobile", "Result"
+          "Mobile", "Result", "Feedback"
       ];
       
       setExportProgress(60);
       const tableRows = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo,
           item["Year-Sec"], item.Sem,
-          item.Mobile, item.Result
+          item.Mobile, item.Result, item.Feedback || ''
       ]);
       
       doc.setFontSize(14);
@@ -882,13 +887,14 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                     <th>Sem</th>
                     <th>Mobile</th>
                     <th>Result</th>
+                    <th>Feedback</th>
                     <th>View</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr className={styles["co-ram-loading-row"]}>
-                      <td colSpan="8" className={styles["co-ram-loading-cell"]}>
+                      <td colSpan="9" className={styles["co-ram-loading-cell"]}>
                         <div className={styles["co-ram-loading-wrapper"]}>
                           <div className={styles["co-ram-spinner"]}></div>
                           <span className={styles["co-ram-loading-text"]}>Loading students…</span>
@@ -913,7 +919,27 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                             {student.Result}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                        <td style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '8px 14px 8px 8px', width: '8%' }}>
+                          <img
+                            src={CoordFeedbackIcon}
+                            alt="Feedback"
+                            title={student.Feedback || 'Feedback'}
+                            onClick={() => {
+                              setSelectedStudentFeedback(student);
+                              setFeedbackRoundName(selectedRound || 'Round Wise Analysis');
+                              setShowFeedbackPopup(true);
+                            }}
+                            style={{
+                              width: '22px',
+                              height: '22px',
+                              objectFit: 'contain',
+                              display: 'block',
+                              margin: '0 auto',
+                              cursor: 'pointer'
+                            }}
+                          />
+                        </td>
+                        <td style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '8px 14px 8px 8px', cursor: 'pointer' }} onClick={() => {
                           if (student.studentId) {
                             navigate(`/coo-profile/${student.studentId}`);
                           }
@@ -924,7 +950,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
                         {selectedCompanyJob ? `No ${coordinatorBranch || ''} students found for this round.` : 'Please select a company and drive to view students.'}
                       </td>
                     </tr>
@@ -934,6 +960,17 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
             </div>
           </div>
         </div>
+
+        {showFeedbackPopup && (
+          <CooRAFeedbackView
+            roundName={feedbackRoundName}
+            studentData={selectedStudentFeedback}
+            onClose={() => {
+              setShowFeedbackPopup(false);
+              setSelectedStudentFeedback(null);
+            }}
+          />
+        )}
       </div>
       
       <ExportProgressAlert 

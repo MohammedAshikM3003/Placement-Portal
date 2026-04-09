@@ -143,7 +143,7 @@ const SuccessPopup = ({ isOpen, onClose }) => {
                         <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
                     </svg>
                     <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-                        Changes Saved ✓
+                        Changes Saved âœ“
                     </h2>
                     <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
                         Your Details have been
@@ -190,7 +190,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                             </g>
                         </svg>
                     </div>
-                    <h2>Image Size Exceeded ✗</h2>
+                    <h2>Image Size Exceeded âœ—</h2>
                     <p className={styles.imageSizePopupLine}>
                         Maximum allowed: <strong>500KB</strong>
                     </p>
@@ -313,6 +313,7 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
             fileLabel="image"
             title="Downloaded !"
             description="The image has been successfully downloaded to your device."
+            color="#4EA24E"
         />
         <DownloadFailedAlert
             isOpen={downloadPopupState === 'error'}
@@ -375,7 +376,7 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
                 <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
                 <div className={styles.imageSizePopupBody}>
                     {renderIcon()}
-                    <h2>Invalid {urlType} Link ✗</h2>
+                    <h2>Invalid {urlType} Link âœ—</h2>
                     {invalidUrl && (
                         <p className={styles.imageSizePopupLine} style={{ wordBreak: 'break-all' }}>
                             You entered: <strong>{invalidUrl}</strong>
@@ -893,7 +894,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         setSelectedSection(merged.section ? String(merged.section) : '');
         setSkills(processedSkills);
         savedDataRef.current = { ...merged, skills: processedSkills };
-        
+
         if (merged.dob) {
             const dobStr = merged.dob.toString();
             if (dobStr.length === 8) {
@@ -903,9 +904,9 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 setDob(new Date(year, month - 1, day));
             }
         }
-        
+
         // Handle profile image loading with debugging
-        console.log('🔍 Profile Image Debug (View):', {
+        console.log('ðŸ” Profile Image Debug (View):', {
             hasProfilePicURL: !!merged.profilePicURL,
             profilePicURL: merged.profilePicURL,
             profileUploadDate: merged.profileUploadDate
@@ -914,7 +915,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
-            console.log('✅ Profile Image Resolved (View):', resolvedUrl);
+            console.log('âœ… Profile Image Resolved (View):', resolvedUrl);
             setProfileImage(resolvedUrl);
             setUploadInfo({
                 name: 'profile.jpg',
@@ -922,7 +923,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             });
         } else {
             // Clear profile image if no profilePicURL is present
-            console.log('⚠️ No profilePicURL found (View), clearing profile image');
+            console.log('âš ï¸ No profilePicURL found (View), clearing profile image');
             setProfileImage(null);
             setUploadInfo({ name: '', date: '' });
         }
@@ -935,7 +936,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
         try {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
-            console.log('🔍 API Response - completeData (View):', {
+            console.log('ðŸ” API Response - completeData (View):', {
                 exists: !!completeData,
                 hasStudent: !!completeData?.student,
                 hasProfilePicURL: !!completeData?.student?.profilePicURL,
@@ -970,19 +971,19 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             // Check if data is already cached from the loading popup
             const cachedData = fastDataService.getInstantData(studentId);
             if (cachedData && cachedData.student) {
-                console.log('⚡ Using cached data from loading popup (View) - skipping loading state');
+                console.log('âš¡ Using cached data from loading popup (View) - skipping loading state');
                 populateFormFields(cachedData.student);
                 // Still fetch fresh data in background to ensure it's up-to-date
                 loadStudentData();
             } else {
                 // No cached data - show loading and fetch
-                console.log('🔍 Admin viewing student (View):', studentId, '- Loading fresh data from API');
+                console.log('ðŸ” Admin viewing student (View):', studentId, '- Loading fresh data from API');
                 loadStudentData();
             }
         } else {
             // Fallback to localStorage (shouldn't happen in admin view, but keeping for safety)
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-            console.log('⚠️ No studentId in URL (View) - falling back to localStorage:', {
+            console.log('âš ï¸ No studentId in URL (View) - falling back to localStorage:', {
                 exists: !!storedStudentData,
                 hasId: !!storedStudentData?._id,
                 hasProfilePicURL: !!storedStudentData?.profilePicURL
@@ -1004,7 +1005,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         // Auto-sync should only run for students viewing their own profile
         // Admin should manually refresh if they want updated data
         if (studentId) {
-            console.log('🔍 Admin view (View) - auto-sync disabled (use manual refresh to see updates)');
+            console.log('ðŸ” Admin view (View) - auto-sync disabled (use manual refresh to see updates)');
             return; // Don't run auto-sync for admin viewing students
         }
 
@@ -1049,7 +1050,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         if (!file) return;
 
         const fileName = file.name.toLowerCase();
-        
+
         // Robust file type detection using both MIME type and extension
         const getFileType = (file, fileName) => {
             // Check MIME type first (most reliable)
@@ -1057,16 +1058,16 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 if (file.type === "image/jpeg" || file.type === "image/jpg") return "jpg";
                 if (file.type === "image/webp") return "webp";
             }
-            
+
             // Fallback to extension check
             if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return "jpg";
             if (fileName.endsWith('.webp')) return "webp";
-            
+
             return null;
         };
 
         const fileType = getFileType(file, fileName);
-        
+
         if (!fileType) {
             setInvalidUrl(file.name);
             setUrlErrorType('File Format');
@@ -1076,10 +1077,10 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             }
             return;
         }
-        
+
         const maxSize = 500 * 1024;
         const fileSizeKB = (file.size / 1024).toFixed(1);
-        
+
         if (file.size > maxSize) {
             setFileSizeErrorKB(fileSizeKB);
             setIsFileSizeErrorOpen(true);
@@ -1088,20 +1089,20 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             }
             return;
         }
-        
+
         // Store raw File for GridFS upload on Save
         setProfilePhotoFile(file);
         setProfileImage(URL.createObjectURL(file));
-        setUploadInfo({ 
-            name: file.name, 
+        setUploadInfo({
+            name: file.name,
             date: new Date().toLocaleDateString('en-GB'),
             size: fileSizeKB,
             type: fileType
         });
         setUploadSuccess(true);
         setTimeout(() => setUploadSuccess(false), 5000);
-        
-        console.log('✅ File selected:', {
+
+        console.log('âœ… File selected:', {
             name: file.name,
             mimeType: file.type || 'unknown',
             size: `${fileSizeKB}KB`,
@@ -1121,7 +1122,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const handleSave = async (e) => {
         e.preventDefault();
         if (!isEditMode) return;
-        
+
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
         const linkedinVal = studentData?.linkedinLink?.trim() || '';
@@ -1139,7 +1140,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         }
 
         setIsSaving(true);
-        
+
         try {
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
             if (!storedStudentData || (!storedStudentData._id && !storedStudentData.id)) {
@@ -1154,20 +1155,20 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             let profilePhotoUrl = studentData?.profilePicURL || '';
             // Initialize finalResolvedUrl with existing profile URL (in case no new photo uploaded)
             let finalResolvedUrl = studentData?.profilePicURL ? gridfsService.getFileUrl(studentData.profilePicURL) : '';
-            
+
             if (profilePhotoFile) {
                 try {
-                    console.log('🔄 Uploading profile photo to GridFS...');
+                    console.log('ðŸ”„ Uploading profile photo to GridFS...');
                     const result = await gridfsService.uploadProfileImage(profilePhotoFile, studentId, 'student');
                     if (result && result.url) {
                         profilePhotoUrl = result.url; // relative GridFS path e.g. /api/file/xxx
                         finalResolvedUrl = gridfsService.getFileUrl(result.url); // full URL
-                        
+
                         // Don't update UI yet - keep old image visible until save completes
-                        // This prevents sidebar flicker (old → placeholder → new)
+                        // This prevents sidebar flicker (old â†’ placeholder â†’ new)
                         setProfilePhotoFile(null);
-                        
-                        console.log('✅ Profile photo uploaded to GridFS:', profilePhotoUrl);
+
+                        console.log('âœ… Profile photo uploaded to GridFS:', profilePhotoUrl);
                     }
                 } catch (uploadErr) {
                     console.error('Failed to upload profile photo:', uploadErr);
@@ -1178,7 +1179,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             }
 
             const formData = new FormData(e.target);
-            
+
             const updateData = {
                 // Include all readonly fields to preserve complete profile data
                 firstName: formData.get('firstName') || studentData?.firstName || '',
@@ -1196,7 +1197,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 aadhaarNo: formData.get('aadhaarNo') || studentData?.aadhaarNo || '',
                 community: formData.get('community') || studentData?.community || '',
                 mediumOfStudy: formData.get('mediumOfStudy') || studentData?.mediumOfStudy || '',
-                
+
                 // Academic background (readonly)
                 tenthBoard: formData.get('tenthBoard') || studentData?.tenthBoard || '',
                 tenthInstitution: formData.get('tenthInstitution') || studentData?.tenthInstitution || '',
@@ -1211,53 +1212,53 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 diplomaInstitution: formData.get('diplomaInstitution') || studentData?.diplomaInstitution || '',
                 diplomaPercentage: formData.get('diplomaPercentage') || studentData?.diplomaPercentage || '',
                 diplomaYear: formData.get('diplomaYear') || studentData?.diplomaYear || '',
-                
+
                 // Editable fields - preserve existing data if field not on current form view
-                address: formData.get('address') || studentData?.address || '', 
+                address: formData.get('address') || studentData?.address || '',
                 city: formData.get('city') || studentData?.city || '',
-                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '', 
+                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '',
                 mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
-                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '', 
+                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '',
                 fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
-                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '', 
+                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '',
                 motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
                 section: formData.get('section') || studentData?.section || '',
-                guardianName: formData.get('guardianName') || studentData?.guardianName || '', 
+                guardianName: formData.get('guardianName') || studentData?.guardianName || '',
                 guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
-                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '', 
+                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '',
                 studyCategory: studyCategory || studentData?.studyCategory || '',
-                currentYear: formData.get('currentYear') || studentData?.currentYear || '', 
+                currentYear: formData.get('currentYear') || studentData?.currentYear || '',
                 currentSemester: formData.get('currentSemester') || studentData?.currentSemester || '',
-                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '', 
+                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '',
                 semester2GPA: formData.get('semester2GPA') || studentData?.semester2GPA || '',
-                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '', 
+                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '',
                 semester4GPA: formData.get('semester4GPA') || studentData?.semester4GPA || '',
-                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '', 
+                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '',
                 semester6GPA: formData.get('semester6GPA') || studentData?.semester6GPA || '',
-                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '', 
+                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '',
                 semester8GPA: formData.get('semester8GPA') || studentData?.semester8GPA || '',
-                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '', 
+                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '',
                 clearedBacklogs: formData.get('clearedBacklogs') || studentData?.clearedBacklogs || '',
-                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '', 
-                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '', 
+                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '',
+                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '',
                 gapReason: formData.get('gapReason') || studentData?.gapReason || '',
-                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '', 
-                quota: formData.get('quota') || studentData?.quota || '', 
+                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '',
+                quota: formData.get('quota') || studentData?.quota || '',
                 languagesKnown: formData.get('languagesKnown') || studentData?.languagesKnown || '',
-                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
-                passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
+                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '',
+                passportNo: formData.get('passportNo') || studentData?.passportNo || '',
                 skillSet: formData.get('skillSet') || studentData?.skillSet || '',
                 skills: skills.filter(s => s.trim()),
-                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
-                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
+                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '',
+                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '',
                 rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
-                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '', 
+                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '',
                 willingToSignBond: formData.get('willingToSignBond') || studentData?.willingToSignBond || '',
-                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '', 
+                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '',
                 githubLink: formData.get('githubLink') || studentData?.githubLink || '',
-                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '', 
-                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '', 
-                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '', 
+                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '',
+                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '',
+                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '',
                 preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
                 profilePicURL: (() => {
                     // Store relative GridFS path in DB, not full URL or Base64
@@ -1282,32 +1283,32 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             const result = await fastDataService.updateProfile(studentId, updateData);
             console.log('StuProfile handleSave result.student:', result?.student);
 
-            const updatedStudentData = { 
-                ...(studentData || {}), 
-                ...(result?.student || {}), 
+            const updatedStudentData = {
+                ...(studentData || {}),
+                ...(result?.student || {}),
                 ...updateData,
                 // Ensure we use the resolved GridFS URL for display
                 profilePicURL: finalResolvedUrl || updateData.profilePicURL || studentData?.profilePicURL
             };
-            
+
             // If we have a new profile image, preload it before updating UI (prevents placeholder flash)
             if (finalResolvedUrl && finalResolvedUrl !== studentData?.profilePicURL) {
                 try {
                     await new Promise((resolve, reject) => {
                         const img = new Image();
                         const timeout = setTimeout(() => {
-                            console.log('⚠️ Image preload timeout, continuing anyway');
+                            console.log('âš ï¸ Image preload timeout, continuing anyway');
                             resolve();
                         }, 3000); // 3 second max wait
-                        
+
                         img.onload = () => {
                             clearTimeout(timeout);
-                            console.log('✅ New profile image preloaded successfully');
+                            console.log('âœ… New profile image preloaded successfully');
                             resolve();
                         };
                         img.onerror = () => {
                             clearTimeout(timeout);
-                            console.log('⚠️ Image preload failed, continuing anyway');
+                            console.log('âš ï¸ Image preload failed, continuing anyway');
                             resolve(); // Don't reject, just continue
                         };
                         img.src = finalResolvedUrl;
@@ -1316,27 +1317,27 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                     console.warn('Image preload error:', preloadErr);
                 }
             }
-            
+
             // Clean up blob URLs to prevent memory leaks (after preload completes)
             if (profileImage && profileImage.startsWith('blob:')) {
                 URL.revokeObjectURL(profileImage);
             }
-            
+
             // Update local state with new data including new profile pic
             setStudentData(updatedStudentData);
             setCurrentYear(String(updatedStudentData.currentYear || ''));
             setCurrentSemester(String(updatedStudentData.currentSemester || ''));
             setSelectedSection(String(updatedStudentData.section || ''));
-            
+
             // Update profile image preview to new image (seamless transition - image already preloaded)
             if (finalResolvedUrl) {
                 setProfileImage(finalResolvedUrl);
             }
-            
+
             // Update localStorage and sidebar ONCE with complete data (image already loaded)
             localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
             window.dispatchEvent(new CustomEvent('profileUpdated', { detail: updatedStudentData }));
-            
+
             // Show success popup immediately after everything is ready
             setIsSaving(false);
             setPopupOpen(true);
@@ -1408,7 +1409,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         const targetPath = view.startsWith('/') ? view : `/${view}`;
         navigate(targetPath);
     }, [onViewChange, navigate]);
-    
+
     const getChangedFields = () => {
         if (!savedDataRef.current || !studentData) return [];
         const saved = savedDataRef.current;
@@ -1499,7 +1500,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                     <span>Your profile has been updated by admin</span>
                 </div>
             )}
-            
+
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <div className={styles.main}>
                 <Sidebar
@@ -1734,11 +1735,11 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                     className={styles.profilePreviewImg}
                                                     onClick={() => setImagePreviewOpen(true)}
                                                     onError={(e) => {
-                                                        console.error('❌ Profile image failed to load (View):', profileImage);
+                                                        console.error('âŒ Profile image failed to load (View):', profileImage);
                                                         console.error('Image error event:', e);
                                                     }}
                                                     onLoad={() => {
-                                                        console.log('✅ Profile image loaded successfully (View):', profileImage);
+                                                        console.log('âœ… Profile image loaded successfully (View):', profileImage);
                                                     }}
                                                 />
                                             ) : (
@@ -1886,7 +1887,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     )}
                             </div>
                         </div>
-                        
+
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Semester</h3>
@@ -1904,7 +1905,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         </div>
                                     ));
                                 })()}
-                                
+
                                 {/* Upload button for current semester */}
                                 {(() => {
                                     const currentSem = parseInt(currentSemester) || 1;
@@ -1920,10 +1921,10 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     );
                                 })()}
                             </div>
-                            
+
                             {/* Separator line */}
                             <div className={styles.semesterSeparator}></div>
-                            
+
                             <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <div className={styles.field}>
                                     <label>CGPA</label>
@@ -1982,7 +1983,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (
                         <div className={styles.profileSectionContainer}>
@@ -2058,12 +2059,12 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                 </>
                             ) : (
                                 <>
-                                    {/* ── Analysis Panel (inline) ── */}
+                                    {/* â”€â”€ Analysis Panel (inline) â”€â”€ */}
                                     <div className={styles.anlsHeader}>
                                         <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
                                         <div className={styles.anlsTitleRow}>
                                             <span className={`${styles.anlsPlacedBadge} ${isStudentPlaced ? styles.anlsPlacedBadgePlaced : styles.anlsPlacedBadgeNotPlaced}`}><span className={`${styles.anlsPlacedDot} ${isStudentPlaced ? styles.anlsPlacedDotPlaced : styles.anlsPlacedDotNotPlaced}`} />{isStudentPlaced ? 'Placed' : 'Not placed'}</span>
-                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back ↩</button>
+                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
                                         </div>
                                     </div>
 
@@ -2132,7 +2133,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                         className={styles.anlsClearBtn}
                                                         onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
                                                     >
-                                                        ✕ Clear Selection
+                                                        âœ• Clear Selection
                                                     </button>
                                                 </div>
                                             )}
@@ -2191,7 +2192,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Work On</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>→</span>{item}</li>)}
+                                                                {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
                                                             </ul>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
@@ -2202,7 +2203,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Best</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>→</span>{item}</li>)}
+                                                                {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -2213,24 +2214,24 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                     <div className={styles.anlsAchievCol}>
                                                         <div className={styles.anlsGoodCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👍</span>
+                                                                <span className={styles.anlsGoodIcon}>ðŸ‘</span>
                                                                 <span className={styles.anlsGoodLabel}>GOOD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].good.map((g, i) => (
                                                                 <div key={i} className={styles.anlsGoodItem}>
-                                                                    <span className={styles.anlsCheckIcon}>✅</span>
+                                                                    <span className={styles.anlsCheckIcon}>âœ…</span>
                                                                     <span>{g}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                         <div className={styles.anlsBadCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👎</span>
+                                                                <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
                                                                 <span className={styles.anlsBadLabel}>BAD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
                                                                 <div key={i} className={styles.anlsBadItem}>
-                                                                    <span className={styles.anlsCheckIcon}>❌</span>
+                                                                    <span className={styles.anlsCheckIcon}>âŒ</span>
                                                                     <span>{b}</span>
                                                                 </div>
                                                             ))}
@@ -2702,10 +2703,10 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             </div>
             {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
             <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
-            <FileSizeErrorPopup 
-                isOpen={isFileSizeErrorOpen} 
-                onClose={() => setIsFileSizeErrorOpen(false)} 
-                fileSizeKB={fileSizeErrorKB} 
+            <FileSizeErrorPopup
+                isOpen={isFileSizeErrorOpen}
+                onClose={() => setIsFileSizeErrorOpen(false)}
+                fileSizeKB={fileSizeErrorKB}
             />
             <URLValidationErrorPopup
                 isOpen={isURLErrorPopupOpen}

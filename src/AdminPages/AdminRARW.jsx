@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from '../utils/useAdminAuth';
-import * as XLSX from 'xlsx'; 
+import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css"; 
 
 import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
@@ -17,6 +14,8 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import styles from './AdminRARW.module.css';
 
 import Adminicon from "../assets/Adminicon.png";
+import AdminFeedbackIcon from "../assets/AdminFeedbackviewicon.svg";
+import AdminRAFeedbackview from './AdminRAFeedbackview';
 
 // Eye Icon Component
 const EyeIcon = () => (
@@ -29,36 +28,37 @@ const EyeIcon = () => (
 function AdminRARW() {
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
-  
+
   // Sidebar toggle state for mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drives, setDrives] = useState([]);
-  const [students, setStudents] = useState([]);
-  
+
   // Filter states - these will apply immediately when changed
-  const [companyFilter, setCompanyFilter] = useState('All Companies');
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedJobRole, setSelectedJobRole] = useState(null);
   const [startDateFilter, setStartDateFilter] = useState(null);
   const [endDateFilter, setEndDateFilter] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
-  const [availableEndDates, setAvailableEndDates] = useState([]);
   const [selectedCompanyJob, setSelectedCompanyJob] = useState(null);
   const [isCompanyOpen, setIsCompanyOpen] = useState(false);
   const [isJobRoleOpen, setIsJobRoleOpen] = useState(false);
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);
-  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
-  const [showExportMenu, setShowExportMenu] = useState(false); 
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [selectedRound, setSelectedRound] = useState(null);
   const [availableRounds, setAvailableRounds] = useState([]);
   const [exportPopupState, setExportPopupState] = useState('none');
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
+
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [selectedStudentFeedback, setSelectedStudentFeedback] = useState(null);
+  const [feedbackRoundName, setFeedbackRoundName] = useState('');
 
   // Toggle Sidebar Function
   const toggleSidebar = () => {
@@ -92,11 +92,11 @@ function AdminRARW() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch drives and reports
         const drivesData = await mongoDBService.getCompanyDrives();
         const reportsResponse = await mongoDBService.getAllReports();
-        
+
         // Extract reports data - handle both array and object response
         let reports = [];
         if (Array.isArray(reportsResponse)) {
@@ -107,22 +107,22 @@ function AdminRARW() {
         } else if (reportsResponse?.data) {
           reports = reportsResponse.data;
         }
-        
+
         console.log('Reports response:', reportsResponse);
         console.log('Extracted reports/drives:', reports.length);
-        
+
         // Filter drives to only show those that have reports saved
         const driveIdsWithReports = new Set(reports.map(r => r.driveId).filter(Boolean));
-        const drivesWithReports = (drivesData || []).filter(drive => 
+        const drivesWithReports = (drivesData || []).filter(drive =>
           driveIdsWithReports.has(drive._id)
         );
-        
+
         console.log('All drives:', drivesData?.length);
         console.log('Drives with reports:', drivesWithReports.length);
         console.log('DriveIds with reports:', Array.from(driveIdsWithReports));
-        
+
         setDrives(drivesWithReports);
-        
+
       } catch (error) {
         console.error('Error fetching data:', error);
         alert('Failed to load data');
@@ -137,10 +137,10 @@ function AdminRARW() {
   // Helper function to format dates as DD-MM-YYYY
   const formatDisplayDate = (dateString) => {
     if (!dateString) return '';
-    
+
     try {
       let date;
-      
+
       // Handle Date objects
       if (dateString instanceof Date) {
         date = dateString;
@@ -155,21 +155,21 @@ function AdminRARW() {
       else if (typeof dateString === 'string' && dateString.includes('/')) {
         const parts = dateString.split('/');
         if (parts.length !== 3) return dateString;
-        
+
         let [day, month, year] = parts;
         day = day.padStart(2, '0');
         month = month.padStart(2, '0');
-        
+
         if (year.length === 2) {
           year = '20' + year;
         }
-        
+
         return `${day}-${month}-${year}`;
       }
       else {
         return String(dateString);
       }
-      
+
       // Format Date object
       if (date) {
         const day = String(date.getDate()).padStart(2, '0');
@@ -177,7 +177,7 @@ function AdminRARW() {
         const year = date.getFullYear();
         return `${day}-${month}-${year}`;
       }
-      
+
       return String(dateString);
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
@@ -199,7 +199,7 @@ function AdminRARW() {
   // Get available job roles for selected company
   const availableJobRoles = useMemo(() => {
     if (!selectedCompany) return [];
-    
+
     const jobRoles = new Set();
     drives.forEach(drive => {
       if (drive.companyName === selectedCompany && drive.jobRole) {
@@ -231,14 +231,13 @@ function AdminRARW() {
     console.log('Selected company:', companyName);
     setSelectedCompany(companyName);
     setIsCompanyOpen(false);
-    
+
     // Reset dependent fields
     setSelectedJobRole(null);
     setSelectedCompanyJob(null);
     setAvailableDates([]);
     setStartDateFilter(null);
     setEndDateFilter(null);
-    setAvailableEndDates([]);
     setAvailableRounds([]);
     setSelectedRound(null);
     setAllData([]);
@@ -250,19 +249,19 @@ function AdminRARW() {
     console.log('Selected job role:', jobRole);
     setSelectedJobRole(jobRole);
     setIsJobRoleOpen(false);
-    
+
     // Find the group with this company and job role
-    const group = groupedDrives.find(g => 
+    const group = groupedDrives.find(g =>
       g.companyName === selectedCompany && g.jobRole === jobRole
     );
-    
+
     if (!group) {
       console.error('Could not find group for company and job role');
       return;
     }
-    
+
     setSelectedCompanyJob(group);
-    
+
     // Extract unique dates from drives in this group
     const dates = group.drives
       .filter(drive => {
@@ -281,18 +280,16 @@ function AdminRARW() {
         return dateObj;
       })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     console.log('Available dates:', dates);
     setAvailableDates(dates);
     setStartDateFilter(null);
     setEndDateFilter(null);
-    setCompanyFilter(`${group.companyName} - ${group.jobRole}`);
-    setAvailableEndDates([]);
-    
+
     // Don't show rounds yet - wait for start date selection
     setAvailableRounds([]);
     setSelectedRound(null);
-    
+
     // Clear table until dates are selected
     setAllData([]);
     setFilteredData([]);
@@ -302,19 +299,7 @@ function AdminRARW() {
   const handleStartDateSelect = (dateObj) => {
     setStartDateFilter(dateObj.date);
     setIsStartDateOpen(false);
-    
-    // Set end dates based on selected start date (use same or later dates)
-    const endDates = availableDates
-      .filter(d => new Date(d.date) >= new Date(dateObj.date))
-      .map(d => ({
-        date: d.endDate || d.date,
-        endDate: d.endDate || d.date,
-        drive: d.drive,
-        rounds: d.rounds
-      }));
-    
-    setAvailableEndDates(endDates);
-    
+
     // Create round buttons based on the selected drive
     if (dateObj.rounds) {
       const numRounds = typeof dateObj.rounds === 'number' ? dateObj.rounds : dateObj.rounds.length;
@@ -326,45 +311,30 @@ function AdminRARW() {
         console.log('Set initial selectedRound to:', rounds[0]);
       }
     }
-    
-    // Auto-select end date if only one option
-    if (endDates.length === 1) {
-      setEndDateFilter(endDates[0].date);
-      loadStudentsForDrive(endDates[0].drive);
-    } else if (endDates.length > 0) {
-      // Auto-select the first end date
-      setEndDateFilter(endDates[0].date);
-      loadStudentsForDrive(endDates[0].drive);
+
+    // Load students immediately for the selected drive
+    if (dateObj.drive) {
+      setEndDateFilter(dateObj.endDate || dateObj.date);
+      loadStudentsForDrive(dateObj.drive);
     } else {
       setEndDateFilter(null);
-    }
-  };
-
-  // Handle end date selection
-  const handleEndDateSelect = (dateObj) => {
-    setEndDateFilter(dateObj.date || dateObj.endDate);
-    setIsEndDateOpen(false);
-    
-    // Load students for this drive
-    if (dateObj.drive) {
-      loadStudentsForDrive(dateObj.drive);
     }
   };
 
   // Load students for a specific drive
   const loadStudentsForDrive = async (drive) => {
     if (!drive) return;
-    
+
     try {
       setIsLoading(true);
       // Clear existing data to prevent showing stale data
       setAllData([]);
       setFilteredData([]);
       console.log('Loading students for drive:', drive);
-      
+
       // Fetch all reports from MongoDB
       const response = await mongoDBService.getAllReports();
-      
+
       // Extract drive documents from response (not flattened data)
       let driveDocs = [];
       if (response?.drives) {
@@ -376,23 +346,23 @@ function AdminRARW() {
         // Fallback: if no drives array, maybe it's old format
         driveDocs = response.data;
       }
-      
+
       console.log('All drive documents:', driveDocs.length);
       console.log('Looking for driveId:', drive._id);
-      
+
       // Find the report document for this specific drive
       const driveReport = driveDocs.find(report => report.driveId === drive._id);
-      
+
       if (driveReport && driveReport.rounds && driveReport.rounds.length > 0) {
         console.log('Found drive report:', driveReport);
         console.log('Drive has', driveReport.rounds.length, 'rounds');
-        
+
         // Extract all students (both passed and failed) from all rounds
         const allStudents = [];
         driveReport.rounds.forEach((round, index) => {
           console.log(`Round ${round.roundNumber} structure:`, round);
           console.log(`Round ${round.roundNumber}: ${round.passedStudents?.length || 0} passed, ${round.failedStudents?.length || 0} failed students`);
-          
+
           // Add passed students
           if (round.passedStudents && round.passedStudents.length > 0) {
             round.passedStudents.forEach(student => {
@@ -404,7 +374,7 @@ function AdminRARW() {
               });
             });
           }
-          
+
           // Add failed students - check multiple possible field names
           const failedStudents = round.failedStudents || round.rejectedStudents || round.notSelectedStudents || [];
           if (failedStudents && failedStudents.length > 0) {
@@ -417,7 +387,7 @@ function AdminRARW() {
               });
             });
           }
-          
+
           // Also check if there's an eligibleStudents array and filter out passed ones
           if (round.eligibleStudents && round.eligibleStudents.length > 0) {
             const passedRegNos = new Set(round.passedStudents?.map(s => s.registerNo || s.regNo) || []);
@@ -435,9 +405,9 @@ function AdminRARW() {
             });
           }
         });
-        
+
         console.log('Total students across all rounds:', allStudents.length);
-        
+
         // Transform to table format
         const transformedData = allStudents.map((item, index) => ({
           "S.No": index + 1,
@@ -448,11 +418,12 @@ function AdminRARW() {
           "Job Role": driveReport.jobRole || drive.jobRole || 'N/A',
           "Mobile": item.phone || item.mobile || 'N/A',
           "Result": item.status || 'Passed',
+          "Feedback": item.feedback || item.comment || item.note || 'View',
           "currentRound": item.currentRound || 0,
           "status": item.status || 'Passed',
           "studentId": item.studentId || item._id
         }));
-        
+
         console.log('Transformed students:', transformedData.length, 'total records');
         console.log('Current selectedRound:', selectedRound);
         setAllData(transformedData);
@@ -482,14 +453,14 @@ function AdminRARW() {
       const selectedRoundNum = parseInt(selectedRound.split(' ')[1]);
       console.log('Filtering for round number:', selectedRoundNum);
       console.log('Before round filter, data count:', currentFilteredData.length);
-      
+
       // Log actual currentRound values to see what we're working with
       currentFilteredData.forEach((s, idx) => {
         if (idx < 6) {
           console.log(`  Record ${idx}: ${s.Name} (${s.RegNo}) - currentRound: ${s.currentRound}, status: ${s.status}`);
         }
       });
-      
+
       currentFilteredData = currentFilteredData.filter(student => {
         // Show only students whose currentRound matches the selected round
         const studentRound = student.currentRound || 0;
@@ -498,7 +469,7 @@ function AdminRARW() {
         const matches = studentRound === selectedRoundNum;
         return matches;
       });
-      
+
       console.log(`Filtered for Round ${selectedRoundNum}:`, currentFilteredData);
       console.log('After round filter, data count:', currentFilteredData.length);
     }
@@ -551,22 +522,22 @@ function AdminRARW() {
           "S.No", "Name", "RegNo", "Branch", "Year-Sec",
           "Email", "Mobile"
       ];
-      
+
       const data = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo, item.Branch,
           item["Year-Sec"],
           item.Email, item.Mobile
       ]);
-      
+
       setExportProgress(60);
       const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Round Wise Analysis Report");
-      
+
       setExportProgress(90);
       await new Promise(resolve => setTimeout(resolve, 300));
       XLSX.writeFile(wb, "RoundWiseAnalysis.xlsx");
-      
+
       setExportProgress(100);
       await new Promise(resolve => setTimeout(resolve, 500));
       setExportPopupState('success');
@@ -575,7 +546,7 @@ function AdminRARW() {
       setExportPopupState('failed');
     }
   };
-  
+
   const exportToPDF = async () => {
     try {
       setExportType('PDF');
@@ -586,23 +557,23 @@ function AdminRARW() {
       await new Promise(resolve => setTimeout(resolve, 500));
       setExportProgress(30);
 
-      const doc = new jsPDF('landscape'); 
-      
+      const doc = new jsPDF('landscape');
+
       const tableColumn = [
           "S.No", "Name", "RegNo", "Branch", "Year-Sec",
           "Email", "Mobile"
       ];
-      
+
       setExportProgress(60);
       const tableRows = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo, item.Branch,
           item["Year-Sec"],
           item.Email, item.Mobile
       ]);
-      
+
       doc.setFontSize(14);
       doc.text("Round Wise Analysis Report", 148, 15, null, null, "center");
-      
+
       setExportProgress(80);
       autoTable(doc, {
           head: [tableColumn], body: tableRows, startY: 20,
@@ -610,11 +581,11 @@ function AdminRARW() {
           headStyles: { fillColor: [78, 162, 78], textColor: 255, fontStyle: 'bold' },
           margin: { top: 20, left: 5, right: 5 },
       });
-      
+
       setExportProgress(90);
       await new Promise(resolve => setTimeout(resolve, 300));
       doc.save("RoundWiseAnalysis.pdf");
-      
+
       setExportProgress(100);
       await new Promise(resolve => setTimeout(resolve, 500));
       setExportPopupState('success');
@@ -624,9 +595,9 @@ function AdminRARW() {
     }
   };
 
-  return ( 
+  return (
     <>
-      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} /> 
+      <Adnavbar Adminicon={Adminicon} onToggleSidebar={toggleSidebar} />
       {/* UPDATED CLASS: Admin-rarw-layout */}
       <div className={styles['Admin-rarw-layout']}>
         <Adsidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
@@ -645,12 +616,12 @@ function AdminRARW() {
             {/* UPDATED CLASSES: Admin-rarw-filter-inputs, Admin-rarw-filter-select, Admin-rarw-filter-date-input */}
             <div className={styles['Admin-rarw-filter-inputs']}>
               <div className={styles['Admin-rarw-dropdown-wrapper']}>
-                <div 
-                  className={styles['Admin-rarw-dropdown-header']} 
+                <div
+                  className={styles['Admin-rarw-dropdown-header']}
                   onClick={() => setIsCompanyOpen(!isCompanyOpen)}
                 >
                   <span>{selectedCompany || 'Select Company'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isCompanyOpen ? '▲' : '▼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isCompanyOpen ? 'â–²' : 'â–¼'}</span>
                 </div>
                 {isCompanyOpen && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -668,12 +639,12 @@ function AdminRARW() {
               </div>
 
               <div className={styles['Admin-rarw-dropdown-wrapper']}>
-                <div 
+                <div
                   className={`${styles['Admin-rarw-dropdown-header']} ${!selectedCompany ? styles['Admin-rarw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
                 >
                   <span>{selectedJobRole || 'Job Role'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isJobRoleOpen ? '▲' : '▼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isJobRoleOpen ? 'â–²' : 'â–¼'}</span>
                 </div>
                 {isJobRoleOpen && selectedCompany && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -691,12 +662,12 @@ function AdminRARW() {
               </div>
 
               <div className={styles['Admin-rarw-dropdown-wrapper']}>
-                <div 
+                <div
                   className={`${styles['Admin-rarw-dropdown-header']} ${!selectedCompanyJob ? styles['Admin-rarw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
                 >
                   <span>{startDateFilter ? formatDisplayDate(startDateFilter) : 'Start Date'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isStartDateOpen ? '▲' : '▼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isStartDateOpen ? 'â–²' : 'â–¼'}</span>
                 </div>
                 {isStartDateOpen && selectedCompanyJob && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -714,7 +685,7 @@ function AdminRARW() {
               </div>
 
               <div className={styles['Admin-rarw-dropdown-wrapper']}>
-                <div 
+                <div
                   className={`${styles['Admin-rarw-dropdown-header']} ${styles['Admin-rarw-dropdown-disabled']}`}
                   style={{ cursor: 'default', opacity: 0.9 }}
                 >
@@ -722,14 +693,14 @@ function AdminRARW() {
                 </div>
               </div>
             </div>
-          </div> 
+          </div>
 
           {/* UPDATED CLASS: Admin-rarw-rounds-container, Admin-rarw-rounds-scroll, Admin-rarw-round-btn, Admin-rarw-round-btn-active, Admin-rarw-round-btn-inactive */}
           {availableRounds.length > 0 && (
             <div className={styles['Admin-rarw-rounds-container']}>
               <div className={styles['Admin-rarw-rounds-scroll']}>
                 {availableRounds.map(round => (
-                  <button 
+                  <button
                     key={round}
                     className={`${styles['Admin-rarw-round-btn']} ${selectedRound === round ? styles['Admin-rarw-round-btn-active'] : styles['Admin-rarw-round-btn-inactive']}`}
                     onClick={() => handleRoundSelect(round)}
@@ -740,7 +711,7 @@ function AdminRARW() {
               </div>
             </div>
           )}
-        
+
           {/* UPDATED CLASS: Admin-rarw-table-section */}
           <div className={`${styles['Admin-rarw-table-section']} ${availableRounds.length > 0 ? styles['Admin-rarw-table-section-with-rounds'] : ''}`}>
             {/* UPDATED CLASSES for header row, title, and actions */}
@@ -748,8 +719,8 @@ function AdminRARW() {
               <div className={styles['Admin-rarw-table-title']}>ROUND WISE ANALYSIS</div>
               <div className={styles['Admin-rarw-table-actions']}>
                 <div className={styles['Admin-rarw-print-button-container']}>
-                  <button 
-                    className={styles['Admin-rarw-print-btn-green']} 
+                  <button
+                    className={styles['Admin-rarw-print-btn-green']}
                     onClick={() => setShowExportMenu(!showExportMenu)}
                   >
                     Print
@@ -776,6 +747,7 @@ function AdminRARW() {
                     <th>Year-Sec</th>
                     <th>Mobile</th>
                     <th>Result</th>
+                    <th>Feedback</th>
                     <th>View</th>
                   </tr>
                 </thead>
@@ -785,7 +757,7 @@ function AdminRARW() {
                       <td colSpan="8" className={styles['Admin-rarw-loading-cell']}>
                         <div className={styles['Admin-rarw-loading-wrapper']}>
                           <div className={styles['Admin-rarw-spinner']}></div>
-                          <span className={styles['Admin-rarw-loading-text']}>Loading students…</span>
+                          <span className={styles['Admin-rarw-loading-text']}>Loading studentsâ€¦</span>
                         </div>
                       </td>
                     </tr>
@@ -808,6 +780,24 @@ function AdminRARW() {
                           </span>
                         </td>
                         <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                          setSelectedStudentFeedback(student);
+                          setFeedbackRoundName(selectedRound?.name || 'Feedback Round');
+                          setShowFeedbackPopup(true);
+                        }}>
+                          <img
+                            src={AdminFeedbackIcon}
+                            alt="Feedback"
+                            title={student.Feedback || 'Feedback'}
+                            style={{
+                              width: '22px',
+                              height: '22px',
+                              objectFit: 'contain',
+                              display: 'inline-block',
+                              verticalAlign: 'middle'
+                            }}
+                          />
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
                           if (student.RegNo) {
                             navigate(`/admin-student-view/${student.RegNo}`)
                           }
@@ -818,7 +808,7 @@ function AdminRARW() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
                         {selectedCompanyJob ? 'No students found for this round.' : 'Please select a company and drive to view students.'}
                       </td>
                     </tr>
@@ -835,22 +825,34 @@ function AdminRARW() {
           ></div>
         )}
       </div>
-      
-      <ExportProgressAlert 
-        isOpen={exportPopupState === 'progress'} 
-        onClose={() => {}} 
+
+      {/* Feedback Popup Modal */}
+      {showFeedbackPopup && (
+        <AdminRAFeedbackview
+          roundName={feedbackRoundName}
+          studentData={selectedStudentFeedback}
+          onClose={() => {
+            setShowFeedbackPopup(false);
+            setSelectedStudentFeedback(null);
+          }}
+        />
+      )}
+
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
         progress={exportProgress}
         exportType={exportType}
       />
-      
-      <ExportSuccessAlert 
-        isOpen={exportPopupState === 'success'} 
+
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
         onClose={() => setExportPopupState('none')}
         exportType={exportType}
       />
-      
-      <ExportFailedAlert 
-        isOpen={exportPopupState === 'failed'} 
+
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
         onClose={() => setExportPopupState('none')}
         exportType={exportType}
       />

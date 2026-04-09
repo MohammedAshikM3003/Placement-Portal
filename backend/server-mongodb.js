@@ -457,6 +457,214 @@ app.get('/api/ai/status', async (req, res) => {
 });
 
 // -------------------------------------------------
+// Admin Feedback APIs
+// -------------------------------------------------
+app.post('/api/feedback/generate', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        const {
+            feedbackType,
+            roundNumber,
+            roundName,
+            companyName,
+            jobRole,
+            studentCount,
+            baseText
+        } = req.body || {};
+
+        if (!feedbackType || !['passed', 'failed'].includes(String(feedbackType).toLowerCase())) {
+            return res.status(400).json({ error: 'feedbackType must be passed or failed' });
+        }
+
+        const { callOllama, checkOllamaStatus } = require('./ollamaService');
+        const status = await checkOllamaStatus();
+
+        if (!status?.running) {
+            return res.status(503).json({
+                error: 'Ollama is not running. Please start Ollama on your machine.',
+                details: 'Run: ollama serve'
+            });
+        }
+
+        const normalizedType = String(feedbackType).toLowerCase();
+        const audienceLabel = normalizedType === 'passed' ? 'passed students' : 'failed students';
+        const prompt = `You are an HR/Admin assistant.
+Rewrite and improve the following placement round feedback in clear, grammatical, professional English.
+
+Rules:
+- Keep the feedback concise (80-140 words).
+- Keep the meaning aligned with the admin intent.
+- Be respectful, specific, and easy to understand.
+- Do not include markdown, bullets, headings, or quotes.
+
+Context:
+- Company: ${companyName || 'N/A'}
+- Job Role: ${jobRole || 'N/A'}
+- Round Number: ${roundNumber || 'N/A'}
+- Round Name: ${roundName || 'N/A'}
+- Audience: ${audienceLabel}
+- Student Count: ${Number(studentCount) || 0}
+
+Admin Draft:
+${(baseText || '').toString().trim() || (normalizedType === 'passed'
+    ? 'Students showed good performance in communication, technical knowledge, and overall attitude.'
+    : 'Students need improvement in technical fundamentals, confidence, and communication clarity.')}
+
+Return only the improved feedback paragraph.`;
+
+        const generatedText = await callOllama(prompt, { temperature: 0.35, max_tokens: 220 });
+
+        return res.json({
+            success: true,
+            feedback: (generatedText || '').toString().trim(),
+            model: status?.requiredModel || process.env.OLLAMA_MODEL || 'ollama'
+        });
+    } catch (error) {
+        console.error('Admin feedback generate error:', error);
+        return res.status(500).json({
+            error: 'Failed to generate feedback',
+            details: error.message
+        });
+    }
+});
+
+app.post('/api/feedback/save', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        const {
+            driveId,
+            companyName,
+            jobRole,
+            startingDate,
+            endingDate,
+            roundNumber,
+            roundName,
+            feedbackType,
+            studentCount,
+            totalStudents,
+            feedback,
+            selectedDate,
+            rating,
+            aiEnabled,
+            aiGenerated
+        } = req.body || {};
+
+        if (!driveId || !companyName || !jobRole || !roundNumber || !feedbackType) {
+            return res.status(400).json({
+                error: 'Missing required fields (driveId, companyName, jobRole, roundNumber, feedbackType)'
+            });
+        }
+
+        const normalizedType = String(feedbackType).toLowerCase();
+        if (!['passed', 'failed'].includes(normalizedType)) {
+            return res.status(400).json({ error: 'feedbackType must be passed or failed' });
+        }
+
+        const payload = {
+            driveId: String(driveId),
+            companyName: String(companyName),
+            jobRole: String(jobRole),
+            startingDate: startingDate || null,
+            endingDate: endingDate || null,
+            roundNumber: Number(roundNumber),
+            roundName: roundName || `Round ${roundNumber}`,
+            feedbackType: normalizedType,
+            studentCount: Number(studentCount) || 0,
+            totalStudents: Number(totalStudents) || 0,
+            feedback: (feedback || '').toString().trim(),
+            selectedDate: selectedDate || null,
+            rating: Number(rating) || 0,
+            aiEnabled: Boolean(aiEnabled),
+            aiGenerated: Boolean(aiGenerated),
+            submittedBy: {
+                userId: req.user?.id || req.user?.userId || null,
+                name: req.user?.name || req.user?.username || 'Admin',
+                role: req.user?.role || 'admin'
+            },
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const Feedback = mongoose.connection.collection('Feedback');
+        const insertResult = await Feedback.insertOne(payload);
+
+        return res.status(201).json({
+            success: true,
+            message: 'Feedback saved successfully',
+            id: insertResult.insertedId
+        });
+    } catch (error) {
+        console.error('Save admin feedback error:', error);
+        return res.status(500).json({
+            error: 'Failed to save feedback',
+            details: error.message
+        });
+    }
+});
+
+app.get('/api/feedback', authenticateToken, checkRole('student', 'admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { driveId, roundNumber, feedbackType, companyName, jobRole, startingDate } = req.query || {};
+
+        const normalizedDriveId = String(driveId || '').trim();
+        const normalizedCompanyName = String(companyName || '').trim();
+        const normalizedJobRole = String(jobRole || '').trim();
+        const normalizedStartingDate = String(startingDate || '').trim();
+
+        if (!normalizedDriveId && !(normalizedCompanyName && normalizedJobRole)) {
+            return res.status(400).json({ error: 'Missing query: provide driveId or companyName+jobRole' });
+        }
+
+        const query = {};
+        if (normalizedDriveId) {
+            query.driveId = normalizedDriveId;
+        } else {
+            query.companyName = normalizedCompanyName;
+            query.jobRole = normalizedJobRole;
+            if (normalizedStartingDate) query.startingDate = normalizedStartingDate;
+        }
+
+        if (roundNumber !== undefined && roundNumber !== null && String(roundNumber).trim() !== '') {
+            query.roundNumber = Number(roundNumber);
+        }
+
+        if (feedbackType && String(feedbackType).trim()) {
+            query.feedbackType = String(feedbackType).trim().toLowerCase();
+        }
+
+        const Feedback = mongoose.connection.collection('Feedback');
+        let data = await Feedback.find(query).sort({ roundNumber: 1, createdAt: -1 }).toArray();
+
+        // Fallback for older student-drive mappings where driveId can differ.
+        if (data.length === 0 && normalizedDriveId && normalizedCompanyName && normalizedJobRole) {
+            const fallbackQuery = {
+                companyName: normalizedCompanyName,
+                jobRole: normalizedJobRole
+            };
+            if (normalizedStartingDate) fallbackQuery.startingDate = normalizedStartingDate;
+            if (query.roundNumber !== undefined) fallbackQuery.roundNumber = query.roundNumber;
+            if (query.feedbackType) fallbackQuery.feedbackType = query.feedbackType;
+
+            data = await Feedback.find(fallbackQuery).sort({ roundNumber: 1, createdAt: -1 }).toArray();
+        }
+
+        return res.json({
+            success: true,
+            data,
+            count: data.length
+        });
+    } catch (error) {
+        console.error('Get feedback error:', error);
+        return res.status(500).json({
+            error: 'Failed to fetch feedback',
+            details: error.message
+        });
+    }
+});
+
+// -------------------------------------------------
 // Branches and Degrees APIs
 // -------------------------------------------------
 
@@ -3811,6 +4019,7 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
             
             return {
                 _id: entry._id,
+                driveId: entry.driveId || '',
                 companyName: entry.companyName,
                 driveStartDate: startDate,
                 driveEndDate: endDate,
@@ -6581,6 +6790,443 @@ app.get('/api/students', async (req, res) => {
     } catch (error) {
         console.error('List students error:', error);
         res.status(500).json({ error: 'Failed to list students', details: error.message });
+    }
+});
+
+app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'), async (req, res) => {
+    req.setTimeout(120000);
+    res.setTimeout(120000);
+
+    try {
+        const { prompt } = req.body;
+
+        if (!prompt || !prompt.trim()) {
+            return res.status(400).json({ error: 'Missing prompt' });
+        }
+
+        const { parseStudentFilterQuery, checkOllamaStatus } = require('./ollamaService');
+        const PlacedStudent = require('./models/PlacedStudent');
+
+        const ollamaStatus = await checkOllamaStatus();
+        if (!ollamaStatus.running) {
+            return res.status(503).json({
+                error: 'Ollama is not running. Please start Ollama on your machine.',
+                details: 'Run: ollama serve'
+            });
+        }
+
+        // Use enhanced AI parsing
+        const parsed = await parseStudentFilterQuery(prompt) || {};
+        const promptText = prompt.toLowerCase();
+
+        // Fallback regex patterns for common queries
+        const fallbackDriveMatch = promptText.match(/(\d+)\s*(drive|drives|placement drive|company drive)/i);
+        const fallbackCompanyMatch = prompt.match(/(?:attended|attend|attending|who are|students who are|students who attended|show me who are)?\s*([a-z0-9&.'-]+(?:\s+[a-z0-9&.'-]+){0,4})\s+(?:company\s+drive|placement\s+drive|drive)/i);
+        const fallbackRoleMatch = prompt.match(/(?:for|role|job\s*role|position)\s+([a-z0-9&.'-]+(?:\s+[a-z0-9&.'-]+){0,4})/i);
+        const fallbackCgpaMatch = promptText.match(/(?:cgpa|gpa)\s*(?:above|greater than|>=|>|more than|at least)\s*(\d+(?:\.\d+)?)/i);
+        const fallbackPlacedMatch = /\b(placed|placement)\b/.test(promptText) && !/\b(not placed|unplaced|un-placed)\b/.test(promptText);
+        const fallbackUnplacedMatch = /\b(not placed|unplaced|un-placed)\b/.test(promptText);
+        const fallbackSkillMatch = prompt.match(/(?:know|knows|skilled in|skills?|experience in|proficient in)\s+([a-z0-9#+.]+(?:\s*,?\s*[a-z0-9#+.]+)*)/i);
+
+        const fallbackFilters = {
+            isBlocked: /\bblocked\b/.test(promptText) ? true : null,
+            driveCountMin: fallbackDriveMatch ? Number(fallbackDriveMatch[1]) : null,
+            companyName: fallbackCompanyMatch ? fallbackCompanyMatch[1].trim() : '',
+            jobRole: fallbackRoleMatch ? fallbackRoleMatch[1].trim() : '',
+            cgpaMin: fallbackCgpaMatch ? Number(fallbackCgpaMatch[1]) : null,
+            isPlaced: fallbackPlacedMatch ? true : (fallbackUnplacedMatch ? false : null),
+            skills: fallbackSkillMatch ? fallbackSkillMatch[1].trim() : '',
+        };
+
+        // Merge AI-parsed filters with fallback
+        const filters = {
+            name: '',
+            regNo: '',
+            department: '',
+            branch: '',
+            batch: '',
+            section: '',
+            currentYear: '',
+            currentSemester: '',
+            gender: '',
+            city: '',
+            cgpaMin: null,
+            cgpaMax: null,
+            tenthMin: null,
+            twelfthMin: null,
+            hasBacklogs: null,
+            skills: '',
+            companyName: '',
+            jobRole: '',
+            isBlocked: null,
+            isPlaced: null,
+            placedCompany: '',
+            packageMin: null,
+            driveCountMin: null,
+            driveCountMax: null,
+            eligibleDriveId: '',
+            sortBy: 'regNo',
+            sortOrder: 'asc',
+            ...(parsed.filters || {}),
+        };
+
+        // Apply fallback values only if AI didn't provide them
+        Object.keys(fallbackFilters).forEach(key => {
+            if (fallbackFilters[key] !== null && fallbackFilters[key] !== '' && (filters[key] === null || filters[key] === '')) {
+                filters[key] = fallbackFilters[key];
+            }
+        });
+
+        // Build dynamic columns list
+        const requestedColumns = Array.isArray(parsed.columns) ? parsed.columns : [];
+        const columns = [...new Set(requestedColumns.filter(Boolean))];
+
+        // Auto-add relevant columns based on filters
+        if ((filters.driveCountMin !== null || /drive|attendance/i.test(promptText)) && !columns.includes('driveCount')) {
+            columns.push('driveCount');
+        }
+        if ((filters.driveCountMin !== null || /drive|attendance/i.test(promptText)) && !columns.includes('lastDriveDate')) {
+            columns.push('lastDriveDate');
+        }
+        if ((filters.isPlaced !== null || filters.placedCompany) && !columns.includes('placementStatus')) {
+            columns.push('placementStatus');
+        }
+        if ((filters.isPlaced !== null || filters.placedCompany) && !columns.includes('placedCompany')) {
+            columns.push('placedCompany');
+        }
+        if ((filters.isPlaced !== null || filters.packageMin !== null) && !columns.includes('package')) {
+            columns.push('package');
+        }
+        if ((filters.cgpaMin !== null || filters.cgpaMax !== null || /cgpa|gpa/i.test(promptText)) && !columns.includes('cgpa')) {
+            columns.push('cgpa');
+        }
+        if (filters.skills && !columns.includes('skills')) {
+            columns.push('skills');
+        }
+        if ((filters.hasBacklogs !== null || /backlog/i.test(promptText)) && !columns.includes('backlogs')) {
+            columns.push('backlogs');
+        }
+
+        // Build MongoDB query conditions
+        const andConditions = [{ isArchived: { $ne: true } }];
+
+        if (filters.regNo) {
+            andConditions.push({ regNo: { $regex: filters.regNo, $options: 'i' } });
+        }
+        if (filters.name) {
+            andConditions.push({
+                $or: [
+                    { firstName: { $regex: filters.name, $options: 'i' } },
+                    { lastName: { $regex: filters.name, $options: 'i' } },
+                    { name: { $regex: filters.name, $options: 'i' } },
+                ]
+            });
+        }
+        if (filters.department) {
+            andConditions.push({
+                $or: [
+                    { department: { $regex: `^${filters.department}$`, $options: 'i' } },
+                    { branch: { $regex: `^${filters.department}$`, $options: 'i' } }
+                ]
+            });
+        }
+        if (filters.branch) {
+            andConditions.push({
+                $or: [
+                    { branch: { $regex: filters.branch, $options: 'i' } },
+                    { department: { $regex: filters.branch, $options: 'i' } }
+                ]
+            });
+        }
+        if (filters.batch) {
+            andConditions.push({ $or: [{ batch: filters.batch }, { year: filters.batch }] });
+        }
+        if (filters.section) {
+            andConditions.push({ section: { $regex: filters.section, $options: 'i' } });
+        }
+        if (filters.currentYear) {
+            andConditions.push({ currentYear: { $regex: filters.currentYear, $options: 'i' } });
+        }
+        if (filters.currentSemester) {
+            andConditions.push({ currentSemester: { $regex: filters.currentSemester, $options: 'i' } });
+        }
+        if (filters.gender) {
+            andConditions.push({ gender: { $regex: filters.gender, $options: 'i' } });
+        }
+        if (filters.city) {
+            andConditions.push({ city: { $regex: filters.city, $options: 'i' } });
+        }
+        if (filters.isBlocked === true) {
+            andConditions.push({ $or: [{ isBlocked: true }, { blocked: true }] });
+        }
+        if (filters.skills) {
+            andConditions.push({ skillSet: { $regex: filters.skills, $options: 'i' } });
+        }
+        if (filters.hasBacklogs === true) {
+            andConditions.push({
+                $and: [
+                    { currentBacklogs: { $exists: true } },
+                    { currentBacklogs: { $ne: '' } },
+                    { currentBacklogs: { $ne: '0' } },
+                    { currentBacklogs: { $ne: 0 } }
+                ]
+            });
+        }
+        if (filters.hasBacklogs === false) {
+            andConditions.push({
+                $or: [
+                    { currentBacklogs: { $exists: false } },
+                    { currentBacklogs: '' },
+                    { currentBacklogs: '0' },
+                    { currentBacklogs: 0 }
+                ]
+            });
+        }
+
+        const query = andConditions.length > 0 ? { $and: andConditions } : {};
+
+        // Build attendance aggregation match
+        const attendanceMatch = { 'students.status': 'Present' };
+        if (filters.companyName) {
+            attendanceMatch.companyName = { $regex: filters.companyName, $options: 'i' };
+        }
+        if (filters.jobRole) {
+            attendanceMatch.jobRole = { $regex: filters.jobRole, $options: 'i' };
+        }
+
+        // Build placement query
+        const placementMatch = {};
+        if (filters.placedCompany) {
+            placementMatch.company = { $regex: filters.placedCompany, $options: 'i' };
+        }
+
+        // Parallel queries for all data sources
+        const [rawStudents, attendanceStats, placementStats, eligibleStats] = await Promise.all([
+            // Main student query with extended fields
+            Student.find(query)
+                .select('_id regNo firstName lastName name department branch batch year section currentYear currentSemester isBlocked blocked overallCGPA skillSet currentBacklogs tenthPercentage twelfthPercentage gender city')
+                .sort({ regNo: 1 })
+                .lean()
+                .exec(),
+
+            // Attendance aggregation
+            Attendance.aggregate([
+                { $unwind: '$students' },
+                { $match: attendanceMatch },
+                {
+                    $group: {
+                        _id: '$students.regNo',
+                        driveCount: { $sum: 1 },
+                        lastDriveDate: { $max: '$startDate' },
+                        companies: { $addToSet: '$companyName' },
+                        roles: { $addToSet: '$jobRole' },
+                    }
+                }
+            ]),
+
+            // Placement data aggregation
+            PlacedStudent.aggregate([
+                { $match: { status: 'Accepted', ...placementMatch } },
+                {
+                    $group: {
+                        _id: '$regNo',
+                        company: { $first: '$company' },
+                        role: { $first: '$role' },
+                        package: { $first: '$pkg' },
+                        placedDate: { $first: '$date' },
+                    }
+                }
+            ]),
+
+            // Eligible students count
+            EligibleStudent.aggregate([
+                { $unwind: '$students' },
+                {
+                    $group: {
+                        _id: '$students.regNo',
+                        eligibleDriveCount: { $sum: 1 },
+                        eligibleCompanies: { $addToSet: '$companyName' },
+                    }
+                }
+            ])
+        ]);
+
+        // Build lookup maps
+        const attendanceMap = new Map(
+            attendanceStats.map((entry) => [String(entry._id || '').trim(), {
+                driveCount: Number(entry.driveCount || 0),
+                lastDriveDate: entry.lastDriveDate || null,
+                companies: entry.companies || [],
+                roles: entry.roles || [],
+            }])
+        );
+
+        const placementMap = new Map(
+            placementStats.map((entry) => [String(entry._id || '').trim(), {
+                isPlaced: true,
+                company: entry.company || '',
+                role: entry.role || '',
+                package: entry.package || '',
+                placedDate: entry.placedDate || '',
+            }])
+        );
+
+        const eligibleMap = new Map(
+            eligibleStats.map((entry) => [String(entry._id || '').trim(), {
+                eligibleDriveCount: Number(entry.eligibleDriveCount || 0),
+                eligibleCompanies: entry.eligibleCompanies || [],
+            }])
+        );
+
+        const normalizeBatch = (student) => student.batch || student.year || '';
+        const normalizeSemester = (student) => student.currentSemester || student.semester || student.sem || '';
+
+        // Transform and enrich students
+        let students = rawStudents.map((student) => {
+            const regNo = String(student.regNo || '').trim();
+            const batch = normalizeBatch(student);
+            const attendance = attendanceMap.get(regNo) || { driveCount: 0, lastDriveDate: null, companies: [], roles: [] };
+            const placement = placementMap.get(regNo) || { isPlaced: false, company: '', role: '', package: '', placedDate: '' };
+            const eligible = eligibleMap.get(regNo) || { eligibleDriveCount: 0, eligibleCompanies: [] };
+
+            return {
+                id: student._id ? String(student._id) : regNo,
+                _id: student._id ? String(student._id) : regNo,
+                regNo: regNo,
+                firstName: student.firstName || '',
+                lastName: student.lastName || '',
+                name: student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+                department: student.department || student.branch || '',
+                branch: student.branch || student.department || '',
+                batch,
+                section: student.section || '',
+                currentYear: student.currentYear || '',
+                currentSemester: normalizeSemester(student),
+                blocked: Boolean(student.isBlocked || student.blocked),
+                // Extended fields
+                cgpa: student.overallCGPA || '',
+                skills: student.skillSet || '',
+                backlogs: student.currentBacklogs || '0',
+                tenthPercentage: student.tenthPercentage || '',
+                twelfthPercentage: student.twelfthPercentage || '',
+                gender: student.gender || '',
+                city: student.city || '',
+                // Attendance data
+                driveCount: attendance.driveCount,
+                lastDriveDate: attendance.lastDriveDate,
+                attendedCompanies: attendance.companies,
+                attendedRoles: attendance.roles,
+                // Placement data
+                isPlaced: placement.isPlaced,
+                placedCompany: placement.company,
+                placedRole: placement.role,
+                package: placement.package,
+                placedDate: placement.placedDate,
+                // Eligibility data
+                eligibleDriveCount: eligible.eligibleDriveCount,
+                eligibleCompanies: eligible.eligibleCompanies,
+            };
+        });
+
+        // Apply post-query filters
+        if (filters.cgpaMin !== null && !isNaN(Number(filters.cgpaMin))) {
+            const minCgpa = Number(filters.cgpaMin);
+            students = students.filter((s) => {
+                const cgpa = parseFloat(s.cgpa);
+                return !isNaN(cgpa) && cgpa >= minCgpa;
+            });
+        }
+        if (filters.cgpaMax !== null && !isNaN(Number(filters.cgpaMax))) {
+            const maxCgpa = Number(filters.cgpaMax);
+            students = students.filter((s) => {
+                const cgpa = parseFloat(s.cgpa);
+                return !isNaN(cgpa) && cgpa <= maxCgpa;
+            });
+        }
+        if (filters.tenthMin !== null && !isNaN(Number(filters.tenthMin))) {
+            const minTenth = Number(filters.tenthMin);
+            students = students.filter((s) => {
+                const tenth = parseFloat(s.tenthPercentage);
+                return !isNaN(tenth) && tenth >= minTenth;
+            });
+        }
+        if (filters.twelfthMin !== null && !isNaN(Number(filters.twelfthMin))) {
+            const minTwelfth = Number(filters.twelfthMin);
+            students = students.filter((s) => {
+                const twelfth = parseFloat(s.twelfthPercentage);
+                return !isNaN(twelfth) && twelfth >= minTwelfth;
+            });
+        }
+        if (filters.driveCountMin !== null && !isNaN(Number(filters.driveCountMin))) {
+            const minDrives = Number(filters.driveCountMin);
+            students = students.filter((s) => s.driveCount >= minDrives);
+        }
+        if (filters.driveCountMax !== null && !isNaN(Number(filters.driveCountMax))) {
+            const maxDrives = Number(filters.driveCountMax);
+            students = students.filter((s) => s.driveCount <= maxDrives);
+        }
+        if (filters.isPlaced === true) {
+            students = students.filter((s) => s.isPlaced === true);
+        }
+        if (filters.isPlaced === false) {
+            students = students.filter((s) => s.isPlaced === false);
+        }
+        if (filters.placedCompany) {
+            students = students.filter((s) => s.isPlaced && s.placedCompany.toLowerCase().includes(filters.placedCompany.toLowerCase()));
+        }
+        if (filters.packageMin !== null && !isNaN(Number(filters.packageMin))) {
+            const minPkg = Number(filters.packageMin);
+            students = students.filter((s) => {
+                const pkg = parseFloat(String(s.package).replace(/[^\d.]/g, ''));
+                return !isNaN(pkg) && pkg >= minPkg;
+            });
+        }
+        if (filters.companyName || filters.jobRole) {
+            students = students.filter((s) => s.driveCount > 0);
+        }
+
+        // Sorting
+        const validSortFields = ['regNo', 'name', 'department', 'branch', 'batch', 'currentYear', 'currentSemester', 'driveCount', 'lastDriveDate', 'cgpa', 'package'];
+        const sortBy = validSortFields.includes(filters.sortBy) ? filters.sortBy : 'regNo';
+        const sortOrder = String(filters.sortOrder || 'asc').toLowerCase() === 'desc' ? -1 : 1;
+
+        students.sort((left, right) => {
+            let leftValue = left[sortBy] ?? '';
+            let rightValue = right[sortBy] ?? '';
+
+            if (['driveCount', 'eligibleDriveCount'].includes(sortBy)) {
+                return (Number(leftValue || 0) - Number(rightValue || 0)) * sortOrder;
+            }
+            if (['cgpa', 'package'].includes(sortBy)) {
+                const leftNum = parseFloat(String(leftValue).replace(/[^\d.]/g, '')) || 0;
+                const rightNum = parseFloat(String(rightValue).replace(/[^\d.]/g, '')) || 0;
+                return (leftNum - rightNum) * sortOrder;
+            }
+            if (sortBy === 'lastDriveDate') {
+                const leftTime = leftValue ? new Date(leftValue).getTime() : 0;
+                const rightTime = rightValue ? new Date(rightValue).getTime() : 0;
+                return (leftTime - rightTime) * sortOrder;
+            }
+            return String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: 'base' }) * sortOrder;
+        });
+
+        const total = students.length;
+
+        res.json({
+            success: true,
+            students,
+            total,
+            columns,
+            filters,
+            reason: parsed.reason || '',
+            model: 'ollama',
+        });
+    } catch (error) {
+        console.error('AI student filter error:', error);
+        res.status(500).json({
+            error: 'Failed to apply AI student filter',
+            details: error.message,
+        });
     }
 });
 
