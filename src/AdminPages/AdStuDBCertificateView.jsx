@@ -6,6 +6,7 @@ import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import styles from './AdStuDBCertificateView.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from '../services/mongoDBService.jsx';
+import gridfsService from '../services/gridfsService';
 import {
   AdminDownloadFailedAlert,
   AdminPreviewFailedAlert,
@@ -164,7 +165,7 @@ function AdStuDBCertificateView() {
                         return {
                             name: certName,
                             date: formattedDate,
-                            url: cert.fileData || cert.certificateUrl || cert.url || '#',
+                            url: cert.gridfsFileUrl || cert.fileData || cert.certificateUrl || cert.url || '#',
                             certificateId: cert._id || cert.id,
                             achievementId: cert.achievementId,
                             status: cert.status,
@@ -316,57 +317,124 @@ function AdStuDBCertificateView() {
                 });
             }, 150);
 
-            let actualFileData = certificateUrl;
+            let fileData = certificateUrl;
             
             // If URL is invalid or '#', fetch from database
             if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
-                console.log('🔄 Fetching certificate file data from database...');
+                console.log('🔄 Certificate URL invalid, fetching from database...');
                 
                 try {
-                    // Fetch the certificate file data using MongoDB service
-                    const idToUse = achievementId || certificateId;
+                    // Try achievementId first, then certificateId as fallback
+                    let idToUse = achievementId;
+                    const lookupId = achievementId || certificateId;
                     
-                    if (!idToUse) {
-                        throw new Error('No certificate ID available');
+                    if (!lookupId) {
+                        throw new Error('No certificate ID available. Both achievementId and certificateId are missing.');
                     }
 
-                    const certificateDataResponse = await Promise.race([
-                        mongoDBService.getCertificateFileByAchievementId(studentId, idToUse),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Certificate fetch timeout')), 30000)
-                        )
-                    ]);
+                    console.log('🔍 Attempting to fetch certificate:', { studentId, achievementId, certificateId, lookupId });
 
-                    actualFileData = certificateDataResponse?.fileData;
+                    // Use the mongoDBService to fetch the certificate document
+                    let certificateDoc = null;
                     
-                    if (!actualFileData) {
-                        throw new Error('No file data available in response');
+                    // Try with achievementId first
+                    if (achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Fetch timeout')), 15000)
+                            )
+                        ]);
                     }
                     
-                    console.log('✅ Certificate file data fetched successfully');
+                    // If not found and certificateId is different, try as fallback
+                    if (!certificateDoc && certificateId && certificateId !== achievementId) {
+                        console.log('⚠️ Achievement ID lookup failed, trying with certificate ID:', certificateId);
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Fetch timeout')), 15000)
+                            )
+                        ]);
+                    }
+
+                    console.log('🔍 Certificate document received:', certificateDoc ? 'YES' : 'NO');
+                    
+                    if (!certificateDoc) {
+                        throw new Error(`Certificate not found with IDs: achievementId=${achievementId}, certificateId=${certificateId}`);
+                    }
+                    
+                    console.log('🔍 Certificate document properties:', Object.keys(certificateDoc));
+                    
+                    // Extract fileData - check gridfsFileUrl first, then fileData, then fileContent
+                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                    
+                    if (!fileData) {
+                        console.error('❌ Certificate has no file data:', JSON.stringify(certificateDoc, null, 2));
+                        throw new Error('Certificate has no file data available');
+                    }
+                    
+                    console.log('✅ Certificate file data fetched from database, type:', fileData.substring(0, 50));
                 } catch (fetchError) {
-                    console.error('❌ Failed to fetch certificate file data:', fetchError);
+                    console.error('❌ Failed to fetch certificate from database:', fetchError);
                     clearInterval(progressInterval);
                     setPreviewPopupState('failed');
                     setTimeout(() => setPreviewPopupState('none'), 3000);
                     return;
                 }
+            } else {
+                // Try GridFS fetch if URL looks like a GridFS path
+                const resolvedUrl = gridfsService.getFileUrl(certificateUrl);
+                if (resolvedUrl && !resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                    console.log('🔄 Fetching from GridFS...');
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const response = await fetch(resolvedUrl, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            credentials: 'include'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch from GridFS: ${response.status}`);
+                        }
+                        
+                        const blob = await response.blob();
+                        if (blob.size === 0 || blob.type.includes('html')) {
+                            throw new Error('Invalid file from GridFS, falling back to database');
+                        }
+                        
+                        fileData = URL.createObjectURL(blob);
+                        console.log('✅ Certificate fetched from GridFS');
+                    } catch (gridfsError) {
+                        console.warn('❌ GridFS fetch failed, trying database:', gridfsError);
+                        // Fall back to database
+                        try {
+                            const idToUse = achievementId || certificateId;
+                            if (idToUse) {
+                                const certificateDoc = await mongoDBService.getCertificateFileByAchievementId(studentId, idToUse);
+                                if (certificateDoc) {
+                                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                                    console.log('✅ Certificate fetched from MongoDB as fallback');
+                                }
+                            }
+                        } catch (dbError) {
+                            console.error('❌ Database fallback also failed:', dbError);
+                        }
+                    }
+                }
             }
 
-            // Wait for popup to render before processing file
-            await new Promise(resolve => setTimeout(resolve, 300));
-
             // Convert base64 to blob URL for preview
-            let previewUrl = actualFileData;
+            let previewUrl = fileData;
             
             // Check if it's base64 data (without or with data URI prefix)
-            if (!actualFileData.startsWith('http')) {
+            if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
                 console.log('🔄 Converting base64 to blob URL');
                 
                 // Add data URI prefix if missing
-                let base64String = actualFileData;
-                if (!actualFileData.startsWith('data:')) {
-                    base64String = `data:application/pdf;base64,${actualFileData}`;
+                let base64String = fileData;
+                if (!fileData.startsWith('data:')) {
+                    base64String = `data:application/pdf;base64,${fileData}`;
                 }
                 
                 // Extract base64 data
@@ -382,11 +450,14 @@ function AdStuDBCertificateView() {
                 const byteArray = new Uint8Array(byteNumbers);
                 const blob = new Blob([byteArray], { type: 'application/pdf' });
                 previewUrl = URL.createObjectURL(blob);
-                console.log('✅ Blob URL created:', previewUrl);
+                console.log('✅ Blob URL created for preview');
             }
 
-            // Open certificate in new tab AFTER popup is visible
-            console.log('🚀 Opening certificate in new tab');
+            // Wait for popup to render before processing file
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            console.log('🚀 Opening certificate with URL:', previewUrl?.substring(0, 50));
+            // Open certificate in new tab
             const newWindow = window.open(previewUrl, '_blank');
             
             // Immediately complete progress and close popup
@@ -401,11 +472,6 @@ function AdStuDBCertificateView() {
                 console.error('❌ Failed to open new window (popup blocker?)');
                 setPreviewPopupState('failed');
                 setTimeout(() => setPreviewPopupState('none'), 3000);
-            }
-            
-            // Clean up blob URL if created
-            if (previewUrl !== actualFileData) {
-                setTimeout(() => URL.revokeObjectURL(previewUrl), 1000);
             }
         } catch (error) {
             console.error('❌ Preview error:', error);
@@ -436,40 +502,110 @@ function AdStuDBCertificateView() {
                 });
             }, 150);
 
-            let actualFileData = certificateUrl;
+            let fileData = certificateUrl;
             
             // If URL is invalid or '#', fetch from database
             if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
-                console.log('🔄 Fetching certificate file data from database...');
+                console.log('🔄 Certificate URL invalid, fetching from database...');
                 
                 try {
-                    // Fetch the certificate file data using MongoDB service
-                    const idToUse = achievementId || certificateId;
+                    // Try achievementId first, then certificateId as fallback
+                    let idToUse = achievementId;
+                    const lookupId = achievementId || certificateId;
                     
-                    if (!idToUse) {
-                        throw new Error('No certificate ID available');
+                    if (!lookupId) {
+                        throw new Error('No certificate ID available. Both achievementId and certificateId are missing.');
                     }
 
-                    const certificateDataResponse = await Promise.race([
-                        mongoDBService.getCertificateFileByAchievementId(studentId, idToUse),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Certificate fetch timeout')), 30000)
-                        )
-                    ]);
+                    console.log('🔍 Attempting to fetch certificate:', { studentId, achievementId, certificateId, lookupId });
 
-                    actualFileData = certificateDataResponse?.fileData;
+                    // Use the mongoDBService to fetch the certificate document
+                    let certificateDoc = null;
                     
-                    if (!actualFileData) {
-                        throw new Error('No file data available in response');
+                    // Try with achievementId first
+                    if (achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Fetch timeout')), 15000)
+                            )
+                        ]);
                     }
                     
-                    console.log('✅ Certificate file data fetched successfully');
+                    // If not found and certificateId is different, try as fallback
+                    if (!certificateDoc && certificateId && certificateId !== achievementId) {
+                        console.log('⚠️ Achievement ID lookup failed, trying with certificate ID:', certificateId);
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Fetch timeout')), 15000)
+                            )
+                        ]);
+                    }
+
+                    console.log('🔍 Certificate document received:', certificateDoc ? 'YES' : 'NO');
+                    
+                    if (!certificateDoc) {
+                        throw new Error(`Certificate not found with IDs: achievementId=${achievementId}, certificateId=${certificateId}`);
+                    }
+                    
+                    console.log('🔍 Certificate document properties:', Object.keys(certificateDoc));
+                    
+                    // Extract fileData - check gridfsFileUrl first, then fileData, then fileContent
+                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                    
+                    if (!fileData) {
+                        console.error('❌ Certificate has no file data:', JSON.stringify(certificateDoc, null, 2));
+                        throw new Error('Certificate has no file data available');
+                    }
+                    
+                    console.log('✅ Certificate file data fetched from database, type:', fileData.substring(0, 50));
                 } catch (fetchError) {
-                    console.error('❌ Failed to fetch certificate file data:', fetchError);
+                    console.error('❌ Failed to fetch certificate from database:', fetchError);
                     clearInterval(progressInterval);
                     setDownloadPopupState('failed');
                     setTimeout(() => setDownloadPopupState('none'), 3000);
                     return;
+                }
+            } else {
+                // Try GridFS fetch if URL looks like a GridFS path
+                const resolvedUrl = gridfsService.getFileUrl(certificateUrl);
+                if (resolvedUrl && !resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                    console.log('🔄 Fetching from GridFS...');
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const response = await fetch(resolvedUrl, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            credentials: 'include'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch from GridFS: ${response.status}`);
+                        }
+                        
+                        const blob = await response.blob();
+                        if (blob.size === 0 || blob.type.includes('html')) {
+                            throw new Error('Invalid file from GridFS, falling back to database');
+                        }
+                        
+                        fileData = URL.createObjectURL(blob);
+                        console.log('✅ Certificate fetched from GridFS');
+                    } catch (gridfsError) {
+                        console.warn('❌ GridFS fetch failed, trying database:', gridfsError);
+                        // Fall back to database
+                        try {
+                            const idToUse = achievementId || certificateId;
+                            if (idToUse) {
+                                const certificateDoc = await mongoDBService.getCertificateFileByAchievementId(studentId, idToUse);
+                                if (certificateDoc) {
+                                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                                    console.log('✅ Certificate fetched from MongoDB as fallback');
+                                }
+                            }
+                        } catch (dbError) {
+                            console.error('❌ Database fallback also failed:', dbError);
+                        }
+                    }
                 }
             }
 
@@ -477,17 +613,17 @@ function AdStuDBCertificateView() {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Convert base64 to blob URL for download
-            let downloadUrl = actualFileData;
+            let downloadUrl = fileData;
             let shouldRevoke = false;
             
             // Check if it's base64 data (without or with data URI prefix)
-            if (!actualFileData.startsWith('http')) {
+            if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
                 console.log('🔄 Converting base64 to blob URL for download');
                 
                 // Add data URI prefix if missing
-                let base64String = actualFileData;
-                if (!actualFileData.startsWith('data:')) {
-                    base64String = `data:application/pdf;base64,${actualFileData}`;
+                let base64String = fileData;
+                if (!fileData.startsWith('data:')) {
+                    base64String = `data:application/pdf;base64,${fileData}`;
                 }
                 
                 const base64Data = base64String.includes('base64,') 
@@ -503,7 +639,7 @@ function AdStuDBCertificateView() {
                 const blob = new Blob([byteArray], { type: 'application/pdf' });
                 downloadUrl = URL.createObjectURL(blob);
                 shouldRevoke = true;
-                console.log('✅ Blob URL created for download:', downloadUrl);
+                console.log('✅ Blob URL created for download');
             }
 
             // Complete progress
@@ -511,7 +647,7 @@ function AdStuDBCertificateView() {
             setDownloadProgress(100);
 
             // Create download link
-            console.log('🚀 Triggering download');
+            console.log('🚀 Triggering download with URL:', downloadUrl?.substring(0, 50));
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.download = certificateName || 'certificate.pdf';
@@ -578,9 +714,15 @@ function AdStuDBCertificateView() {
                                         <div className={styles['certificate-profile-pic-container']}>
                                             {studentData?.profilePicURL ? (
                                                 <img 
-                                                    src={studentData.profilePicURL} 
+                                                    src={gridfsService.resolveImageUrl(studentData.profilePicURL)} 
                                                     alt="Profile" 
                                                     className={styles['certificate-profile-pic']}
+                                                    onError={(e) => {
+                                                        console.error('❌ Profile image failed to load:', studentData.profilePicURL);
+                                                        e.target.style.display = 'none';
+                                                        const defaultContainer = e.target.parentElement?.querySelector('[style*="display: none"]')?.nextElementSibling;
+                                                        if (defaultContainer) defaultContainer.style.display = 'flex';
+                                                    }}
                                                 />
                                             ) : (
                                                 <div className={styles['certificate-default-profile']}>

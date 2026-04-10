@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
-import { startBlockStatusMonitor, stopBlockStatusMonitor } from '../utils/blockStatusChecker';
+import {
+  startBlockStatusMonitor,
+  stopBlockStatusMonitor,
+  startCoordinatorBlockStatusMonitor,
+  stopCoordinatorBlockStatusMonitor
+} from '../utils/blockStatusChecker';
 import { BLOCKED_INFO_STORAGE_KEY } from '../constants/storageKeys';
 import { API_BASE_URL } from '../utils/apiConfig';
 
@@ -240,6 +245,57 @@ export const AuthProvider = ({ children }) => {
     }
 
     stopBlockStatusMonitor();
+    return undefined;
+  }, [state.isAuthenticated, state.role]);
+
+  useEffect(() => {
+    if (state.isAuthenticated && state.role === 'coordinator') {
+      const handleCoordinatorBlocked = (blockerDetails) => {
+        console.log('🚨 AuthContext: Block monitor detected coordinator block');
+
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            BLOCKED_INFO_STORAGE_KEY,
+            JSON.stringify({
+              blockedBy: blockerDetails?.blockedBy || blockerDetails?.name || 'Placement Office',
+              name: blockerDetails?.name || blockerDetails?.blockedBy || 'Placement Office',
+              cabin: blockerDetails?.cabin || 'N/A',
+              blockedByRole: blockerDetails?.blockedByRole || 'admin',
+              blockedUserRole: 'coordinator',
+              message:
+                blockerDetails?.message ||
+                'Your coordinator account has been blocked by the admin. Please contact the placement office for more information.'
+            })
+          );
+
+          window.dispatchEvent(
+            new CustomEvent('coordinatorBlocked', {
+              detail: {
+                coordinator: blockerDetails || null
+              }
+            })
+          );
+        }
+
+        authService.logout();
+        dispatch({
+          type: AUTH_ACTIONS.LOGIN_FAIL,
+          payload: {
+            error:
+              blockerDetails?.message ||
+              'Your coordinator account has been blocked by the admin. Please contact the placement office for more information.'
+          }
+        });
+      };
+
+      startCoordinatorBlockStatusMonitor(handleCoordinatorBlocked, 30000);
+
+      return () => {
+        stopCoordinatorBlockStatusMonitor();
+      };
+    }
+
+    stopCoordinatorBlockStatusMonitor();
     return undefined;
   }, [state.isAuthenticated, state.role]);
 
@@ -630,6 +686,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚪 AuthContext: Logging out...');
       stopBlockStatusMonitor();
+      stopCoordinatorBlockStatusMonitor();
       
       // 🖼️ Clear Admin Image Caches (matching Student logout pattern)
       try {

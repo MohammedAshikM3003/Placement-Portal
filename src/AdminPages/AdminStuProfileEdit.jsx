@@ -10,6 +10,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminStuProfileEdit.module.css'; // Module Import
+import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/AdmingreenCapicon.svg';
 import BestAchievement from '../assets/BestAchievementicon.svg';
 import StuEyeIcon from '../assets/StuProfileviewgreenicon.svg';
@@ -18,6 +19,7 @@ import mongoDBService from '../services/mongoDBService.jsx';
 import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
 import {
+    CertificateDownloadProgressAlert,
     DownloadSuccessAlert,
     DownloadFailedAlert
 } from '../components/alerts/DownloadPreviewAlerts';
@@ -223,9 +225,339 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     );
 };
 
+const resolveProfileImageUrl = (value) => gridfsService.resolveImageUrl(value);
+
+const fetchProfileImageBlobUrl = async (value) => {
+    const resolvedUrl = resolveProfileImageUrl(value);
+
+    if (!resolvedUrl) {
+        throw new Error('Profile image not available');
+    }
+
+    if (resolvedUrl.startsWith('data:') || resolvedUrl.startsWith('blob:')) {
+        return { resolvedUrl, blobUrl: null };
+    }
+
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const response = await fetch(resolvedUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        throw new Error(`Image fetch failed with status ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return { resolvedUrl, blobUrl: window.URL.createObjectURL(blob) };
+};
+
+const toPdfBlobUrl = (fileData, mimeType = 'application/pdf') => {
+    const rawData = fileData.includes('base64,') ? fileData.split('base64,')[1] : fileData;
+    const byteCharacters = atob(rawData);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let index = 0; index < byteCharacters.length; index += 1) {
+        byteNumbers[index] = byteCharacters.charCodeAt(index);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    return window.URL.createObjectURL(blob);
+};
+
+const resolveResumeFileUrl = (value) => {
+    if (!value) return '';
+    if (value.startsWith('http') || value.startsWith('blob:') || value.startsWith('data:')) return value;
+    if (value.startsWith('/api/file/')) return gridfsService.getFileUrl(value);
+    if (value.startsWith('/file/')) return `${API_BASE_URL}${value}`;
+    if (value.startsWith('/api/')) return `${API_BASE_URL.replace('/api', '')}${value}`;
+    if (value.startsWith('/')) return `${API_BASE_URL.replace('/api', '')}${value}`;
+    return value;
+};
+
+const fetchFileAsBlobUrl = async (fileUrl) => {
+    const resolvedUrl = resolveResumeFileUrl(fileUrl);
+
+    if (!resolvedUrl) {
+        throw new Error('Resume URL is missing');
+    }
+
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const response = await fetch(resolvedUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        throw new Error(`File fetch failed with status ${response.status}`);
+    }
+
+    const blob = await response.blob();
+
+    if (!blob.size || blob.type.includes('html')) {
+        throw new Error('Invalid file response received');
+    }
+
+    return window.URL.createObjectURL(blob);
+};
+
+const getResumeDocument = async (studentId) => {
+    try {
+        const response = await mongoDBService.getResume(studentId);
+        return response?.resume || response || null;
+    } catch (error) {
+        console.warn('Resume lookup failed:', error);
+        return null;
+    }
+};
+
+const fetchResumeBlobUrl = async (studentId) => {
+    const resumeDoc = await getResumeDocument(studentId);
+
+    if (resumeDoc) {
+        const fileName = resumeDoc.fileName
+            || resumeDoc.name
+            || resumeDoc.resumeData?.name
+            || resumeDoc.resumeData?.fileName
+            || 'resume.pdf';
+
+        const candidateUrl = resumeDoc.gridfsFileUrl
+            || (resumeDoc.gridfsFileId ? `/api/file/${resumeDoc.gridfsFileId}` : '')
+            || resumeDoc.url
+            || resumeDoc.resumeURL
+            || resumeDoc.resumeUrl
+            || resumeDoc.fileURL
+            || resumeDoc.resumeData?.url
+            || resumeDoc.resumeData?.resumeURL
+            || resumeDoc.resumeData?.resumeUrl
+            || resumeDoc.resumeData?.fileUrl
+            || resumeDoc.resumeData?.pdfUrl
+            || '';
+
+        if (candidateUrl && !candidateUrl.startsWith('data:') && !candidateUrl.startsWith('blob:') && candidateUrl !== '#') {
+            return {
+                blobUrl: await fetchFileAsBlobUrl(candidateUrl),
+                fileName
+            };
+        }
+
+        const base64Data = resumeDoc.fileData
+            || resumeDoc.fileContent
+            || resumeDoc.resumeData?.fileData
+            || resumeDoc.resumeData?.fileContent
+            || resumeDoc.resumeData?.base64
+            || resumeDoc.resumeData?.content
+            || '';
+
+        if (base64Data) {
+            return {
+                blobUrl: toPdfBlobUrl(base64Data, resumeDoc.fileType || 'application/pdf'),
+                fileName
+            };
+        }
+
+        if (candidateUrl.startsWith('data:')) {
+            return {
+                blobUrl: toPdfBlobUrl(candidateUrl, resumeDoc.fileType || 'application/pdf'),
+                fileName
+            };
+        }
+    }
+
+    // Fallback to resume-builder PDF output when a stored resume is unavailable.
+    const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const authToken = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Resume not found');
+    }
+
+    const result = await response.json();
+    if (!result?.success || !result?.resume?.url) {
+        throw new Error('Resume not found');
+    }
+
+    return {
+        blobUrl: await fetchFileAsBlobUrl(result.resume.url),
+        fileName: result.resume.fileName || 'resume.pdf'
+    };
+};
+
+const ResumeChooserModal = ({ isOpen, onClose, onView, onDownload, isProcessing, activeAction }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="alert-overlay" onClick={onClose}>
+            <div className="achievement-popup-container" onClick={(e) => e.stopPropagation()}>
+                <div className="achievement-popup-header" style={{ backgroundColor: '#4EA24E' }}>
+                    Resume
+                </div>
+                <div className="achievement-popup-body">
+                    <svg className="download-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle className="download-success-icon--circle" cx="26" cy="26" r="25" fill="none" />
+                        <path className="download-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                    </svg>
+                    <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
+                        Student Resume
+                    </h2>
+                    <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
+                        Choose an action to open or download the resume.
+                    </p>
+                </div>
+                <div className="achievement-popup-footer">
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (isProcessing) {
+                                    return;
+                                }
+                                if (typeof onView === 'function') {
+                                    onView();
+                                }
+                            }}
+                            disabled={isProcessing}
+                            style={{
+                                backgroundColor: '#197AFF',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '0.8rem 1.5rem',
+                                borderRadius: '8px',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                opacity: isProcessing && activeAction !== 'preview' ? 0.75 : 1,
+                                boxShadow: '0 2px 8px rgba(25, 122, 255, 0.2)',
+                                minWidth: '108px'
+                            }}
+                        >
+                            {isProcessing && activeAction === 'preview' ? 'Preview..' : 'Preview'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (isProcessing) {
+                                    return;
+                                }
+                                if (typeof onDownload === 'function') {
+                                    onDownload();
+                                }
+                            }}
+                            disabled={isProcessing}
+                            style={{
+                                backgroundColor: '#4EA24E',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '0.8rem 1.5rem',
+                                borderRadius: '8px',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                opacity: isProcessing && activeAction !== 'download' ? 0.75 : 1,
+                                boxShadow: '0 2px 8px rgba(78, 162, 78, 0.2)',
+                                minWidth: '108px'
+                            }}
+                        >
+                            {isProcessing && activeAction === 'download' ? 'Download..' : 'Download'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ResumeFailedAlert = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="alert-overlay">
+            <div className="achievement-popup-container">
+                <div className="achievement-popup-header" style={{ backgroundColor: '#D73D3D' }}>
+                    Resume Failed !
+                </div>
+                <div className="achievement-popup-body">
+                    <div className="download-error-icon-container">
+                        <svg className="download-error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle className="download-error-icon--circle" cx="26" cy="26" r="25" fill="#B84349" />
+                            <path className="download-error-icon--cross" fill="white" d="M16 16l20 20M36 16L16 36" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                    </div>
+                    <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
+                        Resume Failed !
+                    </h2>
+                    <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
+                        Unable to open or download the resume.
+                        <br />
+                        Please try again.
+                    </p>
+                </div>
+                <div className="achievement-popup-footer">
+                    <button type="button" onClick={onClose} className="achievement-popup-close-btn">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ImagePreviewModal = ({ src, isOpen, onClose }) => {
     const [downloadPopupState, setDownloadPopupState] = useState('none');
+    const [previewSrc, setPreviewSrc] = useState('');
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const shouldShowPreviewPopup = downloadPopupState === 'none' || downloadPopupState === 'progress';
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        let isActive = true;
+        let objectUrl = null;
+
+        const loadPreviewImage = async () => {
+            setIsPreviewLoading(true);
+            try {
+                const result = await fetchProfileImageBlobUrl(src);
+                if (!isActive) {
+                    if (result.blobUrl) {
+                        window.URL.revokeObjectURL(result.blobUrl);
+                    }
+                    return;
+                }
+
+                objectUrl = result.blobUrl;
+                setPreviewSrc(result.blobUrl || result.resolvedUrl);
+            } catch (error) {
+                console.error('Profile image preview failed:', error);
+                if (isActive) {
+                    setPreviewSrc(resolveProfileImageUrl(src) || src || '');
+                }
+            } finally {
+                if (isActive) {
+                    setIsPreviewLoading(false);
+                }
+            }
+        };
+
+        setPreviewSrc('');
+        loadPreviewImage();
+
+        return () => {
+            isActive = false;
+            if (objectUrl) {
+                window.URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [isOpen, src]);
 
     if (!isOpen) return null;
 
@@ -239,41 +571,12 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
 
         setDownloadPopupState('progress');
 
+        let objectUrl = null;
+
         try {
-            if (!src) {
-                throw new Error('Profile image not available');
-            }
-
-            let resolvedUrl = src;
-            const backendBaseUrl = API_BASE_URL.replace('/api', '');
-
-            if (/^[a-f0-9]{24}$/i.test(resolvedUrl)) {
-                resolvedUrl = `${backendBaseUrl}/file/${resolvedUrl}`;
-            } else if (resolvedUrl.startsWith('/api/file/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl.replace('/api', '')}`;
-            } else if (resolvedUrl.startsWith('/file/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
-            } else if (resolvedUrl.startsWith('/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
-            }
-
-            let hrefForDownload = resolvedUrl;
-            let revokeObjectUrl = null;
-
-            if (!resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
-                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-                const response = await fetch(resolvedUrl, {
-                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Download failed with status ${response.status}`);
-                }
-
-                const blob = await response.blob();
-                revokeObjectUrl = window.URL.createObjectURL(blob);
-                hrefForDownload = revokeObjectUrl;
-            }
+            const result = await fetchProfileImageBlobUrl(src);
+            const hrefForDownload = result.blobUrl || result.resolvedUrl;
+            objectUrl = result.blobUrl;
 
             const link = document.createElement('a');
             link.href = hrefForDownload;
@@ -282,12 +585,15 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
             link.click();
             document.body.removeChild(link);
 
-            if (revokeObjectUrl) {
-                setTimeout(() => window.URL.revokeObjectURL(revokeObjectUrl), 1000);
+            if (objectUrl) {
+                setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
             }
 
             setDownloadPopupState('success');
         } catch (error) {
+            if (objectUrl) {
+                window.URL.revokeObjectURL(objectUrl);
+            }
             console.error('Image download failed:', error);
             setDownloadPopupState('error');
         }
@@ -300,7 +606,11 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
                 <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
                     <div className={styles.imagePreviewHeader}>Preview Image</div>
                     <div className={styles.imagePreviewBody}>
-                        <img src={src} alt="Profile Preview" />
+                        {isPreviewLoading ? (
+                            <div style={{ color: '#4EA24E', fontWeight: 600 }}>Loading image...</div>
+                        ) : (
+                            <img src={previewSrc || resolveProfileImageUrl(src)} alt="Profile Preview" />
+                        )}
                     </div>
                     <div className={styles.imagePreviewFooter}>
                         <button
@@ -312,7 +622,7 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
                         </button>
                         <button
                             onClick={handleDownload}
-                            disabled={downloadPopupState === 'progress'}
+                            disabled={downloadPopupState === 'progress' || isPreviewLoading}
                             className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
                         >
                             {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
@@ -774,6 +1084,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(false); // Loading handled by popup, no need for page loading
+    const [loadingProgress, setLoadingProgress] = useState(15);
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
@@ -797,6 +1108,11 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const [pendingNavView, setPendingNavView] = useState(null);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isResumeChooserOpen, setIsResumeChooserOpen] = useState(false);
+    const [isResumeFailureOpen, setIsResumeFailureOpen] = useState(false);
+    const [isResumeDownloading, setIsResumeDownloading] = useState(false);
+    const [resumeActionType, setResumeActionType] = useState('');
+    const [isResumeDownloadSuccessOpen, setIsResumeDownloadSuccessOpen] = useState(false);
     const [loginPassword, setLoginPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
@@ -811,6 +1127,22 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        if (!isInitialLoading) return undefined;
+
+        setLoadingProgress(15);
+        const timer = window.setInterval(() => {
+            setLoadingProgress((prev) => {
+                if (prev >= 95) return 95;
+                if (prev < 50) return prev + 8;
+                if (prev < 80) return prev + 4;
+                return prev + 2;
+            });
+        }, 220);
+
+        return () => window.clearInterval(timer);
+    }, [isInitialLoading]);
 
     // Fetch degrees and branches from database
     useEffect(() => {
@@ -1324,6 +1656,8 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const loadStudentData = useCallback(async () => {
         if (!studentId) return;
 
+        let didPopulate = false;
+
         try {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
             console.log('ðŸ” API Response - completeData:', {
@@ -1334,10 +1668,15 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             });
 
             if (completeData && completeData.student) {
+                didPopulate = true;
                 populateFormFields(completeData.student);
             }
         } catch (error) {
             console.error('Error loading student data:', error);
+        } finally {
+            if (!didPopulate) {
+                setIsInitialLoading(false);
+            }
         }
     }, [studentId]);
 
@@ -1345,6 +1684,8 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         // ADMIN VIEW FIX: When admin is viewing a student's profile, we should ONLY
         // load data from the API using the studentId from URL params, NOT from localStorage.
         // localStorage.studentData contains the logged-in admin's data, not the viewed student's data.
+
+        setIsInitialLoading(true);
 
         // CLEAR OLD DATA FIRST - prevents showing previous student's data when switching
         setStudentData(null);
@@ -1358,18 +1699,8 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         setStudyCategory('12th');
 
         if (studentId) {
-            // Check if data is already cached from the loading popup
-            const cachedData = fastDataService.getInstantData(studentId);
-            if (cachedData && cachedData.student) {
-                console.log('âš¡ Using cached data from loading popup - skipping loading state');
-                populateFormFields(cachedData.student);
-                // Still fetch fresh data in background to ensure it's up-to-date
-                loadStudentData();
-            } else {
-                // No cached data - show loading and fetch
-                console.log('ðŸ” Admin viewing student:', studentId, '- Loading fresh data from API');
-                loadStudentData();
-            }
+            console.log('ðŸ” Admin viewing student:', studentId, '- Loading fresh data from API');
+            loadStudentData();
         } else {
             // Fallback to localStorage (shouldn't happen in admin view, but keeping for safety)
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -1381,6 +1712,8 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
             if (storedStudentData && storedStudentData._id) {
                 populateFormFields(storedStudentData);
+            } else {
+                setIsInitialLoading(false);
             }
         }
 
@@ -1865,6 +2198,115 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
     const closePopup = () => setPopupOpen(false);
 
+    const closeResumePopup = () => {
+        if (isResumeDownloading) {
+            return;
+        }
+
+        setIsResumeChooserOpen(false);
+    };
+
+    const openResumePopup = () => {
+        setIsResumeFailureOpen(false);
+        setIsResumeDownloadSuccessOpen(false);
+        setResumeActionType('');
+        setIsResumeChooserOpen(true);
+    };
+
+    const resolveResumeFile = async () => {
+        if (!studentId) {
+            throw new Error('Student ID not found');
+        }
+
+        const { blobUrl, fileName } = await fetchResumeBlobUrl(studentId);
+        return { blobUrl, fileName: fileName || 'resume.pdf' };
+    };
+
+    const handleResumeView = async () => {
+        if (isResumeDownloading) {
+            return;
+        }
+
+        setResumeActionType('preview');
+        setIsResumeDownloading(true);
+
+        let blobUrl = null;
+
+        try {
+            const result = await resolveResumeFile();
+            blobUrl = result.blobUrl;
+
+            const resumeWindow = window.open(blobUrl, '_blank');
+            if (!resumeWindow) {
+                throw new Error('Popup blocked');
+            }
+
+            setIsResumeChooserOpen(false);
+            setIsResumeFailureOpen(false);
+
+            setTimeout(() => {
+                if (blobUrl) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+            }, 1500);
+        } catch (error) {
+            console.error('Resume view failed:', error);
+            if (blobUrl) {
+                window.URL.revokeObjectURL(blobUrl);
+            }
+            setIsResumeChooserOpen(false);
+            setIsResumeFailureOpen(true);
+        } finally {
+            setIsResumeDownloading(false);
+            setResumeActionType('');
+        }
+    };
+
+    const handleResumeDownload = async () => {
+        if (isResumeDownloading) {
+            return;
+        }
+
+        setResumeActionType('download');
+        setIsResumeDownloading(true);
+
+        let blobUrl = null;
+        let downloadFileName = 'resume.pdf';
+
+        try {
+            const result = await resolveResumeFile();
+            blobUrl = result.blobUrl;
+            downloadFileName = result.fileName || downloadFileName;
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = downloadFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setIsResumeChooserOpen(false);
+            setIsResumeFailureOpen(false);
+            setIsResumeDownloadSuccessOpen(true);
+
+            setTimeout(() => {
+                if (blobUrl) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+            }, 1500);
+        } catch (error) {
+            console.error('Resume download failed:', error);
+            if (blobUrl) {
+                window.URL.revokeObjectURL(blobUrl);
+            }
+            setIsResumeChooserOpen(false);
+            setIsResumeFailureOpen(true);
+        } finally {
+            setIsResumeDownloading(false);
+            setResumeActionType('');
+        }
+    };
+
     const getChangedFields = useCallback(() => {
         if (!savedDataRef.current || !studentData) return [];
         const saved = savedDataRef.current;
@@ -1931,31 +2373,6 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             setIsSidebarOpen(false);
         }
     };
-
-    if (isInitialLoading) {
-        return (
-            <div className={styles.container}>
-                <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-                <div className={styles.main}>
-                    <Sidebar
-                        isOpen={isSidebarOpen}
-                        onLogout={onLogout}
-                        currentView={'student-database'}
-                        onViewChange={handleViewChange}
-                        studentData={studentData}
-                    />
-                    <div className={styles.dashboardArea}>
-                        <div className={styles.initialLoaderOverlay}>
-                            <div className={styles.initialLoaderCard}>
-                                <div className={styles.loadingSpinner}></div>
-                                <p>Loading your profile...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className={`${styles.container} ${isSaving ? styles['stu-profile-saving'] : ''} ${isEditMode ? styles.editMode : ''}`}>
@@ -2308,6 +2725,18 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             <div className={styles.countryCode}>+91</div>
                                             <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>&nbsp;</label>
+                                        <button type="button" className={styles.fieldButton} onClick={openResumePopup}>
+                                            Resume
+                                        </button>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>&nbsp;</label>
+                                        <button type="button" className={styles.fieldButton} onClick={() => navigate(`/admin-student-certificates/${studentId}`, { state: { studentData } })}>
+                                            Certificate
+                                        </button>
                                     </div>
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
@@ -3498,6 +3927,18 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 urlType={urlErrorType}
                 invalidUrl={invalidUrl}
             />
+            <ResumeChooserModal
+                isOpen={isResumeChooserOpen}
+                onClose={closeResumePopup}
+                onView={handleResumeView}
+                onDownload={handleResumeDownload}
+                isProcessing={isResumeDownloading}
+                activeAction={resumeActionType}
+            />
+            <ResumeFailedAlert
+                isOpen={isResumeFailureOpen}
+                onClose={() => setIsResumeFailureOpen(false)}
+            />
             <CropImageModal
                 isOpen={isCropModalOpen}
                 imageSrc={imageToCrop}
@@ -3506,6 +3947,27 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 onDiscard={handleCropDiscard}
             />
             <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
+            <DownloadSuccessAlert
+                isOpen={isResumeDownloadSuccessOpen}
+                onClose={() => setIsResumeDownloadSuccessOpen(false)}
+                fileLabel="resume"
+                title="Downloaded !"
+                description="The resume has been successfully downloaded to your device."
+                color="#4EA24E"
+            />
+            <CertificateDownloadProgressAlert
+                isOpen={isInitialLoading}
+                progress={loadingProgress}
+                fileLabel="student profile"
+                title="Loading..."
+                color="#4EA24E"
+                progressColor="#4EA24E"
+                messages={{
+                    initial: 'Fetching student profile...',
+                    mid: 'Loading latest record...',
+                    final: 'Preparing page...'
+                }}
+            />
             {showUnsavedModal && (
                 <UnsavedChangesModal
                     isOpen={showUnsavedModal}

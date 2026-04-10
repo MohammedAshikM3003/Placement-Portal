@@ -3,6 +3,8 @@ import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import styles from './ResumeBuilder.module.css';
 import '../components/alerts/AlertStyles.css';
+import { API_BASE_URL } from '../utils/apiConfig';
+import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 
 // Lazy load popups
 const PopupExperience = lazy(() => import('./PopupExperience.jsx'));
@@ -126,6 +128,11 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
 
   // Resume PDF URL (after generation)
   const [resumePdfUrl, setResumePdfUrl] = useState(null);
+
+  // ATS Check state (for progress popup)
+  const [atsPopupState, setAtsPopupState] = useState('none'); // 'none' | 'progress' | 'error'
+  const [atsProgress, setAtsProgress] = useState(0);
+  const [atsProgressMessage, setAtsProgressMessage] = useState('');
 
   // ===== AUTO-SYNC to MongoDB when popup data changes =====
   const syncToMongoDB = useCallback(async (updatedFields) => {
@@ -1087,6 +1094,176 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
     }
   };
 
+  // ===== HANDLE CHECK ATS - Show popup, fetch data, run analysis, then navigate =====
+  const handleCheckATS = async () => {
+    if (atsPopupState !== 'none') return;
+    setShowCreated(false); // Close the Created! modal
+    setAtsPopupState('progress');
+    setAtsProgress(0);
+    setAtsProgressMessage('Fetching resume from database...');
+
+    // Dynamic progress animation
+    let targetProgress = 10;
+    const progressInterval = setInterval(() => {
+      setAtsProgress(prev => {
+        if (prev < targetProgress) {
+          const diff = targetProgress - prev;
+          const increment = Math.min(diff * 0.1, 2); // Smooth acceleration
+          return Math.min(prev + increment, targetProgress);
+        }
+        return prev;
+      });
+    }, 100);
+
+    try {
+      const studentId = studentData?._id || studentData?.id;
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      let fetchedResumeData = null;
+      let analysisResult = null;
+
+      // Step 1: Fetch resume data from MongoDB
+      targetProgress = 15;
+      if (studentId) {
+        setAtsProgressMessage('Loading resume data...');
+        targetProgress = 20;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        try {
+          const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-data/${studentId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.resumeData) {
+              fetchedResumeData = data.resumeData;
+              targetProgress = 30;
+            }
+          }
+        } catch (fetchErr) {
+          console.warn('ATS data fetch failed:', fetchErr.message);
+        }
+
+        // Fallback: try localStorage
+        if (!fetchedResumeData) {
+          try {
+            const storageKey = getStorageKey();
+            const stored = localStorage.getItem(storageKey) || localStorage.getItem('resumeBuilderData');
+            if (stored) {
+              fetchedResumeData = JSON.parse(stored);
+              targetProgress = 30;
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+      // Step 2: Try to load existing analysis from MongoDB
+      if (studentId && fetchedResumeData) {
+        targetProgress = 35;
+        setAtsProgressMessage('Checking for existing analysis...');
+        try {
+          const controller2 = new AbortController();
+          const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
+          targetProgress = 40;
+          const atsResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-result/${studentId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            signal: controller2.signal,
+          });
+          clearTimeout(timeoutId2);
+          targetProgress = 50;
+
+          if (atsResponse.ok) {
+            const atsData = await atsResponse.json();
+            if (atsData.success && atsData.analysis) {
+              analysisResult = atsData.analysis;
+              targetProgress = 85;
+              setAtsProgressMessage('Analysis loaded!');
+            }
+          }
+        } catch (err) {
+          console.warn('Existing analysis fetch failed:', err.message);
+        }
+      }
+
+      // Step 3: If no existing analysis, run fresh ATS check
+      if (!analysisResult && fetchedResumeData) {
+        targetProgress = 55;
+        setAtsProgressMessage('AI analyzing content quality...');
+        try {
+          targetProgress = 60;
+          const atsCheckResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-check`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ resumeData: fetchedResumeData, studentId }),
+          });
+          targetProgress = 75;
+
+          if (atsCheckResponse.ok) {
+            const checkResult = await atsCheckResponse.json();
+            if (checkResult.analysis) {
+              analysisResult = checkResult.analysis;
+              targetProgress = 85;
+              setAtsProgressMessage('Analysis complete!');
+
+              // Save analysis to MongoDB in background
+              fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/save-ats-analysis`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ studentId, atsAnalysis: analysisResult }),
+              }).catch(() => {});
+            }
+          }
+        } catch (err) {
+          console.warn('ATS check failed:', err.message);
+        }
+      }
+
+      // Step 4: Store everything for ATSChecker page
+      targetProgress = 90;
+      if (fetchedResumeData) {
+        sessionStorage.setItem('atsCheckerPrefetchedData', JSON.stringify(fetchedResumeData));
+      }
+      if (analysisResult) {
+        sessionStorage.setItem('atsCheckerPrefetchedAnalysis', JSON.stringify(analysisResult));
+      }
+
+      // Finish progress and navigate
+      targetProgress = 95;
+      setAtsProgressMessage('Opening ATS Checker...');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      targetProgress = 100;
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      clearInterval(progressInterval);
+      setAtsPopupState('none');
+      setAtsProgress(0);
+      setShowCreated(false);
+      onViewChange('ats-checker');
+    } catch (err) {
+      console.error('ATS check error:', err);
+      clearInterval(progressInterval);
+      setAtsPopupState('none');
+      setAtsProgress(0);
+      onViewChange('ats-checker');
+    }
+  };
+
   // ===== LOAD SAVED DATA =====
   useEffect(() => {
     const fetchResumeData = async () => {
@@ -1835,10 +2012,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               </button>
               <button
                 onClick={() => {
-                  setShowCreated(false);
-                  setIsPreviewing(false);
-                  setHasCreatedOnce(false);
-                  if (onViewChange) onViewChange('ats-checker');
+                  handleCheckATS();
                 }}
                 className="achievement-popup-close-btn"
                 style={{
@@ -1871,6 +2045,21 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           </div>
         </div>
       )}
+
+      {/* ===== ATS CHECK LOADING POPUP ===== */}
+      <PreviewProgressAlert
+        isOpen={atsPopupState === 'progress'}
+        progress={atsProgress}
+        title="Checking ATS Score..."
+        color="#2085f6"
+        progressColor="#2085f6"
+        fileLabel="resume"
+        messages={{
+          initial: atsProgressMessage || 'Fetching resume from database...',
+          mid: atsProgressMessage || 'AI analyzing content quality...',
+          final: 'Opening ATS Checker...'
+        }}
+      />
     </div>
   );
 }

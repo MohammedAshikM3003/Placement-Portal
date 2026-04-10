@@ -229,6 +229,7 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25, fileLabel = 'resu
   if (!isOpen) return null;
 
   const { lower: labelLower } = normalizeFileLabel(fileLabel);
+  const progressVerb = /^loading/i.test((title || '').trim()) ? 'Loading' : 'Downloading';
   const combinedMessages = {
     initial: `Preparing ${labelLower} for download...`,
     mid: 'Finalizing download...',
@@ -261,7 +262,7 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25, fileLabel = 'resu
             </svg>
           </div>
           <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-            Downloading {Math.round(progress)}%
+            {progressVerb} {Math.round(progress)}%
           </h2>
           <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
             {progress < 85 ? combinedMessages.initial :

@@ -466,41 +466,13 @@ function AdminstudDB() {
         setAiTooltip(prev => (prev.visible ? { ...prev, visible: false } : prev));
     };
 
-    const showLoadingThenNavigate = async (onNavigate) => {
-        setExportType('Loading');
-        setExportPopupState('progress');
-        setExportProgress(0);
-
-        const progressInterval = setInterval(() => {
-            setExportProgress(prev => {
-                if (prev >= 90) {
-                    clearInterval(progressInterval);
-                    return 90;
-                }
-                return prev + 15;
-            });
-        }, 200);
-
-        await new Promise(resolve => setTimeout(resolve, 900));
-        clearInterval(progressInterval);
-        setExportProgress(100);
-
-        await new Promise(resolve => setTimeout(resolve, 250));
-        setExportPopupState('none');
-        setExportProgress(0);
-
-        onNavigate();
-    };
-
     const handleViewProfile = (studentId) => {
         const studentToView = students.find(s => s.id === studentId);
         if (studentToView) {
-            showLoadingThenNavigate(() => {
-                navigate(`/admin-student-view/${studentId}`, {
-                    state: {
-                        isBlocked: studentToView.blocked
-                    }
-                });
+            navigate(`/admin-student-view/${studentId}`, {
+                state: {
+                    isBlocked: studentToView.blocked
+                }
             });
         }
     };
@@ -514,18 +486,16 @@ function AdminstudDB() {
         });
     };
     
-    const handleEdit = () => { 
+    const handleEdit = () => {
         if (selectedStudentIds.size === 1) {
             const studentId = Array.from(selectedStudentIds)[0];
             const studentToEdit = students.find(s => s.id === studentId);
-            
+
             if (studentToEdit) {
-                showLoadingThenNavigate(() => {
-                    navigate(`/admin-student-edit/${studentId}`, {
-                        state: {
-                            isBlocked: studentToEdit.blocked
-                        }
-                    });
+                navigate(`/admin-student-edit/${studentId}`, {
+                    state: {
+                        isBlocked: studentToEdit.blocked
+                    }
                 });
             }
         } else if (selectedStudentIds.size > 1) {
@@ -535,12 +505,12 @@ function AdminstudDB() {
         }
     };
 
-    const handleBlock = () => { 
+    const handleBlock = () => {
         if (!selectedStudentIds.size || blockInProgress) return;
         confirmBlock();
     };
 
-    const handleUnblock = () => { 
+    const handleUnblock = () => {
         if (!selectedStudentIds.size || unblockInProgress) return;
         confirmUnblock();
     };
@@ -549,8 +519,7 @@ function AdminstudDB() {
         setBlockInProgress(true);
         try {
             const ids = Array.from(selectedStudentIds);
-            
-            const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfileCache') || 'null');
+            const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfile') || 'null');
             const adminData = JSON.parse(localStorage.getItem('adminData') || 'null');
 
             const adminName =
@@ -561,15 +530,15 @@ function AdminstudDB() {
                 'Admin';
             const adminCabin = cachedAdminProfile?.cabin || adminData?.cabin || 'N/A';
             const adminIdentifier = cachedAdminProfile?.adminLoginID || adminData?.adminLoginID || localStorage.getItem('adminLoginID') || adminName;
-            
+
             console.log('🚫 BLOCKING STUDENTS:', {
                 studentIds: ids,
                 adminName,
                 count: ids.length
             });
-            
-            const blockData = { 
-                blocked: true, 
+
+            const blockData = {
+                blocked: true,
                 isBlocked: true,
                 blockedBy: adminName,
                 blockedByRole: 'admin',
@@ -578,18 +547,18 @@ function AdminstudDB() {
                 blockedAt: new Date().toISOString(),
                 blockedReason: 'Your account has been blocked by the admin. Please contact the placement office for more information.'
             };
-            
+
             console.log('Block data:', blockData);
-            
+
             const updatePromises = ids.map(id => {
                 console.log('Blocking student ID:', id);
                 return mongoDBService.updateStudent(id, blockData);
             });
-            
+
             await Promise.all(updatePromises);
-            
+
             console.log('✅ All students blocked successfully');
-            
+
             setStudents(students.map(s => selectedStudentIds.has(s.id) ? { ...s, blocked: true, isBlocked: true } : s));
             setActivePopup('blockSuccess');
         } catch (e) {

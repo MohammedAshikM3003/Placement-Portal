@@ -178,11 +178,13 @@ function AppContent() {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('studentBlocked', handleBlockedEvent);
+      window.addEventListener('coordinatorBlocked', handleBlockedEvent);
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('studentBlocked', handleBlockedEvent);
+        window.removeEventListener('coordinatorBlocked', handleBlockedEvent);
       }
     };
   }, [navigate]);

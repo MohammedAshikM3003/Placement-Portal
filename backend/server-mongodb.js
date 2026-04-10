@@ -4861,6 +4861,12 @@ app.patch('/api/coordinators/:coordinatorId/block', async (req, res) => {
                 return res.status(404).json({ error: 'Coordinator not found' });
             }
 
+            // CRITICAL FIX: Clear login cache when block status changes
+            // This ensures the next login request gets fresh data from DB instead of cached blocked status
+            const coordCacheKey = `coord:${coordinatorId}`;
+            _invalidateLoginCache(coordCacheKey);
+            console.log(`✅ Login cache cleared for coordinator: ${coordinatorId} (block status changed to ${isBlocked})`);
+
             await User.findOneAndUpdate(
                 { coordinatorId },
                 { isBlocked }
@@ -4942,6 +4948,11 @@ app.put('/api/coordinators/:coordinatorId', async (req, res) => {
                 return res.status(404).json({ error: 'Coordinator not found' });
             }
 
+            // Clear login cache for this coordinator since profile was updated
+            const coordCacheKey = `coord:${coordinatorId}`;
+            _invalidateLoginCache(coordCacheKey);
+            console.log(`✅ Login cache cleared for coordinator: ${coordinatorId} (profile updated)`);
+
             console.log('✅ Coordinator profile updated:', updatedCoordinator.coordinatorId);
 
             return res.json({
@@ -5019,6 +5030,11 @@ app.put('/api/coordinators/:coordinatorId/credentials', async (req, res) => {
             if (!updatedCoordinator) {
                 return res.status(404).json({ error: 'Coordinator not found' });
             }
+
+            // Clear login cache for this coordinator since credentials were updated
+            const coordCacheKey = `coord:${coordinatorId}`;
+            _invalidateLoginCache(coordCacheKey);
+            console.log(`✅ Login cache cleared for coordinator: ${coordinatorId} (credentials updated)`);
 
             await User.findOneAndUpdate(
                 { coordinatorId },

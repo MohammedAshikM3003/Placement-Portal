@@ -1,13 +1,15 @@
 /**
  * Block Status Checker Utility
- * Monitors if a logged-in student has been blocked by admin/coordinator
+ * Monitors if logged-in users have been blocked by admin/coordinator
  * and automatically logs them out with a blocked popup
  */
 
 import authService from '../services/authService.jsx';
 
-let checkInterval = null;
-let isChecking = false;
+let studentCheckInterval = null;
+let coordinatorCheckInterval = null;
+let isStudentChecking = false;
+let isCoordinatorChecking = false;
 
 /**
  * Start monitoring the student's block status
@@ -16,7 +18,7 @@ let isChecking = false;
  */
 export const startBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
   // Don't start multiple monitors
-  if (checkInterval) {
+  if (studentCheckInterval) {
     console.log('🔍 Block status monitor already running');
     return;
   }
@@ -25,10 +27,10 @@ export const startBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
 
   const checkBlockStatus = async () => {
     // Prevent concurrent checks
-    if (isChecking) return;
+    if (isStudentChecking) return;
     
     try {
-      isChecking = true;
+      isStudentChecking = true;
       
       // Get student data from localStorage
       const studentData = JSON.parse(localStorage.getItem('studentData') || 'null');
@@ -78,7 +80,7 @@ export const startBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
         stopBlockStatusMonitor();
       }
     } finally {
-      isChecking = false;
+      isStudentChecking = false;
     }
   };
 
@@ -86,18 +88,106 @@ export const startBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
   checkBlockStatus();
 
   // Set up periodic checking
-  checkInterval = setInterval(checkBlockStatus, intervalMs);
+  studentCheckInterval = setInterval(checkBlockStatus, intervalMs);
 };
 
 /**
  * Stop monitoring the block status
  */
 export const stopBlockStatusMonitor = () => {
-  if (checkInterval) {
+  if (studentCheckInterval) {
     console.log('🛑 Stopping block status monitor...');
-    clearInterval(checkInterval);
-    checkInterval = null;
-    isChecking = false;
+    clearInterval(studentCheckInterval);
+    studentCheckInterval = null;
+    isStudentChecking = false;
+  }
+};
+
+/**
+ * Start monitoring the coordinator's block status
+ * @param {Function} onBlocked - Callback when coordinator is blocked
+ * @param {number} intervalMs - Check interval in milliseconds (default: 30000ms = 30 seconds)
+ */
+export const startCoordinatorBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
+  // Don't start multiple monitors
+  if (coordinatorCheckInterval) {
+    console.log('🔍 Coordinator block status monitor already running');
+    return;
+  }
+
+  console.log('🚀 Starting coordinator block status monitor...');
+
+  const checkCoordinatorBlockStatus = async () => {
+    if (isCoordinatorChecking) return;
+
+    try {
+      isCoordinatorChecking = true;
+
+      const coordinatorData = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
+      const coordinatorId =
+        coordinatorData?.coordinatorId ||
+        localStorage.getItem('coordinatorId') ||
+        localStorage.getItem('coordinatorUsername');
+
+      if (!coordinatorId) {
+        console.log('⚠️ No coordinator data found, stopping coordinator monitor');
+        stopCoordinatorBlockStatusMonitor();
+        return;
+      }
+
+      const data = await authService.apiCall(`/coordinators/${encodeURIComponent(coordinatorId)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      });
+
+      const coordinator = data.coordinator || data;
+
+      if (coordinator && coordinator.isBlocked) {
+        console.log('🚫 Coordinator has been blocked! Triggering logout...');
+
+        const blockerDetails = {
+          name: coordinator.blockedBy || 'Placement Office',
+          cabin: coordinator.blockedByCabin || 'N/A',
+          blockedBy: coordinator.blockedBy || 'Placement Office',
+          blockedByCabin: coordinator.blockedByCabin || 'N/A',
+          blockedByRole: coordinator.blockedByRole || 'admin',
+          blockedUserRole: 'coordinator',
+          message:
+            coordinator.blockedReason ||
+            'Your coordinator account has been blocked. Please contact the placement office.'
+        };
+
+        if (onBlocked && typeof onBlocked === 'function') {
+          onBlocked(blockerDetails);
+        }
+
+        stopCoordinatorBlockStatusMonitor();
+      }
+    } catch (error) {
+      console.error('❌ Error checking coordinator block status:', error);
+      if (error?.status === 401 || error?.status === 403 || error?.status === 404) {
+        stopCoordinatorBlockStatusMonitor();
+      }
+    } finally {
+      isCoordinatorChecking = false;
+    }
+  };
+
+  checkCoordinatorBlockStatus();
+  coordinatorCheckInterval = setInterval(checkCoordinatorBlockStatus, intervalMs);
+};
+
+/**
+ * Stop monitoring the coordinator block status
+ */
+export const stopCoordinatorBlockStatusMonitor = () => {
+  if (coordinatorCheckInterval) {
+    console.log('🛑 Stopping coordinator block status monitor...');
+    clearInterval(coordinatorCheckInterval);
+    coordinatorCheckInterval = null;
+    isCoordinatorChecking = false;
   }
 };
 
@@ -105,5 +195,5 @@ export const stopBlockStatusMonitor = () => {
  * Check if monitor is currently running
  */
 export const isMonitorRunning = () => {
-  return checkInterval !== null;
+  return studentCheckInterval !== null || coordinatorCheckInterval !== null;
 };

@@ -5,6 +5,7 @@ import Cosidebar from '../components/Sidebar/Cosidebar.js';
 import styles from '../AdminPages/AdStuDBCertificateView.module.css'; // Reuse admin CSS
 import Coordinatoricon from "../assets/Coordinatorcap.png";
 import mongoDBService from '../services/mongoDBService.jsx';
+import gridfsService from '../services/gridfsService';
 import {
   DownloadFailedAlert,
   PreviewFailedAlert,
@@ -60,6 +61,7 @@ function CooStuDBCertificateView() {
     const [previewPopupState, setPreviewPopupState] = useState('none');
     const [downloadProgress, setDownloadProgress] = useState(0);
     const [previewProgress, setPreviewProgress] = useState(0);
+    const [profileImageFailed, setProfileImageFailed] = useState(false);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -76,6 +78,10 @@ function CooStuDBCertificateView() {
         localStorage.removeItem('userRole');
         navigate('/coo-login');
     };
+
+    useEffect(() => {
+        setProfileImageFailed(false);
+    }, [studentData?.profilePicURL]);
 
     useEffect(() => {
         const loadStudentData = async () => {
@@ -139,7 +145,7 @@ function CooStuDBCertificateView() {
                         return {
                             name: certName,
                             date: formattedDate,
-                            url: cert.fileData || cert.certificateUrl || cert.url || '#',
+                            url: cert.gridfsFileUrl || cert.fileData || cert.certificateUrl || cert.url || '#',
                             certificateId: cert._id || cert.id,
                             achievementId: cert.achievementId,
                             status: cert.status,
@@ -199,7 +205,7 @@ function CooStuDBCertificateView() {
                             return {
                                 name: certName,
                                 date: formattedDate,
-                                url: cert.fileData || cert.certificateUrl || cert.url || '#',
+                                url: cert.gridfsFileUrl || cert.fileData || cert.certificateUrl || cert.url || '#',
                                 certificateId: cert._id || cert.id,
                                 achievementId: cert.achievementId,
                                 status: cert.status,
@@ -231,41 +237,102 @@ function CooStuDBCertificateView() {
         setShowScrollIndicator(scrollHeight > 0);
     };
 
-    const handleViewCertificate = async (certificateUrl) => {
-        if (!certificateUrl || certificateUrl === '#') {
-            setPreviewPopupState('failed');
-            setTimeout(() => setPreviewPopupState('none'), 3000);
-            return;
-        }
+    const handleViewCertificate = async (certificateUrl, certificateId, achievementId) => {
+        let progressInterval;
 
         try {
             setPreviewPopupState('progress');
             setPreviewProgress(0);
 
-            const progressInterval = setInterval(() => {
-                setPreviewProgress(prev => {
+            progressInterval = setInterval(() => {
+                setPreviewProgress((prev) => {
                     if (prev >= 90) {
-                        clearInterval(progressInterval);
                         return 90;
                     }
                     return prev + 15;
                 });
             }, 150);
 
-            await new Promise(resolve => setTimeout(resolve, 300));
+            let fileData = certificateUrl;
 
-            let previewUrl = certificateUrl;
-            
-            if (!certificateUrl.startsWith('http')) {
-                let base64String = certificateUrl;
-                if (!certificateUrl.startsWith('data:')) {
-                    base64String = `data:application/pdf;base64,${certificateUrl}`;
+            if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
+                try {
+                    let certificateDoc = null;
+
+                    if (achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 15000))
+                        ]);
+                    }
+
+                    if (!certificateDoc && certificateId && certificateId !== achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 15000))
+                        ]);
+                    }
+
+                    fileData = certificateDoc?.gridfsFileUrl || certificateDoc?.fileData || certificateDoc?.fileContent;
+
+                    if (!fileData) {
+                        throw new Error('Certificate has no file data available');
+                    }
+                } catch (fetchError) {
+                    if (progressInterval) {
+                        clearInterval(progressInterval);
+                    }
+                    setPreviewPopupState('failed');
+                    setTimeout(() => setPreviewPopupState('none'), 3000);
+                    return;
                 }
-                
-                const base64Data = base64String.includes('base64,') 
-                    ? base64String.split('base64,')[1] 
+            } else {
+                const resolvedUrl = gridfsService.getFileUrl(certificateUrl);
+                if (resolvedUrl && !resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const response = await fetch(resolvedUrl, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch from GridFS: ${response.status}`);
+                        }
+
+                        const blob = await response.blob();
+                        if (blob.size === 0 || blob.type.includes('html')) {
+                            throw new Error('Invalid file from GridFS, falling back to database');
+                        }
+
+                        fileData = URL.createObjectURL(blob);
+                    } catch (gridfsError) {
+                        try {
+                            const idToUse = achievementId || certificateId;
+                            if (idToUse) {
+                                const certificateDoc = await mongoDBService.getCertificateFileByAchievementId(studentId, idToUse);
+                                if (certificateDoc) {
+                                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                                }
+                            }
+                        } catch (dbError) {
+                            console.error('Database fallback failed:', dbError);
+                        }
+                    }
+                }
+            }
+
+            let previewUrl = fileData;
+            if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
+                let base64String = fileData;
+                if (!fileData.startsWith('data:')) {
+                    base64String = `data:application/pdf;base64,${fileData}`;
+                }
+
+                const base64Data = base64String.includes('base64,')
+                    ? base64String.split('base64,')[1]
                     : base64String;
-                    
+
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -276,62 +343,128 @@ function CooStuDBCertificateView() {
                 previewUrl = URL.createObjectURL(blob);
             }
 
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
             const newWindow = window.open(previewUrl, '_blank');
-            
-            clearInterval(progressInterval);
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
             setPreviewProgress(100);
-            
+
             if (newWindow) {
                 setTimeout(() => setPreviewPopupState('none'), 500);
             } else {
                 setPreviewPopupState('failed');
                 setTimeout(() => setPreviewPopupState('none'), 3000);
             }
-            
-            if (previewUrl !== certificateUrl) {
-                setTimeout(() => URL.revokeObjectURL(previewUrl), 1000);
-            }
         } catch (error) {
-            console.error('Preview error:', error);
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
             setPreviewPopupState('failed');
             setTimeout(() => setPreviewPopupState('none'), 3000);
         }
     };
 
-    const handleDownloadCertificate = async (certificateUrl, certificateName) => {
-        if (!certificateUrl || certificateUrl === '#') {
-            setDownloadPopupState('failed');
-            setTimeout(() => setDownloadPopupState('none'), 2000);
-            return;
-        }
+    const handleDownloadCertificate = async (certificateUrl, certificateName, certificateId, achievementId) => {
+        let progressInterval;
 
         try {
             setDownloadPopupState('progress');
             setDownloadProgress(0);
 
-            const progressInterval = setInterval(() => {
-                setDownloadProgress(prev => {
-                    if (prev >= 90) {
-                        clearInterval(progressInterval);
-                        return 90;
+            progressInterval = setInterval(() => {
+                setDownloadProgress((prev) => {
+                    if (prev >= 85) {
+                        return prev;
                     }
-                    return prev + 20;
+                    return prev + Math.random() * 12;
                 });
-            }, 100);
+            }, 150);
 
-            let downloadUrl = certificateUrl;
-            let shouldRevoke = false;
-            
-            if (!certificateUrl.startsWith('http')) {
-                let base64String = certificateUrl;
-                if (!certificateUrl.startsWith('data:')) {
-                    base64String = `data:application/pdf;base64,${certificateUrl}`;
+            let fileData = certificateUrl;
+
+            if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
+                try {
+                    let certificateDoc = null;
+
+                    if (achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 15000))
+                        ]);
+                    }
+
+                    if (!certificateDoc && certificateId && certificateId !== achievementId) {
+                        certificateDoc = await Promise.race([
+                            mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 15000))
+                        ]);
+                    }
+
+                    fileData = certificateDoc?.gridfsFileUrl || certificateDoc?.fileData || certificateDoc?.fileContent;
+
+                    if (!fileData) {
+                        throw new Error('Certificate has no file data available');
+                    }
+                } catch (fetchError) {
+                    if (progressInterval) {
+                        clearInterval(progressInterval);
+                    }
+                    setDownloadPopupState('failed');
+                    setTimeout(() => setDownloadPopupState('none'), 3000);
+                    return;
                 }
-                
-                const base64Data = base64String.includes('base64,') 
-                    ? base64String.split('base64,')[1] 
+            } else {
+                const resolvedUrl = gridfsService.getFileUrl(certificateUrl);
+                if (resolvedUrl && !resolvedUrl.startsWith('data:') && !resolvedUrl.startsWith('blob:')) {
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const response = await fetch(resolvedUrl, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch from GridFS: ${response.status}`);
+                        }
+
+                        const blob = await response.blob();
+                        if (blob.size === 0 || blob.type.includes('html')) {
+                            throw new Error('Invalid file from GridFS, falling back to database');
+                        }
+
+                        fileData = URL.createObjectURL(blob);
+                    } catch (gridfsError) {
+                        try {
+                            const idToUse = achievementId || certificateId;
+                            if (idToUse) {
+                                const certificateDoc = await mongoDBService.getCertificateFileByAchievementId(studentId, idToUse);
+                                if (certificateDoc) {
+                                    fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
+                                }
+                            }
+                        } catch (dbError) {
+                            console.error('Database fallback failed:', dbError);
+                        }
+                    }
+                }
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            let downloadUrl = fileData;
+            let shouldRevoke = false;
+            if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
+                let base64String = fileData;
+                if (!fileData.startsWith('data:')) {
+                    base64String = `data:application/pdf;base64,${fileData}`;
+                }
+
+                const base64Data = base64String.includes('base64,')
+                    ? base64String.split('base64,')[1]
                     : base64String;
-                    
+
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -343,6 +476,11 @@ function CooStuDBCertificateView() {
                 shouldRevoke = true;
             }
 
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            setDownloadProgress(100);
+
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.download = certificateName || 'certificate.pdf';
@@ -350,20 +488,17 @@ function CooStuDBCertificateView() {
             link.click();
             document.body.removeChild(link);
 
-            setTimeout(() => {
-                clearInterval(progressInterval);
-                setDownloadProgress(100);
-                
-                setDownloadPopupState('success');
-                
-                if (shouldRevoke) {
-                    setTimeout(() => URL.revokeObjectURL(downloadUrl), 500);
-                }
-                
-                setTimeout(() => setDownloadPopupState('none'), 2500);
-            }, 800);
+            setDownloadPopupState('success');
+
+            if (shouldRevoke) {
+                setTimeout(() => URL.revokeObjectURL(downloadUrl), 500);
+            }
+
+            setTimeout(() => setDownloadPopupState('none'), 2500);
         } catch (error) {
-            console.error('Download error:', error);
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
             setDownloadPopupState('failed');
             setTimeout(() => setDownloadPopupState('none'), 3000);
         }
@@ -402,11 +537,12 @@ function CooStuDBCertificateView() {
                             <div className={styles['certificate-card-content']}>
                                 <h2 className={styles['certificate-card-title']}>Student Info</h2>
                                 <div className={styles['certificate-profile-pic-container']}>
-                                    {studentData?.profilePicURL ? (
+                                    {studentData?.profilePicURL && !profileImageFailed ? (
                                         <img 
-                                            src={studentData.profilePicURL} 
+                                            src={gridfsService.resolveImageUrl(studentData.profilePicURL)} 
                                             alt="Profile" 
                                             className={styles['certificate-profile-pic']}
+                                            onError={() => setProfileImageFailed(true)}
                                         />
                                     ) : (
                                         <div className={styles['certificate-default-profile']}>
@@ -517,14 +653,23 @@ function CooStuDBCertificateView() {
                                             <div className={styles['certificate-item-actions']}>
                                                 <button 
                                                     className={`${styles['certificate-action-btn']} ${styles['certificate-view-btn']}`}
-                                                    onClick={() => handleViewCertificate(cert.url || cert.certificateUrl)}
+                                                    onClick={() => handleViewCertificate(
+                                                        cert.url || cert.certificateUrl,
+                                                        cert.certificateId,
+                                                        cert.achievementId
+                                                    )}
                                                 >
                                                     <ViewIcon />
                                                     View
                                                 </button>
                                                 <button 
                                                     className={`${styles['certificate-action-btn']} ${styles['certificate-download-btn']}`}
-                                                    onClick={() => handleDownloadCertificate(cert.url || cert.certificateUrl, cert.name || cert.certificateName)}
+                                                    onClick={() => handleDownloadCertificate(
+                                                        cert.url || cert.certificateUrl,
+                                                        cert.name || cert.certificateName,
+                                                        cert.certificateId,
+                                                        cert.achievementId
+                                                    )}
                                                 >
                                                     <DownloadIcon />
                                                     Download
