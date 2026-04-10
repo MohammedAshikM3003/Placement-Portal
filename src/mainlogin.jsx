@@ -61,6 +61,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const [showUserNotFoundPopup, setShowUserNotFoundPopup] = useState(false);
   const [isBlockedPopupOpen, setIsBlockedPopupOpen] = useState(false);
   const [blockedInfo, setBlockedInfo] = useState(null);
+  const [blockedPopupVariant, setBlockedPopupVariant] = useState('student');
   const mainLayoutRef = useRef(null);
 
   const handleInputBlur = useCallback(() => {
@@ -87,6 +88,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   const handleBlockedPopupClose = () => {
     setIsBlockedPopupOpen(false);
     setBlockedInfo(null);
+    setBlockedPopupVariant('student');
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem(BLOCKED_INFO_STORAGE_KEY);
     }
@@ -105,6 +107,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       if (stored) {
         const parsed = JSON.parse(stored);
         setBlockedInfo(parsed || null);
+        setBlockedPopupVariant(parsed?.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
         setIsBlockedPopupOpen(true);
       }
     } catch (error) {
@@ -319,7 +322,10 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         const coordinatorDetails = {
           blockedBy: loginResult?.coordinator?.blockedBy || loginResult?.coordinator?.name || 'Placement Office',
           name: loginResult?.coordinator?.name || loginResult?.coordinator?.blockedBy || 'Placement Office',
-          cabin: loginResult?.coordinator?.cabin || 'N/A',
+          cabin: loginResult?.coordinator?.cabin || loginResult?.coordinator?.blockedByCabin || 'N/A',
+          blockedByCabin: loginResult?.coordinator?.blockedByCabin || loginResult?.coordinator?.cabin || 'N/A',
+          blockedByRole: loginResult?.coordinator?.blockedByRole || 'admin',
+          blockedUserRole: loginResult?.blockedUserRole || (isCoordinatorAttempt ? 'coordinator' : 'student'),
           message: loginResult?.error || 'Your account has been blocked by the admin. Please contact the placement office for more information.'
         };
 
@@ -328,6 +334,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
 
         setBlockedInfo(coordinatorDetails);
+          setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
         setIsBlockedPopupOpen(true);
         
         return;
@@ -340,6 +347,8 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
     } catch (error) {
       console.error('❌ Login exception:', error);
       const errorMsg = error.message || 'Login failed. Please check your credentials.';
+      const currentLoginInput = registerNumber.trim();
+      const coordinatorBlockedAttempt = !currentLoginInput.toLowerCase().startsWith('admin') && /[a-zA-Z]/.test(currentLoginInput);
       setIsLoading(false);
 
       // Check if this is a blocked account error
@@ -348,6 +357,9 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           blockedBy: 'Placement Office',
           name: 'Placement Office',
           cabin: 'N/A',
+          blockedByCabin: 'N/A',
+          blockedByRole: coordinatorBlockedAttempt ? 'admin' : 'unknown',
+          blockedUserRole: coordinatorBlockedAttempt ? 'coordinator' : 'student',
           message: errorMsg
         };
 
@@ -356,6 +368,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
 
         setBlockedInfo(coordinatorDetails);
+          setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
         setIsBlockedPopupOpen(true);
         setError('');
         setShowUserNotFoundPopup(false);
@@ -392,7 +405,8 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
 
       {isBlockedPopupOpen && (
         <BlockedPopup
-          coordinator={blockedInfo}
+          blockedInfo={blockedInfo}
+          variant={blockedPopupVariant}
           onClose={handleBlockedPopupClose}
         />
       )}

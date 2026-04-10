@@ -464,12 +464,16 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             const blockedByName = coordinatorData 
                 ? `${coordinatorData.firstName || ''} ${coordinatorData.lastName || ''}`.trim()
                 : 'Placement Office';
+            const blockerCabin = coordinatorData?.cabin || 'N/A';
+            const blockerIdentifier = coordinatorData?.coordinatorId || coordinatorData?.username || blockedByName;
             
             await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { 
                 blocked: true, 
                 isBlocked: true,
                 blockedBy: blockedByName,
                 blockedByRole: 'coordinator',
+                blockedByCabin: blockerCabin,
+                blockedByIdentifier: blockerIdentifier,
                 blockedAt: new Date().toISOString(),
                 blockedReason: 'Your account has been blocked by the placement coordinator. Please contact the placement office for more information.'
             })));
@@ -494,6 +498,20 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
 
         try {
             await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false })));
+            
+            // 🔄 FIXED: Clear fastDataService cache for unblocked students
+            // This ensures they get fresh data when they login
+            try {
+                const fastDataService = (await import('../services/fastDataService.jsx')).default;
+                ids.forEach(id => {
+                    console.log(`🧹 Clearing cache for unblocked student: ${id}`);
+                    fastDataService.clearCache(id);
+                });
+            } catch (cacheErr) {
+                console.warn('⚠️ Could not clear fastDataService cache:', cacheErr);
+                // Non-critical error, continue
+            }
+            
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: false } : student));
             setSelectedStudentIds(new Set());
             setIsUnblockedPopupOpen(true);

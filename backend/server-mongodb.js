@@ -170,6 +170,20 @@ const _invalidateLoginCache = (key) => {
     loginDocCache.delete(key);
 };
 
+const getStudentLoginCacheKey = (studentDoc) => {
+    if (!studentDoc) return null;
+    const regNo = (studentDoc.regNo || '').toString().trim();
+    const dob = (studentDoc.dob || '').toString().trim();
+    if (!regNo || !dob) return null;
+    return `student:${regNo}:${dob}`;
+};
+
+const invalidateStudentLoginCache = (studentDoc) => {
+    const cacheKey = getStudentLoginCacheKey(studentDoc);
+    if (!cacheKey) return;
+    loginDocCache.delete(cacheKey);
+};
+
 // JWT Authentication Middleware (with cache)
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -659,6 +673,309 @@ app.get('/api/feedback', authenticateToken, checkRole('student', 'admin', 'coord
         console.error('Get feedback error:', error);
         return res.status(500).json({
             error: 'Failed to fetch feedback',
+            details: error.message
+        });
+    }
+});
+
+// -------------------------------------------------
+// Student Feedback APIs
+// -------------------------------------------------
+app.post('/api/student-feedback/generate', authenticateToken, checkRole('student'), async (req, res) => {
+    try {
+        const {
+            roundNumber,
+            roundName,
+            companyName,
+            jobRole,
+            difficulty,
+            roundStatus,
+            textType,
+            baseText
+        } = req.body || {};
+
+        const normalizedTextType = String(textType || '').trim().toLowerCase();
+        if (!['feedback', 'suggestion'].includes(normalizedTextType)) {
+            return res.status(400).json({ error: 'textType must be feedback or suggestion' });
+        }
+
+        const { callOllama, checkOllamaStatus } = require('./ollamaService');
+        const status = await checkOllamaStatus();
+
+        if (!status?.running) {
+            return res.status(503).json({
+                error: 'Ollama is not running. Please start Ollama on your machine.',
+                details: 'Run: ollama serve'
+            });
+        }
+
+        const normalizedDifficulty = String(difficulty || '').trim() || 'N/A';
+        const normalizedRoundStatus = String(roundStatus || '').trim() || 'N/A';
+        const draftText = (baseText || '').toString().trim();
+
+        const prompt = normalizedTextType === 'feedback'
+            ? `You are a placement coaching assistant.
+Rewrite and improve the student's round feedback in clear, professional English.
+
+Rules:
+- Keep it concise (70-120 words).
+- Keep it in first person (student perspective).
+- Mention performance highlights and communication quality.
+- Do not include markdown, bullets, headings, or quotes.
+
+Context:
+- Company: ${companyName || 'N/A'}
+- Job Role: ${jobRole || 'N/A'}
+- Round Number: ${roundNumber || 'N/A'}
+- Round Name: ${roundName || 'N/A'}
+- Difficulty: ${normalizedDifficulty}
+- Round Status: ${normalizedRoundStatus}
+
+Student Draft:
+${draftText || 'I attended this round and tried to answer with clarity and confidence while applying my technical knowledge.'}
+
+Return only the improved feedback paragraph.`
+            : `You are a placement coaching assistant.
+Rewrite and improve the student's suggestion text into practical and actionable improvement points as one concise paragraph.
+
+Rules:
+- Keep it concise (70-120 words).
+- Keep it in first person (student perspective).
+- Focus on specific next steps for preparation.
+- Do not include markdown, bullets, headings, or quotes.
+
+Context:
+- Company: ${companyName || 'N/A'}
+- Job Role: ${jobRole || 'N/A'}
+- Round Number: ${roundNumber || 'N/A'}
+- Round Name: ${roundName || 'N/A'}
+- Difficulty: ${normalizedDifficulty}
+- Round Status: ${normalizedRoundStatus}
+
+Student Draft:
+${draftText || 'I should improve technical depth, revise core concepts regularly, and practice clear communication in mock interviews.'}
+
+Return only the improved suggestion paragraph.`;
+
+        const generatedText = await callOllama(prompt, { temperature: 0.35, max_tokens: 220 });
+
+        return res.json({
+            success: true,
+            textType: normalizedTextType,
+            text: (generatedText || '').toString().trim(),
+            model: status?.requiredModel || process.env.OLLAMA_MODEL || 'ollama'
+        });
+    } catch (error) {
+        console.error('Student feedback generate error:', error);
+        return res.status(500).json({
+            error: 'Failed to generate student feedback text',
+            details: error.message
+        });
+    }
+});
+
+app.post('/api/student-feedback/save', authenticateToken, checkRole('student'), async (req, res) => {
+    try {
+        const {
+            driveId,
+            companyName,
+            jobRole,
+            startingDate,
+            endingDate,
+            roundNumber,
+            roundName,
+            roundStatus,
+            difficulty,
+            feedback,
+            suggestion,
+            selectedDate,
+            rating,
+            aiEnabled,
+            aiGeneratedFeedback,
+            aiGeneratedSuggestion,
+            studentId,
+            regNo
+        } = req.body || {};
+
+        if (!driveId || !companyName || !jobRole || !roundNumber) {
+            return res.status(400).json({
+                error: 'Missing required fields (driveId, companyName, jobRole, roundNumber)'
+            });
+        }
+
+        const normalizedFeedback = (feedback || '').toString().trim();
+        const normalizedSuggestion = (suggestion || '').toString().trim();
+        if (!normalizedFeedback && !normalizedSuggestion) {
+            return res.status(400).json({
+                error: 'At least one field is required: feedback or suggestion'
+            });
+        }
+
+        const normalizedStudentId = String(studentId || req.user?.id || req.user?.userId || '').trim();
+        const normalizedRegNo = String(regNo || req.user?.regNo || '').trim();
+        if (!normalizedStudentId && !normalizedRegNo) {
+            return res.status(400).json({
+                error: 'Student identity is missing for feedback save'
+            });
+        }
+
+        const payload = {
+            driveId: String(driveId).trim(),
+            companyName: String(companyName).trim(),
+            jobRole: String(jobRole).trim(),
+            startingDate: startingDate || null,
+            endingDate: endingDate || null,
+            roundNumber: Number(roundNumber),
+            roundName: roundName || `Round ${roundNumber}`,
+            roundStatus: (roundStatus || '').toString().trim() || null,
+            difficulty: (difficulty || '').toString().trim() || null,
+            feedback: normalizedFeedback,
+            suggestion: normalizedSuggestion,
+            selectedDate: selectedDate || null,
+            rating: Number(rating) || 0,
+            aiEnabled: Boolean(aiEnabled),
+            aiGeneratedFeedback: Boolean(aiGeneratedFeedback),
+            aiGeneratedSuggestion: Boolean(aiGeneratedSuggestion),
+            studentId: normalizedStudentId || null,
+            regNo: normalizedRegNo || null,
+            submittedBy: {
+                userId: req.user?.id || req.user?.userId || null,
+                regNo: req.user?.regNo || normalizedRegNo || null,
+                role: req.user?.role || 'student'
+            },
+            updatedAt: new Date()
+        };
+
+        const identityQuery = [];
+        if (normalizedStudentId) identityQuery.push({ studentId: normalizedStudentId });
+        if (normalizedRegNo) identityQuery.push({ regNo: normalizedRegNo });
+
+        const filter = {
+            driveId: payload.driveId,
+            roundNumber: payload.roundNumber,
+            ...(identityQuery.length === 1 ? identityQuery[0] : { $or: identityQuery })
+        };
+
+        const StudentFeedback = mongoose.connection.collection('StudentFeedback');
+        const updateResult = await StudentFeedback.updateOne(
+            filter,
+            {
+                $set: payload,
+                $setOnInsert: { createdAt: new Date() }
+            },
+            { upsert: true }
+        );
+
+        return res.status(updateResult.upsertedCount ? 201 : 200).json({
+            success: true,
+            message: updateResult.upsertedCount ? 'Student feedback saved successfully' : 'Student feedback updated successfully'
+        });
+    } catch (error) {
+        console.error('Save student feedback error:', error);
+        return res.status(500).json({
+            error: 'Failed to save student feedback',
+            details: error.message
+        });
+    }
+});
+
+app.get('/api/student-feedback', authenticateToken, checkRole('student', 'admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const {
+            driveId,
+            roundNumber,
+            companyName,
+            jobRole,
+            startingDate,
+            studentId,
+            regNo
+        } = req.query || {};
+
+        const normalizedDriveId = String(driveId || '').trim();
+        const normalizedCompanyName = String(companyName || '').trim();
+        const normalizedJobRole = String(jobRole || '').trim();
+        const normalizedStartingDate = String(startingDate || '').trim();
+
+        if (!normalizedDriveId && !(normalizedCompanyName && normalizedJobRole)) {
+            return res.status(400).json({ error: 'Missing query: provide driveId or companyName+jobRole' });
+        }
+
+        const query = {};
+        if (normalizedDriveId) {
+            query.driveId = normalizedDriveId;
+        } else {
+            query.companyName = normalizedCompanyName;
+            query.jobRole = normalizedJobRole;
+            if (normalizedStartingDate) query.startingDate = normalizedStartingDate;
+        }
+
+        if (roundNumber !== undefined && roundNumber !== null && String(roundNumber).trim() !== '') {
+            query.roundNumber = Number(roundNumber);
+        }
+
+        const role = String(req.user?.role || '').toLowerCase();
+        const tokenStudentId = String(req.user?.id || req.user?.userId || '').trim();
+        const tokenRegNo = String(req.user?.regNo || '').trim();
+
+        if (role === 'student') {
+            if (!tokenStudentId && !tokenRegNo) {
+                return res.status(403).json({ error: 'Student identity missing in token' });
+            }
+
+            if (tokenStudentId && tokenRegNo) {
+                query.$or = [{ studentId: tokenStudentId }, { regNo: tokenRegNo }];
+            } else if (tokenStudentId) {
+                query.studentId = tokenStudentId;
+            } else {
+                query.regNo = tokenRegNo;
+            }
+        } else {
+            const normalizedStudentId = String(studentId || '').trim();
+            const normalizedRegNo = String(regNo || '').trim();
+            if (normalizedStudentId && normalizedRegNo) {
+                query.$or = [{ studentId: normalizedStudentId }, { regNo: normalizedRegNo }];
+            } else if (normalizedStudentId) {
+                query.studentId = normalizedStudentId;
+            } else if (normalizedRegNo) {
+                query.regNo = normalizedRegNo;
+            }
+        }
+
+        const StudentFeedback = mongoose.connection.collection('StudentFeedback');
+        let data = await StudentFeedback.find(query).sort({ roundNumber: 1, updatedAt: -1, createdAt: -1 }).toArray();
+
+        if (data.length === 0 && normalizedDriveId && normalizedCompanyName && normalizedJobRole) {
+            const fallbackQuery = {
+                companyName: normalizedCompanyName,
+                jobRole: normalizedJobRole
+            };
+            if (normalizedStartingDate) fallbackQuery.startingDate = normalizedStartingDate;
+            if (query.roundNumber !== undefined) fallbackQuery.roundNumber = query.roundNumber;
+
+            if (query.$or) {
+                fallbackQuery.$or = query.$or;
+            } else if (query.studentId) {
+                fallbackQuery.studentId = query.studentId;
+            } else if (query.regNo) {
+                fallbackQuery.regNo = query.regNo;
+            }
+
+            data = await StudentFeedback.find(fallbackQuery).sort({ roundNumber: 1, updatedAt: -1, createdAt: -1 }).toArray();
+        }
+
+        return res.json({
+            success: true,
+            data,
+            count: data.length
+        });
+    } catch (error) {
+        console.error('Get student feedback error:', error);
+        return res.status(500).json({
+            error: 'Failed to fetch student feedback',
             details: error.message
         });
     }
@@ -4488,7 +4805,15 @@ app.post('/api/coordinators', async (req, res) => {
 app.patch('/api/coordinators/:coordinatorId/block', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { coordinatorId } = req.params;
-    const { isBlocked } = req.body;
+    const {
+        isBlocked,
+        blockedBy,
+        blockedByRole,
+        blockedByCabin,
+        blockedByIdentifier,
+        blockedReason,
+        blockedAt
+    } = req.body || {};
 
     try {
         if (typeof isBlocked !== 'boolean') {
@@ -4496,9 +4821,39 @@ app.patch('/api/coordinators/:coordinatorId/block', async (req, res) => {
         }
 
         if (isMongoConnected) {
+            const updatePayload = { isBlocked };
+
+            if (isBlocked) {
+                updatePayload.blockedBy = blockedBy || 'Admin';
+                updatePayload.blockedByRole = blockedByRole || 'admin';
+                updatePayload.blockedByCabin = blockedByCabin || 'N/A';
+                updatePayload.blockedByIdentifier = blockedByIdentifier || blockedBy || 'admin1000';
+                updatePayload.blockedReason = blockedReason || 'Your coordinator account is blocked. Please contact the placement office.';
+                updatePayload.blockedAt = blockedAt ? new Date(blockedAt) : new Date();
+            } else {
+                updatePayload.blockedBy = undefined;
+                updatePayload.blockedByRole = undefined;
+                updatePayload.blockedByCabin = undefined;
+                updatePayload.blockedByIdentifier = undefined;
+                updatePayload.blockedReason = undefined;
+                updatePayload.blockedAt = undefined;
+            }
+
             const coordinator = await Coordinator.findOneAndUpdate(
                 { coordinatorId },
-                { isBlocked },
+                isBlocked
+                    ? { $set: updatePayload }
+                    : {
+                        $set: { isBlocked: false },
+                        $unset: {
+                            blockedBy: 1,
+                            blockedByRole: 1,
+                            blockedByCabin: 1,
+                            blockedByIdentifier: 1,
+                            blockedReason: 1,
+                            blockedAt: 1
+                        }
+                    },
                 { new: true }
             );
 
@@ -6130,12 +6485,47 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
 
     if (coordinatorDoc.isBlocked) {
         console.warn('Coordinator login blocked:', identifier);
+
+        let blockerName = coordinatorDoc.blockedBy || 'Admin';
+        let blockerCabin = coordinatorDoc.blockedByCabin || 'N/A';
+
+        if (isMongoConnected && (!coordinatorDoc.blockedBy || !coordinatorDoc.blockedByCabin)) {
+            try {
+                const Admin = require('./models/Admin');
+                const adminIdentifier = coordinatorDoc.blockedByIdentifier || coordinatorDoc.blockedBy || 'admin1000';
+                const adminDoc = await Admin.findOne({
+                    $or: [
+                        { adminLoginID: adminIdentifier },
+                        { adminLoginID: coordinatorDoc.blockedBy },
+                        { fullName: coordinatorDoc.blockedBy },
+                        { firstName: coordinatorDoc.blockedBy },
+                        { lastName: coordinatorDoc.blockedBy }
+                    ]
+                })
+                    .select('firstName lastName adminLoginID cabin')
+                    .lean()
+                    .maxTimeMS(2000);
+
+                if (adminDoc) {
+                    blockerName = `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim()
+                        || adminDoc.adminLoginID
+                        || blockerName;
+                    blockerCabin = adminDoc.cabin || blockerCabin;
+                }
+            } catch (error) {
+                console.warn('Unable to resolve blocked coordinator authority details:', error.message);
+            }
+        }
+
         return res.status(403).json({
-            error: 'Your coordinator account is blocked. Please contact the placement office.',
+            error: coordinatorDoc.blockedReason || 'Your coordinator account is blocked. Please contact the placement office.',
             isBlocked: true,
             coordinator: {
-                name: `${coordinatorDoc.firstName || ''} ${coordinatorDoc.lastName || ''}`.trim() || coordinatorDoc.username || 'Coordinator',
-                cabin: coordinatorDoc.cabin || 'N/A',
+                name: blockerName,
+                blockedBy: blockerName,
+                cabin: blockerCabin,
+                blockedByCabin: blockerCabin,
+                blockedByRole: coordinatorDoc.blockedByRole || 'admin',
                 department: coordinatorDoc.department || 'N/A'
             }
         });
@@ -6483,6 +6873,33 @@ app.post('/api/auth/admin-login', async (req, res) => {
 app.post('/api/students/login', async (req, res) => {
     const { regNo, dob } = req.body;
     let student;
+    const resolveStudentId = (studentDoc) => studentDoc?._id || studentDoc?.id;
+    const toLoginStudentPayload = (studentDoc) => ({
+        _id: resolveStudentId(studentDoc),
+        regNo: studentDoc.regNo,
+        firstName: studentDoc.firstName,
+        lastName: studentDoc.lastName,
+        primaryEmail: studentDoc.primaryEmail || studentDoc.email,
+        email: studentDoc.email,
+        branch: studentDoc.branch,
+        degree: studentDoc.degree,
+        profilePicURL: studentDoc.profilePicURL || '',
+        resumeData: studentDoc.resumeData || null,
+        resumeURL: studentDoc.resumeURL || '',
+        dob: studentDoc.dob,
+        phone: studentDoc.phone || studentDoc.mobileNo || studentDoc.mobile || '',
+        gender: studentDoc.gender || '',
+        cgpa: studentDoc.cgpa || '',
+        year: studentDoc.year || '',
+        skills: studentDoc.skills || '',
+        backlogs: studentDoc.backlogs || '0',
+        tenthPercentage: studentDoc.tenthPercentage || '',
+        twelfthPercentage: studentDoc.twelfthPercentage || '',
+        companyPlaced: studentDoc.companyPlaced || '',
+        packageOffered: studentDoc.packageOffered || '',
+        placement: studentDoc.placement || '',
+        driveCount: studentDoc.driveCount || 0
+    });
 
     console.log('=== LOGIN ATTEMPT ===');
     console.log('RegNo:', regNo, 'DOB:', dob);
@@ -6490,8 +6907,44 @@ app.post('/api/students/login', async (req, res) => {
     try {
         // Check MongoDB connection status (non-blocking)
         const connectionState = mongoose.connection.readyState;
-        const isMongoConnected = connectionState === 1;
+        let isMongoConnected = connectionState === 1;
         const startTime = Date.now();
+        const essentialFields = '_id regNo dob firstName lastName primaryEmail email branch degree isBlocked blocked blockedBy blockedByRole blockedAt blockedReason profilePicURL resumeData resumeURL phone gender cgpa year skills backlogs tenthPercentage twelfthPercentage companyPlaced packageOffered placement driveCount';
+
+        const fetchStudentFromMongoWithRetry = async () => {
+            // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
+            const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
+                let findPromise = Student.findOne({ regNo, dob })
+                    .select(essentialFields)
+                    .lean();
+                if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
+                
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
+                );
+
+                return Promise.race([findPromise, timeoutPromise]);
+            };
+
+            // Fast (10s) → Medium (20s) → Final (45s, no MongoDB server timeout)
+            try {
+                student = await queryWithTimeout(10000);
+                console.log(`⚡ Student found in ${Date.now() - startTime}ms (fast path)`);
+            } catch (fastError) {
+                console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
+                
+                try {
+                    student = await queryWithTimeout(20000);
+                    console.log(`✅ Student found in ${Date.now() - startTime}ms (medium path)`);
+                } catch (mediumError) {
+                    console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
+                    
+                    // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
+                    student = await queryWithTimeout(45000, false);
+                    console.log(`✅ Student found in ${Date.now() - startTime}ms (slow/cold-start path)`);
+                }
+            }
+        };
         
         console.log('👤 Student login attempt:', {
             regNo,
@@ -6509,42 +6962,7 @@ app.post('/api/students/login', async (req, res) => {
             // Try MongoDB with optimized query
             try {
                 console.log('Searching for student in MongoDB...');
-                
-                // OPTIMIZATION 1: Only select needed fields (reduces data transfer)
-                const essentialFields = 'regNo dob firstName lastName primaryEmail email branch degree isBlocked blocked blockedBy blockedByRole blockedAt blockedReason';
-                
-                // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
-                const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
-                    let findPromise = Student.findOne({ regNo, dob })
-                        .select(essentialFields)
-                        .lean();
-                    if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
-                    
-                    const timeoutPromise = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
-                    );
-
-                    return Promise.race([findPromise, timeoutPromise]);
-                };
-
-                // Fast (10s) → Medium (20s) → Final (45s, no MongoDB server timeout)
-                try {
-                    student = await queryWithTimeout(10000);
-                    console.log(`⚡ Student found in ${Date.now() - startTime}ms (fast path)`);
-                } catch (fastError) {
-                    console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
-                    
-                    try {
-                        student = await queryWithTimeout(20000);
-                        console.log(`✅ Student found in ${Date.now() - startTime}ms (medium path)`);
-                    } catch (mediumError) {
-                        console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
-                        
-                        // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
-                        student = await queryWithTimeout(45000, false);
-                        console.log(`✅ Student found in ${Date.now() - startTime}ms (slow/cold-start path)`);
-                    }
-                }
+                await fetchStudentFromMongoWithRetry();
                 
                 if (student) {
                     // Cache for next time (30 min TTL)
@@ -6558,6 +6976,26 @@ app.post('/api/students/login', async (req, res) => {
             } catch (mongoError) {
                 console.log(`❌ MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
                 // Fall through to in-memory
+            }
+        }
+
+        // If MongoDB was briefly disconnected (common after unblock/update activity),
+        // force a reconnect attempt before considering in-memory fallback.
+        if (!student && !isMongoConnected) {
+            try {
+                console.log('🔄 MongoDB not ready for login. Attempting reconnect before fallback...');
+                const mongoReady = await ensureConnection();
+                isMongoConnected = mongoReady;
+
+                if (mongoReady) {
+                    await fetchStudentFromMongoWithRetry();
+                    if (student) {
+                        setLoginCache(studentCacheKey, student);
+                        console.log('✅ Student found after reconnect attempt');
+                    }
+                }
+            } catch (reconnectError) {
+                console.warn('Mongo reconnect attempt failed during login:', reconnectError.message);
             }
         }
 
@@ -6586,36 +7024,110 @@ app.post('/api/students/login', async (req, res) => {
         // Check if student is blocked (check both isBlocked and blocked fields for compatibility)
         if (student.isBlocked || student.blocked) {
             console.log('❌ Login failed: Student is blocked.', regNo);
-            let coordinatorDetails = { 
-                name: student.blockedBy || 'the placement office', 
-                cabin: 'N/A',
-                blockedBy: student.blockedBy || 'Placement Office'
+            const blockedByRole = (student.blockedByRole || '').toString().trim().toLowerCase();
+            const defaultBlockedBy = student.blockedBy || 'Placement Office';
+            const defaultCabin = student.blockedByCabin || 'N/A';
+
+            let coordinatorDetails = {
+                name: defaultBlockedBy,
+                cabin: defaultCabin,
+                blockedBy: defaultBlockedBy,
+                blockedByCabin: defaultCabin,
+                blockedByRole: blockedByRole || 'admin'
             };
             
             // Try to get more details from the blocker if available (non-blocking)
             if (isMongoConnected && student.blockedBy) {
                 try {
-                    // Try to find coordinator by name with timeout
-                    const coordinator = await Coordinator.findOne({ 
+                    const blockedByIdentifier = student.blockedByIdentifier || student.blockedBy;
+                    const blockedByParts = String(student.blockedBy || '').trim().split(/\s+/).filter(Boolean);
+                    const blockedByFirst = blockedByParts[0] || '';
+                    const blockedByLast = blockedByParts.slice(1).join(' ');
+
+                    const findCoordinator = async () => Coordinator.findOne({
                         $or: [
+                            { coordinatorId: blockedByIdentifier },
+                            { username: blockedByIdentifier },
                             { fullName: student.blockedBy },
                             { coordinatorId: student.blockedBy },
-                            { username: student.blockedBy }
+                            { username: student.blockedBy },
+                            { firstName: student.blockedBy },
+                            { lastName: student.blockedBy },
+                            ...(blockedByFirst ? [{ firstName: blockedByFirst }] : []),
+                            ...(blockedByLast ? [{ lastName: blockedByLast }] : [])
                         ]
                     })
-                    .select('firstName lastName cabin')
-                    .lean()
-                    .maxTimeMS(2000);
-                    
-                    if (coordinator) {
-                        coordinatorDetails = {
-                            name: `${coordinator.firstName} ${coordinator.lastName}`,
-                            cabin: coordinator.cabin || 'N/A',
-                            blockedBy: `${coordinator.firstName} ${coordinator.lastName}`
-                        };
+                        .select('firstName lastName cabin coordinatorId username fullName')
+                        .lean()
+                        .maxTimeMS(2000);
+
+                    if (blockedByRole === 'coordinator') {
+                        const coordinator = await findCoordinator();
+
+                        if (coordinator) {
+                            const coordinatorName = `${coordinator.firstName || ''} ${coordinator.lastName || ''}`.trim()
+                                || coordinator.fullName
+                                || coordinator.username
+                                || coordinator.coordinatorId
+                                || defaultBlockedBy;
+
+                            coordinatorDetails = {
+                                name: coordinatorName,
+                                cabin: coordinator.cabin || defaultCabin,
+                                blockedBy: coordinatorName,
+                                blockedByCabin: coordinator.cabin || defaultCabin,
+                                blockedByRole: 'coordinator'
+                            };
+                        }
+                    } else {
+                        const Admin = require('./models/Admin');
+                        const admin = await Admin.findOne({
+                            $or: [
+                                { adminLoginID: blockedByIdentifier },
+                                { adminLoginID: student.blockedBy },
+                                { fullName: student.blockedBy },
+                                { firstName: student.blockedBy },
+                                { lastName: student.blockedBy }
+                            ]
+                        })
+                        .select('firstName lastName adminLoginID cabin')
+                        .lean()
+                        .maxTimeMS(2000);
+
+                        if (admin) {
+                            const adminName = `${admin.firstName || ''} ${admin.lastName || ''}`.trim()
+                                || admin.adminLoginID
+                                || defaultBlockedBy;
+
+                            coordinatorDetails = {
+                                name: adminName,
+                                cabin: admin.cabin || defaultCabin,
+                                blockedBy: adminName,
+                                blockedByCabin: admin.cabin || defaultCabin,
+                                blockedByRole: 'admin'
+                            };
+                        } else {
+                            // Backward compatibility: if role metadata is missing/wrong, try coordinator too.
+                            const coordinator = await findCoordinator();
+                            if (coordinator) {
+                                const coordinatorName = `${coordinator.firstName || ''} ${coordinator.lastName || ''}`.trim()
+                                    || coordinator.fullName
+                                    || coordinator.username
+                                    || coordinator.coordinatorId
+                                    || defaultBlockedBy;
+
+                                coordinatorDetails = {
+                                    name: coordinatorName,
+                                    cabin: coordinator.cabin || defaultCabin,
+                                    blockedBy: coordinatorName,
+                                    blockedByCabin: coordinator.cabin || defaultCabin,
+                                    blockedByRole: 'coordinator'
+                                };
+                            }
+                        }
                     }
                 } catch (err) {
-                    console.log('Could not fetch coordinator details:', err.message);
+                    console.log('Could not fetch blocker details:', err.message);
                 }
             }
             
@@ -6627,26 +7139,44 @@ app.post('/api/students/login', async (req, res) => {
         }
         
         console.log(`✅ Student login successful in ${Date.now() - startTime}ms:`, regNo);
+        console.log('🔍 DEBUG: Student object before response:', {
+            _id: student._id,
+            id: student.id,
+            regNo: student.regNo,
+            hasId: !!student._id,
+            hasId2: !!student.id
+        });
+
+        const studentId = resolveStudentId(student);
+        if (!studentId) {
+            console.error('❌ Student login aborted: missing stable student identifier', {
+                regNo,
+                source: isMongoConnected ? 'mongo' : 'in-memory'
+            });
+            return res.status(503).json({
+                error: 'Your account data is syncing. Please try logging in again in a few seconds.'
+            });
+        }
         
         // Generate token
         const token = jwt.sign({ 
-            userId: student._id || student.id, 
+            userId: studentId, 
             regNo: student.regNo, 
             role: 'student' 
         }, JWT_SECRET, { expiresIn: '6h' });
         
+        const responseStudent = toLoginStudentPayload(student);
+        
+        console.log('📤 DEBUG: Response student object:', {
+            _id: responseStudent._id,
+            regNo: responseStudent.regNo,
+            hasId: !!responseStudent._id
+        });
+        
         res.json({ 
             message: 'Login successful', 
             token, 
-            student: {
-                _id: student._id || student.id,
-                regNo: student.regNo,
-                firstName: student.firstName,
-                lastName: student.lastName,
-                primaryEmail: student.primaryEmail || student.email,
-                branch: student.branch,
-                degree: student.degree
-            }
+            student: responseStudent
         });
 
     } catch (error) {
@@ -6657,8 +7187,16 @@ app.post('/api/students/login', async (req, res) => {
             try {
                 student = students.find(s => s.regNo === regNo && s.dob === dob);
                 if (student) {
+                    const studentId = resolveStudentId(student);
+                    if (!studentId) {
+                        console.error('❌ Fallback login aborted: missing stable student identifier', { regNo });
+                        return res.status(503).json({
+                            error: 'Your account data is syncing. Please try logging in again in a few seconds.'
+                        });
+                    }
+
                     const token = jwt.sign({ 
-                        userId: student._id || student.id, 
+                        userId: studentId, 
                         regNo: student.regNo, 
                         role: 'student' 
                     }, JWT_SECRET, { expiresIn: '6h' });
@@ -6666,7 +7204,32 @@ app.post('/api/students/login', async (req, res) => {
                     return res.json({ 
                         message: 'Login successful (fallback mode)', 
                         token, 
-                        student 
+                        student: {
+                            _id: student._id || student.id,
+                            regNo: student.regNo,
+                            firstName: student.firstName,
+                            lastName: student.lastName,
+                            primaryEmail: student.primaryEmail || student.email,
+                            email: student.email,
+                            branch: student.branch,
+                            degree: student.degree,
+                            profilePicURL: student.profilePicURL || '',
+                            resumeData: student.resumeData || null,
+                            resumeURL: student.resumeURL || '',
+                            dob: student.dob,
+                            phone: student.phone || student.mobileNo || student.mobile || '',
+                            gender: student.gender || '',
+                            cgpa: student.cgpa || '',
+                            year: student.year || '',
+                            skills: student.skills || '',
+                            backlogs: student.backlogs || '0',
+                            tenthPercentage: student.tenthPercentage || '',
+                            twelfthPercentage: student.twelfthPercentage || '',
+                            companyPlaced: student.companyPlaced || '',
+                            packageOffered: student.packageOffered || '',
+                            placement: student.placement || '',
+                            driveCount: student.driveCount || 0
+                        }
                     });
                 }
             } catch (fallbackError) {
@@ -7305,11 +7868,58 @@ app.put('/api/students/:id', authenticateToken, checkRole('student', 'admin', 'c
     try {
         if (isMongoConnected) {
             console.log('Updating student in MongoDB...');
+            const previousStudent = await Student.findById(id).select('regNo dob').lean();
             const student = await Student.findByIdAndUpdate(id, updateData, { new: true });
             if (!student) {
                 console.log('Student not found in MongoDB');
                 return res.status(404).json({ error: 'Student not found' });
             }
+
+            // Clear stale login cache entries so block/unblock takes effect on next login attempt.
+            invalidateStudentLoginCache(previousStudent);
+            invalidateStudentLoginCache(student);
+
+            // Keep login cache payload aligned with the student-login response fields.
+            // This prevents partial data immediately after unblock/update.
+            const refreshedLoginCacheDoc = {
+                _id: student._id,
+                regNo: student.regNo,
+                dob: student.dob,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                primaryEmail: student.primaryEmail,
+                email: student.email,
+                branch: student.branch,
+                degree: student.degree,
+                isBlocked: student.isBlocked,
+                blocked: student.blocked,
+                blockedBy: student.blockedBy,
+                blockedByRole: student.blockedByRole,
+                blockedByCabin: student.blockedByCabin,
+                blockedAt: student.blockedAt,
+                blockedReason: student.blockedReason,
+                profilePicURL: student.profilePicURL || '',
+                resumeData: student.resumeData || null,
+                resumeURL: student.resumeURL || '',
+                phone: student.phone || student.mobileNo || student.mobile || '',
+                gender: student.gender || '',
+                cgpa: student.cgpa || '',
+                year: student.year || '',
+                skills: student.skills || '',
+                backlogs: student.backlogs || '0',
+                tenthPercentage: student.tenthPercentage || '',
+                twelfthPercentage: student.twelfthPercentage || '',
+                companyPlaced: student.companyPlaced || '',
+                packageOffered: student.packageOffered || '',
+                placement: student.placement || '',
+                driveCount: student.driveCount || 0
+            };
+
+            const refreshedCacheKey = getStudentLoginCacheKey(refreshedLoginCacheDoc);
+            if (refreshedCacheKey) {
+                setLoginCache(refreshedCacheKey, refreshedLoginCacheDoc);
+            }
+
             console.log('Student updated successfully in MongoDB');
             res.json({ message: 'Student updated successfully', student });
         } else {
@@ -7518,7 +8128,12 @@ app.get('/api/students/:studentId/status', async (req, res) => {
                 regNo: studentData.regNo,
                 firstName: studentData.firstName,
                 lastName: studentData.lastName,
+                isBlocked: Boolean(studentData.isBlocked),
                 blocked: studentData.blocked || false,
+                blockedBy: studentData.blockedBy || '',
+                blockedByRole: studentData.blockedByRole || '',
+                blockedByCabin: studentData.blockedByCabin || '',
+                blockedReason: studentData.blockedReason || '',
                 primaryEmail: studentData.primaryEmail || studentData.email
             }
         });

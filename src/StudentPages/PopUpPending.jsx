@@ -321,7 +321,14 @@ function SFPScrollTextarea({ value, onChange, readOnly, height = 110 }) {
 }
 
 // â”€â”€ Student Feedback Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
+function StudentFeedbackPopup({
+  roundName,
+  onClose,
+  viewOnly = false,
+  driveContext = null,
+  roundNumber = null,
+  roundStatus = ''
+}) {
   const [aiEnabled, setAiEnabled]     = useState(true);
   const [difficulty, setDifficulty]   = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -331,9 +338,33 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
   const [hoverRating, setHoverRating] = useState(0);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
+  const [generateError, setGenerateError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [aiGeneratedFeedback, setAiGeneratedFeedback] = useState(false);
+  const [aiGeneratedSuggestion, setAiGeneratedSuggestion] = useState(false);
   const mobileScrollRef = useRef(null);
   const mobileTrackRef = useRef(null);
   const [mobileThumb, setMobileThumb] = useState({ height: 40, top: 0 });
+  const parsedRoundNumber = Number.isFinite(Number(roundNumber))
+    ? Number(roundNumber)
+    : Number(String(roundName || '').match(/round\s+(\d+)/i)?.[1] || 0) || null;
+
+  const getStudentInfoFromStorage = useCallback(() => {
+    try {
+      const student = JSON.parse(localStorage.getItem('studentData') || 'null') || {};
+      return {
+        studentId: String(student?._id || student?.id || '').trim(),
+        regNo: String(student?.regNo || student?.registerNo || student?.registerNumber || '').trim()
+      };
+    } catch (error) {
+      return { studentId: '', regNo: '' };
+    }
+  }, []);
 
   const [isPopupMobile, setIsPopupMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -375,6 +406,162 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
     const timer = setTimeout(updateMobileThumb, 100);
     return () => clearTimeout(timer);
   }, [feedback, suggestion, isPopupMobile, updateMobileThumb]);
+
+  useEffect(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadExistingStudentFeedback = async () => {
+      const normalizedDriveId = String(driveContext?.driveId || '').trim();
+      if (!normalizedDriveId || !parsedRoundNumber) return;
+
+      setLoadError('');
+      setIsLoadingExisting(true);
+
+      try {
+        const studentInfo = getStudentInfoFromStorage();
+        const response = await mongoDBService.getStudentFeedback({
+          driveId: normalizedDriveId,
+          companyName: driveContext?.company,
+          jobRole: driveContext?.jobRole,
+          startingDate: driveContext?.startDate,
+          roundNumber: parsedRoundNumber,
+          studentId: studentInfo.studentId,
+          regNo: studentInfo.regNo
+        });
+
+        if (!isMounted) return;
+        const records = Array.isArray(response?.data) ? response.data : [];
+        const latest = records[0] || null;
+        if (!latest) return;
+
+        setDifficulty((latest?.difficulty || '').toString());
+        setSelectedDate((latest?.selectedDate || '').toString().slice(0, 10) || '');
+        setFeedback((latest?.feedback || '').toString());
+        setSuggestion((latest?.suggestion || '').toString());
+        setRating(Number(latest?.rating) > 0 ? Number(latest?.rating) : 1);
+        setAiEnabled(latest?.aiEnabled !== false);
+      } catch (error) {
+        if (isMounted) {
+          setLoadError('Unable to load saved feedback for this round.');
+          console.error('Student feedback load failed:', error);
+        }
+      } finally {
+        if (isMounted) setIsLoadingExisting(false);
+      }
+    };
+
+    loadExistingStudentFeedback();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [driveContext?.driveId, driveContext?.company, driveContext?.jobRole, driveContext?.startDate, parsedRoundNumber, getStudentInfoFromStorage]);
+
+  const handleGenerateText = async (textType) => {
+    if (viewOnly || !aiEnabled) return;
+    if (textType === 'feedback' ? isGeneratingFeedback : isGeneratingSuggestion) return;
+
+    setGenerateError('');
+    if (textType === 'feedback') {
+      setIsGeneratingFeedback(true);
+    } else {
+      setIsGeneratingSuggestion(true);
+    }
+
+    try {
+      const response = await mongoDBService.generateStudentFeedback({
+        roundNumber: parsedRoundNumber,
+        roundName,
+        roundStatus,
+        companyName: driveContext?.company || '',
+        jobRole: driveContext?.jobRole || '',
+        difficulty,
+        textType,
+        baseText: textType === 'feedback' ? feedback : suggestion
+      });
+
+      const generatedText = (response?.text || '').toString().trim();
+      if (!generatedText) {
+        setGenerateError('No text was generated. Please try again.');
+        return;
+      }
+
+      if (textType === 'feedback') {
+        setFeedback(generatedText);
+        setAiGeneratedFeedback(true);
+      } else {
+        setSuggestion(generatedText);
+        setAiGeneratedSuggestion(true);
+      }
+    } catch (error) {
+      setGenerateError(error?.message || 'Failed to generate text.');
+    } finally {
+      if (textType === 'feedback') {
+        setIsGeneratingFeedback(false);
+      } else {
+        setIsGeneratingSuggestion(false);
+      }
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (viewOnly || isSaving) return;
+
+    const normalizedDriveId = String(driveContext?.driveId || '').trim();
+    if (!normalizedDriveId) {
+      setSaveError('Drive ID is missing. Please reopen the popup and try again.');
+      return;
+    }
+    if (!parsedRoundNumber) {
+      setSaveError('Round number is missing. Please reopen the popup and try again.');
+      return;
+    }
+    if (!feedback.trim() && !suggestion.trim()) {
+      setSaveError('Please enter feedback or suggestion before submitting.');
+      return;
+    }
+
+    setSaveError('');
+    setIsSaving(true);
+
+    try {
+      const studentInfo = getStudentInfoFromStorage();
+      await mongoDBService.saveStudentFeedback({
+        driveId: normalizedDriveId,
+        companyName: driveContext?.company || '',
+        jobRole: driveContext?.jobRole || '',
+        startingDate: driveContext?.startDate || null,
+        endingDate: driveContext?.endDate || null,
+        roundNumber: parsedRoundNumber,
+        roundName,
+        roundStatus,
+        difficulty,
+        selectedDate,
+        rating,
+        feedback,
+        suggestion,
+        aiEnabled,
+        aiGeneratedFeedback,
+        aiGeneratedSuggestion,
+        studentId: studentInfo.studentId,
+        regNo: studentInfo.regNo
+      });
+
+      setShowSubmitSuccess(true);
+    } catch (error) {
+      setSaveError(error?.message || 'Failed to save feedback.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const onMobileThumbDrag = (startE) => {
     startE.preventDefault();
@@ -590,7 +777,6 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
-                    <option value="hardcore">Hardcore</option>
                   </select>
                   <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -632,7 +818,6 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                       <option value="easy">Easy</option>
                       <option value="medium">Medium</option>
                       <option value="hard">Hard</option>
-                      <option value="hardcore">Hardcore</option>
                     </select>
                     <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -690,11 +875,12 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                       position: 'absolute', bottom: '8px', right: '18px',
                       display: 'flex', gap: '6px', zIndex: 1
                     }}>
-                      <button onClick={() => setFeedback('')} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
-                      <button style={{ backgroundColor: '#197AFF', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>Generate</button>
+                      <button onClick={() => { setFeedback(''); setAiGeneratedFeedback(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
+                      <button onClick={() => handleGenerateText('feedback')} disabled={isGeneratingFeedback || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingFeedback || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingFeedback ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
+                {isLoadingExisting && <div style={{ color: '#555', fontSize: '0.78rem', marginTop: '6px' }}>Loading saved feedback...</div>}
               </div>
 
               {/* Suggestion Area */}
@@ -712,12 +898,13 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                       position: 'absolute', bottom: '8px', right: '18px',
                       display: 'flex', gap: '6px', zIndex: 1
                     }}>
-                      <button onClick={() => setSuggestion('')} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
-                      <button style={{ backgroundColor: '#197AFF', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>Generate</button>
+                      <button onClick={() => { setSuggestion(''); setAiGeneratedSuggestion(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
+                      <button onClick={() => handleGenerateText('suggestion')} disabled={isGeneratingSuggestion || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingSuggestion || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingSuggestion ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
               </div>
+              {(generateError || loadError || saveError) && <div style={{ color: '#d32f2f', fontSize: '0.78rem', marginTop: '-8px' }}>{generateError || loadError || saveError}</div>}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -736,7 +923,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                     display: 'flex', gap: '6px', zIndex: 1
                   }}>
                     <button
-                      onClick={() => setFeedback('')}
+                      onClick={() => { setFeedback(''); setAiGeneratedFeedback(false); }}
                       style={{
                         backgroundColor: '#ef4444', color: '#fff', border: 'none',
                         borderRadius: '6px', padding: '4px 12px',
@@ -751,19 +938,23 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                       Clear
                     </button>
                     <button
+                      onClick={() => handleGenerateText('feedback')}
+                      disabled={isGeneratingFeedback || isSaving}
                       style={{
                         backgroundColor: '#197AFF', color: '#fff', border: 'none',
                         borderRadius: '6px', padding: '4px 12px',
-                        fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isSaving) ? 'not-allowed' : 'pointer',
                         fontFamily: "'Poppins', sans-serif",
-                        boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
+                        boxShadow: '0 2px 6px rgba(25,122,255,0.35)',
+                        opacity: (isGeneratingFeedback || isSaving) ? 0.75 : 1
                       }}
                     >
-                      Generate
+                      {isGeneratingFeedback ? 'Generating...' : 'Generate'}
                     </button>
                   </div>
                 )}
               </div>
+              {isLoadingExisting && <div style={{ color: '#555', fontSize: '0.78rem', marginTop: '6px' }}>Loading saved feedback...</div>}
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
@@ -780,7 +971,7 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                       display: 'flex', gap: '6px', zIndex: 1
                     }}>
                       <button
-                        onClick={() => setSuggestion('')}
+                        onClick={() => { setSuggestion(''); setAiGeneratedSuggestion(false); }}
                         style={{
                           backgroundColor: '#ef4444', color: '#fff', border: 'none',
                           borderRadius: '6px', padding: '4px 12px',
@@ -795,20 +986,24 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
                         Clear
                       </button>
                       <button
+                        onClick={() => handleGenerateText('suggestion')}
+                        disabled={isGeneratingSuggestion || isSaving}
                         style={{
                           backgroundColor: '#197AFF', color: '#fff', border: 'none',
                           borderRadius: '6px', padding: '4px 12px',
-                          fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                          fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer',
                           fontFamily: "'Poppins', sans-serif",
-                          boxShadow: '0 2px 6px rgba(25,122,255,0.35)'
+                          boxShadow: '0 2px 6px rgba(25,122,255,0.35)',
+                          opacity: (isGeneratingSuggestion || isSaving) ? 0.75 : 1
                         }}
                       >
-                        Generate
+                        {isGeneratingSuggestion ? 'Generating...' : 'Generate'}
                       </button>
                     </div>
                   )}
                 </div>
               </div>
+              {(generateError || loadError || saveError) && <div style={{ color: '#d32f2f', fontSize: '0.78rem', marginTop: '-4px' }}>{generateError || loadError || saveError}</div>}
             </div>
           )}
         </div>
@@ -862,22 +1057,26 @@ function StudentFeedbackPopup({ roundName, onClose, viewOnly = false }) {
             <>
               <button
                 onClick={onClose}
+                disabled={isSaving || isGeneratingFeedback || isGeneratingSuggestion}
                 style={{
                   backgroundColor: '#7C7C7C', color: '#fff', border: 'none',
                   borderRadius: '12px', padding: '10px 40px',
-                  fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
+                  fontWeight: 600, fontSize: '1rem', cursor: (isSaving || isGeneratingFeedback || isGeneratingSuggestion) ? 'not-allowed' : 'pointer',
+                  opacity: (isSaving || isGeneratingFeedback || isGeneratingSuggestion) ? 0.7 : 1,
                   fontFamily: "'Poppins', sans-serif"
                 }}
               >Discard</button>
               <button
-                onClick={() => setShowSubmitSuccess(true)}
+                onClick={handleSubmit}
+                disabled={isSaving || isGeneratingFeedback || isGeneratingSuggestion || (!feedback.trim() && !suggestion.trim())}
                 style={{
                   backgroundColor: '#197AFF', color: '#fff', border: 'none',
                   borderRadius: '12px', padding: '10px 40px',
-                  fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
+                  fontWeight: 600, fontSize: '1rem', cursor: (isSaving || isGeneratingFeedback || isGeneratingSuggestion || (!feedback.trim() && !suggestion.trim())) ? 'not-allowed' : 'pointer',
+                  opacity: (isSaving || isGeneratingFeedback || isGeneratingSuggestion || (!feedback.trim() && !suggestion.trim())) ? 0.7 : 1,
                   fontFamily: "'Poppins', sans-serif"
                 }}
-              >Submit</button>
+              >{isSaving ? 'Saving...' : 'Submit'}</button>
             </>
           )}
         </div>
@@ -1071,6 +1270,8 @@ export default function PopUpPending({ app, onBack }) {
   const [selectedAdminRoundLabel, setSelectedAdminRoundLabel] = useState('');
   const [showStudentFeedback, setShowStudentFeedback] = useState(false);
   const [selectedRoundName, setSelectedRoundName] = useState('');
+  const [selectedRoundNumber, setSelectedRoundNumber] = useState(null);
+  const [selectedRoundStatus, setSelectedRoundStatus] = useState('');
   const [feedbackViewMode, setFeedbackViewMode] = useState('edit'); // 'edit' | 'view'
   const roundsListRef = useRef(null);
   const [roundsThumb, setRoundsThumb] = useState({ height: 34, top: 0 });
@@ -1365,6 +1566,8 @@ export default function PopUpPending({ app, onBack }) {
             onClick={(e) => {
               e.stopPropagation();
               setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+              setSelectedRoundNumber(index + 1);
+              setSelectedRoundStatus(round.statusText || '');
               setFeedbackViewMode('edit');
               setShowStudentFeedback(true);
             }}
@@ -1383,6 +1586,8 @@ export default function PopUpPending({ app, onBack }) {
             onClick={(e) => {
               e.stopPropagation();
               setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+              setSelectedRoundNumber(index + 1);
+              setSelectedRoundStatus(round.statusText || '');
               setFeedbackViewMode('view');
               setShowStudentFeedback(true);
             }}
@@ -1566,6 +1771,9 @@ export default function PopUpPending({ app, onBack }) {
         {showStudentFeedback && (
           <StudentFeedbackPopup
             roundName={selectedRoundName}
+            roundNumber={selectedRoundNumber}
+            roundStatus={selectedRoundStatus}
+            driveContext={app}
             viewOnly={feedbackViewMode === 'view'}
             onClose={() => { setShowStudentFeedback(false); }}
           />

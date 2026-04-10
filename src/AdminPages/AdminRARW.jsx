@@ -59,6 +59,8 @@ function AdminRARW() {
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const [selectedStudentFeedback, setSelectedStudentFeedback] = useState(null);
   const [feedbackRoundName, setFeedbackRoundName] = useState('');
+  const [feedbackRoundNumber, setFeedbackRoundNumber] = useState(null);
+  const [selectedFeedbackDriveContext, setSelectedFeedbackDriveContext] = useState(null);
 
   // Toggle Sidebar Function
   const toggleSidebar = () => {
@@ -299,6 +301,7 @@ function AdminRARW() {
   const handleStartDateSelect = (dateObj) => {
     setStartDateFilter(dateObj.date);
     setIsStartDateOpen(false);
+    setSelectedFeedbackDriveContext(dateObj.drive || null);
 
     // Create round buttons based on the selected drive
     if (dateObj.rounds) {
@@ -420,6 +423,7 @@ function AdminRARW() {
           "Result": item.status || 'Passed',
           "Feedback": item.feedback || item.comment || item.note || 'View',
           "currentRound": item.currentRound || 0,
+          "roundName": item.roundName || '',
           "status": item.status || 'Passed',
           "studentId": item.studentId || item._id
         }));
@@ -781,7 +785,13 @@ function AdminRARW() {
                         </td>
                         <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
                           setSelectedStudentFeedback(student);
-                          setFeedbackRoundName(selectedRound?.name || 'Feedback Round');
+                          const clickedRoundNumber = Number.parseInt(String(selectedRound || '').split(' ')[1], 10) || Number(student?.currentRound) || null;
+                          const clickedRoundName = String(student?.roundName || '').trim();
+                          const resolvedRoundLabel = clickedRoundNumber
+                            ? `Round ${clickedRoundNumber}${clickedRoundName ? ` (${clickedRoundName})` : ''}`
+                            : (clickedRoundName || 'Round');
+                          setFeedbackRoundName(resolvedRoundLabel);
+                          setFeedbackRoundNumber(clickedRoundNumber);
                           setShowFeedbackPopup(true);
                         }}>
                           <img
@@ -830,6 +840,11 @@ function AdminRARW() {
       {showFeedbackPopup && (
         <AdminRAFeedbackview
           roundName={feedbackRoundName}
+          roundNumber={feedbackRoundNumber}
+          driveContext={selectedFeedbackDriveContext}
+          selectedStartDate={startDateFilter}
+          selectedJobRole={selectedJobRole}
+          selectedCompany={selectedCompany}
           studentData={selectedStudentFeedback}
           onClose={() => {
             setShowFeedbackPopup(false);

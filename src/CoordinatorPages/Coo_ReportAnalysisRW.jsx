@@ -85,6 +85,8 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const [selectedStudentFeedback, setSelectedStudentFeedback] = useState(null);
   const [feedbackRoundName, setFeedbackRoundName] = useState('');
+  const [feedbackRoundNumber, setFeedbackRoundNumber] = useState(null);
+  const [feedbackDriveContext, setFeedbackDriveContext] = useState(null);
 
   const exportMenuRef = useRef(null);
 
@@ -460,6 +462,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
           "Mobile": item.phone || item.mobile || 'N/A',
           "Result": item.status || 'Passed',
           "currentRound": item.currentRound || 0,
+          "roundName": item.roundName || '',
           "status": item.status || 'Passed',
           "studentId": item.studentId || item._id
         }));
@@ -925,8 +928,21 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                             alt="Feedback"
                             title={student.Feedback || 'Feedback'}
                             onClick={() => {
+                              const roundNum = Number(student.currentRound) || (selectedRound ? parseInt(String(selectedRound).split(' ')[1], 10) : null);
+                              const normalizedRoundName = String(student.roundName || '').trim();
+                              const composedRoundLabel = roundNum
+                                ? `Round ${roundNum}${normalizedRoundName ? ` (${normalizedRoundName})` : ''}`
+                                : (selectedRound || 'Round Wise Analysis');
+
                               setSelectedStudentFeedback(student);
-                              setFeedbackRoundName(selectedRound || 'Round Wise Analysis');
+                              setFeedbackRoundName(composedRoundLabel);
+                              setFeedbackRoundNumber(roundNum || null);
+                              setFeedbackDriveContext({
+                                driveId: selectedCompanyJob?.drives?.find((d) => String(d.startingDate || d.driveStartDate || d.companyDriveDate || '') === String(startDateFilter || ''))?._id || '',
+                                companyName: selectedCompany || '',
+                                jobRole: selectedJobRole || '',
+                                startingDate: startDateFilter || ''
+                              });
                               setShowFeedbackPopup(true);
                             }}
                             style={{
@@ -964,10 +980,17 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
         {showFeedbackPopup && (
           <CooRAFeedbackView
             roundName={feedbackRoundName}
+            roundNumber={feedbackRoundNumber}
+            driveContext={feedbackDriveContext}
+            selectedStartDate={startDateFilter}
+            selectedJobRole={selectedJobRole}
+            selectedCompany={selectedCompany}
             studentData={selectedStudentFeedback}
             onClose={() => {
               setShowFeedbackPopup(false);
               setSelectedStudentFeedback(null);
+              setFeedbackRoundNumber(null);
+              setFeedbackDriveContext(null);
             }}
           />
         )}

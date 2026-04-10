@@ -55,8 +55,11 @@ export const startBlockStatusMonitor = (onBlocked, intervalMs = 30000) => {
         // Prepare coordinator/blocker details
         const coordinatorDetails = {
           name: student.blockedBy || 'Placement Office',
-          cabin: 'N/A',
+          cabin: student.blockedByCabin || 'N/A',
           blockedBy: student.blockedBy || 'Placement Office',
+          blockedByCabin: student.blockedByCabin || 'N/A',
+          blockedByRole: student.blockedByRole || 'admin',
+          blockedUserRole: 'student',
           message: student.blockedReason || 'Your account has been blocked. Please contact the placement office.'
         };
         

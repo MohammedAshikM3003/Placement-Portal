@@ -377,12 +377,30 @@ function AdminMcood() {
         
         setBlockInProgress(true);
         const idsArray = Array.from(selectedCoordinatorIds);
+
+        const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfileCache') || 'null');
+        const adminData = JSON.parse(localStorage.getItem('adminData') || 'null');
+        const adminName =
+            `${cachedAdminProfile?.firstName || ''} ${cachedAdminProfile?.lastName || ''}`.trim() ||
+            cachedAdminProfile?.fullName ||
+            adminData?.fullName ||
+            localStorage.getItem('adminLoginID') ||
+            'Admin';
+        const adminCabin = cachedAdminProfile?.cabin || adminData?.cabin || 'N/A';
+        const adminIdentifier = cachedAdminProfile?.adminLoginID || adminData?.adminLoginID || localStorage.getItem('adminLoginID') || adminName;
         
         try {
             await Promise.all(idsArray.map((selectedId) => {
                 const coordinator = coordinators.find(c => c.id === selectedId);
                 if (!coordinator || !coordinator.coordinatorId) return Promise.resolve();
-                return mongoDBService.updateCoordinatorBlockStatus(coordinator.coordinatorId, true);
+                return mongoDBService.updateCoordinatorBlockStatus(coordinator.coordinatorId, true, {
+                    blockedBy: adminName,
+                    blockedByRole: 'admin',
+                    blockedByCabin: adminCabin,
+                    blockedByIdentifier: adminIdentifier,
+                    blockedAt: new Date().toISOString(),
+                    blockedReason: 'Your coordinator account is blocked. Please contact the placement office.'
+                });
             }));
 
             setCoordinators(prev => prev.map(coordinator =>

@@ -711,10 +711,10 @@ class MongoDBService {
     return await this.apiCall(endpoint);
   }
 
-  async updateCoordinatorBlockStatus(coordinatorId, isBlocked) {
+  async updateCoordinatorBlockStatus(coordinatorId, isBlocked, metadata = {}) {
     return await this.apiCall(`/coordinators/${encodeURIComponent(coordinatorId)}/block`, {
       method: 'PATCH',
-      body: JSON.stringify({ isBlocked })
+      body: JSON.stringify({ isBlocked, ...metadata })
     });
   }
 
@@ -994,6 +994,39 @@ class MongoDBService {
     return await this.apiCall('/feedback/save', {
       method: 'POST',
       body: JSON.stringify(payload)
+    });
+  }
+
+  async generateStudentFeedback(payload) {
+    return await this.apiCall('/student-feedback/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async saveStudentFeedback(payload) {
+    return await this.apiCall('/student-feedback/save', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getStudentFeedback(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.driveId !== undefined && filters.driveId !== null && String(filters.driveId).trim() !== '') {
+      params.append('driveId', String(filters.driveId).trim());
+    }
+    if (filters.companyName) params.append('companyName', String(filters.companyName).trim());
+    if (filters.jobRole) params.append('jobRole', String(filters.jobRole).trim());
+    if (filters.startingDate) params.append('startingDate', String(filters.startingDate).trim());
+    if (filters.roundNumber !== undefined && filters.roundNumber !== null && String(filters.roundNumber).trim() !== '') {
+      params.append('roundNumber', String(filters.roundNumber).trim());
+    }
+    if (filters.studentId) params.append('studentId', String(filters.studentId).trim());
+    if (filters.regNo) params.append('regNo', String(filters.regNo).trim());
+
+    return await this.apiCall(`/student-feedback?${params.toString()}`, {
+      method: 'GET'
     });
   }
 

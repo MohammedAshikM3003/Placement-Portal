@@ -148,7 +148,9 @@ class AuthService {
         console.log('✅ LOGIN SUCCESS: New student data received:', {
           regNo: response.student.regNo,
           name: `${response.student.firstName} ${response.student.lastName}`,
-          id: response.student._id
+          id: response.student._id,
+          hasId: !!response.student._id,
+          fullResponse: response.student
         });
         
         // CRITICAL: Check if student is blocked (double-check for security)
@@ -157,10 +159,13 @@ class AuthService {
           return {
             success: false,
             isBlocked: true,
+            blockedUserRole: 'student',
             coordinator: {
               name: response.student.blockedBy || 'Placement Office',
-              cabin: 'N/A',
-              blockedBy: response.student.blockedBy || 'Placement Office'
+              cabin: response.student.blockedByCabin || 'N/A',
+              blockedBy: response.student.blockedBy || 'Placement Office',
+              blockedByCabin: response.student.blockedByCabin || 'N/A',
+              blockedByRole: response.student.blockedByRole || 'admin'
             },
             error: response.student.blockedReason || 'Your account is blocked.'
           };
@@ -171,15 +176,39 @@ class AuthService {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('authRole', 'student');
         
-        // Store minimal student info (fetch full data when needed)
-        const minimalStudent = {
-          _id: response.student._id,
+        // 📸 FIXED: Store FULL student info including profilePicURL, resume, and other fields
+        // This ensures even if page is refreshed, user sees their data immediately
+        const fullStudent = {
+          _id: response.student._id || response.student.id,
+          id: response.student.id || response.student._id,
           regNo: response.student.regNo,
           firstName: response.student.firstName,
           lastName: response.student.lastName,
-          branch: response.student.branch
+          branch: response.student.branch,
+          degree: response.student.degree,
+          email: response.student.email || response.student.primaryEmail,
+          primaryEmail: response.student.primaryEmail || response.student.email,
+          // 📸 Profile picture - CRITICAL for unblocked students
+          profilePicURL: response.student.profilePicURL || '',
+          // 📄 Resume data - CRITICAL for unblocked students
+          resumeData: response.student.resumeData || null,
+          resumeURL: response.student.resumeURL || '',
+          // Other important fields
+          dob: response.student.dob,
+          phone: response.student.phone || '',
+          gender: response.student.gender || '',
+          cgpa: response.student.cgpa || '',
+          year: response.student.year || '',
+          skills: response.student.skills || '',
+          backlogs: response.student.backlogs || '0',
+          tenthPercentage: response.student.tenthPercentage || '',
+          twelfthPercentage: response.student.twelfthPercentage || '',
+          companyPlaced: response.student.companyPlaced || '',
+          packageOffered: response.student.packageOffered || '',
+          placement: response.student.placement || '',
+          driveCount: response.student.driveCount || 0
         };
-        localStorage.setItem('studentData', JSON.stringify(minimalStudent));
+        localStorage.setItem('studentData', JSON.stringify(fullStudent));
         
         // Clear any cached data from fastDataService
         import('./fastDataService.jsx')
@@ -211,10 +240,13 @@ class AuthService {
         return {
           success: false,
           isBlocked: true,
+          blockedUserRole: 'student',
           coordinator: error.data?.coordinator || {
             name: 'Placement Office',
             cabin: 'N/A',
-            blockedBy: 'Placement Office'
+            blockedBy: 'Placement Office',
+            blockedByCabin: 'N/A',
+            blockedByRole: 'admin'
           },
           error: error.data?.error || error.message || 'Your account is blocked.'
         };
@@ -435,6 +467,7 @@ class AuthService {
         return {
           success: false,
           isBlocked: true,
+          blockedUserRole: 'coordinator',
           coordinator: error.data.coordinator,
           error: error.data.error || 'Your coordinator account is blocked.'
         };

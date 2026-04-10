@@ -550,8 +550,17 @@ function AdminstudDB() {
         try {
             const ids = Array.from(selectedStudentIds);
             
-            // Get admin name (for now use "Admin" as placeholder, can be enhanced later)
-            const adminName = localStorage.getItem('adminName') || 'Admin';
+            const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfileCache') || 'null');
+            const adminData = JSON.parse(localStorage.getItem('adminData') || 'null');
+
+            const adminName =
+                `${cachedAdminProfile?.firstName || ''} ${cachedAdminProfile?.lastName || ''}`.trim() ||
+                cachedAdminProfile?.fullName ||
+                adminData?.fullName ||
+                localStorage.getItem('adminLoginID') ||
+                'Admin';
+            const adminCabin = cachedAdminProfile?.cabin || adminData?.cabin || 'N/A';
+            const adminIdentifier = cachedAdminProfile?.adminLoginID || adminData?.adminLoginID || localStorage.getItem('adminLoginID') || adminName;
             
             console.log('🚫 BLOCKING STUDENTS:', {
                 studentIds: ids,
@@ -564,6 +573,8 @@ function AdminstudDB() {
                 isBlocked: true,
                 blockedBy: adminName,
                 blockedByRole: 'admin',
+                blockedByCabin: adminCabin,
+                blockedByIdentifier: adminIdentifier,
                 blockedAt: new Date().toISOString(),
                 blockedReason: 'Your account has been blocked by the admin. Please contact the placement office for more information.'
             };
@@ -595,6 +606,20 @@ function AdminstudDB() {
         try {
             const ids = Array.from(selectedStudentIds);
             await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false })));
+            
+            // 🔄 FIXED: Clear fastDataService cache for unblocked students
+            // This ensures they get fresh data when they login
+            try {
+                const fastDataService = (await import('../services/fastDataService.jsx')).default;
+                ids.forEach(id => {
+                    console.log(`🧹 Clearing cache for unblocked student: ${id}`);
+                    fastDataService.clearCache(id);
+                });
+            } catch (cacheErr) {
+                console.warn('⚠️ Could not clear fastDataService cache:', cacheErr);
+                // Non-critical error, continue
+            }
+            
             setStudents(students.map(s => selectedStudentIds.has(s.id) ? { ...s, blocked: false } : s));
             setActivePopup('unblockSuccess');
         } catch (e) {

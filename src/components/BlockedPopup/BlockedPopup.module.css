@@ -1,135 +1,177 @@
 .popup-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(12, 15, 23, 0.68);
+    background: rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 11000;
+    z-index: 9999;
     padding: 16px;
+    animation: blocked-fade-in 0.25s ease;
 }
 
 .popup-container {
     width: min(420px, 94vw);
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.24);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     font-family: 'Poppins', 'Segoe UI', sans-serif;
+    animation: blocked-slide-in 0.25s ease;
 }
 
 .popup-header {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: #ffffff;
-    padding: 20px 28px;
+    padding: 1rem;
     text-align: center;
-    font-size: 1.85rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.student-header {
+    background-color: rgb(25, 122, 255);
+}
+
+.coordinator-header {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
 .popup-body {
-    padding: 32px 28px 26px;
+    padding: 2rem;
+    min-height: 220px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    align-items: center;
+    justify-content: center;
 }
 
 .block-icon {
-    width: 96px;
-    height: 96px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: rgba(220, 53, 69, 0.08);
+    background: #fee2e2;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
-    color: #dc3545;
+    margin: 0 auto 16px;
 }
 
 .block-icon svg {
-    width: 58px;
-    height: 58px;
-    color: inherit;
+    width: 46px;
+    height: 46px;
 }
 
 .blocked-title {
-    font-size: 1.6rem;
+    margin: 16px 0 8px;
+    font-size: 24px;
     font-weight: 700;
-    color: #1f2937;
-    margin: 0;
+    color: #000000;
 }
 
 .blocked-message {
-    color: #4b5563;
-    font-size: 1rem;
-    line-height: 1.55;
     margin: 0;
+    color: #888888;
+    font-size: 16px;
+    line-height: 1.45;
 }
 
 .visit-card {
-    border: 1px solid rgba(59, 130, 246, 0.25);
-    border-radius: 16px;
-    padding: 20px 18px;
-    background: rgba(37, 99, 235, 0.05);
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 16px;
+    width: 100%;
+    background: #f9fafb;
     text-align: left;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-}
-
-.visit-label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1d4ed8;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    gap: 12px;
 }
 
 .info-item {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 14px;
-    font-size: 1rem;
-    color: #1f2937;
 }
 
 .info-label {
-    font-weight: 600;
-    color: #dc2626;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .info-value {
-    font-weight: 500;
     color: #111827;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
 }
 
 .popup-footer {
-    padding: 18px 24px 24px;
-    display: flex;
-    justify-content: center;
-    background: #f9fafb;
+    padding: 1.5rem;
+    text-align: center;
+    background: #f7f7f7;
 }
 
 .close-btn {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-    color: white;
     border: none;
-    border-radius: 999px;
-    padding: 12px 36px;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    min-width: 100px;
     font-size: 1rem;
     font-weight: 600;
+    color: #ffffff;
     cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    box-shadow: 0 12px 24px rgba(55, 65, 81, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.student-btn {
+    background: #d23b42;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.22);
+}
+
+.student-btn:hover {
+    background: #b53138;
+}
+
+.coordinator-btn {
+    background: #5f6368;
+    box-shadow: 0 2px 8px rgba(95, 99, 104, 0.2);
+}
+
+.coordinator-btn:hover {
+    background: #4b5563;
 }
 
 .close-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 16px 28px rgba(55, 65, 81, 0.28);
 }
 
 .close-btn:active {
     transform: translateY(0);
+}
+
+@keyframes blocked-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes blocked-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-18px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }

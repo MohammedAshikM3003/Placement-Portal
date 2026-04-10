@@ -1,175 +1,87 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import styles from './BlockedPopup.module.css';
 
-/**
- * GLOBAL DEBUGGER:
- * If you see '🚀 FILE LOADED' but no '🎭 MOUNTED' log, 
- * the problem is in the PARENT component (it's not rendering this component).
- */
-console.log('🚀 BlockedPopup.jsx file has been LOADED by the browser');
+const normalizeVariant = (value) => {
+    if (value === 'coordinator') return 'coordinator';
+    return 'student';
+};
 
-const BlockedPopup = ({ coordinator, onClose }) => {
+const getRoleBasedMessage = (blockedByRole, fallbackMessage) => {
+    const role = (blockedByRole || '').toString().trim().toLowerCase();
+    if (role === 'coordinator') {
+        return 'Your account has been blocked by the placement coordinator.';
+    }
+    if (role === 'admin') {
+        return 'Your account has been blocked by the placement Admin.';
+    }
+    return fallbackMessage || 'Your account has been blocked by the placement Admin.';
+};
+
+const BlockedPopup = ({ coordinator, blockedInfo, onClose, variant = 'student' }) => {
+    const popupVariant = normalizeVariant(variant);
+    const source = blockedInfo || coordinator || {};
+
     useEffect(() => {
-        // This confirms the component has actually entered the DOM
-        console.log('✅ 🎭 BlockedPopup MOUNTED into Portal successfully');
-        console.log('📦 Props received:', coordinator);
-        
-        // Safety check for document.body
-        if (!document.body) {
-            console.error('❌ ERROR: document.body is not available!');
-            return;
-        }
+        if (typeof document === 'undefined' || !document.body) return undefined;
 
         const originalStyle = window.getComputedStyle(document.body).overflow;
         document.body.style.overflow = 'hidden';
-        
+
         return () => {
-            console.log('🧹 🎭 BlockedPopup UNMOUNTED');
             document.body.style.overflow = originalStyle;
         };
-    }, [coordinator]);
-    
+    }, []);
+
     const details = {
-        name: coordinator?.blockedBy || coordinator?.name || 'Placement Office',
-        cabin: coordinator?.cabin || 'N/A',
-        message: coordinator?.message || 'Your account has been temporarily blocked. Please contact the placement office to restore access.',
+        authority: source?.blockedBy || source?.name || 'Placement Office',
+        cabin: source?.cabin || source?.blockedByCabin || 'N/A',
+        message: getRoleBasedMessage(source?.blockedByRole, source?.message)
     };
 
-    const styles = {
-        overlay: {
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999999,
-            padding: '20px',
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
-        },
-        container: {
-            background: 'white',
-            borderRadius: '24px',
-            maxWidth: '440px',
-            width: '100%',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            overflow: 'hidden',
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            animation: 'popupBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-        },
-        header: {
-            background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
-            color: 'white',
-            padding: '24px',
-            textAlign: 'center',
-            fontSize: '22px',
-            fontWeight: '700',
-            letterSpacing: '-0.02em'
-        },
-        body: {
-            padding: '32px 28px',
-            textAlign: 'center'
-        },
-        iconWrapper: {
-            width: '80px',
-            height: '80px',
-            backgroundColor: '#fee2e2',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px',
-            fontSize: '40px'
-        },
-        title: {
-            fontSize: '24px',
-            fontWeight: '800',
-            color: '#111827',
-            margin: '0 0 12px 0'
-        },
-        message: {
-            fontSize: '15px',
-            color: '#4b5563',
-            lineHeight: '1.6',
-            margin: '0 0 24px 0'
-        },
-        infoCard: {
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            textAlign: 'left'
-        },
-        row: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '10px'
-        },
-        label: {
-            color: '#6b7280',
-            fontSize: '12px',
-            fontWeight: '700',
-            textTransform: 'uppercase'
-        },
-        value: {
-            color: '#111827',
-            fontSize: '14px',
-            fontWeight: '600'
-        },
-        button: {
-            background: '#111827',
-            color: 'white',
-            border: 'none',
-            padding: '16px',
-            borderRadius: '12px',
-            width: '100%',
-            fontSize: '16px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            transition: 'transform 0.2s, background 0.2s'
-        }
-    };
-
-    // If for some reason we have no body yet, don't try to portal
     if (typeof document === 'undefined' || !document.body) return null;
 
     return createPortal(
-        <div style={styles.overlay} onClick={onClose} id="blocked-popup-overlay">
-            <style>
-                {`
-                    @keyframes popupBounce {
-                        from { opacity: 0; transform: scale(0.95) translateY(10px); }
-                        to { opacity: 1; transform: scale(1) translateY(0); }
-                    }
-                `}
-            </style>
-            
-            <div style={styles.container} onClick={(e) => e.stopPropagation()}>
-                <div style={styles.header}>Access Restricted</div>
+        <div className={styles['popup-overlay']} onClick={onClose} id="blocked-popup-overlay">
+            <div className={styles['popup-container']} onClick={(event) => event.stopPropagation()}>
+                <div
+                    className={`${styles['popup-header']} ${
+                        popupVariant === 'coordinator' ? styles['coordinator-header'] : styles['student-header']
+                    }`}
+                >
+                    Restricted
+                </div>
 
-                <div style={styles.body}>
-                    <div style={styles.iconWrapper}>🚫</div>
-                    <h3 style={styles.title}>Account Blocked</h3>
-                    <p style={styles.message}>{details.message}</p>
-
-                    <div style={styles.infoCard}>
-                        <div style={styles.row}>
-                            <span style={styles.label}>Authority</span>
-                            <span style={styles.value}>{details.name}</span>
-                        </div>
-                        <div style={{...styles.row, marginBottom: 0}}>
-                            <span style={styles.label}>Location</span>
-                            <span style={styles.value}>{details.cabin}</span>
-                        </div>
+                <div className={styles['popup-body']}>
+                    <div className={styles['block-icon']}>
+                        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="36" cy="36" r="24" stroke="#D23B42" strokeWidth="6" fill="none" strokeLinecap="round" />
+                            <line x1="22" y1="22" x2="50" y2="50" stroke="#D23B42" strokeWidth="6" strokeLinecap="round" />
+                        </svg>
                     </div>
 
-                    <button 
-                        style={styles.button} 
+                    <h3 className={styles['blocked-title']}>Account Blocked</h3>
+                    <p className={styles['blocked-message']}>{details.message}</p>
+
+                    <div className={styles['visit-card']}>
+                        <div className={styles['info-item']}>
+                            <span className={styles['info-label']}>Authority</span>
+                            <span className={styles['info-value']}>{details.authority}</span>
+                        </div>
+                        <div className={styles['info-item']}>
+                            <span className={styles['info-label']}>Cabin</span>
+                            <span className={styles['info-value']}>{details.cabin}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles['popup-footer']}>
+                    <button
+                        type="button"
+                        className={`${styles['close-btn']} ${
+                            popupVariant === 'coordinator' ? styles['coordinator-btn'] : styles['student-btn']
+                        }`}
                         onClick={onClose}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#000'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#111827'}
                     >
                         I Understand
                     </button>
