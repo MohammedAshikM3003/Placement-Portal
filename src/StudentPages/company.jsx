@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import PopUpPending from './PopUpPending.jsx';
+import { getOverallStatus as getPopupOverallStatus } from './PopUpPending.jsx';
 import styles from './Company.module.css';
 
 // Fetch eligible students for a student from backend
@@ -30,6 +31,10 @@ export default function Company({ onLogout, onViewChange }) {
   const [studentApplications, setStudentApplications] = useState([]);
   const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isFetchingRef = useRef(false);
+  const lastFetchedStudentIdRef = useRef(null);
+  const eligibleDrivesRef = useRef([]);
+  const studentApplicationsRef = useRef([]);
 
   // Custom scrollbar states
   const appListRef = useRef(null);
@@ -68,41 +73,94 @@ export default function Company({ onLogout, onViewChange }) {
 
   const findApplicationForDrive = (drive) => {
     const driveId = (drive.driveId || drive._id || '').toString();
+    const driveCompany = normalizeText(drive.companyName);
     const driveRole = normalizeText(drive.jobs || drive.jobRole);
+    const driveStart = normalizeDate(drive.driveStartDate || drive.companyDriveDate);
+    const driveEnd = normalizeDate(drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate);
 
-    return studentApplications.find((app) => {
-      const appDriveId = (app?.driveId || '').toString();
-      if (driveId && appDriveId && appDriveId === driveId) {
-        return true;
-      }
-
-      return normalizeText(app?.companyName) === normalizeText(drive.companyName) &&
-             normalizeText(app?.jobRole) === driveRole;
+    const candidates = studentApplications.filter((app) => {
+      const appCompany = normalizeText(app?.companyName);
+      const appRole = normalizeText(app?.jobRole);
+      return appCompany === driveCompany && appRole === driveRole;
     });
+
+    if (candidates.length === 0) return null;
+
+    // 1) Strongest key: explicit driveId match.
+    if (driveId) {
+      const byDriveId = candidates.find((app) => (app?.driveId || '').toString() === driveId);
+      if (byDriveId) return byDriveId;
+    }
+
+    // 2) Next key: start date equality between drive and application.
+    const byStartDate = candidates.find((app) => {
+      const appStart = normalizeDate(app?.startingDate || app?.startDate || app?.nasaDate);
+      return Boolean(driveStart && appStart && driveStart === appStart);
+    });
+    if (byStartDate) return byStartDate;
+
+    // 3) Last fallback: overlap with application start/end window.
+    const byWindowOverlap = candidates.find((app) => {
+      const appStart = normalizeDate(app?.startingDate || app?.startDate || app?.nasaDate);
+      const appEnd = normalizeDate(app?.endingDate || app?.endDate || app?.startingDate || app?.nasaDate);
+      if (!appStart || !driveStart) return false;
+      return appStart === driveStart ||
+             (driveEnd && appStart === driveEnd) ||
+             (appEnd && driveStart === appEnd) ||
+             (appEnd && driveEnd && appEnd === driveEnd);
+    });
+    if (byWindowOverlap) return byWindowOverlap;
+
+    // 4) Deterministic final fallback: latest application among same company+role.
+    return candidates
+      .slice()
+      .sort((left, right) => new Date(right?.updatedAt || right?.appliedDate || 0) - new Date(left?.updatedAt || left?.appliedDate || 0))[0] || null;
   };
 
   const fetchStudentAttendanceRecords = async (student) => {
     const mongoDBService = await import('../services/mongoDBService').then(m => m.default);
-    const regNo = student?.regNo || student?.registerNumber || student?.registerNo || '';
+    const regNoRaw = String(student?.regNo || student?.registerNumber || student?.registerNo || '').trim();
+    const studentId = String(student?._id || '').trim();
 
-    if (regNo) {
-      const attendanceByRegNo = await mongoDBService.getStudentAttendanceByRegNo(regNo);
-      if (attendanceByRegNo?.success) {
-        return attendanceByRegNo;
+    const attendanceCalls = [];
+    if (regNoRaw) {
+      attendanceCalls.push(mongoDBService.getStudentAttendanceByRegNo(regNoRaw).catch(() => null));
+      const regNoUpper = regNoRaw.toUpperCase();
+      if (regNoUpper !== regNoRaw) {
+        attendanceCalls.push(mongoDBService.getStudentAttendanceByRegNo(regNoUpper).catch(() => null));
       }
     }
-
-    if (student?._id) {
-      const attendanceByStudentId = await mongoDBService.getStudentAttendance(student._id);
-      if (attendanceByStudentId?.success) {
-        return attendanceByStudentId;
-      }
+    if (studentId) {
+      attendanceCalls.push(mongoDBService.getStudentAttendance(studentId).catch(() => null));
     }
 
-    return { success: true, data: [] };
+    const responses = attendanceCalls.length > 0 ? await Promise.all(attendanceCalls) : [];
+    const merged = [];
+    const seenKeys = new Set();
+
+    responses.forEach((response) => {
+      if (!response?.success || !Array.isArray(response?.data)) return;
+      response.data.forEach((record) => {
+        const dedupeKey = [
+          String(record?.driveId || '').trim(),
+          normalizeText(record?.companyName),
+          normalizeText(record?.jobRole),
+          normalizeDate(record?.startDate),
+          normalizeDate(record?.endDate),
+          normalizeText(record?.status)
+        ].join('::');
+
+        if (seenKeys.has(dedupeKey)) return;
+        seenKeys.add(dedupeKey);
+        merged.push(record);
+      });
+    });
+
+    return { success: true, data: merged };
   };
 
   const isAttendanceAbsentForDrive = (drive) => {
+    const driveId = String(drive.driveId || drive._id || '').trim();
     const driveCompany = normalizeText(drive.companyName);
     const driveRole = normalizeText(drive.jobs || drive.jobRole);
     const driveStart = normalizeDate(drive.driveStartDate || drive.companyDriveDate);
@@ -110,6 +168,12 @@ export default function Company({ onLogout, onViewChange }) {
 
     const matched = studentAttendanceRecords.some((record) => {
       if (normalizeText(record?.status) !== 'absent') return false;
+
+      const recordDriveId = String(record?.driveId || '').trim();
+      if (driveId && recordDriveId) {
+        return recordDriveId === driveId;
+      }
+
       if (normalizeText(record?.companyName) !== driveCompany) return false;
 
       const recordRole = normalizeText(record?.jobRole);
@@ -137,12 +201,7 @@ export default function Company({ onLogout, onViewChange }) {
       return datesMatch;
     });
 
-    if (matched) return true;
-
-    // Fallback: any absent record for the same company, even if role/date differ.
-    return studentAttendanceRecords.some((record) =>
-      normalizeText(record?.status) === 'absent' && normalizeText(record?.companyName) === driveCompany
-    );
+    return matched;
   };
 
   // Custom scrollbar logic
@@ -201,6 +260,14 @@ export default function Company({ onLogout, onViewChange }) {
   }, [eligibleDrives.length, isLoading, updateScrollThumb]);
 
   useEffect(() => {
+    eligibleDrivesRef.current = eligibleDrives;
+  }, [eligibleDrives]);
+
+  useEffect(() => {
+    studentApplicationsRef.current = studentApplications;
+  }, [studentApplications]);
+
+  useEffect(() => {
     const handleScrollResize = () => updateScrollThumb();
     window.addEventListener('resize', handleScrollResize);
     return () => window.removeEventListener('resize', handleScrollResize);
@@ -214,108 +281,110 @@ export default function Company({ onLogout, onViewChange }) {
   }, []);
 
   useEffect(() => {
-    let isFetching = false;
-    
-    const handleProfileUpdate = () => {
-      // Prevent multiple simultaneous fetches
-      if (isFetching) {
-        console.log('Fetch already in progress, skipping...');
+    let isUnmounted = false;
+
+    const fetchCompanyPageData = async ({ force = false } = {}) => {
+      if (isFetchingRef.current) {
         return;
       }
-      
+
+      let parsedStudentData = null;
       try {
-        const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-        if (updatedStudentData) {
-          setStudentData(updatedStudentData);
-          
-          // Only fetch if we don't already have data or if student ID changed
-          const shouldFetch = eligibleDrives.length === 0 || 
-                             studentData?._id !== updatedStudentData._id;
-          
-          if (!shouldFetch) {
-            console.log('Data already loaded, skipping fetch...');
-            return;
-          }
-          
-          isFetching = true;
-          setIsLoading(true);
-          
-          // Fetch both eligible drives and student applications
-          Promise.all([
-            getEligibleStudents(updatedStudentData._id),
-            import('../services/mongoDBService').then(m => 
-              m.default.getStudentApplications(updatedStudentData._id)
-            ),
-            fetchStudentAttendanceRecords(updatedStudentData)
-          ]).then(([drives, appsResponse, attendanceResponse]) => {
-            console.log('Fetched drives:', drives);
-            console.log('Fetched applications:', appsResponse?.applications);
-            setEligibleDrives(drives);
-            setStudentApplications(appsResponse?.applications || []);
-            setStudentAttendanceRecords(attendanceResponse?.data || []);
-            setIsLoading(false);
-            isFetching = false;
-          }).catch((error) => {
-            console.error('Error fetching data:', error);
-            setIsLoading(false);
-            isFetching = false;
-          });
-        }
+        parsedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
       } catch (error) {
-        console.error('Error updating student data for sidebar:', error);
-        setIsLoading(false);
-        isFetching = false;
+        console.error('Error parsing student data from localStorage:', error);
+      }
+
+      if (!parsedStudentData?._id) {
+        if (!isUnmounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const studentId = String(parsedStudentData._id);
+      const hasExistingData = eligibleDrivesRef.current.length > 0 || studentApplicationsRef.current.length > 0;
+      const sameStudentAsLastFetch = lastFetchedStudentIdRef.current === studentId;
+
+      if (!force && hasExistingData && sameStudentAsLastFetch) {
+        return;
+      }
+
+      isFetchingRef.current = true;
+      const shouldShowLoading = !hasExistingData || !sameStudentAsLastFetch;
+
+      if (shouldShowLoading && !isUnmounted) {
+        setIsLoading(true);
+      }
+
+      try {
+        if (!isUnmounted) {
+          setStudentData(parsedStudentData);
+        }
+
+        const [drives, appsResponse, attendanceResponse] = await Promise.all([
+          getEligibleStudents(studentId),
+          import('../services/mongoDBService').then(m => m.default.getStudentApplications(studentId)),
+          fetchStudentAttendanceRecords(parsedStudentData)
+        ]);
+
+        if (!isUnmounted) {
+          setEligibleDrives(drives || []);
+          setStudentApplications(appsResponse?.applications || []);
+          setStudentAttendanceRecords(attendanceResponse?.data || []);
+        }
+
+        lastFetchedStudentIdRef.current = studentId;
+      } catch (error) {
+        console.error('Error fetching company page data:', error);
+      } finally {
+        isFetchingRef.current = false;
+        if (!isUnmounted) {
+          setIsLoading(false);
+        }
       }
     };
-    
-    const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-    if (storedStudentData) {
-      setStudentData(storedStudentData);
-      setIsLoading(true);
-      
-      // Fetch both eligible drives and student applications
-      Promise.all([
-        getEligibleStudents(storedStudentData._id),
-        import('../services/mongoDBService').then(m => 
-          m.default.getStudentApplications(storedStudentData._id)
-        ),
-        fetchStudentAttendanceRecords(storedStudentData)
-      ]).then(([drives, appsResponse, attendanceResponse]) => {
-        console.log('Initial fetch - Drives:', drives);
-        console.log('Initial fetch - Applications:', appsResponse?.applications);
-        setEligibleDrives(drives);
-        setStudentApplications(appsResponse?.applications || []);
-        setStudentAttendanceRecords(attendanceResponse?.data || []);
-        setIsLoading(false);
-      });
-      
-      if (storedStudentData._id) {
-        import('../services/fastDataService.jsx').then(({ default: fastDataService }) => {
-          const instantData = fastDataService.getInstantData(storedStudentData._id);
-          if (instantData && instantData.student) {
-            setStudentData(instantData.student);
-          }
-        });
+
+    const handleProfileUpdate = () => {
+      fetchCompanyPageData({ force: true });
+    };
+
+    fetchCompanyPageData({ force: false });
+
+    const storedStudentData = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('studentData') || 'null');
+      } catch (error) {
+        return null;
       }
-    } else {
-      setIsLoading(false);
+    })();
+
+    if (storedStudentData?._id) {
+      import('../services/fastDataService.jsx').then(({ default: fastDataService }) => {
+        if (isUnmounted) return;
+        const instantData = fastDataService.getInstantData(storedStudentData._id);
+        if (instantData?.student) {
+          setStudentData(instantData.student);
+        }
+      });
     }
-    
+
     window.addEventListener('storage', handleProfileUpdate);
     window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('allDataPreloaded', handleProfileUpdate);
 
-    const refreshInterval = setInterval(handleProfileUpdate, 30000);
+    const refreshInterval = setInterval(() => fetchCompanyPageData({ force: true }), 30000);
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        handleProfileUpdate();
+        fetchCompanyPageData({ force: true });
       }
     };
 
     window.addEventListener('focus', handleProfileUpdate);
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
+      isUnmounted = true;
       window.removeEventListener('storage', handleProfileUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener('allDataPreloaded', handleProfileUpdate);
@@ -332,64 +401,32 @@ export default function Company({ onLogout, onViewChange }) {
   };
 
   // Function to determine overall status based on rounds
-  const getOverallStatus = (application, attendanceAbsent = false) => {
-    console.log('getOverallStatus called with application:', application);
-    console.log('Application rounds:', application?.rounds);
+  const getOverallStatus = (application, drive = null, attendanceAbsent = false) => {
+    const popupCompatibleApplication = {
+      ...(application || {}),
+      totalRounds: Number(drive?.totalRounds || application?.totalRounds || drive?.roundDetails?.length || application?.roundDetails?.length || 0),
+      roundDetails: Array.isArray(drive?.roundDetails) && drive.roundDetails.length > 0
+        ? drive.roundDetails
+        : (application?.roundDetails || []),
+      status: attendanceAbsent ? 'Absent' : (application?.status || 'Pending')
+    };
 
-    if (attendanceAbsent) {
+    const normalizedStatus = (getPopupOverallStatus(popupCompatibleApplication)?.status || 'Pending').toString();
+
+    if (normalizedStatus === 'Absent') {
       return { status: 'Absent', colorClass: styles.appStatusAbsent, textClass: styles.appStatusTextAbsent };
     }
-
-    const normalizedStatus = (application?.status || '').toString().trim().toLowerCase();
-    if (normalizedStatus === 'absent') {
-      return { status: 'Absent', colorClass: styles.appStatusAbsent, textClass: styles.appStatusTextAbsent };
-    }
-    if (normalizedStatus === 'rejected' || normalizedStatus === 'failed') {
+    if (normalizedStatus === 'Rejected') {
       return { status: 'Rejected', colorClass: styles.appStatusRejected, textClass: styles.appStatusTextRejected };
     }
-    if (normalizedStatus === 'placed' || normalizedStatus === 'selected') {
+    if (normalizedStatus === 'Placed') {
       return { status: 'Placed', colorClass: styles.appStatusPlaced, textClass: styles.appStatusTextPlaced };
     }
-    
-    if (!application || !application?.rounds || application.rounds.length === 0) {
-      console.log('No application or rounds found, returning Pending');
-      return { status: 'Pending', colorClass: styles.appStatusPending, textClass: styles.appStatusTextPending };
+    if (normalizedStatus.startsWith('Passed-')) {
+      return { status: normalizedStatus, colorClass: styles.appStatusBlue, textClass: styles.appStatusTextBlue };
     }
 
-    const rounds = application.rounds;
-    console.log('Processing rounds:', rounds);
-    
-    const hasAbsent = rounds.some(r => r.status === 'Absent');
-    const hasFailed = rounds.some(r => r.status === 'Failed');
-    const passedCount = rounds.filter(r => r.status === 'Passed').length;
-    const totalRounds = rounds.length;
-    const allPassed = passedCount === totalRounds && totalRounds > 0;
-    
-    console.log('Status analysis:', { hasAbsent, hasFailed, allPassed, passedCount, totalRounds });
-
-    if (hasAbsent) {
-      console.log('Returning Absent');
-      const result = { status: 'Absent', colorClass: styles.appStatusAbsent, textClass: styles.appStatusTextAbsent };
-      console.log('Function returning:', result);
-      return result;
-    }
-    if (hasFailed) {
-      console.log('Returning Rejected');
-      const result = { status: 'Rejected', colorClass: styles.appStatusRejected, textClass: styles.appStatusTextRejected };
-      console.log('Function returning:', result);
-      return result;
-    }
-    if (passedCount > 0) {
-      console.log(`Returning Passed-${passedCount}`);
-      const result = { status: `Passed-${passedCount}`, colorClass: styles.appStatusBlue, textClass: styles.appStatusTextBlue };
-      console.log('Function returning:', result);
-      return result;
-    }
-    
-    console.log('Returning Pending (default)');
-    const result = { status: 'Pending', colorClass: styles.appStatusPending, textClass: styles.appStatusTextPending };
-    console.log('Function returning:', result);
-    return result;
+    return { status: 'Pending', colorClass: styles.appStatusPending, textClass: styles.appStatusTextPending };
   };
 
   const handleViewChange = (view) => {
@@ -403,7 +440,7 @@ export default function Company({ onLogout, onViewChange }) {
   const effectiveStatuses = eligibleDrives.map((drive) => {
     const application = findApplicationForDrive(drive);
     const attendanceAbsent = isAttendanceAbsentForDrive(drive);
-    return getOverallStatus(application, attendanceAbsent).status;
+    return getOverallStatus(application, drive, attendanceAbsent).status;
   });
   const pendingCount = effectiveStatuses.filter((status) => status === 'Pending').length;
   const rejectedCount = effectiveStatuses.filter((status) => status === 'Rejected' || status === 'Absent').length;
@@ -502,19 +539,8 @@ export default function Company({ onLogout, onViewChange }) {
                   const application = findApplicationForDrive(drive);
                   const attendanceAbsent = isAttendanceAbsentForDrive(drive);
 
-                  console.log('Drive:', drive.companyName, 'Application:', application);
-                  console.log('Application rounds:', application?.rounds);
-                  console.log('Attendance records:', studentAttendanceRecords);
-                  console.log('Attendance absent match for drive?', attendanceAbsent, {
-                    driveCompany: drive.companyName,
-                    driveRole: drive.jobs || drive.jobRole,
-                    driveStart: drive.driveStartDate || drive.companyDriveDate,
-                    driveEnd: drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate
-                  });
-
                   // Get overall status based on rounds
-                  const overallStatus = getOverallStatus(application, attendanceAbsent);
-                  console.log('Overall status for', drive.companyName, ':', overallStatus);
+                  const overallStatus = getOverallStatus(application, drive, attendanceAbsent);
 
                   return (
                     <div 
@@ -537,7 +563,6 @@ export default function Company({ onLogout, onViewChange }) {
                           rounds: application?.rounds || [],
                           status: attendanceAbsent ? 'Absent' : (application?.status || 'Pending')
                         };
-                        console.log('Selected application data:', selectedApp);
                         setSelectedApplication(selectedApp);
                       }}
                       style={{ cursor: 'pointer' }}

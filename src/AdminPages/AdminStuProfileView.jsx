@@ -742,6 +742,8 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [eligibleDrives, setEligibleDrives] = useState([]);
     const [studentApplications, setStudentApplications] = useState([]);
     const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
+    const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
+    const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
     const savedDataRef = useRef(null);
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -1089,6 +1091,44 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         syncCompanyData();
     }, [fetchStudentAttendanceRecords, studentData, studentId]);
 
+    useEffect(() => {
+        let isActive = true;
+
+        const loadTrainingCardData = async () => {
+            const regNo = (studentData?.regNo || studentData?.registerNumber || studentData?.registerNo || '').toString().trim();
+
+            if (!regNo) {
+                if (isActive) {
+                    setStudentTrainingAssignment(null);
+                    setStudentTrainingAttendanceRecords([]);
+                }
+                return;
+            }
+
+            try {
+                const [assignment, attendanceResponse] = await Promise.all([
+                    mongoDBService.getStudentTrainingAssignment(regNo),
+                    mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] }))
+                ]);
+
+                if (!isActive) return;
+
+                setStudentTrainingAssignment(assignment || null);
+                setStudentTrainingAttendanceRecords(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
+            } catch (error) {
+                if (!isActive) return;
+                setStudentTrainingAssignment(null);
+                setStudentTrainingAttendanceRecords([]);
+            }
+        };
+
+        loadTrainingCardData();
+
+        return () => {
+            isActive = false;
+        };
+    }, [studentData?.regNo, studentData?.registerNo, studentData?.registerNumber]);
+
     const companyStats = useMemo(() => ({
         totalCompaniesAttended: driveAnalytics.totalCompaniesAttended,
         totalDrivesAttended: driveAnalytics.totalDrivesAttended,
@@ -1099,6 +1139,56 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         highestPackageDrive: driveAnalytics.highestPackageLpa,
         totalRoundsCleared: driveAnalytics.totalRoundsCleared,
     }), [driveAnalytics, studentData?.preferredModeOfDrive]);
+
+    const trainingCardStats = useMemo(() => {
+        const presentCount = studentTrainingAttendanceRecords.filter(
+            (entry) => normalizeText(entry?.status) === 'present'
+        ).length;
+        const absentCount = studentTrainingAttendanceRecords.filter(
+            (entry) => normalizeText(entry?.status) === 'absent'
+        ).length;
+        const totalSessions = presentCount + absentCount;
+        const attendancePercentage = totalSessions > 0
+            ? Math.round((presentCount / totalSessions) * 100)
+            : 0;
+
+        const attendedCourse = studentTrainingAttendanceRecords
+            .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+            .find(Boolean);
+
+        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+        const preferredCourse = (selectedTrainings[0] || '').toString().trim();
+        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+
+        let calculatedTotalDays = 0;
+        const assignmentStartDate = studentTrainingAssignment?.startDate;
+        const assignmentEndDate = studentTrainingAssignment?.endDate;
+        if (assignmentStartDate && assignmentEndDate) {
+            const start = new Date(assignmentStartDate);
+            const end = new Date(assignmentEndDate);
+            if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+                const dayMs = 24 * 60 * 60 * 1000;
+                const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
+                if (diffDays >= 0) calculatedTotalDays = diffDays + 1;
+            }
+        }
+
+        const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : calculatedTotalDays;
+
+        return {
+            courseName: assignmentCourse || attendedCourse || preferredCourse || 'N/A',
+            attendancePercentage,
+            totalTrainingDays
+        };
+    }, [
+        normalizeText,
+        selectedTrainings,
+        studentTrainingAssignment?.courseName,
+        studentTrainingAssignment?.endDate,
+        studentTrainingAssignment?.startDate,
+        studentTrainingAssignment?.totalDays,
+        studentTrainingAttendanceRecords
+    ]);
 
     const PIE_DATA = driveAnalytics.pieData;
     const ROUND_DETAILS = driveAnalytics.roundDetails;
@@ -2360,6 +2450,26 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
+
+                        {(studentTrainingAssignment || studentTrainingAttendanceRecords.length > 0) && (
+                            <div className={styles.profileSectionContainer}>
+                                <h3 className={styles.sectionHeader}>Training</h3>
+                                <div className={styles.companyStatsGrid}>
+                                    <div className={styles.companyStatCardEmpty}>
+                                        <span className={styles.companyStatLabel}>Training 1</span>
+                                        <span className={styles.companyStatValueEmpty}>{trainingCardStats.courseName}</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                        <span className={styles.companyStatValue}>{trainingCardStats.attendancePercentage}%</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Total Training Days</span>
+                                        <span className={styles.companyStatValue}>{trainingCardStats.totalTrainingDays}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (

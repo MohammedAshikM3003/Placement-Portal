@@ -1169,6 +1169,67 @@ export default function AdminAtt({ onLogout }) {
       ];
 
 
+  const dispatchAttendanceAbsentNotifications = (attendancePayload, driveData) => {
+
+    const absentStudents = (attendancePayload?.students || []).filter(
+
+      (student) => String(student?.status || '').toLowerCase() === 'absent'
+
+    );
+
+
+
+    if (!absentStudents.length) {
+
+      return;
+
+    }
+
+
+
+    absentStudents.forEach((student, index) => {
+
+      const studentId = String(student?.studentId || '').trim();
+
+      if (!studentId) return;
+
+
+
+      const payload = {
+
+        studentId,
+
+        status: 'absent',
+
+        companyName: attendancePayload?.companyName || selectedCompanyJob?.companyName || '',
+
+        jobRole: attendancePayload?.jobRole || selectedCompanyJob?.jobRole || '',
+
+        roundName: 'Attendance',
+
+        roundNumber: 0,
+
+        driveId: driveData?._id || attendancePayload?.driveId || null,
+
+        signature: `${studentId}:${attendancePayload?.driveId || 'attendance'}:${attendancePayload?.startDate || ''}:absent`,
+
+        emittedAt: Date.now() + index
+
+      };
+
+
+
+      window.dispatchEvent(new CustomEvent('roundResultNotification', { detail: payload }));
+
+      localStorage.setItem('placementBannerBroadcast', JSON.stringify(payload));
+
+      console.log('📢 Dispatched absent attendance notification:', payload);
+
+    });
+
+  };
+
+
 
   const handleApply = async () => {
 
@@ -1417,6 +1478,10 @@ export default function AdminAtt({ onLogout }) {
         setSubmitStatus('success');
 
         setShowSuccessPopup(true);
+
+        // Trigger absent student banner events from attendance page flow.
+
+        dispatchAttendanceAbsentNotifications(attendanceData, selectedDrive);
 
         
 

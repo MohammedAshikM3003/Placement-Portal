@@ -56,6 +56,35 @@ const placedStudentSchema = new mongoose.Schema({
     enum: ['Accepted', 'Pending', 'Rejected'],
     default: 'Accepted'
   },
+  offerStatus: {
+    type: String,
+    enum: ['Pending', 'Sent'],
+    default: 'Pending'
+  },
+  offerLetterName: {
+    type: String
+  },
+  offerLetterType: {
+    type: String
+  },
+  offerLetterSize: {
+    type: Number
+  },
+  offerLetterData: {
+    type: String
+  },
+  offerGridfsFileId: {
+    type: String
+  },
+  offerGridfsFileUrl: {
+    type: String
+  },
+  offerUploadedAt: {
+    type: Date
+  },
+  offerSentAt: {
+    type: Date
+  },
   profilePhoto: {
     type: String  // Will store base64 image data
   },

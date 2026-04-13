@@ -1111,96 +1111,117 @@ const AbsentIcon = ({ size = 28 }) => (
 
 export const generateRounds = (app) => {
   const normalizedAppStatus = (app?.status || '').toString().trim().toLowerCase();
-  const isApplicationAbsent = normalizedAppStatus === 'absent';
-  // Keep backward compatibility for round-level absence from existing data.
-  const hasAbsent = app?.rounds?.some(r => r.status === 'Absent');
+  const normalizeRoundStatus = (status) => {
+    const normalized = String(status || '').trim().toLowerCase();
+    if (normalized === 'passed' || normalized === 'selected' || normalized === 'cleared') return 'Passed';
+    if (normalized === 'failed' || normalized === 'rejected') return 'Failed';
+    if (normalized === 'absent') return 'Absent';
+    if (normalized === 'not eligible' || normalized === 'not_eligible' || normalized === 'ineligible') return 'Not Eligible';
+    return normalized ? 'Pending' : '';
+  };
 
-  // Check if Round 1 is failed - if yes, mark subsequent rounds as Not Eligible
-  const isRound1Failed = app?.rounds?.[0]?.status === 'Failed' ||
-                         (app?.roundDetails && app?.rounds?.find(r => r.roundNumber === 1 || r.name === app.roundDetails[0])?.status === 'Failed');
+  const getIconForStatus = (status) => (
+    status === 'Passed'
+      ? <FaCheckCircle color="#197AFF" size={28} />
+      : status === 'Failed'
+      ? <FaTimes color="#D23B42" size={28} />
+      : status === 'Absent'
+      ? <AbsentIcon />
+      : status === 'Not Eligible'
+      ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
+      : <FaExclamationCircle color="#949494" size={28} />
+  );
+
+  const getColorForStatus = (status) => (
+    status === 'Passed' ? '#197AFF' :
+    status === 'Failed' ? '#D23B42' :
+    status === 'Absent' ? '#ff2800' :
+    status === 'Not Eligible' ? '#f39c12' : '#717070'
+  );
+
+  const buildRoundEntry = (name, status, index) => ({
+    name: name || `Round ${index + 1}`,
+    status,
+    icon: getIconForStatus(status),
+    statusColor: getColorForStatus(status),
+    statusText: status || 'Pending'
+  });
+
+  const resolveTerminalRoundInfo = (statusList) => {
+    let terminalIndex = -1;
+    let terminalStatus = '';
+
+    statusList.forEach((status, index) => {
+      if (terminalIndex !== -1) return;
+      if (status === 'Absent' || status === 'Failed') {
+        terminalIndex = index;
+        terminalStatus = status;
+      }
+    });
+
+    if (terminalIndex === -1 && normalizedAppStatus === 'absent') {
+      terminalIndex = 0;
+      terminalStatus = 'Absent';
+    }
+
+    return { terminalIndex, terminalStatus };
+  };
 
   // If roundDetails exist, use them as the base and merge with student rounds
   if (app?.roundDetails && app.roundDetails.length > 0) {
-    return app.roundDetails.map((roundName, index) => {
+    const detailedRounds = app.roundDetails.map((roundName, index) => {
       // Find corresponding student round by name or round number
       const studentRound = app.rounds?.find(
         r => r.name === roundName ||
              r.roundName === roundName ||
              r.roundNumber === (index + 1)
       );
-
-      let status;
-      if (isApplicationAbsent) {
-        // Attendance-level absent: show first round absent and remaining rounds not eligible.
-        status = index === 0 ? "Absent" : "Not Eligible";
-      } else if (hasAbsent) {
-        // Round-level absent from existing data: preserve old behavior.
-        status = "Absent";
-      } else if (isRound1Failed && index > 0 && !studentRound?.status) {
-        // If Round 1 is failed and this is not the first round and no status exists, mark as Not Eligible
-        status = "Not Eligible";
-      } else {
-        status = studentRound?.status || "Pending";
-      }
-
       return {
         name: roundName || `Round ${index + 1}`,
-        status: status,
-        icon: status === "Passed"
-          ? <FaCheckCircle color="#197AFF" size={28} />
-          : status === "Failed"
-          ? <FaTimes color="#D23B42" size={28} />
-          : status === "Absent"
-          ? <AbsentIcon />
-          : status === "Not Eligible"
-          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
-          : <FaExclamationCircle color="#949494" size={28} />,
-        statusColor: status === "Passed" ? "#197AFF" :
-                     status === "Failed" ? "#D23B42" :
-                     status === "Absent" ? "#ff2800" :
-                     status === "Not Eligible" ? "#f39c12" : "#717070",
-        statusText: status
+        originalStatus: normalizeRoundStatus(studentRound?.status)
       };
+    });
+
+    const normalizedStatuses = detailedRounds.map((round) => round.originalStatus);
+    const { terminalIndex, terminalStatus } = resolveTerminalRoundInfo(normalizedStatuses);
+
+    return detailedRounds.map((round, index) => {
+      let status = round.originalStatus || 'Pending';
+      if (terminalIndex !== -1) {
+        if (index === terminalIndex) {
+          status = terminalStatus;
+        } else if (index > terminalIndex) {
+          status = 'Not Eligible';
+        }
+      }
+      return buildRoundEntry(round.name, status, index);
     });
   }
 
   // Fallback: If only student rounds exist without roundDetails
   if (app?.rounds && app.rounds.length > 0) {
-    // Check if any round has Absent status
-    const hasAbsent = app.rounds.some(r => r.status === 'Absent');
-    // Check if first round is failed
-    const isFirstRoundFailed = app.rounds[0]?.status === 'Failed';
+    const orderedRounds = app.rounds
+      .slice()
+      .sort((left, right) => Number(left?.roundNumber || 0) - Number(right?.roundNumber || 0));
 
-    return app.rounds.map((round, index) => {
-      let status;
-      if (isApplicationAbsent) {
-        status = index === 0 ? "Absent" : "Not Eligible";
-      } else if (hasAbsent) {
-        status = "Absent";
-      } else if (isFirstRoundFailed && index > 0 && !round.status) {
-        status = "Not Eligible";
-      } else {
-        status = round.status || "Pending";
+    const normalizedStatuses = orderedRounds.map((round) => normalizeRoundStatus(round?.status));
+    const { terminalIndex, terminalStatus } = resolveTerminalRoundInfo(normalizedStatuses);
+
+    return orderedRounds.map((round, index) => {
+      let status = normalizeRoundStatus(round?.status) || 'Pending';
+      if (terminalIndex !== -1) {
+        if (index === terminalIndex) {
+          status = terminalStatus;
+        } else if (index > terminalIndex) {
+          status = 'Not Eligible';
+        }
       }
 
-      return {
-        name: round.name || round.roundName || `Round ${round.roundNumber}`,
-        status: status,
-        icon: status === "Passed"
-          ? <FaCheckCircle color="#197AFF" size={28} />
-          : status === "Failed"
-          ? <FaTimes color="#D23B42" size={28} />
-          : status === "Absent"
-          ? <AbsentIcon />
-          : status === "Not Eligible"
-          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
-          : <FaExclamationCircle color="#949494" size={28} />,
-        statusColor: status === "Passed" ? "#197AFF" :
-                     status === "Failed" ? "#D23B42" :
-                     status === "Absent" ? "#ff2800" :
-                     status === "Not Eligible" ? "#f39c12" : "#717070",
-        statusText: status || "Pending"
-      };
+      return buildRoundEntry(
+        round.name || round.roundName || `Round ${round.roundNumber || index + 1}`,
+        status,
+        index
+      );
     });
   }
 
@@ -1213,15 +1234,7 @@ export const generateRounds = (app) => {
         : 'Pending';
 
       return {
-        name: `Round ${index + 1}`,
-        status,
-        icon: status === 'Absent'
-          ? <AbsentIcon />
-          : status === 'Not Eligible'
-          ? <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 36 36"><path fill="#f39c12" d="M18 2a16 16 0 1 0 16 16A16 16 0 0 0 18 2m11.15 18H6.85a.85.85 0 0 1-.85-.85v-2.3a.85.85 0 0 1 .85-.85h22.3a.85.85 0 0 1 .85.85v2.29a.85.85 0 0 1-.85.86" class="clr-i-solid clr-i-solid-path-1"/><path fill="none" d="M0 0h36v36H0z"/></svg>
-          : <FaExclamationCircle color="#949494" size={28} />,
-        statusColor: status === 'Absent' ? '#ff2800' : status === 'Not Eligible' ? '#f39c12' : '#717070',
-        statusText: status
+        ...buildRoundEntry(`Round ${index + 1}`, status, index)
       };
     });
   }
@@ -1234,12 +1247,16 @@ export const getOverallStatus = (app) => {
   if (normalizedAppStatus === 'absent') {
     return { status: "Absent", color: "#ff2800" };
   }
+  if (normalizedAppStatus === 'failed' || normalizedAppStatus === 'rejected') {
+    return { status: "Rejected", color: "#D23B42" };
+  }
 
   const rounds = generateRounds(app);
+  const totalRounds = Number(app?.totalRounds || app?.roundDetails?.length || rounds.length || 0);
+  const hasRoundData = rounds.length > 0 || totalRounds > 0;
   const hasAbsent = rounds.some(r => r.status === "Absent");
   const hasFailed = rounds.some(r => r.status === "Failed");
   const passedCount = rounds.filter(r => r.status === "Passed").length;
-  const totalRounds = app?.totalRounds || app?.roundDetails?.length || rounds.length;
   const allPassed = passedCount === totalRounds && totalRounds > 0;
 
   if (hasAbsent) {
@@ -1253,6 +1270,9 @@ export const getOverallStatus = (app) => {
   }
   if (passedCount > 0) {
     return { status: `Passed-${passedCount}`, color: "#1976D2" };
+  }
+  if (!hasRoundData && (normalizedAppStatus === 'placed' || normalizedAppStatus === 'selected')) {
+    return { status: "Placed", color: "#1FAD66" };
   }
   return { status: "Pending", color: "#717070" };
 };

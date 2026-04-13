@@ -948,6 +948,110 @@
   }
 }
 
+/* ============================================================
+   Animated Send Icon Styles for Offer Upload
+   ============================================================ */
+
+.offer-send-icon-container {
+  width: 94px;
+  height: 94px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #22C55E;
+  animation: send-icon-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.offer-send-icon {
+  width: 54px;
+  height: 54px;
+  display: block;
+  animation: send-icon-rotate 0.75s ease-out forwards;
+}
+
+.send-icon-animated {
+  animation: send-icon-fly 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+  transform-origin: 50% 50%;
+}
+
+.send-stroke {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.send-stroke-1 {
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  animation: send-stroke-draw 0.42s ease-out 0.35s forwards;
+}
+
+.send-stroke-2 {
+  stroke-dasharray: 25;
+  stroke-dashoffset: 25;
+  animation: send-stroke-draw 0.2s ease-out 0.77s forwards;
+}
+
+.send-stroke-3 {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: send-stroke-draw 0.24s ease-out 0.95s forwards;
+}
+
+/* Pop-in animation for the container */
+@keyframes send-icon-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Rotation animation for the entire icon */
+@keyframes send-icon-rotate {
+  0% {
+    transform: rotate(-28deg) scale(0.55);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Flying animation for the telegram send icon */
+@keyframes send-icon-fly {
+  0% {
+    transform: translate(-34px, 22px) rotate(-16deg) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(6px, -4px) rotate(6deg) scale(1.03);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes send-stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes zip-slider-move {
   0% {
     transform: translateY(0);

@@ -226,6 +226,27 @@
   align-items: center;
 }
 
+.Admin-ps-search-input {
+  width: 240px;
+  height: 40px;
+  border: 1.5px solid #cfd5dc;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background: #fff;
+  outline: none;
+}
+
+.Admin-ps-search-input::placeholder {
+  color: #9aa0a6;
+}
+
+.Admin-ps-search-input:focus {
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.12);
+}
+
 .Admin-ps-table-container h3 {
   margin-top: 0;
   font-weight: 600;
@@ -373,6 +394,254 @@
 .Admin-ps-action-icon {
   color: #4EA24E;
   cursor: pointer;
+}
+
+.Admin-ps-offer-cell {
+  text-align: center;
+}
+
+.Admin-ps-offer-upload-btn {
+  border: none;
+  background: transparent;
+  color: #9AA0A6;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Admin-ps-offer-upload-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.Admin-ps-offer-upload-btn:hover {
+  color: #6b7280;
+}
+
+.Admin-ps-upload-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.Admin-ps-upload-modal {
+  width: min(540px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.Admin-ps-upload-header {
+  background: linear-gradient(135deg, #4EA24E, #3d8a3d);
+  color: #fff;
+  font-weight: 700;
+  padding: 20px 24px;
+  font-size: 1.15rem;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.Admin-ps-upload-body {
+  padding: 28px 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.Admin-ps-student-details {
+  background: linear-gradient(135deg, #f8fbf8 0%, #f2f9f2 100%);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 26px;
+  box-shadow: 0 2px 8px rgba(78, 162, 78, 0.08);
+}
+
+.Admin-ps-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.Admin-ps-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.Admin-ps-detail-row:first-child {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #d4e0d4;
+}
+
+.Admin-ps-upload-student {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111;
+  flex: 1;
+}
+
+.Admin-ps-offer-status {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(178, 45, 45, 0.1);
+}
+
+.Admin-ps-detail-label {
+  color: #666666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 75px;
+}
+
+.Admin-ps-detail-value {
+  color: #111111;
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+.Admin-ps-dropzone {
+  position: relative;
+  border: 2px dashed #b0c0b0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f9fcf9 0%, #f3f8f3 100%);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 24px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.Admin-ps-dropzone-active {
+  border-color: #4EA24E;
+  background: linear-gradient(180deg, #eff8ef 0%, #e8f3e8 100%);
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-ps-dropzone-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.Admin-ps-dropzone-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #eceff1;
+  color: #9aa0a6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.Admin-ps-dropzone-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.Admin-ps-dropzone-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.Admin-ps-dropzone-text {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.Admin-ps-selected-file {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #e8f1e8;
+  color: #1f5e20;
+  font-size: 0.9rem;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(78, 162, 78, 0.12);
+}
+
+.Admin-ps-upload-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.Admin-ps-upload-close-btn,
+.Admin-ps-upload-send-btn {
+  min-width: 110px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.Admin-ps-upload-close-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.Admin-ps-upload-close-btn:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.Admin-ps-upload-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.Admin-ps-upload-send-btn {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.Admin-ps-upload-send-btn:hover:not(:disabled) {
+  background: #3d8a3d;
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+.Admin-ps-upload-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Print Button Styles */
@@ -638,6 +907,10 @@
     max-width: 200px;
     margin: 0 auto 15px auto;
     display: block;
+  }
+
+  .Admin-ps-search-input {
+    width: 100%;
   }
 
   .Admin-ps-dashboard-grid {

@@ -1067,6 +1067,32 @@ class MongoDBService {
     });
   }
 
+  async uploadPlacedStudentOffer(file, payload = {}) {
+    const formData = new FormData();
+    formData.append('offerLetter', file);
+    if (payload.placedStudentId) formData.append('placedStudentId', payload.placedStudentId);
+    if (payload.regNo) formData.append('regNo', payload.regNo);
+    if (payload.company) formData.append('company', payload.company);
+    if (payload.role) formData.append('role', payload.role);
+
+    const authToken = localStorage.getItem('authToken');
+    const headers = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+    const response = await fetch(`${this.baseURL}/placed-students/offer/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data?.error || data?.message || `Upload failed: ${response.status}`);
+    }
+
+    return data;
+  }
+
   // ============ REPORTS (FOR ANALYSIS PAGES) ============
 
   async getAllReports() {

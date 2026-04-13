@@ -76,6 +76,7 @@ function Admincdd() {
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
   const location = useLocation();
+  const bannerTestMode = new URLSearchParams(location.search).get('bannerTest') === '1';
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeRound, setActiveRound] = useState(1);
   const [filterData, setFilterData] = useState({
@@ -604,6 +605,18 @@ function Admincdd() {
         // Don't fail the entire save if application update fails
       }
 
+      // Dispatch notifications to students for round results
+      try {
+        dispatchRoundResultNotifications(roundResults, {
+          companyName: fullDriveData.companyName,
+          jobRole: fullDriveData.jobRole,
+          _id: fullDriveData._id,
+          driveId
+        });
+      } catch (notifyError) {
+        console.error('Error dispatching notifications:', notifyError);
+      }
+
       // Show success popup based on both round position and remaining students.
       const totalRounds = companyInfo.rounds || 1;
       const hasMoreRounds = activeRound < totalRounds;
@@ -934,6 +947,123 @@ function Admincdd() {
 
   const displayStudents = isFiltered ? filteredStudents : studentData;
 
+  const dispatchRoundResultNotifications = (roundResults, driveDetails) => {
+    if (!Array.isArray(roundResults) || roundResults.length === 0) {
+      return;
+    }
+
+    const roundNameForStudent = companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`;
+    const inferredTotalRounds = Number(
+      driveDetails?.totalRounds ||
+      driveDetails?.numberOfRounds ||
+      driveDetails?.rounds ||
+      driveDetails?.roundDetails?.length ||
+      companyInfo.rounds ||
+      companyInfo.roundNames?.length ||
+      0
+    );
+    const isFinalRound = inferredTotalRounds > 0 && activeRound >= inferredTotalRounds;
+
+    roundResults.forEach((student) => {
+      const studentId = String(student?.studentId || '').trim();
+      if (!studentId) {
+        return;
+      }
+
+      const normalizedStatus =
+        student.status === 'Passed'
+          ? (isFinalRound ? 'placed' : 'passed')
+          : student.status === 'Failed'
+            ? 'failed'
+            : student.status === 'Placed'
+              ? 'placed'
+              : 'absent';
+
+      const payload = {
+        studentId,
+        status: normalizedStatus,
+        companyName: driveDetails?.companyName || companyInfo.companyName,
+        jobRole: driveDetails?.jobRole || companyInfo.jobRole,
+        roundName: roundNameForStudent,
+        roundNumber: activeRound,
+        totalRounds: inferredTotalRounds,
+        isFinalRound,
+        signature: `${studentId}:${driveDetails?.driveId || driveDetails?._id || 'no-drive'}:${activeRound}:${normalizedStatus}`,
+        driveId: driveDetails?.driveId || driveDetails?._id || companyInfo.driveId || null,
+        emittedAt: Date.now()
+      };
+
+      window.dispatchEvent(new CustomEvent('roundResultNotification', { detail: payload }));
+
+      // Broadcast over localStorage so other open student tabs get storage event updates.
+      localStorage.setItem('placementBannerBroadcast', JSON.stringify(payload));
+
+      console.log('📢 Dispatched round result notification:', payload);
+    });
+  };
+
+  const handlePlacementBannerTest = () => {
+    try {
+      const full = JSON.parse(localStorage.getItem('completeStudentData') || 'null');
+      const basic = JSON.parse(localStorage.getItem('studentData') || 'null');
+
+      const fallbackStudentId =
+        full?.student?._id ||
+        full?.student?.id ||
+        basic?._id ||
+        basic?.id ||
+        null;
+
+      const studentIdsFromTable = displayStudents
+        .map((student) => String(student?.id || student?.studentId || '').trim())
+        .filter(Boolean)
+        .slice(0, 20);
+
+      const targetStudentIds = Array.from(
+        new Set([
+          ...studentIdsFromTable,
+          String(fallbackStudentId || '').trim()
+        ].filter(Boolean))
+      );
+
+      if (targetStudentIds.length === 0) {
+        alert('Banner test requires at least one student row or logged-in student data in localStorage.');
+        return;
+      }
+
+      const base = {
+        studentId: targetStudentId,
+        companyName: companyInfo.companyName || 'Test Company',
+        jobRole: companyInfo.jobRole || 'Test Role',
+        roundName: companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`,
+        roundNumber: activeRound,
+        driveId: companyInfo.driveId || 'test-drive',
+        testMode: true
+      };
+
+      const statuses = ['placed', 'passed', 'failed', 'absent'];
+      targetStudentIds.forEach((targetStudentId, studentIndex) => {
+        statuses.forEach((status, index) => {
+          const payload = {
+            ...base,
+            studentId: targetStudentId,
+            status,
+            signature: `${targetStudentId}:test:${activeRound}:${status}:${Date.now()}:${studentIndex}:${index}`,
+            emittedAt: Date.now() + studentIndex * 10 + index
+          };
+
+          window.dispatchEvent(new CustomEvent('roundResultNotification', { detail: payload }));
+          localStorage.setItem('placementBannerBroadcast', JSON.stringify(payload));
+        });
+      });
+
+      alert(`Dispatched 4 test banner events for ${targetStudentIds.length} student IDs.`);
+    } catch (error) {
+      console.error('Error running placement banner test:', error);
+      alert('Failed to run banner test. Check console logs for details.');
+    }
+  };
+
   const handleExport = async (type) => {
     if (type === 'excel') {
       try {
@@ -1169,6 +1299,16 @@ function Admincdd() {
                   >
                     Clear
                   </button>
+                  {bannerTestMode && (
+                    <button
+                      className={styles['Admin-cdd-action-clear-btn']}
+                      onClick={handlePlacementBannerTest}
+                      disabled={isSaving}
+                      style={{ opacity: isSaving ? 0.5 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                    >
+                      Test 4 Banners
+                    </button>
+                  )}
                 </div>
               )}
             </div>

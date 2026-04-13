@@ -593,6 +593,46 @@ export const ExportFailedAlert = ({ isOpen, onClose, exportType = 'Excel', color
 };
 
 // ============================================================
+// Offer Upload Success Alert with Animated Send Icon
+// ============================================================
+
+export const OfferUploadSuccessAlert = ({ isOpen, onClose, color = '#22C55E' }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="alert-overlay">
+      <div className="achievement-popup-container">
+        <div className="achievement-popup-header" style={{ backgroundColor: color }}>
+          Uploaded !
+        </div>
+        <div className="achievement-popup-body">
+          <div className="offer-send-icon-container">
+            <svg className="offer-send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
+              <g className="send-icon-animated">
+                <path className="send-stroke send-stroke-1" d="M12 30L52 12L36 52L28 36Z" />
+                <path className="send-stroke send-stroke-2" d="M12 30L28 36" />
+                <path className="send-stroke send-stroke-3" d="M28 36L52 12" />
+              </g>
+            </svg>
+          </div>
+          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+            Offer Sent !
+          </h2>
+          <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+            The offer letter has been<br />sent successfully.
+          </p>
+        </div>
+        <div className="achievement-popup-footer">
+          <button type="button" onClick={onClose} className="achievement-popup-close-btn">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
 // Zipping/Unzipping Alerts for Batch Archive Operations
 // ============================================================
 

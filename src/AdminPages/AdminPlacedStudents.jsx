@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { FaEye } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from '../utils/useAdminAuth';
@@ -12,7 +12,7 @@ import mongoDBService from '../services/mongoDBService';
 // FIXED: Import CSS as a Module
 import styles from "./AdminPlacedStudents.module.css";
 import Adminicon from "../assets/Adminicon.png";
-import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, OfferUploadSuccessAlert } from '../components/alerts';
 
 // Component for the Bar Chart
 const BarChartComponent = ({ data }) => {
@@ -36,6 +36,113 @@ const BarChartComponent = ({ data }) => {
         <Bar dataKey="students" fill="#7B68EE" radius={[8, 8, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
+  );
+};
+
+const UploadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 16V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8.5 10.5L12 7l3.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 17.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const OfferUploadModal = ({
+  isOpen,
+  student,
+  selectedFile,
+  isDragging,
+  isSending,
+  onClose,
+  onFileSelect,
+  onDrop,
+  onDragOver,
+  onDragLeave,
+  onSend
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles['Admin-ps-upload-overlay']}>
+      <div className={styles['Admin-ps-upload-modal']} onClick={(event) => event.stopPropagation()}>
+        <div className={styles['Admin-ps-upload-header']}>Upload Offer</div>
+        
+        {/* Student Details Section */}
+        <div className={styles['Admin-ps-upload-body']}>
+          <div className={styles['Admin-ps-student-details']}>
+            {/* Primary Information */}
+            <div className={styles['Admin-ps-detail-row']}>
+              <p className={styles['Admin-ps-upload-student']}>{student?.name || 'Student'}</p>
+              <span className={styles['Admin-ps-offer-status']}>{student?.offerStatus || 'Pending'}</span>
+            </div>
+            
+            {/* Registration Number */}
+            <div className={styles['Admin-ps-detail-row']}>
+              <span className={styles['Admin-ps-detail-label']}>Reg No:</span>
+              <span className={styles['Admin-ps-detail-value']}>{student?.regNo || 'N/A'}</span>
+            </div>
+            
+            {/* Company Name */}
+            <div className={styles['Admin-ps-detail-row']}>
+              <span className={styles['Admin-ps-detail-label']}>Company:</span>
+              <span className={styles['Admin-ps-detail-value']}>{student?.company || 'N/A'}</span>
+            </div>
+            
+            {/* Job Role and Package */}
+            <div className={styles['Admin-ps-detail-row']}>
+              <span className={styles['Admin-ps-detail-label']}>Position:</span>
+              <span className={styles['Admin-ps-detail-value']}>
+                {student?.role || 'N/A'} - {student?.pkg || 'N/A'} LPA
+              </span>
+            </div>
+          </div>
+
+          {/* Drag & Drop Zone */}
+          <div
+            className={`${styles['Admin-ps-dropzone']} ${isDragging ? styles['Admin-ps-dropzone-active'] : ''}`}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+          >
+            <input
+              type="file"
+              className={styles['Admin-ps-dropzone-input']}
+              onChange={onFileSelect}
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              disabled={isSending}
+            />
+            <div className={styles['Admin-ps-dropzone-icon']}>
+              <UploadIcon />
+            </div>
+            <p className={styles['Admin-ps-dropzone-title']}>Drag & Drop file here</p>
+            <p className={styles['Admin-ps-dropzone-text']}>or click to select a file</p>
+            {selectedFile && (
+              <div className={styles['Admin-ps-selected-file']}>
+                {selectedFile.name}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className={styles['Admin-ps-upload-footer']}>
+          <button 
+            type="button" 
+            className={styles['Admin-ps-upload-close-btn']} 
+            onClick={onClose}
+            disabled={isSending}
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            className={styles['Admin-ps-upload-send-btn']}
+            onClick={onSend}
+            disabled={!selectedFile || isSending}
+          >
+            {isSending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -65,6 +172,13 @@ const PlacementDashboard = () => {
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel'); // 'Excel' or 'PDF'
+  const [studentSearch, setStudentSearch] = useState('');
+  const [isOfferUploadOpen, setIsOfferUploadOpen] = useState(false);
+  const [activeOfferStudent, setActiveOfferStudent] = useState(null);
+  const [selectedOfferFile, setSelectedOfferFile] = useState(null);
+  const [isOfferDragging, setIsOfferDragging] = useState(false);
+  const [offerUploadSuccessOpen, setOfferUploadSuccessOpen] = useState(false);
+  const [isOfferSending, setIsOfferSending] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
@@ -132,48 +246,76 @@ const PlacementDashboard = () => {
     const fetchPlacedStudents = async () => {
       try {
         setIsLoading(true);
+        console.log('📡 Fetching placed students from collection...');
+        
         const response = await mongoDBService.getPlacedStudents();
         
-        if (response.success && response.data) {
-          // Map data to match the component's expected format
-          const mappedData = response.data.map((student, index) => ({
-            sno: index + 1,
-            name: student.name,
-            regNo: student.regNo || student.enrollmentNo || student.roll || student.rollNo || student.studentId || 'N/A',
-            branch: student.dept,
-            batch: student.batch,
-            company: student.company,
-            role: student.role,
-            pkg: student.pkg,
-            date: student.date,
-            status: student.status,
-            yearSec: student.yearSec,
-            semester: student.semester,
-            phone: student.phone,
-            email: student.email,
-            profilePhoto: student.profilePhoto
-          }));
+        if (response.success && response.data && response.data.length > 0) {
+          // Map data from placed_students collection to component format
+          const mappedData = response.data.map((student, index) => {
+            // Validate required fields exist
+            if (!student.name) {
+              console.warn(`⚠️ Student missing name field:`, student);
+            }
+            
+            return {
+              sno: index + 1,
+              id: student._id,
+              studentId: student.studentId,
+              name: student.name || 'Unknown',
+              regNo: student.regNo || 'N/A', // Backend now guarantees regNo
+              branch: student.dept || 'N/A',
+              batch: student.batch || 'N/A',
+              company: student.company || 'N/A',
+              role: student.role || 'N/A',
+              pkg: student.pkg || 'N/A',
+              status: student.status || 'N/A',
+              offerStatus: student.offerStatus || 'Pending',
+              offerLetterName: student.offerLetterName || '',
+              offerGridfsFileUrl: student.offerGridfsFileUrl || '',
+              profilePhoto: student.profilePhoto || student.profilePicURL
+            };
+          });
+          
+          console.log(`✅ Fetched ${mappedData.length} placed students successfully`);
+          console.log('📊 First student:', mappedData[0]);
           
           setAllStudentsData(mappedData);
           setDisplayedStudents(mappedData);
           generateChartData(mappedData);
           
-          // Extract unique companies and job roles
-          const uniqueCompanies = ['All Companies', ...new Set(mappedData.map(s => s.company))].sort();
-          const uniqueRoles = [...new Set(mappedData.map(s => s.role))].sort();
+          // Extract unique companies and job roles from placed_students collection
+          const uniqueCompanies = ['All Companies', ...new Set(
+            mappedData
+              .map(s => s.company)
+              .filter(c => c && c !== 'N/A')
+          )].sort();
+          
+          const uniqueRoles = ['All Job Roles', ...new Set(
+            mappedData
+              .map(s => s.role)
+              .filter(r => r && r !== 'N/A')
+          )].sort();
+          
           setCompanies(uniqueCompanies);
           setJobRoles(uniqueRoles);
-          
-          // Debug: log first student to check available fields
-          if (mappedData.length > 0) {
-            console.log('First student object:', mappedData[0]);
-            console.log('Available fields in backend response:', response.data[0]);
-          }
+        } else if (response.success && response.data?.length === 0) {
+          console.log('ℹ️ No placed students found in collection');
+          setAllStudentsData([]);
+          setDisplayedStudents([]);
+          setCompanies(['All Companies']);
+          setJobRoles(['All Job Roles']);
+        } else {
+          console.error('❌ Invalid response format:', response);
+          setAllStudentsData([]);
+          setDisplayedStudents([]);
         }
       } catch (error) {
-        console.error('Error fetching placed students:', error);
+        console.error('❌ Error fetching placed students:', error.message);
         setAllStudentsData([]);
         setDisplayedStudents([]);
+        setCompanies(['All Companies']);
+        setJobRoles(['All Job Roles']);
       } finally {
         setIsLoading(false);
       }
@@ -205,6 +347,88 @@ const PlacementDashboard = () => {
 
   // Get unique values for dropdown options
   const uniqueBatches = ['All Batches', ...new Set(allStudentsData.map(s => s.batch))].sort();
+  const filteredStudents = useMemo(() => {
+    const query = studentSearch.trim().toLowerCase();
+    if (!query) return displayedStudents;
+
+    return displayedStudents.filter((student) => {
+      const name = (student.name || '').toString().toLowerCase();
+      const regNo = (student.regNo || '').toString().toLowerCase();
+      return name.includes(query) || regNo.includes(query);
+    });
+  }, [displayedStudents, studentSearch]);
+
+  const openOfferUpload = (student) => {
+    setActiveOfferStudent(student);
+    setSelectedOfferFile(null);
+    setIsOfferDragging(false);
+    setIsOfferUploadOpen(true);
+  };
+
+  const closeOfferUpload = () => {
+    setIsOfferUploadOpen(false);
+    setActiveOfferStudent(null);
+    setSelectedOfferFile(null);
+    setIsOfferDragging(false);
+  };
+
+  const handleOfferFileSelect = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedOfferFile(file);
+  };
+
+  const handleOfferDrop = (event) => {
+    event.preventDefault();
+    setIsOfferDragging(false);
+    const file = event.dataTransfer.files?.[0] || null;
+    if (file) {
+      setSelectedOfferFile(file);
+    }
+  };
+
+  const handleOfferSend = async () => {
+    if (!selectedOfferFile) return;
+
+    try {
+      setIsOfferSending(true);
+
+      const uploadResponse = await mongoDBService.uploadPlacedStudentOffer(selectedOfferFile, {
+        placedStudentId: activeOfferStudent?.id,
+        regNo: activeOfferStudent?.regNo,
+        company: activeOfferStudent?.company,
+        role: activeOfferStudent?.role
+      });
+
+      setAllStudentsData((prev) => prev.map((student) => (
+        student.id === activeOfferStudent?.id
+          ? {
+              ...student,
+              offerStatus: 'Sent',
+              offerLetterName: selectedOfferFile.name,
+              offerGridfsFileUrl: uploadResponse?.gridfsFileUrl || student.offerGridfsFileUrl || ''
+            }
+          : student
+      )));
+      setDisplayedStudents((prev) => prev.map((student) => (
+        student.id === activeOfferStudent?.id
+          ? {
+              ...student,
+              offerStatus: 'Sent',
+              offerLetterName: selectedOfferFile.name,
+              offerGridfsFileUrl: uploadResponse?.gridfsFileUrl || student.offerGridfsFileUrl || ''
+            }
+          : student
+      )));
+
+      closeOfferUpload();
+      setOfferUploadSuccessOpen(true);
+    } catch (error) {
+      console.error('Offer upload failed:', error);
+      alert(error?.message || 'Failed to upload offer letter. Please try again.');
+    } finally {
+      setIsOfferSending(false);
+    }
+  };
 
   const exportToExcel = async () => {
     try {
@@ -415,6 +639,13 @@ const PlacementDashboard = () => {
             <div className={styles['Admin-ps-table-header-row']}>
               <h3 className={styles['Admin-ps-table-title']}>DETAILED PLACED STUDENT RECORDS</h3>
               <div className={styles['Admin-ps-table-actions']}>
+                <input
+                  type="text"
+                  className={styles['Admin-ps-search-input']}
+                  placeholder="Search name or reg no"
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                />
                 <div className={styles['Admin-ps-print-button-container']}>
                   <button
                     className={styles['Admin-ps-print-btn']}
@@ -458,14 +689,14 @@ const PlacementDashboard = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : displayedStudents.length === 0 ? (
+                  ) : filteredStudents.length === 0 ? (
                     <tr>
                       <td colSpan="10" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
                         No placed students found
                       </td>
                     </tr>
                   ) : (
-                    displayedStudents.map((student) => (
+                    filteredStudents.map((student) => (
                       <tr key={student.sno}>
                         <td>{student.sno}</td>
                         <td style={{ fontWeight: '600' }}>{student.name}</td>
@@ -475,10 +706,16 @@ const PlacementDashboard = () => {
                         <td>{student.company}</td>
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
-                        <td>
-                          <span className={`${styles['Admin-ps-status-badge']} ${styles[`Admin-ps-status-${student.status.toLowerCase()}`]}`}>
-                            {student.status}
-                          </span>
+                        <td className={styles['Admin-ps-offer-cell']}>
+                          <button
+                            type="button"
+                            className={styles['Admin-ps-offer-upload-btn']}
+                            onClick={() => openOfferUpload(student)}
+                            aria-label={`Upload offer for ${student.name}`}
+                            title="Upload offer"
+                          >
+                            <UploadIcon />
+                          </button>
                         </td>
                         <td onClick={() => navigate(`/coo-view-Admin-ps`)}>
                           <FaEye className={styles['Admin-ps-action-icon']} />
@@ -515,6 +752,27 @@ const PlacementDashboard = () => {
       isOpen={exportPopupState === 'failed'} 
       onClose={() => setExportPopupState('none')}
       exportType={exportType}
+    />
+    <OfferUploadModal
+      isOpen={isOfferUploadOpen}
+      student={activeOfferStudent}
+      selectedFile={selectedOfferFile}
+      isDragging={isOfferDragging}
+      isSending={isOfferSending}
+      onClose={closeOfferUpload}
+      onFileSelect={handleOfferFileSelect}
+      onDrop={handleOfferDrop}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setIsOfferDragging(true);
+      }}
+      onDragLeave={() => setIsOfferDragging(false)}
+      onSend={handleOfferSend}
+    />
+    <OfferUploadSuccessAlert
+      isOpen={offerUploadSuccessOpen}
+      onClose={() => setOfferUploadSuccessOpen(false)}
+      color="#4EA24E"
     />
   </>
 );

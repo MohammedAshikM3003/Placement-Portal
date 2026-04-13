@@ -2,6 +2,21 @@ const express = require('express');
 const router = express.Router();
 const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+
+const requireMongoConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database not connected',
+      details: 'Please retry after MongoDB connection is established.'
+    });
+  }
+
+  return next();
+};
+
+router.use(requireMongoConnection);
 
 // PUBLIC ENDPOINT - GET college images only (no authentication required)
 // This allows the landing page to display college images without login
@@ -10,7 +25,10 @@ router.get('/college-images/:adminLoginID', async (req, res) => {
     const { adminLoginID } = req.params;
     const loginID = adminLoginID || 'admin1000'; // Default admin
     
-    const admin = await Admin.findOne({ adminLoginID: loginID });
+    const admin = await Admin.findOne({ adminLoginID: loginID })
+      .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
+      .maxTimeMS(3000)
+      .lean();
     
     if (!admin) {
       return res.status(404).json({ 

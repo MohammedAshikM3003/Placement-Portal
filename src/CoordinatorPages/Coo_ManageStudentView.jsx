@@ -187,6 +187,8 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
     const [resumeDownloadPopupState, setResumeDownloadPopupState] = useState('none');
     const [resumeDownloadProgress, setResumeDownloadProgress] = useState(0);
     const [loadingProgress, setLoadingProgress] = useState(15);
+    const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
+    const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
 
     // Helper functions for multi-select values
     const selectedCompanyTypes = useMemo(
@@ -777,6 +779,26 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
+
+                        {(studentTrainingAssignment || studentTrainingAttendanceRecords.length > 0) && (
+                            <div className={styles.profileSectionContainer}>
+                                <h3 className={styles.sectionHeader}>Training</h3>
+                                <div className={styles.companyStatsGrid}>
+                                    <div className={styles.companyStatCardEmpty}>
+                                        <span className={styles.companyStatLabel}>Training 1</span>
+                                        <span className={styles.companyStatValueEmpty}>{trainingCardStats.courseName}</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                        <span className={styles.companyStatValue}>{trainingCardStats.attendancePercentage}%</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Total Training Days</span>
+                                        <span className={styles.companyStatValue}>{trainingCardStats.totalTrainingDays}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* --- COMPANY DETAILS --- */}
                         <div className={styles.profileSectionContainer}>

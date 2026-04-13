@@ -714,6 +714,8 @@ function StuProfile({ onLogout, onViewChange }) {
     const [eligibleDrives, setEligibleDrives] = useState([]);
     const [studentApplications, setStudentApplications] = useState([]);
     const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
+    const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
+    const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
     const companyAutoSaveTimerRef = useRef(null);
     const companyAutoSaveInFlightRef = useRef(false);
     const companyAutoSaveKeyRef = useRef('');
@@ -1109,6 +1111,29 @@ function StuProfile({ onLogout, onViewChange }) {
         }
     }, [fetchStudentAttendanceRecords]);
 
+    const syncTrainingCardData = useCallback(async (student) => {
+        const regNo = (student?.regNo || student?.registerNumber || student?.registerNo || '').toString().trim();
+
+        if (!regNo) {
+            setStudentTrainingAssignment(null);
+            setStudentTrainingAttendanceRecords([]);
+            return;
+        }
+
+        try {
+            const [assignment, attendanceResponse] = await Promise.all([
+                mongoDBService.getStudentTrainingAssignment(regNo),
+                mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] }))
+            ]);
+
+            setStudentTrainingAssignment(assignment || null);
+            setStudentTrainingAttendanceRecords(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
+        } catch (error) {
+            setStudentTrainingAssignment(null);
+            setStudentTrainingAttendanceRecords([]);
+        }
+    }, []);
+
     useEffect(() => {
         const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         const activeStudent = studentData || storedStudentData;
@@ -1150,6 +1175,48 @@ function StuProfile({ onLogout, onViewChange }) {
             document.removeEventListener('visibilitychange', refreshOnVisibility);
         };
     }, [studentData, syncCompanyRealtimeData]);
+
+    useEffect(() => {
+        const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
+        const activeStudent = studentData || storedStudentData;
+        if (!activeStudent) return;
+
+        syncTrainingCardData(activeStudent);
+
+        const refreshFromStorage = () => {
+            try {
+                const latest = JSON.parse(localStorage.getItem('studentData') || 'null');
+                if (latest) {
+                    syncTrainingCardData(latest);
+                }
+            } catch {
+                // Ignore malformed cache values
+            }
+        };
+
+        const refreshOnVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                refreshFromStorage();
+            }
+        };
+
+        const refreshInterval = setInterval(refreshFromStorage, 45000);
+
+        window.addEventListener('profileUpdated', refreshFromStorage);
+        window.addEventListener('allDataPreloaded', refreshFromStorage);
+        window.addEventListener('storage', refreshFromStorage);
+        window.addEventListener('focus', refreshFromStorage);
+        document.addEventListener('visibilitychange', refreshOnVisibility);
+
+        return () => {
+            clearInterval(refreshInterval);
+            window.removeEventListener('profileUpdated', refreshFromStorage);
+            window.removeEventListener('allDataPreloaded', refreshFromStorage);
+            window.removeEventListener('storage', refreshFromStorage);
+            window.removeEventListener('focus', refreshFromStorage);
+            document.removeEventListener('visibilitychange', refreshOnVisibility);
+        };
+    }, [studentData, syncTrainingCardData]);
 
     const driveAnalytics = useMemo(() => {
         const colorPalette = ['#6C7A89', '#197AFF', '#FF9F43', '#F4C542', '#3DDAD7', '#FF7A9E', '#10B981', '#8B5CF6'];
@@ -1508,6 +1575,56 @@ function StuProfile({ onLogout, onViewChange }) {
             studentAttendanceRecords.length > 0
         );
     }, [eligibleDrives.length, studentApplications.length, studentAttendanceRecords.length]);
+
+    const trainingCardStats = useMemo(() => {
+        const presentCount = studentTrainingAttendanceRecords.filter(
+            (entry) => normalizeText(entry?.status) === 'present'
+        ).length;
+        const absentCount = studentTrainingAttendanceRecords.filter(
+            (entry) => normalizeText(entry?.status) === 'absent'
+        ).length;
+        const totalSessions = presentCount + absentCount;
+        const attendancePercentage = totalSessions > 0
+            ? Math.round((presentCount / totalSessions) * 100)
+            : 0;
+
+        const attendedCourse = studentTrainingAttendanceRecords
+            .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+            .find(Boolean);
+
+        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+        const preferredCourse = (selectedTrainings[0] || '').toString().trim();
+        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+
+        let calculatedTotalDays = 0;
+        const assignmentStartDate = studentTrainingAssignment?.startDate;
+        const assignmentEndDate = studentTrainingAssignment?.endDate;
+        if (assignmentStartDate && assignmentEndDate) {
+            const start = new Date(assignmentStartDate);
+            const end = new Date(assignmentEndDate);
+            if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+                const dayMs = 24 * 60 * 60 * 1000;
+                const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
+                if (diffDays >= 0) calculatedTotalDays = diffDays + 1;
+            }
+        }
+
+        const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : calculatedTotalDays;
+
+        return {
+            courseName: assignmentCourse || attendedCourse || preferredCourse || 'N/A',
+            attendancePercentage,
+            totalTrainingDays
+        };
+    }, [
+        normalizeText,
+        selectedTrainings,
+        studentTrainingAssignment?.courseName,
+        studentTrainingAssignment?.endDate,
+        studentTrainingAssignment?.startDate,
+        studentTrainingAssignment?.totalDays,
+        studentTrainingAttendanceRecords
+    ]);
 
     const PIE_DATA = driveAnalytics.pieData;
     const ROUND_DETAILS = driveAnalytics.roundDetails;
@@ -2797,6 +2914,24 @@ function StuProfile({ onLogout, onViewChange }) {
                             </div>
                         </div>
                         
+                        <div className={styles.profileSectionContainer}>
+                            <h3 className={styles.sectionHeader}>Training</h3>
+                            <div className={styles.companyStatsGrid}>
+                                <div className={styles.companyStatCardEmpty}>
+                                    <span className={styles.companyStatLabel}>Training 1</span>
+                                    <span className={styles.companyStatValueEmpty}>{trainingCardStats.courseName}</span>
+                                </div>
+                                <div className={styles.companyStatCard}>
+                                    <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                    <span className={styles.companyStatValue}>{trainingCardStats.attendancePercentage}%</span>
+                                </div>
+                                <div className={styles.companyStatCard}>
+                                    <span className={styles.companyStatLabel}>Total Training Days</span>
+                                    <span className={styles.companyStatValue}>{trainingCardStats.totalTrainingDays}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (
                         <div className={styles.profileSectionContainer}>

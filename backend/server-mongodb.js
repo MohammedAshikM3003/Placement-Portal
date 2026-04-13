@@ -2,10 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const { Readable } = require('stream');
 // const fs = require('fs'); // Unused - commented out
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+mongoose.set('bufferCommands', false);
+mongoose.set('bufferTimeoutMS', 0);
 // Load environment variables from backend directory
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -37,6 +40,25 @@ console.log('  PORT:', process.env.PORT || 'not set');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Register fatal process handlers early, before any async startup work begins.
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️  Unhandled Rejection at:', promise, 'reason:', reason);
+    // Keep process alive; request handlers already return 503 when DB is unavailable.
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('⚠️  Uncaught Exception:', error);
+    // Keep process alive to preserve local development availability.
+});
+
+// File upload configuration (Multer - memory storage for upload routes)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    }
+});
 
 // =====================================================
 // GLOBAL CORS HANDLING (must run before all routes)
@@ -303,9 +325,8 @@ const connectDB = async (retryCount = 0) => {
             retryWrites: true,
             retryReads: true,
 
-            // Serverless optimizations
-            // Buffer commands during initial connection to prevent early request failures
-            bufferCommands: true,
+            // Fail fast when DB is unavailable instead of buffering queries
+            bufferCommands: false,
 
             // Heartbeat to keep connection alive
             heartbeatFrequencyMS: 10000,
@@ -2380,7 +2401,9 @@ app.post('/api/student-applications', authenticateToken, checkRole('student', 'a
         // Use bulkWrite for better performance
         const bulkOps = applications.map(app => ({
             updateOne: {
-                filter: { studentId: app.studentId, companyName: app.companyName, jobRole: app.jobRole },
+                filter: app.driveId
+                    ? { studentId: app.studentId, driveId: app.driveId }
+                    : { studentId: app.studentId, companyName: app.companyName, jobRole: app.jobRole },
                 update: { $set: app },
                 upsert: true
             }
@@ -2562,7 +2585,9 @@ app.post('/api/sync-student-applications', async (req, res) => {
 
             const bulkOps = applications.map(app => ({
                 updateOne: {
-                    filter: { studentId: app.studentId, companyName: app.companyName, jobRole: app.jobRole },
+                    filter: app.driveId
+                        ? { studentId: app.studentId, driveId: app.driveId }
+                        : { studentId: app.studentId, companyName: app.companyName, jobRole: app.jobRole },
                     update: { $set: app },
                     upsert: true
                 }
@@ -2899,11 +2924,14 @@ app.get('/api/attendance/student/:studentId', async (req, res) => {
             const studentData = attendance.students.find(s => s.studentId === studentId);
             return {
                 _id: attendance._id,
+                driveId: attendance.driveId || '',
                 companyName: attendance.companyName,
                 jobRole: attendance.jobRole,
                 startDate: attendance.startDate,
                 endDate: attendance.endDate,
-                status: studentData?.status || '-'
+                status: studentData?.status || '-',
+                submittedAt: attendance.submittedAt || null,
+                updatedAt: attendance.updatedAt || attendance.submittedAt || null
             };
         });
         
@@ -2938,11 +2966,14 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
             const studentData = attendance.students.find(s => s.regNo === regNo);
             return {
                 _id: attendance._id,
+                driveId: attendance.driveId || '',
                 companyName: attendance.companyName,
                 jobRole: attendance.jobRole,
                 startDate: attendance.startDate,
                 endDate: attendance.endDate,
-                status: studentData?.status || '-'
+                status: studentData?.status || '-',
+                submittedAt: attendance.submittedAt || null,
+                updatedAt: attendance.updatedAt || attendance.submittedAt || null
             };
         });
         
@@ -3599,13 +3630,17 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected' });
         }
 
-        const { companyName, jobRole, roundNumber, roundName, students } = req.body;
+        const { companyName, jobRole, roundNumber, roundName, students, driveId, startingDate, endingDate, totalRounds } = req.body;
         
         console.log('Update Student Applications Request:', {
+            driveId,
             companyName,
             jobRole,
+            startingDate,
+            endingDate,
             roundNumber,
             roundName,
+            totalRounds,
             studentsCount: students?.length
         });
 
@@ -3616,15 +3651,52 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
         // Update each student's application
         const updates = await Promise.all(
             students.map(async (student) => {
-                const application = await StudentApplication.findOne({
-                    studentId: student.studentId,
-                    companyName,
-                    jobRole
-                });
+                const studentId = String(student?.studentId || '').trim();
+                if (!studentId) return null;
+
+                let application = null;
+
+                if (driveId) {
+                    application = await StudentApplication.findOne({
+                        studentId,
+                        driveId: String(driveId)
+                    });
+                }
+
+                if (!application) {
+                    const fallbackQuery = {
+                        studentId,
+                        companyName,
+                        jobRole
+                    };
+
+                    if (startingDate) {
+                        fallbackQuery.$or = [
+                            { nasaDate: startingDate },
+                            { startingDate }
+                        ];
+                    }
+
+                    application = await StudentApplication.findOne(fallbackQuery).sort({ appliedDate: -1, updatedAt: -1 });
+                }
 
                 if (!application) {
                     console.log(`No application found for student ${student.registerNo}`);
                     return null;
+                }
+
+                // Self-heal legacy records so future lookups stay drive-specific.
+                if (driveId && !application.driveId) {
+                    application.driveId = String(driveId);
+                }
+                if (startingDate && !application.startingDate) {
+                    application.startingDate = startingDate;
+                }
+                if (endingDate && !application.endingDate) {
+                    application.endingDate = endingDate;
+                }
+                if (Number.isFinite(Number(totalRounds)) && Number(totalRounds) > 0) {
+                    application.totalRounds = Number(totalRounds);
                 }
 
                 // Initialize rounds array if it doesn't exist
@@ -3656,15 +3728,25 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
                 // Update overall status based on rounds
                 const hasAbsent = application.rounds.some(r => r.status === 'Absent');
                 const hasFailed = application.rounds.some(r => r.status === 'Failed');
+                const effectiveTotalRounds = Number(application.totalRounds || totalRounds || 0);
+                const allPassed = application.rounds.length > 0 && application.rounds.every(r => r.status === 'Passed');
+                const maxRoundNumber = application.rounds.reduce((max, currentRound) => {
+                    const numericRound = Number(currentRound?.roundNumber || 0);
+                    return numericRound > max ? numericRound : max;
+                }, 0);
                 
                 if (hasAbsent) {
                     application.status = 'Absent';
                 } else if (hasFailed) {
                     application.status = 'Rejected';
                 } else {
-                    // Keep as Pending unless all rounds are passed
-                    const allPassed = application.rounds.every(r => r.status === 'Passed');
-                    if (allPassed && application.rounds.length > 0) {
+                    // Mark as Placed only when final required round is passed.
+                    if (
+                        effectiveTotalRounds > 0 &&
+                        allPassed &&
+                        maxRoundNumber >= effectiveTotalRounds &&
+                        application.rounds.length >= effectiveTotalRounds
+                    ) {
                         application.status = 'Placed';
                     } else {
                         application.status = 'Pending';
@@ -3740,6 +3822,7 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
                     pkg: student.pkg || 'N/A',
                     date: student.date || new Date().toLocaleDateString('en-GB'),
                     status: 'Accepted',
+                    offerStatus: 'Pending',
                     profilePhoto: studentRecord?.profilePicURL || studentRecord?.profilePhoto || studentRecord?.photo || null,
                     createdAt: new Date(),
                     updatedAt: new Date()
@@ -3775,6 +3858,111 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
         console.error('Error saving placed students:', error);
         res.status(500).json({
             error: 'Failed to save placed students',
+            details: error.message
+        });
+    }
+});
+
+// Upload placed student offer letter and mark offer status as Sent
+app.post('/api/placed-students/offer/upload', authenticateToken, checkRole('admin', 'coordinator'), upload.single('offerLetter'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const file = req.file;
+        const { placedStudentId, regNo, company, role } = req.body;
+
+        if (!file) {
+            return res.status(400).json({ error: 'No offer letter uploaded' });
+        }
+
+        const PlacedStudents = mongoose.connection.collection('placed_students');
+
+        let filter;
+        if (placedStudentId) {
+            if (!mongoose.Types.ObjectId.isValid(placedStudentId)) {
+                return res.status(400).json({ error: 'Invalid placed student id' });
+            }
+            filter = { _id: new mongoose.Types.ObjectId(placedStudentId) };
+        } else {
+            filter = { regNo, company, role };
+        }
+
+        if (!placedStudentId && (!regNo || !company || !role)) {
+            return res.status(400).json({ error: 'Missing placed student identifier' });
+        }
+
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+
+        const gridfsUpload = await new Promise((resolve, reject) => {
+            const filename = `offer_${regNo || 'student'}_${Date.now()}_${file.originalname}`;
+            const readable = new Readable();
+            readable.push(file.buffer);
+            readable.push(null);
+
+            const uploadStream = bucket.openUploadStream(filename, {
+                contentType: file.mimetype,
+                metadata: {
+                    category: 'offer-letter',
+                    placedStudentId: placedStudentId || null,
+                    regNo: regNo || null,
+                    company: company || null,
+                    role: role || null,
+                    originalName: file.originalname
+                }
+            });
+
+            readable
+                .pipe(uploadStream)
+                .on('error', reject)
+                .on('finish', () => resolve({
+                    id: uploadStream.id.toString(),
+                    url: `/api/file/${uploadStream.id.toString()}`
+                }));
+        });
+
+        const existingRecord = await PlacedStudents.findOne(filter, { projection: { offerGridfsFileId: 1 } });
+        if (existingRecord?.offerGridfsFileId) {
+            try {
+                await bucket.delete(new mongoose.Types.ObjectId(existingRecord.offerGridfsFileId));
+            } catch (deleteError) {
+                console.log('⚠️ Previous offer GridFS file delete skipped:', deleteError.message);
+            }
+        }
+
+        const offerUpdate = {
+            offerStatus: 'Sent',
+            offerLetterName: file.originalname,
+            offerLetterType: file.mimetype,
+            offerLetterSize: file.size,
+            offerLetterData: '', // Keep empty for GridFS-based uploads
+            offerGridfsFileId: gridfsUpload.id,
+            offerGridfsFileUrl: gridfsUpload.url,
+            offerUploadedAt: new Date(),
+            offerSentAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const result = await PlacedStudents.updateOne(filter, { $set: offerUpdate });
+
+        if (!result.matchedCount) {
+            return res.status(404).json({ error: 'Placed student record not found' });
+        }
+
+        return res.json({
+            success: true,
+            message: 'Offer letter uploaded and status updated',
+            offerStatus: 'Sent',
+            fileName: file.originalname,
+            gridfsFileId: offerUpdate.offerGridfsFileId,
+            gridfsFileUrl: offerUpdate.offerGridfsFileUrl,
+            uploadedAt: offerUpdate.offerUploadedAt
+        });
+    } catch (error) {
+        console.error('Error uploading offer letter:', error);
+        return res.status(500).json({
+            error: 'Failed to upload offer letter',
             details: error.message
         });
     }
@@ -3856,11 +4044,17 @@ app.get('/api/placed-students', async (req, res) => {
         // OPTIMIZATION: Field selection - only return essential fields (avoid large base64 images)
         // Landing page only needs: name, dept, company, pkg, role, profilePicURL
         const projection = {
+            studentId: 1,
             name: 1,
+            regNo: 1,
             dept: 1,
             company: 1,
             pkg: 1,
             role: 1,
+            offerStatus: 1,
+            offerLetterName: 1,
+            offerGridfsFileId: 1,
+            offerGridfsFileUrl: 1,
             profilePicURL: 1,
             profilePhoto: 1,
             batch: 1,
@@ -5553,7 +5747,6 @@ const archivedBatchSchema = new mongoose.Schema({
 }, { timestamps: true, strict: false });
 
 archivedBatchSchema.index({ batch: 1 });
-archivedBatchSchema.index({ archiveName: 1 });
 archivedBatchSchema.index({ archivedAt: -1 });
 
 const ArchivedBatch = mongoose.model('ArchivedBatch', archivedBatchSchema, 'archived_batches');
@@ -5794,14 +5987,6 @@ const IN_MEMORY_FALLBACK_ENABLED = process.env.ENABLE_IN_MEMORY_FALLBACK === 'tr
 
 // Database initialization flag (for serverless lazy initialization)
 let dbInitialized = false;
-
-// File upload configuration (Multer - memory storage for legacy routes)
-const upload = multer({ 
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
-    }
-});
 
 // Warm up database indexes for instant login
 const warmupLoginIndexes = async () => {
@@ -8128,7 +8313,10 @@ app.get('/api/students/:studentId/status', async (req, res) => {
             studentData = await Student.findById(studentId).select('-__v').lean();
             console.log(`✅ Student status fetched: ${!!studentData}`);
         } else {
-            studentData = students.find(s => (s._id || s.id) === studentId);
+            return res.status(503).json({
+                error: 'Database not connected',
+                details: 'Student status is temporarily unavailable while MongoDB is reconnecting.'
+            });
         }
         
         if (!studentData) {
@@ -9189,36 +9377,38 @@ app.use('/api', gridfsRoutes);
 
 // Server startup logic - works for both development and production (Render)
 if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
-    // Development or Render production - start traditional server
-    // IMPORTANT: Connect to MongoDB BEFORE starting the server to prevent early request failures
-    (async () => {
+    // Development or Render production - start HTTP server first.
+    // DB initializes in background so clients get clean 503 responses instead of connection refused.
+    app.listen(PORT, () => {
+        console.log(`✅ Placement Portal Server running on port ${PORT}`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`🚀 Status: HTTP server ready (database initialization in progress)`);
+
+        // JWT Status Information
+        console.log('\n🔐 JWT AUTHENTICATION STATUS: ACTIVE');
+        console.log('🕐 Token Duration: 6 hours');
+        console.log('🛡️  Protected Endpoints:');
+        console.log('   ✅ Student routes protected');
+        console.log('   ✅ Admin routes protected');
+        console.log('   ✅ Coordinator routes protected');
+        console.log('   ✅ Role-based access control enabled\n');
+    });
+
+    Promise.resolve().then(async () => {
         try {
             console.log('🔄 Initializing database connection...');
-            await startServer();
+            const isMongoConnected = await startServer();
             dbInitialized = true;
-            console.log('✅ Database initialized successfully');
-
-            // Now start accepting HTTP requests
-            app.listen(PORT, () => {
-                console.log(`✅ Placement Portal Server running on port ${PORT}`);
-                console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-                console.log(`🚀 Status: Ready and accepting connections`);
-                console.log(`📊 MongoDB: Connected to Atlas cluster`);
-
-                // JWT Status Information
-                console.log('\n🔐 JWT AUTHENTICATION STATUS: ACTIVE');
-                console.log('🕐 Token Duration: 6 hours');
-                console.log('🛡️  Protected Endpoints:');
-                console.log('   ✅ Student routes protected');
-                console.log('   ✅ Admin routes protected');
-                console.log('   ✅ Coordinator routes protected');
-                console.log('   ✅ Role-based access control enabled\n');
-            });
+            if (isMongoConnected) {
+                console.log('✅ Database initialized successfully (MongoDB Atlas connected)');
+            } else {
+                console.warn('⚠️ Database initialization completed with fallback mode (MongoDB unavailable)');
+            }
         } catch (error) {
-            console.error('❌ Server initialization failed:', error.message);
-            process.exit(1);
+            console.error('❌ Database background initialization failed:', error.message);
+            console.warn('⚠️ Server will stay up and continue retrying MongoDB on incoming requests.');
         }
-    })();
+    });
 } else {
     // Serverless mode (Vercel) - initialize DB connection immediately
     try {
@@ -9254,18 +9444,6 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found', path: req.path });
-});
-
-// Handle unhandled promise rejections - PREVENT CRASHES
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('⚠️  Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit - keep server running
-});
-
-// Handle uncaught exceptions - PREVENT CRASHES  
-process.on('uncaughtException', (error) => {
-    console.error('⚠️  Uncaught Exception:', error);
-    // Don't exit - keep server running
 });
 
 // Export for Vercel - must export the app directly

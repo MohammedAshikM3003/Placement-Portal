@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute, { RoleGuard } from "./components/ProtectedRoute.jsx";
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import GlobalNotificationChecker from "./components/CertificateNotification/GlobalNotificationChecker.jsx";
+import GlobalPlacementBannerChecker from "./components/CertificateNotification/GlobalPlacementBannerChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -217,8 +218,13 @@ function AppContent() {
         />
       )}
 
-      {/* Global Certificate Notification Checker - Only on student-authenticated routes */}
-      {isStudentLoggedIn && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && <GlobalNotificationChecker />}
+      {/* Global Certificate Notification Checker & Placement Banner - Only on student-authenticated routes */}
+      {isStudentLoggedIn && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && (
+        <>
+          <GlobalNotificationChecker />
+          <GlobalPlacementBannerChecker />
+        </>
+      )}
 
     <Routes>
       {/* PUBLIC ROUTES */}
