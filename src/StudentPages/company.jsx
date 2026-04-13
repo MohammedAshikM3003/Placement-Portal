@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import PopUpPending from './PopUpPending.jsx';
 import { getOverallStatus as getPopupOverallStatus } from './PopUpPending.jsx';
 import styles from './Company.module.css';
+import alertStyles from '../components/alerts/AlertStyles.module.css';
 
 // Fetch eligible students for a student from backend
 const getEligibleStudents = async (studentId) => {
@@ -30,8 +31,25 @@ export default function Company({ onLogout, onViewChange }) {
   const [eligibleDrives, setEligibleDrives] = useState([]);
   const [studentApplications, setStudentApplications] = useState([]);
   const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
+  const [studentOfferLetter, setStudentOfferLetter] = useState(null);
+  const [offerDecision, setOfferDecision] = useState('pending');
+  const [isOfferDecisionUpdating, setIsOfferDecisionUpdating] = useState(false);
+  const [offerActionInFlight, setOfferActionInFlight] = useState('');
+  const [isDownloadingOffer, setIsDownloadingOffer] = useState(false);
+  const [offerResponsePopup, setOfferResponsePopup] = useState({
+    isOpen: false,
+    phase: 'saving',
+    decision: 'accepted',
+    studentName: '',
+    companyName: '',
+    jobRole: '',
+    packageText: '',
+    regNo: '',
+    message: ''
+  });
   const [isLoading, setIsLoading] = useState(true);
   const isFetchingRef = useRef(false);
+  const offerDecisionLockRef = useRef(false);
   const lastFetchedStudentIdRef = useRef(null);
   const eligibleDrivesRef = useRef([]);
   const studentApplicationsRef = useRef([]);
@@ -42,6 +60,10 @@ export default function Company({ onLogout, onViewChange }) {
   const [showScrollBar, setShowScrollBar] = useState(false);
 
   const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
+  const getStudentLookupIds = (student) => ({
+    studentId: String(student?._id || student?.id || student?.studentId || '').trim(),
+    regNo: String(student?.regNo || student?.registerNumber || student?.registerNo || '').trim()
+  });
   const normalizeDate = (value) => {
     if (!value) return '';
 
@@ -119,8 +141,7 @@ export default function Company({ onLogout, onViewChange }) {
 
   const fetchStudentAttendanceRecords = async (student) => {
     const mongoDBService = await import('../services/mongoDBService').then(m => m.default);
-    const regNoRaw = String(student?.regNo || student?.registerNumber || student?.registerNo || '').trim();
-    const studentId = String(student?._id || '').trim();
+    const { studentId, regNo: regNoRaw } = getStudentLookupIds(student);
 
     const attendanceCalls = [];
     if (regNoRaw) {
@@ -157,6 +178,77 @@ export default function Company({ onLogout, onViewChange }) {
     });
 
     return { success: true, data: merged };
+  };
+
+  const fetchStudentOfferLetter = async (student) => {
+    const mongoDBService = await import('../services/mongoDBService').then(m => m.default);
+    const { studentId, regNo: regNoRaw } = getStudentLookupIds(student);
+    const driveCompany = String(student?.company || student?.companyName || '').trim();
+    const driveRole = String(student?.role || student?.jobRole || '').trim();
+
+    const candidates = [];
+
+    if (regNoRaw) {
+      const byRegNo = await mongoDBService.getPlacedStudents({ regNo: regNoRaw }).catch(() => null);
+      if (byRegNo?.success && Array.isArray(byRegNo.data)) {
+        candidates.push(...byRegNo.data);
+      }
+    }
+
+    if (studentId) {
+      const byStudentId = await mongoDBService.getPlacedStudents({ studentId }).catch(() => null);
+      if (byStudentId?.success && Array.isArray(byStudentId.data)) {
+        candidates.push(...byStudentId.data);
+      }
+    }
+
+    if (driveCompany && driveRole) {
+      const byDrive = await mongoDBService.getPlacedStudents({ company: driveCompany, role: driveRole }).catch(() => null);
+      if (byDrive?.success && Array.isArray(byDrive.data)) {
+        candidates.push(...byDrive.data);
+      }
+    }
+
+    if (!candidates.length) {
+      return null;
+    }
+
+    const unique = [];
+    const seen = new Set();
+    candidates.forEach((entry) => {
+      const key = [
+        String(entry?._id || '').trim(),
+        String(entry?.offerGridfsFileId || '').trim(),
+        String(entry?.offerGridfsFileUrl || '').trim(),
+        String(entry?.regNo || '').trim()
+      ].join('::');
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(entry);
+      }
+    });
+
+    return unique
+      .slice()
+      .sort((left, right) => {
+        const rightTs = new Date(right?.offerSentAt || right?.offerUploadedAt || 0).getTime();
+        const leftTs = new Date(left?.offerSentAt || left?.offerUploadedAt || 0).getTime();
+        return rightTs - leftTs;
+      })[0] || null;
+  };
+
+  const resolveOfferLetterUrl = (offerEntry) => {
+    if (!offerEntry) return '';
+
+    const directUrl = String(offerEntry?.offerGridfsFileUrl || '').trim();
+    const fileId = String(offerEntry?.offerGridfsFileId || '').trim();
+    const raw = directUrl || (fileId ? `/api/file/${fileId}` : '');
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const origin = apiBase.replace(/\/api\/?$/, '');
+    return `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
   };
 
   const isAttendanceAbsentForDrive = (drive) => {
@@ -295,14 +387,15 @@ export default function Company({ onLogout, onViewChange }) {
         console.error('Error parsing student data from localStorage:', error);
       }
 
-      if (!parsedStudentData?._id) {
+      const studentIdentity = getStudentLookupIds(parsedStudentData);
+      if (!studentIdentity.studentId && !studentIdentity.regNo) {
         if (!isUnmounted) {
           setIsLoading(false);
         }
         return;
       }
 
-      const studentId = String(parsedStudentData._id);
+      const studentId = studentIdentity.studentId;
       const hasExistingData = eligibleDrivesRef.current.length > 0 || studentApplicationsRef.current.length > 0;
       const sameStudentAsLastFetch = lastFetchedStudentIdRef.current === studentId;
 
@@ -322,16 +415,18 @@ export default function Company({ onLogout, onViewChange }) {
           setStudentData(parsedStudentData);
         }
 
-        const [drives, appsResponse, attendanceResponse] = await Promise.all([
+        const [drives, appsResponse, attendanceResponse, offerResponse] = await Promise.all([
           getEligibleStudents(studentId),
           import('../services/mongoDBService').then(m => m.default.getStudentApplications(studentId)),
-          fetchStudentAttendanceRecords(parsedStudentData)
+          fetchStudentAttendanceRecords(parsedStudentData),
+          fetchStudentOfferLetter(parsedStudentData)
         ]);
 
         if (!isUnmounted) {
           setEligibleDrives(drives || []);
           setStudentApplications(appsResponse?.applications || []);
           setStudentAttendanceRecords(attendanceResponse?.data || []);
+          setStudentOfferLetter(offerResponse || null);
         }
 
         lastFetchedStudentIdRef.current = studentId;
@@ -444,6 +539,211 @@ export default function Company({ onLogout, onViewChange }) {
   });
   const pendingCount = effectiveStatuses.filter((status) => status === 'Pending').length;
   const rejectedCount = effectiveStatuses.filter((status) => status === 'Rejected' || status === 'Absent').length;
+  const offerLetterUrl = resolveOfferLetterUrl(studentOfferLetter);
+  const offerCompanyName = String(studentOfferLetter?.company || studentOfferLetter?.companyName || 'N/A').trim() || 'N/A';
+  const offerJobRole = String(studentOfferLetter?.role || studentOfferLetter?.jobRole || 'N/A').trim() || 'N/A';
+  const offerPackage = String(studentOfferLetter?.pkg || studentOfferLetter?.package || 'N/A').trim() || 'N/A';
+  const offerPackageDisplay = offerPackage && offerPackage !== 'N/A' && !/\bLPA\b/i.test(offerPackage)
+    ? `${offerPackage} LPA`
+    : offerPackage;
+  const hasSentOfferLetter = Boolean(
+    studentOfferLetter &&
+    offerLetterUrl
+  );
+
+  useEffect(() => {
+    if (!studentOfferLetter) {
+      setOfferDecision('pending');
+      return;
+    }
+    const normalizedStatus = String(studentOfferLetter?.status || 'Pending').trim().toLowerCase();
+    if (normalizedStatus === 'accepted') {
+      setOfferDecision('accepted');
+      return;
+    }
+    if (normalizedStatus === 'rejected') {
+      setOfferDecision('rejected');
+      return;
+    }
+    setOfferDecision('pending');
+  }, [studentOfferLetter]);
+
+  const handleOfferDecisionUpdate = useCallback(async (decision) => {
+    if (!studentOfferLetter || isOfferDecisionUpdating || offerDecisionLockRef.current) return false;
+
+    if (offerDecision === 'accepted' && decision === 'rejected') return false;
+    if (offerDecision === 'rejected' && decision === 'accepted') return false;
+
+    if (offerDecision === decision) {
+      return true;
+    }
+
+    const mongoDBService = await import('../services/mongoDBService').then(m => m.default);
+    try {
+      offerDecisionLockRef.current = true;
+      setIsOfferDecisionUpdating(true);
+      setOfferActionInFlight(decision);
+
+      setOfferResponsePopup({
+        isOpen: true,
+        phase: 'saving',
+        decision,
+        studentName: String(studentData?.name || studentData?.fullName || studentOfferLetter?.name || 'Student').trim(),
+        companyName: String(studentOfferLetter?.company || studentOfferLetter?.companyName || 'N/A').trim() || 'N/A',
+        jobRole: String(studentOfferLetter?.role || studentOfferLetter?.jobRole || 'N/A').trim() || 'N/A',
+        packageText: offerPackageDisplay,
+        regNo: String(studentOfferLetter?.regNo || studentData?.regNo || 'N/A').trim() || 'N/A',
+        message: 'Submitting your response to admin...'
+      });
+
+      await mongoDBService.updatePlacedStudentOfferResponse({
+        placedStudentId: studentOfferLetter?._id,
+        regNo: studentOfferLetter?.regNo || studentData?.regNo,
+        company: studentOfferLetter?.company,
+        role: studentOfferLetter?.role,
+        studentId: studentOfferLetter?.studentId || studentData?._id || studentData?.id,
+        decision
+      });
+
+      const statusValue = decision === 'accepted' ? 'Accepted' : 'Rejected';
+
+      setStudentOfferLetter((prev) => (prev ? { ...prev, status: statusValue } : prev));
+      setOfferDecision(decision);
+
+      setOfferResponsePopup((prev) => ({
+        ...prev,
+        phase: 'success',
+        message: `Your ${statusValue.toLowerCase()} response has been submitted to admin.`
+      }));
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to ${decision} offer:`, error);
+
+      setOfferResponsePopup((prev) => ({
+        ...prev,
+        isOpen: true,
+        phase: 'failed',
+        message: 'Failed to submit your response. Please try again.'
+      }));
+
+      return false;
+    } finally {
+      offerDecisionLockRef.current = false;
+      setIsOfferDecisionUpdating(false);
+      setOfferActionInFlight('');
+    }
+  }, [studentOfferLetter, isOfferDecisionUpdating, offerDecision, studentData, offerPackageDisplay]);
+
+  const handleOfferAccept = useCallback(async () => {
+    await handleOfferDecisionUpdate('accepted');
+  }, [handleOfferDecisionUpdate]);
+
+  const handleOfferReject = useCallback(async () => {
+    await handleOfferDecisionUpdate('rejected');
+  }, [handleOfferDecisionUpdate]);
+
+  const handleOfferDownload = useCallback(async () => {
+    if (!offerLetterUrl || isDownloadingOffer) return;
+
+    try {
+      setIsDownloadingOffer(true);
+      const response = await fetch(offerLetterUrl);
+      if (!response.ok) {
+        throw new Error('Failed to download offer letter');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const suggestedName = String(studentOfferLetter?.offerLetterName || '').trim() || 'Offer-Letter.pdf';
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = suggestedName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Offer letter download failed:', error);
+      window.open(offerLetterUrl, '_blank', 'noopener,noreferrer');
+    } finally {
+      setIsDownloadingOffer(false);
+    }
+  }, [offerLetterUrl, isDownloadingOffer, studentOfferLetter]);
+
+  const closeOfferResponsePopup = useCallback(() => {
+    setOfferResponsePopup((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const isPopupOpen = offerResponsePopup.isOpen;
+  const isAccepted = String(offerResponsePopup.decision || '').toLowerCase() === 'accepted';
+  const isSaving = offerResponsePopup.phase === 'saving';
+  const isSuccess = offerResponsePopup.phase === 'success';
+  const isFailed = offerResponsePopup.phase === 'failed';
+  const popupTitle = isSaving ? 'Submitting Response' : (isFailed ? 'Submission Failed' : 'Response Submitted');
+  const popupBadge = isAccepted ? 'Accepted' : 'Rejected';
+  const popupCompany = String(offerResponsePopup.companyName || 'N/A').trim() || 'N/A';
+  const popupRole = String(offerResponsePopup.jobRole || 'N/A').trim() || 'N/A';
+  const popupPackage = String(offerResponsePopup.packageText || 'N/A').trim() || 'N/A';
+  const offerResponsePopupElement = isPopupOpen ? (
+    <div className={alertStyles['alert-overlay']}>
+      <div className={alertStyles['achievement-popup-container']} onClick={(event) => event.stopPropagation()}>
+        <div className={alertStyles['achievement-popup-header']} style={{ backgroundColor: '#2085f6' }}>
+          {popupTitle}
+        </div>
+
+        <div className={alertStyles['achievement-popup-body']}>
+          {isSaving ? (
+            <div className={styles.offerResponseLoadingDot} aria-label="Processing response" />
+          ) : isFailed ? (
+            <svg className={`${styles.offerResponseStateIcon} ${styles.offerResponseStateIconFailed}`} viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="26" cy="26" r="24" />
+              <path d="M18 18L34 34M34 18L18 34" />
+            </svg>
+          ) : (
+            <div className={styles.offerResponseSuccessIconCircle}>
+              <svg className={styles.offerResponseSuccessIcon} viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Response submitted">
+                <path className={`${styles.offerResponseDocStroke} ${styles.offerResponseDocStrokePrimary}`} d="M13.9 11.6h16.2l6.8 6.8v18.5a2.9 2.9 0 0 1-2.9 2.9h-20a2.9 2.9 0 0 1-2.9-2.9V14.5a2.9 2.9 0 0 1 2.9-2.9z" />
+                <path className={`${styles.offerResponseDocStroke} ${styles.offerResponseDocStrokeSecondary}`} d="M30.1 11.6v6.8h6.8" />
+                <path className={`${styles.offerResponseDocStroke} ${styles.offerResponseDocStrokeTertiary}`} d="M17.2 24.2h13.2" />
+                <path className={`${styles.offerResponseDocStroke} ${styles.offerResponseDocStrokeQuaternary}`} d="M17.2 29.6H26" />
+                {isAccepted ? (
+                  <path className={styles.offerResponseDecisionMark} d="M19.2 33.6l4.8 4.8 9.8-9.8" />
+                ) : (
+                  <>
+                    <path className={styles.offerResponseDecisionMark} d="M20.2 32.2l10.4 10.4" />
+                    <path className={`${styles.offerResponseDecisionMark} ${styles.offerResponseDecisionMarkSecondary}`} d="M30.6 32.2L20.2 42.6" />
+                  </>
+                )}
+              </svg>
+            </div>
+          )}
+
+          <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
+            {offerResponsePopup.studentName || 'Student'} - {popupBadge}
+          </h2>
+
+          <div className={styles.offerResponseInlineMeta}>
+            <span>{popupCompany}</span>
+            <span aria-hidden="true">&middot;</span>
+            <span>{popupRole}</span>
+            <span aria-hidden="true">&middot;</span>
+            <span>{popupPackage}</span>
+          </div>
+
+          <p style={{ margin: '0 0 10px 0', color: '#888', fontSize: '16px' }}>
+            {offerResponsePopup.message || (isSuccess ? 'This response has been submitted to admin.' : 'Submitting your response to admin...')}
+          </p>
+        </div>
+
+        <div className={alertStyles['achievement-popup-footer']}>
+          <button onClick={closeOfferResponsePopup} className={alertStyles['achievement-popup-close-btn']} disabled={isSaving}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   // If an application is selected, show PopUpPending
   if (selectedApplication) {
@@ -499,6 +799,66 @@ export default function Company({ onLogout, onViewChange }) {
               <div className={styles.summaryCardNumber}>{rejectedCount}</div>
             </div>
           </div>
+
+          {hasSentOfferLetter && (
+            <div className={styles.congratsBanner}>
+              <div className={styles.offerLeftSection}>
+                <div className={styles.offerTickIcon}>✓</div>
+                <div className={styles.congratsText}>
+                  <div className={styles.congratsTitle}>Congratulations! you&apos;re Placed!</div>
+                  <div className={styles.congratsDesc}>
+                    We wish you a fantastic career journey!
+                  </div>
+                  <div className={styles.offerInfoRow}>
+                    <span className={styles.offerInfoText}>
+                      <span>{offerCompanyName}</span>
+                      <span className={styles.offerInfoDot}>&middot;</span>
+                      <span>{offerJobRole}</span>
+                      <span className={styles.offerInfoDot}>&middot;</span>
+                      <span>{offerPackageDisplay}</span>
+                    </span>
+                    <div className={styles.offerActionRow}>
+                      {offerDecision === 'accepted' ? (
+                        <span className={`${styles.offerDecisionBadge} ${styles.offerDecisionBadgeAccepted}`}>
+                          Accepted
+                        </span>
+                      ) : offerDecision === 'rejected' ? (
+                        <span className={`${styles.offerDecisionBadge} ${styles.offerDecisionBadgeRejected}`}>
+                          Rejected
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            className={`${styles.offerActionBtn} ${styles.offerAcceptBtn}`}
+                            onClick={handleOfferAccept}
+                            disabled={isOfferDecisionUpdating}
+                          >
+                            {offerActionInFlight === 'accepted' ? 'Saving...' : 'Accept'}
+                          </button>
+                          <button
+                            className={`${styles.offerActionBtn} ${styles.offerRejectBtn}`}
+                            onClick={handleOfferReject}
+                            disabled={isOfferDecisionUpdating}
+                          >
+                            {offerActionInFlight === 'rejected' ? 'Saving...' : 'Reject'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button
+                className={styles.downloadOfferBtn}
+                onClick={handleOfferDownload}
+                disabled={!offerLetterUrl || isDownloadingOffer}
+                title={offerLetterUrl ? 'Download Offer Letter' : 'Offer letter unavailable'}
+              >
+                <div className={styles.downloadOfferIconCircle}>⬇</div>
+                <span>{isDownloadingOffer ? 'Downloading...' : 'Download Offer Letter'}</span>
+              </button>
+            </div>
+          )}
 
           {/* My Application History Section */}
           <div className={styles.applicationHistoryContainer} style={{ position: 'relative' }}>
@@ -624,6 +984,7 @@ export default function Company({ onLogout, onViewChange }) {
         </div>
       </div>
       {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
+      {offerResponsePopupElement}
     </div>
   );
 }

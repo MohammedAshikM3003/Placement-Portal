@@ -1058,12 +1058,24 @@ class MongoDBService {
   }
 
   async getPlacedStudents(filters = {}) {
-    const query = new URLSearchParams(
+    const params = new URLSearchParams(
       Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== '')
-    ).toString();
+    );
+    const isRealtimeLookup = Boolean(filters?.regNo || filters?.studentId || filters?.offerStatus);
+    if (isRealtimeLookup) {
+      params.append('_ts', Date.now().toString());
+    }
+    const query = params.toString();
     const endpoint = query ? `/placed-students?${query}` : '/placed-students';
     return await this.apiCall(endpoint, {
-      method: 'GET'
+      method: 'GET',
+      headers: isRealtimeLookup
+        ? {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0'
+          }
+        : undefined
     });
   }
 
@@ -1091,6 +1103,13 @@ class MongoDBService {
     }
 
     return data;
+  }
+
+  async updatePlacedStudentOfferResponse(payload = {}) {
+    return await this.apiCall('/placed-students/offer-response', {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    });
   }
 
   // ============ REPORTS (FOR ANALYSIS PAGES) ============

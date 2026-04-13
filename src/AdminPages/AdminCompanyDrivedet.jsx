@@ -671,7 +671,7 @@ function Admincdd() {
                 role: fullDriveData.jobRole,
                 pkg: packageValue,
                 date: new Date().toLocaleDateString('en-GB'),
-                status: 'Accepted',
+                status: 'Pending',
                 yearSec: student.yearSec,
                 semester: student.semester,
                 phone: student.phone,

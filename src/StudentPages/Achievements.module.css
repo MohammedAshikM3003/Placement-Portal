@@ -1207,6 +1207,51 @@ select.input-hover {
   border-color: #2276fc;
   box-shadow: 0 0 6px rgba(34, 118, 252, 0.5);
 }
+
+/* =================================== */
+/* ===== OFFER LETTER ICON ANIMATION ===== */
+/* =================================== */
+.offer-letter-icon-animate {
+  animation: offerLetterBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center;
+}
+
+.icon-stroke path {
+  opacity: 0;
+  animation: fadeInPath 0.5s ease-out forwards;
+}
+
+.icon-stroke path:nth-child(1) {
+  animation-delay: 0.4s;
+}
+
+.icon-stroke path:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.icon-stroke path:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+@keyframes offerLetterBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInPath {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .input-hover:focus {
   outline: none;
   border-color: #1a56db;

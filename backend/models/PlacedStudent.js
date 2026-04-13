@@ -54,7 +54,7 @@ const placedStudentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Accepted', 'Pending', 'Rejected'],
-    default: 'Accepted'
+    default: 'Pending'
   },
   offerStatus: {
     type: String,
@@ -83,6 +83,9 @@ const placedStudentSchema = new mongoose.Schema({
     type: Date
   },
   offerSentAt: {
+    type: Date
+  },
+  offerRespondedAt: {
     type: Date
   },
   profilePhoto: {

@@ -3821,10 +3821,8 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
                     role: jobRole,
                     pkg: student.pkg || 'N/A',
                     date: student.date || new Date().toLocaleDateString('en-GB'),
-                    status: 'Accepted',
-                    offerStatus: 'Pending',
+                    status: 'Pending',
                     profilePhoto: studentRecord?.profilePicURL || studentRecord?.profilePhoto || studentRecord?.photo || null,
-                    createdAt: new Date(),
                     updatedAt: new Date()
                 };
             })
@@ -3838,7 +3836,13 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
                     company: companyName,
                     role: jobRole 
                 },
-                update: { $set: student },
+                update: {
+                    $set: student,
+                    $setOnInsert: {
+                        offerStatus: 'Pending',
+                        createdAt: new Date()
+                    }
+                },
                 upsert: true
             }
         }));
@@ -3932,6 +3936,7 @@ app.post('/api/placed-students/offer/upload', authenticateToken, checkRole('admi
         }
 
         const offerUpdate = {
+            status: 'Pending',
             offerStatus: 'Sent',
             offerLetterName: file.originalname,
             offerLetterType: file.mimetype,
@@ -3941,6 +3946,7 @@ app.post('/api/placed-students/offer/upload', authenticateToken, checkRole('admi
             offerGridfsFileUrl: gridfsUpload.url,
             offerUploadedAt: new Date(),
             offerSentAt: new Date(),
+            offerRespondedAt: null,
             updatedAt: new Date()
         };
 
@@ -3963,6 +3969,129 @@ app.post('/api/placed-students/offer/upload', authenticateToken, checkRole('admi
         console.error('Error uploading offer letter:', error);
         return res.status(500).json({
             error: 'Failed to upload offer letter',
+            details: error.message
+        });
+    }
+});
+
+// Student accepts/rejects an offer letter and persist status in placed_students collection
+app.patch('/api/placed-students/offer-response', authenticateToken, checkRole('student'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { placedStudentId, regNo, company, role, studentId, decision } = req.body || {};
+        const normalizedDecision = String(decision || '').trim().toLowerCase();
+
+        if (normalizedDecision !== 'accepted' && normalizedDecision !== 'rejected') {
+            return res.status(400).json({ error: 'Decision must be accepted or rejected' });
+        }
+
+        const normalizeString = (value) => String(value || '').trim();
+        const tokenStudentId = normalizeString(req.user?.userId || req.user?.id || req.user?._id);
+        const tokenRegNo = normalizeString(req.user?.regNo || req.user?.registerNumber || req.user?.registrationNumber);
+        const bodyStudentId = normalizeString(studentId);
+        const bodyRegNo = normalizeString(regNo);
+        const normalizedCompany = normalizeString(company);
+        const normalizedRole = normalizeString(role);
+
+        const PlacedStudents = mongoose.connection.collection('placed_students');
+
+        let explicitIdFilter = null;
+        if (placedStudentId) {
+            if (!mongoose.Types.ObjectId.isValid(placedStudentId)) {
+                return res.status(400).json({ error: 'Invalid placed student id' });
+            }
+            explicitIdFilter = { _id: new mongoose.Types.ObjectId(placedStudentId) };
+        }
+
+        const identityClauses = [];
+        const seenIdentityKeys = new Set();
+
+        const pushIdentity = (field, value) => {
+            const normalizedValue = normalizeString(value);
+            if (!normalizedValue) return;
+            const identityKey = `${field}:${normalizedValue}`;
+            if (seenIdentityKeys.has(identityKey)) return;
+            seenIdentityKeys.add(identityKey);
+            identityClauses.push({ [field]: normalizedValue });
+        };
+
+        pushIdentity('studentId', tokenStudentId);
+        pushIdentity('studentId', bodyStudentId);
+        pushIdentity('regNo', tokenRegNo);
+        pushIdentity('regNo', bodyRegNo);
+
+        if (!explicitIdFilter && identityClauses.length === 0) {
+            return res.status(403).json({ error: 'Student identity missing in token or request' });
+        }
+
+        const statusValue = normalizedDecision === 'accepted' ? 'Accepted' : 'Rejected';
+        const update = {
+            $set: {
+                status: statusValue,
+                offerRespondedAt: new Date(),
+                updatedAt: new Date()
+            }
+        };
+
+        const candidateQueries = [];
+
+        if (explicitIdFilter) {
+            const byIdQuery = {
+                ...explicitIdFilter,
+                offerStatus: 'Sent'
+            };
+            if (normalizedCompany) byIdQuery.company = normalizedCompany;
+            if (normalizedRole) byIdQuery.role = normalizedRole;
+            candidateQueries.push(byIdQuery);
+        }
+
+        if (identityClauses.length > 0) {
+            const identityScopedQuery = {
+                offerStatus: 'Sent',
+                $or: identityClauses
+            };
+            if (normalizedCompany) identityScopedQuery.company = normalizedCompany;
+            if (normalizedRole) identityScopedQuery.role = normalizedRole;
+            candidateQueries.push(identityScopedQuery);
+
+            // Fallback: allow identity match without company/role if frontend has stale values.
+            candidateQueries.push({
+                offerStatus: 'Sent',
+                $or: identityClauses
+            });
+        }
+
+        let result = null;
+        for (const query of candidateQueries) {
+            // eslint-disable-next-line no-await-in-loop
+            const found = await PlacedStudents.findOneAndUpdate(query, update, {
+                returnDocument: 'after'
+            });
+            const foundDoc = found?.value || found;
+            if (foundDoc && foundDoc._id) {
+                result = foundDoc;
+                break;
+            }
+        }
+
+        if (!result || !result._id) {
+            return res.status(404).json({ error: 'Placed student offer record not found for this student' });
+        }
+
+        return res.json({
+            success: true,
+            message: `Offer ${normalizedDecision} successfully`,
+            status: result.status,
+            offerStatus: result.offerStatus,
+            updatedAt: result.updatedAt
+        });
+    } catch (error) {
+        console.error('Error updating student offer response:', error);
+        return res.status(500).json({
+            error: 'Failed to update student offer response',
             details: error.message
         });
     }
@@ -4028,16 +4157,27 @@ app.get('/api/placed-students', async (req, res) => {
             return res.status(503).json({ error: 'Database not connected' });
         }
 
-        // OPTIMIZATION: Cache headers for faster landing page loads
-        res.set('Cache-Control', 'public, max-age=300, s-maxage=600'); // 5 min cache
+        const { dept, batch, company, status, regNo, studentId, offerStatus } = req.query;
+        const isRealtimeLookup = Boolean(regNo || studentId || offerStatus);
 
-        const { dept, batch, company, status } = req.query;
+        // Keep landing-page caching, but disable it for live student offer/status checks.
+        if (isRealtimeLookup) {
+            res.set('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+            res.set('Pragma', 'no-cache');
+            res.set('Expires', '0');
+        } else {
+            res.set('Cache-Control', 'public, max-age=300, s-maxage=600'); // 5 min cache
+        }
+
         const query = {};
 
         if (dept && dept !== 'All Departments') query.dept = dept;
         if (batch && batch !== 'All Batches') query.batch = batch;
         if (company && company !== 'All Companies') query.company = company;
         if (status && status !== 'All') query.status = status;
+        if (regNo) query.regNo = String(regNo).trim();
+        if (studentId) query.studentId = String(studentId).trim();
+        if (offerStatus) query.offerStatus = String(offerStatus).trim();
 
         const PlacedStudents = mongoose.connection.collection('placed_students');
         
@@ -4055,6 +4195,9 @@ app.get('/api/placed-students', async (req, res) => {
             offerLetterName: 1,
             offerGridfsFileId: 1,
             offerGridfsFileUrl: 1,
+            offerUploadedAt: 1,
+            offerSentAt: 1,
+            offerRespondedAt: 1,
             profilePicURL: 1,
             profilePhoto: 1,
             batch: 1,
@@ -4065,7 +4208,7 @@ app.get('/api/placed-students', async (req, res) => {
         // Sort by package descending to show top placements first
         const students = await PlacedStudents
             .find(query, { projection })
-            .sort({ pkg: -1 }) // Highest packages first
+            .sort({ offerSentAt: -1, offerUploadedAt: -1, pkg: -1 })
             .limit(100)
             .maxTimeMS(5000) // 5s timeout protection
             .toArray()

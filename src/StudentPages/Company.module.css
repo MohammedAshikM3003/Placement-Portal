@@ -62,7 +62,7 @@
 .summaryCardsContainer {
     display: flex;
     gap: 20px;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     flex-shrink: 0;
 }
 
@@ -128,25 +128,378 @@
     border-radius: 14px;
     display: flex;
     align-items: center;
-    padding: 30px 45px;
-    gap: 22px;
+    justify-content: space-between;
+    padding: 22px 30px;
+    gap: 18px;
     box-shadow: 0 2px 10px rgba(56, 168, 92, 0.07);
-    min-height: 115px;
+    min-height: 140px;
+    margin-bottom : 10px;
 }
 
 .congratsIcon { width: 40px; height: 40px; margin-right: 18px; flex-shrink: 0; }
+.offerLeftSection {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    flex: 1;
+    min-width: 0;
+}
+.offerTickIcon {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #3ad400;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 800;
+    margin-right: 18px;
+    flex-shrink: 0;
+}
 .congratsText { display: flex; flex-direction: column; justify-content: center; }
-.congratsTitle { font-weight: 800; font-size: 22.5px; color: #178A2E; margin-bottom: 3px; }
-.congratsDesc { font-weight: 400; font-size: 15.8px; color: #285F2B; }
+.congratsTitle { font-weight: 800; font-size: 22px; color: #178A2E; margin-bottom: 2px; line-height: 1.2; }
+.congratsDesc { font-weight: 400; font-size: 15px; color: #285F2B; max-width: 680px; }
 .congratsDesc span { color: #159051; font-weight: 700; }
+
+.offerInfoRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.offerInfoText {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1f5d2a;
+    line-height: 1.2;
+}
+
+.offerInfoDot {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.offerInfoItem {
+    font-size: 14px;
+    color: #1f5d2a;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(34, 139, 34, 0.16);
+    border-radius: 999px;
+    padding: 4px 10px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.offerActionRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
+    margin-bottom: 2px;
+}
+
+.offerActionBtn {
+    border: none;
+    border-radius: 999px;
+    min-width: 112px;
+    height: 40px;
+    padding: 0 16px;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.offerActionBtn:hover {
+    transform: translateY(-1px);
+}
+
+.offerAcceptBtn {
+    background: #bfe8df;
+    color: #0e9f86;
+}
+
+.offerRejectBtn {
+    background: #f2bec2;
+    color: #b4373a;
+}
+
+.offerActionActive {
+    box-shadow: inset 0 0 0 2px rgba(18, 18, 18, 0.14);
+}
+
+.offerDecisionBadge {
+    min-width: 112px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.offerDecisionBadgeAccepted {
+    background: #d7f4e2;
+    color: #1c9f5b;
+}
+
+.offerDecisionBadgeRejected {
+    background: #f6d1d1;
+    color: #c54545;
+}
+
+.offerResponseOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.offerResponseModal {
+    width: 100%;
+    max-width: 430px;
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+.offerResponseHeader {
+    background: linear-gradient(180deg, #4EA24E 0%, #3E8F3E 100%);
+    color: #ffffff;
+    padding: 18px 22px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.offerResponseBody {
+    padding: 20px 22px 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfffb 100%);
+}
+
+.offerResponseTopRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.offerResponseStudentName {
+    color: #232323;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.offerResponseStatusBadge {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.offerResponseStatusBadgeAccepted {
+    background: #e8faec;
+    color: #1FAD66;
+    box-shadow: inset 0 0 0 1px rgba(31, 173, 102, 0.14);
+}
+
+.offerResponseStatusBadgeRejected {
+    background: #fce5e5;
+    color: #d44b4b;
+    box-shadow: inset 0 0 0 1px rgba(212, 75, 75, 0.14);
+}
+
+.offerResponseLoadingDot {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.24);
+    border-top-color: #4EA24E;
+    animation: offerResponseSpin 0.8s linear infinite;
+}
+
+.offerResponseStateIcon {
+    width: 58px;
+    height: 58px;
+}
+
+.offerResponseStateIcon circle,
+.offerResponseStateIcon path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 4;
+}
+
+.offerResponseStateIconSuccess circle,
+.offerResponseStateIconSuccess path {
+    stroke: #22C55E;
+}
+
+.offerResponseStateIconFailed circle,
+.offerResponseStateIconFailed path {
+    stroke: #D84A4A;
+}
+
+.offerResponseSuccessIconCircle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #22C55E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.offerResponseSuccessIcon {
+    width: 48px;
+    height: 48px;
+    display: block;
+    color: #ffffff;
+}
+
+.offerResponseDocStroke {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+    animation: offerResponseDraw 0.45s ease forwards;
+}
+
+.offerResponseDocStrokePrimary {
+    animation-delay: 0s;
+}
+
+.offerResponseDocStrokeSecondary {
+    animation-delay: 0.12s;
+}
+
+.offerResponseDocStrokeTertiary {
+    animation-delay: 0.22s;
+}
+
+.offerResponseDocStrokeQuaternary {
+    animation-delay: 0.3s;
+}
+
+.offerResponseDecisionMark {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: offerResponseDraw 0.55s ease forwards;
+    animation-delay: 0.42s;
+}
+
+.offerResponseDecisionMarkSecondary {
+    animation-delay: 0.56s;
+}
+
+.offerResponseInlineMeta {
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    color: #1f2f1f;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.offerResponseDetailCompact {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f7f7f7;
+    border: 1px solid #ececec;
+    text-align: left;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.5;
+}
+
+@keyframes offerResponseSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes offerResponseDraw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
 
 .downloadOfferBtn {
     margin-left: auto;
-    background: none; border: none; display: flex; flex-direction: column;
-    align-items: center; cursor: pointer; gap: 6px; flex-shrink: 0;
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 180px;
 }
 .downloadOfferBtn img { width: 31px; height: 31px; }
-.downloadOfferBtn span { color: #178A2E; font-weight: 800; font-size: 17.5px; }
+.downloadOfferBtn span { color: #178A2E; font-weight: 800; font-size: 17px; text-align: center; }
+
+.downloadOfferIconCircle {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: 7px solid #0f7f0f;
+    color: #0f7f0f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+}
 
 .historyContainer {
     background: #3B6FB6;
@@ -534,20 +887,110 @@
     /* Congrats Banner */
     .congratsBanner {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         text-align: left;
-        padding: 20px;
+        padding: 18px;
+        min-height: unset;
+        gap: 14px;
+    }
+
+    .offerLeftSection {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .congratsTitle {
+        font-size: 18.5px;
+    }
+
+    .congratsDesc {
+        font-size: 14px;
+        max-width: none;
+    }
+
+    .offerActionRow {
+        margin-top: 0;
+        margin-bottom: 0;
+        gap: 8px;
+    }
+
+    .offerInfoRow {
+        gap: 8px;
+        margin-top: 9px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .offerInfoText {
+        font-size: 14px;
+    }
+
+    .offerInfoItem {
+        font-size: 12px;
+        padding: 4px 9px;
+    }
+
+    .offerActionBtn {
+        flex: 1;
+        min-width: 0;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .offerDecisionBadge {
+        flex: 1;
+        min-width: 0;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .offerResponseStateIcon,
+    .offerResponseLoadingDot {
+        width: 50px;
+        height: 50px;
+    }
+
+    .offerResponseSuccessIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .offerResponseSuccessIconCircle {
+        width: 58px;
+        height: 58px;
+    }
+
+    .offerResponseDetailCompact {
+        font-size: 13px;
+    }
+
+    .offerResponseInlineMeta {
+        font-size: 18px;
+        gap: 6px;
     }
 
     .downloadOfferBtn {
         margin-left: 0;
-        margin-top: 20px;
+        margin-top: 4px;
         flex-direction: row;
         width: 100%;
         background-color: rgba(255, 255, 255, 0.2);
-        padding: 10px;
+        padding: 10px 12px;
         border-radius: 10px;
         justify-content: center;
+        min-width: 0;
+    }
+
+    .downloadOfferIconCircle {
+        width: 44px;
+        height: 44px;
+        border-width: 4px;
+        font-size: 24px;
+    }
+
+    .downloadOfferBtn span {
+        font-size: 15px;
+        text-align: left;
     }
 
     .historyContainer {
@@ -579,6 +1022,18 @@
     .appItem {
         padding: 10px 10px;
         min-height: 56px;
+    }
+
+    .offerTickIcon {
+        width: 46px;
+        height: 46px;
+        font-size: 28px;
+        margin-right: 0;
+    }
+
+    .offerActionBtn {
+        height: 34px;
+        font-size: 13px;
     }
 
     .appCompany { font-size: 0.88rem; }

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactDOM from 'react-dom';
 import { FaCheckCircle, FaExclamationCircle, FaTimes, FaStar, FaRegStar } from "react-icons/fa";
+import '../components/alerts/AlertStyles.css';
 import scrollStyles from './PopupScrollbar.module.css';
 import companyfeedbackicon from '../assets/companyfeedbackicon.svg';
 import CopmanyviewFeedbackicon from '../assets/CopmanyviewFeedbackicon.svg';
@@ -54,7 +55,6 @@ function FeedbackScrollBox({ text }) {
 
   return (
     <div style={{ display: 'flex', gap: '6px', maxHeight: '180px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-      {/* Content â€” native scrollbar hidden */}
       <div
         ref={contentRef}
         onScroll={updateThumb}
@@ -1301,6 +1301,56 @@ export default function PopUpPending({ app, onBack }) {
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
   });
+  const [offerLetterRecord, setOfferLetterRecord] = useState(null);
+  const [isOfferLetterLoading, setIsOfferLetterLoading] = useState(false);
+  const [showOfferLetterPopup, setShowOfferLetterPopup] = useState(false);
+  const [showOfferLetterPreview, setShowOfferLetterPreview] = useState(false);
+  const [isOfferDecisionUpdating, setIsOfferDecisionUpdating] = useState(false);
+  const [offerActionInFlight, setOfferActionInFlight] = useState('');
+
+  const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
+
+  const resolveOfferLetterUrl = (offerEntry) => {
+    if (!offerEntry) return '';
+
+    const directUrl = String(offerEntry?.offerGridfsFileUrl || '').trim();
+    const fileId = String(offerEntry?.offerGridfsFileId || '').trim();
+    const raw = directUrl || (fileId ? `/api/file/${fileId}` : '');
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const origin = apiBase.replace(/\/api\/?$/, '');
+    return `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
+  };
+
+  const getBestOfferForDrive = useCallback((offers = []) => {
+    const driveCompany = normalizeText(app?.company);
+    const driveRole = normalizeText(app?.jobRole);
+    const driveId = String(app?.driveId || '').trim();
+
+    const sameDriveOffers = offers.filter((entry) => {
+      const offerCompany = normalizeText(entry?.company || entry?.companyName);
+      const offerRole = normalizeText(entry?.role || entry?.jobRole);
+      const offerDriveId = String(entry?.driveId || '').trim();
+
+      if (driveId && offerDriveId) {
+        return offerDriveId === driveId;
+      }
+
+      return offerCompany === driveCompany && offerRole === driveRole;
+    });
+
+    if (!sameDriveOffers.length) return null;
+
+    return sameDriveOffers
+      .slice()
+      .sort((left, right) => {
+        const rightTs = new Date(right?.offerSentAt || right?.offerUploadedAt || right?.updatedAt || 0).getTime();
+        const leftTs = new Date(left?.offerSentAt || left?.offerUploadedAt || left?.updatedAt || 0).getTime();
+        return rightTs - leftTs;
+      })[0] || null;
+  }, [app?.company, app?.jobRole, app?.driveId]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -1372,14 +1422,120 @@ export default function PopUpPending({ app, onBack }) {
   const getStudentIdentity = () => {
     try {
       const student = JSON.parse(localStorage.getItem('studentData') || 'null') || {};
+      const regNoRaw = String(student?.regNo || student?.registerNo || student?.registerNumber || '').trim();
       return {
         studentId: String(student?._id || student?.id || '').trim(),
-        regNo: String(student?.regNo || student?.registerNo || student?.registerNumber || '').trim().toLowerCase()
+        regNoRaw,
+        regNo: regNoRaw.toLowerCase()
       };
     } catch (error) {
-      return { studentId: '', regNo: '' };
+      return { studentId: '', regNoRaw: '', regNo: '' };
     }
   };
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadOfferLetterForDrive = async () => {
+      setIsOfferLetterLoading(true);
+      setOfferLetterRecord(null);
+
+      const { studentId, regNoRaw } = getStudentIdentity();
+      const candidateRecords = [];
+
+      try {
+        if (regNoRaw) {
+          const byRegNo = await mongoDBService.getPlacedStudents({ regNo: regNoRaw, offerStatus: 'Sent' }).catch(() => null);
+          if (byRegNo?.success && Array.isArray(byRegNo?.data)) {
+            candidateRecords.push(...byRegNo.data);
+          }
+        }
+
+        if (studentId) {
+          const byStudentId = await mongoDBService.getPlacedStudents({ studentId, offerStatus: 'Sent' }).catch(() => null);
+          if (byStudentId?.success && Array.isArray(byStudentId?.data)) {
+            candidateRecords.push(...byStudentId.data);
+          }
+        }
+
+        if (!isActive) return;
+
+        const unique = [];
+        const seen = new Set();
+        candidateRecords.forEach((entry) => {
+          const key = [
+            String(entry?._id || '').trim(),
+            String(entry?.offerGridfsFileId || '').trim(),
+            String(entry?.offerGridfsFileUrl || '').trim()
+          ].join('::');
+          if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(entry);
+          }
+        });
+
+        const matched = getBestOfferForDrive(unique);
+        const hasSentOffer = matched && String(matched?.offerStatus || '').toLowerCase() === 'sent' && resolveOfferLetterUrl(matched);
+        setOfferLetterRecord(hasSentOffer ? matched : null);
+      } catch (error) {
+        console.error('Failed to load drive offer letter:', error);
+        if (isActive) {
+          setOfferLetterRecord(null);
+        }
+      } finally {
+        if (isActive) {
+          setIsOfferLetterLoading(false);
+        }
+      }
+    };
+
+    loadOfferLetterForDrive();
+
+    return () => {
+      isActive = false;
+    };
+  }, [app?.company, app?.jobRole, app?.driveId, getBestOfferForDrive]);
+
+  const handleOfferDecisionUpdate = useCallback(async (decision) => {
+    if (!offerLetterRecord || isOfferDecisionUpdating) return false;
+
+    const normalizedDecision = String(decision || '').trim().toLowerCase();
+    if (normalizedDecision !== 'accepted' && normalizedDecision !== 'rejected') return false;
+
+    const currentStatus = String(offerLetterRecord?.status || 'Pending').trim().toLowerCase();
+    if (currentStatus !== 'pending') return false;
+
+    try {
+      setIsOfferDecisionUpdating(true);
+      setOfferActionInFlight(normalizedDecision);
+
+      await mongoDBService.updatePlacedStudentOfferResponse({
+        placedStudentId: offerLetterRecord?._id,
+        regNo: offerLetterRecord?.regNo,
+        company: offerLetterRecord?.company,
+        role: offerLetterRecord?.role,
+        studentId: offerLetterRecord?.studentId || getStudentIdentity().studentId,
+        decision: normalizedDecision
+      });
+
+      setOfferLetterRecord((prev) => (prev ? {
+        ...prev,
+        status: normalizedDecision === 'accepted' ? 'Accepted' : 'Rejected'
+      } : prev));
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to ${normalizedDecision} offer letter:`, error);
+      return false;
+    } finally {
+      setIsOfferDecisionUpdating(false);
+      setOfferActionInFlight('');
+    }
+  }, [offerLetterRecord, isOfferDecisionUpdating]);
+
+  const handleOfferAccept = useCallback(() => handleOfferDecisionUpdate('accepted'), [handleOfferDecisionUpdate]);
+
+  const handleOfferReject = useCallback(() => handleOfferDecisionUpdate('rejected'), [handleOfferDecisionUpdate]);
 
   const buildEligibilityMap = (driveReport) => {
     const { studentId, regNo } = getStudentIdentity();
@@ -1539,6 +1695,13 @@ export default function PopUpPending({ app, onBack }) {
   );
 
   const roundsToRender = rounds;
+  const driveOfferLetterUrl = resolveOfferLetterUrl(offerLetterRecord);
+  const driveOfferDecision = String(offerLetterRecord?.status || 'Pending').trim();
+  const canShowOfferLetterButton = Boolean(
+    offerLetterRecord &&
+    String(offerLetterRecord?.offerStatus || '').toLowerCase() === 'sent' &&
+    driveOfferLetterUrl
+  );
 
   const roundsContent = roundsToRender.length > 0 ? roundsToRender.map((round, index) => (
     <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 78 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
@@ -1696,9 +1859,37 @@ export default function PopUpPending({ app, onBack }) {
                   {overallStatus}
                 </span>
               </div>
-              <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: isMobile ? '9px 15px' : "8px 32px", fontWeight: isMobile ? 600 : 600, fontSize: isMobile ? 16 : 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>â†©</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+                {canShowOfferLetterButton && (
+                  <button
+                    onClick={() => {
+                      setShowOfferLetterPreview(false);
+                      setShowOfferLetterPopup(true);
+                    }}
+                    style={{
+                      background: '#5932EA',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 12,
+                      padding: isMobile ? '9px 14px' : '8px 20px',
+                      fontWeight: 700,
+                      fontSize: isMobile ? 14 : 15,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 6px 16px rgba(89, 50, 234, 0.28)'
+                    }}
+                    title="View Offer Letter"
+                  >
+                    Offer Letter
+                  </button>
+                )}
+                {!canShowOfferLetterButton && isOfferLetterLoading && (
+                  <span style={{ color: '#777', fontSize: isMobile ? 12 : 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Checking offer...</span>
+                )}
+                <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: isMobile ? '9px 15px' : "8px 32px", fontWeight: isMobile ? 600 : 600, fontSize: isMobile ? 16 : 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>â†©</span>
+                </button>
+              </div>
             </div>
             <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
               {isMobile ? (
@@ -1798,6 +1989,190 @@ export default function PopUpPending({ app, onBack }) {
             viewOnly={feedbackViewMode === 'view'}
             onClose={() => { setShowStudentFeedback(false); }}
           />
+        )}
+        {showOfferLetterPopup && canShowOfferLetterButton && (
+          <div className="alert-overlay">
+            <div className="achievement-popup-container" style={{ width: isMobile ? '92vw' : '400px', maxWidth: '90vw' }}>
+              <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6', fontSize: isMobile ? '1.45rem' : '1.75rem', padding: isMobile ? '0.85rem 1rem' : '1rem' }}>
+                Offer Letter
+              </div>
+              <div className="achievement-popup-body" style={{ minHeight: '220px', padding: isMobile ? '1.5rem 1.25rem' : '2rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" className="offer-letter-icon-animate" style={{ width: isMobile ? '60px' : '85px', height: isMobile ? '60px' : '85px', margin: '0 auto 1.5rem auto', display: 'block' }}>
+                  <circle cx="10" cy="10" r="10" fill="#1FAD66" />
+                  <g fill="#fff" fillRule="evenodd" clipRule="evenodd" className="icon-stroke" transform="translate(10, 10) scale(0.7) translate(-10, -10)">
+                    <path d="M2.5 8a.5.5 0 0 1 .5.5V17h14V8.5a.5.5 0 0 1 1 0v9a.5.5 0 0 1-.5.5h-15a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5"/>
+                    <path d="M3 5.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v4.67a.5.5 0 0 1-.223.416l-6.5 4.33a.5.5 0 0 1-.554 0l-6.5-4.33A.5.5 0 0 1 3 10.17zM4 6v3.902l6 3.997l6-3.997V6z"/>
+                    <path d="M9.723 2.084a.5.5 0 0 1 .554 0l4.5 3l-.554.832L10 3.101L5.777 5.916l-.554-.832zm7.131 5.062l1 1l-.708.708l-1-1zm-13 .708l-1 1l-.708-.708l1-1zM6.75 8A.25.25 0 0 1 7 7.75h6a.25.25 0 1 1 0 .5H7A.25.25 0 0 1 6.75 8m.5 2a.25.25 0 0 1 .25-.25h5a.25.25 0 1 1 0 .5h-5a.25.25 0 0 1-.25-.25"/>
+                  </g>
+                </svg>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: isMobile ? '20px' : '24px', color: '#000', fontWeight: '700' }}>
+                  Offer Letter Ready ✓
+                </h2>
+                <p style={{ margin: 0, color: '#888', fontSize: isMobile ? '15px' : '16px', lineHeight: 1.35 }}>
+                  {offerLetterRecord?.company || 'N/A'} · {offerLetterRecord?.role || 'N/A'} · {offerLetterRecord?.pkg || offerLetterRecord?.package || 'N/A'}
+                </p>
+                <p style={{ margin: '10px 0 0 0', color: '#666', fontSize: isMobile ? '14px' : '15px', lineHeight: 1.45 }}>
+                  Your offer letter has been received and processed. You can preview or download it using the buttons below.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+                  <span style={{ color: '#666', fontWeight: 600, fontSize: isMobile ? '0.88rem' : '0.95rem' }}>Response:</span>
+                  {String(offerLetterRecord?.status || 'Pending').trim().toLowerCase() === 'pending' ? (
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={handleOfferAccept}
+                        disabled={isOfferDecisionUpdating}
+                        style={{
+                          backgroundColor: '#1FAD66',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: isMobile ? '8px 14px' : '9px 18px',
+                          fontWeight: 700,
+                          fontSize: isMobile ? '0.88rem' : '0.95rem',
+                          cursor: isOfferDecisionUpdating ? 'not-allowed' : 'pointer',
+                          opacity: isOfferDecisionUpdating ? 0.75 : 1
+                        }}
+                      >
+                        {offerActionInFlight === 'accepted' ? 'Saving...' : 'Accept'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOfferReject}
+                        disabled={isOfferDecisionUpdating}
+                        style={{
+                          backgroundColor: '#D23B42',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: isMobile ? '8px 14px' : '9px 18px',
+                          fontWeight: 700,
+                          fontSize: isMobile ? '0.88rem' : '0.95rem',
+                          cursor: isOfferDecisionUpdating ? 'not-allowed' : 'pointer',
+                          opacity: isOfferDecisionUpdating ? 0.75 : 1
+                        }}
+                      >
+                        {offerActionInFlight === 'rejected' ? 'Saving...' : 'Reject'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{
+                      padding: '3px 9px',
+                      borderRadius: 16,
+                      backgroundColor: String(offerLetterRecord?.status || 'Pending').trim().toLowerCase() === 'accepted' ? '#e8faef' : '#f5f5f5',
+                      color: String(offerLetterRecord?.status || 'Pending').trim().toLowerCase() === 'accepted' ? '#1FAD66' : '#333',
+                      fontWeight: 700,
+                      fontSize: isMobile ? '0.8rem' : '0.88rem'
+                    }}>
+                      {driveOfferDecision}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="achievement-popup-footer" style={{ display: 'flex', gap: '12px', justifyContent: 'center', padding: '1.5rem' }}>
+                <button
+                  onClick={() => window.open(driveOfferLetterUrl, '_blank')}
+                  className="achievement-popup-close-btn"
+                  style={{
+                    flex: '1',
+                    background: '#e9f1fc',
+                    color: '#2085f6',
+                    border: 'none',
+                    padding: '0.8rem 1rem',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    opacity: 1,
+                    transition: 'background 0.2s ease',
+                    boxShadow: 'none',
+                    transform: 'none',
+                    minWidth: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#d5e5f9';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#e9f1fc';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                >
+                  Preview
+                </button>
+                <a
+                  href={driveOfferLetterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="achievement-popup-close-btn"
+                  style={{
+                    flex: '1',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    backgroundColor: '#2085f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1rem',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    boxShadow: 'none',
+                    transform: 'none',
+                    minWidth: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#1976d2';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#2085f6';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                >
+                  Download
+                </a>
+                <button
+                  onClick={() => setShowOfferLetterPopup(false)}
+                  className="achievement-popup-close-btn"
+                  style={{
+                    flex: '1',
+                    backgroundColor: '#D23B42',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0.8rem 1rem',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    boxShadow: 'none',
+                    transform: 'none',
+                    minWidth: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#b53138';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#D23B42';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         )}
     </>
   );

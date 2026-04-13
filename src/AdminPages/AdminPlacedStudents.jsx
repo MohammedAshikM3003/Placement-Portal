@@ -676,7 +676,7 @@ const PlacementDashboard = () => {
                     <th>Job Role</th>
                     <th>Package</th>
                     <th>Offer</th>
-                    <th>Action</th>
+                    <th>View</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -697,9 +697,25 @@ const PlacementDashboard = () => {
                     </tr>
                   ) : (
                     filteredStudents.map((student) => (
-                      <tr key={student.sno}>
+                      <tr
+                        key={student.sno}
+                        className={[
+                          String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['Admin-ps-row-accepted'] : '',
+                          String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['Admin-ps-row-rejected'] : ''
+                        ].filter(Boolean).join(' ')}
+                      >
                         <td>{student.sno}</td>
-                        <td style={{ fontWeight: '600' }}>{student.name}</td>
+                        <td>
+                          <span
+                            className={[
+                              styles['Admin-ps-student-name'],
+                              String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['Admin-ps-student-name-accepted'] : '',
+                              String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['Admin-ps-student-name-rejected'] : ''
+                            ].filter(Boolean).join(' ')}
+                          >
+                            {student.name}
+                          </span>
+                        </td>
                         <td>{student.regNo}</td>
                         <td>{student.branch}</td>
                         <td>{student.batch}</td>

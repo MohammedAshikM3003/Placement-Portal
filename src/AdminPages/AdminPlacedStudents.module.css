@@ -275,6 +275,35 @@
   font-size: 0.9rem;
 }
 
+.Admin-ps-student-name {
+  font-weight: 600;
+  color: #111111;
+}
+
+.Admin-ps-student-name-accepted {
+  color: #1b8f3b;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-student-name-rejected {
+  color: #d32f2f;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-row-accepted td {
+  color: #1b8f3b;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-row-rejected td {
+  color: #d32f2f;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
 .Admin-ps-table-scroll {
   height: 140px;
   overflow-y: auto;
