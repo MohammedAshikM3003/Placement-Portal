@@ -1111,6 +1111,7 @@ const AbsentIcon = ({ size = 28 }) => (
 
 export const generateRounds = (app) => {
   const normalizedAppStatus = (app?.status || '').toString().trim().toLowerCase();
+  const isApplicationAbsent = normalizedAppStatus === 'absent';
   const normalizeRoundStatus = (status) => {
     const normalized = String(status || '').trim().toLowerCase();
     if (normalized === 'passed' || normalized === 'selected' || normalized === 'cleared') return 'Passed';

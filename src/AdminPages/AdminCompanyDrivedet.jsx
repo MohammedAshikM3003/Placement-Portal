@@ -1032,7 +1032,6 @@ function Admincdd() {
       }
 
       const base = {
-        studentId: targetStudentId,
         companyName: companyInfo.companyName || 'Test Company',
         jobRole: companyInfo.jobRole || 'Test Role',
         roundName: companyInfo.roundNames?.[activeRound - 1] || `Round ${activeRound}`,

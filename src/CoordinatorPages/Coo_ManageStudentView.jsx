@@ -211,6 +211,19 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
         [selectedCompanyTypes]
     );
 
+    const trainingCardStats = useMemo(() => {
+        const attendanceRecords = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
+        const presentCount = attendanceRecords.filter((record) => String(record?.status || '').trim().toLowerCase() === 'present').length;
+        const totalTrainingDays = attendanceRecords.length;
+        const attendancePercentage = totalTrainingDays > 0 ? Math.round((presentCount / totalTrainingDays) * 100) : 0;
+
+        return {
+            courseName: studentTrainingAssignment?.courseName || studentTrainingAssignment?.course || studentTrainingAssignment?.trainingName || 'N/A',
+            attendancePercentage,
+            totalTrainingDays
+        };
+    }, [studentTrainingAssignment, studentTrainingAttendanceRecords]);
+
     const jobLocationsHiddenValue = useMemo(
         () => selectedJobLocations.join(', '),
         [selectedJobLocations]
