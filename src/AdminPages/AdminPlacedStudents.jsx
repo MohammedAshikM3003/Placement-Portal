@@ -733,8 +733,23 @@ const PlacementDashboard = () => {
                             <UploadIcon />
                           </button>
                         </td>
-                        <td onClick={() => navigate(`/coo-view-Admin-ps`)}>
-                          <FaEye className={styles['Admin-ps-action-icon']} />
+                        <td>
+                          <button
+                            type="button"
+                            className={styles['Admin-ps-view-btn']}
+                            onClick={() => {
+                              const targetStudentId = String(student.studentId || student.id || '').trim();
+                              if (!targetStudentId) {
+                                alert('Student ID is not available for this row.');
+                                return;
+                              }
+                              navigate(`/admin-student-view/${targetStudentId}`);
+                            }}
+                            aria-label={`View ${student.name}`}
+                            title="View student profile"
+                          >
+                            <FaEye className={styles['Admin-ps-action-icon']} />
+                          </button>
                         </td>
                       </tr>
                     ))

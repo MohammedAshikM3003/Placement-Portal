@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import mongoDBService from '../../services/mongoDBService.jsx';
 import PlacementStatusBanner from './PlacementStatusBanner';
+import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
 
 const POLL_INTERVAL_MS = 5000;
 const PLACEMENT_POPUP_STORAGE_PREFIX = 'placementPopupSeen';
@@ -260,13 +261,60 @@ const GlobalPlacementBannerChecker = () => {
 	const [bannerData, setBannerData] = useState(null);
 	const showingRef = useRef(false);
 	const pollCountRef = useRef(0);
+	const queueSlotId = useMemo(() => {
+		if (!bannerData) return null;
+		return `placement-notification:${bannerData.signature || `${bannerData.status || 'placed'}:${bannerData.companyName || ''}:${bannerData.roundNumber || 0}`}`;
+	}, [bannerData]);
+	const canDisplayBanner = useBannerQueueSlot(queueSlotId, Boolean(bannerData));
 
-	const hasSeenSignature = useCallback((candidateSignature, candidateStudentId = studentId || studentRegNo) => {
-		if (!candidateSignature || !candidateStudentId) return false;
-		const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${candidateStudentId}`;
-		const seenSignatures = (localStorage.getItem(seenKey) || '').split('|').filter(Boolean);
-		return seenSignatures.includes(candidateSignature);
+	const getSeenStorageKeys = useCallback((extraStudentId = null) => {
+		const keys = [];
+		const candidates = [studentId, studentRegNo, extraStudentId]
+			.map((value) => normalizeStudentId(value))
+			.filter(Boolean);
+
+		candidates.forEach((value) => {
+			const key = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${value}`;
+			if (!keys.includes(key)) {
+				keys.push(key);
+			}
+		});
+
+		return keys;
 	}, [studentId, studentRegNo]);
+
+	const readSeenSignatures = useCallback((storageKey) => {
+		const rawValue = localStorage.getItem(storageKey);
+		if (!rawValue) return [];
+
+		try {
+			const parsed = JSON.parse(rawValue);
+			if (Array.isArray(parsed)) {
+				return parsed.map((value) => normalizeText(value)).filter(Boolean);
+			}
+		} catch (error) {
+			// Backward compatibility for legacy pipe-delimited storage format.
+		}
+
+		return rawValue
+			.split('|')
+			.map((value) => normalizeText(value))
+			.filter(Boolean);
+	}, []);
+
+	const writeSeenSignatures = useCallback((storageKey, signatures) => {
+		localStorage.setItem(storageKey, JSON.stringify(signatures));
+	}, []);
+
+	const hasSeenSignature = useCallback((candidateSignature, extraStudentId = null) => {
+		const normalizedSignature = normalizeText(candidateSignature);
+		if (!normalizedSignature) return false;
+
+		const keys = getSeenStorageKeys(extraStudentId);
+		if (!keys.length) return false;
+
+		return keys.some((storageKey) => readSeenSignatures(storageKey).includes(normalizedSignature));
+	}, [getSeenStorageKeys, readSeenSignatures]);
 
 	const resolveStudentId = useCallback(() => {
 		const resolved = extractStudentIdentifier();
@@ -286,16 +334,21 @@ const GlobalPlacementBannerChecker = () => {
 		}
 	}, []);
 
-	const markSignatureAsSeen = useCallback((signature) => {
-		const keyStudent = studentId || studentRegNo;
-		if (keyStudent && signature) {
-			const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${keyStudent}`;
-			const currentSeen = localStorage.getItem(seenKey) || '';
-			const newSeen = currentSeen ? `${currentSeen}|${signature}` : signature;
-			localStorage.setItem(seenKey, newSeen);
-			console.log('🔔 [PlacementChecker] Marked signature as seen:', signature);
-		}
-	}, [studentId, studentRegNo]);
+	const markSignatureAsSeen = useCallback((signature, extraStudentId = null) => {
+		const normalizedSignature = normalizeText(signature);
+		if (!normalizedSignature) return;
+
+		const keys = getSeenStorageKeys(extraStudentId);
+		if (!keys.length) return;
+
+		keys.forEach((storageKey) => {
+			const currentSeen = readSeenSignatures(storageKey);
+			if (currentSeen.includes(normalizedSignature)) return;
+			writeSeenSignatures(storageKey, [...currentSeen, normalizedSignature]);
+		});
+
+		console.log('🔔 [PlacementChecker] Marked signature as seen:', normalizedSignature, 'keys:', keys);
+	}, [getSeenStorageKeys, readSeenSignatures, writeSeenSignatures]);
 
 	useEffect(() => {
 		console.log('🔔 [PlacementChecker] Mounted on route:', window.location.pathname);
@@ -323,7 +376,7 @@ const GlobalPlacementBannerChecker = () => {
 				}
 
 				console.log('🔔 [PlacementChecker] Received storage broadcast for current student:', payload);
-				markSignatureAsSeen(payload?.signature);
+				markSignatureAsSeen(payload?.signature, payloadStudentId);
 				showingRef.current = true;
 				setBannerData(payload);
 			} catch (error) {
@@ -351,7 +404,7 @@ const GlobalPlacementBannerChecker = () => {
 				}
 
 				console.log('🔔 [PlacementChecker] Event is for current student, showing banner');
-				markSignatureAsSeen(normalizedPayload?.signature);
+				markSignatureAsSeen(normalizedPayload?.signature, eventStudentId);
 				showingRef.current = true;
 				setBannerData(normalizedPayload);
 			} else if (!studentId) {
@@ -414,7 +467,7 @@ const GlobalPlacementBannerChecker = () => {
 
 			if (!snapshot || !snapshot.isPlaced) return;
 
-			if (hasSeenSignature(snapshot.signature, studentId)) {
+			if (hasSeenSignature(snapshot.signature)) {
 				console.log('🔔 [PlacementChecker] Already shown for signature:', snapshot.signature);
 				return;
 			}
@@ -440,9 +493,9 @@ const GlobalPlacementBannerChecker = () => {
 			studentRegNo,
 			forcePoll: pollPlacement,
 			clearSeen: () => {
-				const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${studentId || studentRegNo}`;
-				localStorage.removeItem(seenKey);
-				console.log('🔔 [PlacementChecker] Cleared seen signature key:', seenKey);
+				const keys = getSeenStorageKeys();
+				keys.forEach((seenKey) => localStorage.removeItem(seenKey));
+				console.log('🔔 [PlacementChecker] Cleared seen signature keys:', keys);
 			}
 		};
 
@@ -454,7 +507,7 @@ const GlobalPlacementBannerChecker = () => {
 				delete window.__placementCheckerDebug;
 			}
 		};
-	}, [studentId, studentRegNo, pollPlacement]);
+	}, [studentId, studentRegNo, pollPlacement, getSeenStorageKeys]);
 
 	const handleClose = useCallback(() => {
 		if (bannerData?.signature) {
@@ -465,7 +518,7 @@ const GlobalPlacementBannerChecker = () => {
 		showingRef.current = false;
 	}, [bannerData, markSignatureAsSeen]);
 
-	if (!bannerData) return null;
+	if (!bannerData || !canDisplayBanner) return null;
 
 	return (
 		<PlacementStatusBanner

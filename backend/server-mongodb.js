@@ -3938,6 +3938,7 @@ app.post('/api/placed-students/offer/upload', authenticateToken, checkRole('admi
         const offerUpdate = {
             status: 'Pending',
             offerStatus: 'Sent',
+            offerNotificationRead: false,
             offerLetterName: file.originalname,
             offerLetterType: file.mimetype,
             offerLetterSize: file.size,
@@ -4031,6 +4032,7 @@ app.patch('/api/placed-students/offer-response', authenticateToken, checkRole('s
         const update = {
             $set: {
                 status: statusValue,
+                offerNotificationRead: true,
                 offerRespondedAt: new Date(),
                 updatedAt: new Date()
             }
@@ -4094,6 +4096,128 @@ app.patch('/api/placed-students/offer-response', authenticateToken, checkRole('s
             error: 'Failed to update student offer response',
             details: error.message
         });
+    }
+});
+
+// GET: Fetch unread offer-letter notifications for a student
+app.get('/api/placed-students/offer-notifications/:identifier', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                notifications: [],
+                count: 0,
+                error: 'Database not connected'
+            });
+        }
+
+        const identifier = String(req.params.identifier || '').trim();
+        if (!identifier) {
+            return res.status(400).json({ error: 'Student identifier is required' });
+        }
+
+        const PlacedStudents = mongoose.connection.collection('placed_students');
+        const notifications = await PlacedStudents.find({
+            $and: [
+                { offerStatus: 'Sent' },
+                { offerNotificationRead: false },
+                {
+                    $or: [
+                        { studentId: identifier },
+                        { regNo: identifier }
+                    ]
+                }
+            ]
+        })
+            .project({
+                _id: 1,
+                studentId: 1,
+                regNo: 1,
+                company: 1,
+                companyName: 1,
+                role: 1,
+                jobRole: 1,
+                pkg: 1,
+                package: 1,
+                offerStatus: 1,
+                offerLetterName: 1,
+                offerSentAt: 1,
+                offerUploadedAt: 1,
+                offerNotificationRead: 1,
+                updatedAt: 1
+            })
+            .sort({ offerSentAt: -1, offerUploadedAt: -1, updatedAt: -1 })
+            .toArray();
+
+        return res.json({
+            notifications: notifications.map((item) => ({
+                id: String(item._id || ''),
+                studentId: String(item.studentId || ''),
+                regNo: String(item.regNo || ''),
+                companyName: item.company || item.companyName || '',
+                jobRole: item.role || item.jobRole || '',
+                packageName: item.pkg || item.package || '',
+                offerLetterName: item.offerLetterName || '',
+                offerStatus: item.offerStatus || 'Sent',
+                offerSentAt: item.offerSentAt || item.offerUploadedAt || item.updatedAt || null
+            })),
+            count: notifications.length
+        });
+    } catch (error) {
+        console.error('Offer notification fetch error:', error);
+        return res.status(500).json({
+            error: 'Failed to fetch offer notifications',
+            notifications: [],
+            count: 0
+        });
+    }
+});
+
+// PATCH: Mark offer-letter notifications as read for a student
+app.patch('/api/placed-students/offer-notifications/mark-read', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const { studentId, regNo, notificationIds = [] } = req.body || {};
+        const normalizedStudentId = String(studentId || '').trim();
+        const normalizedRegNo = String(regNo || '').trim();
+
+        if (!normalizedStudentId && !normalizedRegNo) {
+            return res.status(400).json({ error: 'studentId or regNo is required' });
+        }
+
+        const PlacedStudents = mongoose.connection.collection('placed_students');
+
+        const identityFilters = [];
+        if (normalizedStudentId) identityFilters.push({ studentId: normalizedStudentId });
+        if (normalizedRegNo) identityFilters.push({ regNo: normalizedRegNo });
+
+        const query = {
+            offerStatus: 'Sent',
+            offerNotificationRead: false,
+            $or: identityFilters
+        };
+
+        if (Array.isArray(notificationIds) && notificationIds.length > 0) {
+            const validIds = notificationIds
+                .map((id) => String(id || '').trim())
+                .filter((id) => mongoose.Types.ObjectId.isValid(id))
+                .map((id) => new mongoose.Types.ObjectId(id));
+
+            if (validIds.length > 0) {
+                query._id = { $in: validIds };
+            }
+        }
+
+        const result = await PlacedStudents.updateMany(query, {
+            $set: { offerNotificationRead: true, updatedAt: new Date() }
+        });
+
+        return res.json({ success: true, updated: result.modifiedCount || 0 });
+    } catch (error) {
+        console.error('Offer notification mark-read error:', error);
+        return res.status(500).json({ error: 'Failed to mark offer notifications as read' });
     }
 });
 

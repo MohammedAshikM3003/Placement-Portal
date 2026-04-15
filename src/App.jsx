@@ -11,6 +11,7 @@ import GlobalNotificationChecker from "./components/CertificateNotification/Glob
 import GlobalPlacementBannerChecker from "./components/CertificateNotification/GlobalPlacementBannerChecker.jsx";
 import GlobalDriveScheduledChecker from "./components/CertificateNotification/GlobalDriveScheduledChecker.jsx";
 import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
+import GlobalOfferLetterNotificationChecker from "./components/CertificateNotification/GlobalOfferLetterNotificationChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -226,6 +227,7 @@ function AppContent() {
           <GlobalNotificationChecker />
           <GlobalPlacementBannerChecker />
           <GlobalDriveScheduledChecker />
+          <GlobalOfferLetterNotificationChecker />
         </>
       )}
 

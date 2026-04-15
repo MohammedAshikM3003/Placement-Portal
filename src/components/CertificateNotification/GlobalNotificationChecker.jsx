@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { fetchUnreadNotifications, markNotificationsAsRead } from '../../services/certificateNotificationService';
 import CertificateStatusBanner from './CertificateStatusBanner';
+import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
 
 const POLL_INTERVAL_MS = 2000; // Poll every 2 seconds for faster notifications
 
@@ -17,6 +18,8 @@ const GlobalNotificationChecker = () => {
     const closingRef            = useRef(false);   // true while mark-as-read is in flight
     const pollingRef            = useRef(null);
     const queueRef              = useRef([]);       // mutable queue to avoid stale closures
+    const queueSlotId = current?.id ? `certificate-notification:${current.id}` : null;
+    const canDisplayBanner = useBannerQueueSlot(queueSlotId, Boolean(current));
 
     // ── 1. Resolve student identifier once on mount ─────────────────────
     // Prefer studentId (MongoDB _id) since it's always present in certificates.
@@ -108,7 +111,7 @@ const GlobalNotificationChecker = () => {
     }, [current, studentIdentifier]);
 
     // ── 4. Render ─────────────────────────────────────────────────────────────
-    if (!current) return null;
+    if (!current || !canDisplayBanner) return null;
 
     return (
         <CertificateStatusBanner

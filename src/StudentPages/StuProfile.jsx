@@ -1581,6 +1581,24 @@ function StuProfile({ onLogout, onViewChange }) {
         studentTrainingAttendanceRecords
     ]);
 
+    const hasTrainingData = useMemo(() => {
+        const hasAttendance = studentTrainingAttendanceRecords.length > 0;
+        const hasAssignment = Boolean(
+            (studentTrainingAssignment?.courseName || '').toString().trim() ||
+            studentTrainingAssignment?.startDate ||
+            studentTrainingAssignment?.endDate ||
+            Number(studentTrainingAssignment?.totalDays || 0) > 0
+        );
+
+        return hasAttendance || hasAssignment;
+    }, [
+        studentTrainingAssignment?.courseName,
+        studentTrainingAssignment?.endDate,
+        studentTrainingAssignment?.startDate,
+        studentTrainingAssignment?.totalDays,
+        studentTrainingAttendanceRecords.length
+    ]);
+
     const PIE_DATA = driveAnalytics.pieData;
     const ROUND_DETAILS = driveAnalytics.roundDetails;
 
@@ -2869,6 +2887,7 @@ function StuProfile({ onLogout, onViewChange }) {
                             </div>
                         </div>
                         
+                        {hasTrainingData && (
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Training</h3>
                             <div className={styles.companyStatsGrid}>
@@ -2886,6 +2905,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
+                        )}
 
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (

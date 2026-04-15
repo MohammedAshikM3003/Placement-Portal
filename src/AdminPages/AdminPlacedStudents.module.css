@@ -425,6 +425,16 @@
   cursor: pointer;
 }
 
+.Admin-ps-view-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .Admin-ps-offer-cell {
   text-align: center;
 }

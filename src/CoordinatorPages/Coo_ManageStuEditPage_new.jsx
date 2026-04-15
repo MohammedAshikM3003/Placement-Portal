@@ -52,14 +52,6 @@ const JOB_LOCATION_OPTIONS = [
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
 
-const PREFERRED_TRAINING_OPTIONS = [
-    "Java",
-    "Python",
-    "Fullstack Development",
-    "Gen AI",
-    "Cloud Computing"
-];
-
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
 const LINKEDIN_URL_REGEX = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]{3,100}\/?$/;
@@ -750,7 +742,6 @@ const EDITABLE_FIELD_LABELS = {
     githubLink: 'GitHub Link', linkedinLink: 'LinkedIn Link',
     portfolioLink: 'Portfolio Link', companyTypes: 'Company Types',
     preferredJobLocation: 'Preferred Job Location',
-    preferredTraining: 'Preferred Training',
     skills: 'Skills', profilePicURL: 'Profile Photo',
 };
 
@@ -919,7 +910,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             preferredModeOfDrive: 'Preferred Mode of Drive',
             companyTypes: 'Company Preferences',
             preferredJobLocation: 'Job Locations',
-            preferredTraining: 'Preferred Training',
 
             // Profile Links
             githubLink: 'GitHub Link',
@@ -934,7 +924,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             const oldValue = original[field];
             const newValue = current[field];
 
-            // Handle arrays (like companyTypes, preferredJobLocation, preferredTraining)
+            // Handle arrays (like companyTypes and preferredJobLocation)
             if (Array.isArray(oldValue) && Array.isArray(newValue)) {
                 const oldSorted = JSON.stringify([...oldValue].sort());
                 const newSorted = JSON.stringify([...newValue].sort());
@@ -1022,19 +1012,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         () => selectedCompanyTypes.join(', '),
         [selectedCompanyTypes]
     );
-
-    const selectedTrainings = useMemo(
-        () => parseMultiValue(studentData?.preferredTraining),
-        [studentData?.preferredTraining]
-    );
-
-    const handleTrainingToggle = (option) => {
-        if (isSaving) return;
-        const current = parseMultiValue(studentData?.preferredTraining);
-        // Toggle off if already selected, otherwise select only this one
-        const updated = current.includes(option) ? [] : [option];
-        setStudentData(prev => ({ ...prev, preferredTraining: updated.join(', ') }));
-    };
 
     const jobLocationsHiddenValue = useMemo(
         () => selectedJobLocations.join(', '),
@@ -1342,7 +1319,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             .find(Boolean);
 
         const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-        const preferredCourse = (selectedTrainings[0] || '').toString().trim();
         const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
 
         let calculatedTotalDays = 0;
@@ -1361,13 +1337,12 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : calculatedTotalDays;
 
         return {
-            courseName: assignmentCourse || attendedCourse || preferredCourse || 'N/A',
+            courseName: assignmentCourse || attendedCourse || 'N/A',
             attendancePercentage,
             totalTrainingDays
         };
     }, [
         normalizeText,
-        selectedTrainings,
         studentTrainingAssignment?.courseName,
         studentTrainingAssignment?.endDate,
         studentTrainingAssignment?.startDate,
@@ -3437,23 +3412,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             }}
                                             disabled={isSaving || isViewMode}
                                         />
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Preferred Training</span>
-                                        <div className={styles.checkboxOptions}>
-                                            {PREFERRED_TRAINING_OPTIONS.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedTrainings.includes(option)}
-                                                        onChange={() => handleTrainingToggle(option)}
-                                                        disabled={isSaving || isViewMode}
-                                                        style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
-                                                    />
-                                                    <span style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
                                     </div>
                                     <div className={styles.checkboxGroup}>
                                         <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>

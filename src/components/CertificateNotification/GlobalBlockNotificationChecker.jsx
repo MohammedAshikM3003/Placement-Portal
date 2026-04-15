@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchUnreadBlockNotifications, markBlockNotificationsAsRead } from '../../services/blockNotificationService.jsx';
 import BlockStatusBanner from './BlockStatusBanner';
+import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -81,6 +82,11 @@ const GlobalBlockNotificationChecker = () => {
   const closingRef = useRef(false);
   const pollingRef = useRef(null);
   const queueRef = useRef([]);
+  const queueSlotId = useMemo(() => {
+    if (!currentNotification) return null;
+    return `block-notification:${currentNotification.id || `${currentNotification.actionType || ''}:${currentNotification.regNo || currentNotification.studentRegNo || ''}`}`;
+  }, [currentNotification]);
+  const canDisplayBanner = useBannerQueueSlot(queueSlotId, Boolean(currentNotification));
 
   const showNotification = useCallback((notification) => {
     if (!notification) return;
@@ -206,7 +212,7 @@ const GlobalBlockNotificationChecker = () => {
     }
   }, [currentNotification, recipientContext]);
 
-  if (!currentNotification) return null;
+  if (!currentNotification || !canDisplayBanner) return null;
 
   return (
     <BlockStatusBanner

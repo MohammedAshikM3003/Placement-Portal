@@ -581,6 +581,8 @@ export default function Company({ onLogout, onViewChange }) {
     studentOfferLetter &&
     offerLetterUrl
   );
+  const normalizedOfferStatus = String(studentOfferLetter?.status || 'Pending').trim().toLowerCase();
+  const shouldShowOfferCard = hasSentOfferLetter && normalizedOfferStatus !== 'accepted' && normalizedOfferStatus !== 'rejected';
 
   useEffect(() => {
     if (!studentOfferLetter) {
@@ -863,7 +865,7 @@ export default function Company({ onLogout, onViewChange }) {
             </div>
           </div>
 
-          {hasSentOfferLetter && (
+          {shouldShowOfferCard && (
             <div className={styles.congratsBanner}>
               <div className={styles.offerLeftSection}>
                 <div className={styles.offerTickIcon}>✓</div>

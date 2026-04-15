@@ -41,14 +41,6 @@ const JOB_LOCATION_OPTIONS = [
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
 
-const PREFERRED_TRAINING_OPTIONS = [
-    "Java",
-    "Python",
-    "Fullstack Development",
-    "Gen AI",
-    "Cloud Computing"
-];
-
 const parseMultiValue = (value) => {
     if (Array.isArray(value)) {
         return value.map((item) => String(item).trim()).filter(Boolean);
@@ -199,11 +191,6 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
     const selectedJobLocations = useMemo(
         () => parseMultiValue(studentData?.preferredJobLocation),
         [studentData?.preferredJobLocation]
-    );
-
-    const selectedTrainings = useMemo(
-        () => parseMultiValue(studentData?.preferredTraining),
-        [studentData?.preferredTraining]
     );
 
     const companyTypesHiddenValue = useMemo(
@@ -977,21 +964,6 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedJobLocations.includes(option)}
-                                                    disabled
-                                                />
-                                                <span>{option}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className={styles.field}>
-                                    <label>Preferred Training</label>
-                                    <div className={styles.checkboxGroup}>
-                                        {PREFERRED_TRAINING_OPTIONS.map((option) => (
-                                            <label key={option}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedTrainings.includes(option)}
                                                     disabled
                                                 />
                                                 <span>{option}</span>
