@@ -48,6 +48,16 @@ class AuthService {
     try {
       const fullUrl = `${this.baseURL}${endpoint}`;
       console.log('🔍 API Call:', fullUrl, options);
+
+      const isFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData;
+      const mergedHeaders = {
+        ...(options.headers || {})
+      };
+
+      // Keep JSON requests parseable on backend when custom headers are provided.
+      if (!isFormDataBody && !mergedHeaders['Content-Type']) {
+        mergedHeaders['Content-Type'] = 'application/json';
+      }
       
       // Add timeout to prevent hanging requests
       // 90s to cover worst-case MongoDB Atlas cold-start (10s + 20s + 45s retries)
@@ -55,12 +65,9 @@ class AuthService {
       const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout for cold Atlas clusters
       
       const response = await fetch(fullUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
-        signal: controller.signal,
-        ...options
+        ...options,
+        headers: mergedHeaders,
+        signal: controller.signal
       });
       
       clearTimeout(timeoutId);

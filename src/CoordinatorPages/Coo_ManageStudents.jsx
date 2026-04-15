@@ -7,6 +7,7 @@ import styles from './Coo_ManageStudents.module.css';
 import achStyles from '../StudentPages/Achievements.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from "../services/mongoDBService.jsx";
+import { createBlockNotifications } from '../services/blockNotificationService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 // IMPORTS for Export Functionality
@@ -415,6 +416,50 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         [coordinatorDepartment]
     );
 
+    const publishBlockNotifications = useCallback(async (actionType, selectedRecords) => {
+        if (!Array.isArray(selectedRecords) || !selectedRecords.length) return;
+
+        const coordinatorData = readStoredCoordinatorData();
+        const coordinatorName =
+            `${coordinatorData?.firstName || ''} ${coordinatorData?.lastName || ''}`.trim() ||
+            coordinatorData?.fullName ||
+            coordinatorData?.username ||
+            'Coordinator';
+        const coordinatorIdentifier =
+            coordinatorData?.coordinatorId ||
+            coordinatorData?.username ||
+            localStorage.getItem('coordinatorId') ||
+            coordinatorName;
+
+        try {
+            await createBlockNotifications({
+                targetRole: 'admin',
+                actionType,
+                actor: {
+                    role: 'coordinator',
+                    name: coordinatorName,
+                    identifier: coordinatorIdentifier
+                },
+                students: selectedRecords.map((student) => ({
+                    studentId: student.studentId || student.id || student._id || '',
+                    regNo: student.regNo || '',
+                    studentName: student.name || '',
+                    branch: student.department || student.branch || coordinatorDepartment || '',
+                    year: student.currentYear || student.year || '',
+                    semester: student.currentSemester || student.sem || ''
+                }))
+            });
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('blockNotificationsUpdated', {
+                    detail: { targetRole: 'admin', actionType }
+                }));
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to publish coordinator block notification:', error);
+        }
+    }, [coordinatorDepartment]);
+
     // Function to apply filters from dropdowns and switch to main view
     const applyFilters = () => {
         // filterDept is already defaulted to 'CSE' and does not need to be updated from a selection state
@@ -477,6 +522,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 blockedAt: new Date().toISOString(),
                 blockedReason: 'Your account has been blocked by the placement coordinator. Please contact the placement office for more information.'
             })));
+
+            await publishBlockNotifications('blocked', ids.map(id => students.find(student => student.id === id)).filter(Boolean));
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: true } : student));
             setSelectedStudentIds(new Set());
             setIsBlockedPopupOpen(true);
@@ -511,6 +558,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 console.warn('⚠️ Could not clear fastDataService cache:', cacheErr);
                 // Non-critical error, continue
             }
+
+            await publishBlockNotifications('unblocked', ids.map(id => students.find(student => student.id === id)).filter(Boolean));
             
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: false } : student));
             setSelectedStudentIds(new Set());

@@ -8809,6 +8809,95 @@ certificateSchema.index({ createdAt: -1 });
 
 const Certificate = mongoose.model('Certificate', certificateSchema);
 
+// Block notification schema
+const blockNotificationSchema = new mongoose.Schema({
+    recipientRole: {
+        type: String,
+        enum: ['admin', 'coordinator'],
+        required: true
+    },
+    recipientIdentifier: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    recipientDepartment: {
+        type: String,
+        default: ''
+    },
+    actionType: {
+        type: String,
+        enum: ['blocked', 'unblocked'],
+        required: true
+    },
+    studentId: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    regNo: {
+        type: String,
+        default: ''
+    },
+    studentName: {
+        type: String,
+        default: ''
+    },
+    branch: {
+        type: String,
+        default: ''
+    },
+    year: {
+        type: String,
+        default: ''
+    },
+    semester: {
+        type: String,
+        default: ''
+    },
+    actorRole: {
+        type: String,
+        default: ''
+    },
+    actorName: {
+        type: String,
+        default: ''
+    },
+    actorIdentifier: {
+        type: String,
+        default: ''
+    },
+    notificationRead: {
+        type: Boolean,
+        default: false
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+blockNotificationSchema.pre('save', function updateTimestamp(next) {
+    this.updatedAt = new Date();
+    next();
+});
+
+blockNotificationSchema.pre('findOneAndUpdate', function setUpdatedAt(next) {
+    this.set({ updatedAt: new Date() });
+    next();
+});
+
+blockNotificationSchema.index({ recipientRole: 1, recipientIdentifier: 1, notificationRead: 1, createdAt: -1 });
+blockNotificationSchema.index({ recipientRole: 1, recipientDepartment: 1, notificationRead: 1, createdAt: -1 });
+
+const BlockNotification = mongoose.models.BlockNotification || mongoose.model('BlockNotification', blockNotificationSchema);
+
+const blockNotifications = [];
+
 const formatStatus = (status) => {
     if (!status) return 'pending';
     const normalized = status.toString().trim().toLowerCase();
@@ -9506,6 +9595,354 @@ app.patch('/api/certificates/notifications/mark-read', async (req, res) => {
     } catch (error) {
         console.error('❌ Mark notifications read error:', error);
         res.status(500).json({ error: 'Failed to mark notifications as read' });
+    }
+});
+
+const buildBlockNotificationStudentPayload = (student = {}) => ({
+    studentId: (student.studentId || student._id || student.id || '').toString().trim(),
+    regNo: (student.regNo || student.registerNo || student.reg || '').toString().trim(),
+    studentName: (student.studentName || student.name || [student.firstName, student.lastName].filter(Boolean).join(' ') || '').toString().trim(),
+    branch: (student.branch || student.department || student.degree || '').toString().trim().toUpperCase(),
+    year: (student.year || student.currentYear || '').toString().trim(),
+    semester: (student.semester || student.currentSemester || student.sem || '').toString().trim()
+});
+
+const buildBlockNotificationRecord = ({ recipientRole, recipientIdentifier, recipientDepartment, actionType, student, actor }) => ({
+    recipientRole,
+    recipientIdentifier,
+    recipientDepartment: recipientDepartment || '',
+    actionType,
+    studentId: student.studentId || student.regNo || student.studentName || Date.now().toString(),
+    regNo: student.regNo || '',
+    studentName: student.studentName || '',
+    branch: student.branch || '',
+    year: student.year || '',
+    semester: student.semester || '',
+    actorRole: actor?.role || '',
+    actorName: actor?.name || '',
+    actorIdentifier: actor?.identifier || '',
+    notificationRead: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+});
+
+app.post('/api/block-notifications', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const {
+        targetRole,
+        recipientRole,
+        role,
+        actionType,
+        type,
+        status,
+        state,
+        isBlocked,
+        students = [],
+        studentRecords = [],
+        records = [],
+        selectedStudents = [],
+        student = null,
+        actor = {}
+    } = req.body || {};
+
+    const effectiveStudents =
+        (Array.isArray(students) && students.length ? students : null) ||
+        (Array.isArray(studentRecords) && studentRecords.length ? studentRecords : null) ||
+        (Array.isArray(records) && records.length ? records : null) ||
+        (Array.isArray(selectedStudents) && selectedStudents.length ? selectedStudents : null) ||
+        (student ? [student] : []);
+
+    const normalizedActorRole = (actor?.role || '').toString().trim().toLowerCase();
+    const inferredTargetRole = (targetRole || recipientRole || role || '').toString().trim().toLowerCase() || (
+        normalizedActorRole === 'admin' ? 'coordinator' :
+        normalizedActorRole === 'coordinator' ? 'admin' :
+        ''
+    );
+    const rawActionType = (actionType || type || status || state || '').toString().trim().toLowerCase();
+    const normalizedActionType =
+        rawActionType === 'blocked' || rawActionType === 'block' || rawActionType === 'blocked-account'
+            ? 'blocked'
+            : rawActionType === 'unblocked' || rawActionType === 'unblock' || rawActionType === 'unblocked-account'
+                ? 'unblocked'
+                : typeof isBlocked === 'boolean'
+                    ? (isBlocked ? 'blocked' : 'unblocked')
+                    : '';
+
+    if (!Array.isArray(effectiveStudents) || effectiveStudents.length === 0) {
+        return res.status(400).json({ error: 'At least one student is required' });
+    }
+
+    try {
+        const normalizedTargetRole = ['admin', 'coordinator'].includes(inferredTargetRole)
+            ? inferredTargetRole
+            : (normalizedActorRole === 'admin' ? 'coordinator' : 'admin');
+
+        const notificationRecords = [];
+        const actorPayload = {
+            role: normalizedActorRole,
+            name: (actor.name || '').toString().trim(),
+            identifier: (actor.identifier || '').toString().trim()
+        };
+
+        console.log('🔔 [BlockNotifications] Create request:', {
+            targetRole: normalizedTargetRole,
+            actionType: normalizedActionType || 'blocked',
+            actorRole: actorPayload.role,
+            studentCount: Array.isArray(effectiveStudents) ? effectiveStudents.length : 0
+        });
+
+        const effectiveActionType = normalizedActionType || 'blocked';
+        if (!normalizedActionType) {
+            console.warn('⚠️ [BlockNotifications] Missing actionType in payload, defaulting to blocked', req.body);
+        }
+
+        if (normalizedTargetRole === 'admin') {
+            effectiveStudents.forEach((studentItem) => {
+                const student = buildBlockNotificationStudentPayload(studentItem);
+                notificationRecords.push(buildBlockNotificationRecord({
+                    recipientRole: 'admin',
+                    recipientIdentifier: 'admin',
+                    recipientDepartment: '',
+                    actionType: effectiveActionType,
+                    student,
+                    actor: actorPayload
+                }));
+            });
+        } else {
+            for (const studentItem of effectiveStudents) {
+                const student = buildBlockNotificationStudentPayload(studentItem);
+                const branch = student.branch;
+
+                if (!branch) {
+                    continue;
+                }
+
+                notificationRecords.push(buildBlockNotificationRecord({
+                    recipientRole: 'coordinator',
+                    recipientIdentifier: branch,
+                    recipientDepartment: branch,
+                    actionType: effectiveActionType,
+                    student,
+                    actor: actorPayload
+                }));
+            }
+        }
+
+        if (!notificationRecords.length) {
+            return res.json({ success: true, created: 0, notifications: [] });
+        }
+
+        if (isMongoConnected) {
+            try {
+                const createdNotifications = await BlockNotification.insertMany(notificationRecords);
+                return res.json({
+                    success: true,
+                    created: createdNotifications.length,
+                    notifications: createdNotifications.map((notification) => ({
+                        id: notification._id,
+                        recipientRole: notification.recipientRole,
+                        recipientIdentifier: notification.recipientIdentifier,
+                        recipientDepartment: notification.recipientDepartment,
+                        actionType: notification.actionType,
+                        studentId: notification.studentId,
+                        regNo: notification.regNo,
+                        studentName: notification.studentName,
+                        branch: notification.branch,
+                        year: notification.year,
+                        semester: notification.semester,
+                        actorRole: notification.actorRole,
+                        actorName: notification.actorName,
+                        actorIdentifier: notification.actorIdentifier,
+                        notificationRead: notification.notificationRead,
+                        createdAt: notification.createdAt
+                    }))
+                });
+            } catch (dbError) {
+                console.warn('⚠️ [BlockNotifications] Mongo insert failed, falling back to in-memory store:', dbError.message);
+            }
+        }
+
+        const createdInMemory = notificationRecords.map((notification) => ({
+            ...notification,
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        }));
+        blockNotifications.push(...createdInMemory);
+
+        return res.json({
+            success: true,
+            created: createdInMemory.length,
+            notifications: createdInMemory
+        });
+    } catch (error) {
+        console.error('❌ Block notification create error:', error);
+        res.status(500).json({ error: 'Failed to create block notifications', details: error.message });
+    }
+});
+
+app.get('/api/block-notifications', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { role, identifier, department } = req.query || {};
+    const normalizedRole = (role || '').toString().trim().toLowerCase();
+    const normalizedIdentifier = (identifier || '').toString().trim();
+    const normalizedDepartment = normalizeDepartment(department);
+    const coordinatorKeys = Array.from(
+        new Set(
+            [normalizedIdentifier, normalizedDepartment]
+                .map((value) => (value || '').toString().trim().toUpperCase())
+                .filter(Boolean)
+        )
+    );
+
+    if (!['admin', 'coordinator'].includes(normalizedRole)) {
+        return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    if (!normalizedIdentifier) {
+        return res.status(400).json({ error: 'Recipient identifier is required' });
+    }
+
+    try {
+        const query = normalizedRole === 'coordinator'
+            ? {
+                recipientRole: normalizedRole,
+                notificationRead: false,
+                $or: [
+                    { recipientIdentifier: { $in: coordinatorKeys } },
+                    { recipientDepartment: { $in: coordinatorKeys } }
+                ]
+            }
+            : {
+                recipientRole: normalizedRole,
+                recipientIdentifier: normalizedIdentifier,
+                notificationRead: false
+            };
+
+        let notifications;
+        if (isMongoConnected) {
+            try {
+                notifications = await BlockNotification.find(query).sort({ createdAt: 1 }).lean();
+            } catch (dbError) {
+                console.warn('⚠️ [BlockNotifications] Mongo fetch failed, falling back to in-memory store:', dbError.message);
+                notifications = null;
+            }
+        }
+
+        if (!Array.isArray(notifications)) {
+            notifications = blockNotifications.filter((notification) => {
+                const isRoleMatch = notification.recipientRole === normalizedRole;
+                const notificationIdentifier = (notification.recipientIdentifier || '').toString().trim().toUpperCase();
+                const notificationDepartment = (notification.recipientDepartment || '').toString().trim().toUpperCase();
+                const isCoordinatorMatch = normalizedRole === 'coordinator'
+                    ? coordinatorKeys.includes(notificationIdentifier) || coordinatorKeys.includes(notificationDepartment)
+                    : notificationIdentifier === normalizedIdentifier;
+                return isRoleMatch && isCoordinatorMatch && !notification.notificationRead;
+            });
+        }
+
+        return res.json({
+            success: true,
+            notifications: notifications.map((notification) => ({
+                id: notification._id || notification.id,
+                recipientRole: notification.recipientRole,
+                recipientIdentifier: notification.recipientIdentifier,
+                recipientDepartment: notification.recipientDepartment,
+                actionType: notification.actionType,
+                studentId: notification.studentId,
+                regNo: notification.regNo,
+                studentName: notification.studentName,
+                branch: notification.branch,
+                year: notification.year,
+                semester: notification.semester,
+                actorRole: notification.actorRole,
+                actorName: notification.actorName,
+                actorIdentifier: notification.actorIdentifier,
+                notificationRead: notification.notificationRead,
+                createdAt: notification.createdAt
+            }))
+        });
+    } catch (error) {
+        console.error('❌ Block notification fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch block notifications', details: error.message });
+    }
+});
+
+app.patch('/api/block-notifications/mark-read', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    const { role, identifier, department, notificationIds = [] } = req.body || {};
+    const normalizedRole = (role || '').toString().trim().toLowerCase();
+    const normalizedIdentifier = (identifier || '').toString().trim();
+    const normalizedDepartment = normalizeDepartment(department);
+    const coordinatorKeys = Array.from(
+        new Set(
+            [normalizedIdentifier, normalizedDepartment]
+                .map((value) => (value || '').toString().trim().toUpperCase())
+                .filter(Boolean)
+        )
+    );
+
+    if (!['admin', 'coordinator'].includes(normalizedRole)) {
+        return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    if (!normalizedIdentifier) {
+        return res.status(400).json({ error: 'Recipient identifier is required' });
+    }
+
+    try {
+        const query = normalizedRole === 'coordinator'
+            ? {
+                recipientRole: normalizedRole,
+                notificationRead: false,
+                $or: [
+                    { recipientIdentifier: { $in: coordinatorKeys } },
+                    { recipientDepartment: { $in: coordinatorKeys } }
+                ]
+            }
+            : {
+                recipientRole: normalizedRole,
+                recipientIdentifier: normalizedIdentifier,
+                notificationRead: false
+            };
+
+        if (Array.isArray(notificationIds) && notificationIds.length > 0) {
+            query._id = {
+                $in: notificationIds.map((id) => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id))
+            };
+        }
+
+        if (isMongoConnected) {
+            try {
+                const result = await BlockNotification.updateMany(query, { $set: { notificationRead: true } });
+                return res.json({ success: true, updated: result.modifiedCount });
+            } catch (dbError) {
+                console.warn('⚠️ [BlockNotifications] Mongo mark-read failed, falling back to in-memory store:', dbError.message);
+            }
+        }
+
+        let updated = 0;
+        blockNotifications.forEach((notification) => {
+            const isRoleMatch = notification.recipientRole === normalizedRole;
+            const notificationIdentifier = (notification.recipientIdentifier || '').toString().trim().toUpperCase();
+            const notificationDepartment = (notification.recipientDepartment || '').toString().trim().toUpperCase();
+            const isCoordinatorMatch = normalizedRole === 'coordinator'
+                ? coordinatorKeys.includes(notificationIdentifier) || coordinatorKeys.includes(notificationDepartment)
+                : notificationIdentifier === normalizedIdentifier;
+            const isIdMatch = !Array.isArray(notificationIds) || notificationIds.length === 0 || notificationIds.includes(notification.id);
+            if (isRoleMatch && isCoordinatorMatch && isIdMatch && !notification.notificationRead) {
+                notification.notificationRead = true;
+                updated += 1;
+            }
+        });
+
+        return res.json({ success: true, updated });
+    } catch (error) {
+        console.error('❌ Block notification mark-read error:', error);
+        res.status(500).json({ error: 'Failed to mark block notifications as read', details: error.message });
     }
 });
 

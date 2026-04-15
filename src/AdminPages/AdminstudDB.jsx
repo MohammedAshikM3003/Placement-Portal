@@ -4,6 +4,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import mongoDBService from '../services/mongoDBService.jsx';
+import { createBlockNotifications } from '../services/blockNotificationService.jsx';
 // UPDATED: Import the CSS file as a module named 'styles'
 import styles from './AdminstudDB.module.css';
 import Adminicon from "../assets/Adminicon.png";
@@ -320,6 +321,132 @@ function AdminstudDB() {
         };
     };
 
+    const buildNotificationStudent = (student = {}) => {
+        const normalizedId = normalizeId(student.studentId || student.id || student._id || student.userId || student.uid);
+        const normalizedRegNo = (student.regNo || student.registerNo || student.reg || '').toString().trim();
+        const normalizedName = (
+            student.studentName ||
+            student.name ||
+            [student.firstName, student.lastName].filter(Boolean).join(' ')
+        ).toString().trim();
+
+        return {
+            studentId: normalizedId || normalizedRegNo || normalizedName || '',
+            regNo: normalizedRegNo,
+            studentName: normalizedName,
+            branch: (student.department || student.branch || student.degree || '').toString().trim().toUpperCase(),
+            year: (student.currentYear || student.year || '').toString().trim(),
+            semester: (student.currentSemester || student.sem || student.semester || '').toString().trim()
+        };
+    };
+
+    const publishBlockNotifications = async (actionType, selectedRecords, selectedIds = []) => {
+        if (!Array.isArray(selectedRecords) && !Array.isArray(selectedIds)) return;
+
+        const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfile') || 'null');
+        const adminData = JSON.parse(localStorage.getItem('adminData') || 'null');
+        const adminName =
+            `${cachedAdminProfile?.firstName || ''} ${cachedAdminProfile?.lastName || ''}`.trim() ||
+            cachedAdminProfile?.fullName ||
+            adminData?.fullName ||
+            localStorage.getItem('adminLoginID') ||
+            'Admin';
+        const adminIdentifier = cachedAdminProfile?.adminLoginID || adminData?.adminLoginID || localStorage.getItem('adminLoginID') || adminName;
+
+        try {
+            let studentPayload = (Array.isArray(selectedRecords) ? selectedRecords : [])
+                .map((student) => buildNotificationStudent(student))
+                .filter((student) => Boolean(student.studentId || student.regNo || student.studentName));
+
+            const hasIncompleteRecord = studentPayload.some((student) => {
+                const hasIdentity = Boolean(student.regNo || student.studentName || student.studentId);
+                const hasBranch = Boolean(student.branch);
+                return !hasIdentity || !hasBranch;
+            });
+
+            // Fallback: fetch by selected IDs when in-memory records are incomplete.
+            if ((!studentPayload.length || hasIncompleteRecord) && Array.isArray(selectedIds) && selectedIds.length) {
+                try {
+                    const fetchedStudents = await Promise.all(
+                        selectedIds.map((id) => mongoDBService.getStudentById(id))
+                    );
+                    const fetchedPayload = fetchedStudents
+                        .filter(Boolean)
+                        .map((student) => buildNotificationStudent(student))
+                        .filter((student) => Boolean(student.studentId || student.regNo || student.studentName));
+
+                    if (fetchedPayload.length) {
+                        const fallbackById = new Map(fetchedPayload.map((student) => [normalizeId(student.studentId), student]));
+                        studentPayload = studentPayload.map((student) => {
+                            const key = normalizeId(student.studentId);
+                            const fallback = fallbackById.get(key);
+                            if (!fallback) return student;
+
+                            return {
+                                studentId: student.studentId || fallback.studentId,
+                                regNo: student.regNo || fallback.regNo,
+                                studentName: student.studentName || fallback.studentName,
+                                branch: student.branch || fallback.branch,
+                                year: student.year || fallback.year,
+                                semester: student.semester || fallback.semester
+                            };
+                        });
+
+                        if (!studentPayload.length) {
+                            studentPayload = fetchedPayload;
+                        }
+                    }
+                } catch (fetchError) {
+                    console.warn('⚠️ Failed to fetch fallback students for notifications:', fetchError);
+                }
+            }
+
+            studentPayload = studentPayload.filter((student) => {
+                const hasIdentity = Boolean(student.regNo || student.studentName || student.studentId);
+                const hasBranch = Boolean(student.branch);
+                return hasIdentity && hasBranch;
+            });
+
+            if (!studentPayload.length) {
+                console.warn('⚠️ Skipping block notification publish: no valid student payload generated', {
+                    actionType,
+                    selectedCount: Array.isArray(selectedRecords) ? selectedRecords.length : 0,
+                    selectedIds
+                });
+                return;
+            }
+
+            console.log('📤 Block notification payload students:', {
+                actionType,
+                count: studentPayload.length,
+                students: studentPayload
+            });
+
+            await createBlockNotifications({
+                targetRole: 'coordinator',
+                actionType,
+                actor: {
+                    role: 'admin',
+                    name: adminName,
+                    identifier: adminIdentifier
+                },
+                students: studentPayload,
+                studentRecords: studentPayload,
+                records: studentPayload,
+                selectedStudents: studentPayload,
+                student: studentPayload[0]
+            });
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('blockNotificationsUpdated', {
+                    detail: { targetRole: 'coordinator', actionType }
+                }));
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to publish block notification:', error);
+        }
+    };
+
     // --- Fetch branches from MongoDB and generate batch options ---
     useEffect(() => {
         const fetchBranchesAndBatches = async () => {
@@ -519,6 +646,7 @@ function AdminstudDB() {
         setBlockInProgress(true);
         try {
             const ids = Array.from(selectedStudentIds);
+            const normalizedSelectedIds = new Set(ids.map(normalizeId));
             const cachedAdminProfile = JSON.parse(localStorage.getItem('adminProfile') || 'null');
             const adminData = JSON.parse(localStorage.getItem('adminData') || 'null');
 
@@ -557,10 +685,24 @@ function AdminstudDB() {
 
             await Promise.all(updatePromises);
 
+            // Use selected IDs to gather full student objects for notifications.
+            const studentsToNotify = students.filter((student) => {
+                const sid = normalizeId(student.id || student._id);
+                return normalizedSelectedIds.has(sid);
+            });
+
+            if (studentsToNotify.length > 0 || ids.length > 0) {
+                await publishBlockNotifications('blocked', studentsToNotify, ids);
+            }
+
             console.log('✅ All students blocked successfully');
 
-            setStudents(students.map(s => selectedStudentIds.has(s.id) ? { ...s, blocked: true, isBlocked: true } : s));
+            setStudents(prev => prev.map(s => {
+                const sid = normalizeId(s.id || s._id);
+                return normalizedSelectedIds.has(sid) ? { ...s, blocked: true, isBlocked: true } : s;
+            }));
             setActivePopup('blockSuccess');
+            setSelectedStudentIds(new Set());
         } catch (e) {
             console.error('❌ Block failed:', e);
             alert('Failed to block student(s): ' + (e.message || 'Unknown error'));
@@ -574,6 +716,7 @@ function AdminstudDB() {
         setUnblockInProgress(true);
         try {
             const ids = Array.from(selectedStudentIds);
+            const normalizedSelectedIds = new Set(ids.map(normalizeId));
             await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false })));
             
             // 🔄 FIXED: Clear fastDataService cache for unblocked students
@@ -588,9 +731,22 @@ function AdminstudDB() {
                 console.warn('⚠️ Could not clear fastDataService cache:', cacheErr);
                 // Non-critical error, continue
             }
+
+            const studentsToNotify = students.filter((student) => {
+                const sid = normalizeId(student.id || student._id);
+                return normalizedSelectedIds.has(sid);
+            });
+
+            if (studentsToNotify.length > 0 || ids.length > 0) {
+                await publishBlockNotifications('unblocked', studentsToNotify, ids);
+            }
             
-            setStudents(students.map(s => selectedStudentIds.has(s.id) ? { ...s, blocked: false } : s));
+            setStudents(prev => prev.map(s => {
+                const sid = normalizeId(s.id || s._id);
+                return normalizedSelectedIds.has(sid) ? { ...s, blocked: false, isBlocked: false } : s;
+            }));
             setActivePopup('unblockSuccess');
+            setSelectedStudentIds(new Set());
         } catch (e) {
             alert('Failed to unblock student(s): ' + (e.message || 'Unknown error'));
             setActivePopup(null);

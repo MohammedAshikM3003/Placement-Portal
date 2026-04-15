@@ -10,6 +10,7 @@ import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import GlobalNotificationChecker from "./components/CertificateNotification/GlobalNotificationChecker.jsx";
 import GlobalPlacementBannerChecker from "./components/CertificateNotification/GlobalPlacementBannerChecker.jsx";
 import GlobalDriveScheduledChecker from "./components/CertificateNotification/GlobalDriveScheduledChecker.jsx";
+import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -226,6 +227,10 @@ function AppContent() {
           <GlobalPlacementBannerChecker />
           <GlobalDriveScheduledChecker />
         </>
+      )}
+
+      {isAuthenticated && ['admin', 'coordinator'].includes(authRole) && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && (
+        <GlobalBlockNotificationChecker />
       )}
 
     <Routes>
