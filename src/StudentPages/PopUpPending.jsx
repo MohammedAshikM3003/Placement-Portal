@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactDOM from 'react-dom';
 import { FaCheckCircle, FaExclamationCircle, FaTimes, FaStar, FaRegStar } from "react-icons/fa";
 import '../components/alerts/AlertStyles.css';
+import {
+  PreviewProgressAlert,
+  DownloadProgressAlert,
+  DownloadSuccessAlert
+} from '../components/alerts';
 import scrollStyles from './PopupScrollbar.module.css';
 import companyfeedbackicon from '../assets/companyfeedbackicon.svg';
 import CopmanyviewFeedbackicon from '../assets/CopmanyviewFeedbackicon.svg';
@@ -1307,8 +1312,26 @@ export default function PopUpPending({ app, onBack }) {
   const [showOfferLetterPreview, setShowOfferLetterPreview] = useState(false);
   const [isOfferDecisionUpdating, setIsOfferDecisionUpdating] = useState(false);
   const [offerActionInFlight, setOfferActionInFlight] = useState('');
+  const [offerPreviewPopupState, setOfferPreviewPopupState] = useState('none'); // none | progress
+  const [offerDownloadPopupState, setOfferDownloadPopupState] = useState('none'); // none | progress | success
+  const [offerPreviewProgress, setOfferPreviewProgress] = useState(0);
+  const [offerDownloadProgress, setOfferDownloadProgress] = useState(0);
 
   const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
+
+  const getRuntimeBackendOrigin = () => {
+    let backendOrigin = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, '');
+
+    if (!backendOrigin || backendOrigin.includes('localhost')) {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+        backendOrigin = 'https://placement-portal-zxo2.onrender.com';
+      } else {
+        backendOrigin = 'http://localhost:5000';
+      }
+    }
+
+    return backendOrigin.replace(/\/$/, '');
+  };
 
   const resolveOfferLetterUrl = (offerEntry) => {
     if (!offerEntry) return '';
@@ -1317,11 +1340,25 @@ export default function PopUpPending({ app, onBack }) {
     const fileId = String(offerEntry?.offerGridfsFileId || '').trim();
     const raw = directUrl || (fileId ? `/api/file/${fileId}` : '');
     if (!raw) return '';
-    if (/^https?:\/\//i.test(raw)) return raw;
 
-    const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const origin = apiBase.replace(/\/api\/?$/, '');
-    return `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
+    const backendOrigin = getRuntimeBackendOrigin();
+
+    if (/^https?:\/\//i.test(raw)) {
+      try {
+        const parsed = new URL(raw);
+        const isCurrentFrontendLocal = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+        const isRawLocal = /^(localhost|127\.0\.0\.1)$/i.test(parsed.hostname);
+
+        if (!isCurrentFrontendLocal && isRawLocal) {
+          return `${backendOrigin}${parsed.pathname}${parsed.search || ''}`;
+        }
+      } catch (error) {
+        // Fallback below keeps current behavior if URL parsing fails.
+      }
+      return raw;
+    }
+
+    return `${backendOrigin}${raw.startsWith('/') ? '' : '/'}${raw}`;
   };
 
   const getBestOfferForDrive = useCallback((offers = []) => {
@@ -1703,6 +1740,85 @@ export default function PopUpPending({ app, onBack }) {
     driveOfferLetterUrl
   );
 
+  const closeOfferDownloadSuccessPopup = useCallback(() => {
+    setOfferDownloadPopupState('none');
+    setOfferDownloadProgress(0);
+  }, []);
+
+  const handleOfferLetterPreview = useCallback(() => {
+    if (!driveOfferLetterUrl || offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') return;
+
+    setShowOfferLetterPopup(false);
+    setOfferPreviewPopupState('progress');
+    setOfferPreviewProgress(0);
+
+    const progressTimer = setInterval(() => {
+      setOfferPreviewProgress((prev) => (prev >= 85 ? prev : prev + 12));
+    }, 140);
+
+    setTimeout(() => {
+      clearInterval(progressTimer);
+      setOfferPreviewProgress(100);
+
+      setTimeout(() => {
+        setOfferPreviewPopupState('none');
+        setOfferPreviewProgress(0);
+
+        // Open only after preview popup finishes, as requested.
+        window.open(driveOfferLetterUrl, '_blank', 'noopener,noreferrer');
+      }, 260);
+    }, 1100);
+  }, [driveOfferLetterUrl, offerPreviewPopupState, offerDownloadPopupState]);
+
+  const handleOfferLetterDownload = useCallback(() => {
+    if (!driveOfferLetterUrl || offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') return;
+
+    setShowOfferLetterPopup(false);
+    setOfferDownloadPopupState('progress');
+    setOfferDownloadProgress(0);
+
+    const progressTimer = setInterval(() => {
+      setOfferDownloadProgress((prev) => (prev >= 85 ? prev : prev + 10));
+    }, 160);
+
+    setTimeout(() => {
+      clearInterval(progressTimer);
+      setOfferDownloadProgress(100);
+
+      setTimeout(async () => {
+        try {
+          const response = await fetch(driveOfferLetterUrl);
+          if (!response.ok) {
+            throw new Error('Failed to fetch offer letter file');
+          }
+
+          const fileBlob = await response.blob();
+          const objectUrl = window.URL.createObjectURL(fileBlob);
+          const link = document.createElement('a');
+          const companyName = String(offerLetterRecord?.company || 'Offer_Letter').replace(/[^a-z0-9_-]/gi, '_');
+          const roleName = String(offerLetterRecord?.role || 'Document').replace(/[^a-z0-9_-]/gi, '_');
+
+          link.href = objectUrl;
+          link.download = `${companyName}_${roleName}_Offer_Letter.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+          // Fallback keeps download in same tab instead of opening a blank/new tab.
+          const link = document.createElement('a');
+          link.href = driveOfferLetterUrl;
+          link.download = '';
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+
+        setOfferDownloadPopupState('success');
+      }, 320);
+    }, 1200);
+  }, [driveOfferLetterUrl, offerPreviewPopupState, offerDownloadPopupState, offerLetterRecord?.company, offerLetterRecord?.role]);
+
   const roundsContent = roundsToRender.length > 0 ? roundsToRender.map((round, index) => (
     <div key={index} style={{ display: "flex", flexDirection: 'row', alignItems: "stretch", background: isMobile ? "#ffffff" : "#f6f7fa", border: isMobile ? '1px solid #e3e9f3' : 'none', borderRadius: 14, marginBottom: index === roundsToRender.length - 1 ? 0 : (isMobile ? 12 : 18), overflow: 'hidden', minHeight: isMobile ? 78 : 'auto', boxShadow: isMobile ? '0 1px 4px rgba(24,39,75,0.08)' : 'none' }}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: isMobile ? '12px' : '16px 18px 16px 24px', gap: isMobile ? '10px' : '18px' }}>
@@ -1844,22 +1960,29 @@ export default function PopUpPending({ app, onBack }) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '8px' : '12px', flexDirection: 'row', marginBottom: isMobile ? 0 : 0 }}>
-              <div style={{ width: 'auto', minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
-                <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
-                <span style={{
-                  fontSize: isMobile ? 18 : 25,
-                  color: overallStatusColor,
-                  fontWeight: isMobile ? 600 : 700,
-                  padding: isMobile ? '4px 12px' : '4px 16px',
-                  borderRadius: '8px',
-                  background: `${overallStatusColor}15`,
-                  whiteSpace: 'nowrap'
-                }}>
-                  {overallStatus}
-                </span>
+            <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: isMobile ? '10px' : '12px', flexDirection: isMobile ? 'column' : 'row', marginBottom: isMobile ? 0 : 0 }}>
+              <div style={{ width: isMobile ? '100%' : 'auto', minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'space-between' : 'flex-start', gap: isMobile ? '8px' : 0, flexWrap: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : 0, flexWrap: 'nowrap' }}>
+                  <span style={{ fontSize: isMobile ? 18 : 23, color: "#888", fontWeight: isMobile ? 500 : 400, whiteSpace: 'nowrap' }}>Overall Status:</span>
+                  <span style={{
+                    fontSize: isMobile ? 18 : 25,
+                    color: overallStatusColor,
+                    fontWeight: isMobile ? 600 : 700,
+                    padding: isMobile ? '4px 12px' : '4px 16px',
+                    borderRadius: '8px',
+                    background: `${overallStatusColor}15`,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {overallStatus}
+                  </span>
+                </div>
+                {isMobile && (
+                  <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: '9px 15px', fontWeight: 600, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <span style={{ fontSize: 16, marginRight: 6 }}>Back</span><span style={{ fontSize: 18 }}>â†©</span>
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'flex-end', width: isMobile ? '100%' : 'auto', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
                 {canShowOfferLetterButton && (
                   <button
                     onClick={() => {
@@ -1886,9 +2009,11 @@ export default function PopUpPending({ app, onBack }) {
                 {!canShowOfferLetterButton && isOfferLetterLoading && (
                   <span style={{ color: '#777', fontSize: isMobile ? 12 : 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Checking offer...</span>
                 )}
-                <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: isMobile ? '9px 15px' : "8px 32px", fontWeight: isMobile ? 600 : 600, fontSize: isMobile ? 16 : 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <span style={{ fontSize: isMobile ? 16 : 18, marginRight: 6 }}>Back</span><span style={{ fontSize: isMobile ? 18 : 22 }}>â†©</span>
-                </button>
+                {!isMobile && (
+                  <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: "8px 32px", fontWeight: 600, fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>â†©</span>
+                  </button>
+                )}
               </div>
             </div>
             <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
@@ -2071,8 +2196,9 @@ export default function PopUpPending({ app, onBack }) {
               </div>
               <div className="achievement-popup-footer" style={{ display: 'flex', gap: '12px', justifyContent: 'center', padding: '1.5rem' }}>
                 <button
-                  onClick={() => window.open(driveOfferLetterUrl, '_blank')}
+                  onClick={handleOfferLetterPreview}
                   className="achievement-popup-close-btn"
+                  disabled={offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress'}
                   style={{
                     flex: '1',
                     background: '#e9f1fc',
@@ -2082,8 +2208,8 @@ export default function PopUpPending({ app, onBack }) {
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer',
-                    opacity: 1,
+                    cursor: (offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') ? 'not-allowed' : 'pointer',
+                    opacity: (offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') ? 0.7 : 1,
                     transition: 'background 0.2s ease',
                     boxShadow: 'none',
                     transform: 'none',
@@ -2102,17 +2228,13 @@ export default function PopUpPending({ app, onBack }) {
                 >
                   Preview
                 </button>
-                <a
-                  href={driveOfferLetterUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
+                <button
+                  type="button"
+                  onClick={handleOfferLetterDownload}
                   className="achievement-popup-close-btn"
+                  disabled={offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress'}
                   style={{
                     flex: '1',
-                    display: 'inline-block',
-                    textAlign: 'center',
-                    textDecoration: 'none',
                     backgroundColor: '#2085f6',
                     color: 'white',
                     border: 'none',
@@ -2120,7 +2242,8 @@ export default function PopUpPending({ app, onBack }) {
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer',
+                    cursor: (offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') ? 'not-allowed' : 'pointer',
+                    opacity: (offerPreviewPopupState === 'progress' || offerDownloadPopupState === 'progress') ? 0.7 : 1,
                     transition: 'background-color 0.2s ease',
                     boxShadow: 'none',
                     transform: 'none',
@@ -2138,7 +2261,7 @@ export default function PopUpPending({ app, onBack }) {
                   }}
                 >
                   Download
-                </a>
+                </button>
                 <button
                   onClick={() => setShowOfferLetterPopup(false)}
                   className="achievement-popup-close-btn"
@@ -2174,6 +2297,45 @@ export default function PopUpPending({ app, onBack }) {
             </div>
           </div>
         )}
+
+        <PreviewProgressAlert
+          isOpen={offerPreviewPopupState === 'progress'}
+          progress={offerPreviewProgress}
+          fileLabel="offer letter"
+          title="Previewing..."
+          messages={{
+            initial: 'Fetching offer letter from database...',
+            mid: 'Preparing preview...',
+            final: 'Opening preview...'
+          }}
+        />
+
+        <DownloadProgressAlert
+          isOpen={offerDownloadPopupState === 'progress'}
+          progress={offerDownloadProgress}
+          fileLabel="offer letter"
+          title="Downloading..."
+          messages={{
+            initial: 'Preparing offer letter for download...',
+            mid: 'Finalizing download...',
+            final: 'Starting download...'
+          }}
+        />
+
+        <DownloadSuccessAlert
+          isOpen={offerDownloadPopupState === 'success'}
+          onClose={closeOfferDownloadSuccessPopup}
+          fileLabel="offer letter"
+          title="Downloaded !"
+          description={(
+            <>
+              The offer letter has been successfully
+              <br />
+              downloaded as PDF to your device.
+            </>
+          )}
+          color="#197AFF"
+        />
     </>
   );
 }

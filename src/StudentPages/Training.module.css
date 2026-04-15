@@ -250,6 +250,12 @@
     color: #888;
 }
 
+.phaseSelect:disabled {
+    cursor: default;
+    background-color: #f3f6fb;
+    color: #333;
+}
+
 /* Bottom Section */
 .bottomSection {
     display: grid;
@@ -319,6 +325,49 @@
 
 .table tbody tr:hover {
     background-color: #f5f9ff;
+}
+
+.trainingCheckboxCell {
+    text-align: center;
+}
+
+.trainingCheckbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #3086F3;
+    cursor: pointer;
+}
+
+.trainingCheckbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.tableSubmitBar {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-end;
+    z-index: 2;
+}
+
+.tableSubmitBtn {
+    background: #197AFF;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tableSubmitBtn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
 }
 
 /* Status Text */

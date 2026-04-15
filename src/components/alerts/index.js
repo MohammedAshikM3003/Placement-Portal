@@ -9,6 +9,7 @@ export { default as InfoAlert } from './InfoAlert';
 export { default as PlacementStatusPopup } from './PlacementStatusPopup';
 export { default as FieldUpdateBanner } from './FieldUpdateBanner';
 export { default as UnsavedChangesAlert } from './UnsavedChangesAlert';
+export { default as TrainingCourseEnrolledAlert } from './TrainingCourseEnrolledAlert';
 export { AchievementSuccessAlert, AchievementErrorAlert } from './AchievementUploadAlert';
 export { 
   RegistrationSuccessAlert, 

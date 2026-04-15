@@ -44,14 +44,6 @@ const JOB_LOCATION_OPTIONS = [
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
 
-const PREFERRED_TRAINING_OPTIONS = [
-    "Java",
-    "Python",
-    "Fullstack Development",
-    "Gen AI",
-    "Cloud Computing"
-];
-
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
 const LINKEDIN_URL_REGEX = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]{3,100}\/?$/;
@@ -710,7 +702,6 @@ function StuProfile({ onLogout, onViewChange }) {
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
-    const [preferredTrainingOptions, setPreferredTrainingOptions] = useState(PREFERRED_TRAINING_OPTIONS);
     const [eligibleDrives, setEligibleDrives] = useState([]);
     const [studentApplications, setStudentApplications] = useState([]);
     const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
@@ -925,42 +916,6 @@ function StuProfile({ onLogout, onViewChange }) {
         () => parseMultiValue(studentData?.preferredTraining),
         [studentData?.preferredTraining]
     );
-
-    useEffect(() => {
-        const loadPreferredTrainingOptions = async () => {
-            const activeYear = (studentData?.currentYear || currentYear || '').toString().trim().toUpperCase();
-
-            if (!activeYear) {
-                setPreferredTrainingOptions(PREFERRED_TRAINING_OPTIONS);
-                return;
-            }
-
-            try {
-                const dynamicCourses = await mongoDBService.getTrainingCoursesByYear(activeYear);
-                const options = [...new Set(
-                    (Array.isArray(dynamicCourses) ? dynamicCourses : [])
-                        .map((item) => (item || '').toString().trim())
-                        .filter(Boolean)
-                )];
-
-                // For a known student year, show only admin-scheduled training options for that year.
-                setPreferredTrainingOptions(options);
-            } catch (error) {
-                console.error('Failed to load preferred training options:', error);
-                setPreferredTrainingOptions(PREFERRED_TRAINING_OPTIONS);
-            }
-        };
-
-        loadPreferredTrainingOptions();
-    }, [studentData?.currentYear, currentYear]);
-
-    const handleTrainingToggle = (option) => {
-        if (isSaving) return;
-        const current = parseMultiValue(studentData?.preferredTraining);
-        // Toggle off if already selected, otherwise select only this one
-        const updated = current.includes(option) ? [] : [option];
-        setStudentData(prev => ({ ...prev, preferredTraining: updated.join(', ') }));
-    };
 
     const jobLocationsHiddenValue = useMemo(
         () => selectedJobLocations.join(', '),
@@ -3548,23 +3503,6 @@ function StuProfile({ onLogout, onViewChange }) {
                                             }}
                                             disabled={isSaving}
                                         />
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Preferred Training</span>
-                                        <div className={styles.checkboxOptions}>
-                                            {preferredTrainingOptions.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedTrainings.includes(option)}
-                                                        onChange={() => handleTrainingToggle(option)}
-                                                        disabled={isSaving}
-                                                        style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
-                                                    />
-                                                    <span style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
                                     </div>
                                     <div className={styles.checkboxGroup}>
                                         <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>

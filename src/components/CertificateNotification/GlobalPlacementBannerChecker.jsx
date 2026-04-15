@@ -286,6 +286,17 @@ const GlobalPlacementBannerChecker = () => {
 		}
 	}, []);
 
+	const markSignatureAsSeen = useCallback((signature) => {
+		const keyStudent = studentId || studentRegNo;
+		if (keyStudent && signature) {
+			const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${keyStudent}`;
+			const currentSeen = localStorage.getItem(seenKey) || '';
+			const newSeen = currentSeen ? `${currentSeen}|${signature}` : signature;
+			localStorage.setItem(seenKey, newSeen);
+			console.log('🔔 [PlacementChecker] Marked signature as seen:', signature);
+		}
+	}, [studentId, studentRegNo]);
+
 	useEffect(() => {
 		console.log('🔔 [PlacementChecker] Mounted on route:', window.location.pathname);
 		resolveStudentId();
@@ -312,6 +323,7 @@ const GlobalPlacementBannerChecker = () => {
 				}
 
 				console.log('🔔 [PlacementChecker] Received storage broadcast for current student:', payload);
+				markSignatureAsSeen(payload?.signature);
 				showingRef.current = true;
 				setBannerData(payload);
 			} catch (error) {
@@ -339,6 +351,7 @@ const GlobalPlacementBannerChecker = () => {
 				}
 
 				console.log('🔔 [PlacementChecker] Event is for current student, showing banner');
+				markSignatureAsSeen(normalizedPayload?.signature);
 				showingRef.current = true;
 				setBannerData(normalizedPayload);
 			} else if (!studentId) {
@@ -360,7 +373,7 @@ const GlobalPlacementBannerChecker = () => {
 			window.removeEventListener('studentDataUpdated', handleStorage);
 			window.removeEventListener('roundResultNotification', handleRoundResultEvent);
 		};
-	}, [resolveStudentId, studentId, hasSeenSignature]);
+	}, [resolveStudentId, studentId, hasSeenSignature, markSignatureAsSeen]);
 
 	const pollPlacement = useCallback(async () => {
 		if ((!studentId && !studentRegNo) || showingRef.current) return;
@@ -401,20 +414,19 @@ const GlobalPlacementBannerChecker = () => {
 
 			if (!snapshot || !snapshot.isPlaced) return;
 
-			const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${studentId}`;
-			const seenSignatures = (localStorage.getItem(seenKey) || '').split('|').filter(Boolean);
-			if (seenSignatures.includes(snapshot.signature)) {
+			if (hasSeenSignature(snapshot.signature, studentId)) {
 				console.log('🔔 [PlacementChecker] Already shown for signature:', snapshot.signature);
 				return;
 			}
 
 			console.log('🔔 [PlacementChecker] Triggering banner for company:', snapshot.companyName || '(unknown)');
+			markSignatureAsSeen(snapshot.signature);
 			showingRef.current = true;
 			setBannerData(snapshot);
 		} catch (error) {
 			console.error('❌ [PlacementChecker] Poll failed:', error);
 		}
-	}, [studentId, studentRegNo]);
+	}, [studentId, studentRegNo, hasSeenSignature, markSignatureAsSeen]);
 
 	useEffect(() => {
 		if (!studentId && !studentRegNo) return;
@@ -445,19 +457,13 @@ const GlobalPlacementBannerChecker = () => {
 	}, [studentId, studentRegNo, pollPlacement]);
 
 	const handleClose = useCallback(() => {
-		const keyStudent = studentId || studentRegNo;
-		if (keyStudent && bannerData?.signature) {
-			const seenKey = `${PLACEMENT_POPUP_STORAGE_PREFIX}:${keyStudent}`;
-			const currentSeen = localStorage.getItem(seenKey) || '';
-			const newSeen = currentSeen ? `${currentSeen}|${bannerData.signature}` : bannerData.signature;
-			localStorage.setItem(seenKey, newSeen);
-			console.log('🔔 [PlacementChecker] Banner closed, stored signature:', bannerData.signature);
-			console.log('🔔 [PlacementChecker] All stored signatures:', newSeen);
+		if (bannerData?.signature) {
+			markSignatureAsSeen(bannerData.signature);
 		}
 
 		setBannerData(null);
 		showingRef.current = false;
-	}, [studentId, studentRegNo, bannerData]);
+	}, [bannerData, markSignatureAsSeen]);
 
 	if (!bannerData) return null;
 

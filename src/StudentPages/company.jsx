@@ -5,6 +5,7 @@ import PopUpPending from './PopUpPending.jsx';
 import { getOverallStatus as getPopupOverallStatus } from './PopUpPending.jsx';
 import styles from './Company.module.css';
 import alertStyles from '../components/alerts/AlertStyles.module.css';
+import { DownloadProgressAlert, DownloadSuccessAlert } from '../components/alerts';
 
 // Fetch eligible students for a student from backend
 const getEligibleStudents = async (studentId) => {
@@ -36,6 +37,8 @@ export default function Company({ onLogout, onViewChange }) {
   const [isOfferDecisionUpdating, setIsOfferDecisionUpdating] = useState(false);
   const [offerActionInFlight, setOfferActionInFlight] = useState('');
   const [isDownloadingOffer, setIsDownloadingOffer] = useState(false);
+  const [offerDownloadPopupState, setOfferDownloadPopupState] = useState('none'); // none | progress | success
+  const [offerDownloadProgress, setOfferDownloadProgress] = useState(0);
   const [offerResponsePopup, setOfferResponsePopup] = useState({
     isOpen: false,
     phase: 'saving',
@@ -240,15 +243,43 @@ export default function Company({ onLogout, onViewChange }) {
   const resolveOfferLetterUrl = (offerEntry) => {
     if (!offerEntry) return '';
 
+    const getRuntimeBackendOrigin = () => {
+      let backendOrigin = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, '');
+
+      if (!backendOrigin || backendOrigin.includes('localhost')) {
+        if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+          backendOrigin = 'https://placement-portal-zxo2.onrender.com';
+        } else {
+          backendOrigin = 'http://localhost:5000';
+        }
+      }
+
+      return backendOrigin.replace(/\/$/, '');
+    };
+
     const directUrl = String(offerEntry?.offerGridfsFileUrl || '').trim();
     const fileId = String(offerEntry?.offerGridfsFileId || '').trim();
     const raw = directUrl || (fileId ? `/api/file/${fileId}` : '');
     if (!raw) return '';
-    if (/^https?:\/\//i.test(raw)) return raw;
 
-    const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const origin = apiBase.replace(/\/api\/?$/, '');
-    return `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
+    const backendOrigin = getRuntimeBackendOrigin();
+
+    if (/^https?:\/\//i.test(raw)) {
+      try {
+        const parsed = new URL(raw);
+        const isCurrentFrontendLocal = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname);
+        const isRawLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(parsed.hostname);
+
+        if (!isCurrentFrontendLocal && isRawLocal) {
+          return `${backendOrigin}${parsed.pathname}${parsed.search || ''}`;
+        }
+      } catch (error) {
+        // If URL parsing fails, keep raw value.
+      }
+      return raw;
+    }
+
+    return `${backendOrigin}${raw.startsWith('/') ? '' : '/'}${raw}`;
   };
 
   const isAttendanceAbsentForDrive = (drive) => {
@@ -644,16 +675,28 @@ export default function Company({ onLogout, onViewChange }) {
   }, [handleOfferDecisionUpdate]);
 
   const handleOfferDownload = useCallback(async () => {
-    if (!offerLetterUrl || isDownloadingOffer) return;
+    if (!offerLetterUrl || isDownloadingOffer || offerDownloadPopupState === 'progress') return;
+
+    let progressTimer;
 
     try {
       setIsDownloadingOffer(true);
+      setOfferDownloadPopupState('progress');
+      setOfferDownloadProgress(0);
+
+      progressTimer = setInterval(() => {
+        setOfferDownloadProgress((prev) => (prev >= 85 ? prev : prev + 10));
+      }, 140);
+
       const response = await fetch(offerLetterUrl);
       if (!response.ok) {
         throw new Error('Failed to download offer letter');
       }
 
       const blob = await response.blob();
+      clearInterval(progressTimer);
+      setOfferDownloadProgress(100);
+
       const blobUrl = URL.createObjectURL(blob);
       const suggestedName = String(studentOfferLetter?.offerLetterName || '').trim() || 'Offer-Letter.pdf';
       const link = document.createElement('a');
@@ -663,13 +706,33 @@ export default function Company({ onLogout, onViewChange }) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
+
+      setTimeout(() => {
+        setOfferDownloadPopupState('success');
+      }, 220);
     } catch (error) {
       console.error('Offer letter download failed:', error);
-      window.open(offerLetterUrl, '_blank', 'noopener,noreferrer');
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+      setOfferDownloadPopupState('none');
+      setOfferDownloadProgress(0);
+
+      const link = document.createElement('a');
+      link.href = offerLetterUrl;
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } finally {
       setIsDownloadingOffer(false);
     }
-  }, [offerLetterUrl, isDownloadingOffer, studentOfferLetter]);
+  }, [offerLetterUrl, isDownloadingOffer, studentOfferLetter, offerDownloadPopupState]);
+
+  const closeOfferDownloadSuccessPopup = useCallback(() => {
+    setOfferDownloadPopupState('none');
+    setOfferDownloadProgress(0);
+  }, []);
 
   const closeOfferResponsePopup = useCallback(() => {
     setOfferResponsePopup((prev) => ({ ...prev, isOpen: false }));
@@ -851,11 +914,11 @@ export default function Company({ onLogout, onViewChange }) {
               <button
                 className={styles.downloadOfferBtn}
                 onClick={handleOfferDownload}
-                disabled={!offerLetterUrl || isDownloadingOffer}
+                disabled={!offerLetterUrl || isDownloadingOffer || offerDownloadPopupState === 'progress'}
                 title={offerLetterUrl ? 'Download Offer Letter' : 'Offer letter unavailable'}
               >
                 <div className={styles.downloadOfferIconCircle}>⬇</div>
-                <span>{isDownloadingOffer ? 'Downloading...' : 'Download Offer Letter'}</span>
+                <span>Download Offer Letter</span>
               </button>
             </div>
           )}
@@ -985,6 +1048,30 @@ export default function Company({ onLogout, onViewChange }) {
       </div>
       {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
       {offerResponsePopupElement}
+      <DownloadProgressAlert
+        isOpen={offerDownloadPopupState === 'progress'}
+        progress={offerDownloadProgress}
+        fileLabel="offer letter"
+        title="Downloading..."
+        messages={{
+          initial: 'Preparing offer letter for download...',
+          mid: 'Finalizing download...',
+          final: 'Starting download...'
+        }}
+      />
+      <DownloadSuccessAlert
+        isOpen={offerDownloadPopupState === 'success'}
+        onClose={closeOfferDownloadSuccessPopup}
+        fileLabel="offer letter"
+        title="Downloaded !"
+        description={(
+          <>
+            The offer letter has been successfully
+            <br />
+            downloaded as PDF to your device.
+          </>
+        )}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import ProtectedRoute, { RoleGuard } from "./components/ProtectedRoute.jsx";
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import GlobalNotificationChecker from "./components/CertificateNotification/GlobalNotificationChecker.jsx";
 import GlobalPlacementBannerChecker from "./components/CertificateNotification/GlobalPlacementBannerChecker.jsx";
+import GlobalDriveScheduledChecker from "./components/CertificateNotification/GlobalDriveScheduledChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -223,6 +224,7 @@ function AppContent() {
         <>
           <GlobalNotificationChecker />
           <GlobalPlacementBannerChecker />
+          <GlobalDriveScheduledChecker />
         </>
       )}
 
