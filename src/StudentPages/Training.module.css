@@ -721,8 +721,8 @@
     }
 
     .chartContainer {
-        width: 140px;
-        height: 140px;
+        width: 160px;
+        height: 160px;
     }
 
     .presentCount,
@@ -801,8 +801,8 @@
     }
 
     .chartContainer {
-        width: 128px;
-        height: 128px;
+        width: 160px;
+        height: 160px;
     }
 
 }

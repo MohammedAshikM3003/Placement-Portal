@@ -255,7 +255,7 @@ const resolveStudentPhotoUrl = (value) => {
   return source;
 };
 
-const PlacementPage = ({ placedStudentsData }) => {
+const PlacementPage = ({ placedStudentsData, isMobile }) => {
   // Derive state from pre-fetched data (no separate API call needed)
   const { students, stats, isLoading } = useMemo(() => {
     if (!placedStudentsData) {
@@ -290,10 +290,10 @@ const PlacementPage = ({ placedStudentsData }) => {
     return { students: [], stats: { highestPackage: '0 LPA', averagePackage: '0 LPA' }, isLoading: false };
   }, [placedStudentsData]);
 
-  // Only duplicate students for scrolling if there are more than 4
-  // Otherwise show them as-is without animation
-  const scrollingStudents = students.length > 4 ? [...students, ...students] : students;
-  const shouldAnimate = students.length > 4;
+  // On mobile, animate when there is more than one card (one-card view layout).
+  // On desktop, keep existing threshold to avoid unnecessary movement for short lists.
+  const shouldAnimate = isMobile ? students.length > 1 : students.length > 4;
+  const scrollingStudents = shouldAnimate ? [...students, ...students] : students;
 
   return (
     <div className={styles['placement-container-wrapper']} id="about">
@@ -350,7 +350,7 @@ const PlacementPage = ({ placedStudentsData }) => {
   );
 };
 
-const PlacementSection = ({ companyDrivesData }) => {
+const PlacementSection = ({ companyDrivesData, isMobile }) => {
   // Derive formatted drives from pre-fetched data
   const { driveData, isLoading } = useMemo(() => {
     if (!companyDrivesData) {
@@ -394,6 +394,8 @@ const PlacementSection = ({ companyDrivesData }) => {
     return { driveData: formattedDrives, isLoading: false };
   }, [companyDrivesData]);
 
+  const shouldAnimateDrives = isMobile ? driveData.length > 1 : driveData.length > 5;
+
   return (
     <div className={styles['placement-section-container']}>
       <section className={styles['industries-section']}>
@@ -417,7 +419,7 @@ const PlacementSection = ({ companyDrivesData }) => {
           </div>
         ) : (
           <div className={styles['marquee-container']}>
-            <div className={`${styles['drive-cards-container']} ${driveData.length > 5 ? styles['animate-marquee'] : ''}`}>
+            <div className={`${styles['drive-cards-container']} ${shouldAnimateDrives ? styles['animate-marquee'] : ''}`}>
               {driveData.map((drive, index) => (
                 <div className={styles['drive-card']} key={`drive-${index}`}>
                   <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
@@ -426,8 +428,8 @@ const PlacementSection = ({ companyDrivesData }) => {
                   <p>Package : {drive.package}</p>
                 </div>
               ))}
-              {/* Duplicate drives only if there are more than 5 for smooth marquee effect */}
-              {driveData.length > 5 && driveData.map((drive, index) => (
+              {/* Duplicate cards only when marquee animation is enabled for smooth looping. */}
+              {shouldAnimateDrives && driveData.map((drive, index) => (
                 <div className={styles['drive-card']} key={`drive-duplicate-${index}`}>
                   <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
                   <h3>{drive.name}</h3>
@@ -573,6 +575,19 @@ const LandingPageContent = () => {
   const [placedStudentsData, setPlacedStudentsData] = useState(cached.placedStudents);
   const [companyDrivesData, setCompanyDrivesData] = useState(cached.companyDrives);
   const [imagesLoading, setImagesLoading] = useState(!hasCachedImages);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Change favicon to default (purple) for landing page
@@ -649,8 +664,8 @@ const LandingPageContent = () => {
       <Navbar />
       <main className={styles['main-content']}>
         <HeroSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
-        <PlacementPage placedStudentsData={placedStudentsData} />
-        <PlacementSection companyDrivesData={companyDrivesData} />
+        <PlacementPage placedStudentsData={placedStudentsData} isMobile={isMobile} />
+        <PlacementSection companyDrivesData={companyDrivesData} isMobile={isMobile} />
         <KSRSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
       </main>
     </div>

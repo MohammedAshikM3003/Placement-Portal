@@ -1791,6 +1791,8 @@ function Admainprofile() {
     };
 
     const handleSave = async () => {
+        if (isSaving || changedFields.length === 0) return false;
+
         try {
             setIsSaving(true);
             setSaveStatus(null);
@@ -2567,7 +2569,7 @@ function Admainprofile() {
                             type="button"
                             className={styles['Admin-main-profile-discard-btn']}
                             onClick={handleDiscard}
-                            disabled={isSaving}
+                            disabled={isSaving || changedFields.length === 0}
                         >
                             Discard
                         </button>
@@ -2575,7 +2577,7 @@ function Admainprofile() {
                             type="button"
                             className={styles['Admin-main-profile-save-btn']}
                             onClick={handleSave}
-                            disabled={isSaving}
+                            disabled={isSaving || changedFields.length === 0}
                         >
                             {isSaving ? 'Saving...' : 'Save'}
                         </button>

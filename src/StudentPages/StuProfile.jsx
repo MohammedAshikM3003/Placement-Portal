@@ -63,6 +63,52 @@ const parseMultiValue = (value) => {
     return [];
 };
 
+const normalizeTrainingCourseName = (value) => (value || '').toString().trim();
+
+const normalizeTrainingYearToken = (value = '') => {
+    const raw = value.toString().trim().toUpperCase();
+    if (!raw) return '';
+
+    const compact = raw.replace(/[^A-Z0-9]/g, '');
+    if (!compact) return '';
+
+    const yearAliases = {
+        '1': 'I', '01': 'I', '1ST': 'I', '1STYEAR': 'I', 'FIRST': 'I', 'FIRSTYEAR': 'I', 'I': 'I',
+        '2': 'II', '02': 'II', '2ND': 'II', '2NDYEAR': 'II', 'SECOND': 'II', 'SECONDYEAR': 'II', 'II': 'II',
+        '3': 'III', '03': 'III', '3RD': 'III', '3RDYEAR': 'III', 'THIRD': 'III', 'THIRDYEAR': 'III', 'III': 'III',
+        '4': 'IV', '04': 'IV', '4TH': 'IV', '4THYEAR': 'IV', 'FOURTH': 'IV', 'FOURTHYEAR': 'IV', 'IV': 'IV'
+    };
+
+    return yearAliases[compact] || compact;
+};
+
+const normalizeTrainingPhaseKey = (value) => {
+    const text = (value || '').toString().trim();
+    const match = text.match(/\d+/);
+    return match ? match[0] : text.toLowerCase();
+};
+
+const parseTrainingDurationToDays = (durationValue) => {
+    const raw = (durationValue || '').toString().trim().toLowerCase();
+    if (!raw) return 0;
+
+    const match = raw.match(/\d+/);
+    if (!match) return 0;
+
+    const parsed = Number.parseInt(match[0], 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getInclusiveDaysBetweenDates = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
+    return diffDays >= 0 ? diffDays + 1 : 0;
+};
+
 const normalizeProfilePicValue = (value) => {
     const raw = (value || '').toString().trim();
     if (!raw) return '';
@@ -707,6 +753,7 @@ function StuProfile({ onLogout, onViewChange }) {
     const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
     const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
     const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
+    const [studentTrainingPhaseMetaMap, setStudentTrainingPhaseMetaMap] = useState({});
     const companyAutoSaveTimerRef = useRef(null);
     const companyAutoSaveInFlightRef = useRef(false);
     const companyAutoSaveKeyRef = useRef('');
@@ -1068,24 +1115,80 @@ function StuProfile({ onLogout, onViewChange }) {
 
     const syncTrainingCardData = useCallback(async (student) => {
         const regNo = (student?.regNo || student?.registerNumber || student?.registerNo || '').toString().trim();
+        const activeYear = normalizeTrainingYearToken(student?.currentYear || student?.year || '');
 
         if (!regNo) {
             setStudentTrainingAssignment(null);
             setStudentTrainingAttendanceRecords([]);
+            setStudentTrainingPhaseMetaMap({});
             return;
         }
 
         try {
-            const [assignment, attendanceResponse] = await Promise.all([
+            const [assignment, attendanceResponse, schedulesResponse] = await Promise.all([
                 mongoDBService.getStudentTrainingAssignment(regNo),
-                mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] }))
+                mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] })),
+                mongoDBService.getScheduledTrainings().catch(() => [])
             ]);
 
             setStudentTrainingAssignment(assignment || null);
             setStudentTrainingAttendanceRecords(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
+
+            const allSchedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
+            const phaseEntries = [];
+
+            allSchedules.forEach((schedule) => {
+                const scheduleBatches = Array.isArray(schedule?.batches) ? schedule.batches : [];
+                const schedulePhases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+
+                const scheduleHasMatchingBatch = activeYear
+                    ? scheduleBatches.some((batch) => normalizeTrainingYearToken(batch?.applicableYear || '') === activeYear)
+                    : true;
+
+                const scheduleUpdatedAt = new Date(schedule?.updatedAt || schedule?.createdAt || 0).getTime() || 0;
+
+                schedulePhases.forEach((phase) => {
+                    const phaseNumber = (phase?.phaseNumber || '').toString().trim();
+                    if (!phaseNumber) return;
+
+                    const phaseYear = normalizeTrainingYearToken(phase?.applicableYear || '');
+                    const includePhase = !activeYear || phaseYear === activeYear || (!phaseYear && scheduleHasMatchingBatch);
+                    if (!includePhase) return;
+
+                    const phaseKey = normalizeTrainingPhaseKey(phaseNumber);
+                    const phaseCourses = Array.isArray(phase?.applicableCourses)
+                        ? phase.applicableCourses.map((course) => normalizeTrainingCourseName(course)).filter(Boolean)
+                        : [];
+
+                    const phaseStartRaw = (phase?.startDate || schedule?.startDate || '').toString().trim();
+                    const phaseEndRaw = (phase?.endDate || schedule?.endDate || '').toString().trim();
+                    const computedTotalDays = parseTrainingDurationToDays(phase?.duration) || getInclusiveDaysBetweenDates(phaseStartRaw, phaseEndRaw);
+
+                    phaseEntries.push({
+                        phaseKey,
+                        phaseNumber,
+                        courses: [...new Set(phaseCourses)],
+                        startDate: phaseStartRaw,
+                        endDate: phaseEndRaw,
+                        totalDays: computedTotalDays,
+                        updatedAt: scheduleUpdatedAt
+                    });
+                });
+            });
+
+            const phaseMapFromSchedules = phaseEntries.reduce((acc, entry) => {
+                const previous = acc[entry.phaseKey];
+                if (!previous || entry.updatedAt >= previous.updatedAt) {
+                    acc[entry.phaseKey] = entry;
+                }
+                return acc;
+            }, {});
+
+            setStudentTrainingPhaseMetaMap(phaseMapFromSchedules);
         } catch (error) {
             setStudentTrainingAssignment(null);
             setStudentTrainingAttendanceRecords([]);
+            setStudentTrainingPhaseMetaMap({});
         }
     }, []);
 
@@ -1531,46 +1634,99 @@ function StuProfile({ onLogout, onViewChange }) {
         );
     }, [eligibleDrives.length, studentApplications.length, studentAttendanceRecords.length]);
 
-    const trainingCardStats = useMemo(() => {
-        const presentCount = studentTrainingAttendanceRecords.filter(
-            (entry) => normalizeText(entry?.status) === 'present'
-        ).length;
-        const absentCount = studentTrainingAttendanceRecords.filter(
-            (entry) => normalizeText(entry?.status) === 'absent'
-        ).length;
-        const totalSessions = presentCount + absentCount;
-        const attendancePercentage = totalSessions > 0
-            ? Math.round((presentCount / totalSessions) * 100)
-            : 0;
+    const trainingCardEntries = useMemo(() => {
+        const records = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
+        const hasPhaseTaggedAttendance = records.some((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''));
 
-        const attendedCourse = studentTrainingAttendanceRecords
-            .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
-            .find(Boolean);
+        const phaseKeySet = new Set();
+        Object.keys(studentTrainingPhaseMetaMap || {}).forEach((phaseKey) => {
+            if (phaseKey) phaseKeySet.add(phaseKey);
+        });
 
-        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-        const preferredCourse = (selectedTrainings[0] || '').toString().trim();
-        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
-
-        let calculatedTotalDays = 0;
-        const assignmentStartDate = studentTrainingAssignment?.startDate;
-        const assignmentEndDate = studentTrainingAssignment?.endDate;
-        if (assignmentStartDate && assignmentEndDate) {
-            const start = new Date(assignmentStartDate);
-            const end = new Date(assignmentEndDate);
-            if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-                const dayMs = 24 * 60 * 60 * 1000;
-                const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
-                if (diffDays >= 0) calculatedTotalDays = diffDays + 1;
-            }
+        if (hasPhaseTaggedAttendance) {
+            records.forEach((entry) => {
+                const key = normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '');
+                if (key) phaseKeySet.add(key);
+            });
         }
 
-        const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : calculatedTotalDays;
+        const sortedPhaseKeys = [...phaseKeySet].sort((left, right) => {
+            const leftNumeric = Number.parseInt(left, 10);
+            const rightNumeric = Number.parseInt(right, 10);
+            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
+            return left.localeCompare(right);
+        });
 
-        return {
-            courseName: assignmentCourse || attendedCourse || preferredCourse || 'N/A',
-            attendancePercentage,
-            totalTrainingDays
-        };
+        if (sortedPhaseKeys.length === 0) {
+            const presentCount = records.filter((entry) => normalizeText(entry?.status) === 'present').length;
+            const absentCount = records.filter((entry) => normalizeText(entry?.status) === 'absent').length;
+            const totalSessions = presentCount + absentCount;
+            const attendancePercentage = totalSessions > 0
+                ? Math.round((presentCount / totalSessions) * 100)
+                : 0;
+
+            const attendedCourse = records
+                .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+                .find(Boolean);
+            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+            const preferredCourse = (selectedTrainings[0] || '').toString().trim();
+            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+            const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : fallbackDaysFromDates;
+
+            return [{
+                label: 'Training 1',
+                courseName: assignmentCourse || attendedCourse || preferredCourse || 'N/A',
+                attendancePercentage,
+                totalTrainingDays
+            }];
+        }
+
+        return sortedPhaseKeys.map((phaseKey, index) => {
+            const phaseMeta = studentTrainingPhaseMetaMap?.[phaseKey] || {};
+            const scopedRecords = hasPhaseTaggedAttendance
+                ? records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey)
+                : (index === 0 ? records : []);
+
+            const presentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'present').length;
+            const absentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'absent').length;
+            const totalSessions = presentCount + absentCount;
+            const attendancePercentage = totalSessions > 0
+                ? Math.round((presentCount / totalSessions) * 100)
+                : 0;
+
+            const attendedCourse = scopedRecords
+                .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+                .find(Boolean);
+            const phaseCourse = Array.isArray(phaseMeta?.courses)
+                ? phaseMeta.courses.find((course) => normalizeTrainingCourseName(course))
+                : '';
+            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+            const preferredCourse = (selectedTrainings[index] || selectedTrainings[0] || '').toString().trim();
+
+            const distinctAttendanceDays = new Set(
+                scopedRecords
+                    .map((entry) => (entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '').toString().trim())
+                    .filter(Boolean)
+            ).size;
+
+            const phaseTotalDays = Number(phaseMeta?.totalDays || 0);
+            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(phaseMeta?.startDate, phaseMeta?.endDate);
+            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+            const totalTrainingDays = phaseTotalDays > 0
+                ? phaseTotalDays
+                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : 0);
+
+            const phaseNumberLabel = (phaseMeta?.phaseNumber || '').toString().trim();
+            const labelSuffix = phaseNumberLabel || (Number.parseInt(phaseKey, 10) || (index + 1));
+
+            return {
+                label: `Training ${labelSuffix}`,
+                courseName: attendedCourse || phaseCourse || assignmentCourse || preferredCourse || 'N/A',
+                attendancePercentage,
+                totalTrainingDays
+            };
+        });
     }, [
         normalizeText,
         selectedTrainings,
@@ -1578,7 +1734,8 @@ function StuProfile({ onLogout, onViewChange }) {
         studentTrainingAssignment?.endDate,
         studentTrainingAssignment?.startDate,
         studentTrainingAssignment?.totalDays,
-        studentTrainingAttendanceRecords
+        studentTrainingAttendanceRecords,
+        studentTrainingPhaseMetaMap
     ]);
 
     const hasTrainingData = useMemo(() => {
@@ -1590,13 +1747,16 @@ function StuProfile({ onLogout, onViewChange }) {
             Number(studentTrainingAssignment?.totalDays || 0) > 0
         );
 
-        return hasAttendance || hasAssignment;
+        const hasPhases = Object.keys(studentTrainingPhaseMetaMap || {}).length > 0;
+
+        return hasAttendance || hasAssignment || hasPhases;
     }, [
         studentTrainingAssignment?.courseName,
         studentTrainingAssignment?.endDate,
         studentTrainingAssignment?.startDate,
         studentTrainingAssignment?.totalDays,
-        studentTrainingAttendanceRecords.length
+        studentTrainingAttendanceRecords.length,
+        studentTrainingPhaseMetaMap
     ]);
 
     const PIE_DATA = driveAnalytics.pieData;
@@ -1968,6 +2128,9 @@ function StuProfile({ onLogout, onViewChange }) {
 
     const handleSave = async (e) => {
         e.preventDefault();
+
+        // Skip submit when nothing changed (e.g., Enter key submit on unchanged form)
+        if (isSaving || getChangedFields().length === 0) return;
         
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
@@ -2295,6 +2458,9 @@ function StuProfile({ onLogout, onViewChange }) {
         }
     };
 
+    const actionableChangedFields = getChangedFields();
+    const hasActionableChanges = actionableChangedFields.length > 0;
+
     if (isInitialLoading) {
         return (
             <div className={styles.container}>
@@ -2384,7 +2550,7 @@ function StuProfile({ onLogout, onViewChange }) {
                     }
                 }}
                 isSaving={isSaving}
-                changedFields={changedFieldsList.length > 0 ? changedFieldsList : getChangedFields()}
+                changedFields={changedFieldsList.length > 0 ? changedFieldsList : actionableChangedFields}
             />
 
             <div className={styles.main}>
@@ -2690,7 +2856,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Blood Group</label>
-                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving} />
+                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} readOnly className={styles.readOnlyInput} />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Aadhaar Number <RequiredStar /></label>
@@ -2890,20 +3056,26 @@ function StuProfile({ onLogout, onViewChange }) {
                         {hasTrainingData && (
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Training</h3>
-                            <div className={styles.companyStatsGrid}>
-                                <div className={styles.companyStatCardEmpty}>
-                                    <span className={styles.companyStatLabel}>Training 1</span>
-                                    <span className={styles.companyStatValueEmpty}>{trainingCardStats.courseName}</span>
+                            {trainingCardEntries.map((trainingCard, index) => (
+                                <div
+                                    key={`${trainingCard.label}-${index}`}
+                                    className={styles.companyStatsGrid}
+                                    style={{ marginBottom: index === trainingCardEntries.length - 1 ? '0' : '1rem' }}
+                                >
+                                    <div className={styles.companyStatCardEmpty}>
+                                        <span className={styles.companyStatLabel}>{trainingCard.label}</span>
+                                        <span className={styles.companyStatValueEmpty}>{trainingCard.courseName}</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                        <span className={styles.companyStatValue}>{trainingCard.attendancePercentage}%</span>
+                                    </div>
+                                    <div className={styles.companyStatCard}>
+                                        <span className={styles.companyStatLabel}>Total Training Days</span>
+                                        <span className={styles.companyStatValue}>{trainingCard.totalTrainingDays}</span>
+                                    </div>
                                 </div>
-                                <div className={styles.companyStatCard}>
-                                    <span className={styles.companyStatLabel}>Attendance Percentage</span>
-                                    <span className={styles.companyStatValue}>{trainingCardStats.attendancePercentage}%</span>
-                                </div>
-                                <div className={styles.companyStatCard}>
-                                    <span className={styles.companyStatLabel}>Total Training Days</span>
-                                    <span className={styles.companyStatValue}>{trainingCardStats.totalTrainingDays}</span>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                         )}
 
@@ -2931,11 +3103,11 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
                                         </div>
                                         <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>#Last Drive Attended</span>
+                                            <span className={styles.companyStatLabel}>Last Drive Attended</span>
                                             <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
                                         </div>
                                         <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>#Last Drive Result</span>
+                                            <span className={styles.companyStatLabel}>Last Drive Result</span>
                                             <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
                                         </div>
                                     </div>
@@ -3562,8 +3734,8 @@ function StuProfile({ onLogout, onViewChange }) {
                         </div>
                         
                         <div className={styles.actionButtons}>
-                            <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving}>Discard</button>
-                            <button type="submit" className={styles.saveBtn} disabled={isSaving}>
+                            <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving || !hasActionableChanges}>Discard</button>
+                            <button type="submit" className={styles.saveBtn} disabled={isSaving || !hasActionableChanges}>
                                 {isSaving ? (
                                     <>
                                         <div className={styles.loadingSpinner}></div>

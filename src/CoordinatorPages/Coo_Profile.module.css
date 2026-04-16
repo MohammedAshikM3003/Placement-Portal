@@ -912,7 +912,7 @@
     color: #666;
 }
 
-.co-profile-discard-btn:hover {
+.co-profile-discard-btn:not(:disabled):hover {
     background-color: #d4d4d4;
 }
 
@@ -921,13 +921,13 @@
     color: white;
 }
 
-.co-profile-save-btn:hover {
+.co-profile-save-btn:not(:disabled):hover {
     background-color: #a72e33;
 }
 
 .co-profile-discard-btn:disabled,
 .co-profile-save-btn:disabled {
-    opacity: 0.7;
+    opacity: 1;
     cursor: not-allowed;
 }
 

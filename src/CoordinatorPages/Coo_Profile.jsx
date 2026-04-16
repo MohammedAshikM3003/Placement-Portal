@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import DatePicker from 'react-datepicker';
@@ -765,6 +765,18 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         setHasUnsavedChanges(changed.length > 0);
     }, [formData, profilePhoto, originalFormData, originalPhotoValue, getChangedFields, getPhotoCompareValue]);
 
+    const actionableChangedFields = useMemo(() => {
+        if (!originalFormData) return [];
+        return getChangedFields(
+            originalFormData,
+            formData,
+            originalPhotoValue,
+            getPhotoCompareValue(profilePhoto || '')
+        );
+    }, [originalFormData, formData, originalPhotoValue, profilePhoto, getChangedFields, getPhotoCompareValue]);
+
+    const hasActionableChanges = actionableChangedFields.length > 0;
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -930,6 +942,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
     };
 
     const handleSave = async () => {
+        if (isSaving || !hasActionableChanges) return false;
+
         try {
             setIsSaving(true);
             setSaveStatus(null);
@@ -1225,10 +1239,10 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     </div>
 
                     <div className={styles['co-profile-action-buttons']}>
-                        <button type="button" className={styles['co-profile-discard-btn']} onClick={handleDiscard} disabled={isSaving}>
+                        <button type="button" className={styles['co-profile-discard-btn']} onClick={handleDiscard} disabled={isSaving || !hasActionableChanges}>
                             Discard
                         </button>
-                        <button type="button" className={styles['co-profile-save-btn']} onClick={handleSave} disabled={isSaving}>
+                        <button type="button" className={styles['co-profile-save-btn']} onClick={handleSave} disabled={isSaving || !hasActionableChanges}>
                             {isSaving ? 'Saving...' : 'Save'}
                         </button>
                     </div>

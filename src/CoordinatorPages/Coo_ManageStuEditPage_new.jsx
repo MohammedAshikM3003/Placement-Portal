@@ -100,6 +100,52 @@ const normalizeDate = (value) => {
     return `${year}-${month}-${day}`;
 };
 
+const normalizeTrainingCourseName = (value) => (value || '').toString().trim();
+
+const normalizeTrainingYearToken = (value = '') => {
+    const raw = value.toString().trim().toUpperCase();
+    if (!raw) return '';
+
+    const compact = raw.replace(/[^A-Z0-9]/g, '');
+    if (!compact) return '';
+
+    const yearAliases = {
+        '1': 'I', '01': 'I', '1ST': 'I', '1STYEAR': 'I', 'FIRST': 'I', 'FIRSTYEAR': 'I', 'I': 'I',
+        '2': 'II', '02': 'II', '2ND': 'II', '2NDYEAR': 'II', 'SECOND': 'II', 'SECONDYEAR': 'II', 'II': 'II',
+        '3': 'III', '03': 'III', '3RD': 'III', '3RDYEAR': 'III', 'THIRD': 'III', 'THIRDYEAR': 'III', 'III': 'III',
+        '4': 'IV', '04': 'IV', '4TH': 'IV', '4THYEAR': 'IV', 'FOURTH': 'IV', 'FOURTHYEAR': 'IV', 'IV': 'IV'
+    };
+
+    return yearAliases[compact] || compact;
+};
+
+const normalizeTrainingPhaseKey = (value) => {
+    const text = (value || '').toString().trim();
+    const match = text.match(/\d+/);
+    return match ? match[0] : text.toLowerCase();
+};
+
+const parseTrainingDurationToDays = (durationValue) => {
+    const raw = (durationValue || '').toString().trim().toLowerCase();
+    if (!raw) return 0;
+
+    const match = raw.match(/\d+/);
+    if (!match) return 0;
+
+    const parsed = Number.parseInt(match[0], 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getInclusiveDaysBetweenDates = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
+    return diffDays >= 0 ? diffDays + 1 : 0;
+};
+
 const normalizeProfilePicValue = (value) => {
     const raw = (value || '').toString().trim();
     if (!raw) return '';
@@ -771,6 +817,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
+    const [degrees, setDegrees] = useState([]);
+    const [selectedDegree, setSelectedDegree] = useState('');
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
@@ -787,6 +837,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [studentAttendanceRecords, setStudentAttendanceRecords] = useState([]);
     const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
     const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
+    const [studentTrainingPhaseMetaMap, setStudentTrainingPhaseMetaMap] = useState({});
     const savedDataRef = useRef(null);
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -1017,6 +1068,74 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         () => selectedJobLocations.join(', '),
         [selectedJobLocations]
     );
+
+    useEffect(() => {
+        const fetchDegreeAndBranchData = async () => {
+            try {
+                const [degreeList, branchList] = await Promise.all([
+                    mongoDBService.getDegrees(),
+                    mongoDBService.getBranches(),
+                ]);
+
+                const sanitizedDegrees = Array.isArray(degreeList)
+                    ? degreeList.map((degree) => ({
+                        ...degree,
+                        degreeAbbreviation: degree.degreeAbbreviation || degree.abbreviation || degree.shortName || '',
+                        degreeFullName: degree.degreeFullName || degree.fullName || degree.name || '',
+                    }))
+                    : [];
+
+                setDegrees(sanitizedDegrees);
+                setBranches(Array.isArray(branchList) ? branchList : []);
+            } catch (error) {
+                console.error('Failed to fetch degree/branch data:', error);
+                setDegrees([]);
+                setBranches([]);
+            }
+        };
+
+        fetchDegreeAndBranchData();
+    }, []);
+
+    useEffect(() => {
+        if (studentData?.degree) setSelectedDegree(studentData.degree);
+        if (studentData?.branch) setSelectedBranch(studentData.branch);
+    }, [studentData?.degree, studentData?.branch]);
+
+    const filteredBranches = useMemo(() => {
+        if (!selectedDegree) return [];
+        const normalized = selectedDegree.toLowerCase();
+        return branches.filter((branch) => {
+            const degree = branch?.degree?.toLowerCase?.() || '';
+            const abbreviation = branch?.degreeAbbreviation?.toLowerCase?.() || '';
+            return degree === normalized || abbreviation === normalized || degree.includes(normalized);
+        });
+    }, [branches, selectedDegree]);
+
+    const getBranchOptionValue = useCallback((branch) => {
+        if (!branch) return '';
+        return branch.branchAbbreviation || branch.branchFullName || branch.branchName || branch.branch;
+    }, []);
+
+    const toggleCompanyType = useCallback((option) => {
+        setStudentData((prev) => {
+            const current = parseMultiValue(prev?.companyTypes);
+            const updated = current.includes(option)
+                ? current.filter((item) => item !== option)
+                : [...current, option];
+            return { ...prev, companyTypes: updated.join(', ') };
+        });
+    }, []);
+
+    const toggleJobLocation = useCallback((option) => {
+        setStudentData((prev) => {
+            const current = parseMultiValue(prev?.preferredJobLocation);
+            const updated = current.includes(option)
+                ? current.filter((item) => item !== option)
+                : [...current, option];
+            return { ...prev, preferredJobLocation: updated.join(', ') };
+        });
+    }, []);
 
     const findApplicationForDrive = useCallback((drive) => {
         const driveId = (drive?.driveId || drive?._id || '').toString();
@@ -1269,29 +1388,85 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
         const loadTrainingCardData = async () => {
             const regNo = (studentData?.regNo || studentData?.registerNumber || studentData?.registerNo || '').toString().trim();
+            const activeYear = normalizeTrainingYearToken(studentData?.currentYear || studentData?.year || '');
 
             if (!regNo) {
                 if (isActive) {
                     setStudentTrainingAssignment(null);
                     setStudentTrainingAttendanceRecords([]);
+                    setStudentTrainingPhaseMetaMap({});
                 }
                 return;
             }
 
             try {
-                const [assignment, attendanceResponse] = await Promise.all([
+                const [assignment, attendanceResponse, schedulesResponse] = await Promise.all([
                     mongoDBService.getStudentTrainingAssignment(regNo),
-                    mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] }))
+                    mongoDBService.getStudentTrainingAttendanceByRegNo(regNo).catch(() => ({ data: [] })),
+                    mongoDBService.getScheduledTrainings().catch(() => [])
                 ]);
 
                 if (!isActive) return;
 
                 setStudentTrainingAssignment(assignment || null);
                 setStudentTrainingAttendanceRecords(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
+
+                const allSchedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
+                const phaseEntries = [];
+
+                allSchedules.forEach((schedule) => {
+                    const scheduleBatches = Array.isArray(schedule?.batches) ? schedule.batches : [];
+                    const schedulePhases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+
+                    const scheduleHasMatchingBatch = activeYear
+                        ? scheduleBatches.some((batch) => normalizeTrainingYearToken(batch?.applicableYear || '') === activeYear)
+                        : true;
+
+                    const scheduleUpdatedAt = new Date(schedule?.updatedAt || schedule?.createdAt || 0).getTime() || 0;
+
+                    schedulePhases.forEach((phase) => {
+                        const phaseNumber = (phase?.phaseNumber || '').toString().trim();
+                        if (!phaseNumber) return;
+
+                        const phaseYear = normalizeTrainingYearToken(phase?.applicableYear || '');
+                        const includePhase = !activeYear || phaseYear === activeYear || (!phaseYear && scheduleHasMatchingBatch);
+                        if (!includePhase) return;
+
+                        const phaseKey = normalizeTrainingPhaseKey(phaseNumber);
+                        const phaseCourses = Array.isArray(phase?.applicableCourses)
+                            ? phase.applicableCourses.map((course) => normalizeTrainingCourseName(course)).filter(Boolean)
+                            : [];
+
+                        const phaseStartRaw = (phase?.startDate || schedule?.startDate || '').toString().trim();
+                        const phaseEndRaw = (phase?.endDate || schedule?.endDate || '').toString().trim();
+                        const computedTotalDays = parseTrainingDurationToDays(phase?.duration) || getInclusiveDaysBetweenDates(phaseStartRaw, phaseEndRaw);
+
+                        phaseEntries.push({
+                            phaseKey,
+                            phaseNumber,
+                            courses: [...new Set(phaseCourses)],
+                            startDate: phaseStartRaw,
+                            endDate: phaseEndRaw,
+                            totalDays: computedTotalDays,
+                            updatedAt: scheduleUpdatedAt
+                        });
+                    });
+                });
+
+                const phaseMapFromSchedules = phaseEntries.reduce((acc, entry) => {
+                    const previous = acc[entry.phaseKey];
+                    if (!previous || entry.updatedAt >= previous.updatedAt) {
+                        acc[entry.phaseKey] = entry;
+                    }
+                    return acc;
+                }, {});
+
+                setStudentTrainingPhaseMetaMap(phaseMapFromSchedules);
             } catch (error) {
                 if (!isActive) return;
                 setStudentTrainingAssignment(null);
                 setStudentTrainingAttendanceRecords([]);
+                setStudentTrainingPhaseMetaMap({});
             }
         };
 
@@ -1302,53 +1477,97 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         };
     }, [studentData?.regNo, studentData?.registerNo, studentData?.registerNumber]);
 
-    const trainingCardStats = useMemo(() => {
-        const presentCount = studentTrainingAttendanceRecords.filter(
-            (entry) => normalizeText(entry?.status) === 'present'
-        ).length;
-        const absentCount = studentTrainingAttendanceRecords.filter(
-            (entry) => normalizeText(entry?.status) === 'absent'
-        ).length;
-        const totalSessions = presentCount + absentCount;
-        const attendancePercentage = totalSessions > 0
-            ? Math.round((presentCount / totalSessions) * 100)
-            : 0;
+    const trainingCardEntries = useMemo(() => {
+        const records = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
+        const hasPhaseTaggedAttendance = records.some((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''));
 
-        const attendedCourse = studentTrainingAttendanceRecords
-            .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
-            .find(Boolean);
+        const phaseKeySet = new Set();
+        Object.keys(studentTrainingPhaseMetaMap || {}).forEach((phaseKey) => {
+            if (phaseKey) phaseKeySet.add(phaseKey);
+        });
 
-        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
-
-        let calculatedTotalDays = 0;
-        const assignmentStartDate = studentTrainingAssignment?.startDate;
-        const assignmentEndDate = studentTrainingAssignment?.endDate;
-        if (assignmentStartDate && assignmentEndDate) {
-            const start = new Date(assignmentStartDate);
-            const end = new Date(assignmentEndDate);
-            if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-                const dayMs = 24 * 60 * 60 * 1000;
-                const diffDays = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / dayMs);
-                if (diffDays >= 0) calculatedTotalDays = diffDays + 1;
-            }
+        if (hasPhaseTaggedAttendance) {
+            records.forEach((entry) => {
+                const key = normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '');
+                if (key) phaseKeySet.add(key);
+            });
         }
 
-        const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : calculatedTotalDays;
+        const sortedPhaseKeys = [...phaseKeySet].sort((left, right) => {
+            const leftNumeric = Number.parseInt(left, 10);
+            const rightNumeric = Number.parseInt(right, 10);
+            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
+            return left.localeCompare(right);
+        });
 
-        return {
-            courseName: assignmentCourse || attendedCourse || 'N/A',
-            attendancePercentage,
-            totalTrainingDays
-        };
-    }, [
-        normalizeText,
-        studentTrainingAssignment?.courseName,
-        studentTrainingAssignment?.endDate,
-        studentTrainingAssignment?.startDate,
-        studentTrainingAssignment?.totalDays,
-        studentTrainingAttendanceRecords
-    ]);
+        if (sortedPhaseKeys.length === 0) {
+            const presentCount = records.filter((entry) => normalizeText(entry?.status) === 'present').length;
+            const absentCount = records.filter((entry) => normalizeText(entry?.status) === 'absent').length;
+            const totalSessions = presentCount + absentCount;
+            const attendancePercentage = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
+
+            const attendedCourse = records
+                .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+                .find(Boolean);
+            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+
+            return [{
+                label: 'Training 1',
+                courseName: assignmentCourse || attendedCourse || 'N/A',
+                attendancePercentage,
+                totalTrainingDays: assignmentTotalDays > 0 ? assignmentTotalDays : fallbackDaysFromDates
+            }];
+        }
+
+        return sortedPhaseKeys.map((phaseKey, index) => {
+            const phaseMeta = studentTrainingPhaseMetaMap?.[phaseKey] || {};
+            const scopedRecords = hasPhaseTaggedAttendance
+                ? records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey)
+                : (index === 0 ? records : []);
+
+            const presentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'present').length;
+            const absentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'absent').length;
+            const totalSessions = presentCount + absentCount;
+            const attendancePercentage = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
+
+            const attendedCourse = scopedRecords
+                .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
+                .find(Boolean);
+            const phaseCourse = Array.isArray(phaseMeta?.courses) ? phaseMeta.courses.find((course) => normalizeTrainingCourseName(course)) : '';
+            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+
+            const distinctAttendanceDays = new Set(
+                scopedRecords
+                    .map((entry) => (entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '').toString().trim())
+                    .filter(Boolean)
+            ).size;
+
+            const phaseTotalDays = Number(phaseMeta?.totalDays || 0);
+            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(phaseMeta?.startDate, phaseMeta?.endDate);
+            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+            const totalTrainingDays = phaseTotalDays > 0
+                ? phaseTotalDays
+                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : 0);
+
+            const phaseNumberLabel = (phaseMeta?.phaseNumber || '').toString().trim();
+            const labelSuffix = phaseNumberLabel || (Number.parseInt(phaseKey, 10) || (index + 1));
+
+            return {
+                label: `Training ${labelSuffix}`,
+                courseName: attendedCourse || phaseCourse || assignmentCourse || 'N/A',
+                attendancePercentage,
+                totalTrainingDays
+            };
+        });
+    }, [studentTrainingAttendanceRecords, studentTrainingPhaseMetaMap, studentTrainingAssignment?.courseName, studentTrainingAssignment?.totalDays, studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate]);
+
+    const hasTrainingData = useMemo(() => (
+        Boolean(studentTrainingAssignment) ||
+        studentTrainingAttendanceRecords.length > 0 ||
+        Object.keys(studentTrainingPhaseMetaMap || {}).length > 0
+    ), [studentTrainingAssignment, studentTrainingAttendanceRecords.length, studentTrainingPhaseMetaMap]);
 
     useEffect(() => {
         if (!selectedRound) return;
@@ -1884,6 +2103,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        if (isSaving || getChangedFields().length === 0) return;
 
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
@@ -2205,6 +2425,9 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         }
     };
 
+    const actionableChangedFields = getChangedFields();
+    const hasActionableChanges = actionableChangedFields.length > 0;
+
     return (
         <div className={`${styles.container} ${isSaving ? styles['stu-profile-saving'] : ''}`}>
             {isSaving && <div className={styles['stu-profile-saving-overlay']} />}
@@ -2269,7 +2492,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     }
                 }}
                 isSaving={isSaving}
-                changedFields={changedFieldsList.length > 0 ? changedFieldsList : getChangedFields()}
+                changedFields={changedFieldsList.length > 0 ? changedFieldsList : actionableChangedFields}
             />
 
             <div className={styles.main}>
@@ -2289,15 +2512,15 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                 <div className={styles.personalInfoFields}>
                                     <div className={styles.field}>
                                         <label>First Name <RequiredStar /></label>
-                                        <input type="text" name="firstName" placeholder="Enter First Name" value={studentData?.firstName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="firstName" placeholder="Enter First Name" value={studentData?.firstName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, firstName: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Last Name <RequiredStar /></label>
-                                        <input type="text" name="lastName" placeholder="Enter Last Name" value={studentData?.lastName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="lastName" placeholder="Enter Last Name" value={studentData?.lastName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, lastName: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Register Number <RequiredStar /></label>
-                                        <input type="text" name="regNo" placeholder="Enter Register Number" value={studentData?.regNo || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="regNo" placeholder="Enter Register Number" value={studentData?.regNo || ''} onChange={(e) => setStudentData(prev => ({ ...prev, regNo: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Batch <RequiredStar /></label>
@@ -2306,8 +2529,13 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 type="text"
                                                 value={studentData?.batch ? (studentData.batch.split('-')[0] || '') : ''}
                                                 placeholder="Start"
-                                                readOnly
-                                                className={styles.readOnlyInput}
+                                                onChange={(e) => {
+                                                    const startPart = e.target.value.replace(/\D/g, '').slice(0, 4);
+                                                    const endPart = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+                                                    const nextBatch = [startPart, endPart].filter(Boolean).join('-');
+                                                    setStudentData(prev => ({ ...prev, batch: nextBatch }));
+                                                }}
+                                                disabled={isSaving || isViewMode}
                                                 style={{ flex: 1 }}
                                             />
                                             <span style={{ fontWeight: '600', color: '#333' }}>-</span>
@@ -2315,8 +2543,13 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 type="text"
                                                 value={studentData?.batch ? (studentData.batch.split('-')[1] || '') : ''}
                                                 placeholder="End"
-                                                readOnly
-                                                className={styles.readOnlyInput}
+                                                onChange={(e) => {
+                                                    const endPart = e.target.value.replace(/\D/g, '').slice(0, 4);
+                                                    const startPart = studentData?.batch ? (studentData.batch.split('-')[0] || '') : '';
+                                                    const nextBatch = [startPart, endPart].filter(Boolean).join('-');
+                                                    setStudentData(prev => ({ ...prev, batch: nextBatch }));
+                                                }}
+                                                disabled={isSaving || isViewMode}
                                                 style={{ flex: 1 }}
                                             />
                                         </div>
@@ -2327,34 +2560,75 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         <div className={styles.datepickerWrapper}>
                                             <DatePicker
                                                 selected={dob}
-                                                onChange={() => {}}
+                                                onChange={(date) => {
+                                                    setDob(date);
+                                                    const formattedDob = date
+                                                        ? `${String(date.getDate()).padStart(2, '0')}${String(date.getMonth() + 1).padStart(2, '0')}${date.getFullYear()}`
+                                                        : '';
+                                                    setStudentData(prev => ({ ...prev, dob: formattedDob }));
+                                                }}
                                                 dateFormat="dd-MM-yyyy"
                                                 placeholderText="Enter DOB"
-                                                className={`${styles.datepickerInput} ${styles.readOnlyInput}`}
+                                                className={styles.datepickerInput}
                                                 wrapperClassName="StuProfile-datepicker-wrapper-inner"
                                                 showPopperArrow={false}
-                                                readOnly
-                                                disabled
+                                                disabled={isSaving || isViewMode}
                                             />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>Degree</option>
-                                            <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
+                                        <select
+                                            name="degree"
+                                            value={selectedDegree}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setSelectedDegree(value);
+                                                setSelectedBranch('');
+                                                setStudentData(prev => ({ ...prev, degree: value, branch: '' }));
+                                            }}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>Select Degree</option>
+                                            {degrees.map((degree) => {
+                                                const value = degree.degreeAbbreviation || degree.degreeFullName;
+                                                const label = degree.degreeFullName
+                                                    ? degree.degreeAbbreviation
+                                                        ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                        : degree.degreeFullName
+                                                    : value;
+                                                return (
+                                                    <option key={degree.id || degree._id || value} value={value}>{label}</option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Branch <RequiredStar /></label>
                                         <select
                                             name="branch"
-                                            value={studentData?.branch || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
+                                            value={selectedBranch}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setSelectedBranch(value);
+                                                setStudentData(prev => ({ ...prev, branch: value }));
+                                            }}
+                                            disabled={isSaving || isViewMode || !selectedDegree}
                                         >
-                                            <option value="" disabled>Branch</option>
-                                            <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
+                                            <option value="" disabled>
+                                                {selectedDegree ? 'Select Branch' : 'Select Degree First'}
+                                            </option>
+                                            {filteredBranches.map((branch) => {
+                                                const value = getBranchOptionValue(branch);
+                                                const label = branch.branchFullName
+                                                    ? branch.branchAbbreviation
+                                                        ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                        : branch.branchFullName
+                                                    : value;
+                                                return (
+                                                    <option key={branch.id || branch._id || value} value={value}>{label}</option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
                                     <div className={styles.field}>
@@ -2391,7 +2665,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
                                             }}
                                             required
-                                            disabled={!currentYear || isSaving}
+                                            disabled={!currentYear || isSaving || isViewMode}
                                         >
                                             <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
                                             {getAvailableSemesters(currentYear).map((sem) => (
@@ -2403,27 +2677,27 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Section <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="section"
-                                                value={selectedSection}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>
-                                                    Section *
-                                                </option>
-                                                <option value="A">A</option>
-                                                <option value="B">B</option>
-                                                <option value="C">C</option>
-                                                <option value="D">D</option>
-                                            </select>
-                                            <input type="hidden" name="section" value={selectedSection || ''} />
-                                        </>
+                                        <select
+                                            name="section"
+                                            value={selectedSection}
+                                            onChange={(e) => {
+                                                setSelectedSection(e.target.value);
+                                                setStudentData((prev) => ({ ...(prev || {}), section: e.target.value }));
+                                            }}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>
+                                                Section *
+                                            </option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Gender <RequiredStar /></label>
-                                        <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
+                                        <select name="gender" value={studentData?.gender || ''} onChange={(e) => setStudentData(prev => ({ ...prev, gender: e.target.value }))} disabled={isSaving || isViewMode}>
                                             <option value="" disabled>Gender</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
@@ -2443,7 +2717,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Domain Email <RequiredStar /></label>
-                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" value={studentData?.domainEmail || ''} onChange={(e) => setStudentData(prev => ({ ...prev, domainEmail: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mobile No. <RequiredStar /></label>
@@ -2454,7 +2728,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Name <RequiredStar /></label>
-                                        <input type="text" name="fatherName" placeholder="Enter Father Name" value={studentData?.fatherName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="fatherName" placeholder="Enter Father Name" value={studentData?.fatherName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, fatherName: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Father Occupation</label>
@@ -2469,7 +2743,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Name <RequiredStar /></label>
-                                        <input type="text" name="motherName" placeholder="Enter Mother Name" value={studentData?.motherName || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="motherName" placeholder="Enter Mother Name" value={studentData?.motherName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, motherName: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mother Occupation</label>
@@ -2564,7 +2838,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Community <RequiredStar /></label>
-                                        <select name="community" value={studentData?.community || ''} disabled className={styles.readOnlyInput}>
+                                        <select name="community" value={studentData?.community || ''} onChange={(e) => setStudentData(prev => ({ ...prev, community: e.target.value }))} disabled={isSaving || isViewMode}>
                                             <option value="" disabled>
                                                 Community
                                             </option>
@@ -2579,7 +2853,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Medium of Study <RequiredStar /></label>
-                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} disabled className={styles.readOnlyInput}>
+                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} onChange={(e) => setStudentData(prev => ({ ...prev, mediumOfStudy: e.target.value }))} disabled={isSaving || isViewMode}>
                                             <option value="" disabled>
                                                 Medium
                                             </option>
@@ -2594,7 +2868,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Aadhaar Number <RequiredStar /></label>
-                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Portfolio Link</label>
@@ -2609,20 +2883,20 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                           <h3 className={styles.sectionHeader}>Academic Background</h3>
                             <div className={styles.formGrid}>
                                 <div className={styles.studyCategory} style={{ gridColumn: '1 / -1' }}>
-                                    <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} disabled />
+                                    <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} onChange={(e) => { setStudyCategory(e.target.value); setStudentData(prev => ({ ...prev, studyCategory: e.target.value })); }} disabled={isSaving || isViewMode} />
                                     <label htmlFor="12th">12th</label>
-                                    <input type="radio" id="diploma" name="study_category" value="diploma" checked={studyCategory === 'diploma'} disabled />
+                                    <input type="radio" id="diploma" name="study_category" value="diploma" checked={studyCategory === 'diploma'} onChange={(e) => { setStudyCategory(e.target.value); setStudentData(prev => ({ ...prev, studyCategory: e.target.value })); }} disabled={isSaving || isViewMode} />
                                     <label htmlFor="diploma">Diploma</label>
-                                    <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} disabled />
+                                    <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} onChange={(e) => { setStudyCategory(e.target.value); setStudentData(prev => ({ ...prev, studyCategory: e.target.value })); }} disabled={isSaving || isViewMode} />
                                     <label htmlFor="both">Both</label>
                                 </div>
                                     <div className={styles.field}>
                                         <label>10th Institution Name <RequiredStar /></label>
-                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Board / University <RequiredStar /></label>
-                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
+                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthBoard: e.target.value }))} disabled={isSaving || isViewMode}>
                                             <option value="" disabled>10th Board/University</option>
                                             <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
                                             <option value="CBSE">CBSE</option>
@@ -2632,21 +2906,21 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
-                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Year of Passing <RequiredStar /></label>
-                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
+                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthYear: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
                                     {(studyCategory === '12th' || studyCategory === 'both') && (
                                         <>
                                             <div className={styles.field}>
                                                 <label>12th Institution Name <RequiredStar /></label>
-                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Board / University <RequiredStar /></label>
-                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}>
+                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthBoard: e.target.value }))} disabled={isSaving || isViewMode}>
                                                     <option value="" disabled>12th Board/University</option>
                                                     <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
                                                     <option value="CBSE">CBSE</option>
@@ -2656,15 +2930,15 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
-                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthYear: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                         </>
                                     )}
@@ -2672,19 +2946,19 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         <>
                                             <div className={styles.field}>
                                                 <label>Diploma Institution <RequiredStar /></label>
-                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Branch <RequiredStar /></label>
-                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaBranch: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Percentage <RequiredStar /></label>
-                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput} />
+                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaYear: e.target.value }))} disabled={isSaving || isViewMode} />
                                             </div>
                                         </>
                                     )}
@@ -2738,8 +3012,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         name="overallCGPA"
                                         placeholder="Enter CGPA"
                                         value={studentData?.overallCGPA ?? ''}
-                                        readOnly
-                                        className={styles.readOnlyInput}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, overallCGPA: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
                                     />
                                 </div>
                                 <div className={styles.field}>
@@ -2749,8 +3023,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         name="clearedBacklogs"
                                         placeholder="Enter No. of Backlog (Arrear Cleared)"
                                         value={studentData?.clearedBacklogs ?? ''}
-                                        readOnly
-                                        className={styles.readOnlyInput}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, clearedBacklogs: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
                                     />
                                 </div>
                                 <div className={styles.field}>
@@ -2760,8 +3034,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         name="currentBacklogs"
                                         placeholder="Enter No. of Current Backlog"
                                         value={studentData?.currentBacklogs ?? ''}
-                                        readOnly
-                                        className={styles.readOnlyInput}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, currentBacklogs: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
                                     />
                                 </div>
                                 <div className={styles.field}>
@@ -2789,23 +3063,29 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                             </div>
                         </div>
 
-                        {(studentTrainingAssignment || studentTrainingAttendanceRecords.length > 0) && (
+                        {hasTrainingData && (
                             <div className={styles.profileSectionContainer}>
                                 <h3 className={styles.sectionHeader}>Training</h3>
-                                <div className={styles.companyStatsGrid}>
-                                    <div className={styles.companyStatCardEmpty}>
-                                        <span className={styles.companyStatLabel}>Training 1</span>
-                                        <span className={styles.companyStatValueEmpty}>{trainingCardStats.courseName}</span>
+                                {trainingCardEntries.map((trainingCard, index) => (
+                                    <div
+                                        key={`${trainingCard.label}-${index}`}
+                                        className={styles.companyStatsGrid}
+                                        style={{ marginBottom: index === trainingCardEntries.length - 1 ? '0' : '1rem' }}
+                                    >
+                                        <div className={styles.companyStatCardEmpty}>
+                                            <span className={styles.companyStatLabel}>{trainingCard.label}</span>
+                                            <span className={styles.companyStatValueEmpty}>{trainingCard.courseName}</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                            <span className={styles.companyStatValue}>{trainingCard.attendancePercentage}%</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Total Training Days</span>
+                                            <span className={styles.companyStatValue}>{trainingCard.totalTrainingDays}</span>
+                                        </div>
                                     </div>
-                                    <div className={styles.companyStatCard}>
-                                        <span className={styles.companyStatLabel}>Attendance Percentage</span>
-                                        <span className={styles.companyStatValue}>{trainingCardStats.attendancePercentage}%</span>
-                                    </div>
-                                    <div className={styles.companyStatCard}>
-                                        <span className={styles.companyStatLabel}>Total Training Days</span>
-                                        <span className={styles.companyStatValue}>{trainingCardStats.totalTrainingDays}</span>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         )}
 
@@ -2833,11 +3113,11 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
                                         </div>
                                         <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>#Last Drive Attended</span>
+                                            <span className={styles.companyStatLabel}>Last Drive Attended</span>
                                             <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
                                         </div>
                                         <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>#Last Drive Result</span>
+                                            <span className={styles.companyStatLabel}>Last Drive Result</span>
                                             <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
                                         </div>
                                     </div>
@@ -3213,19 +3493,16 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Quota <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="quota"
-                                                value={studentData?.quota || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Quota</option>
-                                                <option value="Management">Management</option>
-                                                <option value="Counselling">Counselling</option>
-                                            </select>
-                                            <input type="hidden" name="quota" value={studentData?.quota || ''} />
-                                        </>
+                                        <select
+                                            name="quota"
+                                            value={studentData?.quota || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, quota: e.target.value }))}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>Quota</option>
+                                            <option value="Management">Management</option>
+                                            <option value="Counselling">Counselling</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Spoken Languages</label>
@@ -3240,19 +3517,16 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>First Graduate <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="firstGraduate"
-                                                value={studentData?.firstGraduate || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>First Graduate</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
-                                        </>
+                                        <select
+                                            name="firstGraduate"
+                                            value={studentData?.firstGraduate || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, firstGraduate: e.target.value }))}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>First Graduate</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Passport No.</label>
@@ -3305,8 +3579,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             name="rationCardNo"
                                             placeholder="Enter Ration Card No."
                                             value={studentData?.rationCardNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, rationCardNo: e.target.value }))}
                                             disabled={isSaving || isViewMode}
                                         />
                                     </div>
@@ -3328,42 +3601,36 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             name="panNo"
                                             placeholder="Enter PAN No."
                                             value={studentData?.panNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, panNo: e.target.value }))}
+                                            disabled={isSaving || isViewMode}
                                         />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Willing to Sign Bond <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="willingToSignBond"
-                                                value={studentData?.willingToSignBond || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Willing to Sign Bond</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
-                                        </>
+                                        <select
+                                            name="willingToSignBond"
+                                            value={studentData?.willingToSignBond || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, willingToSignBond: e.target.value }))}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>Willing to Sign Bond</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Preferred Mode of Drive <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="preferredModeOfDrive"
-                                                value={studentData?.preferredModeOfDrive || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Preferred Mode of Drive</option>
-                                                <option value="On-Campus">On-Campus</option>
-                                                <option value="Off-Campus">Off-Campus</option>
-                                                <option value="Hybrid">Hybrid</option>
-                                            </select>
-                                            <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
-                                        </>
+                                        <select
+                                            name="preferredModeOfDrive"
+                                            value={studentData?.preferredModeOfDrive || ''}
+                                            onChange={(e) => setStudentData(prev => ({ ...prev, preferredModeOfDrive: e.target.value }))}
+                                            disabled={isSaving || isViewMode}
+                                        >
+                                            <option value="" disabled>Preferred Mode of Drive</option>
+                                            <option value="On-Campus">On-Campus</option>
+                                            <option value="Off-Campus">Off-Campus</option>
+                                            <option value="Hybrid">Hybrid</option>
+                                        </select>
                                     </div>
                                     <div className={styles.field}>
                                         <label>GitHub Link</label>
@@ -3422,7 +3689,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                         type="checkbox"
                                                         name="companyTypesReadonly"
                                                         checked={selectedCompanyTypes.includes(option)}
-                                                        disabled
+                                                        onChange={() => toggleCompanyType(option)}
+                                                        disabled={isSaving || isViewMode}
                                                     />
                                                     <span>{option}</span>
                                                 </label>
@@ -3438,7 +3706,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                         type="checkbox"
                                                         name="jobLocationsReadonly"
                                                         checked={selectedJobLocations.includes(option)}
-                                                        disabled
+                                                        onChange={() => toggleJobLocation(option)}
+                                                        disabled={isSaving || isViewMode}
                                                     />
                                                     <span>{option}</span>
                                                 </label>
@@ -3453,8 +3722,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                         {/* Only show Save/Discard buttons in edit mode */}
                         {!isViewMode && (
                             <div className={styles.actionButtons}>
-                                <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving || isViewMode}>Discard</button>
-                                <button type="submit" className={styles.saveBtn} disabled={isSaving || isViewMode}>
+                                <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving || isViewMode || !hasActionableChanges}>Discard</button>
+                                <button type="submit" className={styles.saveBtn} disabled={isSaving || isViewMode || !hasActionableChanges}>
                                     {isSaving ? (
                                         <>
                                             <div className={styles.loadingSpinner}></div>

@@ -363,7 +363,7 @@
   }
 }
 .students-grid.animate-scroll {
-  animation: scroll-students 40s linear infinite;
+  animation: scroll-students 15s linear infinite;
 }
 .students-grid.animate-scroll:hover {
   animation-play-state: paused;
@@ -538,7 +538,7 @@
     justify-content: center;
   }
 }
-.drive-cards-container.animate-marquee { animation: scroll-drives 50s linear infinite; justify-content: flex-start; margin-top: 10px;}
+.drive-cards-container.animate-marquee { animation: scroll-drives 200s linear infinite; justify-content: flex-start; margin-top: 10px;}
 .marquee-container:hover .drive-cards-container.animate-marquee { animation-play-state: paused; }
 @keyframes scroll-drives { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .drive-card { background-color: #ffffff; border-radius: 15px; padding: 25px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); width: 220px; text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; position: relative; z-index: 1; }

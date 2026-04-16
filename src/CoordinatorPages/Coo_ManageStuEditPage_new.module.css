@@ -610,8 +610,8 @@
 @keyframes StuProfile-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 /* Disabled States */
-.saveBtn:disabled { opacity: 0.7; cursor: not-allowed; background-color: #1976d2; }
-.discardBtn:disabled { opacity: 0.7; cursor: not-allowed; }
+.saveBtn:disabled { opacity: 1; cursor: not-allowed; background-color: #ff7676; color: #ffffff; }
+.discardBtn:disabled { opacity: 1; cursor: not-allowed; background-color: #5555; color: #ffffff; }
 
 
 /* --- POPUPS & ANIMATIONS --- */
@@ -2457,7 +2457,7 @@ select:disabled {
   color: white;
 }
 
-.discardBtn:hover {
+.discardBtn:not(:disabled):hover {
   background: #616161;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

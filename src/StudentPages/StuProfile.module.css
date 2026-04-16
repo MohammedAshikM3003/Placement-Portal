@@ -1092,9 +1092,13 @@ select:disabled {
     align-items: center;
     justify-content: center;
     text-align: center;
+    width: 100%;
+    padding: 0 0.75rem;
+    box-sizing: border-box;
 }
 
 .successRateLabel {
+    display: block;
     font-size: 0.9rem;
     color: #555;
     font-weight: 500;
@@ -1191,10 +1195,14 @@ select:disabled {
     .companyBottomRow { grid-template-columns: 1fr; }
     .successRateCircleContainer { width: 160px; height: 160px; }
     .successRateSvg { width: 160px; height: 160px; }
+    .successRateLabel { font-size: 0.78rem; }
+    .successRateNum { font-size: 2.35rem; }
 }
 
 @media (max-width: 600px) {
     .companyStatsGrid { grid-template-columns: 1fr; }
+    .successRateLabel { font-size: 0.74rem; }
+    .successRateNum { font-size: 2.1rem; }
 }
 
 /* ================================================================
@@ -2443,7 +2451,7 @@ select:disabled {
   color: white;
 }
 
-.discardBtn:hover {
+.discardBtn:not(:disabled):hover {
   background: #616161;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

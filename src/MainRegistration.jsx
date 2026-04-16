@@ -1024,7 +1024,7 @@ function MainRegistration() {
       gender: "Gender", primaryEmail: "Primary Email", domainEmail: "Domain Email",
       mobileNo: "Mobile Number", fatherName: "Father Name", fatherMobile: "Father's Mobile Number",
       motherName: "Mother Name", motherMobile: "Mother's Mobile Number", community: "Community",
-      aadhaarNo: "Aadhaar Number", portfolioLink: "Portfolio Link",
+      aadhaarNo: "Aadhaar Number",
       mediumOfStudy: "Medium of Study", residentialStatus: "Residential Status",
       quota: "Quota", firstGraduate: "First Graduate", skillSet: "Skill Set",
       rationCardNo: "Ration Card Number", familyAnnualIncome: "Family Annual Income",
