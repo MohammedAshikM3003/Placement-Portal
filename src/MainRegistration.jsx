@@ -570,7 +570,6 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
             <div className={cx("mr-crop-control-group")}>
               <label className={cx("mr-crop-control-label")}>Aspect Ratio</label>
               <div className={cx("mr-crop-aspect-buttons")}>
-                <button onClick={() => setAspect(null)} className={cx("mr-crop-aspect-btn", aspect === null ? "mr-crop-aspect-btn-active" : "")} type="button">Custom</button>
                 <button onClick={() => setAspect(1)} className={cx("mr-crop-aspect-btn", aspect === 1 ? "mr-crop-aspect-btn-active" : "")} type="button">1:1</button>
                 <button onClick={() => setAspect(4 / 3)} className={cx("mr-crop-aspect-btn", aspect === 4 / 3 ? "mr-crop-aspect-btn-active" : "")} type="button">4:3</button>
                 <button onClick={() => setAspect(3 / 4)} className={cx("mr-crop-aspect-btn", aspect === 3 / 4 ? "mr-crop-aspect-btn-active" : "")} type="button">3:4</button>
@@ -1182,6 +1181,13 @@ function MainRegistration() {
     setPopupOpen(false);
     setShowConfetti(false);
   }, []);
+  const triggerConfetti = useCallback(() => {
+    // Force a fresh confetti cycle even if it is already active.
+    setShowConfetti(false);
+    requestAnimationFrame(() => {
+      setShowConfetti(true);
+    });
+  }, []);
   const closeExistingRegNoPopup = useCallback(() => setExistingRegNoPopupOpen(false), []);
   const closeMismatchedRegNoPopup = useCallback(() => setMismatchedRegNoPopupOpen(false), []);
   const closeFileSizeErrorPopup = useCallback(() => setIsFileSizeErrorOpen(false), []);
@@ -1631,7 +1637,7 @@ function MainRegistration() {
         }
 
         // Start confetti immediately
-        setShowConfetti(true);
+        triggerConfetti();
 
         // Show popup after short delay so confetti starts first
         setTimeout(() => {
@@ -1661,6 +1667,7 @@ function MainRegistration() {
       residentialStatus,
       quota,
       firstGraduate,
+      triggerConfetti,
     ]
   );
 
@@ -2409,7 +2416,7 @@ function MainRegistration() {
                         type="button"
                         onClick={() => setShowAllErrors(!showAllErrors)}
                         className={styles.showMoreButton}
-                        type="button"
+                        
                       >
                         <span>
                           {showAllErrors
