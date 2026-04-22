@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
+import ExactDiwaliBurst from '../components/Confetti/ExactDiwaliBurst.jsx';
 import PopUpPending from './PopUpPending.jsx';
 import { getOverallStatus as getPopupOverallStatus } from './PopUpPending.jsx';
 import styles from './Company.module.css';
@@ -39,6 +40,7 @@ export default function Company({ onLogout, onViewChange }) {
   const [isDownloadingOffer, setIsDownloadingOffer] = useState(false);
   const [offerDownloadPopupState, setOfferDownloadPopupState] = useState('none'); // none | progress | success
   const [offerDownloadProgress, setOfferDownloadProgress] = useState(0);
+  const [showFireworkConfetti, setShowFireworkConfetti] = useState(false);
   const [offerResponsePopup, setOfferResponsePopup] = useState({
     isOpen: false,
     phase: 'saving',
@@ -56,6 +58,7 @@ export default function Company({ onLogout, onViewChange }) {
   const lastFetchedStudentIdRef = useRef(null);
   const eligibleDrivesRef = useRef([]);
   const studentApplicationsRef = useRef([]);
+  const fireworkConfettiTimerRef = useRef(null);
 
   // Custom scrollbar states
   const appListRef = useRef(null);
@@ -740,6 +743,30 @@ export default function Company({ onLogout, onViewChange }) {
     setOfferResponsePopup((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
+  const triggerFireworkConfetti = useCallback(() => {
+    if (fireworkConfettiTimerRef.current) {
+      clearTimeout(fireworkConfettiTimerRef.current);
+    }
+
+    setShowFireworkConfetti(false);
+    requestAnimationFrame(() => {
+      setShowFireworkConfetti(true);
+    });
+
+    fireworkConfettiTimerRef.current = setTimeout(() => {
+      setShowFireworkConfetti(false);
+      fireworkConfettiTimerRef.current = null;
+    }, 4200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fireworkConfettiTimerRef.current) {
+        clearTimeout(fireworkConfettiTimerRef.current);
+      }
+    };
+  }, []);
+
   const isPopupOpen = offerResponsePopup.isOpen;
   const isAccepted = String(offerResponsePopup.decision || '').toLowerCase() === 'accepted';
   const isSaving = offerResponsePopup.phase === 'saving';
@@ -810,10 +837,13 @@ export default function Company({ onLogout, onViewChange }) {
     </div>
   ) : null;
 
+  const fireworkConfettiElement = <ExactDiwaliBurst isActive={showFireworkConfetti} />;
+
   // If an application is selected, show PopUpPending
   if (selectedApplication) {
     return (
       <div className={styles.container}>
+        {fireworkConfettiElement}
         <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className={styles.main}>
           <Sidebar 
@@ -837,6 +867,11 @@ export default function Company({ onLogout, onViewChange }) {
 
   return (
     <div className={styles.container}>
+      {fireworkConfettiElement}
+      <button type="button" className={styles.fireworkButton} onClick={triggerFireworkConfetti}>
+        <span className={styles.fireworkButtonIcon}>✦</span>
+        <span>Firework</span>
+      </button>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className={styles.main}>
         <Sidebar 

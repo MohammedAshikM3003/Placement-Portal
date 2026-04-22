@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
+import ExactDiwaliBurst from '../components/Confetti/ExactDiwaliBurst.jsx';
 import Profile from "../assets/totalpercentagestudenticon.png";
 import totalpercentagestudenticon from "../assets/UpcomingDriveIcon.svg";
 import Resume from "../assets/UploadResumeIcon.svg";
@@ -87,10 +88,36 @@ const AttendanceChart = ({ present, absent, isLoading }) => {
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(() => getCachedCollegeLogo());
+  const [showFireworkConfetti, setShowFireworkConfetti] = React.useState(false);
+  const fireworkTimerRef = React.useRef(null);
 
   // Change favicon to student (blue) for student dashboard
   React.useEffect(() => {
     changeFavicon(FAVICON_TYPES.STUDENT);
+  }, []);
+
+  const triggerFireworkConfetti = React.useCallback(() => {
+    if (fireworkTimerRef.current) {
+      clearTimeout(fireworkTimerRef.current);
+    }
+
+    setShowFireworkConfetti(false);
+    requestAnimationFrame(() => {
+      setShowFireworkConfetti(true);
+    });
+
+    fireworkTimerRef.current = setTimeout(() => {
+      setShowFireworkConfetti(false);
+      fireworkTimerRef.current = null;
+    }, 4200);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (fireworkTimerRef.current) {
+        clearTimeout(fireworkTimerRef.current);
+      }
+    };
   }, []);
 
   // Fetch college logo from DB
@@ -305,6 +332,11 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
 
   return (
     <div className={styles['stu-db-container']}>
+      <ExactDiwaliBurst isActive={showFireworkConfetti} />
+      <button type="button" className={styles['stu-db-firework-btn']} onClick={triggerFireworkConfetti}>
+        <span className={styles['stu-db-firework-icon']}>✦</span>
+        <span>Firework</span>
+      </button>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className={styles['stu-db-main']}>
         <Sidebar 

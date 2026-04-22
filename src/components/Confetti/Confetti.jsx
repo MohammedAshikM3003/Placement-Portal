@@ -15,7 +15,7 @@ export default function ConfettiOnly({ isActive = true }) {
         position: "fixed",
         top: 0,
         left: 0,
-        zIndex: 1500,
+        zIndex: 2500,
         pointerEvents: "none",
       }}
     />

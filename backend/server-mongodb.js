@@ -8911,6 +8911,7 @@ const certificateSchema = new mongoose.Schema({
     verifiedAt: { type: Date, default: null },
     verifiedBy: { type: String, default: '' },
     notificationRead: { type: Boolean, default: true }, // false = student hasn't seen status change yet
+    coordinatorNotificationRead: { type: Boolean, default: true }, // false = coordinator hasn't seen new student upload yet
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -9088,7 +9089,11 @@ const buildCertificatePayload = (certificateData = {}) => {
         date: primaryDate,
         uploadDate: certificateData.uploadDate || new Date().toLocaleDateString('en-GB'),
         verifiedAt: certificateData.verifiedAt || null,
-        verifiedBy: certificateData.verifiedBy || ''
+        verifiedBy: certificateData.verifiedBy || '',
+        coordinatorNotificationRead:
+            typeof certificateData.coordinatorNotificationRead === 'boolean'
+                ? certificateData.coordinatorNotificationRead
+                : true
     };
 };
 
@@ -9156,7 +9161,11 @@ const toCertificatesResponse = (certificatesList = []) =>
 // Certificate endpoints
 app.post('/api/certificates', authenticateToken, checkRole('student', 'admin'), async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
-    const certificateData = buildCertificatePayload(req.body);
+    const isStudentUpload = (req.user?.role || '').toString().toLowerCase() === 'student';
+    const certificateData = buildCertificatePayload({
+        ...req.body,
+        coordinatorNotificationRead: isStudentUpload ? false : req.body?.coordinatorNotificationRead
+    });
 
     try {
         if (isMongoConnected) {
@@ -9492,7 +9501,10 @@ function getBasicAnalysisResult() {
 // ⚡ SUPER FAST: Certificate upload endpoint
 app.post('/api/certificates/upload', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
-    const certificateData = req.body;
+    const certificateData = {
+        ...req.body,
+        coordinatorNotificationRead: false
+    };
     
     try {
         if (!certificateData.studentId || !certificateData.fileName || !certificateData.fileData) {
@@ -9643,6 +9655,30 @@ app.put('/api/certificates/student/:studentId/achievement/:achievementId', async
     }
 })();
 
+// One-time migration: set coordinatorNotificationRead=true on legacy certificates.
+// New student uploads explicitly set this flag to false.
+(async () => {
+    try {
+        const runMigration = async () => {
+            const result = await Certificate.updateMany(
+                { coordinatorNotificationRead: { $exists: false } },
+                { $set: { coordinatorNotificationRead: true } }
+            );
+            if (result.modifiedCount > 0) {
+                console.log(`📋 Migration: Set coordinatorNotificationRead=true on ${result.modifiedCount} legacy certificate(s)`);
+            }
+        };
+
+        if (mongoose.connection.readyState === 1) {
+            await runMigration();
+        } else {
+            mongoose.connection.once('open', runMigration);
+        }
+    } catch (err) {
+        console.error('Coordinator notification migration error:', err);
+    }
+})();
+
 // GET: Fetch unread certificate notifications for a student
 // Accepts studentId (MongoDB _id) as primary, falls back to regNo
 app.get('/api/certificates/notifications/:identifier', async (req, res) => {
@@ -9719,6 +9755,101 @@ app.patch('/api/certificates/notifications/mark-read', async (req, res) => {
     } catch (error) {
         console.error('❌ Mark notifications read error:', error);
         res.status(500).json({ error: 'Failed to mark notifications as read' });
+    }
+});
+
+// GET: Fetch unread certificate-upload notifications for logged-in coordinator's department
+app.get('/api/certificates/coordinator-notifications', authenticateToken, checkRole('coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ success: true, notifications: [] });
+        }
+
+        const coordinatorId = String(req.user?.coordinatorId || '').trim();
+        if (!coordinatorId) {
+            return res.status(400).json({ error: 'Coordinator identifier missing in token' });
+        }
+
+        const coordinator = await Coordinator.findOne({ coordinatorId }).select('department branch').lean();
+        const coordinatorDepartment = normalizeDepartment(
+            coordinator?.department || coordinator?.branch || ''
+        );
+
+        if (!coordinatorDepartment) {
+            return res.status(400).json({ error: 'Coordinator department not found' });
+        }
+
+        const notifications = await Certificate.find({
+            department: coordinatorDepartment,
+            status: 'pending',
+            coordinatorNotificationRead: false
+        })
+            .select('_id regNo studentName name competition certificateName comp prize createdAt uploadDate')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            notifications: notifications.map((item) => ({
+                id: String(item._id || ''),
+                regNo: item.regNo || '',
+                studentName: item.studentName || item.name || 'Student',
+                competition: item.competition || item.certificateName || item.comp || '',
+                prize: item.prize || '',
+                createdAt: item.createdAt || item.uploadDate || null
+            }))
+        });
+    } catch (error) {
+        console.error('Coordinator certificate notifications fetch error:', error);
+        return res.status(500).json({ error: 'Failed to fetch coordinator certificate notifications' });
+    }
+});
+
+// PATCH: Mark coordinator certificate-upload notifications as read
+app.patch('/api/certificates/coordinator-notifications/mark-read', authenticateToken, checkRole('coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const coordinatorId = String(req.user?.coordinatorId || '').trim();
+        if (!coordinatorId) {
+            return res.status(400).json({ error: 'Coordinator identifier missing in token' });
+        }
+
+        const coordinator = await Coordinator.findOne({ coordinatorId }).select('department branch').lean();
+        const coordinatorDepartment = normalizeDepartment(
+            coordinator?.department || coordinator?.branch || ''
+        );
+
+        if (!coordinatorDepartment) {
+            return res.status(400).json({ error: 'Coordinator department not found' });
+        }
+
+        const notificationIds = Array.isArray(req.body?.notificationIds) ? req.body.notificationIds : [];
+        const query = {
+            department: coordinatorDepartment,
+            status: 'pending',
+            coordinatorNotificationRead: false
+        };
+
+        if (notificationIds.length > 0) {
+            query._id = {
+                $in: notificationIds
+                    .map((id) => String(id || '').trim())
+                    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+                    .map((id) => new mongoose.Types.ObjectId(id))
+            };
+        }
+
+        const result = await Certificate.updateMany(query, {
+            $set: { coordinatorNotificationRead: true, updatedAt: new Date() }
+        });
+
+        return res.json({ success: true, updated: result.modifiedCount || 0 });
+    } catch (error) {
+        console.error('Coordinator certificate notifications mark-read error:', error);
+        return res.status(500).json({ error: 'Failed to mark coordinator certificate notifications as read' });
     }
 });
 

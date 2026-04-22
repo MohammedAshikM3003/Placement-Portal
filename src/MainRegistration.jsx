@@ -975,6 +975,7 @@ function MainRegistration() {
         firstName: 'personal', lastName: 'personal', regNo: 'personal',
         batch: 'personal', dob: 'personal', degree: 'personal', branch: 'personal',
         section: 'personal', gender: 'personal', primaryEmail: 'personal',
+        address: 'personal', city: 'personal',
         domainEmail: 'personal', mobileNo: 'personal', fatherName: 'personal',
         fatherMobile: 'personal', motherName: 'personal', motherMobile: 'personal',
         community: 'personal', aadhaarNo: 'other',
@@ -1021,6 +1022,7 @@ function MainRegistration() {
       firstName: "First Name", lastName: "Last Name", regNo: "Registration Number",
       batch: "Batch", degree: "Degree", branch: "Branch", section: "Section",
       gender: "Gender", primaryEmail: "Primary Email", domainEmail: "Domain Email",
+      address: "Address", city: "City",
       mobileNo: "Mobile Number", fatherName: "Father Name", fatherMobile: "Father's Mobile Number",
       motherName: "Mother Name", motherMobile: "Mother's Mobile Number", community: "Community",
       aadhaarNo: "Aadhaar Number",
@@ -1858,12 +1860,12 @@ function MainRegistration() {
                       </select>
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>Address</label>
-                      <input type="text" name="address" placeholder="Enter Address" />
+                      <label>Address <RequiredStar /></label>
+                      <input type="text" name="address" placeholder="Enter Address" required />
                     </div>
                     <div className={cx("mr-field")}>
-                      <label>City</label>
-                      <input type="text" name="city" placeholder="Enter City" />
+                      <label>City <RequiredStar /></label>
+                      <input type="text" name="city" placeholder="Enter City" required />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Primary Email <RequiredStar /></label>

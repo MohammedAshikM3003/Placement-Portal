@@ -12,6 +12,7 @@ import GlobalPlacementBannerChecker from "./components/CertificateNotification/G
 import GlobalDriveScheduledChecker from "./components/CertificateNotification/GlobalDriveScheduledChecker.jsx";
 import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
 import GlobalOfferLetterNotificationChecker from "./components/CertificateNotification/GlobalOfferLetterNotificationChecker.jsx";
+import GlobalCoordinatorCertificateUploadChecker from "./components/CertificateNotification/GlobalCoordinatorCertificateUploadChecker.jsx";
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -233,6 +234,10 @@ function AppContent() {
 
       {isAuthenticated && ['admin', 'coordinator'].includes(authRole) && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && (
         <GlobalBlockNotificationChecker />
+      )}
+
+      {isCoordinatorLoggedIn && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && (
+        <GlobalCoordinatorCertificateUploadChecker />
       )}
 
     <Routes>

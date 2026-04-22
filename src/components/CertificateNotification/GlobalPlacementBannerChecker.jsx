@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import mongoDBService from '../../services/mongoDBService.jsx';
 import PlacementStatusBanner from './PlacementStatusBanner';
 import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
+import {
+	fetchUnreadOfferNotifications,
+	markOfferNotificationsAsRead
+} from '../../services/offerLetterNotificationService';
 
 const POLL_INTERVAL_MS = 5000;
 const PLACEMENT_POPUP_STORAGE_PREFIX = 'placementPopupSeen';
@@ -183,7 +187,7 @@ const getLatestApplicationSnapshot = (applications = []) => {
 		.sort((left, right) => {
 			const byTime = (right.recordedAt || 0) - (left.recordedAt || 0);
 			if (byTime !== 0) return byTime;
-			const statusPriority = { placed: 4, passed: 3, failed: 2, absent: 1 };
+			const statusPriority = { placed: 4, passed: 3, failed: 2, present: 1, absent: 1 };
 			return (statusPriority[right.status] || 0) - (statusPriority[left.status] || 0);
 		})[0];
 
@@ -202,10 +206,13 @@ const getLatestApplicationSnapshot = (applications = []) => {
 
 const getLatestAttendanceSnapshot = (attendanceRecords = []) => {
 	const records = Array.isArray(attendanceRecords) ? attendanceRecords : [];
-	const absentRecords = records.filter((record) => normalizeText(record?.status) === 'absent');
-	if (!absentRecords.length) return null;
+	const attendanceStatusRecords = records.filter((record) => {
+		const status = normalizeText(record?.status);
+		return status === 'absent' || status === 'present';
+	});
+	if (!attendanceStatusRecords.length) return null;
 
-	const latestAbsent = absentRecords
+	const latestAttendance = attendanceStatusRecords
 		.slice()
 		.sort((left, right) => {
 			const rightTs = new Date(right?.updatedAt || right?.submittedAt || right?.startDate || right?.endDate || 0).getTime();
@@ -213,20 +220,22 @@ const getLatestAttendanceSnapshot = (attendanceRecords = []) => {
 			return rightTs - leftTs;
 		})[0];
 
-	const driveId = (latestAbsent?.driveId || '').toString().trim();
-	const companyName = (latestAbsent?.companyName || '').toString().trim();
-	const jobRole = (latestAbsent?.jobRole || '').toString().trim();
-	const startDate = (latestAbsent?.startDate || '').toString().trim();
-	const recordedAt = new Date(latestAbsent?.updatedAt || latestAbsent?.submittedAt || latestAbsent?.startDate || latestAbsent?.endDate || 0).getTime();
+	const attendanceStatus = normalizeText(latestAttendance?.status) === 'present' ? 'present' : 'absent';
+
+	const driveId = (latestAttendance?.driveId || '').toString().trim();
+	const companyName = (latestAttendance?.companyName || '').toString().trim();
+	const jobRole = (latestAttendance?.jobRole || '').toString().trim();
+	const startDate = (latestAttendance?.startDate || '').toString().trim();
+	const recordedAt = new Date(latestAttendance?.updatedAt || latestAttendance?.submittedAt || latestAttendance?.startDate || latestAttendance?.endDate || 0).getTime();
 
 	return {
 		isPlaced: true,
-		status: 'absent',
+		status: attendanceStatus,
 		companyName,
 		jobRole,
 		roundName: 'Attendance',
 		roundNumber: 0,
-		signature: [driveId || companyName, jobRole, startDate, 'absent', recordedAt].join('::'),
+		signature: [driveId || companyName, jobRole, startDate, attendanceStatus, recordedAt].join('::'),
 		recordedAt
 	};
 };
@@ -398,6 +407,11 @@ const GlobalPlacementBannerChecker = () => {
 			// Only process if this event is for the currently logged-in student
 			if (normalizeStudentId(studentId) && eventStudentId === normalizeStudentId(studentId)) {
 				const normalizedPayload = normalizeIncomingBannerPayload(event.detail);
+				if (normalizeText(normalizedPayload?.status) === 'placed') {
+					// Placed notifications are handled via backend unread offer notifications
+					// so they are consistent across devices.
+					return;
+				}
 				if (hasSeenSignature(normalizedPayload?.signature, eventStudentId)) {
 					console.log('🔔 [PlacementChecker] Event ignored (already seen):', normalizedPayload?.signature);
 					return;
@@ -467,6 +481,33 @@ const GlobalPlacementBannerChecker = () => {
 
 			if (!snapshot || !snapshot.isPlaced) return;
 
+			if (normalizeText(snapshot?.status) === 'placed') {
+				const identifier = studentId || studentRegNo;
+				if (!identifier) return;
+
+				const unreadOfferNotifications = await fetchUnreadOfferNotifications(identifier);
+				if (!Array.isArray(unreadOfferNotifications) || unreadOfferNotifications.length === 0) {
+					return;
+				}
+
+				const latestNotification = unreadOfferNotifications[0];
+				const notificationId = String(latestNotification?.id || '').trim();
+				if (!notificationId) return;
+
+				showingRef.current = true;
+				setBannerData({
+					status: 'placed',
+					companyName: latestNotification?.companyName || snapshot?.companyName || '',
+					jobRole: latestNotification?.jobRole || snapshot?.jobRole || '',
+					packageName: latestNotification?.packageName || snapshot?.packageName || '',
+					roundName: '',
+					roundNumber: null,
+					notificationId,
+					signature: `offer-notification:${notificationId}`
+				});
+				return;
+			}
+
 			if (hasSeenSignature(snapshot.signature)) {
 				console.log('🔔 [PlacementChecker] Already shown for signature:', snapshot.signature);
 				return;
@@ -509,14 +550,26 @@ const GlobalPlacementBannerChecker = () => {
 		};
 	}, [studentId, studentRegNo, pollPlacement, getSeenStorageKeys]);
 
-	const handleClose = useCallback(() => {
-		if (bannerData?.signature) {
+	const handleClose = useCallback(async () => {
+		const status = normalizeText(bannerData?.status);
+		const notificationId = String(bannerData?.notificationId || '').trim();
+
+		if (status === 'placed' && notificationId) {
+			const identifier = studentId || studentRegNo;
+			if (identifier) {
+				try {
+					await markOfferNotificationsAsRead(identifier, [notificationId]);
+				} catch (error) {
+					console.error('❌ [PlacementChecker] Failed to mark placed notification as read:', error);
+				}
+			}
+		} else if (bannerData?.signature) {
 			markSignatureAsSeen(bannerData.signature);
 		}
 
 		setBannerData(null);
 		showingRef.current = false;
-	}, [bannerData, markSignatureAsSeen]);
+	}, [bannerData, markSignatureAsSeen, studentId, studentRegNo]);
 
 	if (!bannerData || !canDisplayBanner) return null;
 

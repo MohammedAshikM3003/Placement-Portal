@@ -3,9 +3,9 @@ import styles from './PlacementStatusBanner.module.css';
 
 /**
  * PlacementStatusBanner - Multi-status notification banner
- * Shows different banners for: Placed, Passed Round, Failed/Rejected, Absent
+ * Shows different banners for: Placed, Passed Round, Failed/Rejected, Absent, Present
  *
- * @param {string} status - Status type: 'placed' | 'passed' | 'failed' | 'absent'
+ * @param {string} status - Status type: 'placed' | 'passed' | 'failed' | 'absent' | 'present'
  * @param {string} companyName - Company name
  * @param {string} jobRole - Job role
  * @param {string} roundName - Round name (for passed rounds)
@@ -22,9 +22,20 @@ const PlacementStatusBanner = ({
   onClose
 }) => {
   const [isVisible, setIsVisible] = useState(true);
+  const isPlacedStatus = status.toLowerCase() === 'placed';
   const trimmedCompany = (companyName || '').toString().trim();
   const trimmedJobRole = (jobRole || '').toString().trim();
   const trimmedPackage = (packageName || '').toString().trim();
+  const sparklePoints = [
+    { top: '16%', left: '14%', delay: '0.1s', duration: '1.5s' },
+    { top: '22%', left: '34%', delay: '0.8s', duration: '2.1s' },
+    { top: '18%', left: '70%', delay: '0.5s', duration: '1.9s' },
+    { top: '38%', left: '54%', delay: '1.2s', duration: '2.3s' },
+    { top: '58%', left: '26%', delay: '0.4s', duration: '1.7s' },
+    { top: '62%', left: '78%', delay: '1.6s', duration: '2.4s' },
+    { top: '76%', left: '44%', delay: '0.9s', duration: '1.8s' },
+    { top: '72%', left: '88%', delay: '1.3s', duration: '2.0s' }
+  ];
 
   // Auto-dismiss after 5 seconds
   useEffect(() => {
@@ -133,6 +144,36 @@ const PlacementStatusBanner = ({
             {[trimmedCompany, trimmedJobRole].filter(Boolean).join(' . ')}
           </div>
         )
+      },
+      present: {
+        className: styles.present,
+        title: 'Present Marked',
+        icon: (
+          <svg
+            className={styles.statusIcon}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            >
+              <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0" />
+              <path d="M10 12h2a2 2 0 1 0 0-4h-2v8" />
+            </g>
+          </svg>
+        ),
+        subtitle: (
+          <div className={styles.mainText}>
+            {[trimmedCompany, trimmedJobRole].filter(Boolean).join(' . ')}
+          </div>
+        )
       }
     };
 
@@ -148,6 +189,22 @@ const PlacementStatusBanner = ({
       className={`${styles.bannerContainer} ${!isVisible ? styles.slideOut : ''}`}
     >
       <div className={`${styles.banner} ${config.className}`}>
+        {isPlacedStatus && (
+          <div className={styles.sparkleLayer} aria-hidden="true">
+            {sparklePoints.map((sparkle, index) => (
+              <span
+                key={`placed-sparkle-${index}`}
+                className={styles.sparkleDot}
+                style={{
+                  top: sparkle.top,
+                  left: sparkle.left,
+                  '--twinkle-delay': sparkle.delay,
+                  '--twinkle-duration': sparkle.duration
+                }}
+              />
+            ))}
+          </div>
+        )}
         <div className={styles.iconWrapper}>{config.icon}</div>
         <div className={styles.content}>
           <p className={styles.header}>{config.title}</p>

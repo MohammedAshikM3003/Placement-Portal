@@ -44,11 +44,28 @@
   gap: 12px;
   min-width: 260px;
   max-width: 340px;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Placed status - Golden color */
 .banner.placed {
-  background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+  background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 50px rgba(184, 134, 11, 0.4);
+}
+
+.banner.placed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -150%;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  transform: skewX(-25deg);
+  z-index: 1;
+  animation: placedSweep 4s ease-in-out infinite;
 }
 
 /* Passed Round - Blue color */
@@ -66,6 +83,11 @@
   background-color: #ff2800;
 }
 
+/* Present - Green color */
+.banner.present {
+  background-color: #16C098;
+}
+
 .iconWrapper {
   display: flex;
   align-items: center;
@@ -74,12 +96,18 @@
   width: 24px;
   height: 24px;
   margin-top: 2px;
+  position: relative;
+  z-index: 2;
 }
 
 .statusIcon {
   width: 24px;
   height: 24px;
   color: #ffffff;
+}
+
+.banner.placed .statusIcon {
+  color: #4a3300;
 }
 
 .absentAIcon {
@@ -103,6 +131,8 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .header {
@@ -125,6 +155,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 220px;
+}
+
+.banner.placed .header {
+  color: #4a3300;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.banner.placed .companyName {
+  color: rgba(74, 51, 0, 0.88);
 }
 
 .mainText {
@@ -173,10 +212,57 @@
   margin-top: 2px;
   opacity: 0.8;
   transition: opacity 0.2s ease;
+  position: relative;
+  z-index: 2;
 }
 
 .closeButton:hover {
   opacity: 1;
+}
+
+.banner.placed .closeButton svg path {
+  stroke: #4a3300;
+}
+
+.sparkleLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sparkleDot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 1);
+  opacity: 0;
+  transform: scale(0);
+  animation: twinkle var(--twinkle-duration, 1.8s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+}
+
+@keyframes placedSweep {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 250%;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.8);
+  }
 }
 
 /* Responsive Design */
