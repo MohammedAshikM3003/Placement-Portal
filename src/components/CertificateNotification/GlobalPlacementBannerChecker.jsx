@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import mongoDBService from '../../services/mongoDBService.jsx';
 import PlacementStatusBanner from './PlacementStatusBanner';
+import ExactDiwaliBurst from '../Confetti/ExactDiwaliBurst';
 import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
 import {
 	fetchUnreadOfferNotifications,
@@ -268,8 +269,11 @@ const GlobalPlacementBannerChecker = () => {
 	const [studentId, setStudentId] = useState(null);
 	const [studentRegNo, setStudentRegNo] = useState(null);
 	const [bannerData, setBannerData] = useState(null);
+	const [confettiVisible, setConfettiVisible] = useState(false);
+	const [confettiActive, setConfettiActive] = useState(false);
 	const showingRef = useRef(false);
 	const pollCountRef = useRef(0);
+	const confettiFadeTimerRef = useRef(null);
 	const queueSlotId = useMemo(() => {
 		if (!bannerData) return null;
 		return `placement-notification:${bannerData.signature || `${bannerData.status || 'placed'}:${bannerData.companyName || ''}:${bannerData.roundNumber || 0}`}`;
@@ -486,24 +490,48 @@ const GlobalPlacementBannerChecker = () => {
 				if (!identifier) return;
 
 				const unreadOfferNotifications = await fetchUnreadOfferNotifications(identifier);
-				if (!Array.isArray(unreadOfferNotifications) || unreadOfferNotifications.length === 0) {
+				if (Array.isArray(unreadOfferNotifications) && unreadOfferNotifications.length > 0) {
+					const latestNotification = unreadOfferNotifications[0];
+					const notificationId = String(latestNotification?.id || '').trim();
+					if (!notificationId) return;
+
+					showingRef.current = true;
+					setBannerData({
+						status: 'placed',
+						companyName: latestNotification?.companyName || snapshot?.companyName || '',
+						jobRole: latestNotification?.jobRole || snapshot?.jobRole || '',
+						packageName: latestNotification?.packageName || snapshot?.packageName || '',
+						roundName: '',
+						roundNumber: null,
+						notificationId,
+						signature: `offer-notification:${notificationId}`
+					});
 					return;
 				}
 
-				const latestNotification = unreadOfferNotifications[0];
-				const notificationId = String(latestNotification?.id || '').trim();
-				if (!notificationId) return;
+				const fallbackSignature = snapshot?.signature || [
+					'placement-snapshot',
+					identifier,
+					snapshot?.companyName || '',
+					snapshot?.jobRole || '',
+					snapshot?.packageName || ''
+				].join(':');
 
+				if (hasSeenSignature(fallbackSignature, identifier)) {
+					return;
+				}
+
+				markSignatureAsSeen(fallbackSignature, identifier);
 				showingRef.current = true;
 				setBannerData({
+					...snapshot,
 					status: 'placed',
-					companyName: latestNotification?.companyName || snapshot?.companyName || '',
-					jobRole: latestNotification?.jobRole || snapshot?.jobRole || '',
-					packageName: latestNotification?.packageName || snapshot?.packageName || '',
+					signature: fallbackSignature,
+					companyName: snapshot?.companyName || '',
+					jobRole: snapshot?.jobRole || '',
+					packageName: snapshot?.packageName || '',
 					roundName: '',
-					roundNumber: null,
-					notificationId,
-					signature: `offer-notification:${notificationId}`
+					roundNumber: null
 				});
 				return;
 			}
@@ -569,20 +597,55 @@ const GlobalPlacementBannerChecker = () => {
 
 		setBannerData(null);
 		showingRef.current = false;
+		setConfettiActive(false);
+		if (confettiFadeTimerRef.current) {
+			clearTimeout(confettiFadeTimerRef.current);
+		}
+		confettiFadeTimerRef.current = setTimeout(() => {
+			setConfettiVisible(false);
+			confettiFadeTimerRef.current = null;
+		}, 900);
 	}, [bannerData, markSignatureAsSeen, studentId, studentRegNo]);
 
-	if (!bannerData || !canDisplayBanner) return null;
+	useEffect(() => {
+		const placedAndVisible = Boolean(bannerData) && canDisplayBanner && normalizeText(bannerData?.status) === 'placed';
+		if (placedAndVisible) {
+			if (confettiFadeTimerRef.current) {
+				clearTimeout(confettiFadeTimerRef.current);
+				confettiFadeTimerRef.current = null;
+			}
+			setConfettiVisible(true);
+			setConfettiActive(true);
+		}
+	}, [bannerData, canDisplayBanner]);
+
+	useEffect(() => {
+		return () => {
+			if (confettiFadeTimerRef.current) {
+				clearTimeout(confettiFadeTimerRef.current);
+			}
+		};
+	}, []);
+
+	if (!bannerData && !confettiVisible) return null;
 
 	return (
-		<PlacementStatusBanner
-			status={bannerData.status || 'placed'}
-			companyName={bannerData.companyName}
-			jobRole={bannerData.jobRole}
-			packageName={bannerData.packageName}
-			roundName={bannerData.roundName}
-			roundNumber={bannerData.roundNumber}
-			onClose={handleClose}
-		/>
+		<>
+			{confettiVisible && (
+				<ExactDiwaliBurst isActive={confettiActive} backgroundOpacity={0.1} zIndex={9998} />
+			)}
+			{bannerData && canDisplayBanner && (
+				<PlacementStatusBanner
+					status={bannerData.status || 'placed'}
+					companyName={bannerData.companyName}
+					jobRole={bannerData.jobRole}
+					packageName={bannerData.packageName}
+					roundName={bannerData.roundName}
+					roundNumber={bannerData.roundNumber}
+					onClose={handleClose}
+				/>
+			)}
+		</>
 	);
 };
 

@@ -70,6 +70,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const [searchParams] = useSearchParams();
   const scheduleMode = (searchParams.get('mode') || 'new').toLowerCase();
   const isEditMode = scheduleMode === 'edit';
+  const isViewMode = scheduleMode === 'view';
   const scheduleIdParam = (searchParams.get('scheduleId') || '').toString().trim();
 
   // Training Details state
@@ -491,7 +492,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   className={styles.control}
-                  disabled={isLoadingCompanies}
+                  disabled={isLoadingCompanies || isViewMode}
                 >
                   <option value="">{isLoadingCompanies ? 'Loading companies...' : 'Select Company'}</option>
                   {companies.map((companyName) => (
@@ -540,6 +541,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                   onChange={(e) => setPhaseNumber(e.target.value)}
                   placeholder="e.g., Phase 1"
                   className={styles.control}
+                  disabled={isViewMode}
                 />
               </div>
 
@@ -549,7 +551,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                   value={selectedTrainer}
                   onChange={(e) => setSelectedTrainer(e.target.value)}
                   className={styles.control}
-                  disabled={!company || trainers.length === 0}
+                  disabled={!company || trainers.length === 0 || isViewMode}
                 >
                   <option value="">Select Trainer</option>
                   {trainers.map((trainer, idx) => (
@@ -566,6 +568,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                   value={applicableYear}
                   onChange={(e) => setApplicableYear(e.target.value)}
                   className={styles.control}
+                  disabled={isViewMode}
                 >
                   <option value="">Select Year</option>
                   <option value="I">I</option>
@@ -579,12 +582,12 @@ const AdminScheduleTraining = ({ onLogout }) => {
             <div className={`${styles.formRow} ${styles.dynamicRow}`}>
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>Start Date</label>
-                <Ad_Calendar value={startDate} onChange={setStartDate} />
+                <Ad_Calendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
               </div>
 
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>End Date</label>
-                <Ad_Calendar value={endDate} onChange={setEndDate} />
+                <Ad_Calendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
               </div>
 
               <div className={styles.formGroup}>
@@ -618,6 +621,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                       checked={selectedCourses.includes(course)}
                       onChange={() => handleCourseToggle(course)}
                       className={styles.courseCheckbox}
+                      disabled={isViewMode}
                     />
                     <span className={styles.courseName}>{course}</span>
                   </label>
@@ -627,38 +631,16 @@ const AdminScheduleTraining = ({ onLogout }) => {
           </div>
         </div>
 
-        {isEditMode && company && (
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Batch</h2>
-            <div className={styles.cardContent}>
-              {isLoadingSchedule ? (
-                <p className={styles.noDataText}>Loading batches...</p>
-              ) : effectiveBatchCourses.length === 0 ? (
-                <p className={styles.noDataText}>No preferred training courses found for this schedule</p>
-              ) : (
-                <div className={styles.batchGrid}>
-                  {effectiveBatchCourses.map((course, idx) => (
-                    <button
-                      key={`${course}-${idx}`}
-                      type="button"
-                      className={styles.batchBtn}
-                      onClick={() => openBatchStudentsPage(course)}
-                    >
-                      {course}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        
+
+        {!isViewMode && (
+          <div className={styles.actions}>
+            <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving}>Discard</button>
+            <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
           </div>
         )}
-
-        <div className={styles.actions}>
-          <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving}>Discard</button>
-          <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
       </div>
     </div>
   );

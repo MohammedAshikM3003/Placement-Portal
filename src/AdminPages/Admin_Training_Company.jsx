@@ -350,12 +350,16 @@ function AdminTrainingCompany({ onLogout }) {
     };
 
     const handleViewCompany = (company) => {
-        navigate('/admin-training-company/view', {
-            state: {
-                viewMode: true,
-                companyData: company
-            }
+        const query = new URLSearchParams({
+            mode: 'view',
+            company: company.companyName || ''
         });
+
+        if (company.scheduleId) {
+            query.set('scheduleId', company.scheduleId);
+        }
+
+        navigate(`/admin-schedule-training?${query.toString()}`);
     };
 
     const filteredCompanies = trainingCompanies.filter(company => {
@@ -671,6 +675,7 @@ function AdminTrainingCompany({ onLogout }) {
                                             <tr
                                                 key={company._id}
                                                 className={`${styles['Admin-tc-table-row']} ${selectedCompanyIds.has(company._id) ? styles['Admin-tc-selected-row'] : ''}`}
+                                                onClick={() => handleCompanySelect(company._id)}
                                             >
                                                 <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-checkbox']}`}>
                                                     <input

@@ -470,12 +470,7 @@ const Ad_ZipActive_Batches_Department = () => {
                     </div>
                 </div>
 
-                {/* Back Button */}
-                <div className={styles['Ad-zd-back-container']}>
-                    <button className={styles['Ad-zd-back-btn']} onClick={handleBack}>
-                        Back
-                    </button>
-                </div>
+                
             </main>
 
             {/* Export Alerts */}

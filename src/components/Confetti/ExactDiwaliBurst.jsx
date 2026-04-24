@@ -1,15 +1,25 @@
 import React, { useEffect, useRef } from "react";
 
-export default function ExactDiwaliBurst({ isActive = true }) {
+export default function ExactDiwaliBurst({
+  isActive = true,
+  backgroundOpacity = 0.1,
+  zIndex = 9998,
+}) {
   const canvasRef = useRef(null);
   const animationFrameRef = useRef(null);
   const timerRef = useRef(null);
+  const isActiveRef = useRef(isActive);
+  const targetOpacityRef = useRef(backgroundOpacity);
 
   useEffect(() => {
-    if (!isActive) {
-      return undefined;
-    }
+    isActiveRef.current = isActive;
+  }, [isActive]);
 
+  useEffect(() => {
+    targetOpacityRef.current = backgroundOpacity;
+  }, [backgroundOpacity]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return undefined;
@@ -22,23 +32,25 @@ export default function ExactDiwaliBurst({ isActive = true }) {
 
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
+    let overlayAlpha = isActiveRef.current ? targetOpacityRef.current : 0;
 
     const bursts = [];
     const rockets = [];
 
     const palettes = [
-      ["#ff1493", "#d4c6a1"],
-      ["#00ff99", "#e6d27a"],
-      ["#f7b6d2", "#ffffff"],
-      ["#ff9800", "#ffe082"],
-      ["#00bcd4", "#b2ebf2"],
-      ["#9c27b0", "#e1bee7"],
+      ["#fff6a3", "#ffd700", "#ffb300", "#fffde7"],
+      ["#d6fff8", "#00e5ff", "#00b8d4", "#e0f7fa"],
+      ["#ffd6ec", "#ff4fa3", "#ff1f7a", "#ffe3f1"],
+      ["#e6dcff", "#9c4dff", "#7c3aed", "#f2ebff"],
+      ["#ddffd6", "#39ff88", "#00c853", "#f1ffe9"],
+      ["#ffe0b2", "#ff9100", "#ff6d00", "#fff3e0"],
     ];
 
     class Rocket {
       constructor(x, targetY, colorSet, scale) {
         this.x = x;
         this.y = h;
+        this.prevY = h;
         this.targetY = targetY;
         this.colorSet = colorSet;
         this.scale = scale;
@@ -46,10 +58,16 @@ export default function ExactDiwaliBurst({ isActive = true }) {
         this.length = 40 * scale;
         this.color = colorSet[0];
         this.exploded = false;
+        this.trail = [];
       }
 
       update() {
+        this.prevY = this.y;
         this.y -= this.speed;
+        this.trail.push(this.prevY);
+        if (this.trail.length > 12) {
+          this.trail.shift();
+        }
         if (this.y <= this.targetY) {
           this.exploded = true;
         }
@@ -57,12 +75,46 @@ export default function ExactDiwaliBurst({ isActive = true }) {
 
       draw() {
         ctx.save();
+
+        // Rope-like tail from bottom to rocket head (launch path).
+        const ropeEndY = Math.min(h, this.y + this.length * 0.35);
+        const ropeGradient = ctx.createLinearGradient(this.x, h, this.x, ropeEndY);
+        ropeGradient.addColorStop(0, "rgba(255,255,255,0.08)");
+        ropeGradient.addColorStop(0.35, this.color);
+        ropeGradient.addColorStop(1, "rgba(255,255,255,0.95)");
+        ctx.beginPath();
+        ctx.moveTo(this.x, h);
+        ctx.lineTo(this.x, ropeEndY);
+        ctx.strokeStyle = ropeGradient;
+        ctx.lineWidth = 2.8 * this.scale;
+        ctx.globalAlpha = 0.72;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+
+        // Tapered glowing tail
+        for (let i = 0; i < this.trail.length; i++) {
+          const y = this.trail[i];
+          const alpha = ((i + 1) / this.trail.length) * 0.45;
+          ctx.beginPath();
+          ctx.moveTo(this.x, y);
+          ctx.lineTo(this.x, y + this.length * 0.8);
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = (1.2 + (i / this.trail.length) * 2.2) * this.scale;
+          ctx.globalAlpha = alpha;
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+        }
+
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
         ctx.lineTo(this.x, this.y + this.length);
         ctx.strokeStyle = this.color;
         ctx.lineWidth = 3 * this.scale;
         ctx.globalAlpha = 1;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
         ctx.stroke();
         ctx.restore();
       }
@@ -73,16 +125,16 @@ export default function ExactDiwaliBurst({ isActive = true }) {
         this.x = x;
         this.y = y;
         this.radius = 0;
-        this.maxRadius = (150 + Math.random() * 30) * radiusScale;
+        this.maxRadius = (190 + Math.random() * 35) * radiusScale;
         this.lines = 34;
         this.colors = colorSet;
         this.life = 1;
-        this.speed = 1.8 * radiusScale;
+        this.speed = 1.55 * radiusScale;
       }
 
       update() {
         this.radius += this.speed;
-        this.life -= 0.006;
+        this.life -= 0.0045;
       }
 
       draw() {
@@ -91,23 +143,44 @@ export default function ExactDiwaliBurst({ isActive = true }) {
 
         for (let i = 0; i < this.lines; i++) {
           const angle = (Math.PI * 2 * i) / this.lines;
-          const end = this.radius;
-          const start = end - 45;
+          const isBigWave = i % 2 === 0;
+          const waveRadiusScale = isBigWave ? 1.2 : 0.78;
+          const waveLength = isBigWave ? 56 : 30;
+          const end = this.radius * waveRadiusScale;
+          const start = end - waveLength;
+          const startX = Math.cos(angle) * start;
+          const startY = Math.sin(angle) * start;
+          const endX = Math.cos(angle) * end;
+          const endY = Math.sin(angle) * end;
+          const glitterGradient = ctx.createLinearGradient(startX, startY, endX, endY);
+          glitterGradient.addColorStop(0, this.colors[0]);
+          glitterGradient.addColorStop(0.4, this.colors[1]);
+          glitterGradient.addColorStop(0.75, this.colors[2]);
+          glitterGradient.addColorStop(1, this.colors[3]);
 
           ctx.beginPath();
-          ctx.moveTo(Math.cos(angle) * start, Math.sin(angle) * start);
-          ctx.lineTo(Math.cos(angle) * end, Math.sin(angle) * end);
-          ctx.strokeStyle = this.colors[i % this.colors.length];
-          ctx.lineWidth = 2.3;
-          ctx.globalAlpha = this.life;
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.strokeStyle = glitterGradient;
+          ctx.lineWidth = isBigWave ? 2.8 : 2.1;
+          ctx.shadowColor = this.colors[i % this.colors.length];
+          ctx.shadowBlur = 12;
+          ctx.globalAlpha = this.life * (0.85 + Math.random() * 0.25);
           ctx.stroke();
+
+          // Tiny glitter spark at the tip for a shiny burst finish.
+          ctx.beginPath();
+          ctx.fillStyle = this.colors[(i + 1) % this.colors.length];
+          ctx.arc(endX, endY, 1.2 + Math.random() * 1.8, 0, Math.PI * 2);
+          ctx.globalAlpha = this.life * 0.9;
+          ctx.fill();
         }
 
         ctx.restore();
       }
 
       alive() {
-        return this.life > 0 && this.radius < this.maxRadius;
+        return this.radius < this.maxRadius || this.life > 0.08;
       }
     }
 
@@ -141,11 +214,13 @@ export default function ExactDiwaliBurst({ isActive = true }) {
         return;
       }
 
-      fireOne(current);
-      current = (current + 1) % 6;
-
-      let nextDelay = 300 + Math.random() * 150;
-      if (current === 0) nextDelay = 2500;
+      let nextDelay = 180;
+      if (isActiveRef.current) {
+        fireOne(current);
+        current = (current + 1) % 6;
+        nextDelay = 300 + Math.random() * 150;
+        if (current === 0) nextDelay = 2500;
+      }
 
       timerRef.current = window.setTimeout(loopFireworks, nextDelay);
     }
@@ -158,6 +233,15 @@ export default function ExactDiwaliBurst({ isActive = true }) {
       }
 
       ctx.clearRect(0, 0, w, h);
+
+      const targetOverlay = isActiveRef.current ? targetOpacityRef.current : 0;
+      overlayAlpha += (targetOverlay - overlayAlpha) * 0.08;
+      if (overlayAlpha > 0.002) {
+        ctx.save();
+        ctx.fillStyle = `rgba(0, 0, 0, ${overlayAlpha})`;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+      }
 
       for (let i = rockets.length - 1; i >= 0; i--) {
         rockets[i].update();
@@ -209,11 +293,7 @@ export default function ExactDiwaliBurst({ isActive = true }) {
       }
       window.removeEventListener("resize", resize);
     };
-  }, [isActive]);
-
-  if (!isActive) {
-    return null;
-  }
+  }, []);
 
   return (
     <canvas
@@ -225,7 +305,7 @@ export default function ExactDiwaliBurst({ isActive = true }) {
         height: "100%",
         background: "transparent",
         pointerEvents: "none",
-        zIndex: 9999,
+        zIndex,
       }}
     />
   );

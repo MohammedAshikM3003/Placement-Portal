@@ -276,7 +276,7 @@
 }
 
 .Ad-zbdv-td-name {
-    text-align: left;
+    text-align: center;
     font-weight: 600;
 }
 
@@ -313,6 +313,9 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    position:relative;
+    left:400px;
+    top:50px;
 }
 
 .Ad-zbdv-spinner {
@@ -542,10 +545,37 @@
 /* RESPONSIVE STYLES */
 /* ============================================ */
 
+/* Desktop main-content scrollbar only */
+@media screen and (min-width: 769px) {
+    .Ad-zbdv-main-content {
+        max-height: calc(100vh - 65px);
+        overflow-y: auto;
+       
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+}
+
 /* Tablet View */
 @media screen and (max-width: 1024px) {
     .Ad-zbdv-main-content {
-        margin: 65px 10px 0 10px;
+        margin: 65px 0px 0 2px;
         padding: 15px;
     }
 
@@ -578,7 +608,7 @@
 /* Mobile View */
 @media screen and (max-width: 768px) {
     .Ad-zbdv-main-content {
-        margin: 70px 15px 0 15px;
+        margin: 70px 0px 0 2px;
         padding: 12px;
         padding-bottom: 30px;
         gap: 15px;
@@ -642,7 +672,6 @@
     }
 
     .Ad-zbdv-table-header {
-        flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
@@ -654,7 +683,6 @@
     }
 
     .Ad-zbdv-action-buttons {
-        flex-direction: column;
         gap: 10px;
     }
 
@@ -668,7 +696,7 @@
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zbdv-main-content {
-        margin: 55px 12px 0 12px;
+        margin: 55px 0px 0 2px;
         padding: 10px;
         width: calc(100% - 24px);
     }

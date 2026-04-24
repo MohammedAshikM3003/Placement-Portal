@@ -21,9 +21,8 @@ const Ad_Zipping_History = () => {
     // State for tabs
     const [activeTab, setActiveTab] = useState('history');
 
-    // Filter states
-    const [regnoFilter, setRegnoFilter] = useState('');
-    const [nameFilter, setNameFilter] = useState('');
+    // Filter state
+    const [actionFilter, setActionFilter] = useState('all');
 
     // State for history data
     const [historyData, setHistoryData] = useState([]);
@@ -58,7 +57,6 @@ const Ad_Zipping_History = () => {
                 }).replace(/\//g, ' - ')
             }));
             setHistoryData(formattedHistory);
-            setFilteredHistory(formattedHistory);
         } catch (err) {
             console.error('Error fetching zipping history:', err);
             setError('Failed to load zipping history');
@@ -74,10 +72,16 @@ const Ad_Zipping_History = () => {
         }
     }, [isAuthenticated, fetchHistory]);
 
-    // Initialize filtered data when historyData changes
+    // Apply action filter whenever data or selection changes
     useEffect(() => {
-        setFilteredHistory(historyData);
-    }, [historyData]);
+        if (actionFilter === 'all') {
+            setFilteredHistory(historyData);
+            return;
+        }
+
+        const targetAction = actionFilter === 'zipped' ? 'Zipped Batch' : 'Unzipped Batch';
+        setFilteredHistory(historyData.filter((item) => item.action === targetAction));
+    }, [historyData, actionFilter]);
 
     // Handle tab change
     const handleTabChange = (tab) => {
@@ -87,38 +91,6 @@ const Ad_Zipping_History = () => {
         } else if (tab === 'zipped') {
             navigate('/admin/zipped-batches');
         }
-    };
-
-    // Apply filters
-    const applyFilters = () => {
-        let filtered = [...historyData];
-
-        if (regnoFilter.trim()) {
-            filtered = filtered.filter(h =>
-                h.batch.toLowerCase().includes(regnoFilter.toLowerCase())
-            );
-        }
-
-        if (nameFilter.trim()) {
-            filtered = filtered.filter(h =>
-                h.implementedBy.toLowerCase().includes(nameFilter.toLowerCase()) ||
-                h.batch.toLowerCase().includes(nameFilter.toLowerCase())
-            );
-        }
-
-        setFilteredHistory(filtered);
-    };
-
-    // Discard filters
-    const discardFilters = () => {
-        setRegnoFilter('');
-        setNameFilter('');
-        setFilteredHistory(historyData);
-    };
-
-    // Handle back
-    const handleBack = () => {
-        navigate('/admin-student-database');
     };
 
     // Get action badge class
@@ -306,34 +278,17 @@ const Ad_Zipping_History = () => {
                     </button>
                 </div>
 
-                {/* Filter Row */}
-                <div className={styles['Ad-zh-filter-row']}>
-                    <div className={styles['Ad-zh-filter-section']}>
-                        <div className={styles['Ad-zh-filter-label']}>Filter & Sort</div>
-                        <input
-                            type="text"
-                            className={styles['Ad-zh-input']}
-                            placeholder="Regno"
-                            value={regnoFilter}
-                            onChange={(e) => setRegnoFilter(e.target.value)}
-                        />
-                        <input
-                            type="text"
-                            className={styles['Ad-zh-input']}
-                            placeholder="Name"
-                            value={nameFilter}
-                            onChange={(e) => setNameFilter(e.target.value)}
-                        />
-                        <button className={styles['Ad-zh-filter-btn']} onClick={applyFilters}>
-                            Filter
-                        </button>
-                        <button className={styles['Ad-zh-discard-btn']} onClick={discardFilters}>
-                            Discard
-                        </button>
-                    </div>
-                    <button className={styles['Ad-zh-back-btn']} onClick={handleBack}>
-                        Back
-                    </button>
+                <div className={styles['Ad-zh-action-filter-wrapper']}>
+                    <select
+                        id="ad-zh-action-filter"
+                        className={styles['Ad-zh-action-filter-select']}
+                        value={actionFilter}
+                        onChange={(e) => setActionFilter(e.target.value)}
+                    >
+                        <option value="all">All Batches</option>
+                        <option value="zipped">Zipped Batches</option>
+                        <option value="unzipped">Unzipped Batches</option>
+                    </select>
                 </div>
 
                 {/* Table Card */}

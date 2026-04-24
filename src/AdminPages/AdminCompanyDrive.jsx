@@ -889,6 +889,7 @@ function AdminCompanyDrive({ onLogout }) {
                                             <tr
                                                 key={company._id}
                                                 className={`${styles['Admin-cd-table-row']} ${selectedCompanyIds.has(company._id) ? styles['Admin-cd-selected-row'] : ''}`}
+                                                onClick={() => handleCompanySelect(company._id)}
                                             >
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-checkbox']}`}>
                                                     <input
@@ -958,7 +959,10 @@ function AdminCompanyDrive({ onLogout }) {
                                                         fill="none" 
                                                         xmlns="http://www.w3.org/2000/svg" 
                                                         style={{ cursor: 'pointer', margin: '0 auto', display: 'block' }}
-                                                        onClick={() => handleViewDrive(company)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleViewDrive(company);
+                                                        }}
                                                     >
                                                         <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3"/>
                                                         <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E"/>
@@ -975,7 +979,8 @@ function AdminCompanyDrive({ onLogout }) {
                                                             // Show clickable tick icon if all rounds are completed
                                                             if (allRoundsCompleted) {
                                                                 return (
-                                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={() => {
+                                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={(e) => {
+                                                                        e.stopPropagation();
                                                                         startNavigationLoading(() => {
                                                                             navigate('/admin/company-drive/details', {
                                                                                 state: {
@@ -1005,7 +1010,8 @@ function AdminCompanyDrive({ onLogout }) {
                                                             if (attendanceTaken) {
                                                                 // Show Play button if attendance is taken
                                                                 return (
-                                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={() => {
+                                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={(e) => {
+                                                                        e.stopPropagation();
                                                                         startNavigationLoading(() => {
                                                                             // Pass the current company object directly - it's already the specific drive from the table row
                                                                             // No need to extract from drives array since table rows show individual drives
@@ -1034,7 +1040,8 @@ function AdminCompanyDrive({ onLogout }) {
                                                                         width="24"
                                                                         height="22"
                                                                         style={{ cursor: 'pointer' }}
-                                                                        onClick={() => {
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
                                                                             // Format dates to YYYY-MM-DD format
                                                                             const formatDate = (dateString) => {
                                                                                 if (!dateString) return '';
@@ -1065,7 +1072,10 @@ function AdminCompanyDrive({ onLogout }) {
 
                                                             // Show Attendance icon if attendance not taken but eligible students exist
                                                             return (
-                                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin-attendance', { state: { companyData: company } })} title="Take Attendance">
+                                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate('/admin-attendance', { state: { companyData: company } });
+                                                                }} title="Take Attendance">
                                                                     <rect x="3" y="4" width="18" height="18" rx="2" fill="#4EA24E"/>
                                                                     <path d="M8 2V6M16 2V6" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round"/>
                                                                     <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>

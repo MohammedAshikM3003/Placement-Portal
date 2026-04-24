@@ -39,7 +39,7 @@
     background-color: #e8e8e8;
     border-radius: 15px;
     overflow: hidden;
-    max-width: 450px;
+    max-width: 500px;
 }
 
 .Ad-zd-filter-header {
@@ -361,7 +361,7 @@
 }
 
 .Ad-zd-td-name {
-    text-align: left;
+    text-align: center;
     font-weight: 500;
 }
 
@@ -418,6 +418,9 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    position:relative;
+    left:400px;
+    top:50px;
 }
 
 .Ad-zd-spinner {
@@ -462,10 +465,22 @@
 /* RESPONSIVE STYLES */
 /* ============================================ */
 
+/* Desktop View */
+@media screen and (min-width: 769px) {
+    .Ad-zd-main-content {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .Ad-zd-main-content::-webkit-scrollbar {
+        width: 0;
+    }
+}
+
 /* Tablet View */
 @media screen and (max-width: 1024px) {
     .Ad-zd-main-content {
-        margin: 65px 10px 0 10px;
+        margin: 65px 0px 0 2px;
         padding: 15px;
     }
 
@@ -485,7 +500,7 @@
 /* Mobile View */
 @media screen and (max-width: 768px) {
     .Ad-zd-main-content {
-        margin: 70px 15px 0 15px;
+        margin: 70px 0px 0 2px;
         padding: 12px;
         padding-bottom: 30px;
         gap: 15px;
@@ -524,7 +539,6 @@
     }
 
     .Ad-zd-table-header {
-        flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
@@ -543,12 +557,17 @@
         width: 100%;
         max-width: 300px;
     }
+
+    .Ad-zd-filter-content {
+        padding: 12px 15px 15px;
+        height:390px;
+    }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zd-main-content {
-        margin: 55px 12px 0 12px;
+        margin: 55px 0px 0 2px;
         padding: 10px;
         width: calc(100% - 24px);
     }
@@ -560,6 +579,7 @@
 
     .Ad-zd-filter-content {
         padding: 12px 15px 15px;
+        height:390px;
     }
 
     .Ad-zd-input,

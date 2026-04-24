@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 
 import Adnavbar from '../components/Navbar/Adnavbar.js';
@@ -13,7 +13,6 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
 import Adminicon from '../assets/Adminicon.png';
 
-import AdminCompanyprofilePopup from './AdminCompanyprofilepopup';
 import mongoDBService from '../services/mongoDBService';
 
 const EyeIcon = () => (
@@ -106,17 +105,13 @@ const EXPORT_HEADERS = [
 
 function Admincompanyprofile({ onLogout }) {
     useAdminAuth(); // JWT authentication verification
-    const location = useLocation();
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [companies, setCompanies] = useState([]);
     const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
-    const [showAddCompanyPopup, setShowAddCompanyPopup] = useState(false);
-    const [editingCompany, setEditingCompany] = useState(null);
-    const [viewingCompany, setViewingCompany] = useState(null);
     const [showDeleteWarning, setShowDeleteWarning] = useState(false);
     const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
-    const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -169,13 +164,6 @@ function Admincompanyprofile({ onLogout }) {
     useEffect(() => {
         fetchCompanies();
     }, [fetchCompanies]);
-
-    // Check if we should open the add company popup from navigation state
-    useEffect(() => {
-        if (location.state?.openAddPopup) {
-            setShowAddCompanyPopup(true);
-        }
-    }, [location.state]);
 
     const filteredCompanies = useMemo(() => {
         if (!companies.length) return [];
@@ -235,9 +223,8 @@ function Admincompanyprofile({ onLogout }) {
     }, []);
 
     const openAddPopup = useCallback(() => {
-        setEditingCompany(null);
-        setShowAddCompanyPopup(true);
-    }, []);
+        navigate('/admin-company-profile/manage/add');
+    }, [navigate]);
 
     const openEditPopup = useCallback(() => {
         if (selectedCompanyIds.size !== 1) {
@@ -253,9 +240,11 @@ function Admincompanyprofile({ onLogout }) {
             return;
         }
 
-        setEditingCompany(company);
-        setShowAddCompanyPopup(true);
-    }, [companies, selectedCompanyIds]);
+        const selectedCompanyId = company.id || company._id;
+        navigate(`/admin-company-profile/manage/edit/${selectedCompanyId}`, {
+            state: { company }
+        });
+    }, [companies, selectedCompanyIds, navigate]);
 
     const openViewPopup = useCallback((companyId) => {
         const company = companies.find((item) => String(item.id || item._id) === String(companyId));
@@ -264,48 +253,10 @@ function Admincompanyprofile({ onLogout }) {
             alert('Company could not be found. Please refresh and try again.');
             return;
         }
-
-        setViewingCompany(company);
-        setShowAddCompanyPopup(true);
-    }, [companies]);
-
-    const handlePopupClose = useCallback(() => {
-        setShowAddCompanyPopup(false);
-        setEditingCompany(null);
-        setViewingCompany(null);
-    }, []);
-
-    const handlePopupSubmit = useCallback(async (formValues) => {
-        try {
-            // Ensure both companyType and domain are sent for backward compatibility
-            const submitData = {
-                ...formValues,
-                domain: formValues.companyType || formValues.domain, // Map companyType to domain for backend
-                companyType: formValues.companyType || formValues.domain
-            };
-
-            if (editingCompany) {
-                const companyId = editingCompany.id || editingCompany._id;
-                await mongoDBService.apiCall(`/admin/companies/${companyId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(submitData)
-                });
-                setShowUpdateSuccess(true);
-                await fetchCompanies();
-                handlePopupClose();
-            } else {
-                await mongoDBService.apiCall('/admin/companies', {
-                    method: 'POST',
-                    body: JSON.stringify(submitData)
-                });
-                await fetchCompanies();
-                // Do NOT close the popup here! Let the popup show the success message and close itself.
-            }
-        } catch (error) {
-            console.error('Failed to save company:', error);
-            alert(error?.message || 'Failed to save company. Please try again.');
-        }
-    }, [editingCompany, fetchCompanies, handlePopupClose]);
+        navigate(`/admin-company-profile/manage/view/${companyId}`, {
+            state: { company }
+        });
+    }, [companies, navigate]);
 
     const handleDeleteClick = useCallback(() => {
         if (!selectedCompanyIds.size) {
@@ -456,8 +407,6 @@ function Admincompanyprofile({ onLogout }) {
     }, [filteredCompanies]);
 
     const closeDeleteSuccess = useCallback(() => setShowDeleteSuccess(false), []);
-    const closeUpdateSuccess = useCallback(() => setShowUpdateSuccess(false), []);
-
     const handleFilterVisitDateChange = useCallback((event) => {
         setFilters((prev) => ({
             ...prev,
@@ -743,14 +692,6 @@ function Admincompanyprofile({ onLogout }) {
                         </table>
                     </div>
                 </div>
-
-                <AdminCompanyprofilePopup
-                    isOpen={showAddCompanyPopup}
-                    onClose={handlePopupClose}
-                    onSubmit={handlePopupSubmit}
-                    editingCompany={editingCompany}
-                    viewingCompany={viewingCompany}
-                />
             </div>
 
             {/* Export Alerts */}

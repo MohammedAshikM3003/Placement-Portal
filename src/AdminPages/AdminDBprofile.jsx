@@ -168,7 +168,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
             position: 'fixed',
             top: 0,
             left: 0,

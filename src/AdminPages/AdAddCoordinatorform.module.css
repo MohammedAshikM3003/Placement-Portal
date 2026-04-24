@@ -490,14 +490,13 @@
 
 .Admin-cood-detail-mobile-actions {
     display: flex;
-    flex-direction: column;
     gap: 10px;
     margin-top: 16px;
 }
 
 /* --- Modals (Image Preview) --- */
 .co-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.2);
     display: flex; justify-content: center; align-items: center; z-index: 1000;
 }
 .co-modal-content { position: relative; max-width: 90%; max-height: 90%; }
@@ -509,7 +508,7 @@
 .co-modal-close:hover { opacity: 1; }
 
 /* --- DESKTOP STYLES --- */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
     .Admin-cood-detail-layout { flex-direction: row; height: 100vh; overflow: hidden; }
     
     .Admin-cood-detail-main-content { 
@@ -543,7 +542,7 @@
         align-items: start;
     }
     .Admin-cood-detail-login-fields {
-        grid-template-columns: repeat(3, 1fr) 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr) ;
         gap: 15px;
         margin-bottom: 20px;
     }
@@ -554,7 +553,10 @@
         gap: 12px;
         justify-content: flex-end;
         grid-column: 1 / -1;
-        margin-top: 10px;
+        position: relative;
+        left:350px;
+        margin-top: -62px;
+
     }
 
     .Admin-cood-detail-mobile-actions {
@@ -572,9 +574,11 @@
         padding: 10px 20px;
         min-width: 150px;
     }
+
+    
 }       
 
-@media (min-width: 769px) and (max-width: 1200px) {
+@media (min-width: 768px) and (max-width: 1200px) {
     .Admin-cood-detail-top-row { grid-template-columns: 1fr; }
     .Admin-cood-detail-input-grid-three-col { grid-template-columns: 1fr 1fr; }
 }
@@ -592,7 +596,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -725,6 +729,20 @@
        left:48px;
 
     }
+    .Admin-cood-detail-discard-btn, .Admin-cood-detail-confirm-save-btn {
+    padding: 12px 15px; 
+    border-radius: 8px; 
+    font-size: 0.95em; 
+    font-weight: 600; 
+    cursor: pointer;
+    transition: all 0.2s; 
+    min-width: auto; 
+    border: none; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    height: 48px;
+    white-space: nowrap;
+    width:225px;
+}
 }
 /* --- Popup Styles (from MainRegistration) --- */
 .mr-popup-overlay {
@@ -733,7 +751,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -501,6 +501,7 @@ router.post('/certificates/upload/gridfs', memoryUpload.single('file'), async (r
                 existing.comp = comp || existing.comp;
                 existing.prize = prize || existing.prize;
                 existing.date = date || existing.date;
+                existing.coordinatorNotificationRead = false;
                 existing.uploadDate = new Date().toISOString();
                 await existing.save();
 
@@ -525,7 +526,8 @@ router.post('/certificates/upload/gridfs', memoryUpload.single('file'), async (r
                     regNo: regNo || '', section: section || '', department: department || '',
                     degree: degree || '', year: year || '', semester: semester || '',
                     competition: competition || '', certificateName: certificateName || '',
-                    comp: comp || '', prize: prize || '', status: 'pending'
+                    comp: comp || '', prize: prize || '', status: 'pending',
+                    coordinatorNotificationRead: false
                 });
                 await newCert.save();
 

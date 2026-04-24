@@ -209,6 +209,7 @@ function AdminHistoryTraining({ onLogout }) {
                                 scheduleId: schedule._id,
                                 companyName,
                                 courseName: course || '-',
+                                applicableYear,
                                 startDate: phaseStartDate,
                                 endDate: phaseEndDate,
                                 trainer: trainer,
@@ -228,6 +229,7 @@ function AdminHistoryTraining({ onLogout }) {
                             scheduleId: schedule._id,
                             companyName,
                             courseName: '-',
+                            applicableYear,
                             startDate: phaseStartDate,
                             endDate: phaseEndDate,
                             trainer: trainer,
@@ -324,10 +326,16 @@ function AdminHistoryTraining({ onLogout }) {
     };
 
     const handleViewHistory = (history) => {
-        navigate('/admin-training-history/view', {
+        navigate('/admin-schedule-training-batch', {
             state: {
-                viewMode: true,
-                historyData: history
+                scheduleId: history?.scheduleId || '',
+                companyName: history?.companyName || companyFromState || '',
+                selectedCourse: history?.courseName || '',
+                applicableYear: history?.applicableYear || '',
+                trainer: history?.trainer || '',
+                scheduleStartDate: history?.startDate || '',
+                scheduleEndDate: history?.endDate || '',
+                availableCourses: history?.courseName && history.courseName !== '-' ? [history.courseName] : []
             }
         });
     };
@@ -652,6 +660,7 @@ function AdminHistoryTraining({ onLogout }) {
                                             <tr
                                                 key={history._id}
                                                 className={`${styles['Admin-ht-table-row']} ${selectedHistoryIds.has(history._id) ? styles['Admin-ht-selected-row'] : ''}`}
+                                                onClick={() => handleHistorySelect(history._id)}
                                             >
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-checkbox']}`}>
                                                     <input
@@ -678,7 +687,10 @@ function AdminHistoryTraining({ onLogout }) {
                                                         fill="none"
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         style={{ cursor: 'pointer', margin: '0 auto', display: 'block' }}
-                                                        onClick={() => handleViewHistory(history)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleViewHistory(history);
+                                                        }}
                                                     >
                                                         <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3"/>
                                                         <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E"/>

@@ -696,7 +696,7 @@ const PlacementDashboard = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredStudents.map((student) => (
+                    filteredStudents.map((student, index) => (
                       <tr
                         key={student.sno}
                         className={[
@@ -704,7 +704,7 @@ const PlacementDashboard = () => {
                           String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['Admin-ps-row-rejected'] : ''
                         ].filter(Boolean).join(' ')}
                       >
-                        <td>{student.sno}</td>
+                        <td>{index + 1}</td>
                         <td>
                           <span
                             className={[

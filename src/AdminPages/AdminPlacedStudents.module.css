@@ -24,7 +24,6 @@
   /* FIXED: Set desktop margin here to offset sidebar */
   margin-top: 50px;
   margin-left: 260px;
-  overflow-y: auto;
   height:93vh;
 }
 
@@ -202,7 +201,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin: 10px 10px 20px 40px;
-  max-height: 230px;
+  min-height: 250px;
   overflow: visible;
   border: 2px solid #808080;
 }
@@ -270,7 +269,7 @@
 
 .Admin-ps-students-table td {
   padding: 12px 15px;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid #eee;
   font-size: 0.9rem;
 }
@@ -1021,7 +1020,7 @@
     margin: 0;
     margin-top: 10px;
     padding: 15px;
-    max-height: none;
+min-height: 400px;
     overflow: visible;
     box-sizing: border-box;
   }
@@ -1034,7 +1033,7 @@
 
   /* Main table scroll wrapper like AdminCompanyprofile */
   .Admin-ps-table-scroll {
-    max-height: 60vh;
+    min-height:285px;
     overflow: auto;
   
   }

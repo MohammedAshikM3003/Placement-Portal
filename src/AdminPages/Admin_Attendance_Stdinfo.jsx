@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Adnavbar.js";
 import Sidebar from "../components/Sidebar/Adsidebar.js";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts/index.js';
@@ -444,6 +444,7 @@ const DeleteSuccessPopup = ({ onClose }) => (
 
 export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [activeBatch, setActiveBatch] = useState("");
@@ -724,6 +725,29 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
 
   const handleStatusUpdate = (id, status) => {
     setPendingChanges((prev) => ({ ...prev, [id]: status }));
+  };
+
+  const handleViewStudentProfile = (student) => {
+    const candidateIds = [student?.id, student?.studentId, student?.regNo]
+      .map((value) => (value || '').toString().trim())
+      .filter(Boolean);
+
+    const stableStudentId = candidateIds.find((value) => !/^student-\d+$/i.test(value)) || '';
+
+    if (!stableStudentId) {
+      alert('Unable to open profile for this student. Student ID is missing.');
+      return;
+    }
+
+    navigate(`/admin-student-view/${encodeURIComponent(stableStudentId)}`, {
+      state: {
+        studentData: student,
+        viewMode: true,
+        viewOnly: true,
+        showLoadingPopup: true,
+        source: 'training-attendance'
+      }
+    });
   };
 
   const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -1190,12 +1214,17 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                     {filteredStudents.map((student, index) => {
                       const displayStatus = pendingChanges[student.id] || student.status;
                       return (
-                        <tr key={student.id} className={selectedStudents.includes(student.id) ? styles['selected-row'] : ''}>
+                        <tr
+                          key={student.id}
+                          className={selectedStudents.includes(student.id) ? styles['selected-row'] : ''}
+                          onClick={() => handleCheckboxChange(student.id)}
+                        >
                           <td className={styles["ad-train-att-col-select"]}>
                             <input
                               type="checkbox"
                               checked={selectedStudents.includes(student.id)}
                               onChange={() => handleCheckboxChange(student.id)}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           </td>
                           <td className={styles["ad-train-att-col-sno"]}>{index + 1}</td>
@@ -1206,7 +1235,15 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                           <td className={styles["ad-train-att-col-section"]}>{student.section}</td>
                           <td className={styles["ad-train-att-col-phone"]}>{student.mobile}</td>
                           <td className={styles["ad-train-att-col-view"]}>
-                            <img src={eyeicon} alt="View Details" className={styles["ad-train-att-eye-icon"]} />
+                            <img
+                              src={eyeicon}
+                              alt="View Details"
+                              className={styles["ad-train-att-eye-icon"]}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewStudentProfile(student);
+                              }}
+                            />
                           </td>
                           <td className={styles["ad-train-att-col-status"]}>
                             <span className={`${styles["ad-train-att-status-text"]} ${styles[`ad-train-att-${displayStatus.toLowerCase()}`]}`}>

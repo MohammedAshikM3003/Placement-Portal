@@ -8,7 +8,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.2);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -333,13 +333,14 @@
 .btn-content {
   display: flex;
   flex-direction: column;
-  text-align: left;
+  text-align: center;
 }
 
 .btn-text-main { 
   font-size: 1.4rem; 
   font-weight: 800; 
   line-height: 1;
+  width:85px;
 }
 
 .btn-text-sub { 
@@ -440,11 +441,20 @@
     gap: 15px;
     justify-content: center;
   }
-  
+
+  .Admin-add-branch-actions-right {
+    order: 1;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .Admin-add-branch-btn-add-coord {
+    order: 2;
+  }
+
   .Admin-add-branch-btn {
     width: 100%;
     justify-content: center;
-    margin-left: 26px;
   }
 
   /* Custom Webkit Scrollbar for Mobile Form */

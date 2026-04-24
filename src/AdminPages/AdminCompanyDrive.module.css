@@ -710,7 +710,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1069,7 +1069,7 @@
     position: relative;
     display: inline-block;
     z-index: 15;
-    left:305px;
+    left:315px;
     top:-65px;
 }
     .Admin-cd-table-header-row {
@@ -1092,6 +1092,9 @@
     .Admin-cd-print-btn {
         padding: 8px 20px;
         font-size: 0.9rem;
+        height:35px;
+        width:95px;
+        margin-left:70px;
     }
 
     .Admin-cd-table-container {
@@ -1394,7 +1397,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.2);
         display: flex;
         justify-content: center;
         align-items: center;

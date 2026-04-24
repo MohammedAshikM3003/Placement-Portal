@@ -20,6 +20,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
     // Get data from navigation state
     const deptData = location.state?.departmentData || {};
     const batchData = location.state?.batchData || {};
+    const preloadedStudents = location.state?.studentsData || [];
     const deptName = deptData.name || decodeURIComponent(deptId || '');
 
     // State for sidebar
@@ -60,46 +61,80 @@ const Ad_Zipped_Batch_Department_Students = () => {
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const handleOverlayClick = () => setIsSidebarOpen(false);
 
+    const normalizeStudents = useCallback((rows = []) => {
+        return (Array.isArray(rows) ? rows : []).map((student, index) => {
+            const fullName =
+                (student?.name || '').toString().trim() ||
+                `${(student?.firstName || '').toString().trim()} ${(student?.lastName || '').toString().trim()}`.trim() ||
+                (student?.studentName || '').toString().trim() ||
+                '-';
+
+            const registerNumber =
+                (student?.registerNumber || student?.regNo || student?.registerNo || student?.rollNo || '').toString().trim() ||
+                '-';
+
+            const profileId =
+                (student?._id || student?.studentId || student?.id || registerNumber || `row-${index}`).toString();
+
+            return {
+                id: profileId,
+                profileId,
+                registerNumber,
+                name: fullName,
+                section: (student?.section || '').toString().trim() || '-',
+                phone: (student?.phone || student?.mobile || student?.mobileNumber || '').toString().trim() || '-',
+                email: (student?.email || student?.primaryEmail || student?.collegeEmail || '').toString().trim() || '-',
+                placementStatus: (student?.placementStatus === 'Placed' || student?.isPlaced) ? 'Placed' : 'Unplaced',
+                rawData: student
+            };
+        });
+    }, []);
+
     // Fetch students data
     const fetchStudents = useCallback(async () => {
         try {
             setIsLoading(true);
             setError(null);
 
-            // Sample data for zipped batch department students
-            // In production, this would fetch from API based on deptId and archiveId
-            const sampleStudents = [
-                { id: 1, registerNumber: '21CS001', name: 'John Doe', section: 'A', phone: '9876543210', email: 'john@example.com', placementStatus: 'Placed' },
-                { id: 2, registerNumber: '21CS002', name: 'Jane Smith', section: 'A', phone: '9876543211', email: 'jane@example.com', placementStatus: 'Unplaced' },
-                { id: 3, registerNumber: '21CS003', name: 'Mike Johnson', section: 'B', phone: '9876543212', email: 'mike@example.com', placementStatus: 'Placed' },
-                { id: 4, registerNumber: '21CS004', name: 'Sarah Williams', section: 'B', phone: '9876543213', email: 'sarah@example.com', placementStatus: 'Unplaced' },
-                { id: 5, registerNumber: '21CS005', name: 'David Brown', section: 'C', phone: '9876543214', email: 'david@example.com', placementStatus: 'Placed' },
-                { id: 6, registerNumber: '21CS006', name: 'Emily Davis', section: 'C', phone: '9876543215', email: 'emily@example.com', placementStatus: 'Unplaced' },
-            ];
+            let rows = [];
 
-            setStudents(sampleStudents);
-            setFilteredStudents(sampleStudents);
+            if (Array.isArray(preloadedStudents) && preloadedStudents.length > 0) {
+                rows = preloadedStudents;
+            } else if (batchData?.id && deptName) {
+                rows = await mongoDBService.getArchivedBatchStudents(batchData.id, deptName);
+            }
+
+            const normalizedStudents = normalizeStudents(rows);
+
+            setStudents(normalizedStudents);
+            setFilteredStudents(normalizedStudents);
 
             // Extract unique sections
-            const uniqueSections = [...new Set(sampleStudents.map(s => s.section))].sort();
+            const uniqueSections = [...new Set(
+                normalizedStudents
+                    .map((s) => (s.section || '').toString().trim())
+                    .filter((section) => section && section !== '-')
+            )].sort();
             setSections(uniqueSections);
 
             // Update stats
-            const placedCount = sampleStudents.filter(s => s.placementStatus === 'Placed').length;
+            const placedCount = normalizedStudents.filter((s) => s.placementStatus === 'Placed').length;
             setDeptStats(prev => ({
                 ...prev,
                 totalSections: uniqueSections.length,
-                totalStudents: sampleStudents.length,
+                totalStudents: normalizedStudents.length,
                 placedStudents: placedCount
             }));
 
         } catch (err) {
             console.error('Error fetching students:', err);
             setError('Failed to load students');
+            setStudents([]);
+            setFilteredStudents([]);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [batchData?.id, deptName, normalizeStudents, preloadedStudents]);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -145,7 +180,22 @@ const Ad_Zipped_Batch_Department_Students = () => {
 
     // Handle view profile
     const handleViewProfile = (student) => {
-        navigate(`/admin-student-view/${student.id}`, { state: { studentData: student } });
+        const targetStudentId = (student?.profileId || student?.registerNumber || '').toString().trim();
+        if (!targetStudentId) {
+            alert('Unable to open profile. Student identifier is missing.');
+            return;
+        }
+
+        navigate(`/admin-student-view/${encodeURIComponent(targetStudentId)}`, {
+            state: {
+                studentData: student?.rawData || student,
+                student: student?.rawData || student,
+                viewMode: true,
+                viewOnly: true,
+                showLoadingPopup: true,
+                source: 'zipped-batch-department-students'
+            }
+        });
     };
 
     // Export functions

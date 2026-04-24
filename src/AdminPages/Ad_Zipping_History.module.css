@@ -67,6 +67,40 @@
     color: white;
 }
 
+.Ad-zh-action-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.Ad-zh-action-filter-label {
+    background-color: #4EA24E;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.Ad-zh-action-filter-select {
+    min-width: 220px;
+    padding: 10px 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.Ad-zh-action-filter-select:focus {
+    outline: none;
+    border-color: #4EA24E;
+}
+
 /* Filter Row */
 .Ad-zh-filter-row {
     display: flex;
@@ -328,7 +362,7 @@
 }
 
 .Ad-zh-td-batch {
-    text-align: left;
+    text-align: center;
     font-weight: 500;
     color: #4A90E2;
 }
@@ -375,6 +409,9 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    position:relative;
+    left:400px;
+    top:50px;
 }
 
 .Ad-zh-spinner {
@@ -399,28 +436,15 @@
 /* Tablet View */
 @media screen and (max-width: 1024px) {
     .Ad-zh-main-content {
-        margin: 65px 10px 0 10px;
+        margin: 65px 0px 0 2px;
         padding: 15px;
-    }
-
-    .Ad-zh-filter-row {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .Ad-zh-filter-section {
-        width: 100%;
-    }
-
-    .Ad-zh-back-btn {
-        align-self: flex-end;
     }
 }
 
 /* Mobile View */
 @media screen and (max-width: 768px) {
     .Ad-zh-main-content {
-        margin: 70px 15px 0 15px;
+        margin: 70px 0px 0 2px;
         padding: 12px;
         padding-bottom: 30px;
         gap: 15px;
@@ -457,32 +481,22 @@
         text-align: center;
     }
 
-    .Ad-zh-filter-section {
-        flex-direction: column;
+    .Ad-zh-action-filter-wrapper {
+        width: 100%;
         align-items: stretch;
         gap: 10px;
     }
 
-    .Ad-zh-filter-label {
+    .Ad-zh-action-filter-label {
         text-align: center;
     }
 
-    .Ad-zh-input {
+    .Ad-zh-action-filter-select {
         width: 100%;
         min-width: auto;
     }
 
-    .Ad-zh-filter-btn,
-    .Ad-zh-discard-btn {
-        width: 48%;
-    }
-
-    .Ad-zh-back-btn {
-        width: 100%;
-    }
-
     .Ad-zh-table-header {
-        flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
@@ -502,7 +516,7 @@
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zh-main-content {
-        margin: 55px 12px 0 12px;
+        margin: 55px 0px 0 2px;
         padding: 10px;
         width: calc(100% - 24px);
     }
@@ -512,20 +526,13 @@
         font-size: 0.75rem;
     }
 
-    .Ad-zh-filter-label {
+    .Ad-zh-action-filter-label {
         font-size: 0.85rem;
         padding: 8px 15px;
     }
 
-    .Ad-zh-input {
+    .Ad-zh-action-filter-select {
         padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-
-    .Ad-zh-filter-btn,
-    .Ad-zh-discard-btn,
-    .Ad-zh-back-btn {
-        padding: 8px 20px;
         font-size: 0.9rem;
     }
 

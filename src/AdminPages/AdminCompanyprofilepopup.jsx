@@ -1,343 +1,381 @@
-import React, { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-// FIXED: Import CSS as a Module
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import useAdminAuth from '../utils/useAdminAuth';
+import Adnavbar from '../components/Navbar/Adnavbar';
+import Adsidebar from '../components/Sidebar/Adsidebar';
+import Adminicon from '../assets/Adminicon.png';
+import mongoDBService from '../services/mongoDBService';
+import Ad_Calendar from '../components/Calendar/Ad_Calendar';
 import styles from './AdminCompanyprofilepopup.module.css';
 
-const parseDateValue = (value) => {
-    if (!value) return null;
-    if (value instanceof Date) {
-        return Number.isNaN(value.getTime()) ? null : value;
-    }
-
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+const emptyFormData = {
+    companyName: '',
+    companyType: '',
+    jobRole: '',
+    mode: '',
+    hrName: '',
+    hrContact: '',
+    round: '',
+    status: '',
+    visitDate: '',
+    package: '',
+    location: '',
+    bondPeriod: ''
 };
 
-const formatDateToISO = (date) => {
-    if (!date || Number.isNaN(date.getTime())) {
-        return '';
-    }
+const mapCompanyToFormData = (sourceCompany) => ({
+    companyName: sourceCompany?.companyName || sourceCompany?.company || '',
+    companyType: sourceCompany?.companyType || sourceCompany?.domain || '',
+    jobRole: sourceCompany?.jobRole || '',
+    mode: sourceCompany?.mode || '',
+    hrName: sourceCompany?.hrName || '',
+    hrContact: sourceCompany?.hrContact || '',
+    round: sourceCompany?.round || '',
+    status: sourceCompany?.status || '',
+    visitDate: sourceCompany?.visitDate || '',
+    package: sourceCompany?.package || '',
+    location: sourceCompany?.location || '',
+    bondPeriod: sourceCompany?.bondPeriod || ''
+});
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+function AdminCompanyprofilePopup({ onLogout }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { mode, companyId } = useParams();
+    const { isAuthenticated, isLoading: authLoading } = useAdminAuth();
 
-    return `${year}-${month}-${day}`;
-};
-
-function AdminCompanyprofilePopup({ isOpen, onClose, onSubmit, editingCompany, viewingCompany }) {
-    
-    // --- Initial Form State ---
-    const getInitialFormData = () => {
-        const sourceCompany = viewingCompany || editingCompany;
-        if (sourceCompany) {
-            return {
-                companyName: sourceCompany.companyName || sourceCompany.company || '',
-                companyType: sourceCompany.companyType || sourceCompany.domain || '',
-                jobRole: sourceCompany.jobRole || '',
-                mode: sourceCompany.mode || '',
-                hrName: sourceCompany.hrName || '',
-                hrContact: sourceCompany.hrContact || '',
-                round: sourceCompany.round || '',
-                status: sourceCompany.status || '',
-                visitDate: sourceCompany.visitDate || '',
-                package: sourceCompany.package || '',
-                location: sourceCompany.location || '',
-                bondPeriod: sourceCompany.bondPeriod || ''
-            };
-        }
-        return {
-            companyName: '',
-            companyType: '',
-            jobRole: '',
-            mode: '',
-            hrName: '',
-            hrContact: '',
-            round: '',
-            status: '',
-            visitDate: '',
-            package: '',
-            location: '',
-            bondPeriod: ''
-        };
-    };
-
-    const [formData, setFormData] = useState(getInitialFormData());
-    
-    // --- State for showing the success message ---
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [successTitle, setSuccessTitle] = useState('Company Added ✔');
-    const [successHeader, setSuccessHeader] = useState('Added !');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [formData, setFormData] = useState(emptyFormData);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isLoadingCompany, setIsLoadingCompany] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [successMode, setSuccessMode] = useState('create');
+
+    const normalizedMode = useMemo(() => String(mode || 'add').toLowerCase(), [mode]);
+    const isViewMode = normalizedMode === 'view';
+    const isEditMode = normalizedMode === 'edit';
+
+    const pageTitle = isViewMode ? 'View Company' : isEditMode ? 'Edit Company' : 'Add Company';
+    const pageDescription = isViewMode
+        ? 'Read-only company details'
+        : isEditMode
+            ? 'Update company profile details'
+            : 'Create a new company profile record';
+
+    const handleCloseSidebar = useCallback(() => setIsSidebarOpen(false), []);
+
+    useEffect(() => {
+        const closeSidebarListener = () => setIsSidebarOpen(false);
+        window.addEventListener('closeSidebar', closeSidebarListener);
+        return () => window.removeEventListener('closeSidebar', closeSidebarListener);
+    }, []);
+
+    useEffect(() => {
+        const loadCompany = async () => {
+            setSubmitError('');
+
+            if (!isEditMode && !isViewMode) {
+                setFormData(emptyFormData);
+                setIsLoadingCompany(false);
+                return;
+            }
+
+            const companyFromState = location.state?.company;
+            const stateCompanyId = companyFromState?.id || companyFromState?._id;
+
+            if (companyFromState && (!companyId || String(stateCompanyId) === String(companyId))) {
+                setFormData(mapCompanyToFormData(companyFromState));
+                setIsLoadingCompany(false);
+                return;
+            }
+
+            if (!companyId) {
+                setSubmitError('Company details are missing. Please go back and select a company again.');
+                setIsLoadingCompany(false);
+                return;
+            }
+
+            setIsLoadingCompany(true);
+            try {
+                const companies = await mongoDBService.getCompanies();
+                const selectedCompany = (companies || []).find(
+                    (company) => String(company.id || company._id) === String(companyId)
+                );
+
+                if (!selectedCompany) {
+                    setSubmitError('Unable to find the selected company. Please return and try again.');
+                    return;
+                }
+
+                setFormData(mapCompanyToFormData(selectedCompany));
+            } catch (error) {
+                console.error('Failed to load company details:', error);
+                setSubmitError(error?.message || 'Failed to load company details. Please try again.');
+            } finally {
+                setIsLoadingCompany(false);
+            }
+        };
+
+        loadCompany();
+    }, [isEditMode, isViewMode, location.state, companyId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prevState => ({
+        setFormData((prevState) => ({
             ...prevState,
             [name]: value
         }));
     };
 
-    const handleVisitDateChange = (date) => {
-        setFormData(prevState => ({
+    const handleVisitDateChange = (dateString) => {
+        setFormData((prevState) => ({
             ...prevState,
-            visitDate: formatDateToISO(date)
+            visitDate: dateString
         }));
+    };
+
+    const handleBack = () => {
+        navigate('/admin-company-profile');
+    };
+
+    const handleSuccessClose = () => {
+        setShowSuccessPopup(false);
+        navigate('/admin-company-profile');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isProcessing) return;
-        setIsProcessing(true);
+        if (isProcessing || isViewMode) return;
 
-        // Validate required fields
         if (!formData.companyName || !formData.companyType || !formData.jobRole || !formData.hrName) {
-            setIsProcessing(false);
-            alert('Please fill in all required fields');
-            return;
-        }
-        if (formData.round && isNaN(parseInt(formData.round))) {
-            setIsProcessing(false);
-            alert('Round must be a number');
+            setSubmitError('Please fill in all required fields.');
             return;
         }
 
-        // Prepare the data object
+        if (formData.round && Number.isNaN(parseInt(formData.round, 10))) {
+            setSubmitError('Round must be a number.');
+            return;
+        }
+
+        setIsProcessing(true);
+        setSubmitError('');
+
         const submitData = {
             ...formData,
-            round: formData.round ? parseInt(formData.round) : ''
+            round: formData.round ? parseInt(formData.round, 10) : '',
+            domain: formData.companyType || formData.domain,
+            companyType: formData.companyType || formData.domain
         };
 
-        setSubmitError('');
-
         try {
-            if (editingCompany) {
-                await Promise.resolve(onSubmit(submitData));
-                setIsProcessing(false);
-                handleClose();
+            if (isEditMode) {
+                if (!companyId) {
+                    throw new Error('Company ID is missing for edit operation.');
+                }
+
+                await mongoDBService.apiCall(`/admin/companies/${companyId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(submitData)
+                });
+                setSuccessMode('update');
             } else {
-                await Promise.resolve(onSubmit(submitData));
-                setIsProcessing(false);
-                setSuccessHeader('Added !');
-                setSuccessTitle('Company Added ✔');
-                setShowSuccess(true);
+                await mongoDBService.apiCall('/admin/companies', {
+                    method: 'POST',
+                    body: JSON.stringify(submitData)
+                });
+                setSuccessMode('create');
             }
+
+            setShowSuccessPopup(true);
         } catch (error) {
-            setIsProcessing(false);
+            console.error('Failed to save company:', error);
             setSubmitError(error?.message || 'Failed to save company. Please try again.');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
-    // Final Close Action for "Added" success screen
-    const handleSuccessClose = () => {
-        handleClose();
-    };
+    if (authLoading) {
+        return <div className={styles['Admin-cp-page-loading']}>Loading...</div>;
+    }
 
-    // Standard Close/Cancel
-    const handleClose = () => {
-        setFormData(getInitialFormData());
-        setShowSuccess(false);
-        setSubmitError('');
-        setIsProcessing(false);
-        onClose();
-    };
+    if (!isAuthenticated) {
+        return null;
+    }
 
-    // Update form data and hide success screen when props change
-    useEffect(() => {
-        setFormData(getInitialFormData());
-        setShowSuccess(false); 
-        setSubmitError('');
-        setIsProcessing(false);
-    }, [editingCompany, viewingCompany, isOpen]);
-
-    if (!isOpen) return null;
+    const isReadOnly = isViewMode || isLoadingCompany;
 
     return (
-        // UPDATED CLASS: Admin-cp-popup-overlay
-        <div className={styles['Admin-cp-popup-overlay']} onClick={handleClose}>
-            <div 
-                // UPDATED CLASSES: Admin-cp-popup-container, is-success, is-form
-                className={`${styles['Admin-cp-popup-container']} ${showSuccess ? styles['is-success'] : styles['is-form']}`} 
-                onClick={(e) => e.stopPropagation()}
-            >
-                
-                {showSuccess ? (
-                    /* --- SUCCESS POPUP MARKUP (Only for Adding) --- */
-                    <>
-                        {/* UPDATED CLASS: Admin-cp-added-popup-header */}
-                        <div className={styles['Admin-cp-added-popup-header']}>
-                            {successHeader}
+        <div className={styles['Admin-cp-page-layout']}>
+            <Adnavbar
+                onMenuClick={() => setIsSidebarOpen((prev) => !prev)}
+                adminName="Admin"
+                adminImage={Adminicon}
+            />
+
+            <Adsidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+
+            {isSidebarOpen && (
+                <div className={styles['Admin-cp-page-overlay']} onClick={handleCloseSidebar} />
+            )}
+
+            <main className={styles['Admin-cp-page-main']}>
+                <section className={styles['Admin-cp-page-card']}>
+                    <div className={styles['Admin-cp-page-header']}>
+                        <div>
+                            <h1>{pageTitle}</h1>
+                            <p>{pageDescription}</p>
                         </div>
-                        {/* UPDATED CLASS: Admin-cp-added-popup-content */}
-                        <div className={styles['Admin-cp-added-popup-content']}>
-                            {/* UPDATED CLASS: Admin-cp-added-icon-wrapper */}
-                            <div className={styles['Admin-cp-added-icon-wrapper']}>
-                                {/* UPDATED CLASSES for SVG elements */}
-                                <svg className={styles['Admin-cp-added-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                    <circle className={styles['Admin-cp-added-icon-circle']} cx="26" cy="26" r="25" fill="none"/>
-                                    <path className={styles['Admin-cp-added-icon-check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        <button
+                            type="button"
+                            className={styles['Admin-cp-page-header-back-btn']}
+                            onClick={handleBack}
+                        >
+                            &#8592; Back
+                        </button>
+                    </div>
+
+                    <form id="admin-company-profile-form" className={styles['Admin-cp-page-form']} onSubmit={handleSubmit}>
+                        <div className={styles['Admin-cp-page-grid']}>
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Company Name *</label>
+                                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Enter company name" required disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Company Type *</label>
+                                <select name="companyType" value={formData.companyType} onChange={handleChange} required disabled={isReadOnly}>
+                                    <option value="">Select Company Type</option>
+                                    <option value="CORE">CORE</option>
+                                    <option value="IT">IT</option>
+                                    <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
+                                    <option value="Marketing & Sales">Marketing & Sales</option>
+                                    <option value="HR / Business analyst">HR / Business analyst</option>
+                                </select>
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Job Role *</label>
+                                <input type="text" name="jobRole" value={formData.jobRole} onChange={handleChange} placeholder="e.g., Junior Developer" required disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Mode</label>
+                                <select name="mode" value={formData.mode} onChange={handleChange} disabled={isReadOnly}>
+                                    <option value="">Select Mode</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Offline">Offline</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>HR Name *</label>
+                                <input type="text" name="hrName" value={formData.hrName} onChange={handleChange} placeholder="Enter HR name" required disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>HR Contact</label>
+                                <input type="email" name="hrContact" value={formData.hrContact} onChange={handleChange} placeholder="Enter email" disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Round</label>
+                                <input type="text" name="round" value={formData.round} onChange={handleChange} placeholder="e.g., 2, 3, 6" disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Status</label>
+                                <select name="status" value={formData.status} onChange={handleChange} disabled={isReadOnly}>
+                                    <option value="">Select Status</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Pending">Pending</option>
+                                </select>
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Visit Date</label>
+                                <Ad_Calendar
+                                    value={formData.visitDate}
+                                    onChange={handleVisitDateChange}
+                                />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Package</label>
+                                <input type="text" name="package" value={formData.package} onChange={handleChange} placeholder="e.g., 6 LPA" disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Location</label>
+                                <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="e.g., Chennai" disabled={isReadOnly} />
+                            </div>
+
+                            <div className={styles['Admin-cp-page-field']}>
+                                <label>Bond Period</label>
+                                <input type="text" name="bondPeriod" value={formData.bondPeriod} onChange={handleChange} placeholder="e.g., 2 Years" disabled={isReadOnly} />
+                            </div>
+                        </div>
+
+                        {submitError && <p className={styles['Admin-cp-page-error']}>{submitError}</p>}
+
+                    </form>
+                </section>
+
+                <div className={styles['Admin-cp-page-actions-outside']}>
+                    {isViewMode ? (
+                        <button type="button" className={styles['Admin-cp-page-primary-btn']} onClick={handleBack}>
+                            Back to Company Profile
+                        </button>
+                    ) : (
+                        <>
+                            <button type="button" className={styles['Admin-cp-page-secondary-btn']} onClick={handleBack} disabled={isProcessing}>
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="admin-company-profile-form"
+                                className={styles['Admin-cp-page-primary-btn']}
+                                disabled={isProcessing || isLoadingCompany}
+                            >
+                                {isEditMode ? (isProcessing ? 'Updating...' : 'Update Company') : (isProcessing ? 'Adding...' : 'Add Company')}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </main>
+
+            {showSuccessPopup && (
+                <div className={styles['Admin-cp-success-overlay']} onClick={handleSuccessClose}>
+                    <div className={styles['Admin-cp-success-popup']} onClick={(event) => event.stopPropagation()}>
+                        <div className={styles['Admin-cp-success-header']}>
+                            {successMode === 'update' ? 'Updated !' : 'Added !'}
+                        </div>
+                        <div className={styles['Admin-cp-success-body']}>
+                            <div className={styles['Admin-cp-success-icon-wrapper']}>
+                                <svg className={styles['Admin-cp-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                    <circle className={styles['Admin-cp-success-icon-circle']} cx="26" cy="26" r="25" fill="none" />
+                                    <path className={styles['Admin-cp-success-icon-check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                                 </svg>
                             </div>
-                            
-                            {/* UPDATED CLASS: Admin-cp-added-title */}
-                            <h3 className={styles['Admin-cp-added-title']}>{successTitle}</h3>
-                            
-                            {/* UPDATED CLASS: Admin-cp-added-text */}
-                            <p className={styles['Admin-cp-added-text']}>
-                                The Company has been successfully added in the Portal.
+                            <h3 className={styles['Admin-cp-success-title']}>
+                                {successMode === 'update' ? 'Company Updated ✓' : 'Company Added ✓'}
+                            </h3>
+                            <p className={styles['Admin-cp-success-message']}>
+                                {successMode === 'update'
+                                    ? 'Company details have been successfully updated in the portal'
+                                    : 'New company has been successfully added in the portal'}
                             </p>
                         </div>
-                        <div className={styles['Admin-cp-added-popup-footer']}>
-                            {/* UPDATED CLASS: Admin-cp-added-close-btn */}
-                            <button className={styles['Admin-cp-added-close-btn']} onClick={handleSuccessClose}>
+                        <div className={styles['Admin-cp-success-footer']}>
+                            <button type="button" className={styles['Admin-cp-success-close-btn']} onClick={handleSuccessClose}>
                                 Close
                             </button>
-                            {submitError && (
-                                <p className={styles['Admin-cp-added-error']}>
-                                    {submitError}
-                                </p>
-                            )}
                         </div>
-                    </>
-                ) : (
-                    /* --- FORM MARKUP --- */
-                    <>
-                        {/* UPDATED CLASS: Admin-cp-popup-header, Admin-cp-popup-close-btn */}
-                        <div className={styles['Admin-cp-popup-header']}>
-                            <h2>{viewingCompany ? 'View Company' : (editingCompany ? 'Edit Company' : 'Add Company')}</h2>
-                            <button className={styles['Admin-cp-popup-close-btn']} onClick={handleClose} disabled={isProcessing}>×</button>
-                        </div>
-
-                        {/* UPDATED CLASS: Admin-cp-popup-form */}
-                        <form className={styles['Admin-cp-popup-form']} onSubmit={handleSubmit}>
-                            {/* UPDATED CLASS: Admin-cp-popup-form-grid */}
-                            <div className={styles['Admin-cp-popup-form-grid']}>
-                                {/* Fields... */}
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Company Name *</label>
-                                    <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Enter company name" required disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Company Type *</label>
-                                    <select name="companyType" value={formData.companyType} onChange={handleChange} required disabled={!!viewingCompany}>
-                                        <option value="">Select Company Type</option>
-                                        <option value="CORE">CORE</option>
-                                        <option value="IT">IT</option>
-                                        <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
-                                        <option value="Marketing & Sales">Marketing & Sales</option>
-                                        <option value="HR / Business analyst">HR / Business analyst</option>
-                                    </select>
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Job Role *</label>
-                                    <input type="text" name="jobRole" value={formData.jobRole} onChange={handleChange} placeholder="e.g., Junior Developer" required disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Mode</label>
-                                    <select name="mode" value={formData.mode} onChange={handleChange} disabled={!!viewingCompany}>
-                                        <option value="">Select Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>HR Name *</label>
-                                    <input type="text" name="hrName" value={formData.hrName} onChange={handleChange} placeholder="Enter HR name" required disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>HR Contact</label>
-                                    <input type="email" name="hrContact" value={formData.hrContact} onChange={handleChange} placeholder="Enter email" disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Round</label>
-                                    <input type="text" name="round" value={formData.round} onChange={handleChange} placeholder="e.g., 2, 3, 6" disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Status</label>
-                                    <select name="status" value={formData.status} onChange={handleChange} disabled={!!viewingCompany}>
-                                        <option value="">Select Status</option>
-                                        <option value="Confirmed">Confirmed</option>
-                                        <option value="Pending">Pending</option>
-                                    </select>
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Visit Date</label>
-                                    <div className={styles['Admin-cp-popup-date-wrapper']}>
-                                        <DatePicker
-                                            selected={parseDateValue(formData.visitDate)}
-                                            onChange={handleVisitDateChange}
-                                            dateFormat="dd-MM-yyyy"
-                                            placeholderText="Select visit date"
-                                            className={styles['Admin-cp-popup-date-input']}
-                                            showPopperArrow={false}
-                                            showMonthDropdown
-                                            showYearDropdown
-                                            dropdownMode="select"
-                                            yearDropdownItemNumber={7}
-                                            scrollableYearDropdown
-                                            minDate={new Date(new Date().getFullYear() - 1, 0, 1)}
-                                            maxDate={new Date(new Date().getFullYear() + 5, 11, 31)}
-                                            isClearable
-                                            autoComplete="off"
-                                            disabled={isProcessing || !!viewingCompany}
-                                        />
-                                    </div>
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Package</label>
-                                    <input type="text" name="package" value={formData.package} onChange={handleChange} placeholder="e.g., 6 LPA" disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Location</label>
-                                    <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="e.g., Chennai" disabled={!!viewingCompany} />
-                                </div>
-                                {/* UPDATED CLASS: Admin-cp-popup-form-group */}
-                                <div className={styles['Admin-cp-popup-form-group']}>
-                                    <label>Bond Period</label>
-                                    <input type="text" name="bondPeriod" value={formData.bondPeriod} onChange={handleChange} placeholder="e.g., 2 Years" disabled={!!viewingCompany} />
-                                </div>
-                            </div>
-
-                            {/* UPDATED CLASSES: Admin-cp-popup-form-actions, Admin-cp-popup-btn-cancel, Admin-cp-popup-btn-submit */}
-                            {viewingCompany ? (
-                                <div className={styles['Admin-cp-popup-form-actions']}>
-                                    <button type="button" className={styles['Admin-cp-popup-btn-submit']} onClick={handleClose} style={{ width: '100%' }}>
-                                        Close
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className={styles['Admin-cp-popup-form-actions']}>
-                                    <button type="button" className={styles['Admin-cp-popup-btn-cancel']} onClick={handleClose} disabled={isProcessing}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className={styles['Admin-cp-popup-btn-submit']} disabled={isProcessing}>
-                                        {editingCompany ? (isProcessing ? 'UPDATING...' : 'UPDATE') : (isProcessing ? 'ADD...' : 'ADD')}
-                                    </button>
-                                    {submitError && (
-                                        <p className={styles['Admin-cp-popup-error']}>
-                                            {submitError}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </form>
-                    </>
-                )}
-            </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

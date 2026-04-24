@@ -625,7 +625,7 @@ function AdminRARW() {
                   onClick={() => setIsCompanyOpen(!isCompanyOpen)}
                 >
                   <span>{selectedCompany || 'Select Company'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isCompanyOpen ? 'â–²' : 'â–¼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isCompanyOpen ? '▲' : '▼'}</span>
                 </div>
                 {isCompanyOpen && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -648,7 +648,7 @@ function AdminRARW() {
                   onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
                 >
                   <span>{selectedJobRole || 'Job Role'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isJobRoleOpen ? 'â–²' : 'â–¼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isJobRoleOpen ? '▲' : '▼'}</span>
                 </div>
                 {isJobRoleOpen && selectedCompany && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -671,7 +671,7 @@ function AdminRARW() {
                   onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
                 >
                   <span>{startDateFilter ? formatDisplayDate(startDateFilter) : 'Start Date'}</span>
-                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isStartDateOpen ? 'â–²' : 'â–¼'}</span>
+                  <span className={styles['Admin-rarw-dropdown-arrow']}>{isStartDateOpen ? '▲' : '▼'}</span>
                 </div>
                 {isStartDateOpen && selectedCompanyJob && (
                   <div className={styles['Admin-rarw-dropdown-menu']}>
@@ -758,7 +758,7 @@ function AdminRARW() {
                 <tbody>
                   {isLoading ? (
                     <tr className={styles['Admin-rarw-loading-row']}>
-                      <td colSpan="8" className={styles['Admin-rarw-loading-cell']}>
+                      <td colSpan="9" className={styles['Admin-rarw-loading-cell']}>
                         <div className={styles['Admin-rarw-loading-wrapper']}>
                           <div className={styles['Admin-rarw-spinner']}></div>
                           <span className={styles['Admin-rarw-loading-text']}>Loading studentsâ€¦</span>

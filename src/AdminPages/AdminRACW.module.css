@@ -329,16 +329,15 @@
   word-wrap: break-word;
 }
 
-/* === Column widths for the table (9 columns after removing Result) === */
+/* === Column widths for the table (8 columns total, sum = 100%) === */
 .Admin-racw-data-table th:nth-child(1), .Admin-racw-data-table td:nth-child(1) { width: 5%; flex-shrink: 0; }  /* S.No */
-.Admin-racw-data-table th:nth-child(2), .Admin-racw-data-table td:nth-child(2) { width: 18%; flex-shrink: 0; } /* Name */
-.Admin-racw-data-table th:nth-child(3), .Admin-racw-data-table td:nth-child(3) { width: 14%; flex-shrink: 0; } /* Reg.No */
-.Admin-racw-data-table th:nth-child(4), .Admin-racw-data-table td:nth-child(4) { width: 9%; flex-shrink: 0; }  /* Branch */
-.Admin-racw-data-table th:nth-child(5), .Admin-racw-data-table td:nth-child(5) { width: 11%; flex-shrink: 0; } /* Year-Sec */
-.Admin-racw-data-table th:nth-child(6), .Admin-racw-data-table td:nth-child(6) { width: 13%; flex-shrink: 0; } /* Batch */
-.Admin-racw-data-table th:nth-child(7), .Admin-racw-data-table td:nth-child(7) { width: 10%; flex-shrink: 0; } /* Reached */
-.Admin-racw-data-table th:nth-child(8), .Admin-racw-data-table td:nth-child(8) { width: 14%; flex-shrink: 0; } /* Mobile */
-.Admin-racw-data-table th:nth-child(9), .Admin-racw-data-table td:nth-child(9) { width: 6%; flex-shrink: 0; }  /* View */
+.Admin-racw-data-table th:nth-child(2), .Admin-racw-data-table td:nth-child(2) { width: 22%; flex-shrink: 0; } /* Name */
+.Admin-racw-data-table th:nth-child(3), .Admin-racw-data-table td:nth-child(3) { width: 16%; flex-shrink: 0; } /* Reg.No */
+.Admin-racw-data-table th:nth-child(4), .Admin-racw-data-table td:nth-child(4) { width: 11%; flex-shrink: 0; } /* Branch */
+.Admin-racw-data-table th:nth-child(5), .Admin-racw-data-table td:nth-child(5) { width: 12%; flex-shrink: 0; } /* Year-Sec */
+.Admin-racw-data-table th:nth-child(6), .Admin-racw-data-table td:nth-child(6) { width: 12%; flex-shrink: 0; } /* Reached */
+.Admin-racw-data-table th:nth-child(7), .Admin-racw-data-table td:nth-child(7) { width: 16%; flex-shrink: 0; } /* Mobile */
+.Admin-racw-data-table th:nth-child(8), .Admin-racw-data-table td:nth-child(8) { width: 6%; flex-shrink: 0; }  /* View */
 
 .Admin-racw-status-cell-placed-green, .Admin-racw-status-cell-rejected {
   padding: 6px 22px;

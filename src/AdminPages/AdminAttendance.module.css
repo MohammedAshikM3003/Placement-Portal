@@ -66,7 +66,7 @@
 
   flex: 1; 
 
-  margin-left: 260px;
+  margin-left: 280px;
 
   margin-top: 0;
 
@@ -677,6 +677,7 @@
   margin-top: 0;
  overflow-y: hidden;
   overflow-x: hidden;
+  min-height:267px;
 
 }
 
@@ -828,7 +829,8 @@
 
 
 
-.Admin-at-attendance-table-header thead th {
+.Admin-at-attendance-table-header thead th,
+.Admin-at-attendance-table-body thead th {
 
   text-align: center;
 
@@ -1090,7 +1092,7 @@
 
     height: 100%;
 
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
 
     display: flex;
 
@@ -1842,9 +1844,6 @@
     min-height: 350px;
     max-height: 350px;
     height: 350px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
   }
 
@@ -1883,37 +1882,37 @@
     margin-top: 0;
   }
 
-  /* Center empty state messages in table */
+  /* Keep table semantics on mobile so each student stays in its own row */
+  .Admin-at-attendance-table-header,
   .Admin-at-attendance-table-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 350px;
+    min-width: 980px;
+    width: 980px;
+  }
+
+  .Admin-at-attendance-table-body {
+    display: table;
+    table-layout: fixed;
   }
 
   .Admin-at-attendance-table-body tbody {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    display: table-row-group;
   }
 
   .Admin-at-attendance-table-body tbody tr {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    display: table-row;
+  }
+
+  .Admin-at-attendance-table-body tbody td {
+    white-space: nowrap;
   }
 
   .Admin-at-attendance-table-body tbody td[colspan] {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+    display: table-cell !important;
     text-align: center;
     padding: 40px 20px !important;
     font-size: 1.1rem;
     width: 100%;
+    white-space: normal;
   }
 
 }

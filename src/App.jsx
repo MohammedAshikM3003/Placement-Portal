@@ -24,6 +24,7 @@ import MainRegistration from "./MainRegistration.jsx";
 const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
 const AdminstudDB = lazy(() => import("./AdminPages/AdminstudDB.jsx"));
 const AdminCompanyprofile = lazy(() => import("./AdminPages/AdminCompanyprofile.jsx"));
+const AdminCompanyprofilePopup = lazy(() => import("./AdminPages/AdminCompanyprofilepopup.jsx"));
 const AdminCompanyDrive = lazy(() => import("./AdminPages/AdminCompanyDrive.jsx"));
 const AdminCompanyDriveAD = lazy(() => import("./AdminPages/AdminCompanyDriveAD.jsx"));
 const AdminCompanyDrivedet = lazy(() => import("./AdminPages/AdminCompanyDrivedet.jsx"));
@@ -298,6 +299,9 @@ function AppContent() {
       <Route path="/admin-train-attendance-stuinfo" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainAttendanceStuinfo onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-student-certificates/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdStuDBCertificateView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-company-profile" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyprofile onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-company-profile/manage/add" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyprofilePopup onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-company-profile/manage/edit/:companyId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyprofilePopup onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-company-profile/manage/view/:companyId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyprofilePopup onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-company-drive" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrive onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/company-drive/add" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDriveAD onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/company-drive/details" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCompanyDrivedet onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

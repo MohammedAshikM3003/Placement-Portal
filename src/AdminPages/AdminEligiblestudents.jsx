@@ -446,8 +446,8 @@ function AdminEsstudapp () {
   };
 
   // Navigate to student profile page
-  const handleViewProfile = (studentId) => {
-    navigate(`/admin-student-profile/${studentId}`);
+  const handleViewProfile = (studentId, student) => {
+    navigate(`/admin-student-view/${studentId}`, { state: { student } });
   };
   
   return (
@@ -595,13 +595,14 @@ function AdminEsstudapp () {
                       </thead>
                       <tbody>
                         {filteredStudents.map((student, index) => (
-                          <tr key={student._id || student.id}>
+                          <tr key={student._id || student.id} onClick={() => handleSelectStudent(student._id || student.id)}>
                             <td>
                               <input
                                 type="checkbox"
                                 className={styles['Admin-es-checkbox']}
                                 checked={selectedStudents.includes(student._id || student.id)}
                                 onChange={() => handleSelectStudent(student._id || student.id)}
+                                onClick={(e) => e.stopPropagation()}
                               />
                             </td>
                             <td>{index + 1}</td>
@@ -614,35 +615,11 @@ function AdminEsstudapp () {
                             {getVisibleColumns().twelfthPercentage && <td>{student.twelfthPercentage || 'N/A'}</td>}
                             {getVisibleColumns().diplomaPercentage && <td>{student.diplomaPercentage || 'N/A'}</td>}
                             {getVisibleColumns().backlogs && <td>{student.currentBacklogs || '0'}</td>}
-                            <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                            <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={(e) => {
+                              e.stopPropagation();
                               const studentId = student._id || student.id;
                               if (studentId) {
-                                // Show loading popup
-                                setExportType('Loading');
-                                setExportPopupState('progress');
-                                setExportProgress(0);
-                                
-                                // Simulate progress while backend fetches
-                                const progressInterval = setInterval(() => {
-                                  setExportProgress(prev => {
-                                    if (prev >= 90) {
-                                      clearInterval(progressInterval);
-                                      return 90;
-                                    }
-                                    return prev + 15;
-                                  });
-                                }, 200);
-                                
-                                // Navigate after a short delay to show the loading popup
-                                setTimeout(() => {
-                                  clearInterval(progressInterval);
-                                  setExportProgress(100);
-                                  setTimeout(() => {
-                                    setExportPopupState('none');
-                                    setExportProgress(0);
-                                    navigate(`/admin-student-view/${studentId}`, { state: { student: student } });
-                                  }, 300);
-                                }, 1000);
+                                handleViewProfile(studentId, student);
                               }
                             }}>
                               <EyeIcon />

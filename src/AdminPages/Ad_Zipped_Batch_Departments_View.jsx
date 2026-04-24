@@ -168,6 +168,8 @@ const Ad_Zipped_Batch_Departments_View = () => {
                     archiveName: archiveName,
                     year: batchYear
                 },
+                studentsData: Array.isArray(dept?.students) ? dept.students : [],
+                selectedDepartmentName: dept.name,
                 isZipped: true
             }
         });

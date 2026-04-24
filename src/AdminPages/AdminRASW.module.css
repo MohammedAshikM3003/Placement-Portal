@@ -524,17 +524,16 @@
   word-wrap: break-word;
 }
 
-/* === Percentage-based column widths (10 columns, Total = 100%) === */
+/* === Percentage-based column widths (9 columns, total = 100%) === */
 .Admin-rasw-data-table th:nth-child(1), .Admin-rasw-data-table td:nth-child(1) { width: 4%; flex-shrink: 0; }  /* S.No */
-.Admin-rasw-data-table th:nth-child(2), .Admin-rasw-data-table td:nth-child(2) { width: 14%; flex-shrink: 0; } /* Name */
-.Admin-rasw-data-table th:nth-child(3), .Admin-rasw-data-table td:nth-child(3) { width: 12%; flex-shrink: 0; } /* Register Number */
-.Admin-rasw-data-table th:nth-child(4), .Admin-rasw-data-table td:nth-child(4) { width: 7%; flex-shrink: 0; }  /* Branch */
-.Admin-rasw-data-table th:nth-child(5), .Admin-rasw-data-table td:nth-child(5) { width: 8%; flex-shrink: 0; }  /* Year-Sec */
-.Admin-rasw-data-table th:nth-child(6), .Admin-rasw-data-table td:nth-child(6) { width: 10%; flex-shrink: 0; } /* Batch */
-.Admin-rasw-data-table th:nth-child(7), .Admin-rasw-data-table td:nth-child(7) { width: 9%; flex-shrink: 0; }  /* Reach */
-.Admin-rasw-data-table th:nth-child(8), .Admin-rasw-data-table td:nth-child(8) { width: 12%; flex-shrink: 0; } /* Mobile */
-.Admin-rasw-data-table th:nth-child(9), .Admin-rasw-data-table td:nth-child(9) { width: 18%; flex-shrink: 0; } /* Email */
-.Admin-rasw-data-table th:nth-child(10), .Admin-rasw-data-table td:nth-child(10) { width: 6%; flex-shrink: 0; } /* View */
+.Admin-rasw-data-table th:nth-child(2), .Admin-rasw-data-table td:nth-child(2) { width: 15%; flex-shrink: 0; } /* Name */
+.Admin-rasw-data-table th:nth-child(3), .Admin-rasw-data-table td:nth-child(3) { width: 13%; flex-shrink: 0; } /* Register Number */
+.Admin-rasw-data-table th:nth-child(4), .Admin-rasw-data-table td:nth-child(4) { width: 9%; flex-shrink: 0; }  /* Branch */
+.Admin-rasw-data-table th:nth-child(5), .Admin-rasw-data-table td:nth-child(5) { width: 10%; flex-shrink: 0; } /* Year-Sec */
+.Admin-rasw-data-table th:nth-child(6), .Admin-rasw-data-table td:nth-child(6) { width: 11%; flex-shrink: 0; } /* Reached */
+.Admin-rasw-data-table th:nth-child(7), .Admin-rasw-data-table td:nth-child(7) { width: 13%; flex-shrink: 0; } /* Mobile */
+.Admin-rasw-data-table th:nth-child(8), .Admin-rasw-data-table td:nth-child(8) { width: 19%; flex-shrink: 0; } /* Email */
+.Admin-rasw-data-table th:nth-child(9), .Admin-rasw-data-table td:nth-child(9) { width: 6%; flex-shrink: 0; }  /* View */
 
 /* Enable text wrapping specifically for the email column */
 .Admin-rasw-data-table td:nth-child(9) {

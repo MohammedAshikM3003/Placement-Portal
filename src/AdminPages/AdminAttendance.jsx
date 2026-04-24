@@ -2097,43 +2097,37 @@ export default function AdminAtt({ onLogout }) {
 
             </div>
 
-            {/* UPDATED CLASS: Admin-at-attendance-table-header */}
-
-            <table className={styles['Admin-at-attendance-table-header']} style={{ width: '100%' }}>
-
-              <thead>
-
-                <tr>
-
-                    <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
-
-                    <th style={{ width: '13%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
-
-                    <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Register Number</th>
-
-                    <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
-
-                    <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
-
-                    <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Year-sec</th>
-
-                    <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Sem</th>
-
-                    <th style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>Phone No</th>
-
-                    <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
-
-                    <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Action</th>
-
-                </tr>
-
-              </thead>
-
-            </table>
-
             <div className={styles['Admin-at-table-body-scroll']}>
 
               <table className={styles['Admin-at-attendance-table-body']}>
+
+                <thead>
+
+                  <tr>
+
+                      <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
+
+                      <th style={{ width: '13%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
+
+                      <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Register Number</th>
+
+                      <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
+
+                      <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
+
+                      <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Year-sec</th>
+
+                      <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Sem</th>
+
+                      <th style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>Phone No</th>
+
+                      <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
+
+                      <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Action</th>
+
+                  </tr>
+
+                </thead>
 
                 <tbody>
 

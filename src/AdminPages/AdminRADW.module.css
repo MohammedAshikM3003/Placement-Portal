@@ -376,16 +376,15 @@
     word-wrap: break-word;
   }
   
-/* === Percentage-based column widths (9 columns, Total = 100%) === */
+/* === Percentage-based column widths (8 columns, total = 100%) === */
 .Admin-radw-data-table th:nth-child(1), .Admin-radw-data-table td:nth-child(1) { width: 5%; flex-shrink: 0; }  /* S.No */
-.Admin-radw-data-table th:nth-child(2), .Admin-radw-data-table td:nth-child(2) { width: 18%; flex-shrink: 0; } /* Name */
-.Admin-radw-data-table th:nth-child(3), .Admin-radw-data-table td:nth-child(3) { width: 15%; flex-shrink: 0; } /* Register Number */
-.Admin-radw-data-table th:nth-child(4), .Admin-radw-data-table td:nth-child(4) { width: 10%; flex-shrink: 0; } /* Branch */
-.Admin-radw-data-table th:nth-child(5), .Admin-radw-data-table td:nth-child(5) { width: 10%; flex-shrink: 0; } /* Year-Sec */
-.Admin-radw-data-table th:nth-child(6), .Admin-radw-data-table td:nth-child(6) { width: 12%; flex-shrink: 0; } /* Batch */
-.Admin-radw-data-table th:nth-child(7), .Admin-radw-data-table td:nth-child(7) { width: 10%; flex-shrink: 0; } /* Reached */
-.Admin-radw-data-table th:nth-child(8), .Admin-radw-data-table td:nth-child(8) { width: 13%; flex-shrink: 0; } /* Mobile */
-.Admin-radw-data-table th:nth-child(9), .Admin-radw-data-table td:nth-child(9) { width: 7%; flex-shrink: 0; }  /* View */
+.Admin-radw-data-table th:nth-child(2), .Admin-radw-data-table td:nth-child(2) { width: 22%; flex-shrink: 0; } /* Name */
+.Admin-radw-data-table th:nth-child(3), .Admin-radw-data-table td:nth-child(3) { width: 16%; flex-shrink: 0; } /* Register Number */
+.Admin-radw-data-table th:nth-child(4), .Admin-radw-data-table td:nth-child(4) { width: 11%; flex-shrink: 0; } /* Branch */
+.Admin-radw-data-table th:nth-child(5), .Admin-radw-data-table td:nth-child(5) { width: 12%; flex-shrink: 0; } /* Year-Sec */
+.Admin-radw-data-table th:nth-child(6), .Admin-radw-data-table td:nth-child(6) { width: 12%; flex-shrink: 0; } /* Reached */
+.Admin-radw-data-table th:nth-child(7), .Admin-radw-data-table td:nth-child(7) { width: 16%; flex-shrink: 0; } /* Mobile */
+.Admin-radw-data-table th:nth-child(8), .Admin-radw-data-table td:nth-child(8) { width: 6%; flex-shrink: 0; }  /* View */
   
   .Admin-radw-status-cell-placed-green, .Admin-radw-status-cell-rejected {
     padding: 6px 22px;

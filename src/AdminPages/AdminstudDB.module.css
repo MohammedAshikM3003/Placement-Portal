@@ -56,6 +56,11 @@
     height: auto;
 }
 
+/* AI mode should size to content instead of keeping the default tall filter card height. */
+.Admin-DB-filter-section-ai-mode {
+    min-height: auto;
+}
+
 .Admin-DB-filter-header-container {
     position: relative;
     margin-bottom: 15px;
@@ -156,11 +161,33 @@
     border-radius: 14px;
     background: #ffffff;
     resize: none;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 18px;
     font-size: 1.2rem;
     color: #4a4a4a;
     outline: none;
     font-family: 'Poppins', sans-serif;
+ 
+}
+
+.Admin-DB-ai-filter-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+.Admin-DB-ai-filter-input::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Admin-DB-ai-filter-input::-webkit-scrollbar-thumb {
+    background-color: #4ea24e;
+    border-radius: 999px;
+}
+
+.Admin-DB-ai-filter-input::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .Admin-DB-ai-filter-input::placeholder {
@@ -701,7 +728,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -797,6 +824,16 @@
         flex: 1 1 auto; 
         width: 100%;
         min-height: 390px;
+    }
+
+    .Admin-DB-filter-section.Admin-DB-filter-section-ai-mode {
+        min-height: auto;
+        height: auto;
+        align-self: flex-start;
+    }
+
+    .Admin-DB-filter-section.Admin-DB-filter-section-ai-mode .Admin-DB-ai-filter-content {
+        flex-grow: 0;
     }
 
     .Admin-DB-ai-toggle-btn {
@@ -929,7 +966,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -153,6 +153,7 @@ body, html {
 .Admin-aat-add-btn-wrapper {
   display: flex;
   align-items: flex-end;
+  margin-top:30px;
 }
 
 .Admin-aat-add-btn {
@@ -252,7 +253,6 @@ body, html {
   }
 
   .Admin-aat-actions {
-    flex-direction: column;
     gap: 12px;
   }
 
@@ -315,7 +315,7 @@ body, html {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
