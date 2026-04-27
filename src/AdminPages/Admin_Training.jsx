@@ -25,6 +25,8 @@ function AdminTraining({ onLogout }) {
   const [attendancePopupSchedules, setAttendancePopupSchedules] = useState([]);
   const [attendanceSelectedCompany, setAttendanceSelectedCompany] = useState('');
   const [attendanceSelectedCourse, setAttendanceSelectedCourse] = useState('');
+  const [attendanceSelectedApplicableYear, setAttendanceSelectedApplicableYear] = useState('');
+  const [attendanceSelectedPhase, setAttendanceSelectedPhase] = useState('');
   const [attendanceSelectedStartDate, setAttendanceSelectedStartDate] = useState('');
   const [attendanceSelectedEndDate, setAttendanceSelectedEndDate] = useState('');
 
@@ -212,9 +214,40 @@ function AdminTraining({ onLogout }) {
     return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
   };
 
+  const normalizeYearToken = (value = '') => {
+    const raw = value.toString().trim().toUpperCase();
+    if (!raw) return '';
+    const compact = raw.replace(/[^A-Z0-9]/g, '');
+    if (!compact) return '';
+
+    const yearAliases = {
+      '1': 'I', '01': 'I', '1ST': 'I', '1STYEAR': 'I', 'FIRST': 'I', 'FIRSTYEAR': 'I', 'I': 'I',
+      '2': 'II', '02': 'II', '2ND': 'II', '2NDYEAR': 'II', 'SECOND': 'II', 'SECONDYEAR': 'II', 'II': 'II',
+      '3': 'III', '03': 'III', '3RD': 'III', '3RDYEAR': 'III', 'THIRD': 'III', 'THIRDYEAR': 'III', 'III': 'III',
+      '4': 'IV', '04': 'IV', '4TH': 'IV', '4THYEAR': 'IV', 'FOURTH': 'IV', 'FOURTHYEAR': 'IV', 'IV': 'IV'
+    };
+
+    return yearAliases[compact] || compact;
+  };
+
+  const parseSchedulePhases = (scheduleRecord) => {
+    const phases = Array.isArray(scheduleRecord?.phases) ? scheduleRecord.phases : [];
+    return phases
+      .map((phase) => ({
+        phaseNumber: (phase?.phaseNumber || '').toString().trim(),
+        applicableYear: normalizeYearToken(phase?.applicableYear || ''),
+        applicableCourses: Array.isArray(phase?.applicableCourses)
+          ? phase.applicableCourses.map((course) => (course || '').toString().trim()).filter(Boolean)
+          : []
+      }))
+      .filter((phase) => phase.phaseNumber || phase.applicableYear || phase.applicableCourses.length > 0);
+  };
+
   const getSelectedAttendanceSchedule = () => {
     const companyKey = attendanceSelectedCompany.toString().trim().toLowerCase();
     const courseKey = attendanceSelectedCourse.toString().trim().toLowerCase();
+    const yearKey = normalizeYearToken(attendanceSelectedApplicableYear);
+    const phaseKey = attendanceSelectedPhase.toString().trim();
     const startKey = normalizeDateKey(attendanceSelectedStartDate);
 
     return attendancePopupSchedules.find((schedule) => {
@@ -224,6 +257,22 @@ function AdminTraining({ onLogout }) {
       if (courseKey) {
         const scheduleCourses = parseScheduleCourses(schedule).map((course) => course.toLowerCase());
         if (!scheduleCourses.includes(courseKey)) return false;
+      }
+
+      if (yearKey) {
+        const scheduleYear = normalizeYearToken(schedule?.applicableYear || '');
+        const phaseYears = parseSchedulePhases(schedule).map((phase) => normalizeYearToken(phase.applicableYear));
+        if (scheduleYear !== yearKey && !phaseYears.includes(yearKey)) {
+          return false;
+        }
+      }
+
+      if (phaseKey) {
+        const phaseNumbers = parseSchedulePhases(schedule).map((phase) => phase.phaseNumber);
+        const schedulePhase = (schedule?.phaseNumber || '').toString().trim();
+        if (!phaseNumbers.includes(phaseKey) && schedulePhase !== phaseKey) {
+          return false;
+        }
       }
 
       if (startKey) {
@@ -254,19 +303,85 @@ function AdminTraining({ onLogout }) {
   }, [attendancePopupSchedules, attendanceSelectedCompany]);
 
   const attendanceStartDateOptions = useMemo(() => {
-    if (!attendanceSelectedCompany || !attendanceSelectedCourse) return [];
+    if (!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear || !attendanceSelectedPhase) return [];
 
     return [...new Set(
       attendancePopupSchedules
         .filter((schedule) => {
           const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
           const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
-          return companyMatch && courseMatch;
+          if (!companyMatch || !courseMatch) return false;
+
+          const yearKey = normalizeYearToken(attendanceSelectedApplicableYear);
+          const phaseKey = attendanceSelectedPhase.toString().trim();
+          const scheduleYear = normalizeYearToken(schedule?.applicableYear || '');
+          const phaseEntries = parseSchedulePhases(schedule);
+          const phaseYears = phaseEntries.map((phase) => normalizeYearToken(phase.applicableYear));
+          const phaseNumbers = phaseEntries.map((phase) => phase.phaseNumber);
+          const schedulePhase = (schedule?.phaseNumber || '').toString().trim();
+
+          const yearMatch = !yearKey || scheduleYear === yearKey || phaseYears.includes(yearKey);
+          const phaseMatch = !phaseKey || phaseNumbers.includes(phaseKey) || schedulePhase === phaseKey;
+          return yearMatch && phaseMatch;
         })
         .map((schedule) => schedule?.startDate || '')
         .filter(Boolean)
     )].sort((a, b) => new Date(a) - new Date(b));
+  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedApplicableYear, attendanceSelectedPhase]);
+
+  const attendanceApplicableYearOptions = useMemo(() => {
+    if (!attendanceSelectedCompany || !attendanceSelectedCourse) return [];
+
+    const yearValues = attendancePopupSchedules
+      .filter((schedule) => {
+        const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
+        const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
+        return companyMatch && courseMatch;
+      })
+      .flatMap((schedule) => {
+        const topLevelYear = normalizeYearToken(schedule?.applicableYear || '');
+        const phaseYears = parseSchedulePhases(schedule).map((phase) => normalizeYearToken(phase.applicableYear));
+        return [topLevelYear, ...phaseYears].filter(Boolean);
+      });
+
+    return [...new Set(yearValues)].sort((a, b) => a.localeCompare(b));
   }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse]);
+
+  const attendancePhaseOptions = useMemo(() => {
+    if (!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear) return [];
+
+    const yearKey = normalizeYearToken(attendanceSelectedApplicableYear);
+
+    const phaseValues = attendancePopupSchedules
+      .filter((schedule) => {
+        const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
+        const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
+        return companyMatch && courseMatch;
+      })
+      .flatMap((schedule) => {
+        const phaseEntries = parseSchedulePhases(schedule);
+        const matchingPhaseEntries = phaseEntries
+          .filter((phase) => {
+            const phaseYear = normalizeYearToken(phase.applicableYear);
+            return !yearKey || !phaseYear || phaseYear === yearKey;
+          })
+          .map((phase) => phase.phaseNumber)
+          .filter(Boolean);
+
+        const scheduleYear = normalizeYearToken(schedule?.applicableYear || '');
+        const topLevelPhase = (schedule?.phaseNumber || '').toString().trim();
+        const topLevelPhaseMatch = topLevelPhase && (!yearKey || !scheduleYear || scheduleYear === yearKey) ? [topLevelPhase] : [];
+
+        return [...matchingPhaseEntries, ...topLevelPhaseMatch];
+      });
+
+    return [...new Set(phaseValues)].sort((a, b) => {
+      const aNum = Number.parseInt(a, 10);
+      const bNum = Number.parseInt(b, 10);
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+      return a.localeCompare(b);
+    });
+  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedApplicableYear]);
 
   const todayInfo = useMemo(() => {
     const now = new Date();
@@ -296,7 +411,7 @@ function AdminTraining({ onLogout }) {
       todayDate: formatDateForDisplay(dateOnlyToday),
       trainingDayLabel: `Training Day ${clampedDay}`
     };
-  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedStartDate]);
+  }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedApplicableYear, attendanceSelectedPhase, attendanceSelectedStartDate]);
 
   const handleOpenAttendancePopup = async () => {
     if (attendancePopupLoading) {
@@ -310,6 +425,8 @@ function AdminTraining({ onLogout }) {
       setAttendancePopupSchedules(normalizedAssignments);
       setAttendanceSelectedCompany('');
       setAttendanceSelectedCourse('');
+      setAttendanceSelectedApplicableYear('');
+      setAttendanceSelectedPhase('');
       setAttendanceSelectedStartDate('');
       setAttendanceSelectedEndDate('');
       setIsAttendancePopupOpen(true);
@@ -329,7 +446,7 @@ function AdminTraining({ onLogout }) {
 
     const selectedSchedule = getSelectedAttendanceSchedule();
     if (!selectedSchedule) {
-      alert('Please select Company, Course, and Start Date.');
+      alert('Please select Company, Course, Applicable Year, Phase, and Start Date.');
       return;
     }
 
@@ -338,13 +455,27 @@ function AdminTraining({ onLogout }) {
       // Fetch batch assignments for the selected company and course
       const filters = {
         companyName: attendanceSelectedCompany,
-        courseName: attendanceSelectedCourse
+        courseName: attendanceSelectedCourse,
+        applicableYear: attendanceSelectedApplicableYear
       };
 
       const batchAssignments = await mongoDBService.getScheduledTrainingBatchAssignments(filters);
       const normalizedAssignments = Array.isArray(batchAssignments) ? batchAssignments : [];
 
-      if (normalizedAssignments.length === 0) {
+      const phaseFilteredAssignments = normalizedAssignments.filter((assignment) => {
+        const phaseKey = attendanceSelectedPhase.toString().trim();
+        if (!phaseKey) return true;
+
+        const phaseEntries = Array.isArray(assignment?.phases) ? assignment.phases : [];
+        const assignmentPhaseNumbers = phaseEntries
+          .map((phase) => (phase?.phaseNumber || '').toString().trim())
+          .filter(Boolean);
+        const topLevelPhase = (assignment?.phaseNumber || '').toString().trim();
+
+        return assignmentPhaseNumbers.includes(phaseKey) || topLevelPhase === phaseKey;
+      });
+
+      if (phaseFilteredAssignments.length === 0) {
         alert('No batch assignments found for the selected company and course.');
         setAttendanceSearchLoading(false);
         return;
@@ -359,6 +490,8 @@ function AdminTraining({ onLogout }) {
           scheduleId: selectedSchedule._id || '',
           startDate: selectedSchedule.startDate || '',
           endDate: attendanceSelectedEndDate || selectedSchedule.endDate || '',
+          applicableYear: attendanceSelectedApplicableYear,
+          phaseNumber: attendanceSelectedPhase,
           todayDate: todayInfo.todayDate,
           trainingDay: todayInfo.trainingDayLabel
         }
@@ -376,12 +509,29 @@ function AdminTraining({ onLogout }) {
   const handleAttendanceCompanyChange = (value) => {
     setAttendanceSelectedCompany(value);
     setAttendanceSelectedCourse('');
+    setAttendanceSelectedApplicableYear('');
+    setAttendanceSelectedPhase('');
     setAttendanceSelectedStartDate('');
     setAttendanceSelectedEndDate('');
   };
 
   const handleAttendanceCourseChange = (value) => {
     setAttendanceSelectedCourse(value);
+    setAttendanceSelectedApplicableYear('');
+    setAttendanceSelectedPhase('');
+    setAttendanceSelectedStartDate('');
+    setAttendanceSelectedEndDate('');
+  };
+
+  const handleAttendanceApplicableYearChange = (value) => {
+    setAttendanceSelectedApplicableYear(value);
+    setAttendanceSelectedPhase('');
+    setAttendanceSelectedStartDate('');
+    setAttendanceSelectedEndDate('');
+  };
+
+  const handleAttendancePhaseChange = (value) => {
+    setAttendanceSelectedPhase(value);
     setAttendanceSelectedStartDate('');
     setAttendanceSelectedEndDate('');
   };
@@ -391,8 +541,17 @@ function AdminTraining({ onLogout }) {
     const selectedSchedule = attendancePopupSchedules.find((schedule) => {
       const companyMatch = (schedule?.companyName || '').toString().trim() === attendanceSelectedCompany;
       const courseMatch = parseScheduleCourses(schedule).includes(attendanceSelectedCourse);
+      const yearKey = normalizeYearToken(attendanceSelectedApplicableYear);
+      const phaseKey = attendanceSelectedPhase.toString().trim();
+      const scheduleYear = normalizeYearToken(schedule?.applicableYear || '');
+      const phaseEntries = parseSchedulePhases(schedule);
+      const phaseYears = phaseEntries.map((phase) => normalizeYearToken(phase.applicableYear));
+      const phaseNumbers = phaseEntries.map((phase) => phase.phaseNumber);
+      const schedulePhase = (schedule?.phaseNumber || '').toString().trim();
+      const yearMatch = !yearKey || scheduleYear === yearKey || phaseYears.includes(yearKey);
+      const phaseMatch = !phaseKey || phaseNumbers.includes(phaseKey) || schedulePhase === phaseKey;
       const startMatch = normalizeDateKey(schedule?.startDate) === normalizeDateKey(value);
-      return companyMatch && courseMatch && startMatch;
+      return companyMatch && courseMatch && yearMatch && phaseMatch && startMatch;
     });
 
     setAttendanceSelectedEndDate(selectedSchedule?.endDate || '');
@@ -617,13 +776,47 @@ function AdminTraining({ onLogout }) {
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Applicable Year</label>
+                  <div className={styles['ad-tr-att-dropdown-container']}>
+                    <select
+                      className={styles['ad-tr-att-dropdown']}
+                      value={attendanceSelectedApplicableYear}
+                      onChange={(e) => handleAttendanceApplicableYearChange(e.target.value)}
+                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse}
+                    >
+                      <option value="">Select Applicable Year</option>
+                      {attendanceApplicableYearOptions.map((yearValue) => (
+                        <option key={yearValue} value={yearValue}>{yearValue}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
+                  <label className={styles['ad-tr-att-static-label']}>Phase</label>
+                  <div className={styles['ad-tr-att-dropdown-container']}>
+                    <select
+                      className={styles['ad-tr-att-dropdown']}
+                      value={attendanceSelectedPhase}
+                      onChange={(e) => handleAttendancePhaseChange(e.target.value)}
+                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear}
+                    >
+                      <option value="">Select Phase</option>
+                      {attendancePhaseOptions.map((phaseValue) => (
+                        <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Start Date</label>
                   <div className={styles['ad-tr-att-dropdown-container']}>
                     <select
                       className={styles['ad-tr-att-dropdown']}
                       value={attendanceSelectedStartDate}
                       onChange={(e) => handleAttendanceStartDateChange(e.target.value)}
-                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse}
+                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear || !attendanceSelectedPhase}
                     >
                       <option value="">Select Start Date</option>
                       {attendanceStartDateOptions.map((startDate) => (

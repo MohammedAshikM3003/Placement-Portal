@@ -91,6 +91,9 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const [companyLocation, setCompanyLocation] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [currentScheduleId, setCurrentScheduleId] = useState('');
+  
+  // Multiple companies state
+  const [selectedCompanies, setSelectedCompanies] = useState([]);
 
   // Phase Details state
   const [phaseNumber, setPhaseNumber] = useState('');
@@ -322,11 +325,55 @@ const AdminScheduleTraining = ({ onLogout }) => {
     setIsSidebarOpen((v) => !v);
   };
 
-  const handleCourseToggle = (courseName) => {
-    const isAlreadySelected = selectedCourses.includes(courseName);
+  const handleCourseToggleWithCompany = (companyItem, courseName) => {
+    // Check if course is already selected (we need to track selected courses with company context)
+    const courseKey = `${companyItem.company}__${courseName}`;
+    const coursesList = selectedCourses;
 
-    if (isAlreadySelected) {
-      setSelectedCourses(selectedCourses.filter((course) => course !== courseName));
+    if (coursesList.includes(courseName)) {
+      // Remove course
+      setSelectedCourses(coursesList.filter((course) => course !== courseName));
+      setSelectedCourseTrainers((prev) => {
+        const next = { ...prev };
+        delete next[courseName];
+        return next;
+      });
+      if (activeCourseForTrainers === courseName) {
+        setShowTrainerPopup(false);
+        setActiveCourseForTrainers('');
+        setPendingTrainerSelection([]);
+      }
+      return;
+    }
+
+    // Add course and fetch trainers for this company
+    const trainingInfo = trainingRecords.find(
+      (record) => (record?.companyName || '').toString().trim().toLowerCase() === (companyItem.company || '').trim().toLowerCase()
+    );
+
+    const trainersList = Array.isArray(trainingInfo?.trainers)
+      ? trainingInfo.trainers
+          .map((trainer) => ({
+            name: (trainer?.name || '').toString().trim(),
+            courses: parseMultiValue(trainer?.courses)
+          }))
+          .filter((trainer) => trainer.name)
+      : [];
+
+    setCompanyTrainers(trainersList);
+    setSelectedCourses([...coursesList, courseName]);
+    setActiveCourseForTrainers(courseName);
+    setPendingTrainerSelection(
+      Array.isArray(selectedCourseTrainers[courseName]) ? selectedCourseTrainers[courseName] : []
+    );
+    setShowTrainerPopup(true);
+  };
+
+  const handleCourseToggle = (courseName) => {
+    const coursesList = selectedCourses;
+
+    if (coursesList.includes(courseName)) {
+      setSelectedCourses(coursesList.filter((course) => course !== courseName));
       setSelectedCourseTrainers((prev) => {
         const next = { ...prev };
         delete next[courseName];
@@ -420,12 +467,61 @@ const AdminScheduleTraining = ({ onLogout }) => {
     setSelectedCourses([]);
     setSelectedCourseTrainers({});
     setScheduledBatches([]);
+    setSelectedCompanies([]);
     closeTrainerPopup();
   };
 
+  const handleAddCompany = () => {
+    setSelectedCompanies([
+      ...selectedCompanies,
+      { id: Date.now(), company: '', companyHR: '', companyLocation: '' }
+    ]);
+  };
+
+  const handleRemoveCompany = (id) => {
+    setSelectedCompanies(selectedCompanies.filter((item) => item.id !== id));
+  };
+
+  const handleCompanyChange = (id, field, value) => {
+    setSelectedCompanies(selectedCompanies.map((item) => {
+      if (item.id === id) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
+  const handleCompanySelect = (id, companyName) => {
+    const trainingInfo = trainingRecords.find(
+      (record) => (record?.companyName || '').toString().trim().toLowerCase() === companyName.trim().toLowerCase()
+    );
+
+    const hr = trainingInfo?.companyHR || trainingInfo?.hrName || '';
+    const location = trainingInfo?.location || trainingInfo?.companyLocation || trainingInfo?.companyInfo || '';
+
+    setSelectedCompanies(selectedCompanies.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          company: companyName,
+          companyHR: hr,
+          companyLocation: location
+        };
+      }
+      return item;
+    }));
+  };
+
   const handleSave = async () => {
-    if (!company) {
-      showAlertPopup('Please select company');
+    if (selectedCompanies.length === 0) {
+      showAlertPopup('Please add and select at least one company');
+      return;
+    }
+
+    // Validate that all companies have been selected
+    const unselectedCompanies = selectedCompanies.filter((item) => !item.company);
+    if (unselectedCompanies.length > 0) {
+      showAlertPopup('Please select a company for all company entries');
       return;
     }
 
@@ -475,23 +571,27 @@ const AdminScheduleTraining = ({ onLogout }) => {
         .filter((row) => row.trainers.length > 0)
     }];
 
-    const payload = {
+    // Save each company as a separate schedule entry
+    const payloads = selectedCompanies.map((companyItem) => ({
       ...(isEditMode && currentScheduleId ? { scheduleId: currentScheduleId } : {}),
-      companyName: company,
-      companyHR: companyHR,
-      location: companyLocation,
+      companyName: companyItem.company,
+      companyHR: companyItem.companyHR,
+      location: companyItem.companyLocation,
       startDate: startDate,
       endDate: endDate,
       phases: phasesToSave,
       batches: scheduledBatches
-    };
+    }));
 
-    console.log('Final payload being sent:', JSON.stringify(payload, null, 2));
+    console.log('Final payloads being sent:', JSON.stringify(payloads, null, 2));
 
     setIsSaving(true);
     try {
-      await mongoDBService.createScheduledTraining(payload);
-      showAlertPopup('Schedule training saved successfully', 'success');
+      // Save each company's schedule
+      for (const payload of payloads) {
+        await mongoDBService.createScheduledTraining(payload);
+      }
+      showAlertPopup(`Schedule training saved successfully for ${payloads.length} compan${payloads.length === 1 ? 'y' : 'ies'}`, 'success');
       handleDiscard();
     } catch (error) {
       console.error('Failed to save schedule training:', error);
@@ -511,46 +611,89 @@ const AdminScheduleTraining = ({ onLogout }) => {
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Training Details</h2>
           <div className={styles.cardContent}>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Select Company</label>
-                <select
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  className={styles.control}
+            {selectedCompanies.length === 0 ? (
+              <div className={styles.formRow}>
+                <button
+                  type="button"
+                  onClick={handleAddCompany}
+                  className={styles.addBtn}
                   disabled={isLoadingCompanies || isViewMode}
                 >
-                  <option value="">{isLoadingCompanies ? 'Loading companies...' : 'Select Company'}</option>
-                  {companies.map((companyName) => (
-                    <option key={companyName} value={companyName}>
-                      {companyName}
-                    </option>
-                  ))}
-                </select>
+                  <span className={styles.addIcon}>+</span> Add Company
+                </button>
               </div>
+            ) : (
+              <>
+                {selectedCompanies.map((item, index) => (
+                  <div key={item.id} className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.fieldLabel}>Select Company</label>
+                      <select
+                        value={item.company}
+                        onChange={(e) => handleCompanySelect(item.id, e.target.value)}
+                        className={styles.control}
+                        disabled={isLoadingCompanies || isViewMode}
+                      >
+                        <option value="">{isLoadingCompanies ? 'Loading companies...' : 'Select Company'}</option>
+                        {companies.map((companyName) => (
+                          <option key={companyName} value={companyName}>
+                            {companyName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Company HR</label>
-                <input
-                  type="text"
-                  value={companyHR}
-                  readOnly
-                  placeholder="Auto-fetched"
-                  className={styles.control}
-                />
-              </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.fieldLabel}>Company HR</label>
+                      <input
+                        type="text"
+                        value={item.companyHR}
+                        readOnly
+                        placeholder="Auto-fetched"
+                        className={styles.control}
+                      />
+                    </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Location</label>
-                <input
-                  type="text"
-                  value={companyLocation}
-                  readOnly
-                  placeholder="Auto-fetched"
-                  className={styles.control}
-                />
-              </div>
-            </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.fieldLabel}>Location</label>
+                      <input
+                        type="text"
+                        value={item.companyLocation}
+                        readOnly
+                        placeholder="Auto-fetched"
+                        className={styles.control}
+                      />
+                    </div>
+
+                    {!isViewMode && (
+                      <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCompany(item.id)}
+                          className={styles.removeCompanyBtn}
+                          title="Remove this company"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {!isViewMode && (
+                  <div className={styles.formRow}>
+                    <button
+                      type="button"
+                      onClick={handleAddCompany}
+                      className={styles.addBtn}
+                      disabled={isLoadingCompanies}
+                    >
+                      <span className={styles.addIcon}>+</span> Add Another Company
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -634,24 +777,48 @@ const AdminScheduleTraining = ({ onLogout }) => {
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Preferred Training</h2>
           <div className={styles.cardContent}>
-            {!company ? (
-              <p className={styles.noDataText}>Please select a company first to view available courses</p>
-            ) : availableCourses.length === 0 ? (
-              <p className={styles.noDataText}>No courses available for selected company</p>
+            {selectedCompanies.length === 0 ? (
+              <p className={styles.noDataText}>Please add companies first to view available courses</p>
             ) : (
-              <div className={styles.coursesGrid}>
-                {availableCourses.map((course, idx) => (
-                  <label key={idx} className={styles.courseItem}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCourses.includes(course)}
-                      onChange={() => handleCourseToggle(course)}
-                      className={styles.courseCheckbox}
-                      disabled={isViewMode}
-                    />
-                    <span className={styles.courseName}>{course}</span>
-                  </label>
-                ))}
+              <div className={styles.companiesCoursesContainer}>
+                {selectedCompanies.map((companyItem, companyIndex) => {
+                  const trainingInfo = trainingRecords.find(
+                    (record) => (record?.companyName || '').toString().trim().toLowerCase() === (companyItem.company || '').trim().toLowerCase()
+                  );
+                  
+                  const coursesList = Array.isArray(trainingInfo?.courses)
+                    ? trainingInfo.courses
+                        .map(c => (c?.name || c?.courseName || (typeof c === 'string' ? c : '')).toString().trim())
+                        .filter(Boolean)
+                    : [];
+
+                  return (
+                    <div key={companyItem.id}>
+                      {companyIndex > 0 && <div className={styles.companySeparator}></div>}
+                      <div className={styles.companySection}>
+                        <h3 className={styles.companyName}>{companyItem.company || 'Select Company'}</h3>
+                        {coursesList.length === 0 ? (
+                          <p className={styles.noDataText}>No courses available for this company</p>
+                        ) : (
+                          <div className={styles.coursesGrid}>
+                            {coursesList.map((course, idx) => (
+                              <label key={idx} className={styles.courseItem}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCourses.includes(course)}
+                                  onChange={() => handleCourseToggleWithCompany(companyItem, course)}
+                                  className={styles.courseCheckbox}
+                                  disabled={isViewMode || !companyItem.company}
+                                />
+                                <span className={styles.courseName}>{course}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

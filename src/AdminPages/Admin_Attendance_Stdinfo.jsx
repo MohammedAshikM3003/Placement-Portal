@@ -470,6 +470,8 @@ const DeleteSuccessPopup = ({ onClose }) => (
 export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const selectedApplicableYear = (location.state?.applicableYear || '').toString().trim();
+  const selectedPhaseNumber = (location.state?.phaseNumber || '').toString().trim();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [activeBatch, setActiveBatch] = useState("");
@@ -496,13 +498,35 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
   }, [batchAssignments, activeBatch]);
 
   const activePhaseNumber = useMemo(() => {
+    if (selectedPhaseNumber) {
+      return selectedPhaseNumber;
+    }
+
     const phases = Array.isArray(activeAssignment?.phases) ? activeAssignment.phases : [];
     const phaseEntry = phases.find((phase) => (phase?.phaseNumber || '').toString().trim());
     const phaseNumber = (phaseEntry?.phaseNumber || '').toString().trim();
 
     if (!phaseNumber) return 'I';
     return phaseNumber;
-  }, [activeAssignment]);
+  }, [activeAssignment, selectedPhaseNumber]);
+
+  const activeApplicableYear = useMemo(() => {
+    if (selectedApplicableYear) {
+      return selectedApplicableYear;
+    }
+
+    const topLevelYear = (activeAssignment?.applicableYear || '').toString().trim();
+    if (topLevelYear) {
+      return topLevelYear;
+    }
+
+    const phases = Array.isArray(activeAssignment?.phases) ? activeAssignment.phases : [];
+    const matchingPhase = phases.find(
+      (phase) => (phase?.phaseNumber || '').toString().trim() === activePhaseNumber
+    ) || phases.find((phase) => (phase?.applicableYear || '').toString().trim());
+
+    return (matchingPhase?.applicableYear || '-').toString().trim() || '-';
+  }, [activeAssignment, activePhaseNumber, selectedApplicableYear]);
 
   const activeBatchDates = useMemo(() => {
     const startRaw = activeAssignment?.startDate || '';
@@ -590,6 +614,8 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         const state = location.state || {};
         const companyName = state.companyName || '';
         const courseName = state.courseName || '';
+        const requestedApplicableYear = (state.applicableYear || '').toString().trim();
+        const requestedPhaseNumber = (state.phaseNumber || '').toString().trim();
 
         if (!companyName || !courseName) {
           setAvailableBatches([]);
@@ -601,19 +627,30 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
 
         const filters = {
           companyName,
-          courseName
+          courseName,
+          ...(requestedApplicableYear ? { applicableYear: requestedApplicableYear } : {})
         };
 
         const assignments = await mongoDBService.getScheduledTrainingBatchAssignments(filters);
         const normalizedAssignments = Array.isArray(assignments) ? assignments : [];
+        const phaseFilteredAssignments = requestedPhaseNumber
+          ? normalizedAssignments.filter((assignment) => {
+              const topLevelPhase = (assignment?.phaseNumber || '').toString().trim();
+              const phaseEntries = Array.isArray(assignment?.phases) ? assignment.phases : [];
+              const phaseNumbers = phaseEntries
+                .map((phase) => (phase?.phaseNumber || '').toString().trim())
+                .filter(Boolean);
+              return topLevelPhase === requestedPhaseNumber || phaseNumbers.includes(requestedPhaseNumber);
+            })
+          : normalizedAssignments;
         
         // Store all batch assignments
-        setBatchAssignments(normalizedAssignments);
+        setBatchAssignments(phaseFilteredAssignments);
         
         // Extract unique batch assignments
         const uniqueBatches = Array.from(
           new Map(
-            normalizedAssignments
+            phaseFilteredAssignments
               .filter((assignment) => (assignment?.batchName || '').toString().trim())
               .map((assignment) => [
                 (assignment?.batchName || '').toString().trim(),
@@ -1108,6 +1145,9 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
               {/* Left: Filter Section */}
               <div className={styles["ad-train-att-filter-card"]}>
                 <div className={styles["ad-train-att-filter-tabs-container"]}>
+                  <button className={styles["ad-train-att-filter-tab-button"]} type="button">
+                    Applicable Year - {activeApplicableYear}
+                  </button>
                   <button className={styles["ad-train-att-filter-tab-button"]} type="button">
                     Phase - {activePhaseNumber}
                   </button>

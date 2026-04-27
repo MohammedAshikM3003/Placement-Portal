@@ -292,6 +292,29 @@ select.control {
   color: white;
 }
 
+.removeCompanyBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #fee2e2;
+  color: #dc3545;
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.removeCompanyBtn:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
 /* Actions */
 .actions {
   display: flex;
@@ -404,6 +427,33 @@ select.control {
   color: #6b7280;
   font-style: italic;
   padding: 1.5rem 0;
+}
+
+/* Company Grouping in Preferred Training */
+.companiesCoursesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.companySection {
+  padding: 1.5rem 0;
+}
+
+.companySeparator {
+  height: 1px;
+  background: linear-gradient(90deg, #def4dd 0%, #4EA24E 50%, #def4dd 100%);
+  margin: 1.5rem 0;
+}
+
+.companyName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4EA24E;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .trainerPopupOverlay {
@@ -886,3 +936,33 @@ select.control {
     padding: 0.9rem;
   }
 }
+
+/* Companies Courses Container */
+.companiesCoursesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.companySection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.companyName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4EA24E;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #def4dd;
+}
+
+.companySeparator {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #def4dd, transparent);
+  margin: 1rem 0;
+}
+
+/* No Data Text */
