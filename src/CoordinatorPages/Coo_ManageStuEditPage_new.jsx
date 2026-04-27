@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { API_BASE_URL } from '../utils/apiConfig';
 
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
+import Coo_Calendar from '../components/Calendar/Coo_Calendar';
 import styles from './Coo_ManageStuEditPage_new.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/Adminicon.png';
@@ -193,6 +192,20 @@ const CalendarIcon = () => (
         <line x1="16" y1="2" x2="16" y2="6"></line>
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
     </svg>
 );
 
@@ -766,6 +779,8 @@ const ResumeChooserModal = ({ isOpen, onClose, onView, onDownload, isProcessing,
 };
 
 const EDITABLE_FIELD_LABELS = {
+    regNo: 'Registration No.',
+    dob: 'Date of Birth',
     address: 'Address', city: 'City', primaryEmail: 'Primary Email',
     mobileNo: 'Mobile Number', fatherOccupation: "Father's Occupation",
     fatherMobile: "Father's Mobile", motherOccupation: "Mother's Occupation",
@@ -788,6 +803,8 @@ const EDITABLE_FIELD_LABELS = {
     githubLink: 'GitHub Link', linkedinLink: 'LinkedIn Link',
     portfolioLink: 'Portfolio Link', companyTypes: 'Company Types',
     preferredJobLocation: 'Preferred Job Location',
+    loginPassword: 'Login Password',
+    confirmPassword: 'Confirm Password',
     skills: 'Skills', profilePicURL: 'Profile Photo',
 };
 
@@ -809,7 +826,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [isImagePreviewOpen, setImagePreviewOpen] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dob, setDob] = useState(null);
+    const [dob, setDob] = useState('');
     const [studentData, setStudentData] = useState(null); // No localStorage cache for coordinator
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
@@ -850,6 +867,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [resumeDownloadPopupState, setResumeDownloadPopupState] = useState('none');
     const [resumeDownloadProgress, setResumeDownloadProgress] = useState(0);
     const [loadingProgress, setLoadingProgress] = useState(15);
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Crop Modal State
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
@@ -878,7 +897,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             // Basic Information
             firstName: 'First Name',
             lastName: 'Last Name',
-            regNo: 'Register Number',
+            regNo: 'Registration No.',
+            dob: 'Date of Birth',
             batch: 'Batch',
             degree: 'Degree',
             branch: 'Branch',
@@ -965,6 +985,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             // Profile Links
             githubLink: 'GitHub Link',
             linkedinLink: 'LinkedIn Link',
+            loginPassword: 'Login Password',
+            confirmPassword: 'Confirm Password',
 
             // Profile Photo
             profilePicURL: 'Profile Photo'
@@ -1480,27 +1502,21 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const trainingCardEntries = useMemo(() => {
         const records = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
         const hasPhaseTaggedAttendance = records.some((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''));
+        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+        const assignmentDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+        const hasAssignmentDetails = Boolean(
+            assignmentCourse ||
+            studentTrainingAssignment?.startDate ||
+            studentTrainingAssignment?.endDate ||
+            assignmentTotalDays > 0
+        );
 
-        const phaseKeySet = new Set();
-        Object.keys(studentTrainingPhaseMetaMap || {}).forEach((phaseKey) => {
-            if (phaseKey) phaseKeySet.add(phaseKey);
-        });
-
-        if (hasPhaseTaggedAttendance) {
-            records.forEach((entry) => {
-                const key = normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '');
-                if (key) phaseKeySet.add(key);
-            });
+        if (records.length === 0 && !hasAssignmentDetails) {
+            return [];
         }
 
-        const sortedPhaseKeys = [...phaseKeySet].sort((left, right) => {
-            const leftNumeric = Number.parseInt(left, 10);
-            const rightNumeric = Number.parseInt(right, 10);
-            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
-            return left.localeCompare(right);
-        });
-
-        if (sortedPhaseKeys.length === 0) {
+        if (!hasPhaseTaggedAttendance) {
             const presentCount = records.filter((entry) => normalizeText(entry?.status) === 'present').length;
             const absentCount = records.filter((entry) => normalizeText(entry?.status) === 'absent').length;
             const totalSessions = presentCount + absentCount;
@@ -1509,23 +1525,30 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             const attendedCourse = records
                 .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
                 .find(Boolean);
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
-            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+            const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : assignmentDaysFromDates;
 
             return [{
                 label: 'Training 1',
                 courseName: assignmentCourse || attendedCourse || 'N/A',
                 attendancePercentage,
-                totalTrainingDays: assignmentTotalDays > 0 ? assignmentTotalDays : fallbackDaysFromDates
+                totalTrainingDays
             }];
         }
 
+        const sortedPhaseKeys = [...new Set(
+            records
+                .map((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''))
+                .filter(Boolean)
+        )].sort((left, right) => {
+            const leftNumeric = Number.parseInt(left, 10);
+            const rightNumeric = Number.parseInt(right, 10);
+            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
+            return left.localeCompare(right);
+        });
+
         return sortedPhaseKeys.map((phaseKey, index) => {
             const phaseMeta = studentTrainingPhaseMetaMap?.[phaseKey] || {};
-            const scopedRecords = hasPhaseTaggedAttendance
-                ? records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey)
-                : (index === 0 ? records : []);
+            const scopedRecords = records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey);
 
             const presentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'present').length;
             const absentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'absent').length;
@@ -1536,8 +1559,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
                 .find(Boolean);
             const phaseCourse = Array.isArray(phaseMeta?.courses) ? phaseMeta.courses.find((course) => normalizeTrainingCourseName(course)) : '';
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-
             const distinctAttendanceDays = new Set(
                 scopedRecords
                     .map((entry) => (entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '').toString().trim())
@@ -1546,10 +1567,9 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
             const phaseTotalDays = Number(phaseMeta?.totalDays || 0);
             const fallbackDaysFromDates = getInclusiveDaysBetweenDates(phaseMeta?.startDate, phaseMeta?.endDate);
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
             const totalTrainingDays = phaseTotalDays > 0
                 ? phaseTotalDays
-                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : 0);
+                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : assignmentDaysFromDates);
 
             const phaseNumberLabel = (phaseMeta?.phaseNumber || '').toString().trim();
             const labelSuffix = phaseNumberLabel || (Number.parseInt(phaseKey, 10) || (index + 1));
@@ -1563,11 +1583,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
         });
     }, [studentTrainingAttendanceRecords, studentTrainingPhaseMetaMap, studentTrainingAssignment?.courseName, studentTrainingAssignment?.totalDays, studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate]);
 
-    const hasTrainingData = useMemo(() => (
-        Boolean(studentTrainingAssignment) ||
-        studentTrainingAttendanceRecords.length > 0 ||
-        Object.keys(studentTrainingPhaseMetaMap || {}).length > 0
-    ), [studentTrainingAssignment, studentTrainingAttendanceRecords.length, studentTrainingPhaseMetaMap]);
+    const hasTrainingData = useMemo(() => trainingCardEntries.length > 0, [trainingCardEntries.length]);
 
     useEffect(() => {
         if (!selectedRound) return;
@@ -1878,7 +1894,11 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             currentSemester: data.currentSemester || data.semester || ''
         };
 
-        const merged = { ...data, ...normalized };
+        const merged = {
+            ...data,
+            ...normalized,
+            confirmPassword: (data?.loginPassword || normalized?.loginPassword || '')
+        };
         setStudentData(merged);
         setOriginalFormData({ ...merged });
         setHasUnsavedChanges(false);
@@ -1899,7 +1919,9 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 const day = dobStr.substring(0, 2);
                 const month = dobStr.substring(2, 4);
                 const year = dobStr.substring(4, 8);
-                setDob(new Date(year, month - 1, day));
+                setDob(`${year}-${month}-${day}`);
+            } else {
+                setDob(normalizeDate(merged.dob));
             }
         }
 
@@ -1928,7 +1950,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             setIsInitialLoading(true);
             setStudentData(null);
             setProfileImage(null);
-            setDob(null);
+            setDob('');
             setSkills([]);
             setCurrentYear('');
             setCurrentSemester('');
@@ -2103,7 +2125,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (isSaving || getChangedFields().length === 0) return;
+        if (isSaving || getChangedFields().length === 0 || isPasswordMismatch) return;
 
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
@@ -2118,6 +2140,13 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             setUrlErrorType('LinkedIn');
             setInvalidUrl(linkedinVal);
             setURLErrorPopupOpen(true);
+            return;
+        }
+
+        const enteredPassword = (studentData?.loginPassword || '').toString();
+        const enteredConfirmPassword = (studentData?.confirmPassword || '').toString();
+        if ((enteredPassword || enteredConfirmPassword) && enteredPassword !== enteredConfirmPassword) {
+            alert('Passwords do not match.');
             return;
         }
 
@@ -2238,6 +2267,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '',
                 companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '',
                 preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
+                loginPassword: formData.get('loginPassword') || studentData?.loginPassword || '',
                 profilePicURL: (() => {
                     // Store relative GridFS path in DB, not full URL or Base64
                     const pic = profilePhotoUrl || studentData?.profilePicURL || '';
@@ -2265,6 +2295,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                 ...(studentData || {}),
                 ...(result?.student || {}),
                 ...updateData,
+                confirmPassword: studentData?.confirmPassword || updateData.loginPassword || '',
                 // Ensure we use the resolved GridFS URL for display
                 profilePicURL: finalResolvedUrl || updateData.profilePicURL || studentData?.profilePicURL
             };
@@ -2342,7 +2373,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const handleDiscard = () => {
         if (formRef.current) {
             formRef.current.reset();
-            setStudyCategory('12th'); setDob(null);
+            setStudyCategory('12th'); setDob('');
             loadStudentData();
 
             // Reset unsaved changes tracking
@@ -2427,6 +2458,11 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
     const actionableChangedFields = getChangedFields();
     const hasActionableChanges = actionableChangedFields.length > 0;
+    const isPasswordMismatch = Boolean(
+        studentData?.loginPassword &&
+        studentData?.confirmPassword &&
+        studentData.loginPassword !== studentData.confirmPassword
+    );
 
     return (
         <div className={`${styles.container} ${isSaving ? styles['stu-profile-saving'] : ''}`}>
@@ -2558,22 +2594,33 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     <div className={styles.field}>
                                         <label>Date of Birth <RequiredStar /></label>
                                         <div className={styles.datepickerWrapper}>
-                                            <DatePicker
-                                                selected={dob}
-                                                onChange={(date) => {
-                                                    setDob(date);
-                                                    const formattedDob = date
-                                                        ? `${String(date.getDate()).padStart(2, '0')}${String(date.getMonth() + 1).padStart(2, '0')}${date.getFullYear()}`
-                                                        : '';
-                                                    setStudentData(prev => ({ ...prev, dob: formattedDob }));
-                                                }}
-                                                dateFormat="dd-MM-yyyy"
-                                                placeholderText="Enter DOB"
-                                                className={styles.datepickerInput}
-                                                wrapperClassName="StuProfile-datepicker-wrapper-inner"
-                                                showPopperArrow={false}
-                                                disabled={isSaving || isViewMode}
-                                            />
+                                            {isViewMode ? (
+                                                <input
+                                                    type="text"
+                                                    value={dob ? (() => {
+                                                        const [year, month, day] = dob.split('-');
+                                                        return `${day}-${month}-${year}`;
+                                                    })() : ''}
+                                                    readOnly
+                                                    className={styles.readOnlyInput}
+                                                />
+                                            ) : (
+                                                <Coo_Calendar
+                                                    value={dob || ''}
+                                                    onChange={(dateStr) => {
+                                                        if (isSaving) return;
+                                                        setDob(dateStr || '');
+                                                        if (dateStr) {
+                                                            const [year, month, day] = dateStr.split('-');
+                                                            const formattedDob = `${day}${month}${year}`;
+                                                            setStudentData(prev => ({ ...prev, dob: formattedDob }));
+                                                        } else {
+                                                            setStudentData(prev => ({ ...prev, dob: '' }));
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                            <input type="hidden" name="dob" value={studentData?.dob || ''} />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
@@ -2906,7 +2953,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
-                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        <div className={styles.percentageInputWrapper}>
+                                            <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                            <div className={styles.percentSuffix}>%</div>
+                                        </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Year of Passing <RequiredStar /></label>
@@ -2930,7 +2980,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
-                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Year of Passing <RequiredStar /></label>
@@ -2938,7 +2991,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))} disabled={isSaving || isViewMode} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -2954,7 +3010,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Percentage <RequiredStar /></label>
-                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))} disabled={isSaving || isViewMode} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Year of Passing <RequiredStar /></label>
@@ -3719,11 +3778,120 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                             </div>
                         </div>
 
+                        <div className={styles.profileSectionContainer}>
+                            <h3 className={styles.sectionHeader}>Login Details</h3>
+                            <div className={styles.formGrid}>
+                                <div className={styles.field}>
+                                    <label>Registration No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="loginRegNo"
+                                        placeholder="Enter Register No"
+                                        value={studentData?.regNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, regNo: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Password <RequiredStar /></label>
+                                    {isViewMode ? (
+                                        <input
+                                            type="text"
+                                            name="loginPassword"
+                                            value={studentData?.loginPassword || ''}
+                                            readOnly
+                                        />
+                                    ) : (
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showLoginPassword ? 'text' : 'password'}
+                                                name="loginPassword"
+                                                placeholder="Enter Password (DDMMYYYY)"
+                                                value={studentData?.loginPassword || ''}
+                                                onChange={(e) => setStudentData(prev => ({ ...prev, loginPassword: e.target.value }))}
+                                                style={{ paddingRight: '40px' }}
+                                                disabled={isSaving || isViewMode}
+                                            />
+                                            <button
+                                                type="button"
+                                                className={styles.passwordToggleBtn}
+                                                onClick={() => setShowLoginPassword((prev) => !prev)}
+                                                tabIndex={-1}
+                                                disabled={isSaving || isViewMode}
+                                            >
+                                                {showLoginPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {!isViewMode && studentData?.dob && (
+                                        <p style={{
+                                            fontSize: '0.85rem',
+                                            color: '#D73D3D',
+                                            marginTop: '6px',
+                                            fontWeight: 500,
+                                            fontFamily: "'Poppins', sans-serif"
+                                        }}>
+                                            Password should be: <strong>{(() => {
+                                                const rawDob = (studentData.dob || '').toString();
+                                                const dobMatch = rawDob.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                                if (!dobMatch) return '';
+                                                const [, year, month, day] = dobMatch;
+                                                return `${day}${month}${year}`;
+                                            })()}</strong> (based on DOB)
+                                        </p>
+                                    )}
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Confirm Password <RequiredStar /></label>
+                                    {isViewMode ? (
+                                        <input
+                                            type="text"
+                                            name="confirmPassword"
+                                            value={studentData?.confirmPassword || ''}
+                                            readOnly
+                                        />
+                                    ) : (
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                name="confirmPassword"
+                                                placeholder="Enter Confirm Password"
+                                                value={studentData?.confirmPassword || ''}
+                                                onChange={(e) => setStudentData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                                style={{ paddingRight: '40px' }}
+                                                disabled={isSaving || isViewMode}
+                                            />
+                                            <button
+                                                type="button"
+                                                className={styles.passwordToggleBtn}
+                                                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                                tabIndex={-1}
+                                                disabled={isSaving || isViewMode}
+                                            >
+                                                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {!isViewMode && studentData?.loginPassword && studentData?.confirmPassword && studentData.loginPassword !== studentData.confirmPassword && (
+                                        <p style={{
+                                            fontSize: '0.85rem',
+                                            color: '#dc3545',
+                                            marginTop: '6px',
+                                            fontWeight: 500,
+                                            fontFamily: "'Poppins', sans-serif"
+                                        }}>
+                                            Passwords do not match
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Only show Save/Discard buttons in edit mode */}
                         {!isViewMode && (
                             <div className={styles.actionButtons}>
                                 <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving || isViewMode || !hasActionableChanges}>Discard</button>
-                                <button type="submit" className={styles.saveBtn} disabled={isSaving || isViewMode || !hasActionableChanges}>
+                                <button type="submit" className={styles.saveBtn} disabled={isSaving || isViewMode || !hasActionableChanges || isPasswordMismatch}>
                                     {isSaving ? (
                                         <>
                                             <div className={styles.loadingSpinner}></div>

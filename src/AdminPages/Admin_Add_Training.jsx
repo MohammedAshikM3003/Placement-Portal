@@ -337,6 +337,7 @@ const Admin_Add_Training = () => {
         onSave={handleTrainerSave}
         initialData={editingTrainerIndex !== null ? trainers[editingTrainerIndex] : null}
         submitLabel={editingTrainerIndex !== null ? 'Update' : 'Save'}
+        availableCourses={courses.map((course) => (course?.name || '').toString().trim()).filter(Boolean)}
       />
 
       {showSuccessPopup && <TrainingSavedPopup onClose={() => setShowSuccessPopup(false)} mode={successMode} />}

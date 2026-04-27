@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Admin_TrainerDetailsPopup.module.css';
 
-const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null, submitLabel = 'Save' }) => {
+const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null, submitLabel = 'Save', availableCourses = [] }) => {
   const [trainerName, setTrainerName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
+  const [assignedCourses, setAssignedCourses] = useState(['']);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -15,6 +16,10 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
       setMobile((initialData?.mobile || '').toString());
       setEmail((initialData?.email || '').toString());
       setGender((initialData?.gender || '').toString());
+      const initialCourses = Array.isArray(initialData?.courses)
+        ? initialData.courses.map((course) => (course || '').toString()).filter(Boolean)
+        : [];
+      setAssignedCourses(initialCourses.length > 0 ? initialCourses : ['']);
       return;
     }
 
@@ -22,6 +27,7 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
     setMobile('');
     setEmail('');
     setGender('');
+    setAssignedCourses(['']);
   }, [isOpen, initialData]);
 
   const isFormValid =
@@ -35,7 +41,27 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
     setMobile('');
     setEmail('');
     setGender('');
+    setAssignedCourses(['']);
     onClose();
+  };
+
+  const handleCourseChange = (index, value) => {
+    setAssignedCourses((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const handleAddCourseField = () => {
+    setAssignedCourses((prev) => [...prev, '']);
+  };
+
+  const handleRemoveCourseField = (index) => {
+    setAssignedCourses((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.length > 0 ? next : [''];
+    });
   };
 
   const handleSave = () => {
@@ -48,7 +74,8 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
       name: trainerName,
       mobile,
       email,
-      gender
+      gender,
+      courses: assignedCourses.map((course) => (course || '').toString().trim()).filter(Boolean)
     };
     
     onSave(trainerData);
@@ -110,6 +137,43 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
+            </div>
+
+            <div className={`${styles['form-group']} ${styles['full-width']}`}>
+              <label className={styles['form-label']}>Assigned Course(s)</label>
+              <div className={styles['course-list']}>
+                {assignedCourses.map((courseValue, index) => (
+                  <div className={styles['course-row']} key={`trainer-course-${index}`}>
+                    <select
+                      value={courseValue}
+                      onChange={(e) => handleCourseChange(index, e.target.value)}
+                      className={`${styles['form-input']} ${styles['course-select']}`}
+                    >
+                      <option value="">Select course</option>
+                      {availableCourses.map((courseName) => (
+                        <option key={`${courseName}-${index}`} value={courseName}>{courseName}</option>
+                      ))}
+                    </select>
+                    {assignedCourses.length > 1 && (
+                      <button
+                        type="button"
+                        className={styles['remove-course-btn']}
+                        onClick={() => handleRemoveCourseField(index)}
+                        aria-label="Remove course"
+                      >
+                        x
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className={styles['add-course-btn']}
+                  onClick={handleAddCourseField}
+                >
+                  + Add Course
+                </button>
+              </div>
             </div>
           </div>
         </div>

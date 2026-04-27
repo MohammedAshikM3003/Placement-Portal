@@ -558,7 +558,7 @@ function AdminTraining({ onLogout }) {
                   query.set('scheduleId', card.scheduleId);
                 }
 
-                navigate(`/admin-schedule-training?${query.toString()}`);
+                navigate(`/admin-preferred-training-students?${query.toString()}`);
               };
 
               return (

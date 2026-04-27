@@ -196,6 +196,57 @@
     color: #666;
 }
 
+/* Percentage Input with Suffix Chip (Academic Background) */
+.percentageInputWrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff9f9;
+    box-sizing: border-box;
+    height: 53.6px;
+}
+
+.formGrid .percentageInputWrapper .percentageInput {
+    flex: 1;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
+    height: 100%;
+    line-height: 1.2;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.formGrid .percentageInputWrapper .percentageInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.percentSuffix {
+    min-width: 50px;
+    background-color: #D73D3D;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+}
+
+.percentageInputWrapper:focus-within {
+    border-color: #D73D3D;
+    box-shadow: 0 0 0 3px rgba(215, 61, 61, 0.2);
+}
+
 /* Responsive for mobile */
 @media (max-width: 900px) {
     .mobileInputWrapper {
@@ -498,17 +549,23 @@
     gap: 0.6rem;
     color: #333;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .checkboxOption input[type='checkbox'] {
     width: 18px;
     height: 18px;
     accent-color: #D73D3D;
-    cursor: not-allowed;
+    cursor: pointer;
 }
 
 .checkboxOption span {
     flex: 1;
+    cursor: pointer;
+}
+
+.checkboxOption input[type='checkbox']:disabled,
+.checkboxOption input[type='checkbox']:disabled + span {
     cursor: not-allowed;
 }
 
@@ -529,11 +586,15 @@
     text-align: center;
     padding: 8px 16px; 
     border-radius: 6px;
-    cursor: not-allowed;
+    cursor: pointer;
     transition: all 0.2s ease-in-out;
     color: #666;
     background-color: transparent;
     font-weight: 400;
+}
+
+.studyCategory input[type='radio']:disabled + label {
+    cursor: not-allowed;
 }
 
 /* Style for selected (checked) radio button */
@@ -594,6 +655,32 @@
 
 .personalInfoFields > .field:has(.fieldButton) {
     margin-top: -1.1rem;
+}
+
+/* Password toggle button */
+.passwordToggleBtn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.passwordToggleBtn:hover {
+    color: #D73D3D;
+}
+
+.passwordToggleBtn svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Action Buttons */

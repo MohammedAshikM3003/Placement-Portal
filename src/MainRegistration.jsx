@@ -105,6 +105,19 @@ const MobileInputWithPrefix = ({ name, placeholder, value, onChange, maxLength =
   );
 };
 
+const PercentageInputWithSuffix = ({ name, placeholder, ...props }) => (
+  <div className={cx("mr-percent-input-wrapper")}>
+    <input
+      type="text"
+      name={name}
+      placeholder={placeholder}
+      className={cx("mr-percent-input")}
+      {...props}
+    />
+    <div className={cx("mr-percent-suffix")}>%</div>
+  </div>
+);
+
 const MdUpload = () => (
   <svg
     stroke="currentColor"
@@ -2045,7 +2058,7 @@ function MainRegistration() {
                   </div>
                   <div className={cx("mr-field")}>
                     <label>10th Percentage <RequiredStar /></label>
-                    <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" required />
+                    <PercentageInputWithSuffix name="tenthPercentage" placeholder="Enter 10th Percentage" required />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>10th Year of Passing <RequiredStar /></label>
@@ -2069,7 +2082,7 @@ function MainRegistration() {
                       </div>
                       <div className={cx("mr-field")}>
                         <label>12th Percentage <RequiredStar /></label>
-                        <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" required />
+                        <PercentageInputWithSuffix name="twelfthPercentage" placeholder="Enter 12th Percentage" required />
                       </div>
                       <div className={cx("mr-field")}>
                         <label>12th Year of Passing <RequiredStar /></label>
@@ -2077,7 +2090,7 @@ function MainRegistration() {
                       </div>
                       <div className={cx("mr-field")}>
                         <label>12th Cut-off <RequiredStar /></label>
-                        <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off" required />
+                        <PercentageInputWithSuffix name="twelfthCutoff" placeholder="Enter 12th Cut-off" required />
                       </div>
                     </>
                   )}
@@ -2093,7 +2106,7 @@ function MainRegistration() {
                       </div>
                       <div className={cx("mr-field")}>
                         <label>Diploma Percentage <RequiredStar /></label>
-                        <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" required />
+                        <PercentageInputWithSuffix name="diplomaPercentage" placeholder="Enter Diploma Percentage" required />
                       </div>
                       <div className={cx("mr-field")}>
                         <label>Diploma Year <RequiredStar /></label>

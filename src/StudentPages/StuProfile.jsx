@@ -1637,27 +1637,22 @@ function StuProfile({ onLogout, onViewChange }) {
     const trainingCardEntries = useMemo(() => {
         const records = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
         const hasPhaseTaggedAttendance = records.some((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''));
+        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+        const assignmentDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+        const hasAssignmentDetails = Boolean(
+            assignmentCourse ||
+            studentTrainingAssignment?.startDate ||
+            studentTrainingAssignment?.endDate ||
+            assignmentTotalDays > 0
+        );
 
-        const phaseKeySet = new Set();
-        Object.keys(studentTrainingPhaseMetaMap || {}).forEach((phaseKey) => {
-            if (phaseKey) phaseKeySet.add(phaseKey);
-        });
-
-        if (hasPhaseTaggedAttendance) {
-            records.forEach((entry) => {
-                const key = normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '');
-                if (key) phaseKeySet.add(key);
-            });
+        // Never render schedule-driven placeholders for students with no assignment/attendance data.
+        if (records.length === 0 && !hasAssignmentDetails) {
+            return [];
         }
 
-        const sortedPhaseKeys = [...phaseKeySet].sort((left, right) => {
-            const leftNumeric = Number.parseInt(left, 10);
-            const rightNumeric = Number.parseInt(right, 10);
-            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
-            return left.localeCompare(right);
-        });
-
-        if (sortedPhaseKeys.length === 0) {
+        if (!hasPhaseTaggedAttendance) {
             const presentCount = records.filter((entry) => normalizeText(entry?.status) === 'present').length;
             const absentCount = records.filter((entry) => normalizeText(entry?.status) === 'absent').length;
             const totalSessions = presentCount + absentCount;
@@ -1668,11 +1663,8 @@ function StuProfile({ onLogout, onViewChange }) {
             const attendedCourse = records
                 .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
                 .find(Boolean);
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
             const preferredCourse = (selectedTrainings[0] || '').toString().trim();
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
-            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
-            const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : fallbackDaysFromDates;
+            const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : assignmentDaysFromDates;
 
             return [{
                 label: 'Training 1',
@@ -1682,11 +1674,20 @@ function StuProfile({ onLogout, onViewChange }) {
             }];
         }
 
+        const sortedPhaseKeys = [...new Set(
+            records
+                .map((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''))
+                .filter(Boolean)
+        )].sort((left, right) => {
+            const leftNumeric = Number.parseInt(left, 10);
+            const rightNumeric = Number.parseInt(right, 10);
+            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
+            return left.localeCompare(right);
+        });
+
         return sortedPhaseKeys.map((phaseKey, index) => {
             const phaseMeta = studentTrainingPhaseMetaMap?.[phaseKey] || {};
-            const scopedRecords = hasPhaseTaggedAttendance
-                ? records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey)
-                : (index === 0 ? records : []);
+            const scopedRecords = records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey);
 
             const presentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'present').length;
             const absentCount = scopedRecords.filter((entry) => normalizeText(entry?.status) === 'absent').length;
@@ -1701,7 +1702,6 @@ function StuProfile({ onLogout, onViewChange }) {
             const phaseCourse = Array.isArray(phaseMeta?.courses)
                 ? phaseMeta.courses.find((course) => normalizeTrainingCourseName(course))
                 : '';
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
             const preferredCourse = (selectedTrainings[index] || selectedTrainings[0] || '').toString().trim();
 
             const distinctAttendanceDays = new Set(
@@ -1712,10 +1712,9 @@ function StuProfile({ onLogout, onViewChange }) {
 
             const phaseTotalDays = Number(phaseMeta?.totalDays || 0);
             const fallbackDaysFromDates = getInclusiveDaysBetweenDates(phaseMeta?.startDate, phaseMeta?.endDate);
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
             const totalTrainingDays = phaseTotalDays > 0
                 ? phaseTotalDays
-                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : 0);
+                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : assignmentDaysFromDates);
 
             const phaseNumberLabel = (phaseMeta?.phaseNumber || '').toString().trim();
             const labelSuffix = phaseNumberLabel || (Number.parseInt(phaseKey, 10) || (index + 1));
@@ -1738,26 +1737,7 @@ function StuProfile({ onLogout, onViewChange }) {
         studentTrainingPhaseMetaMap
     ]);
 
-    const hasTrainingData = useMemo(() => {
-        const hasAttendance = studentTrainingAttendanceRecords.length > 0;
-        const hasAssignment = Boolean(
-            (studentTrainingAssignment?.courseName || '').toString().trim() ||
-            studentTrainingAssignment?.startDate ||
-            studentTrainingAssignment?.endDate ||
-            Number(studentTrainingAssignment?.totalDays || 0) > 0
-        );
-
-        const hasPhases = Object.keys(studentTrainingPhaseMetaMap || {}).length > 0;
-
-        return hasAttendance || hasAssignment || hasPhases;
-    }, [
-        studentTrainingAssignment?.courseName,
-        studentTrainingAssignment?.endDate,
-        studentTrainingAssignment?.startDate,
-        studentTrainingAssignment?.totalDays,
-        studentTrainingAttendanceRecords.length,
-        studentTrainingPhaseMetaMap
-    ]);
+    const hasTrainingData = useMemo(() => trainingCardEntries.length > 0, [trainingCardEntries.length]);
 
     const PIE_DATA = driveAnalytics.pieData;
     const ROUND_DETAILS = driveAnalytics.roundDetails;
@@ -2898,7 +2878,10 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
-                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                        <div className={styles.percentageInputWrapper}>
+                                            <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.percentageInput} />
+                                            <div className={styles.percentSuffix}>%</div>
+                                        </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Year of Passing <RequiredStar /></label>
@@ -2922,7 +2905,10 @@ function StuProfile({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
-                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Year of Passing <RequiredStar /></label>
@@ -2930,7 +2916,10 @@ function StuProfile({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.readOnlyInput} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -2946,7 +2935,10 @@ function StuProfile({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Percentage <RequiredStar /></label>
-                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.readOnlyInput} />
+                                                <div className={styles.percentageInputWrapper}>
+                                                    <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.percentageInput} />
+                                                    <div className={styles.percentSuffix}>%</div>
+                                                </div>
                                             </div>
                                             <div className={styles.field}>
                                                 <label>Diploma Year of Passing <RequiredStar /></label>

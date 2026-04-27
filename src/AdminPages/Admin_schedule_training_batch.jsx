@@ -68,6 +68,42 @@ const normalizeYearToken = (value = '') => {
   return yearAliases[compact] || compact;
 };
 
+const normalizePhase = (value = '') => {
+  const text = value.toString().trim();
+  const match = text.match(/\d+/);
+  return match ? match[0] : text.toLowerCase();
+};
+
+const parsePreferredTrainingByPhase = (rawValue) => {
+  if (!rawValue) return {};
+
+  const source = (() => {
+    if (typeof rawValue === 'string') {
+      const trimmed = rawValue.trim();
+      if (!trimmed) return null;
+      try {
+        return JSON.parse(trimmed);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    if (typeof rawValue === 'object') return rawValue;
+    return null;
+  })();
+
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+
+  return Object.entries(source).reduce((acc, [phase, course]) => {
+    const phaseKey = normalizePhase(phase);
+    const courseName = (course || '').toString().trim();
+    if (phaseKey && courseName) {
+      acc[phaseKey] = courseName;
+    }
+    return acc;
+  }, {});
+};
+
 const formatDateToDDMMYYYY = (dateString) => {
   if (!dateString) return '-';
   try {
@@ -100,18 +136,32 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   const [allStudents, setAllStudents] = useState([]);
   const [batchAssignments, setBatchAssignments] = useState([]);
   const [activeBatchIndex, setActiveBatchIndex] = useState(0);
+  const [trainingCompanies, setTrainingCompanies] = useState([]);
 
   // Filters
   const [batchName, setBatchName] = useState('');
-  const [trainerFilter, setTrainerFilter] = useState((scheduleContext.trainer || '').toString().trim());
+  const initialSelectedTrainers = useMemo(() => {
+    const fromSelectedTrainers = Array.isArray(scheduleContext?.selectedTrainers)
+      ? scheduleContext.selectedTrainers.map((name) => (name || '').toString().trim()).filter(Boolean)
+      : [];
+
+    const fromTrainerString = parseMultiValue(scheduleContext?.trainer)
+      .map((name) => (name || '').toString().trim())
+      .filter((name) => name && name !== '-');
+
+    return [...new Set([...fromSelectedTrainers, ...fromTrainerString])];
+  }, [scheduleContext]);
+  const [selectedTrainerFilters, setSelectedTrainerFilters] = useState(initialSelectedTrainers);
   const [courseFilter, setCourseFilter] = useState((scheduleContext.selectedCourse || '').toString().trim());
   const [departmentFilter, setDepartmentFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState((scheduleContext.applicableYear || '').toString().trim());
   const [sectionFilter, setSectionFilter] = useState('');
   const [nameOrRegFilter, setNameOrRegFilter] = useState('');
   const [mobileFilter, setMobileFilter] = useState('');
   const [cgpaFromFilter, setCgpaFromFilter] = useState('');
   const [cgpaToFilter, setCgpaToFilter] = useState('');
+  const [isTrainerPopupOpen, setIsTrainerPopupOpen] = useState(false);
+  const [trainerValidationError, setTrainerValidationError] = useState(false);
+  const selectedPhaseKey = useMemo(() => normalizePhase(scheduleContext?.phaseNumber || ''), [scheduleContext?.phaseNumber]);
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -163,7 +213,8 @@ function AdminScheduleTrainingBatch({ onLogout }) {
             section: (student?.section || '').toString().trim() || '-',
             cgpa: (student?.cgpa || student?.overallCGPA || student?.gpa || '').toString().trim() || '-',
             mobile: (student?.mobile || student?.mobileNumber || student?.phone || '').toString().trim() || '-',
-            preferredTraining: parseMultiValue(student?.preferredTraining)
+            preferredTraining: parseMultiValue(student?.preferredTraining),
+            preferredTrainingByPhase: parsePreferredTrainingByPhase(student?.preferredTrainingByPhase)
           };
         });
 
@@ -180,13 +231,27 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   }, []);
 
   useEffect(() => {
+    const loadTrainingCompanies = async () => {
+      try {
+        const trainings = await mongoDBService.getTrainings();
+        setTrainingCompanies(Array.isArray(trainings) ? trainings : []);
+      } catch (error) {
+        console.error('Failed to load training companies for trainer mapping:', error);
+        setTrainingCompanies([]);
+      }
+    };
+
+    loadTrainingCompanies();
+  }, []);
+
+  useEffect(() => {
     const loadBatchAssignments = async () => {
       try {
         const assignments = await mongoDBService.getScheduledTrainingBatchAssignments({
           scheduleId: scheduleContext.scheduleId || '',
           companyName: scheduleContext.companyName || '',
           courseName: courseFilter || scheduleContext.selectedCourse || '',
-          applicableYear: yearFilter || scheduleContext.applicableYear || ''
+          applicableYear: scheduleContext.applicableYear || ''
         });
 
         setBatchAssignments(assignments);
@@ -205,7 +270,7 @@ function AdminScheduleTrainingBatch({ onLogout }) {
     };
 
     loadBatchAssignments();
-  }, [scheduleContext.scheduleId, scheduleContext.companyName, scheduleContext.selectedCourse, scheduleContext.applicableYear, courseFilter, yearFilter]);
+  }, [scheduleContext.scheduleId, scheduleContext.companyName, scheduleContext.selectedCourse, scheduleContext.applicableYear, courseFilter]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((v) => !v);
@@ -216,19 +281,32 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       ? scheduleContext.availableCourses.map((course) => (course || '').toString().trim()).filter(Boolean)
       : [];
 
-    const fromStudents = allStudents.flatMap((student) => student.preferredTraining || []);
+    const fromStudents = allStudents.flatMap((student) => {
+      if (selectedPhaseKey) {
+        const fromPhase = (student?.preferredTrainingByPhase?.[selectedPhaseKey] || '').toString().trim();
+        if (fromPhase) return [fromPhase];
+      }
+
+      const legacy = Array.isArray(student?.preferredTraining) ? student.preferredTraining : [];
+      if (selectedPhaseKey && selectedPhaseKey !== '1') {
+        return [];
+      }
+
+      return legacy;
+    });
     return [...new Set([...fromSchedule, ...fromStudents])];
-  }, [scheduleContext.availableCourses, allStudents]);
+  }, [scheduleContext.availableCourses, allStudents, selectedPhaseKey]);
 
   const filteredStudents = useMemo(() => {
     const normalizedCourse = (courseFilter || '').toString().trim().toLowerCase();
-    const normalizedYear = normalizeYearToken(yearFilter || '');
     const normalizedDept = (departmentFilter || '').toString().trim().toLowerCase();
     const normalizedSection = (sectionFilter || '').toString().trim().toLowerCase();
     const normalizedNameOrReg = (nameOrRegFilter || '').toString().trim().toLowerCase();
     const normalizedMobile = (mobileFilter || '').toString().trim().toLowerCase();
+
     const cgpaFrom = Number.parseFloat(cgpaFromFilter);
     const cgpaTo = Number.parseFloat(cgpaToFilter);
+
     const hasCgpaFrom = !Number.isNaN(cgpaFrom);
     const hasCgpaTo = !Number.isNaN(cgpaTo);
 
@@ -236,8 +314,10 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       const preferredTrainings = Array.isArray(student.preferredTraining)
         ? student.preferredTraining.map((course) => (course || '').toString().trim().toLowerCase())
         : [];
+      const preferredForPhase = selectedPhaseKey
+        ? (student?.preferredTrainingByPhase?.[selectedPhaseKey] || '').toString().trim().toLowerCase()
+        : '';
 
-      const studentYear = normalizeYearToken(student.year || '');
       const studentDept = (student.dept || '').toString().trim().toLowerCase();
       const studentSection = (student.section || '').toString().trim().toLowerCase();
       const studentName = (student.name || '').toString().trim().toLowerCase();
@@ -245,12 +325,15 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       const studentMobile = (student.mobile || '').toString().trim().toLowerCase();
       const studentCgpa = Number.parseFloat(student.cgpa);
 
-      if (normalizedCourse && !preferredTrainings.includes(normalizedCourse)) {
-        return false;
-      }
-
-      if (normalizedYear && studentYear !== normalizedYear) {
-        return false;
+      if (normalizedCourse) {
+        if (selectedPhaseKey) {
+          const legacyAllowed = selectedPhaseKey === '1' && preferredTrainings.includes(normalizedCourse);
+          if (preferredForPhase !== normalizedCourse && !legacyAllowed) {
+            return false;
+          }
+        } else if (!preferredTrainings.includes(normalizedCourse) && preferredForPhase !== normalizedCourse) {
+          return false;
+        }
       }
 
       if (normalizedDept && studentDept !== normalizedDept) {
@@ -281,26 +364,93 @@ function AdminScheduleTrainingBatch({ onLogout }) {
         return false;
       }
 
-      // Trainer is schedule-level context here; if a different trainer is chosen, return no rows.
-      if (trainerFilter && scheduleContext.trainer && trainerFilter !== scheduleContext.trainer) {
-        return false;
-      }
-
       return true;
     });
   }, [
     allStudents,
+    selectedPhaseKey,
     courseFilter,
-    yearFilter,
     departmentFilter,
     sectionFilter,
     nameOrRegFilter,
     mobileFilter,
     cgpaFromFilter,
-    cgpaToFilter,
-    trainerFilter,
-    scheduleContext.trainer
+    cgpaToFilter
   ]);
+
+  const trainerOptions = useMemo(() => {
+    const selectedCompanyName = (scheduleContext?.companyName || '').toString().trim().toLowerCase();
+    const selectedCourseName = (courseFilter || scheduleContext?.selectedCourse || '').toString().trim().toLowerCase();
+    const excludedTrainingName = (scheduleContext?.trainingName || courseFilter || scheduleContext?.selectedCourse || '').toString().trim().toLowerCase();
+
+    const trainingCompanyEntry = trainingCompanies.find((item) =>
+      (item?.companyName || '').toString().trim().toLowerCase() === selectedCompanyName
+    );
+
+    const trainersFromMongo = Array.isArray(trainingCompanyEntry?.trainers)
+      ? trainingCompanyEntry.trainers
+          .filter((trainer) => {
+            const trainerCourses = Array.isArray(trainer?.courses)
+              ? trainer.courses.map((course) => (course || '').toString().trim().toLowerCase()).filter(Boolean)
+              : [];
+
+            if (!selectedCourseName) {
+              return true;
+            }
+
+            return trainerCourses.includes(selectedCourseName);
+          })
+          .map((trainer) => (trainer?.name || '').toString().trim())
+          .filter(Boolean)
+      : [];
+
+    const explicitTrainerList = Array.isArray(scheduleContext?.selectedTrainers)
+      ? scheduleContext.selectedTrainers.map((item) => (item || '').toString().trim()).filter(Boolean)
+      : [];
+
+    const courseSpecific = Array.isArray(scheduleContext?.courseTrainers)
+      ? scheduleContext.courseTrainers
+          .filter((entry) => {
+            const entryCourse = (entry?.courseName || '').toString().trim().toLowerCase();
+            return entryCourse && entryCourse === (courseFilter || scheduleContext.selectedCourse || '').toString().trim().toLowerCase();
+          })
+          .flatMap((entry) => (Array.isArray(entry?.trainers) ? entry.trainers : []))
+          .map((item) => (item || '').toString().trim())
+          .filter(Boolean)
+      : [];
+
+    const fallback = (scheduleContext?.trainer || '').toString().trim();
+    const merged = [
+      ...trainersFromMongo,
+      ...explicitTrainerList,
+      ...courseSpecific,
+      ...(fallback && fallback !== '-' ? [fallback] : [])
+    ];
+
+    return [...new Set(
+      merged.filter((trainerName) => trainerName.toString().trim().toLowerCase() !== excludedTrainingName)
+    )];
+  }, [scheduleContext, courseFilter, trainingCompanies]);
+
+  useEffect(() => {
+    if (!trainerOptions.length) {
+      setSelectedTrainerFilters([]);
+      return;
+    }
+
+    const normalizedOptions = new Set(trainerOptions.map((name) => name.toString().trim().toLowerCase()));
+    setSelectedTrainerFilters((prev) => prev.filter((name) => normalizedOptions.has(name.toString().trim().toLowerCase())));
+  }, [trainerOptions]);
+
+  const selectedTrainerCount = selectedTrainerFilters.length;
+  const trainerButtonLabel = selectedTrainerCount > 0 ? `Selected Trainers (${selectedTrainerCount})` : '+ Add Trainers';
+  const isAddDisabled = selectedRows.length === 0 || isLoadingStudents;
+
+  useEffect(() => {
+    if (selectedTrainerCount > 0 && trainerValidationError) {
+      setTrainerValidationError(false);
+    }
+  }, [selectedTrainerCount, trainerValidationError]);
 
   const batchTabs = useMemo(() => {
     if (batchAssignments.length > 0) {
@@ -321,6 +471,17 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   }, [batchAssignments, batchName, courseFilter, filteredStudents]);
 
   const activeBatchTab = batchTabs[activeBatchIndex] || batchTabs[0];
+
+  const displayedTrainingName = useMemo(() => {
+    const assignmentForActiveBatch = batchAssignments[activeBatchIndex] || batchAssignments[0] || {};
+    return (
+      (assignmentForActiveBatch?.trainingName || '').toString().trim() ||
+      (assignmentForActiveBatch?.courseName || '').toString().trim() ||
+      (scheduleContext?.trainingName || '').toString().trim() ||
+      (courseFilter || scheduleContext?.selectedCourse || '').toString().trim() ||
+      '-'
+    );
+  }, [batchAssignments, activeBatchIndex, scheduleContext, courseFilter]);
 
   const activeBatchStudents = useMemo(() => {
     const students = activeBatchTab?.students || [];
@@ -345,14 +506,6 @@ function AdminScheduleTrainingBatch({ onLogout }) {
     return [...new Set(
       activeBatchStudents
         .map((student) => (student.dept || '').toString().trim())
-        .filter((value) => value && value !== '-')
-    )].sort((a, b) => a.localeCompare(b));
-  }, [activeBatchStudents]);
-
-  const yearOptions = useMemo(() => {
-    return [...new Set(
-      activeBatchStudents
-        .map((student) => normalizeYearToken(student.year))
         .filter((value) => value && value !== '-')
     )].sort((a, b) => a.localeCompare(b));
   }, [activeBatchStudents]);
@@ -404,6 +557,16 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   };
 
   const handleAddButtonClick = async () => {
+    if (selectedTrainerCount === 0) {
+      setTrainerValidationError(true);
+      alert('Please select at least one trainer before adding students.');
+      return;
+    }
+
+    if (trainerValidationError) {
+      setTrainerValidationError(false);
+    }
+
     if (selectedRows.length === 0) {
       alert('Please select at least one student before adding.');
       return;
@@ -419,8 +582,8 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       const scheduleId = (scheduleContext.scheduleId || '').toString().trim();
       const companyName = (scheduleContext.companyName || '').toString().trim();
       const courseName = (courseFilter || scheduleContext.selectedCourse || '').toString().trim();
-      const trainerName = (trainerFilter || scheduleContext.trainer || '').toString().trim();
-      const applicableYear = (yearFilter || scheduleContext.applicableYear || '').toString().trim();
+      const trainerName = selectedTrainerFilters.join(', ').toString().trim();
+      const applicableYear = (scheduleContext.applicableYear || '').toString().trim();
       const startDate = (scheduleContext.scheduleStartDate || '').toString().trim();
       const endDate = (scheduleContext.scheduleEndDate || '').toString().trim();
       const currentBatchNumber = (activeBatchIndex || 0) + 1;
@@ -486,7 +649,7 @@ function AdminScheduleTrainingBatch({ onLogout }) {
         scheduleId: scheduleContext.scheduleId || '',
         companyName: scheduleContext.companyName || '',
         courseName: courseFilter || scheduleContext.selectedCourse || '',
-        applicableYear: yearFilter || scheduleContext.applicableYear || ''
+        applicableYear: scheduleContext.applicableYear || ''
       });
 
       setBatchAssignments(refreshedAssignments);
@@ -633,16 +796,6 @@ function AdminScheduleTrainingBatch({ onLogout }) {
               </div>
 
               <div className={styles['ad-stb-filter-group']}>
-                <label className={styles['ad-stb-filter-label']}>Year</label>
-                <select className={styles['ad-stb-input']} value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
-                  <option value="">Select Year</option>
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles['ad-stb-filter-group']}>
                 <label className={styles['ad-stb-filter-label']}>Section</label>
                 <select className={styles['ad-stb-input']} value={sectionFilter} onChange={(e) => setSectionFilter(e.target.value)}>
                   <option value="">Select Section</option>
@@ -680,6 +833,30 @@ function AdminScheduleTrainingBatch({ onLogout }) {
                   />
                 </div>
               </div>
+
+              <div className={styles['ad-stb-filter-group']}>
+                <label className={styles['ad-stb-filter-label']}>Trainers</label>
+                <button
+                  type="button"
+                  className={`${styles['ad-stb-trainer-btn']} ${trainerValidationError ? styles['ad-stb-trainer-btn-error'] : ''}`}
+                  onClick={() => {
+                    setIsTrainerPopupOpen(true);
+                    if (trainerValidationError) {
+                      setTrainerValidationError(false);
+                    }
+                  }}
+                  aria-invalid={trainerValidationError ? 'true' : 'false'}
+                >
+                  {selectedTrainerCount > 0 ? (
+                    trainerButtonLabel
+                  ) : (
+                    <>
+                      <span className={styles['ad-stb-trainer-btn-plus']}>+</span>
+                      <span>Add Trainers</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -693,7 +870,7 @@ function AdminScheduleTrainingBatch({ onLogout }) {
             <div className={styles['ad-stb-batch-inner']}>
               <div className={styles['ad-stb-batch-body']}>
                 <div><span>Company :</span> <strong>{scheduleContext.companyName || '-'}</strong></div>
-                <div><span>Trainer :</span> <strong>{scheduleContext.trainer || '-'}</strong></div>
+                <div><span>Training Name :</span> <strong>{displayedTrainingName}</strong></div>
                 <div><span>Departments :</span> <strong>{displayedDepartment}</strong></div>
                 <div><span>Course :</span> <strong>{courseFilter || '-'}</strong></div>
                 <div><span>Starting Date :</span> <strong>{formatDateToDDMMYYYY(scheduleContext.scheduleStartDate) || '-'}</strong></div>
@@ -801,7 +978,14 @@ function AdminScheduleTrainingBatch({ onLogout }) {
           <div className={styles['ad-stb-inner-actions-row']}>
             <div className={styles['ad-stb-actions-right']}>
               <button type="button" className={styles['ad-stb-btn-light']} onClick={handleClearSelections}>Clear</button>
-              <button type="button" className={styles['ad-stb-btn-primary']} onClick={handleAddButtonClick}>Add</button>
+              <button
+                type="button"
+                className={styles['ad-stb-btn-primary']}
+                onClick={handleAddButtonClick}
+                disabled={isAddDisabled}
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>
@@ -820,6 +1004,41 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       <ExportProgressAlert isOpen={exportPopupState === 'progress'} onClose={() => {}} progress={exportProgress} exportType={exportType} />
       <ExportSuccessAlert isOpen={exportPopupState === 'success'} onClose={() => setExportPopupState('none')} exportType={exportType} />
       <ExportFailedAlert isOpen={exportPopupState === 'failed'} onClose={() => setExportPopupState('none')} exportType={exportType} />
+
+      {isTrainerPopupOpen && (
+        <div className={styles['ad-stb-trainer-popup-overlay']} onClick={() => setIsTrainerPopupOpen(false)}>
+          <div className={styles['ad-stb-trainer-popup-container']} onClick={(e) => e.stopPropagation()}>
+            <div className={styles['ad-stb-trainer-popup-header']}>Trainers : {selectedTrainerCount}</div>
+            <div className={styles['ad-stb-trainer-popup-body']}>
+              {trainerOptions.length === 0 ? (
+                <p className={styles['ad-stb-trainer-empty']}>No trainers available</p>
+              ) : (
+                trainerOptions.map((trainerName) => (
+                  <label key={trainerName} className={styles['ad-stb-trainer-option']}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTrainerFilters.includes(trainerName)}
+                      onChange={() => {
+                        setSelectedTrainerFilters((prev) => (
+                          prev.includes(trainerName)
+                            ? prev.filter((name) => name !== trainerName)
+                            : [...prev, trainerName]
+                        ));
+                      }}
+                    />
+                    <span>{trainerName}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            <div className={styles['ad-stb-trainer-popup-footer']}>
+              <button type="button" className={styles['ad-stb-trainer-popup-close']} onClick={() => setIsTrainerPopupOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

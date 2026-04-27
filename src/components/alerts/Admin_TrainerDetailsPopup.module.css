@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,9 +17,11 @@
   background: white;
   border-radius: 12px;
   width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 530px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
 }
@@ -42,7 +44,7 @@
   padding: 20px 24px;
   border-radius: 12px 12px 0 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
@@ -71,11 +73,34 @@
   font-size: 1.5rem;
   font-weight: 600;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 100%;
+  text-align: center;
 }
 
 /* Popup Content */
 .popup-content {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-gutter: stable;
+}
+
+.popup-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.popup-content::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.popup-content::-webkit-scrollbar-thumb {
+  background-color: #4ea24e;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.popup-content::-webkit-scrollbar-thumb:hover {
+  background-color: #3d8a3d;
 }
 
 /* Form Grid */
@@ -125,10 +150,65 @@
   padding: 20px 24px;
   border-top: 1px solid #e1e5e9;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   background: #f8f9fa;
   border-radius: 0 0 12px 12px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.course-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.course-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.course-select {
+  width: 100%;
+}
+
+.remove-course-btn {
+  border: none;
+  background: #f1f3f5;
+  color: #6b7280;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.remove-course-btn:hover {
+  background: #e5e7eb;
+}
+
+.add-course-btn {
+  grid-column: 1 / -1;
+  border: none;
+  background: #4ea24e;
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.add-course-btn:hover {
+  background: #45a043;
 }
 
 .discard-btn, .save-btn {
@@ -165,25 +245,6 @@
   box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
 }
 
-/* Green scrollbar styling */
-.popup-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.popup-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.popup-container::-webkit-scrollbar-thumb {
-  background: #4ea24e;
-  border-radius: 10px;
-}
-
-.popup-container::-webkit-scrollbar-thumb:hover {
-  background: #45a043;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .popup-container {
@@ -206,6 +267,10 @@
   .form-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .course-list {
+    grid-template-columns: 1fr;
   }
   
   .popup-footer {

@@ -323,16 +323,16 @@ function Coo_Calendar({ value, onChange }) {
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          border: hovered ? '1px solid #D23B42' : '1px solid #dde6f4',
-          boxShadow: hovered ? '0 0 0 3px rgba(210,59,66,0.2)' : 'none',
+          border: hovered ? '1px solid #D73D3D' : '1px solid #f4dddd',
+          boxShadow: hovered ? '0 0 0 3px rgba(215,61,61,0.2)' : 'none',
           borderRadius: '8px',
-          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#f9fbff',
+          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#fff9f9',
           fontSize: '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
           transition: 'border-color 0.3s, box-shadow 0.3s'
         }}
       >
-        <span style={{ flex: 1, fontWeight: 600, color: displayVal ? '#1a1a1a' : '#9aa7c2' }}>{displayVal || 'DD-MM-YYYY'}</span>
+        <span style={{ flex: 1, fontWeight: 500, color: displayVal ? '#222' : '#8a8a8a' }}>{displayVal || 'DD-MM-YYYY'}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="4" width="18" height="18" rx="2" />
           <line x1="16" y1="2" x2="16" y2="6" />

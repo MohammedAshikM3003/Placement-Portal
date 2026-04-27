@@ -629,6 +629,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
   const isTrainingPage = window.location.pathname === '/admin-training' ||
                          window.location.pathname === '/admin-add-training' ||
                          window.location.pathname === '/admin-schedule-training' ||
+                         window.location.pathname === '/admin-preferred-training-students' ||
                          window.location.pathname === '/admin-schedule-training-batch' ||
                          window.location.pathname === '/admin-attendance-stdinfo' ||
                          window.location.pathname === '/admin-train-attendance-stuinfo' ||

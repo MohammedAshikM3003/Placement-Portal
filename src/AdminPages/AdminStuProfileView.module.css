@@ -280,6 +280,57 @@
     line-height: 48px;
 }
 
+/* Percentage Input with Suffix Chip (Academic Background) */
+.percentageInputWrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9fff9;
+    box-sizing: border-box;
+    height: 53.6px;
+}
+
+.formGrid .percentageInputWrapper .percentageInput {
+    flex: 1;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
+    height: 100%;
+    line-height: 1.2;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.formGrid .percentageInputWrapper .percentageInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.percentSuffix {
+    min-width: 50px;
+    background: #4EA24E;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 12px;
+}
+
+.percentageInputWrapper:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
 .mobileNumberInput:focus {
     outline: none;
     box-shadow: none;
@@ -651,7 +702,6 @@
     background-color: #4EA24E;
     color: white;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(32, 133, 246, 0.3);
 }
 
 

@@ -1299,7 +1299,12 @@ const sanitizeTrainingPayload = (payload = {}) => {
                 name: (trainer?.name || '').toString().trim(),
                 mobile: (trainer?.mobile || '').toString().trim(),
                 email: (trainer?.email || '').toString().trim(),
-                gender: (trainer?.gender || '').toString().trim()
+                gender: (trainer?.gender || '').toString().trim(),
+                courses: Array.isArray(trainer?.courses)
+                    ? trainer.courses
+                        .map((course) => (course || '').toString().trim())
+                        .filter(Boolean)
+                    : []
             }))
             .filter((trainer) => trainer.name)
         : [];
@@ -1463,17 +1468,34 @@ const sanitizeScheduledTrainingPayload = (payload = {}) => {
                 if (!phase.applicableCourses.every((course) => typeof course === 'string')) return false;
                 return true;
             })
-            .map((phase) => ({
-                phaseNumber: phase.phaseNumber.toString().trim(),
-                trainer: (phase.trainer || '').toString().trim(),
-                applicableYear: (phase.applicableYear || '').toString().trim(),
-                startDate: (phase.startDate || '').toString().trim(),
-                endDate: (phase.endDate || '').toString().trim(),
-                duration: (phase.duration || '').toString().trim(),
-                applicableCourses: phase.applicableCourses
-                    .map((course) => (course || '').toString().trim())
-                    .filter(Boolean)
-            }))
+            .map((phase) => {
+                const courseTrainers = Array.isArray(phase.courseTrainers)
+                    ? phase.courseTrainers
+                        .map((item) => ({
+                            courseName: (item?.courseName || '').toString().trim(),
+                            trainers: Array.isArray(item?.trainers)
+                                ? item.trainers
+                                    .map((name) => (name || '').toString().trim())
+                                    .filter(Boolean)
+                                : []
+                        }))
+                        .filter((item) => item.courseName && item.trainers.length > 0)
+                    : [];
+
+                return {
+                    phaseNumber: phase.phaseNumber.toString().trim(),
+                    trainingName: (phase.trainingName || '').toString().trim(),
+                    trainer: (phase.trainer || '').toString().trim(),
+                    applicableYear: (phase.applicableYear || '').toString().trim(),
+                    startDate: (phase.startDate || '').toString().trim(),
+                    endDate: (phase.endDate || '').toString().trim(),
+                    duration: (phase.duration || '').toString().trim(),
+                    applicableCourses: phase.applicableCourses
+                        .map((course) => (course || '').toString().trim())
+                        .filter(Boolean),
+                    courseTrainers
+                };
+            })
             .filter((phase) => phase.phaseNumber && phase.applicableCourses.length > 0)
         : [];
 
@@ -1548,14 +1570,39 @@ app.post('/api/scheduled-trainings', async (req, res) => {
                 });
             }
 
+            const existingRecord = await ScheduledTraining.findById(payload.scheduleId).lean();
+            if (!existingRecord) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Scheduled training not found'
+                });
+            }
+
+            const existingPhases = Array.isArray(existingRecord.phases) ? existingRecord.phases : [];
+            const incomingPhases = Array.isArray(payload.phases) ? payload.phases : [];
+
+            const mergedPhasesMap = new Map();
+            [...existingPhases, ...incomingPhases].forEach((phase) => {
+                const phaseNumber = (phase?.phaseNumber || '').toString().trim();
+                if (!phaseNumber) return;
+                mergedPhasesMap.set(phaseNumber, {
+                    ...phase,
+                    phaseNumber
+                });
+            });
+
+            const mergedBatches = Array.isArray(payload.batches) && payload.batches.length > 0
+                ? payload.batches
+                : (Array.isArray(existingRecord.batches) ? existingRecord.batches : []);
+
             record = await ScheduledTraining.findByIdAndUpdate(
                 payload.scheduleId,
                 {
                     companyName: payload.companyName,
-                    startDate: payload.startDate,
-                    endDate: payload.endDate,
-                    phases: payload.phases,
-                    batches: payload.batches
+                    startDate: payload.startDate || existingRecord.startDate,
+                    endDate: payload.endDate || existingRecord.endDate,
+                    phases: Array.from(mergedPhasesMap.values()),
+                    batches: mergedBatches
                 },
                 { new: true }
             );
@@ -2043,10 +2090,66 @@ app.get('/api/students/:regNo/training-assignment', async (req, res) => {
             });
         }
 
-        const assignment = await TrainingBatchAssignment
-            .findOne({ 'students.regNo': regNo })
+        const allAssignmentsForStudent = await TrainingBatchAssignment
+            .find({ 'students.regNo': regNo })
+            .select({
+                scheduleId: 1,
+                companyName: 1,
+                courseName: 1,
+                trainer: 1,
+                applicableYear: 1,
+                startDate: 1,
+                endDate: 1,
+                batchNumber: 1,
+                batchName: 1,
+                phases: 1,
+                students: 1,
+                updatedAt: 1,
+                createdAt: 1
+            })
             .sort({ updatedAt: -1, createdAt: -1 })
             .lean();
+
+        const parsePhaseRank = (phases = []) => {
+            if (!Array.isArray(phases) || phases.length === 0) return -1;
+
+            return phases.reduce((maxRank, phase) => {
+                const phaseText = (phase?.phaseNumber || '').toString().trim();
+                if (!phaseText) return maxRank;
+
+                const numericMatch = phaseText.match(/\d+/);
+                if (numericMatch) {
+                    const numericValue = Number.parseInt(numericMatch[0], 10);
+                    return Number.isFinite(numericValue) ? Math.max(maxRank, numericValue) : maxRank;
+                }
+
+                // Non-numeric phase labels rank below numeric phases but still above missing phases.
+                return Math.max(maxRank, 0);
+            }, -1);
+        };
+
+        const assignment = (Array.isArray(allAssignmentsForStudent) ? allAssignmentsForStudent : []).reduce((best, current) => {
+            if (!best) return current;
+
+            const bestRank = parsePhaseRank(best?.phases);
+            const currentRank = parsePhaseRank(current?.phases);
+            if (currentRank > bestRank) return current;
+            if (currentRank < bestRank) return best;
+
+            const bestUpdatedAt = new Date(best?.updatedAt || best?.createdAt || 0).getTime() || 0;
+            const currentUpdatedAt = new Date(current?.updatedAt || current?.createdAt || 0).getTime() || 0;
+            return currentUpdatedAt > bestUpdatedAt ? current : best;
+        }, null);
+
+        const courseTrainerMap = (Array.isArray(allAssignmentsForStudent) ? allAssignmentsForStudent : []).reduce((acc, row) => {
+            const courseKey = (row?.courseName || '').toString().trim().toLowerCase();
+            const trainerValue = (row?.trainer || '').toString().trim();
+            if (!courseKey || !trainerValue) return acc;
+            if (!acc[courseKey]) {
+                acc[courseKey] = trainerValue;
+            }
+            return acc;
+        }, {});
 
         if (!assignment) {
             return res.json({
@@ -2062,7 +2165,8 @@ app.get('/api/students/:regNo/training-assignment', async (req, res) => {
             assignment: {
                 ...assignment,
                 student: studentEntry,
-                totalStudentsInBatch: Array.isArray(assignment.students) ? assignment.students.length : 0
+                totalStudentsInBatch: Array.isArray(assignment.students) ? assignment.students.length : 0,
+                courseTrainerMap
             }
         });
     } catch (error) {
@@ -2666,6 +2770,7 @@ app.post('/api/training-attendance/submit', authenticateToken, checkRole('coordi
         const companyName = (attendanceData.companyName || '').toString().trim();
         const courseName = (attendanceData.courseName || '').toString().trim();
         const batchName = (attendanceData.batchName || '').toString().trim();
+        const trainer = (attendanceData.trainer || '').toString().trim();
         const phaseNumber = (attendanceData.phaseNumber || '').toString().trim();
         const attendanceDateKey = parseAttendanceDateKey(attendanceData.attendanceDateKey || attendanceData.attendanceDate);
         const batchNumber = Number.parseInt(attendanceData.batchNumber, 10);
@@ -2723,6 +2828,7 @@ app.post('/api/training-attendance/submit', authenticateToken, checkRole('coordi
                     courseName,
                     batchNumber,
                     batchName,
+                    trainer,
                     phaseNumber,
                     attendanceDateKey,
                     attendanceDate,
@@ -3018,6 +3124,7 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
                     courseName: attendance.courseName,
                     batchName: attendance.batchName,
                     batchNumber: attendance.batchNumber,
+                    trainer: attendance.trainer || '',
                     phaseNumber: attendance.phaseNumber,
                     attendanceDate: attendance.attendanceDate,
                     attendanceDateKey: attendance.attendanceDateKey,
@@ -5856,7 +5963,8 @@ const trainingSchema = new mongoose.Schema({
         name: { type: String, required: true, trim: true },
         mobile: { type: String, trim: true },
         email: { type: String, trim: true },
-        gender: { type: String, trim: true }
+        gender: { type: String, trim: true },
+        courses: [{ type: String, trim: true }]
     }]
 }, { timestamps: true });
 
@@ -5869,12 +5977,17 @@ const scheduledTrainingSchema = new mongoose.Schema({
     endDate: { type: String, required: true, trim: true },
     phases: [{
         phaseNumber: { type: String, required: true, trim: true },
+        trainingName: { type: String, trim: true },
         trainer: { type: String, trim: true },
         applicableYear: { type: String, trim: true },
         startDate: { type: String, trim: true },
         endDate: { type: String, trim: true },
         duration: { type: String, trim: true },
-        applicableCourses: [{ type: String, trim: true }]
+        applicableCourses: [{ type: String, trim: true }],
+        courseTrainers: [{
+            courseName: { type: String, trim: true },
+            trainers: [{ type: String, trim: true }]
+        }]
     }],
     batches: [{
         batchName: { type: String, trim: true },
@@ -5882,7 +5995,7 @@ const scheduledTrainingSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-const ScheduledTraining = mongoose.model('ScheduledTraining', scheduledTrainingSchema, 'trainning_schedule');
+const ScheduledTraining = mongoose.model('ScheduledTraining', scheduledTrainingSchema, 'training_schedule');
 
 const trainingBatchAssignmentSchema = new mongoose.Schema({
     scheduleId: { type: String, trim: true },
@@ -5926,6 +6039,7 @@ const trainingAttendanceSchema = new mongoose.Schema({
     courseName: { type: String, required: true, trim: true },
     batchNumber: { type: Number, required: true, min: 1 },
     batchName: { type: String, required: true, trim: true },
+    trainer: { type: String, trim: true },
     phaseNumber: { type: String, trim: true },
     attendanceDateKey: { type: String, required: true, trim: true },
     attendanceDate: { type: Date, required: true },

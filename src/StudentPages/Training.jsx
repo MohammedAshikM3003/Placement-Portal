@@ -62,10 +62,12 @@ function Training({ onLogout, onViewChange }) {
         }
     });
     const [attendanceData, setAttendanceData] = useState({ present: 0, absent: 0, records: [] });
+    const [trainingAttendanceDocs, setTrainingAttendanceDocs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedPhase, setSelectedPhase] = useState('');
     const [availablePhases, setAvailablePhases] = useState([]);
     const [phaseMetaMap, setPhaseMetaMap] = useState({});
+    const [courseTrainerMap, setCourseTrainerMap] = useState({});
     const [selectedCourse, setSelectedCourse] = useState('');
     const [isCourseSubmitting, setIsCourseSubmitting] = useState(false);
     const [isCourseEnrolledPopupOpen, setIsCourseEnrolledPopupOpen] = useState(false);
@@ -74,6 +76,7 @@ function Training({ onLogout, onViewChange }) {
         company: '-',
         batch: '-',
         course: '-',
+        trainer: '-',
         startDate: '-',
         endDate: '-',
         totalDays: 0,
@@ -84,6 +87,36 @@ function Training({ onLogout, onViewChange }) {
         const text = (value || '').toString().trim();
         const match = text.match(/\d+/);
         return match ? match[0] : text.toLowerCase();
+    };
+
+    const parsePreferredTrainingByPhase = (rawValue) => {
+        if (!rawValue) return {};
+
+        const source = (() => {
+            if (typeof rawValue === 'string') {
+                const trimmed = rawValue.trim();
+                if (!trimmed) return null;
+                try {
+                    return JSON.parse(trimmed);
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            if (typeof rawValue === 'object') return rawValue;
+            return null;
+        })();
+
+        if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+
+        return Object.entries(source).reduce((acc, [phase, course]) => {
+            const phaseKey = normalizePhase(phase);
+            const courseName = normalizeCourseName(course);
+            if (phaseKey && courseName) {
+                acc[phaseKey] = courseName;
+            }
+            return acc;
+        }, {});
     };
 
     const scopedAttendanceRecords = useMemo(() => {
@@ -139,20 +172,63 @@ function Training({ onLogout, onViewChange }) {
         return phaseMetaMap[normalizePhase(selectedPhase)] || null;
     }, [phaseMetaMap, selectedPhase]);
 
+    const preferredTrainingByPhaseMap = useMemo(() => {
+        return parsePreferredTrainingByPhase(studentData?.preferredTrainingByPhase);
+    }, [studentData?.preferredTrainingByPhase]);
+
+    const earliestPhaseKey = useMemo(() => {
+        if (!Array.isArray(availablePhases) || availablePhases.length === 0) return '';
+
+        const normalized = availablePhases
+            .map((phase) => normalizePhase(phase))
+            .filter(Boolean);
+
+        if (!normalized.length) return '';
+
+        const numeric = normalized
+            .map((phase) => Number.parseInt(phase, 10))
+            .filter((value) => Number.isFinite(value));
+
+        if (numeric.length) {
+            return String(Math.min(...numeric));
+        }
+
+        return normalized[0];
+    }, [availablePhases]);
+
+    const legacyPreferredCourse = useMemo(() => {
+        const preferred = (studentData?.preferredTraining || '').toString().split(',').map((item) => item.trim()).filter(Boolean);
+        return preferred[0] || '';
+    }, [studentData?.preferredTraining]);
+
+    const preferredCourseForSelectedPhase = useMemo(() => {
+        const selectedKey = normalizePhase(selectedPhase);
+        if (!selectedKey) return '';
+
+        const byPhase = normalizeCourseName(preferredTrainingByPhaseMap[selectedKey] || '');
+        if (byPhase) return byPhase;
+
+        // Backward compatibility: legacy preferredTraining is considered Phase 1 only.
+        if (legacyPreferredCourse && selectedKey === earliestPhaseKey) {
+            return legacyPreferredCourse;
+        }
+
+        return '';
+    }, [earliestPhaseKey, legacyPreferredCourse, preferredTrainingByPhaseMap, selectedPhase]);
+
     const enrolledCourseForSelectedPhase = useMemo(() => {
-        const preferred = (studentData?.preferredTraining || '').toString().trim();
+        const preferred = preferredCourseForSelectedPhase;
         if (!preferred) return '';
 
         const preferredLower = preferred.toLowerCase();
         const existsInPhase = preferredTrainingRows.some((course) => course.toLowerCase() === preferredLower);
         return existsInPhase ? preferred : '';
-    }, [preferredTrainingRows, studentData?.preferredTraining]);
+    }, [preferredCourseForSelectedPhase, preferredTrainingRows]);
 
     const isCurrentPhaseSubmitted = Boolean(enrolledCourseForSelectedPhase);
 
     useEffect(() => {
-        const preferred = (studentData?.preferredTraining || '').toString().split(',').map((item) => item.trim()).filter(Boolean);
-        const currentPreferred = preferred[0] || '';
+        const currentPreferred = preferredCourseForSelectedPhase;
 
         if (currentPreferred && preferredTrainingRows.some((course) => course.toLowerCase() === currentPreferred.toLowerCase())) {
             setSelectedCourse(currentPreferred);
@@ -160,7 +236,7 @@ function Training({ onLogout, onViewChange }) {
         }
 
         setSelectedCourse('');
-    }, [preferredTrainingRows, studentData?.preferredTraining]);
+    }, [preferredCourseForSelectedPhase, preferredTrainingRows]);
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
@@ -205,6 +281,7 @@ function Training({ onLogout, onViewChange }) {
                             company: '-',
                             batch: '-',
                             course: '-',
+                            trainer: '-',
                             startDate: '-',
                             endDate: '-',
                             totalDays: 0,
@@ -227,10 +304,48 @@ function Training({ onLogout, onViewChange }) {
 
                 const activeYear = normalizeYearToken(studentData?.currentYear || studentData?.year || assignment?.applicableYear || '');
                 const allSchedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
+                const scopedSchedules = (() => {
+                    const assignmentScheduleId = (assignment?.scheduleId || '').toString().trim();
+                    const assignmentCompany = (assignment?.companyName || '').toString().trim().toLowerCase();
+
+                    if (assignmentScheduleId) {
+                        const exact = allSchedules.filter((schedule) => ((schedule?._id || '').toString().trim() === assignmentScheduleId));
+                        if (exact.length > 0) {
+                            // Include same-company schedules as fallback to avoid missing newer phases
+                            // when assignments were created against an older schedule id.
+                            const siblingCompanySchedules = assignmentCompany
+                                ? allSchedules.filter((schedule) => {
+                                    const scheduleId = (schedule?._id || '').toString().trim();
+                                    const scheduleCompany = (schedule?.companyName || '').toString().trim().toLowerCase();
+                                    return scheduleId !== assignmentScheduleId && scheduleCompany === assignmentCompany;
+                                })
+                                : [];
+
+                            const merged = [...exact, ...siblingCompanySchedules];
+                            const dedupedById = Array.from(new Map(
+                                merged.map((schedule, index) => {
+                                    const key = (schedule?._id || '').toString().trim();
+                                    return [key || `schedule-fallback-${index}`, schedule];
+                                })
+                            ).values());
+
+                            return dedupedById;
+                        }
+                    }
+
+                    if (assignmentCompany) {
+                        return allSchedules.filter(
+                            (schedule) => (schedule?.companyName || '').toString().trim().toLowerCase() === assignmentCompany
+                        );
+                    }
+
+                    return allSchedules;
+                })();
+                const normalizedAssignmentCourse = normalizeCourseName(assignment?.courseName || '').toLowerCase();
 
                 const phaseEntries = [];
 
-                allSchedules.forEach((schedule) => {
+                scopedSchedules.forEach((schedule) => {
                     const scheduleBatches = Array.isArray(schedule?.batches) ? schedule.batches : [];
                     const schedulePhases = Array.isArray(schedule?.phases) ? schedule.phases : [];
 
@@ -252,6 +367,31 @@ function Training({ onLogout, onViewChange }) {
                         const phaseCourses = Array.isArray(phase?.applicableCourses)
                             ? phase.applicableCourses.map((course) => normalizeCourseName(course)).filter(Boolean)
                             : [];
+                        const phaseCourseTrainers = Array.isArray(phase?.courseTrainers)
+                            ? phase.courseTrainers
+                                .map((row) => ({
+                                    courseName: normalizeCourseName(row?.courseName || ''),
+                                    trainers: Array.isArray(row?.trainers)
+                                        ? row.trainers.map((name) => (name || '').toString().trim()).filter(Boolean)
+                                        : []
+                                }))
+                                .filter((row) => row.courseName)
+                            : [];
+
+                        const matchedCourseTrainers = normalizedAssignmentCourse
+                            ? (phaseCourseTrainers.find((row) => row.courseName.toLowerCase() === normalizedAssignmentCourse)?.trainers || [])
+                            : [];
+
+                        const fallbackTrainers = [...new Set(phaseCourseTrainers.flatMap((row) => row.trainers))];
+                        const phaseTrainerValue =
+                            (phase?.trainer || '').toString().trim() ||
+                            matchedCourseTrainers.join(', ') ||
+                            fallbackTrainers.join(', ');
+
+                        const mergedPhaseCourses = [...new Set([
+                            ...phaseCourses,
+                            ...phaseCourseTrainers.map((row) => row.courseName)
+                        ])];
 
                         const phaseStartRaw = (phase?.startDate || schedule?.startDate || '').toString().trim();
                         const phaseEndRaw = (phase?.endDate || schedule?.endDate || '').toString().trim();
@@ -260,8 +400,17 @@ function Training({ onLogout, onViewChange }) {
                         phaseEntries.push({
                             phaseKey,
                             phaseNumber,
-                            courses: [...new Set(phaseCourses)],
+                            courses: mergedPhaseCourses,
+                            preferredCourse: (normalizedAssignmentCourse
+                                ? (mergedPhaseCourses.find((course) => course.toLowerCase() === normalizedAssignmentCourse) || '')
+                                : ''),
                             companyName: (schedule?.companyName || assignment?.companyName || '-').toString().trim(),
+                            batch: ((assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-').toString().trim(),
+                            trainer: phaseTrainerValue,
+                            courseTrainersMap: phaseCourseTrainers.reduce((acc, row) => {
+                                acc[row.courseName.toLowerCase()] = row.trainers;
+                                return acc;
+                            }, {}),
                             startDate: phaseStartRaw,
                             endDate: phaseEndRaw,
                             totalDays: computedTotalDays,
@@ -278,8 +427,119 @@ function Training({ onLogout, onViewChange }) {
                     return acc;
                 }, {});
 
-                const phaseOptions = Object.values(phaseMapFromSchedules)
+                const assignmentPhases = Array.isArray(assignment?.phases) ? assignment.phases : [];
+                assignmentPhases.forEach((phase) => {
+                    const phaseNumber = (phase?.phaseNumber || '').toString().trim();
+                    if (!phaseNumber) return;
+
+                    const phaseKey = normalizePhase(phaseNumber);
+                    const existing = phaseMapFromSchedules[phaseKey];
+
+                    if (existing) {
+                        const assignmentPhaseCourses = Array.isArray(phase?.applicableCourses)
+                            ? phase.applicableCourses.map((course) => normalizeCourseName(course)).filter(Boolean)
+                            : [];
+
+                        phaseMapFromSchedules[phaseKey] = {
+                            ...existing,
+                            courses: [...new Set([...(Array.isArray(existing?.courses) ? existing.courses : []), ...assignmentPhaseCourses])],
+                            trainer: (existing?.trainer || '').toString().trim() || (phase?.trainer || '').toString().trim(),
+                            startDate: (existing?.startDate || '').toString().trim() || (phase?.startDate || '').toString().trim() || (assignment?.startDate || '').toString().trim(),
+                            endDate: (existing?.endDate || '').toString().trim() || (phase?.endDate || '').toString().trim() || (assignment?.endDate || '').toString().trim(),
+                            batch: (existing?.batch || '').toString().trim() || ((assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-').toString().trim(),
+                            companyName: (existing?.companyName || '').toString().trim() || (assignment?.companyName || '-').toString().trim()
+                        };
+                        return;
+                    }
+
+                    const phaseStartRaw = (phase?.startDate || assignment?.startDate || '').toString().trim();
+                    const phaseEndRaw = (phase?.endDate || assignment?.endDate || '').toString().trim();
+                    const phaseCourses = Array.isArray(phase?.applicableCourses)
+                        ? phase.applicableCourses.map((course) => normalizeCourseName(course)).filter(Boolean)
+                        : [];
+                    const computedTotalDays = parseDurationToDays(phase?.duration) || getTotalDays(phaseStartRaw, phaseEndRaw);
+
+                    phaseMapFromSchedules[phaseKey] = {
+                        phaseKey,
+                        phaseNumber,
+                        courses: phaseCourses,
+                        preferredCourse: (normalizedAssignmentCourse
+                            ? (phaseCourses.find((course) => course.toLowerCase() === normalizedAssignmentCourse) || '')
+                            : ''),
+                        companyName: (assignment?.companyName || '-').toString().trim(),
+                        batch: ((assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-').toString().trim(),
+                        trainer: (phase?.trainer || '').toString().trim(),
+                        courseTrainersMap: {},
+                        startDate: phaseStartRaw,
+                        endDate: phaseEndRaw,
+                        totalDays: computedTotalDays,
+                        updatedAt: 0
+                    };
+                });
+
+                const attendanceRowsRaw = Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : [];
+                const attendancePhaseOptions = attendanceRowsRaw
+                    .map((entry) => (entry?.phaseNumber || entry?.phase || '').toString().trim())
+                    .filter(Boolean);
+
+                const attendanceRowsByPhase = attendanceRowsRaw.reduce((acc, entry) => {
+                    const phaseText = (entry?.phaseNumber || entry?.phase || '').toString().trim();
+                    if (!phaseText) return acc;
+                    const phaseKey = normalizePhase(phaseText);
+                    if (!phaseKey) return acc;
+                    if (!acc[phaseKey]) acc[phaseKey] = [];
+                    acc[phaseKey].push(entry);
+                    return acc;
+                }, {});
+
+                Object.entries(attendanceRowsByPhase).forEach(([phaseKey, rows]) => {
+                    if (phaseMapFromSchedules[phaseKey]) return;
+
+                    const phaseNumber = (rows[0]?.phaseNumber || rows[0]?.phase || '').toString().trim() || phaseKey;
+                    const courseFromAttendance = (rows.find((row) => (row?.courseName || row?.course || '').toString().trim())?.courseName
+                        || rows.find((row) => (row?.courseName || row?.course || '').toString().trim())?.course
+                        || '')
+                        .toString()
+                        .trim();
+                    const batchFromAttendance = (rows.find((row) => (row?.batchNumber ?? '').toString().trim() || (row?.batchName || '').toString().trim())?.batchNumber
+                        ?? rows.find((row) => (row?.batchNumber ?? '').toString().trim() || (row?.batchName || '').toString().trim())?.batchName
+                        ?? '')
+                        .toString()
+                        .trim();
+
+                    const dateStamps = rows
+                        .map((row) => (row?.attendanceDate || row?.attendanceDateKey || row?.date || '').toString().trim())
+                        .filter(Boolean)
+                        .map((value) => new Date(value))
+                        .filter((date) => !Number.isNaN(date.getTime()))
+                        .map((date) => date.getTime())
+                        .sort((a, b) => a - b);
+
+                    const startRaw = dateStamps.length ? new Date(dateStamps[0]).toISOString().slice(0, 10) : '';
+                    const endRaw = dateStamps.length ? new Date(dateStamps[dateStamps.length - 1]).toISOString().slice(0, 10) : '';
+
+                    phaseMapFromSchedules[phaseKey] = {
+                        phaseKey,
+                        phaseNumber,
+                        courses: courseFromAttendance ? [normalizeCourseName(courseFromAttendance)] : [],
+                        preferredCourse: normalizeCourseName(courseFromAttendance),
+                        companyName: (assignment?.companyName || '-').toString().trim(),
+                        batch: batchFromAttendance || ((assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-').toString().trim(),
+                        trainer: '-',
+                        courseTrainersMap: {},
+                        startDate: startRaw,
+                        endDate: endRaw,
+                        totalDays: getTotalDays(startRaw, endRaw),
+                        updatedAt: 0
+                    };
+                });
+
+                const phaseOptions = [...new Set([
+                    ...Object.values(phaseMapFromSchedules)
                     .map((entry) => (entry?.phaseNumber || '').toString().trim())
+                    .filter(Boolean),
+                    ...attendancePhaseOptions
+                ])]
                     .map((phaseKey) => {
                         const numeric = Number.parseInt(phaseKey, 10);
                         return Number.isFinite(numeric) ? numeric.toString() : phaseKey;
@@ -295,8 +555,18 @@ function Training({ onLogout, onViewChange }) {
                 setPhaseMetaMap(phaseMapFromSchedules);
                 setAvailablePhases(phaseOptions);
                 setSelectedPhase((prev) => {
-                    if (prev && phaseOptions.includes(prev)) return prev;
-                    return pickLatestPhase(phaseOptions);
+                    const latestPhase = pickLatestPhase(phaseOptions);
+                    if (!latestPhase) return '';
+
+                    const prevPhaseKey = normalizePhase(prev);
+                    const latestPhaseKey = normalizePhase(latestPhase);
+
+                    // If the schedule has advanced to a newer phase, always move the UI to it.
+                    if (!prev || !phaseOptions.includes(prev) || prevPhaseKey !== latestPhaseKey) {
+                        return latestPhase;
+                    }
+
+                    return prev;
                 });
 
                 if (assignment) {
@@ -304,8 +574,11 @@ function Training({ onLogout, onViewChange }) {
                     const endDate = assignment?.endDate || '';
                     const totalDays = getTotalDays(startDate, endDate);
                     const completedDays = getCompletedDays(startDate, endDate);
+                    const assignmentCourseTrainerMap = assignment?.courseTrainerMap && typeof assignment.courseTrainerMap === 'object'
+                        ? assignment.courseTrainerMap
+                        : {};
+                    setCourseTrainerMap(assignmentCourseTrainerMap);
 
-                    const attendanceRowsRaw = Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : [];
                     const batchNumberFromAttendance = attendanceRowsRaw
                         .map((entry) => (entry?.batchNumber ?? '').toString().trim())
                         .find(Boolean);
@@ -314,16 +587,19 @@ function Training({ onLogout, onViewChange }) {
                         company: assignment?.companyName || '-',
                         batch: batchNumberFromAttendance || (assignment?.batchNumber ?? '').toString().trim() || assignment?.batchName || '-',
                         course: assignment?.courseName || '-',
+                        trainer: (assignment?.trainer || '-').toString().trim() || '-',
                         startDate: formatDate(startDate),
                         endDate: formatDate(endDate),
                         totalDays,
                         completedDays: Math.min(completedDays, totalDays)
                     });
                 } else {
+                    setCourseTrainerMap({});
                     setTrainingData({
                         company: '-',
                         batch: '-',
                         course: '-',
+                        trainer: '-',
                         startDate: '-',
                         endDate: '-',
                         totalDays: 0,
@@ -342,19 +618,23 @@ function Training({ onLogout, onViewChange }) {
                             date: entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '',
                             status: normalizedStatus,
                             phaseNumber: entry?.phaseNumber || entry?.phase || '',
-                            courseName: entry?.courseName || entry?.course || ''
+                            courseName: entry?.courseName || entry?.course || '',
+                            batch: (entry?.batchNumber ?? '').toString().trim() || entry?.batchName || ''
                         };
                     })
                     : [];
+                setTrainingAttendanceDocs(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
                 setAttendanceData({ present: 0, absent: 0, records: attendanceRows });
             } catch (error) {
                 console.error('Failed to load training data for student:', error);
                 if (!isActive) return;
                 setAttendanceData({ present: 0, absent: 0, records: [] });
+                setTrainingAttendanceDocs([]);
                 setTrainingData({
                     company: '-',
                     batch: '-',
                     course: '-',
+                    trainer: '-',
                     startDate: '-',
                     endDate: '-',
                     totalDays: 0,
@@ -362,6 +642,7 @@ function Training({ onLogout, onViewChange }) {
                 });
                 setAvailablePhases([]);
                 setPhaseMetaMap({});
+                setCourseTrainerMap({});
                 setSelectedPhase('');
             } finally {
                 if (isActive) {
@@ -401,6 +682,12 @@ function Training({ onLogout, onViewChange }) {
         const chosen = (selectedCourse || '').toString().trim();
         if (!chosen || isCourseSubmitting) return;
 
+        const selectedKey = normalizePhase(selectedPhase);
+        if (!selectedKey) {
+            alert('Please choose a phase before submitting.');
+            return;
+        }
+
         const studentId = resolveStudentId();
         if (!studentId) {
             alert('Unable to identify student. Please login again and retry.');
@@ -409,10 +696,30 @@ function Training({ onLogout, onViewChange }) {
 
         try {
             setIsCourseSubmitting(true);
-            await mongoDBService.updateStudent(studentId, { preferredTraining: chosen });
+            const existingByPhase = parsePreferredTrainingByPhase(studentData?.preferredTrainingByPhase);
+            const updatedByPhase = {
+                ...existingByPhase,
+                [selectedKey]: chosen
+            };
+
+            const updatePayload = {
+                preferredTrainingByPhase: updatedByPhase,
+                // Keep old field for compatibility with pages that still read a single value.
+                preferredTraining: selectedKey === earliestPhaseKey
+                    ? chosen
+                    : (studentData?.preferredTraining || '')
+            };
+
+            await mongoDBService.updateStudent(studentId, updatePayload);
 
             setStudentData((prev) => {
-                const updated = { ...(prev || {}), preferredTraining: chosen };
+                const updated = {
+                    ...(prev || {}),
+                    preferredTrainingByPhase: updatedByPhase,
+                    preferredTraining: selectedKey === earliestPhaseKey
+                        ? chosen
+                        : (prev?.preferredTraining || '')
+                };
                 try {
                     localStorage.setItem('studentData', JSON.stringify(updated));
 
@@ -422,7 +729,10 @@ function Training({ onLogout, onViewChange }) {
                             ...full,
                             student: {
                                 ...full.student,
-                                preferredTraining: chosen
+                                preferredTrainingByPhase: updatedByPhase,
+                                preferredTraining: selectedKey === earliestPhaseKey
+                                    ? chosen
+                                    : (full.student.preferredTraining || '')
                             }
                         };
                         localStorage.setItem('completeStudentData', JSON.stringify(updatedFull));
@@ -456,10 +766,18 @@ function Training({ onLogout, onViewChange }) {
     const displayStartDate = selectedPhaseDetails?.startDate ? formatDate(selectedPhaseDetails.startDate) : trainingData.startDate;
     const displayEndDate = selectedPhaseDetails?.endDate ? formatDate(selectedPhaseDetails.endDate) : trainingData.endDate;
     const displayTotalDays = selectedPhaseDetails ? selectedPhaseDetails.totalDays : trainingData.totalDays;
-    const displayBatch = trainingData.batch || '-';
-    const displayCourse = selectedPhaseDetails
-        ? (enrolledCourseForSelectedPhase || '-')
-        : trainingData.course;
+    const selectedPhaseAttendanceSnapshot = useMemo(() => {
+        if (!selectedPhase) return null;
+        const phaseKey = normalizePhase(selectedPhase);
+        const rows = Array.isArray(trainingAttendanceDocs) ? trainingAttendanceDocs : [];
+        return rows.find((record) => normalizePhase(record?.phaseNumber || record?.phase || '') === phaseKey) || null;
+    }, [trainingAttendanceDocs, selectedPhase]);
+
+    const displayBatch = selectedPhaseAttendanceSnapshot?.batchNumber
+        ? selectedPhaseAttendanceSnapshot.batchNumber.toString()
+        : selectedPhaseAttendanceSnapshot?.batchName || '-';
+    const displayCourse = selectedPhaseAttendanceSnapshot?.courseName || '-';
+    const displayTrainer = selectedPhaseAttendanceSnapshot?.trainer || '-';
     const isAttendanceTableMode = scopedAttendanceRecords.length > 0;
 
     return (
@@ -527,9 +845,9 @@ function Training({ onLogout, onViewChange }) {
                                         <span className={styles.infoValue}>{displayCourse}</span>
                                     </div>
                                     <div className={styles.infoItem}>
-                                        <span className={styles.infoLabel}>Total Days</span>
+                                        <span className={styles.infoLabel}>Trainer</span>
                                         <span className={styles.infoColon}>:</span>
-                                        <span className={styles.infoValue}>{displayTotalDays}</span>
+                                        <span className={styles.infoValue}>{displayTrainer}</span>
                                     </div>
                                 </div>
                             </div>

@@ -665,6 +665,65 @@ position: relative;
 .Admin-cp-delete-btn.close-btn { background-color: #d54953; color: white; }
 .Admin-cp-delete-btn.close-btn:hover { background-color: #d54953; }
 
+/* Suffix input groups used on the company add/edit form */
+.Admin-cp-input-affix-wrapper {
+    position: relative;
+    width: 100%;
+    border: 1px solid #dce9d9;
+    border-radius: 8px;
+    background-color: #ffffff;
+    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 45px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.Admin-cp-input-affix-wrapper:hover,
+.Admin-cp-input-affix-wrapper:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.12);
+}
+
+.Admin-cp-input-affix-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0 86px 0 15px;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.Admin-cp-input-affix-input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-cp-input-affix-input:disabled {
+    cursor: not-allowed;
+}
+
+.Admin-cp-input-affix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 16px;
+    background-color: #4EA24E;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 72px;
+    box-sizing: border-box;
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
 
 /* ============================================================================
    MOBILE RESPONSIVENESS

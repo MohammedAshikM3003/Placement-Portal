@@ -248,27 +248,21 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
     const trainingCardEntries = useMemo(() => {
         const records = Array.isArray(studentTrainingAttendanceRecords) ? studentTrainingAttendanceRecords : [];
         const hasPhaseTaggedAttendance = records.some((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''));
+        const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
+        const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
+        const assignmentDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+        const hasAssignmentDetails = Boolean(
+            assignmentCourse ||
+            studentTrainingAssignment?.startDate ||
+            studentTrainingAssignment?.endDate ||
+            assignmentTotalDays > 0
+        );
 
-        const phaseKeySet = new Set();
-        Object.keys(studentTrainingPhaseMetaMap || {}).forEach((phaseKey) => {
-            if (phaseKey) phaseKeySet.add(phaseKey);
-        });
-
-        if (hasPhaseTaggedAttendance) {
-            records.forEach((entry) => {
-                const key = normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '');
-                if (key) phaseKeySet.add(key);
-            });
+        if (records.length === 0 && !hasAssignmentDetails) {
+            return [];
         }
 
-        const sortedPhaseKeys = [...phaseKeySet].sort((left, right) => {
-            const leftNumeric = Number.parseInt(left, 10);
-            const rightNumeric = Number.parseInt(right, 10);
-            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
-            return left.localeCompare(right);
-        });
-
-        if (sortedPhaseKeys.length === 0) {
+        if (!hasPhaseTaggedAttendance) {
             const presentCount = records.filter((entry) => String(entry?.status || '').trim().toLowerCase() === 'present').length;
             const absentCount = records.filter((entry) => String(entry?.status || '').trim().toLowerCase() === 'absent').length;
             const totalSessions = presentCount + absentCount;
@@ -277,23 +271,30 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
             const attendedCourse = records
                 .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
                 .find(Boolean);
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
-            const fallbackDaysFromDates = getInclusiveDaysBetweenDates(studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate);
+            const totalTrainingDays = assignmentTotalDays > 0 ? assignmentTotalDays : assignmentDaysFromDates;
 
             return [{
                 label: 'Training 1',
                 courseName: assignmentCourse || attendedCourse || 'N/A',
                 attendancePercentage,
-                totalTrainingDays: assignmentTotalDays > 0 ? assignmentTotalDays : fallbackDaysFromDates
+                totalTrainingDays
             }];
         }
 
+        const sortedPhaseKeys = [...new Set(
+            records
+                .map((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || ''))
+                .filter(Boolean)
+        )].sort((left, right) => {
+            const leftNumeric = Number.parseInt(left, 10);
+            const rightNumeric = Number.parseInt(right, 10);
+            if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)) return leftNumeric - rightNumeric;
+            return left.localeCompare(right);
+        });
+
         return sortedPhaseKeys.map((phaseKey, index) => {
             const phaseMeta = studentTrainingPhaseMetaMap?.[phaseKey] || {};
-            const scopedRecords = hasPhaseTaggedAttendance
-                ? records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey)
-                : (index === 0 ? records : []);
+            const scopedRecords = records.filter((entry) => normalizeTrainingPhaseKey(entry?.phaseNumber || entry?.phase || '') === phaseKey);
 
             const presentCount = scopedRecords.filter((entry) => String(entry?.status || '').trim().toLowerCase() === 'present').length;
             const absentCount = scopedRecords.filter((entry) => String(entry?.status || '').trim().toLowerCase() === 'absent').length;
@@ -304,8 +305,6 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
                 .map((entry) => (entry?.courseName || entry?.course || entry?.trainingName || '').toString().trim())
                 .find(Boolean);
             const phaseCourse = Array.isArray(phaseMeta?.courses) ? phaseMeta.courses.find((course) => normalizeTrainingCourseName(course)) : '';
-            const assignmentCourse = (studentTrainingAssignment?.courseName || '').toString().trim();
-
             const distinctAttendanceDays = new Set(
                 scopedRecords
                     .map((entry) => (entry?.attendanceDate || entry?.attendanceDateKey || entry?.date || '').toString().trim())
@@ -314,10 +313,9 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
 
             const phaseTotalDays = Number(phaseMeta?.totalDays || 0);
             const fallbackDaysFromDates = getInclusiveDaysBetweenDates(phaseMeta?.startDate, phaseMeta?.endDate);
-            const assignmentTotalDays = Number(studentTrainingAssignment?.totalDays || 0);
             const totalTrainingDays = phaseTotalDays > 0
                 ? phaseTotalDays
-                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : 0);
+                : fallbackDaysFromDates || distinctAttendanceDays || (sortedPhaseKeys.length === 1 ? assignmentTotalDays : assignmentDaysFromDates);
 
             const phaseNumberLabel = (phaseMeta?.phaseNumber || '').toString().trim();
             const labelSuffix = phaseNumberLabel || (Number.parseInt(phaseKey, 10) || (index + 1));
@@ -331,11 +329,7 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
         });
     }, [studentTrainingAttendanceRecords, studentTrainingPhaseMetaMap, studentTrainingAssignment?.courseName, studentTrainingAssignment?.totalDays, studentTrainingAssignment?.startDate, studentTrainingAssignment?.endDate]);
 
-    const hasTrainingData = useMemo(() => (
-        Boolean(studentTrainingAssignment) ||
-        studentTrainingAttendanceRecords.length > 0 ||
-        Object.keys(studentTrainingPhaseMetaMap || {}).length > 0
-    ), [studentTrainingAssignment, studentTrainingAttendanceRecords.length, studentTrainingPhaseMetaMap]);
+    const hasTrainingData = useMemo(() => trainingCardEntries.length > 0, [trainingCardEntries.length]);
 
     const jobLocationsHiddenValue = useMemo(
         () => selectedJobLocations.join(', '),
@@ -625,7 +619,8 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
             currentYear: data.currentYear,
             currentSemester: data.currentSemester,
             section: data.section,
-            registerNumber: data.registerNumber,
+            regNo: data.regNo || data.registerNumber || data.registerNo || '',
+            registerNumber: data.registerNumber || data.regNo || data.registerNo || '',
             firstName: data.firstName,
             lastName: data.lastName,
             dob: data.dob,
@@ -645,6 +640,8 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
             linkedinLink: data.linkedinLink,
             githubLink: data.githubLink,
             portfolioLink: data.portfolioLink,
+            loginPassword: data.loginPassword || '',
+            confirmPassword: data.confirmPassword || data.loginPassword || '',
         };
 
         const merged = { ...data, ...normalized };
@@ -1199,6 +1196,32 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
                                 </div>
                                 <input type="hidden" name="companyTypes" value={companyTypesHiddenValue} />
                                 <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
+                            </div>
+                        </div>
+
+                        <div className={styles.profileSectionContainer}>
+                            <h3 className={styles.sectionHeader}>Login Details</h3>
+                            <div className={styles.formGrid}>
+                                <div className={styles.field}>
+                                    <label>Registration No.</label>
+                                    <input type="text" value={studentData?.regNo || ''} readOnly />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Password</label>
+                                    <input
+                                        type="text"
+                                        value={studentData?.loginPassword || ''}
+                                        readOnly
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Confirm Password</label>
+                                    <input
+                                        type="text"
+                                        value={studentData?.confirmPassword || studentData?.loginPassword || ''}
+                                        readOnly
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

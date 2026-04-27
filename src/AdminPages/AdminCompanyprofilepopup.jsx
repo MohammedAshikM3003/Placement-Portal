@@ -144,6 +144,10 @@ function AdminCompanyprofilePopup({ onLogout }) {
         navigate('/admin-company-profile');
     };
 
+    const bondPeriodValue = String(formData.bondPeriod || '').trim();
+    const bondPeriodNumber = Number.parseFloat(bondPeriodValue);
+    const bondPeriodSuffix = Number.isFinite(bondPeriodNumber) && bondPeriodNumber > 1 ? 'Years' : 'Year';
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isProcessing || isViewMode) return;
@@ -304,7 +308,10 @@ function AdminCompanyprofilePopup({ onLogout }) {
 
                             <div className={styles['Admin-cp-page-field']}>
                                 <label>Package</label>
-                                <input type="text" name="package" value={formData.package} onChange={handleChange} placeholder="e.g., 6 LPA" disabled={isReadOnly} />
+                                <div className={styles['Admin-cp-input-affix-wrapper']}>
+                                    <input type="text" name="package" value={formData.package} onChange={handleChange} placeholder="e.g., 6" disabled={isReadOnly} className={styles['Admin-cp-input-affix-input']} />
+                                    <div className={styles['Admin-cp-input-affix']}>LPA</div>
+                                </div>
                             </div>
 
                             <div className={styles['Admin-cp-page-field']}>
@@ -314,7 +321,10 @@ function AdminCompanyprofilePopup({ onLogout }) {
 
                             <div className={styles['Admin-cp-page-field']}>
                                 <label>Bond Period</label>
-                                <input type="text" name="bondPeriod" value={formData.bondPeriod} onChange={handleChange} placeholder="e.g., 2 Years" disabled={isReadOnly} />
+                                <div className={styles['Admin-cp-input-affix-wrapper']}>
+                                    <input type="text" name="bondPeriod" value={formData.bondPeriod} onChange={handleChange} placeholder="e.g., 1" disabled={isReadOnly} className={styles['Admin-cp-input-affix-input']} />
+                                    <div className={styles['Admin-cp-input-affix']}>{bondPeriodSuffix}</div>
+                                </div>
                             </div>
                         </div>
 

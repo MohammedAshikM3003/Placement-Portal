@@ -195,6 +195,58 @@
     color: #666;
 }
 
+/* Percentage Input with Suffix Chip (Academic Background) */
+.percentageInputWrapper {
+    display: flex;
+    width: 100%;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9fbff;
+    box-sizing: border-box;
+    min-height: 53.6px;
+    align-items: stretch;
+}
+
+.formGrid .percentageInputWrapper .percentageInput {
+    flex: 1;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
+    height: 100%;
+    line-height: 1.2;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.formGrid .percentageInputWrapper .percentageInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.percentSuffix {
+    min-width: 50px;
+    background: linear-gradient(135deg, #2085f6 0%, #1a6fd1 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 12px;
+}
+
+.percentageInputWrapper:focus-within {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
 /* Responsive for mobile */
 @media (max-width: 900px) {
     .mobileInputWrapper {
@@ -207,6 +259,15 @@
     .mobileNumberInput {
         padding: 0.9rem 0.8rem;
         width: 82%;
+    }
+
+    .percentageInputWrapper {
+        margin-bottom: 1.5rem;
+    }
+
+    .percentSuffix {
+        font-size: 0.9rem;
+        min-width: 50px;
     }
 }
 

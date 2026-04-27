@@ -57,6 +57,31 @@ const parseDateValue = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const parseMultiValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item || '').toString().trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const normalizeTrainerSelection = (values) => {
+  if (!Array.isArray(values)) return [];
+
+  return [...new Set(
+    values
+      .map((item) => (item || '').toString().trim().toLowerCase())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+};
+
 const UpdateSuccessPopup = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
@@ -548,8 +573,10 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
     search: "",
     dept: "",
     section: "",
-    mobile: "",
   });
+  const [isTrainerPopupOpen, setIsTrainerPopupOpen] = useState(false);
+  const [selectedTrainers, setSelectedTrainers] = useState([]);
+  const [baselineTrainers, setBaselineTrainers] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all"); // all, present, absent
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
   const [exportProgress, setExportProgress] = useState(0);
@@ -648,9 +675,22 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
 
         const savedAttendance = Array.isArray(attendances) ? attendances[0] : null;
         if (!savedAttendance || !Array.isArray(savedAttendance.students)) {
+          const fallbackTrainerSelection = parseMultiValue(activeAssignment?.trainer);
+          setSelectedTrainers(fallbackTrainerSelection);
+          setBaselineTrainers(fallbackTrainerSelection);
           setStudents(buildAttendanceStudents(activeAssignment));
           setPendingChanges({});
           return;
+        }
+
+        const savedTrainerSelection = parseMultiValue(savedAttendance?.trainer);
+        if (savedTrainerSelection.length > 0) {
+          setSelectedTrainers(savedTrainerSelection);
+          setBaselineTrainers(savedTrainerSelection);
+        } else {
+          const fallbackTrainerSelection = parseMultiValue(activeAssignment?.trainer);
+          setSelectedTrainers(fallbackTrainerSelection);
+          setBaselineTrainers(fallbackTrainerSelection);
         }
 
         const statusMap = savedAttendance.students.reduce((accumulator, student) => {
@@ -665,6 +705,9 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
         setPendingChanges({});
       } catch (error) {
         console.error('Failed to load saved training attendance:', error);
+        const fallbackTrainerSelection = parseMultiValue(activeAssignment?.trainer);
+        setSelectedTrainers(fallbackTrainerSelection);
+        setBaselineTrainers(fallbackTrainerSelection);
         setStudents(buildAttendanceStudents(activeAssignment));
         setPendingChanges({});
       }
@@ -678,22 +721,64 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
     const searchQ = (filters.search || "").trim().toLowerCase();
     const deptQ = (filters.dept || "").trim().toLowerCase();
     const sectionQ = (filters.section || "").trim().toLowerCase();
-    const mobileQ = (filters.mobile || "").trim().toLowerCase();
 
     return students.filter((s) => {
       const nameValue = (s.name || '').toLowerCase();
       const regNoValue = (s.regNo || '').toLowerCase();
-      const mobileValue = (s.mobile || '').toLowerCase();
 
       const searchMatch = !searchQ || nameValue.includes(searchQ) || regNoValue.includes(searchQ);
       const deptMatch = !deptQ || (s.dept || '').toLowerCase() === deptQ;
       const sectionMatch = !sectionQ || (s.section || '').toLowerCase() === sectionQ;
-      const mobileMatch = !mobileQ || mobileValue.includes(mobileQ);
       // Status filter
       const statusMatch = statusFilter === "all" || s.status.toLowerCase() === statusFilter;
-      return searchMatch && deptMatch && sectionMatch && mobileMatch && statusMatch;
+      return searchMatch && deptMatch && sectionMatch && statusMatch;
     });
-  }, [students, filters.search, filters.dept, filters.section, filters.mobile, statusFilter]);
+  }, [students, filters.search, filters.dept, filters.section, statusFilter]);
+
+  const trainerOptions = useMemo(() => {
+    const fromAssignments = (Array.isArray(batchAssignments) ? batchAssignments : [])
+      .flatMap((assignment) => parseMultiValue(assignment?.trainer));
+
+    const fromActivePhase = (Array.isArray(activeAssignment?.phases) ? activeAssignment.phases : [])
+      .flatMap((phase) => parseMultiValue(phase?.trainer));
+
+    return [...new Set([...fromAssignments, ...fromActivePhase])];
+  }, [batchAssignments, activeAssignment]);
+
+  useEffect(() => {
+    const initialSelected = parseMultiValue(activeAssignment?.trainer);
+    if (initialSelected.length > 0) {
+      setSelectedTrainers(initialSelected);
+      setBaselineTrainers(initialSelected);
+      return;
+    }
+    setSelectedTrainers([]);
+    setBaselineTrainers([]);
+  }, [activeAssignment]);
+
+  useEffect(() => {
+    const normalizedOptions = new Set(trainerOptions.map((name) => name.toLowerCase()));
+    setSelectedTrainers((prev) => prev.filter((name) => normalizedOptions.has(name.toLowerCase())));
+  }, [trainerOptions]);
+
+  const selectedTrainerCount = selectedTrainers.length;
+  const trainerButtonLabel = selectedTrainerCount > 0 ? `Selected Trainers (${selectedTrainerCount})` : '+ Add Trainers';
+  const isTrainerSelectionChanged = useMemo(() => {
+    const normalizedCurrent = normalizeTrainerSelection(selectedTrainers);
+    const normalizedBaseline = normalizeTrainerSelection(baselineTrainers);
+
+    if (normalizedCurrent.length !== normalizedBaseline.length) {
+      return true;
+    }
+
+    for (let index = 0; index < normalizedCurrent.length; index += 1) {
+      if (normalizedCurrent[index] !== normalizedBaseline[index]) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [selectedTrainers, baselineTrainers]);
 
   const attendanceStatusCounts = useMemo(() => {
     return students.reduce((accumulator, student) => {
@@ -774,7 +859,8 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
   }, [students]);
 
   const handleUpdateClick = async () => {
-    if (Object.keys(pendingChanges).length === 0 || !activeAssignment || !activeBatchDate || isSavingAttendance) return;
+    const hasStatusChanges = Object.keys(pendingChanges).length > 0;
+    if ((!hasStatusChanges && !isTrainerSelectionChanged) || !activeAssignment || !activeBatchDate || isSavingAttendance) return;
 
     const updatedStudents = students.map((student) => (
       pendingChanges[student.id] ? { ...student, status: pendingChanges[student.id] } : student
@@ -789,6 +875,11 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
     const percentage = updatedStudents.length > 0
       ? Number(((totalPresent / updatedStudents.length) * 100).toFixed(2))
       : 0;
+    const selectedTrainerValue = selectedTrainers
+      .map((trainer) => (trainer || '').toString().trim())
+      .filter(Boolean)
+      .join(', ');
+    const trainer = selectedTrainerValue || (activeAssignment?.trainer || '').toString().trim();
 
     const attendancePayload = {
       scheduleId: activeAssignment.scheduleId || '',
@@ -796,6 +887,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
       courseName: activeAssignment.courseName || '',
       batchNumber: Number.parseInt(activeAssignment.batchNumber, 10) || 1,
       batchName: activeAssignment.batchName || activeBatch,
+      trainer,
       phaseNumber: activePhaseNumber,
       attendanceDateKey: activeBatchDate,
       attendanceDate: activeBatchDate,
@@ -820,6 +912,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
       await mongoDBService.submitTrainingAttendance(attendancePayload);
       setStudents(updatedStudents);
       setPendingChanges({});
+      setBaselineTrainers(selectedTrainers);
       setShowUpdateSuccessPopup(true);
     } catch (error) {
       console.error('Failed to save training attendance:', error);
@@ -835,9 +928,10 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
 
   const handleDiscard = () => {
     setPendingChanges({});
+    setSelectedTrainers(baselineTrainers);
   };
 
-  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0 || isTrainerSelectionChanged;
 
   const handleRemoveStudents = () => {
     if (selectedStudents.length === 0) return;
@@ -1064,7 +1158,7 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                     </div>
                   </div>
 
-                  {/* Second Row: Section and Mobile */}
+                  {/* Second Row: Section and Trainers */}
                   <div className={styles["ad-train-att-filter-fields-row"]}>
                     {/* Section Dropdown with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
@@ -1088,22 +1182,27 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                       </div>
                     </div>
 
-                    {/* Mobile Input with Static Label */}
+                    {/* Trainer Button with Static Label */}
                     <div className={styles["ad-train-att-filter-field-wrapper"]}>
-                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-mobile">
-                        Enter Mobile Number
+                      <label className={styles["ad-train-att-static-label"]} htmlFor="ad-train-att-filter-trainer-btn">
+                        Trainers
                       </label>
-                      <div className={styles["ad-train-att-text-container"]}>
-                        <input
-                          id="ad-train-att-filter-mobile"
-                          className={styles["ad-train-att-text"]}
-                          type="text"
-                          placeholder="Enter Mobile Number"
-                          value={filters.mobile || ""}
-                          onChange={(e) =>
-                            setFilters((prev) => ({ ...prev, mobile: e.target.value }))
-                          }
-                        />
+                      <div className={styles["ad-train-att-dropdown-container"]}>
+                        <button
+                          id="ad-train-att-filter-trainer-btn"
+                          type="button"
+                          className={styles["ad-train-att-trainer-btn"]}
+                          onClick={() => setIsTrainerPopupOpen(true)}
+                        >
+                          {selectedTrainerCount > 0 ? (
+                            trainerButtonLabel
+                          ) : (
+                            <>
+                              <span className={styles['ad-train-att-trainer-btn-plus']}>+</span>
+                              <span>Add Trainers</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1172,6 +1271,41 @@ export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) 
                 </div>
               </div>
             </div>
+
+            {isTrainerPopupOpen && (
+              <div className={styles['ad-train-att-trainer-popup-overlay']} onClick={() => setIsTrainerPopupOpen(false)}>
+                <div className={styles['ad-train-att-trainer-popup-container']} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles['ad-train-att-trainer-popup-header']}>Trainers : {selectedTrainerCount}</div>
+                  <div className={styles['ad-train-att-trainer-popup-body']}>
+                    {trainerOptions.length === 0 ? (
+                      <p className={styles['ad-train-att-trainer-empty']}>No trainers available</p>
+                    ) : (
+                      trainerOptions.map((trainerName) => (
+                        <label key={trainerName} className={styles['ad-train-att-trainer-option']}>
+                          <input
+                            type="checkbox"
+                            checked={selectedTrainers.includes(trainerName)}
+                            onChange={() => {
+                              setSelectedTrainers((prev) => (
+                                prev.includes(trainerName)
+                                  ? prev.filter((name) => name !== trainerName)
+                                  : [...prev, trainerName]
+                              ));
+                            }}
+                          />
+                          <span>{trainerName}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <div className={styles['ad-train-att-trainer-popup-footer']}>
+                    <button type="button" className={styles['ad-train-att-trainer-popup-close']} onClick={() => setIsTrainerPopupOpen(false)}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Bottom Row: Attendance Table Section */}
             <div className={styles["ad-train-att-table-section"]}>
