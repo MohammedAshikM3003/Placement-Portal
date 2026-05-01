@@ -1,7 +1,8 @@
 // MongoDB-based Authentication Service
 import profileUtils from '../components/Sidebar/profileUtils';
 import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
-const { canonicalStorePath } = profileUtils;
+import API_BASE_URL from '../utils/apiConfig';
+const { canonicalStorePath, resolveProfileUrl } = profileUtils;
 
 class AuthService {
   constructor() {
@@ -487,7 +488,8 @@ class AuthService {
             const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', coordinatorData);
             const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', coordinatorData);
             const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', coordinatorData);
-            const resolvedProfilePhoto = coordinatorData.profilePhoto || coordinatorData.profilePicURL || null;
+            // CRITICAL: Always resolve URLs to production backend (localhost → render.com)
+            const resolvedProfilePhoto = resolveProfileUrl(coordinatorData.profilePhoto || coordinatorData.profilePicURL || null, API_BASE_URL);
             localStorage.setItem(profileCacheKey, JSON.stringify({
               ...coordinatorData,
               profilePhoto: resolvedProfilePhoto,
@@ -519,7 +521,8 @@ class AuthService {
                   const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', enriched);
                   const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', enriched);
                   const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', enriched);
-                  const resolvedProfilePhoto = enriched.profilePhoto || enriched.profilePicURL || null;
+                  // CRITICAL: Always resolve URLs to production backend (localhost → render.com)
+                  const resolvedProfilePhoto = resolveProfileUrl(enriched.profilePhoto || enriched.profilePicURL || null, API_BASE_URL);
                   localStorage.setItem(profileCacheKey, JSON.stringify({
                     ...enriched,
                     profilePhoto: resolvedProfilePhoto,

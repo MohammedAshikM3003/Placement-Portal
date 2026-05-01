@@ -6256,6 +6256,22 @@ const sanitizeCoordinator = (coordinatorDoc) => {
     const plain = coordinatorDoc.toObject ? coordinatorDoc.toObject() : { ...coordinatorDoc };
     delete plain.passwordHash;
     delete plain.password;
+    
+    // CRITICAL FIX: Strip localhost URLs from profile photo before sending to frontend
+    // This prevents mixed content errors on Vercel deployment
+    if (plain.profilePhoto && typeof plain.profilePhoto === 'string') {
+        const match = plain.profilePhoto.match(/(\/api\/file\/[a-f0-9]{24})/i);
+        if (match) {
+            plain.profilePhoto = match[1]; // Return just the relative path
+        }
+    }
+    if (plain.profilePicURL && typeof plain.profilePicURL === 'string') {
+        const match = plain.profilePicURL.match(/(\/api\/file\/[a-f0-9]{24})/i);
+        if (match) {
+            plain.profilePicURL = match[1]; // Return just the relative path
+        }
+    }
+    
     return plain;
 };
 
