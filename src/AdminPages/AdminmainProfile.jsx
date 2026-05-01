@@ -1069,6 +1069,28 @@ function Admainprofile() {
         if (!rawLogo) return '';
         return resolveProfileUrl(sanitizeCachedUrl(rawLogo), API_BASE_URL);
     }, [collegeLogo, collegeLogoBase64]);
+    
+    // CRITICAL FIX: Resolve college banner URL to production backend (prevent localhost errors on Vercel)
+    const collegeBannerDisplaySrc = useMemo(() => {
+        const rawBanner = collegeBannerBase64 || collegeBanner || '';
+        if (!rawBanner) return '';
+        return gridfsService.resolveImageUrl(sanitizeCachedUrl(rawBanner));
+    }, [collegeBanner, collegeBannerBase64]);
+    
+    // CRITICAL FIX: Resolve NAAC certificate URL to production backend
+    const naacCertificateDisplaySrc = useMemo(() => {
+        const rawNaac = naacCertificateBase64 || naacCertificate || '';
+        if (!rawNaac) return '';
+        return gridfsService.resolveImageUrl(sanitizeCachedUrl(rawNaac));
+    }, [naacCertificate, naacCertificateBase64]);
+    
+    // CRITICAL FIX: Resolve NBA certificate URL to production backend
+    const nbaCertificateDisplaySrc = useMemo(() => {
+        const rawNba = nbaCertificateBase64 || nbaCertificate || '';
+        if (!rawNba) return '';
+        return gridfsService.resolveImageUrl(sanitizeCachedUrl(rawNba));
+    }, [nbaCertificate, nbaCertificateBase64]);
+    
     const [bannerUploadSuccess, setBannerUploadSuccess] = useState(false);
     const [naacUploadSuccess, setNaacUploadSuccess] = useState(false);
     const [nbaUploadSuccess, setNbaUploadSuccess] = useState(false);
@@ -2455,8 +2477,8 @@ function Admainprofile() {
                                     >
                                         {isBannerLoading ? (
                                             <CollegeImageLoader />
-                                        ) : collegeBanner ? (
-                                            <img src={collegeBanner} alt="College Banner" className={styles['Admin-main-profile-college-image']} />
+                                        ) : collegeBannerDisplaySrc ? (
+                                            <img src={collegeBannerDisplaySrc} alt="College Banner" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Banner</div>
                                         )}
@@ -2485,8 +2507,8 @@ function Admainprofile() {
                                     <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
                                         {isNaacLoading ? (
                                             <CollegeImageLoader />
-                                        ) : naacCertificate ? (
-                                            <img src={naacCertificate} alt="NAAC Certificate" className={styles['Admin-main-profile-college-image']} />
+                                        ) : naacCertificateDisplaySrc ? (
+                                            <img src={naacCertificateDisplaySrc} alt="NAAC Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
                                         )}
@@ -2515,8 +2537,8 @@ function Admainprofile() {
                                     <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
                                         {isNbaLoading ? (
                                             <CollegeImageLoader />
-                                        ) : nbaCertificate ? (
-                                            <img src={nbaCertificate} alt="NBA Certificate" className={styles['Admin-main-profile-college-image']} />
+                                        ) : nbaCertificateDisplaySrc ? (
+                                            <img src={nbaCertificateDisplaySrc} alt="NBA Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
                                         )}
