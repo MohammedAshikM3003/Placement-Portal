@@ -69,6 +69,21 @@ router.get('/college-images/:adminLoginID', async (req, res) => {
   }
 });
 
+// Helper: Strip localhost URLs from image fields (Vercel mixed content fix)
+const stripLocalhostUrls = (data) => {
+  if (!data) return data;
+  const fields = ['profilePhoto', 'collegeBanner', 'naacCertificate', 'nbaCertificate', 'collegeLogo'];
+  for (const field of fields) {
+    if (data[field] && typeof data[field] === 'string') {
+      const match = data[field].match(/(\/api\/file\/[a-f0-9]{24})/i);
+      if (match) {
+        data[field] = match[1]; // Return just the relative path
+      }
+    }
+  }
+  return data;
+};
+
 // GET admin profile by adminLoginID
 router.get('/profile/:adminLoginID', async (req, res) => {
   try {
@@ -86,6 +101,9 @@ router.get('/profile/:adminLoginID', async (req, res) => {
     // Don't send password in response
     const adminData = admin.toObject();
     delete adminData.adminPassword;
+    
+    // CRITICAL FIX: Strip localhost URLs to prevent mixed content on Vercel
+    stripLocalhostUrls(adminData);
     
     res.json({ 
       success: true, 
@@ -229,6 +247,9 @@ router.post('/profile', async (req, res) => {
       const responseData = updatedAdmin.toObject();
       delete responseData.adminPassword;
       
+      // CRITICAL FIX: Strip localhost URLs in response
+      stripLocalhostUrls(responseData);
+      
       res.json({ 
         success: true, 
         message: 'Admin profile updated successfully',
@@ -252,6 +273,9 @@ router.post('/profile', async (req, res) => {
       
       const responseData = admin.toObject();
       delete responseData.adminPassword;
+      
+      // CRITICAL FIX: Strip localhost URLs in response
+      stripLocalhostUrls(responseData);
       
       res.status(201).json({ 
         success: true, 

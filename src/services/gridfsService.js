@@ -264,8 +264,25 @@ class GridFSService {
     if (!value) return '';
     // Old Base64 data URL — render directly (backward compatible)
     if (value.startsWith('data:')) return value;
-    // Already a full http(s) URL
-    if (value.startsWith('http')) return value;
+    
+    // CRITICAL FIX: Strip localhost URLs to avoid mixed content errors on Vercel
+    // If URL is http://localhost:xxxx/api/file/ID, extract just the /api/file/ID part
+    if (value.startsWith('http://localhost') || value.startsWith('http://127.0.0.1')) {
+      try {
+        const url = new URL(value);
+        const pathMatch = url.pathname.match(/(\/api\/file\/[a-f0-9]{24})/i) || url.pathname.match(/\/file\/([a-f0-9]{24})/i);
+        if (pathMatch) {
+          value = pathMatch[1].startsWith('/api') ? pathMatch[1] : `/api/file/${pathMatch[1]}`;
+          // Continue to re-resolve with production backend below
+        }
+      } catch (e) {
+        // Not a valid URL, continue with original value
+      }
+    }
+    
+    // Already a full https URL (production) — keep it
+    if (value.startsWith('https://')) return value;
+    
     // Determine runtime backend base (fallback to window.location.origin if baseURL is not set or seems wrong)
     const runtimeBase = (this.baseURL && this.baseURL.replace(/\/api\/?$/, '')) || (typeof window !== 'undefined' ? window.location.origin : '');
     // GridFS path like /api/file/abc123 - baseURL already has /api
