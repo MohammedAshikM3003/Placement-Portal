@@ -77,42 +77,6 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     );
 };
 
-// College Image Loading Spinner Component (Matches AdminCompanyDrive table loader)
-const CollegeImageLoader = () => (
-    <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10
-    }}>
-        <div style={{
-            width: '50px',
-            height: '50px',
-            border: '5px solid #f3f3f3',
-            borderTop: '5px solid #4EA24E',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-        }}></div>
-        <style>{`
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `}</style>
-        <p style={{
-            marginTop: '15px',
-            fontSize: '13px',
-            color: '#666',
-            fontWeight: '600'
-        }}>Loading...</p>
-    </div>
-);
-
 // SuccessPopup Component
 const SuccessPopup = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
@@ -1069,6 +1033,12 @@ function Admainprofile() {
         if (!rawLogo) return '';
         return resolveProfileUrl(sanitizeCachedUrl(rawLogo), API_BASE_URL);
     }, [collegeLogo, collegeLogoBase64]);
+
+    const profilePhotoDisplaySrc = useMemo(() => {
+        const rawPhoto = profilePhotoBase64 || profilePhoto || '';
+        if (!rawPhoto) return '';
+        return gridfsService.resolveImageUrl(sanitizeCachedUrl(rawPhoto));
+    }, [profilePhoto, profilePhotoBase64]);
     
     // CRITICAL FIX: Resolve college banner URL to production backend (prevent localhost errors on Vercel)
     const collegeBannerDisplaySrc = useMemo(() => {
@@ -1139,13 +1109,6 @@ function Admainprofile() {
         }
         return true; // Show loading only if no valid cache
     });
-
-    // Always show loading spinners initially (will be hidden after server fetch)
-    const [isBannerLoading, setIsBannerLoading] = useState(true);
-    const [isNaacLoading, setIsNaacLoading] = useState(true);
-    const [isNbaLoading, setIsNbaLoading] = useState(true);
-    const [isLogoLoading, setIsLogoLoading] = useState(true);
-    const [dataLoaded, setDataLoaded] = useState(false);
 
     // Get admin login ID from localStorage or session
     const getAdminLoginID = () => {
@@ -1311,7 +1274,6 @@ function Admainprofile() {
                                 newPassword: '',
                                 confirmPassword: ''
                             };
-                            setDataLoaded(true);
                             setIsLoading(false);
                             // Continue to fetch from server for any updates (don't return early)
                         }
@@ -1411,8 +1373,6 @@ function Admainprofile() {
                         setCollegeBannerBase64('');
                         setCollegeBannerName('');
                     }
-                    setIsBannerLoading(false);
-
                     // NAAC Certificate
                     const resolvedNaac = data.naacCertificate ? gridfsService.resolveImageUrl(data.naacCertificate) : '';
                     if (data.naacCertificate) {
@@ -1423,8 +1383,6 @@ function Admainprofile() {
                         setNaacCertificate(null);
                         setNaacCertificateBase64('');
                     }
-                    setIsNaacLoading(false);
-
                     // NBA Certificate
                     const resolvedNba = data.nbaCertificate ? gridfsService.resolveImageUrl(data.nbaCertificate) : '';
                     if (data.nbaCertificate) {
@@ -1435,8 +1393,6 @@ function Admainprofile() {
                         setNbaCertificate(null);
                         setNbaCertificateBase64('');
                     }
-                    setIsNbaLoading(false);
-
                     // College Logo
                     const resolvedLogo = data.collegeLogo ? gridfsService.resolveImageUrl(data.collegeLogo) : '';
                     if (data.collegeLogo) {
@@ -1449,8 +1405,6 @@ function Admainprofile() {
                         setCollegeLogoBase64('');
                         setCollegeLogoName('');
                     }
-                    setIsLogoLoading(false);
-
                     savedDataRef.current = {
                         firstName: data.firstName || '',
                         lastName: data.lastName || '',
@@ -1521,18 +1475,12 @@ function Admainprofile() {
                             }
                     }
 
-                    setDataLoaded(true);
                     setIsLoading(false);
                     }
                 }
             } catch (error) {
                 console.error('Error loading admin data:', error);
                 setIsLoading(false);
-                // Set all image loading states to false on error
-                setIsBannerLoading(false);
-                setIsNaacLoading(false);
-                setIsNbaLoading(false);
-                setIsLogoLoading(false);
             }
         };
 
@@ -1616,7 +1564,7 @@ function Admainprofile() {
         if (type === 'banner' && collegeBanner) {
             setCollegeImagePreview({
                 isOpen: true,
-                src: collegeBanner,
+                src: collegeBannerDisplaySrc || collegeBanner,
                 title: 'College Banner Preview',
                 alt: 'College Banner Preview',
                 downloadFilename: collegeBannerName || 'college-banner.jpg'
@@ -1625,7 +1573,7 @@ function Admainprofile() {
         if (type === 'logo' && collegeLogo) {
             setCollegeImagePreview({
                 isOpen: true,
-                src: collegeLogo,
+                src: collegeLogoDisplaySrc || collegeLogo,
                 title: 'College Logo Preview',
                 alt: 'College Logo Preview',
                 downloadFilename: collegeLogoName || 'college-logo.jpg'
@@ -2375,9 +2323,9 @@ function Admainprofile() {
                                 <h3 className={styles['Admin-main-profile-section-header']}>Profile Photo</h3>
 
                                 <div className={styles['Admin-main-profile-photo-icon-container']}>
-                                    {profilePhoto ? (
+                                    {profilePhotoDisplaySrc ? (
                                         <img
-                                            src={profilePhoto}
+                                            src={profilePhotoDisplaySrc}
                                             alt="Profile Preview"
                                             className={styles['Admin-main-profile-photo-preview']}
                                             onClick={handleImageClick}
@@ -2475,9 +2423,7 @@ function Admainprofile() {
                                         tabIndex={collegeBanner ? 0 : undefined}
                                         onKeyDown={collegeBanner ? (e) => { if (e.key === 'Enter' || e.key === ' ') openCollegeImagePreview('banner'); } : undefined}
                                     >
-                                        {isBannerLoading ? (
-                                            <CollegeImageLoader />
-                                        ) : collegeBannerDisplaySrc ? (
+                                        {collegeBannerDisplaySrc ? (
                                             <img src={collegeBannerDisplaySrc} alt="College Banner" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Banner</div>
@@ -2505,9 +2451,7 @@ function Admainprofile() {
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>NAAC Certificate</h4>
                                     <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
-                                        {isNaacLoading ? (
-                                            <CollegeImageLoader />
-                                        ) : naacCertificateDisplaySrc ? (
+                                        {naacCertificateDisplaySrc ? (
                                             <img src={naacCertificateDisplaySrc} alt="NAAC Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
@@ -2535,9 +2479,7 @@ function Admainprofile() {
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>NBA Certificate</h4>
                                     <div className={styles['Admin-main-profile-college-preview']} style={{ position: 'relative' }}>
-                                        {isNbaLoading ? (
-                                            <CollegeImageLoader />
-                                        ) : nbaCertificateDisplaySrc ? (
+                                        {nbaCertificateDisplaySrc ? (
                                             <img src={nbaCertificateDisplaySrc} alt="NBA Certificate" className={styles['Admin-main-profile-college-image']} />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Certificate</div>
@@ -2572,9 +2514,7 @@ function Admainprofile() {
                                         tabIndex={collegeLogo ? 0 : undefined}
                                         onKeyDown={collegeLogo ? (e) => { if (e.key === 'Enter' || e.key === ' ') openCollegeImagePreview('logo'); } : undefined}
                                     >
-                                        {isLogoLoading ? (
-                                            <CollegeImageLoader />
-                                        ) : collegeLogoDisplaySrc ? (
+                                        {collegeLogoDisplaySrc ? (
                                             <img
                                                 src={collegeLogoDisplaySrc}
                                                 alt="College Logo"
