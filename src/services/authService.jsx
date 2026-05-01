@@ -1,7 +1,7 @@
 // MongoDB-based Authentication Service
 import profileUtils from '../components/Sidebar/profileUtils';
-const { canonicalStorePath } = profileUtils;
 import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
+const { canonicalStorePath } = profileUtils;
 
 class AuthService {
   constructor() {
