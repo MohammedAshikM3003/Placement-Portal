@@ -1737,7 +1737,7 @@ function StuProfile({ onLogout, onViewChange }) {
         studentTrainingPhaseMetaMap
     ]);
 
-    const hasTrainingData = useMemo(() => trainingCardEntries.length > 0, [trainingCardEntries.length]);
+    const hasTrainingData = useMemo(() => trainingCardEntries.length > 0, [trainingCardEntries]);
 
     const PIE_DATA = driveAnalytics.pieData;
     const ROUND_DETAILS = driveAnalytics.roundDetails;

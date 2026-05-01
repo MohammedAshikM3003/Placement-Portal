@@ -14,6 +14,8 @@ import Reportdashbord from "../assets/Reportdashboard.svg";
 import uploadcertificateicon from "../assets/uploadcertificateicon.svg";
 import AdminBrowseStudenticon from "../assets/AdminBrowseStudenticon.svg";
 import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
+import { API_BASE_URL } from '../utils/apiConfig';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 
 
 const cx = (...classNames) => classNames.filter(Boolean).join(" ");
@@ -97,7 +99,15 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
   useCoordinatorAuth(); // JWT authentication verification
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [collegeLogoUrl, setCollegeLogoUrl] = useState(() => getCachedCollegeLogo());
+  const [collegeLogoUrl, setCollegeLogoUrl] = useState(() => {
+    try {
+      const cached = getCachedCollegeLogo();
+      if (cached) return cached;
+      const raw = localStorage.getItem('collegeLogo');
+      if (raw) return resolveProfileUrl(raw, API_BASE_URL);
+    } catch (e) { /* ignore */ }
+    return null;
+  });
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0 });
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
   const [upcomingDrive, setUpcomingDrive] = useState(null);

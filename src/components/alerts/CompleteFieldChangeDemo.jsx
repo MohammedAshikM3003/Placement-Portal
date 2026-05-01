@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
-import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
+import FieldUpdateBanner from './FieldUpdateBanner';
+import UnsavedChangesAlert from './UnsavedChangesAlert';
 
 /**
  * Complete Demo showing both components working together

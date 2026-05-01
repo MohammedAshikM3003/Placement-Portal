@@ -16,6 +16,8 @@ import styles from './mainlogin.module.css';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import InteractiveBackground from './components/InteractiveBackground/InteractiveBackground.jsx';
 import loginDripsImg from './assets/logindrips.svg';
+import profileUtils from './components/Sidebar/profileUtils';
+const { canonicalStorePath } = profileUtils;
 
 // Internal Popup Component using Module Styles
 const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
@@ -230,10 +232,10 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                     return val;
                   };
                   const resolvedImages = {
-                    collegeLogo: resolveUrl(data.collegeLogo),
-                    collegeBanner: resolveUrl(data.collegeBanner),
-                    naacCertificate: resolveUrl(data.naacCertificate),
-                    nbaCertificate: resolveUrl(data.nbaCertificate),
+                    collegeLogo: canonicalStorePath(data.collegeLogo),
+                    collegeBanner: canonicalStorePath(data.collegeBanner),
+                    naacCertificate: canonicalStorePath(data.naacCertificate),
+                    nbaCertificate: canonicalStorePath(data.nbaCertificate),
                   };
                   localStorage.setItem('collegeImagesCache', JSON.stringify(resolvedImages));
                   localStorage.setItem('collegeImagesCacheTimestamp', Date.now().toString());

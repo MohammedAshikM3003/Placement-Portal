@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 import { API_BASE_URL } from '../../utils/apiConfig';
+import { resolveProfileUrl, fetchAndCacheBlob, clearBlobCache } from './profileUtils';
 
 import styles from './Adsidebar.module.css';
 
@@ -69,6 +70,12 @@ const sidebarItems = [
 
 const viewToPath = (view) => `/` + view;
 
+const normalizeSidebarProfilePhoto = (value) => {
+  if (!value) return null;
+  const resolved = resolveProfileUrl(value, API_BASE_URL);
+  return resolved || null;
+};
+
 
 
 const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
@@ -111,7 +118,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
             name: fullName,
 
-            profilePhoto: data.profilePhoto || null
+            profilePhoto: normalizeSidebarProfilePhoto(data.profilePhoto)
 
           };
 
@@ -125,6 +132,9 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
         } else if (data.name) {
 
           // Already in sidebar format
+          if (data.profilePhoto) {
+            data.profilePhoto = normalizeSidebarProfilePhoto(data.profilePhoto);
+          }
           cachedAdminProfile = data;
           cachedProfileTimestamp = Date.now();
 
@@ -263,6 +273,25 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
           setImageKey(Date.now()); // Force image re-render
 
+          // Resolve the profile URL (GridFS id / relative paths) and try to cache as blob
+          try {
+            const resolved = resolveProfileUrl(profilePhotoUrl, API_BASE_URL);
+            if (resolved && resolved !== profilePhotoUrl) {
+              profilePhotoUrl = resolved;
+            }
+
+            // Try to fetch blob URL for smoother rendering
+            try {
+              const blobUrl = await fetchAndCacheBlob(profilePhotoUrl);
+              if (blobUrl) {
+                profilePhotoUrl = blobUrl;
+                // update state/cache to use blob URL
+                cachedAdminProfile.profilePhoto = profilePhotoUrl;
+                setAdminProfile(prev => ({ ...(prev || {}), profilePhoto: profilePhotoUrl }));
+              }
+            } catch (_) { /* best-effort */ }
+          } catch (_) { /* best-effort */ }
+
 
 
           // NOTE: Don't overwrite the full adminProfileCache here
@@ -399,12 +428,12 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
 
 
+        let updatedPhoto = data.profilePhoto || null;
+        try { updatedPhoto = resolveProfileUrl(updatedPhoto, API_BASE_URL); } catch (_) {}
+
         const profileData = {
-
           name: fullName,
-
-          profilePhoto: data.profilePhoto || null
-
+          profilePhoto: normalizeSidebarProfilePhoto(updatedPhoto)
         };
 
 
@@ -481,12 +510,12 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
 
 
+        let updatedPhoto = data.profilePhoto || null;
+        try { updatedPhoto = resolveProfileUrl(updatedPhoto, API_BASE_URL); } catch (_) {}
+
         const profileData = {
-
           name: fullName,
-
-          profilePhoto: data.profilePhoto || null
-
+          profilePhoto: normalizeSidebarProfilePhoto(updatedPhoto)
         };
 
 
@@ -661,6 +690,9 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
       console.warn('⚠ Failed to clear admin image cache on logout:', error);
 
     }
+
+    // Clear blob URL cache (shared)
+    try { clearBlobCache(); } catch (_) {}
 
 
 

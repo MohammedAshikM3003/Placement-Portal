@@ -2,6 +2,8 @@
 // Routes all AI calls through the Node backend → Ollama (local)
 // No API keys needed, no rate limits, unlimited usage
 
+import { joinApiUrl } from '../utils/apiConfig';
+
 class OllamaService {
   constructor() {
     this.isAvailable = true; // Always available (Ollama runs locally)
@@ -135,7 +137,7 @@ class OllamaService {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
-      const resp = await fetch(`${API_BASE}/api/resume-builder/ai-generate`, {
+      const resp = await fetch(joinApiUrl('/resume-builder/ai-generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

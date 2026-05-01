@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar';
 import AdSidebar from '../components/Sidebar/Adsidebar';
 import styles from './Admin_Schedule_Training.module.css';
-import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import AdCalendar from '../components/Calendar/Ad_Calendar';
 import mongoDBService from '../services/mongoDBService';
 
 const parseMultiValue = (value) => {
@@ -92,8 +92,8 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [currentScheduleId, setCurrentScheduleId] = useState('');
   
-  // Multiple companies state
-  const [selectedCompanies, setSelectedCompanies] = useState([]);
+  // Multiple companies state (ensure at least one row by default)
+  const [selectedCompanies, setSelectedCompanies] = useState(() => ([{ id: Date.now(), company: '', companyHR: '', companyLocation: '' }]));
 
   // Phase Details state
   const [phaseNumber, setPhaseNumber] = useState('');
@@ -467,7 +467,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
     setSelectedCourses([]);
     setSelectedCourseTrainers({});
     setScheduledBatches([]);
-    setSelectedCompanies([]);
+    setSelectedCompanies([{ id: Date.now(), company: '', companyHR: '', companyLocation: '' }]);
     closeTrainerPopup();
   };
 
@@ -480,6 +480,14 @@ const AdminScheduleTraining = ({ onLogout }) => {
 
   const handleRemoveCompany = (id) => {
     setSelectedCompanies(selectedCompanies.filter((item) => item.id !== id));
+  };
+
+  const handleRemoveLastCompany = () => {
+    if (selectedCompanies.length <= 1) return; // keep minimum one company row
+    const last = selectedCompanies[selectedCompanies.length - 1];
+    if (last && last.id) {
+      handleRemoveCompany(last.id);
+    }
   };
 
   const handleCompanyChange = (id, field, value) => {
@@ -627,7 +635,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
                 {selectedCompanies.map((item, index) => (
                   <div key={item.id} className={styles.formRow}>
                     <div className={styles.formGroup}>
-                      <label className={styles.fieldLabel}>Select Company</label>
+                      <label className={styles.fieldLabel}>Select Company <span className={styles.requiredStar}>*</span></label>
                       <select
                         value={item.company}
                         onChange={(e) => handleCompanySelect(item.id, e.target.value)}
@@ -665,23 +673,12 @@ const AdminScheduleTraining = ({ onLogout }) => {
                       />
                     </div>
 
-                    {!isViewMode && (
-                      <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'flex-end' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCompany(item.id)}
-                          className={styles.removeCompanyBtn}
-                          title="Remove this company"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
+                    {/* Remove button moved to the actions row below. */}
                   </div>
                 ))}
 
                 {!isViewMode && (
-                  <div className={styles.formRow}>
+                  <div className={styles.formRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <button
                       type="button"
                       onClick={handleAddCompany}
@@ -690,6 +687,19 @@ const AdminScheduleTraining = ({ onLogout }) => {
                     >
                       <span className={styles.addIcon}>+</span> Add Another Company
                     </button>
+                    {selectedCompanies.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLastCompany()}
+                        className={styles.clearCompanyBtn}
+                        title="Remove last added company"
+                      >
+                        <span className={styles.clearCompanyIcon} aria-hidden="true">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6z" stroke-width="0.5" stroke="currentColor"/></svg>
+                        </span>
+                        <span className={styles.clearCompanyText}>Clear</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </>
@@ -703,7 +713,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
           <div className={styles.cardContent}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Phase Number</label>
+                <label className={styles.fieldLabel}>Phase Number <span className={styles.requiredStar}>*</span></label>
                 <div className={styles.phasePrefixInput}>
                   <span className={styles.phasePrefixChip}>Phase</span>
                   <input
@@ -720,7 +730,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Training Name</label>
+                <label className={styles.fieldLabel}>Training Name <span className={styles.requiredStar}>*</span></label>
                 <input
                   type="text"
                   value={trainingName}
@@ -732,7 +742,7 @@ const AdminScheduleTraining = ({ onLogout }) => {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.fieldLabel}>Applicable Year</label>
+                <label className={styles.fieldLabel}>Applicable Year <span className={styles.requiredStar}>*</span></label>
                 <select
                   value={applicableYear}
                   onChange={(e) => setApplicableYear(e.target.value)}
@@ -750,13 +760,13 @@ const AdminScheduleTraining = ({ onLogout }) => {
 
             <div className={`${styles.formRow} ${styles.dynamicRow}`}>
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
-                <label className={styles.fieldLabel}>Start Date</label>
-                <Ad_Calendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
+                <label className={styles.fieldLabel}>Start Date <span className={styles.requiredStar}>*</span></label>
+                <AdCalendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
               </div>
 
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
-                <label className={styles.fieldLabel}>End Date</label>
-                <Ad_Calendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
+                <label className={styles.fieldLabel}>End Date <span className={styles.requiredStar}>*</span></label>
+                <AdCalendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
               </div>
 
               <div className={styles.formGroup}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import DatePicker from 'react-datepicker';
@@ -12,8 +12,10 @@ import mongoDBService from '../services/mongoDBService.jsx';
 import gridfsService from '../services/gridfsService';
 import { fileToBase64WithCompression, getBase64SizeKB } from '../utils/imageCompression';
 import API_BASE_URL from '../utils/apiConfig';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 import { DownloadSuccessAlert, DownloadFailedAlert } from '../components/alerts/DownloadPreviewAlerts';
 import CoordinatorUnsavedChangesAlert from '../components/alerts/CoordinatorUnsavedChangesAlert';
+import { getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
 
 // Import CSS Module
 import styles from './Coo_Profile.module.css';
@@ -26,12 +28,21 @@ import ProfileGraduationcap from "../assets/ProfileGraduationcap.svg"
 // Helper to get coordinator ID from storage
 const getCoordinatorId = () => {
     try {
+        // PRIORITY 1: Check current session keys (coordinatorId/coordinatorUsername)
+        // These are set during login and represent the CURRENT session
+        const separateId = localStorage.getItem('coordinatorId') || localStorage.getItem('coordinatorUsername');
+        if (separateId) {
+            console.log('... Coordinator ID from session key (PRIORITY 1):', separateId);
+            return separateId;
+        }
+
+        // PRIORITY 2: Check coordinatorData (may contain stale data from previous login)
         const coordinatorData = localStorage.getItem('coordinatorData');
         if (coordinatorData) {
             const parsed = JSON.parse(coordinatorData);
             // Try multiple fields where coordinatorId might be stored
             const id = parsed.coordinatorId || parsed._id || parsed.id || parsed.username;
-            console.log('ðŸ“‹ Coordinator data from storage:', {
+            console.log('... Coordinator data from storage (PRIORITY 2 - may be stale):', {
                 coordinatorId: parsed.coordinatorId,
                 _id: parsed._id,
                 id: parsed.id,
@@ -39,12 +50,6 @@ const getCoordinatorId = () => {
                 resolved: id
             });
             return id;
-        }
-        // Fallback to separate localStorage key
-        const separateId = localStorage.getItem('coordinatorId') || localStorage.getItem('coordinatorUsername');
-        if (separateId) {
-            console.log('ðŸ“‹ Coordinator ID from separate key:', separateId);
-            return separateId;
         }
     } catch (e) {
         console.error('Error getting coordinator ID:', e);
@@ -82,19 +87,51 @@ const normalizeProfilePhotoUrl = (data) => {
         return source;
     }
 
-    // GridFS relative path /api/file/... - prepend backend base URL
-    if (source.startsWith('/api/file/')) {
-        const backendBase = API_BASE_URL.replace('/api', '');
-        return `${backendBase}${source}`;
-    }
-
     // Raw base64 string - add the data URL prefix
     if (isLikelyBase64(source)) {
         const mime = getMimeFromName(data?.profilePhotoName);
         return `data:${mime};base64,${source}`;
     }
 
-    return source;
+    // For GridFS relative paths, raw IDs, or other app-specific values,
+    // use the shared resolver with API_BASE_URL to ensure correct backend resolution
+    try {
+        return resolveProfileUrl(source, API_BASE_URL);
+    } catch (err) {
+        console.error('resolveProfileUrl failed, falling back to API_BASE_URL:', err);
+        // Fallback: preserve previous behavior for /api/file/*
+        if (String(source).startsWith('/api/file/')) {
+            const backendBase = API_BASE_URL.replace('/api', '');
+            return `${backendBase}${source}`;
+        }
+        return source;
+    }
+};
+
+const readStoredCoordinatorData = () => {
+    try {
+        return JSON.parse(localStorage.getItem('coordinatorData') || 'null');
+    } catch (_error) {
+        return null;
+    }
+};
+
+const getScopedCoordinatorPhotoCache = (data = null) => {
+    const photoKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', data);
+    const profileKey = getCoordinatorScopedKey('coordinatorProfileCache', data);
+
+    try {
+        const directPhoto = localStorage.getItem(photoKey);
+        if (directPhoto) return directPhoto;
+    } catch (_error) {}
+
+    try {
+        const cachedProfile = JSON.parse(localStorage.getItem(profileKey) || 'null');
+        const cachedUrl = cachedProfile?.profilePhoto || cachedProfile?.profilePicURL;
+        if (cachedUrl) return cachedUrl;
+    } catch (_error) {}
+
+    return null;
 };
 
 // Icons to match ManageStudentsProfile styles
@@ -470,21 +507,15 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         cabin: '',
     });
 
-    // Initialize profile photo instantly from the URL already cached by the sidebar / auth service.
-    // Falls back to extracting from coordinatorData if the separate key doesn't exist yet.
+    // Initialize profile photo from the current coordinator data first.
+    // Fall back to the shared cache only when the loaded data does not include a photo yet.
     const [profilePhoto, setProfilePhoto] = useState(() => {
-        try {
-            const cached = localStorage.getItem('cachedCoordinatorPicUrl');
-            if (cached) return cached;
-        } catch (_) {}
-        try {
-            const stored = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
-            if (stored) {
-                const url = normalizeProfilePhotoUrl(stored);
-                if (url) return url;
-            }
-        } catch (_) {}
-        return null;
+        const stored = readStoredCoordinatorData();
+        if (stored) {
+            const url = normalizeProfilePhotoUrl(stored) || getScopedCoordinatorPhotoCache(stored);
+            if (url) return url;
+        }
+        return getScopedCoordinatorPhotoCache();
     });
     const [profilePhotoBase64, setProfilePhotoBase64] = useState('');
     const [photoDetails, setPhotoDetails] = useState({ fileName: null, uploadDate: null });
@@ -504,6 +535,12 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
     const afterSaveNavRef = useRef(null);
+    const getCurrentPhotoCacheKeys = useCallback((source = null) => {
+        const photoKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', source);
+        const profileKey = getCoordinatorScopedKey('coordinatorProfileCache', source);
+        const profileTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', source);
+        return { photoKey, profileKey, profileTimeKey };
+    }, []);
 
     const getPhotoCompareValue = useCallback((value) => {
         if (!value) return '';
@@ -555,11 +592,11 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             const cachedData = localStorage.getItem('coordinatorData');
             if (cachedData) {
                 const data = JSON.parse(cachedData);
-                // Check any meaningful field
                 if (data.firstName || data.lastName || data.email || data.coordinatorId || data.username) {
-                    return false; // Don't show loading if cache exists
+                    return false;
                 }
             }
+            return !!getScopedCoordinatorPhotoCache();
         } catch (e) {
             // Ignore parse errors
         }
@@ -591,6 +628,17 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                         const hasFullProfileData = data.firstName || data.lastName || data.email;
                         // Cache is only considered complete if degree+branch are also present
                         const hasDegreeData = data.degree && data.branch;
+
+                        const photoUrl = normalizeProfilePhotoUrl(data) || getScopedCoordinatorPhotoCache(data);
+
+                        if (photoUrl) {
+                            setProfilePhoto(photoUrl);
+                            if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
+                        }
+
+                        if (photoUrl) {
+                            setOriginalPhotoValue(getPhotoCompareValue(photoUrl));
+                        }
 
                         if (hasFullProfileData && hasDegreeData) {
                             console.log('âœ… Loading coordinator profile from cache - INSTANT');
@@ -627,19 +675,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                             };
                             setOriginalFormData(initialFormData);
 
-                            // Profile photo: prefer the pre-resolved URL cached by the sidebar,
-                            // then fall back to extracting from coordinatorData.
-                            const cachedPicUrl = localStorage.getItem('cachedCoordinatorPicUrl');
-                            const photoUrl = cachedPicUrl || normalizeProfilePhotoUrl(data);
                             if (photoUrl) {
                                 console.log('ðŸ–¼ï¸ Profile photo from cache:', photoUrl.substring(0, 60));
-                                setProfilePhoto(photoUrl);
-                                // Only set base64 for data: URLs; leave File objects untouched
-                                if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
-                                // Ensure the separate key is populated for next time
-                                if (!cachedPicUrl) localStorage.setItem('cachedCoordinatorPicUrl', photoUrl);
                             }
-                            setOriginalPhotoValue(getPhotoCompareValue(photoUrl || ''));
 
                             console.log('âœ… Coordinator profile loaded instantly from cache');
                             setIsLoading(false);
@@ -664,14 +702,13 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 staffId: staffIdValue || prev.staffId,
                                 cabin: data.cabin || prev.cabin,
                             }));
+
+                            setIsLoading(false);
                         }
                     } catch (err) {
                         console.warn('Cache parse error:', err);
                     }
                 }
-
-                // Only show loading state if we need to fetch from server
-                setIsLoading(true);
 
                 // Get coordinator ID for server fetch
                 const coordinatorId = getCoordinatorId();
@@ -727,23 +764,31 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     };
                     setOriginalFormData(initialFormData);
 
-                    // Load profile photo â€” prefer pre-resolved sidebar cache key
-                    const cachedPicUrl = localStorage.getItem('cachedCoordinatorPicUrl');
-                    const photoUrl = cachedPicUrl || normalizeProfilePhotoUrl(data);
+                    const photoUrl = normalizeProfilePhotoUrl(data) || getScopedCoordinatorPhotoCache(data);
                     if (photoUrl) {
                         setProfilePhoto(photoUrl);
                         if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
-                        if (!cachedPicUrl) localStorage.setItem('cachedCoordinatorPicUrl', photoUrl);
                     }
                     setOriginalPhotoValue(getPhotoCompareValue(photoUrl || ''));
 
                     // Update localStorage cache
+                    const { photoKey, profileKey, profileTimeKey } = getCurrentPhotoCacheKeys(data);
                     const cacheData = {
                         ...data,
                         profilePicURL: photoUrl || data.profilePicURL || null,
                         timestamp: Date.now()
                     };
                     localStorage.setItem('coordinatorData', JSON.stringify(cacheData));
+                    if (photoUrl) {
+                        localStorage.setItem(photoKey, photoUrl);
+                        localStorage.setItem(profileKey, JSON.stringify({
+                            ...cacheData,
+                            profilePhoto: photoUrl,
+                            profilePicURL: photoUrl,
+                            hasProfilePhoto: true
+                        }));
+                        localStorage.setItem(profileTimeKey, Date.now().toString());
+                    }
                     console.log('âœ… Coordinator profile cached successfully');
                 }
             } catch (error) {
@@ -906,8 +951,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 });
 
                 if (data.profilePhoto) {
-                    setProfilePhoto(data.profilePhoto);
-                    setProfilePhotoBase64(data.profilePhoto);
+                    const normalizedUrl = normalizeProfilePhotoUrl({ profilePhoto: data.profilePhoto });
+                    setProfilePhoto(normalizedUrl);
+                    if (!normalizedUrl.startsWith('blob:')) setProfilePhotoBase64(normalizedUrl);
                 } else {
                     setProfilePhoto(null);
                     setProfilePhotoBase64('');
@@ -998,6 +1044,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 setTimeout(() => {
                     try {
                         const existingData = JSON.parse(localStorage.getItem('coordinatorData') || '{}');
+                        const { photoKey, profileKey, profileTimeKey } = getCurrentPhotoCacheKeys(existingData);
                         const updatedCacheData = {
                             ...existingData,
                             ...dataToSave,
@@ -1006,7 +1053,16 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                             timestamp: Date.now()
                         };
                         localStorage.setItem('coordinatorData', JSON.stringify(updatedCacheData));
-                        if (resolvedPhotoUrl) localStorage.setItem('cachedCoordinatorPicUrl', resolvedPhotoUrl);
+                        if (resolvedPhotoUrl) {
+                            localStorage.setItem(photoKey, resolvedPhotoUrl);
+                            localStorage.setItem(profileKey, JSON.stringify({
+                                ...updatedCacheData,
+                                profilePhoto: resolvedPhotoUrl,
+                                profilePicURL: resolvedPhotoUrl,
+                                hasProfilePhoto: true
+                            }));
+                            localStorage.setItem(profileTimeKey, Date.now().toString());
+                        }
 
                         const updatedProfileData = {
                             coordinatorId: coordinatorId,
@@ -1072,8 +1128,21 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         onViewChange(view);
     };
 
+    // Resolve and cache profile photo URL for reliable rendering
+    const resolvedProfilePhotoSrc = useMemo(() => {
+        if (!profilePhoto) return null;
+        
+        // If already a blob URL or data URL, use as-is
+        if (profilePhoto.startsWith('blob:') || profilePhoto.startsWith('data:')) {
+            return profilePhoto;
+        }
+        
+        // Otherwise normalize it
+        return normalizeProfilePhotoUrl({ profilePhoto });
+    }, [profilePhoto]);
+
     // Constructing classNames using the styles object
-    const photoClassNames = `${styles['co-profile-photo-preview']} ${profilePhoto ? `${styles['co-profile-photo-clickable']} ${styles['co-profile-photo-active']}` : ''}`;
+    const photoClassNames = `${styles['co-profile-photo-preview']} ${resolvedProfilePhotoSrc ? `${styles['co-profile-photo-clickable']} ${styles['co-profile-photo-active']}` : ''}`;
 
     // Show loading state only if no cache
     if (isLoading) {
@@ -1189,9 +1258,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 <h3 className={`${styles['co-profile-section-header']} ${styles['co-profile-photo-header']}`}>Profile Photo</h3>
                                 <div className={styles['co-profile-photo-header-line']}>
                                     <div className={styles['co-profile-photo-icon-container']}>
-                                        {profilePhoto ? (
+                                        {resolvedProfilePhotoSrc ? (
                                             <img
-                                                src={profilePhoto}
+                                                src={resolvedProfilePhotoSrc}
                                                 alt="Profile Preview"
                                                 className={photoClassNames}
                                                 onClick={handleImageClick}

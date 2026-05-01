@@ -95,6 +95,8 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
     res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin,Cache-Control,Pragma,Expires');
     res.header('Access-Control-Allow-Credentials', 'true');
+    // Permit Private Network preflight requests (for browsers restricting loopback access)
+    res.header('Access-Control-Allow-Private-Network', 'true');
     res.header('Access-Control-Expose-Headers', 'Content-Type,Authorization');
 
     if (req.method === 'OPTIONS') {
@@ -105,6 +107,11 @@ app.use((req, res, next) => {
 });
 
 try {
+    // Ensure Private Network header is present for all responses before cors middleware runs
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Private-Network', 'true');
+        next();
+    });
     app.use(cors({
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
@@ -7335,7 +7342,8 @@ app.post('/api/auth/admin-login', async (req, res) => {
             const Admin = require('./models/Admin');
             
             // OPTIMIZATION 1: Only select needed fields (reduces data transfer by 80%+)
-            const essentialFields = 'adminLoginID adminPassword firstName lastName emailId domainMailId phoneNumber department dob gender profilePhoto';
+            // Include collegeLogo so login responses can surface the college branding immediately
+            const essentialFields = 'adminLoginID adminPassword firstName lastName emailId domainMailId phoneNumber department dob gender profilePhoto collegeLogo';
             
             // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
             const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
@@ -7416,6 +7424,16 @@ app.post('/api/auth/admin-login', async (req, res) => {
         });
     }
 
+    // Small helper to normalize stored URLs to relative /api/file/<id> when possible
+    const normalizeUrl = (url) => {
+        if (!url) return null;
+        const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
+        if (match) return match[1];
+        // If value looks like a 24-char hex ObjectId, return as-is so frontend resolver can build full URL
+        if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
+        return url;
+    };
+
     // Prepare admin payload (exclude sensitive data)
     const adminPayload = {
         _id: adminDoc._id,
@@ -7429,7 +7447,9 @@ app.post('/api/auth/admin-login', async (req, res) => {
         domainMailId: adminDoc.domainMailId || '',
         phoneNumber: adminDoc.phoneNumber || '',
         department: adminDoc.department || '',
-        profilePhoto: adminDoc.profilePhoto || null
+        profilePhoto: adminDoc.profilePhoto || null,
+        // Provide normalized college logo reference for immediate display on login
+        collegeLogo: normalizeUrl(adminDoc.collegeLogo)
     };
 
     const token = jwt.sign({
@@ -7748,17 +7768,37 @@ app.post('/api/students/login', async (req, res) => {
         }, JWT_SECRET, { expiresIn: '6h' });
         
         const responseStudent = toLoginStudentPayload(student);
-        
+
         console.log('📤 DEBUG: Response student object:', {
             _id: responseStudent._id,
             regNo: responseStudent.regNo,
             hasId: !!responseStudent._id
         });
-        
+
+        // Try to fetch default college logo (admin1000) so the client can show branding immediately
+        let defaultCollegeLogo = null;
+        try {
+            const Admin = require('./models/Admin');
+            const adminBrand = await Admin.findOne({ adminLoginID: 'admin1000' })
+                .select('collegeLogo')
+                .lean()
+                .maxTimeMS(1500);
+
+            if (adminBrand && adminBrand.collegeLogo) {
+                const m = String(adminBrand.collegeLogo).match(/(\/api\/file\/[a-f0-9]{24})/);
+                if (m) defaultCollegeLogo = m[1];
+                else if (/^[a-f0-9]{24}$/.test(String(adminBrand.collegeLogo))) defaultCollegeLogo = String(adminBrand.collegeLogo);
+                else defaultCollegeLogo = adminBrand.collegeLogo;
+            }
+        } catch (err) {
+            console.log('Could not fetch default college logo during login:', err.message);
+        }
+
         res.json({ 
             message: 'Login successful', 
             token, 
-            student: responseStudent
+            student: responseStudent,
+            collegeLogo: defaultCollegeLogo
         });
 
     } catch (error) {

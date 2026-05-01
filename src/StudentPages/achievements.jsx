@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
+import { joinApiUrl } from '../utils/apiConfig';
 import CertificateUpload from "./PopupAchievements.jsx";
 import EditCertificate from "./popupEditAchievements.jsx";
 // FIX: Import the CSS Module into a 'styles' object
@@ -1296,7 +1297,7 @@ Only pending records can be edited.`);
           const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
-          const response = await fetch(`${API_BASE}/api/file/${certificateData.certificateId}`, {
+          const response = await fetch(joinApiUrl(`/file/${certificateData.certificateId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -1782,7 +1783,7 @@ Only pending records can be edited.`);
           const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
-          const response = await fetch(`${API_BASE}/api/file/${currentAchievement.certificateId}`, {
+          const response = await fetch(joinApiUrl(`/file/${currentAchievement.certificateId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})

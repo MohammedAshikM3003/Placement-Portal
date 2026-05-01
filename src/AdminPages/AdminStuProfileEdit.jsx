@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import AdCalendar from '../components/Calendar/Ad_Calendar';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { API_BASE_URL } from '../utils/apiConfig';
+import { joinApiUrl } from '../utils/apiConfig';
 import useAdminAuth from '../utils/useAdminAuth';
 
 import Navbar from '../components/Navbar/Adnavbar';
@@ -406,7 +407,7 @@ const fetchResumeBlobUrl = async (studentId) => {
     // Fallback to resume-builder PDF output when a stored resume is unavailable.
     const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
     const authToken = localStorage.getItem('authToken');
-    const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+    const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
         headers: {
             'Content-Type': 'application/json',
             ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
@@ -2708,7 +2709,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     <div className={styles.field}>
                                         <label>Date of Birth <RequiredStar /></label>
                                         <div className={styles.datepickerWrapper}>
-                                            <Ad_Calendar
+                                            <AdCalendar
                                                 value={dob}
                                                 onChange={(dateStr) => {
                                                     // dateStr is in "YYYY-MM-DD" format

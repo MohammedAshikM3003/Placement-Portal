@@ -60,7 +60,7 @@ const AdminLoadingPage = () => {
               timestamp: Date.now()
             };
             
-            localStorage.setItem('adminProfileCache', JSON.stringify(fullProfileCache));
+            try { saveProfileObjectCache('adminProfileCache', fullProfileCache); } catch (_) { localStorage.setItem('adminProfileCache', JSON.stringify(fullProfileCache)); }
             localStorage.setItem('adminProfileCacheTime', Date.now().toString());
             console.log('✅ Complete admin profile cached (personal info + college details):', {
               hasPersonalInfo: !!(adminProfile.firstName && adminProfile.lastName),
@@ -78,7 +78,7 @@ const AdminLoadingPage = () => {
               timestamp: Date.now(),
               isFirstTimeSetup: true
             };
-            localStorage.setItem('adminProfileCache', JSON.stringify(emptyCache));
+            try { saveProfileObjectCache('adminProfileCache', emptyCache); } catch (_) { localStorage.setItem('adminProfileCache', JSON.stringify(emptyCache)); }
             localStorage.setItem('adminProfileCacheTime', Date.now().toString());
           }
         } catch (profileError) {

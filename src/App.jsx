@@ -13,6 +13,7 @@ import GlobalDriveScheduledChecker from "./components/CertificateNotification/Gl
 import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
 import GlobalOfferLetterNotificationChecker from "./components/CertificateNotification/GlobalOfferLetterNotificationChecker.jsx";
 import GlobalCoordinatorCertificateUploadChecker from "./components/CertificateNotification/GlobalCoordinatorCertificateUploadChecker.jsx";
+import { runCacheMigration } from './utils/cacheMigration';
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
 import LandingPage from "./LandingPage.jsx";
@@ -43,6 +44,7 @@ const AdminHistoryTraining = lazy(() => import("./AdminPages/Admin_History_Train
 const AdminAddTraining = lazy(() => import("./AdminPages/Admin_Add_Training.jsx"));
 const AdminScheduleTraining = lazy(() => import("./AdminPages/Admin_Schedule_Training.jsx"));
 const AdminScheduleTrainingBatch = lazy(() => import("./AdminPages/Admin_schedule_training_batch.jsx"));
+const AdminTrainingsArchive = lazy(() => import("./AdminPages/Admin_Trainings_Archive.jsx"));
 const AdminPreferredTrainingButton = lazy(() => import("./AdminPages/Admin_Preferred_Training_button.jsx"));
 const AdminAttendanceStdinfo = lazy(() => import("./AdminPages/Admin_Attendance_Stdinfo.jsx"));
 const AdminTrainAttendanceStuinfo = lazy(() => import("./AdminPages/Admin_TrainAttendanceStuinfo.jsx"));
@@ -179,6 +181,9 @@ function AppContent() {
   };
 
   useEffect(() => {
+    // Run one-time cache migration to sanitize cached image URLs (avoid localhost entries)
+    try { runCacheMigration(); } catch (e) { /* ignore */ }
+
     const handleBlockedEvent = () => {
       navigate('/mainlogin', { replace: true });
     };
@@ -296,6 +301,7 @@ function AppContent() {
       <Route path="/admin-add-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAddTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-schedule-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-schedule-training-batch" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTrainingBatch onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-trainings-archive" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainingsArchive onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-preferred-training-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPreferredTrainingButton onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-attendance-stdinfo" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAttendanceStdinfo onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-train-attendance-stuinfo" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainAttendanceStuinfo onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

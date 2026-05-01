@@ -9,7 +9,7 @@ import Adminicon from '../assets/Adminicon.png';
 import resumeAnalysisService from '../services/resumeAnalysisService.jsx';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { DownloadProgressAlert, DownloadSuccessAlert, DownloadFailedAlert, PreviewProgressAlert, PreviewFailedAlert } from '../components/alerts/DownloadPreviewAlerts';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 
 const DEGREE_STOP_WORDS = new Set(['of', 'in', 'and', 'for', 'the', 'with', 'to', 'a', 'an', 'on', 'by', 'from']);
 
@@ -17,9 +17,9 @@ const DEGREE_STOP_WORDS = new Set(['of', 'in', 'and', 'for', 'the', 'with', 'to'
 const resolveProfileUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('data:') || url.startsWith('http') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/api/file/')) return `${API_BASE_URL}${url.replace('/api', '')}`;
-  if (url.startsWith('/file/')) return `${API_BASE_URL}${url}`;
-  if (/^[a-f0-9]{24}$/.test(url)) return `${API_BASE_URL}/file/${url}`;
+  if (url.startsWith('/api/file/')) return joinApiUrl(url);
+  if (url.startsWith('/file/')) return joinApiUrl(url);
+  if (/^[a-f0-9]{24}$/.test(url)) return joinApiUrl(`/file/${url}`);
   return url;
 };
 
@@ -408,7 +408,7 @@ function MainContent({ onViewChange }) {
                     try {
                       const authToken = localStorage.getItem('authToken');
                       
-                      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`, {
+                      const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
                         headers: {
                           'Content-Type': 'application/json',
                           ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -485,7 +485,7 @@ function MainContent({ onViewChange }) {
           if (studentId) {
             try {
               const authToken = localStorage.getItem('authToken');
-              const apiUrl = `${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`;
+              const apiUrl = joinApiUrl(`/resume-builder/pdf/${studentId}`);
               console.log('📡 API_BASE_URL:', API_BASE_URL);
               console.log('📡 Student ID:', studentId);
               console.log('📡 Auth Token exists:', !!authToken);
@@ -706,7 +706,7 @@ function MainContent({ onViewChange }) {
         
         console.log('📊 Fetching ATS analysis for studentId:', studentId);
         
-        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-analysis/${studentId}`, {
+        const response = await fetch(joinApiUrl(`/resume-builder/ats-analysis/${studentId}`), {
           headers: {
             'Content-Type': 'application/json',
             ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -791,7 +791,7 @@ function MainContent({ onViewChange }) {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-          const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-data/${studentId}`, {
+          const response = await fetch(joinApiUrl(`/resume-builder/ats-data/${studentId}`), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -833,7 +833,7 @@ function MainContent({ onViewChange }) {
           const controller2 = new AbortController();
           const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
           targetProgress = 40;
-          const atsResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-result/${studentId}`, {
+          const atsResponse = await fetch(joinApiUrl(`/resume-builder/ats-result/${studentId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -862,7 +862,7 @@ function MainContent({ onViewChange }) {
         setAtsProgressMessage('AI analyzing content quality...');
         try {
           targetProgress = 60;
-          const atsCheckResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-check`, {
+          const atsCheckResponse = await fetch(joinApiUrl('/resume-builder/ats-check'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -880,7 +880,7 @@ function MainContent({ onViewChange }) {
               setAtsProgressMessage('Analysis complete!');
 
               // Save analysis to MongoDB in background
-              fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/save-ats-analysis`, {
+              fetch(joinApiUrl('/resume-builder/save-ats-analysis'), {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -967,7 +967,7 @@ function MainContent({ onViewChange }) {
           const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
-          const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+          const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -1065,7 +1065,7 @@ function MainContent({ onViewChange }) {
           const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
-          const response = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+          const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
@@ -1199,7 +1199,7 @@ function MainContent({ onViewChange }) {
       if (studentId) {
         const authToken = localStorage.getItem('token');
         // Pre-fetch resume data from MongoDB and cache in localStorage
-        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/load/${studentId}`, {
+        const response = await fetch(joinApiUrl(`/resume-builder/load/${studentId}`), {
           headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }
         });
         if (response.ok) {

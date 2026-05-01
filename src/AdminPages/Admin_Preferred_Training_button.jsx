@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar';
 import AdSidebar from '../components/Sidebar/Adsidebar';
 import styles from './Admin_Preferred_Training_button.module.css';
-import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import AdCalendar from '../components/Calendar/Ad_Calendar';
 import mongoDBService from '../services/mongoDBService';
 
 const parseMultiValue = (value) => {
@@ -629,12 +629,12 @@ const AdminPreferredTrainingButton = ({ onLogout }) => {
             <div className={`${styles.formRow} ${styles.dynamicRow}`}>
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>Start Date</label>
-                <Ad_Calendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
+                <AdCalendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
               </div>
 
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>End Date</label>
-                <Ad_Calendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
+                <AdCalendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
               </div>
 
               <div className={styles.formGroup}>

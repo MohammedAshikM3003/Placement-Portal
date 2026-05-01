@@ -10,6 +10,8 @@ import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import mongoDBService from "../services/mongoDBService";
 import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
+import { API_BASE_URL } from '../utils/apiConfig';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // IMPORT THE MODULE CSS
@@ -129,7 +131,15 @@ function AdminDashboard({ onLogout, currentView, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0 });
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
-  const [collegeLogoUrl, setCollegeLogoUrl] = useState(() => getCachedCollegeLogo());
+  const [collegeLogoUrl, setCollegeLogoUrl] = useState(() => {
+    try {
+      const cached = getCachedCollegeLogo();
+      if (cached) return cached;
+      const raw = localStorage.getItem('collegeLogo');
+      if (raw) return resolveProfileUrl(raw, API_BASE_URL);
+    } catch (e) { /* ignore */ }
+    return null;
+  });
 
   // Change favicon to admin (green flipped) for admin dashboard
   useEffect(() => {

@@ -66,23 +66,43 @@ const memoryUpload = multer({
  */
 function uploadToGridFS(buffer, filename, contentType, metadata = {}) {
     return new Promise((resolve, reject) => {
-        const bucket = getBucket();
-        if (!bucket) return reject(new Error('GridFS not initialized'));
+        try {
+            const bucket = getBucket();
+            if (!bucket) {
+                console.error('❌ GridFS bucket is null - connection might not be ready');
+                return reject(new Error('GridFS not initialized'));
+            }
 
-        const readable = new Readable();
-        readable.push(buffer);
-        readable.push(null);
+            const readable = new Readable();
+            readable.push(buffer);
+            readable.push(null);
 
-        const uploadStream = bucket.openUploadStream(filename, {
-            contentType,
-            metadata
-        });
-
-        readable.pipe(uploadStream)
-            .on('error', reject)
-            .on('finish', () => {
-                resolve({ id: uploadStream.id.toString(), filename: uploadStream.filename });
+            const uploadStream = bucket.openUploadStream(filename, {
+                contentType,
+                metadata
             });
+            
+            // Add timeout to catch hanging streams
+            const timeout = setTimeout(() => {
+                uploadStream.destroy();
+                reject(new Error('GridFS upload timeout - stream stalled'));
+            }, 30000); // 30 second timeout
+
+            readable.pipe(uploadStream)
+                .on('error', (error) => {
+                    clearTimeout(timeout);
+                    console.error('❌ GridFS upload stream error:', error.message);
+                    reject(error);
+                })
+                .on('finish', () => {
+                    clearTimeout(timeout);
+                    console.log('✅ GridFS upload finished:', uploadStream.id);
+                    resolve({ id: uploadStream.id.toString(), filename: uploadStream.filename });
+                });
+        } catch (error) {
+            console.error('❌ GridFS upload exception:', error.message);
+            reject(error);
+        }
     });
 }
 
@@ -92,8 +112,12 @@ function uploadToGridFS(buffer, filename, contentType, metadata = {}) {
 // =====================================================
 router.get('/file/:id', async (req, res) => {
     try {
+        const { id } = req.params;
+        console.log(`📥 GridFS GET /file/${id} - connState=${mongoose.connection.readyState}, bucket=${!!gridFSBucket}`);
+        
         // Wait for connection if it's connecting
         if (mongoose.connection.readyState === 2) { // 2 = connecting
+            console.log('⏳ MongoDB connecting, waiting...');
             await new Promise((resolve) => {
                 const checkConnection = setInterval(() => {
                     if (mongoose.connection.readyState === 1) {
@@ -109,25 +133,38 @@ router.get('/file/:id', async (req, res) => {
             });
         }
 
-        const bucket = getBucket();
+        let bucket = getBucket();
         if (!bucket) {
             console.error('❌ GridFS bucket not available, connection state:', mongoose.connection.readyState);
-            return res.status(503).json({ error: 'GridFS not initialized. Please try again.' });
+            // Try to reinitialize if connection is ready
+            if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
+                console.log('🔄 Reinitializing GridFS bucket...');
+                gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+                bucket = gridFSBucket;
+            }
+            
+            if (!bucket) {
+                return res.status(503).json({ error: 'GridFS not initialized. Please try again.' });
+            }
         }
 
         let fileId;
         try {
-            fileId = new ObjectId(req.params.id);
+            fileId = new ObjectId(id);
         } catch (e) {
+            console.warn(`⚠️ Invalid file ID format: ${id}`);
             return res.status(400).json({ error: 'Invalid file ID' });
         }
 
+        console.log(`🔍 Looking for file: ${fileId}`);
         const files = await bucket.find({ _id: fileId }).toArray();
         if (!files || files.length === 0) {
-            return res.status(404).json({ error: 'File not found' });
+            console.warn(`❌ File not found in GridFS: ${fileId}`);
+            return res.status(404).json({ error: 'File not found', fileId: id });
         }
 
         const file = files[0];
+        console.log(`✅ File found: ${file.filename} (${file.length} bytes, ${file.contentType})`);
 
         // Generate ETag for caching
         const etag = `"${file._id.toString()}-${file.uploadDate.getTime()}"`;
@@ -155,13 +192,73 @@ router.get('/file/:id', async (req, res) => {
 
         const downloadStream = bucket.openDownloadStream(fileId);
         downloadStream.on('error', (err) => {
-            console.error('GridFS stream error:', err);
+            console.error(`❌ GridFS stream error for ${id}:`, err.message);
+            if (!res.headersSent) res.status(500).json({ error: 'Stream error', details: err.message });
+        });
+        downloadStream.on('end', () => {
+            console.log(`✅ File streamed successfully: ${file.filename}`);
+        });
+        downloadStream.pipe(res);
+    } catch (error) {
+        console.error('❌ GridFS fetch error:', error.message, error.stack);
+        if (!res.headersSent) res.status(500).json({ error: 'Failed to fetch file', details: error.message });
+    }
+});
+
+// =====================================================
+// PROXY: Stream image via proxy endpoint (alias to /api/file/:id)
+// This endpoint exists to provide an explicit proxy path that clients
+// or CDN rewrites can target. It forwards optional Authorization header
+// and streams the GridFS file with permissive CORS headers.
+// GET /api/proxy/image/:id
+// =====================================================
+router.get('/proxy/image/:id', async (req, res) => {
+    try {
+        // Allow quick response for OPTIONS preflight
+        if (req.method === 'OPTIONS') return res.status(200).end();
+
+        // Mirror a subset of CORS headers to be explicit for proxies
+        const origin = req.headers.origin || '*';
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Type,Content-Length,ETag');
+
+        // Reuse the existing logic for fetching the file
+        const bucket = getBucket();
+        if (!bucket) return res.status(503).json({ error: 'GridFS not initialized' });
+
+        let fileId;
+        try { fileId = new ObjectId(req.params.id); }
+        catch (e) { return res.status(400).json({ error: 'Invalid file ID' }); }
+
+        const files = await bucket.find({ _id: fileId }).toArray();
+        if (!files || files.length === 0) return res.status(404).json({ error: 'File not found' });
+
+        const file = files[0];
+
+        const etag = `"${file._id.toString()}-${file.uploadDate.getTime()}"`;
+        if (req.headers['if-none-match'] === etag) return res.status(304).end();
+
+        res.set('Content-Type', file.contentType || 'application/octet-stream');
+        res.set('Content-Length', file.length);
+        res.set('Cache-Control', 'public, max-age=604800, immutable');
+        res.set('ETag', etag);
+        res.set('Accept-Ranges', 'bytes');
+        res.set('X-Content-Type-Options', 'nosniff');
+
+        const isImage = (file.contentType || '').startsWith('image/');
+        if (isImage) res.set('Content-Disposition', `inline; filename="${file.filename}"`);
+
+        const downloadStream = bucket.openDownloadStream(fileId);
+        downloadStream.on('error', (err) => {
+            console.error('GridFS proxy stream error:', err);
             if (!res.headersSent) res.status(500).json({ error: 'Stream error' });
         });
         downloadStream.pipe(res);
     } catch (error) {
-        console.error('❌ GridFS fetch error:', error);
-        if (!res.headersSent) res.status(500).json({ error: 'Failed to fetch file' });
+        console.error('❌ GridFS proxy error:', error);
+        if (!res.headersSent) res.status(500).json({ error: 'Failed to proxy file' });
     }
 });
 
@@ -258,6 +355,51 @@ router.post('/upload/profile-image', memoryUpload.single('profileImage'), async 
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
         const { userId, userType } = req.body;
+        
+        // Debug: Log connection state and bucket availability
+        console.log(`📸 Profile upload: userId=${userId}, userType=${userType}, connState=${mongoose.connection.readyState}, bucket=${!!gridFSBucket}`);
+        
+        // Wait for connection if it's connecting
+        if (mongoose.connection.readyState === 2) {
+            console.log('⏳ MongoDB connecting, waiting...');
+            await new Promise((resolve, reject) => {
+                const maxWait = 5000;
+                const startTime = Date.now();
+                const checkConnection = setInterval(() => {
+                    if (mongoose.connection.readyState === 1) {
+                        clearInterval(checkConnection);
+                        resolve();
+                    }
+                    if (Date.now() - startTime > maxWait) {
+                        clearInterval(checkConnection);
+                        reject(new Error('Connection timeout'));
+                    }
+                }, 100);
+            });
+        }
+        
+        // Ensure connection is ready
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ 
+                error: 'MongoDB not connected', 
+                connState: mongoose.connection.readyState,
+                details: 'Please try again in a moment'
+            });
+        }
+        
+        // Ensure bucket exists - try to initialize if not present
+        let bucket = getBucket();
+        if (!bucket && mongoose.connection.db) {
+            console.log('🔄 GridFS bucket missing, reinitializing...');
+            gridFSBucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+            bucket = gridFSBucket;
+        }
+        
+        if (!bucket) {
+            console.error('❌ GridFS bucket not initialized - connection.db:', !!mongoose.connection.db);
+            return res.status(503).json({ error: 'GridFS bucket not initialized' });
+        }
+        
         const filename = `profile_${Date.now()}_${req.file.originalname}`;
         const metadata = { category: 'profile-image', uploadedBy: userId || 'unknown', userType: userType || 'unknown' };
         const uploaded = await uploadToGridFS(req.file.buffer, filename, req.file.mimetype, metadata);

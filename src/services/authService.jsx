@@ -1,4 +1,8 @@
 // MongoDB-based Authentication Service
+import profileUtils from '../components/Sidebar/profileUtils';
+const { canonicalStorePath } = profileUtils;
+import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
+
 class AuthService {
   constructor() {
     // Use environment variable or fallback based on environment
@@ -113,6 +117,35 @@ class AuthService {
     }
   }
 
+  // Always refresh college branding on authentication so dashboards reflect latest uploaded logo.
+  refreshCollegeLogoOnAuth() {
+    try {
+      import('./collegeImagesService.js')
+        .then(mod => {
+          if (mod && typeof mod.fetchCollegeImages === 'function') {
+            return mod.fetchCollegeImages('admin1000', { forceRefresh: true });
+          }
+          return null;
+        })
+        .then(images => {
+          const logo = images?.collegeLogo;
+          if (logo) {
+            localStorage.setItem('collegeLogo', logo);
+            try {
+              window.dispatchEvent(new StorageEvent('storage', { key: 'collegeLogo', newValue: logo }));
+            } catch (e) {
+              // Some environments may not support constructing StorageEvent directly.
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to refresh college logo during authentication:', err);
+        });
+    } catch (e) {
+      console.warn('Unable to trigger college logo refresh:', e);
+    }
+  }
+
   // Student login with registration number and date of birth
   async loginStudent(regNo, dob) {
     try {
@@ -216,6 +249,19 @@ class AuthService {
           driveCount: response.student.driveCount || 0
         };
         localStorage.setItem('studentData', JSON.stringify(fullStudent));
+        // If server provided collegeLogo during login, cache it for immediate dashboard display
+        if (response.collegeLogo) {
+          try {
+            const logoPath = canonicalStorePath(response.collegeLogo) || response.collegeLogo;
+            localStorage.setItem('collegeLogo', logoPath);
+            // Notify listeners (sidebar/dashboard) about the new logo
+            window.dispatchEvent(new StorageEvent('storage', { key: 'collegeLogo', newValue: logoPath }));
+          } catch (e) {
+            console.warn('Failed to cache collegeLogo from login response:', e);
+          }
+        }
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
         
         // Clear any cached data from fastDataService
         import('./fastDataService.jsx')
@@ -338,11 +384,13 @@ class AuthService {
                 
                 const profileCache = {
                   name: response.admin.fullName,
-                  profilePhoto: response.admin.profilePhoto || null,
+                  profilePhoto: canonicalStorePath(response.admin.profilePhoto) || null,
                   adminLoginID: response.admin.adminLoginID,
                   firstName: response.admin.firstName || '',
                   lastName: response.admin.lastName || '',
                   emailId: response.admin.emailId || '',
+                  // Store college logo if provided so UIs can render quickly
+                  collegeLogo: canonicalStorePath(response.admin.collegeLogo) || response.admin.collegeLogo || null,
                   timestamp: Date.now()
                 };
                 localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
@@ -354,6 +402,9 @@ class AuthService {
         }).catch(err => {
           console.error('❌ Failed to import loginDataPreloader:', err);
         });
+
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
 
         return {
           success: true,
@@ -390,9 +441,13 @@ class AuthService {
         'coordinatorToken',
         'coordinatorData',
         'isCoordinatorLoggedIn',
-        'coordinatorUsername'
+        'coordinatorUsername',
+          'coordinatorId',
+          'cachedCoordinatorPicUrl',
+          'coordinatorProfileCache',
+          'coordinatorProfileCacheTime'
       ];
-      coordinatorKeys.forEach(key => localStorage.removeItem(key));
+        clearCoordinatorScopedCache(coordinatorKeys);
 
       // Remove student session markers when switching roles
       localStorage.removeItem('authToken');
@@ -424,9 +479,24 @@ class AuthService {
           ...response.coordinator,
           coordinatorId: coordinatorIdValue,
           username: usernameValue,
+          profilePhoto: canonicalStorePath(response.coordinator.profilePhoto) || null,
           timestamp: Date.now()
         };
         localStorage.setItem('coordinatorData', JSON.stringify(coordinatorData));
+          if (coordinatorData.profilePhoto || coordinatorData.profilePicURL) {
+            const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', coordinatorData);
+            const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', coordinatorData);
+            const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', coordinatorData);
+            const resolvedProfilePhoto = coordinatorData.profilePhoto || coordinatorData.profilePicURL || null;
+            localStorage.setItem(profileCacheKey, JSON.stringify({
+              ...coordinatorData,
+              profilePhoto: resolvedProfilePhoto,
+              profilePicURL: resolvedProfilePhoto,
+              hasProfilePhoto: true
+            }));
+            localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+            localStorage.setItem(photoCacheKey, resolvedProfilePhoto);
+          }
         console.log('✅ Coordinator profile data cached for instant loading');
 
         // 🚀 Fetch COMPLETE profile in background to ensure degree/branch/photo are fully populated
@@ -445,6 +515,20 @@ class AuthService {
                 timestamp: Date.now()
               };
               localStorage.setItem('coordinatorData', JSON.stringify(enriched));
+                if (enriched.profilePhoto || enriched.profilePicURL) {
+                  const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', enriched);
+                  const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', enriched);
+                  const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', enriched);
+                  const resolvedProfilePhoto = enriched.profilePhoto || enriched.profilePicURL || null;
+                  localStorage.setItem(profileCacheKey, JSON.stringify({
+                    ...enriched,
+                    profilePhoto: resolvedProfilePhoto,
+                    profilePicURL: resolvedProfilePhoto,
+                    hasProfilePhoto: true
+                  }));
+                  localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+                  localStorage.setItem(photoCacheKey, resolvedProfilePhoto);
+                }
               // Notify sidebar/profile via storage event
               window.dispatchEvent(new StorageEvent('storage', {
                 key: 'coordinatorData',
@@ -457,6 +541,9 @@ class AuthService {
             console.warn('⚠️ Background coordinator prefetch failed (non-critical):', prefetchError.message);
           }
         });
+
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
 
         return {
           success: true,

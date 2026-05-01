@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
+import { joinApiUrl } from '../utils/apiConfig';
 import styles from './ATSChecker.module.css';
 
 // ===== SCORE RING COMPONENT =====
@@ -196,7 +197,7 @@ function ATSCheckerContent({ onViewChange }) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
         
-        const response = await fetch(`${API_BASE}/api/resume-builder/ats-data/${studentId}`, {
+        const response = await fetch(joinApiUrl(`/resume-builder/ats-data/${studentId}`), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -275,7 +276,7 @@ function ATSCheckerContent({ onViewChange }) {
       console.log('💾 Suggestions:', analysisData.suggestions?.length || 0);
       console.log('💾 ========================================');
       
-      const response = await fetch(`${API_BASE}/api/resume-builder/save-ats-analysis`, {
+      const response = await fetch(joinApiUrl('/resume-builder/save-ats-analysis'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +347,7 @@ function ATSCheckerContent({ onViewChange }) {
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const studentId = studentData?._id || studentData?.id;
       const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE}/api/resume-builder/ats-check`, {
+      const response = await fetch(joinApiUrl('/resume-builder/ats-check'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -405,7 +406,7 @@ function ATSCheckerContent({ onViewChange }) {
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
-            const response = await fetch(`${API_BASE}/api/resume-builder/ats-result/${studentId}`, {
+            const response = await fetch(joinApiUrl(`/resume-builder/ats-result/${studentId}`), {
               headers: {
                 'Content-Type': 'application/json',
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),

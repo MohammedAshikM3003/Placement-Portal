@@ -4,15 +4,23 @@
  */
 
 import { API_BASE_URL } from '../utils/apiConfig';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 
 // Resolve GridFS paths (/api/file/xxx) to full backend URLs
 // Returns null for empty/non-string values so the UI never renders broken <img> tags
 const resolveUrl = (val) => {
   if (!val || val === '' || typeof val !== 'string') return null;
-  if (val.startsWith('data:') || val.startsWith('http')) return val;
-  if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
-  if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
-  return val;
+  // Prefer the shared resolver which handles ids, /api/file/* and runtime base fallback
+  try {
+    const resolved = resolveProfileUrl(val, API_BASE_URL) || null;
+    return resolved;
+  } catch (e) {
+    // Fallback to simple handling
+    if (val.startsWith('data:') || val.startsWith('http')) return val;
+    if (val.startsWith('/api/file/')) return `${API_BASE_URL}${val.replace('/api', '')}`;
+    if (/^[a-f0-9]{24}$/.test(val)) return `${API_BASE_URL}/file/${val}`;
+    return val;
+  }
 };
 
 const CACHE_KEY = 'collegeImagesCache';
@@ -29,7 +37,18 @@ export const getCachedCollegeLogo = () => {
     const cachedData = localStorage.getItem(CACHE_KEY);
     if (cachedData) {
       const parsed = JSON.parse(cachedData);
-      return parsed.collegeLogo || null;
+      const raw = parsed.collegeLogo || null;
+      if (!raw) return null;
+      // Sanitize any localhost entries and re-resolve at runtime
+      try {
+        const sanitized = (function sanitize(v){
+          try { const u = new URL(v, window.location.origin); if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return u.pathname + u.search + u.hash; } catch(e){}
+          return v;
+        })(raw);
+        return resolveProfileUrl(sanitized, API_BASE_URL);
+      } catch (e) {
+        return raw;
+      }
     }
   } catch (e) { /* ignore */ }
   return null;
@@ -46,7 +65,15 @@ export const getCachedCollegeImages = () => {
     if (cachedData && timestamp) {
       const age = Date.now() - parseInt(timestamp, 10);
       if (age < CACHE_DURATION) {
-        return JSON.parse(cachedData);
+        const parsed = JSON.parse(cachedData);
+        // Re-resolve any cached URLs to avoid pointing at localhost
+        const safe = {
+          collegeLogo: parsed.collegeLogo ? resolveProfileUrl((function(v){ try { const u=new URL(v, window.location.origin); if (u.hostname==='localhost'||u.hostname==='127.0.0.1') return u.pathname+u.search+u.hash; } catch(e){} return v; })(parsed.collegeLogo), API_BASE_URL) : null,
+          collegeBanner: parsed.collegeBanner ? resolveProfileUrl((function(v){ try { const u=new URL(v, window.location.origin); if (u.hostname==='localhost'||u.hostname==='127.0.0.1') return u.pathname+u.search+u.hash; } catch(e){} return v; })(parsed.collegeBanner), API_BASE_URL) : null,
+          naacCertificate: parsed.naacCertificate ? resolveProfileUrl((function(v){ try { const u=new URL(v, window.location.origin); if (u.hostname==='localhost'||u.hostname==='127.0.0.1') return u.pathname+u.search+u.hash; } catch(e){} return v; })(parsed.naacCertificate), API_BASE_URL) : null,
+          nbaCertificate: parsed.nbaCertificate ? resolveProfileUrl((function(v){ try { const u=new URL(v, window.location.origin); if (u.hostname==='localhost'||u.hostname==='127.0.0.1') return u.pathname+u.search+u.hash; } catch(e){} return v; })(parsed.nbaCertificate), API_BASE_URL) : null,
+        };
+        return safe;
       }
     }
   } catch (e) { /* ignore */ }
@@ -56,15 +83,27 @@ export const getCachedCollegeImages = () => {
 /**
  * Fetch college images from the admin profile
  * @param {string} adminLoginID - Admin login ID (default: 'admin1000')
+ * @param {{ forceRefresh?: boolean }} options - Force bypass cache when true
  * @returns {Promise<object>} - Object containing college images
  */
-export const fetchCollegeImages = async (adminLoginID = 'admin1000') => {
+export const fetchCollegeImages = async (adminLoginID = 'admin1000', options = {}) => {
   try {
-    // Check cache first
-    const cachedImages = getCachedImages();
-    if (cachedImages) {
+    const forceRefresh = Boolean(options?.forceRefresh);
+
+    // Check cache first unless force refresh is requested (e.g. immediately after login)
+    const cachedImages = forceRefresh ? null : getCachedImages();
+    if (!forceRefresh && cachedImages?.collegeLogo) {
       console.log('✅ Using cached college images');
       return cachedImages;
+    }
+
+    if (forceRefresh) {
+      console.log('🔄 Force-refreshing college images (bypassing cache)');
+      clearCache();
+    }
+
+    if (!forceRefresh && cachedImages && !cachedImages.collegeLogo) {
+      console.log('⚠️ Cached college images present but collegeLogo is missing, fetching fresh data');
     }
 
     const authToken = localStorage.getItem('authToken');
@@ -139,7 +178,13 @@ const getCachedImages = () => {
       return null;
     }
 
-    return JSON.parse(cachedData);
+    const parsed = JSON.parse(cachedData);
+    return {
+      collegeLogo: parsed.collegeLogo ? resolveUrl(parsed.collegeLogo) : null,
+      collegeBanner: parsed.collegeBanner ? resolveUrl(parsed.collegeBanner) : null,
+      naacCertificate: parsed.naacCertificate ? resolveUrl(parsed.naacCertificate) : null,
+      nbaCertificate: parsed.nbaCertificate ? resolveUrl(parsed.nbaCertificate) : null,
+    };
   } catch (error) {
     console.error('⚠️ Error reading cache:', error);
     return null;
@@ -163,6 +208,11 @@ const cacheImages = (images) => {
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
     localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
     console.log('✅ College images cached successfully');
+    // Notify UI that college images have been updated so dashboards can refresh immediately
+    try {
+      window.dispatchEvent(new CustomEvent('collegeImagesUpdated', { detail: { timestamp: Date.now() } }));
+      localStorage.setItem('collegeImagesUpdatedSignal', Date.now().toString());
+    } catch (e) { /* ignore */ }
   } catch (error) {
     // If full cache is too big, try just the logo
     try {

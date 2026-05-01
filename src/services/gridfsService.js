@@ -266,10 +266,12 @@ class GridFSService {
     if (value.startsWith('data:')) return value;
     // Already a full http(s) URL
     if (value.startsWith('http')) return value;
+    // Determine runtime backend base (fallback to window.location.origin if baseURL is not set or seems wrong)
+    const runtimeBase = (this.baseURL && this.baseURL.replace(/\/api\/?$/, '')) || (typeof window !== 'undefined' ? window.location.origin : '');
     // GridFS path like /api/file/abc123 - baseURL already has /api
-    if (value.startsWith('/api/file/')) return `${this.baseURL}${value.replace('/api', '')}`;
+    if (value.startsWith('/api/file/')) return `${runtimeBase}${value.replace('/api', '')}`;
     // Raw ObjectId string — build URL
-    if (/^[a-f0-9]{24}$/.test(value)) return `${this.baseURL}/file/${value}`;
+    if (/^[a-f0-9]{24}$/.test(value)) return `${runtimeBase}/file/${value}`;
     // Anything else (could be a relative path or empty)
     return value;
   }

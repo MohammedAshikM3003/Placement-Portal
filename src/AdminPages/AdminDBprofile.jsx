@@ -9,6 +9,7 @@ import Sidebar from '../components/Sidebar/Adsidebar.js';
 import styles from './AdminDBprofile.module.css';
 import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts.js';
 import gridfsService from '../services/gridfsService';
+import { joinApiUrl } from '../utils/apiConfig';
 
 import Adminicons from '../assets/AdmingreenCapicon.svg';
 
@@ -846,7 +847,7 @@ function AdminAdProfile({ onLogout, onViewChange }) {
                         try {
                             const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
                             const authToken = localStorage.getItem('authToken');
-                            const pdfResponse = await fetch(`${API_BASE}/api/resume-builder/pdf/${studentId}`, {
+                            const pdfResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
                                 headers: {
                                     'Content-Type': 'application/json',
                                     ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})

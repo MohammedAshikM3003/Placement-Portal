@@ -1,6 +1,9 @@
 // Login Data Preloader - Fetches and caches all necessary data during login
 import adminImageCacheService from './adminImageCacheService.jsx';
 import { API_BASE_URL } from '../utils/apiConfig';
+import { saveProfileObjectCache } from '../hooks/useProfileCache';
+import profileUtils from '../components/Sidebar/profileUtils';
+const { canonicalStorePath } = profileUtils;
 
 class LoginDataPreloader {
   constructor() {
@@ -138,7 +141,7 @@ class LoginDataPreloader {
             const profileCache = {
               adminLoginID: adminLoginID,
               name: adminData.fullName || 'Admin',
-              profilePhoto: adminData.profilePhoto || null,
+              profilePhoto: canonicalStorePath(adminData.profilePhoto) || null,
               firstName: fullProfile?.firstName || adminData.firstName || '',
               lastName: fullProfile?.lastName || adminData.lastName || '',
               emailId: fullProfile?.emailId || adminData.emailId || '',
@@ -149,16 +152,16 @@ class LoginDataPreloader {
               gender: fullProfile?.gender || '',
               domainMailId: fullProfile?.domainMailId || '',
               // Include college images
-              collegeBanner: fullProfile?.collegeBanner || null,
-              naacCertificate: fullProfile?.naacCertificate || null,
-              nbaCertificate: fullProfile?.nbaCertificate || null,
-              collegeLogo: fullProfile?.collegeLogo || null,
+              collegeBanner: canonicalStorePath(fullProfile?.collegeBanner) || null,
+              naacCertificate: canonicalStorePath(fullProfile?.naacCertificate) || null,
+              nbaCertificate: canonicalStorePath(fullProfile?.nbaCertificate) || null,
+              collegeLogo: canonicalStorePath(fullProfile?.collegeLogo) || null,
               timestamp: Date.now()
             };
             
             // Try to cache with college images first
             try {
-              localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+              try { saveProfileObjectCache('adminProfileCache', profileCache); } catch (_) { localStorage.setItem('adminProfileCache', JSON.stringify(profileCache)); }
               localStorage.setItem('adminProfileCacheTime', Date.now().toString());
               console.log('✅ Admin FULL profile cached (including DOB and College images)');
             } catch (quotaError) {
@@ -179,7 +182,7 @@ class LoginDataPreloader {
                 timestamp: Date.now()
               };
               try {
-                localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache));
+                try { saveProfileObjectCache('adminProfileCache', minimalCache); } catch (_) { localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache)); }
                 localStorage.setItem('adminProfileCacheTime', Date.now().toString());
                 console.log('✅ Admin profile cached without college images (quota limit)');
               } catch (fallbackError) {
@@ -204,7 +207,7 @@ class LoginDataPreloader {
               timestamp: Date.now()
             };
             try {
-              localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+              try { saveProfileObjectCache('adminProfileCache', profileCache); } catch (_) { localStorage.setItem('adminProfileCache', JSON.stringify(profileCache)); }
               localStorage.setItem('adminProfileCacheTime', Date.now().toString());
             } catch (e) {
               console.error('❌ Failed to cache basic profile:', e);

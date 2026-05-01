@@ -4,7 +4,7 @@
 // ============================================
 
 // -------- STEP 1: ADD IMPORT (around line 16-18) --------
-import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
+import FieldUpdateBanner from './FieldUpdateBanner';
 
 
 // -------- STEP 2: ADD STATE VARIABLES (around line 358) --------

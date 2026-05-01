@@ -5,7 +5,7 @@ import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import Adminicon from '../assets/Adminicon.png';
 import mongoDBService from '../services/mongoDBService';
-import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import AdCalendar from '../components/Calendar/Ad_Calendar';
 import styles from './AdminCompanyprofilepopup.module.css';
 
 const emptyFormData = {
@@ -300,7 +300,7 @@ function AdminCompanyprofilePopup({ onLogout }) {
 
                             <div className={styles['Admin-cp-page-field']}>
                                 <label>Visit Date</label>
-                                <Ad_Calendar
+                                <AdCalendar
                                     value={formData.visitDate}
                                     onChange={handleVisitDateChange}
                                 />

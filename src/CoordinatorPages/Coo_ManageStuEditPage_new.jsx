@@ -3,11 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
-import Coo_Calendar from '../components/Calendar/Coo_Calendar';
+import CooCalendar from '../components/Calendar/Coo_Calendar';
 import styles from './Coo_ManageStuEditPage_new.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/Adminicon.png';
@@ -1686,7 +1686,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
             if (!resumeUrl) {
                 const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-                const fallbackResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`, {
+                const fallbackResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
                     headers: {
                         'Content-Type': 'application/json',
                         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
@@ -2605,7 +2605,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                     className={styles.readOnlyInput}
                                                 />
                                             ) : (
-                                                <Coo_Calendar
+                                                <CooCalendar
                                                     value={dob || ''}
                                                     onChange={(dateStr) => {
                                                         if (isSaving) return;

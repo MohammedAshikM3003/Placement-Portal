@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Cosidebar.module.css';
 import API_BASE_URL from '../../utils/apiConfig';
+import { resolveProfileUrl } from './profileUtils';
+import mongoDBService from '../../services/mongoDBService.jsx';
+import { getCoordinatorScopedKey } from '../../utils/coordinatorCacheKeys';
 
 // Assets
 import Adminicon from '../../assets/Adminicon.png';
-import mongoDBService from '../../services/mongoDBService.jsx';
-
-// Assets
 import CoDashboard from '../../assets/CoDashboard.svg';
 import ManageStudents from "../../assets/ManageStudents.svg";
 import CooTrainingicon from "../../assets/Coo_Trainingicon.svg";
@@ -21,146 +21,10 @@ import AdminPlacedStudentsicon from "../../assets/PlacedStudentIcon.svg";
 import AdminResourceAnalysisicon from "../../assets/Reportanalysisicon.svg";
 import AdminProfileicon from "../../assets/AdminProfileicon.svg";
 
-const COORDINATOR_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
-
-let cachedCoordinator = null;
-let coordinatorCacheTimestamp = null;
-let cachedCoordinatorPicUrl = null;
-let cachedCoordinatorBlobUrl = null;
-let cachedCoordinatorBlobSourceUrl = null;
-let coordinatorBlobFetchInProgress = null;
-
-const coordinateMimeFromName = (name) => {
-  if (!name || typeof name !== 'string') {
-    return 'image/jpeg';
-  }
-
-  const lower = name.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.bmp')) return 'image/bmp';
-  return 'image/jpeg';
-};
-
-const isLikelyBase64 = (value) => {
-  if (!value || typeof value !== 'string') return false;
-  if (value.startsWith('data:') || value.startsWith('http') || value.startsWith('blob:')) {
-    return false;
-  }
-  const cleaned = value.replace(/\s+/g, '');
-  // Basic heuristic: only base64 characters and reasonable length
-  return /^[A-Za-z0-9+/=]+$/.test(cleaned) && cleaned.length > 64;
-};
-
-const normalizeProfileUrl = (record = {}, fallback = {}) => {
-  const {
-    profilePicURL,
-    profilePhoto,
-    profilePhotoUrl,
-    photoURL,
-    profilePhotoName
-  } = record || {};
-
-  const source = profilePicURL || profilePhoto || profilePhotoUrl || photoURL;
-  if (!source) {
-    if (!fallback) return null;
-    const fallbackSource = fallback.profilePicURL || fallback.profilePhoto || fallback.profilePhotoUrl || fallback.photoURL;
-    if (!fallbackSource) return null;
-    if (fallbackSource.startsWith('data:') || fallbackSource.startsWith('http') || fallbackSource.startsWith('blob:')) {
-      return fallbackSource;
-    }
-    if (fallbackSource.startsWith('/api/file/')) {
-      const backendBase = API_BASE_URL.replace('/api', '');
-      return `${backendBase}${fallbackSource}`;
-    }
-    const mime = coordinateMimeFromName(fallback.profilePhotoName);
-    return `data:${mime};base64,${fallbackSource}`;
-  }
-
-  if (source.startsWith('data:') || source.startsWith('http') || source.startsWith('blob:')) {
-    return source;
-  }
-
-  // GridFS relative path /api/file/... - prepend backend base URL
-  if (source.startsWith('/api/file/')) {
-    const backendBase = API_BASE_URL.replace('/api', '');
-    return `${backendBase}${source}`;
-  }
-
-  if (isLikelyBase64(source)) {
-    const mime = coordinateMimeFromName(profilePhotoName || fallback.profilePhotoName);
-    return `data:${mime};base64,${source}`;
-  }
-
-  return source;
-};
-
-const mergeCoordinatorData = (baseData, incomingData) => {
-  const merged = { ...(baseData || {}), ...(incomingData || {}) };
-  const resolvedPhoto = normalizeProfileUrl(incomingData, baseData);
-  if (resolvedPhoto) {
-    merged.profilePicURL = resolvedPhoto;
-  }
-  return merged;
-};
-
-const readCoordinatorDataFromStorage = () => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return null;
-  }
-
-  try {
-    const stored = window.localStorage.getItem('coordinatorData');
-    if (!stored) {
-      return null;
-    }
-    const parsed = JSON.parse(stored);
-    const merged = mergeCoordinatorData(null, parsed);
-
-    // Persist computed profilePicURL back to localStorage so it's available
-    // on future reads without re-computing (avoids needing a network fetch just for the URL)
-    if (merged.profilePicURL && merged.profilePicURL !== parsed.profilePicURL) {
-      try {
-        window.localStorage.setItem('coordinatorData', JSON.stringify({ ...parsed, profilePicURL: merged.profilePicURL }));
-      } catch (_) { /* non-critical */ }
-    }
-
-    return merged;
-  } catch (error) {
-    console.error('Failed to parse coordinatorData from storage:', error);
-    return null;
-  }
-};
-
-const fetchAndCacheCoordinatorBlob = async (url) => {
-  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl === url) return cachedCoordinatorBlobUrl;
-  if (cachedCoordinatorBlobUrl && cachedCoordinatorBlobSourceUrl !== url) {
-    URL.revokeObjectURL(cachedCoordinatorBlobUrl);
-    cachedCoordinatorBlobUrl = null;
-    cachedCoordinatorBlobSourceUrl = null;
-  }
-  if (coordinatorBlobFetchInProgress) return coordinatorBlobFetchInProgress;
-  coordinatorBlobFetchInProgress = (async () => {
-    try {
-      const response = await fetch(url, { mode: 'cors' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const blob = await response.blob();
-      if (blob.size > 0) {
-        cachedCoordinatorBlobUrl = URL.createObjectURL(blob);
-        cachedCoordinatorBlobSourceUrl = url;
-        return cachedCoordinatorBlobUrl;
-      }
-      return url;
-    } catch (e) {
-      return url;
-    } finally {
-      coordinatorBlobFetchInProgress = null;
-    }
-  })();
-  return coordinatorBlobFetchInProgress;
-};
+// Module-level cache (persists across component unmount/remount - PREVENTS FLICKERING!)
+let cachedCoordinatorProfile = null;
+let cachedCoordinatorTimestamp = null;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 const sidebarItems = [
   { icon: CoDashboard, text: 'Dashboard', view: 'dashboard' },
@@ -175,281 +39,213 @@ const sidebarItems = [
   { icon: AdminResourceAnalysisicon, text: 'Report Analysis', view: 'report-analysis' },
 ];
 
+// Normalize profile photo URL (resolve GridFS paths)
+const normalizeCoordinatorProfilePhoto = (value) => {
+  if (!value) return null;
+  const resolved = resolveProfileUrl(value, API_BASE_URL);
+  return resolved || null;
+};
+
+const getCoordinatorProfileCacheKeys = (source = null) => ({
+  profileCacheKey: getCoordinatorScopedKey('coordinatorProfileCache', source),
+  profileCacheTimeKey: getCoordinatorScopedKey('coordinatorProfileCacheTime', source),
+  photoCacheKey: getCoordinatorScopedKey('cachedCoordinatorPicUrl', source)
+});
+
 const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
   const { logout: authLogout } = useAuth();
   const navigate = useNavigate();
-  const hasFetchedRef = useRef(false);
+  const hasFetchedRef = useRef(false); // Prevent duplicate fetches
 
-  const [coordinatorData, setCoordinatorData] = useState(() => {
-    if (
-      cachedCoordinator &&
-      coordinatorCacheTimestamp &&
-      Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION
-    ) {
-      // Refresh timestamp on each mount so 5-min TTL resets on navigation
-      coordinatorCacheTimestamp = Date.now();
-      return cachedCoordinator;
+  // State for coordinator profile data - initialize from MODULE-LEVEL cache first (INSTANT!)
+  const [coordinatorProfile, setCoordinatorProfile] = useState(() => {
+    // PRIORITY 1: Check module-level cache (fastest - already in memory)
+    if (cachedCoordinatorProfile && cachedCoordinatorTimestamp && (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)) {
+      console.log('⚡ Coordinator Sidebar: Loaded from memory cache (instant - NO FLICKERING)');
+      return cachedCoordinatorProfile;
     }
 
-    const storedData = readCoordinatorDataFromStorage();
-    if (storedData) {
-      cachedCoordinator = storedData;
-      coordinatorCacheTimestamp = Date.now();
-      return storedData;
+    // PRIORITY 2: Check localStorage cache
+    const cachedProfile = localStorage.getItem(getCoordinatorProfileCacheKeys().profileCacheKey);
+    if (cachedProfile) {
+      try {
+        const data = JSON.parse(cachedProfile);
+        if (data.name) {
+          // Normalize profile photo
+          if (data.profilePhoto) {
+            data.profilePhoto = normalizeCoordinatorProfilePhoto(data.profilePhoto);
+          }
+          cachedCoordinatorProfile = data;
+          cachedCoordinatorTimestamp = Date.now();
+          console.log('⚡ Coordinator Sidebar: Loaded from localStorage');
+          return data;
+        }
+      } catch (error) {
+        console.error('Error parsing cached profile:', error);
+      }
     }
 
-    return null;
+    return {
+      name: 'Coordinator',
+      profilePhoto: null
+    };
   });
+
+  // Image handling states
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
 
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState(() => {
-    // P0: blob URL (instant, in-memory)
-    if (cachedCoordinatorBlobUrl) return cachedCoordinatorBlobUrl;
-    // P1: module-level URL cache
-    if (cachedCoordinatorPicUrl) return cachedCoordinatorPicUrl;
-    // P2: separate localStorage key
+  // Function to fetch coordinator profile data
+  const fetchCoordinatorProfile = async () => {
     try {
-      const cached = localStorage.getItem('cachedCoordinatorPicUrl');
-      if (cached) { cachedCoordinatorPicUrl = cached; return cached; }
-    } catch (_) {}
-    // P3: from cached coordinator data (module-level)
-    if (cachedCoordinator) {
-      const url = normalizeProfileUrl(cachedCoordinator);
-      if (url) { cachedCoordinatorPicUrl = url; return url; }
-    }
-    // P4: from localStorage coordinatorData
-    try {
-      const stored = JSON.parse(localStorage.getItem('coordinatorData') || 'null');
-      if (stored) {
-        const url = normalizeProfileUrl(stored);
-        if (url) {
-          cachedCoordinatorPicUrl = url;
-          localStorage.setItem('cachedCoordinatorPicUrl', url);
-          return url;
-        }
-      }
-    } catch (_) {}
-    return null;
-  });
-
-  const coordinatorUsername = useMemo(() => {
-    if (coordinatorData?.firstName || coordinatorData?.lastName) {
-      return `${coordinatorData.firstName || ''} ${coordinatorData.lastName || ''}`.trim() || (coordinatorData.username || 'Coordinator');
-    }
-    return coordinatorData?.username || localStorage.getItem('coordinatorUsername') || coordinatorData?.coordinatorId || 'Coordinator';
-  }, [coordinatorData]);
-
-  useEffect(() => {
-    const fetchCoordinatorProfile = async () => {
-      // Skip if already fetched in this lifecycle and cache is still valid
-      if (
-        hasFetchedRef.current &&
-        cachedCoordinator &&
-        coordinatorCacheTimestamp &&
-        (Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION)
-      ) {
+      const coordinatorId = localStorage.getItem('coordinatorId') || localStorage.getItem('coordinatorUsername');
+      if (!coordinatorId) {
+        console.warn('⚠️ No coordinator ID found');
         return;
       }
 
-      const stored = localStorage.getItem('coordinatorData');
-      if (!stored) {
-        return;
-      }
+      const authToken = localStorage.getItem('authToken');
+      const response = await mongoDBService.getCoordinatorById(coordinatorId);
+      const data = response?.coordinator || response;
 
-      let parsed = null;
-      try {
-        parsed = JSON.parse(stored);
+      if (data) {
+        const fullName = (data.firstName || data.lastName)
+          ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+          : 'Coordinator';
 
-        const coordinatorId = parsed?.coordinatorId || parsed?._id || parsed?.id;
+        let profilePhotoUrl = normalizeCoordinatorProfilePhoto(data.profilePhoto || data.profilePicURL);
 
-        if (!coordinatorId) {
-          const normalized = mergeCoordinatorData(null, parsed);
-          setCoordinatorData(normalized);
-          cachedCoordinator = normalized;
-          coordinatorCacheTimestamp = Date.now();
-          hasFetchedRef.current = true;
-          return;
-        }
+        const profileData = {
+          name: fullName,
+          profilePhoto: profilePhotoUrl || null
+        };
+        const { profileCacheKey, profileCacheTimeKey, photoCacheKey } = getCoordinatorProfileCacheKeys(data);
 
-        // Skip network fetch if module-level cache is fresh and has coordinator identity.
-        if (
-          cachedCoordinator &&
-          coordinatorCacheTimestamp &&
-          (Date.now() - coordinatorCacheTimestamp < COORDINATOR_CACHE_DURATION) &&
-          (cachedCoordinator?.coordinatorId || cachedCoordinator?.username)
-        ) {
-          setCoordinatorData(cachedCoordinator);
-          hasFetchedRef.current = true;
-          return;
-        }
+        // Update module-level cache AND state
+        cachedCoordinatorProfile = profileData;
+        cachedCoordinatorTimestamp = Date.now();
+        setCoordinatorProfile({ ...profileData });
+        setImageError(false);
 
-        const response = await mongoDBService.getCoordinatorById(coordinatorId);
-        const normalizedResponse = response?.coordinator || response;
-
-        if (normalizedResponse) {
-          const enriched = mergeCoordinatorData(parsed, {
-            ...normalizedResponse,
-            coordinatorId: normalizedResponse.coordinatorId || parsed?.coordinatorId || coordinatorId,
-            username: normalizedResponse.username || parsed?.username || parsed?.coordinatorId || coordinatorId
-          });
-
-          cachedCoordinator = enriched;
-          coordinatorCacheTimestamp = Date.now();
-          hasFetchedRef.current = true;
-          setCoordinatorData(enriched);
-
-          if (enriched.profilePicURL) {
-            setProfilePhotoUrl(enriched.profilePicURL);
-            cachedCoordinatorPicUrl = enriched.profilePicURL;
-            localStorage.setItem('cachedCoordinatorPicUrl', enriched.profilePicURL);
-          }
-
-          try {
-            localStorage.setItem('coordinatorData', JSON.stringify(enriched));
-          } catch (storageError) {
-            console.error('Failed to persist coordinator data:', storageError);
-          }
-
-          if (enriched.profilePicURL) {
-            const img = new Image();
-            img.onload = () => setImageKey(Date.now());
-            img.onerror = () => setImageError(true);
-            img.src = enriched.profilePicURL;
-          } else {
+        // Preload image if exists to ensure it's ready (using Image object - simple & proven)
+        if (profilePhotoUrl) {
+          const img = new Image();
+          img.onload = () => {
+            console.log('✓ Coordinator profile image preloaded successfully');
+            setImageKey(Date.now()); // Force image to re-render once loaded
             setImageError(false);
-          }
-        } else {
-          const fallbackData = mergeCoordinatorData(null, parsed);
-          setCoordinatorData(fallbackData);
-          cachedCoordinator = fallbackData;
-          coordinatorCacheTimestamp = Date.now();
-          setImageError(false);
+          };
+          img.onerror = () => {
+            console.warn('⚠️ Failed to load coordinator profile image');
+            setImageError(true);
+          };
+          img.src = profilePhotoUrl;
         }
-      } catch (error) {
-        console.error('Failed to fetch coordinator profile:', error);
-        if (parsed) {
-          setCoordinatorData(prev => prev || mergeCoordinatorData(null, parsed));
-        }
-      } finally {
-        // no spinner state to avoid flicker
-      }
-    };
 
+        // Cache to localStorage for persistence across sessions
+        localStorage.setItem(profileCacheKey, JSON.stringify(profileData));
+        localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+        if (profilePhotoUrl) {
+          localStorage.setItem(photoCacheKey, profilePhotoUrl);
+        }
+        console.log('✓ Coordinator sidebar profile updated:', fullName);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching coordinator profile:', error);
+    }
+  };
+
+  // Fetch coordinator profile on mount - ONLY if cache is expired or not fetched yet
+  useEffect(() => {
+    // PRIORITY 1: If we already have valid cached data and have fetched, skip
+    if (
+      hasFetchedRef.current &&
+      cachedCoordinatorProfile &&
+      cachedCoordinatorTimestamp &&
+      (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)
+    ) {
+      console.log('✅ Coordinator Sidebar: Already initialized with valid cache, skipping fetch');
+      return;
+    }
+
+    // PRIORITY 2: Check if cache is valid - if so, use it without fetching
+    if (
+      cachedCoordinatorProfile &&
+      cachedCoordinatorTimestamp &&
+      (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)
+    ) {
+      console.log('✅ Coordinator Sidebar: Using valid cache, skipping fetch');
+      hasFetchedRef.current = true;
+      // Only update state if different to prevent re-render
+      if (coordinatorProfile.name !== cachedCoordinatorProfile.name || coordinatorProfile.profilePhoto !== cachedCoordinatorProfile.profilePhoto) {
+        setCoordinatorProfile(cachedCoordinatorProfile);
+      }
+      return;
+    }
+
+    // Only fetch if we haven't fetched yet in this component lifecycle
+    if (hasFetchedRef.current) {
+      console.log('⏭️ Coordinator Sidebar: Already fetched in this lifecycle, skipping');
+      return;
+    }
+
+    console.log('🔄 Coordinator Sidebar: Cache expired or missing, fetching...');
+    hasFetchedRef.current = true;
     fetchCoordinatorProfile();
   }, []);
 
+  // Listen for profile update events (when coordinator saves their profile)
   useEffect(() => {
-    const resetCache = () => {
-      cachedCoordinator = null;
-      coordinatorCacheTimestamp = null;
+    const handleProfileUpdate = (event) => {
+      if (event.detail) {
+        const data = event.detail;
+        const fullName = (data.firstName || data.lastName)
+          ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+          : 'Coordinator';
+
+        let updatedPhoto = normalizeCoordinatorProfilePhoto(data.profilePhoto || data.profilePicURL);
+
+        const profileData = {
+          name: fullName,
+          profilePhoto: updatedPhoto
+        };
+        const { profileCacheKey, profileCacheTimeKey, photoCacheKey } = getCoordinatorProfileCacheKeys(data);
+
+        // Update module-level cache AND state
+        cachedCoordinatorProfile = profileData;
+        cachedCoordinatorTimestamp = Date.now();
+        setCoordinatorProfile(profileData);
+        setImageError(false);
+        setImageKey(Date.now()); // Force re-render
+
+        // Cache to localStorage
+        localStorage.setItem(profileCacheKey, JSON.stringify(profileData));
+        localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+        if (updatedPhoto) {
+          localStorage.setItem(photoCacheKey, updatedPhoto);
+        }
+        console.log('✓ Coordinator profile updated from event:', fullName);
+
+        // Preload image
+        if (updatedPhoto) {
+          const img = new Image();
+          img.onload = () => {
+            console.log('✓ Updated coordinator image preloaded');
+            setImageKey(Date.now());
+            setImageError(false);
+          };
+          img.onerror = () => {
+            console.warn('⚠️ Failed to load updated coordinator image');
+            setImageError(true);
+          };
+          img.src = updatedPhoto;
+        }
+      }
     };
 
-    const handleCoordinatorStorageChange = (event) => {
-      if (typeof window === 'undefined') {
-        return;
-      }
-
-      if (!event) {
-        return;
-      }
-
-      if (event.storageArea !== window.localStorage) {
-        return;
-      }
-
-      const relevantKeys = new Set([
-        'coordinatorData',
-        'coordinatorUsername',
-        'coordinatorToken',
-        'isCoordinatorLoggedIn'
-      ]);
-
-      if (event.key && !relevantKeys.has(event.key)) {
-        return;
-      }
-
-      if (event.key === 'coordinatorData') {
-        if (!event.newValue) {
-          resetCache();
-          setCoordinatorData(null);
-          setImageError(false);
-          return;
-        }
-
-        try {
-          const parsed = JSON.parse(event.newValue);
-          const normalized = mergeCoordinatorData(null, parsed);
-          cachedCoordinator = normalized;
-          coordinatorCacheTimestamp = Date.now();
-          setCoordinatorData(normalized);
-          setImageError(false);
-          setImageKey(Date.now());
-          if (normalized.profilePicURL) {
-            setProfilePhotoUrl(normalized.profilePicURL);
-            cachedCoordinatorPicUrl = normalized.profilePicURL;
-            localStorage.setItem('cachedCoordinatorPicUrl', normalized.profilePicURL);
-          }
-        } catch (error) {
-          console.error('Failed to parse coordinatorData from storage event:', error);
-        }
-        return;
-      }
-
-      if (event.key === null) {
-        resetCache();
-        setCoordinatorData(null);
-        setImageError(false);
-        return;
-      }
-
-      const storedData = readCoordinatorDataFromStorage();
-      if (!storedData) {
-        resetCache();
-        setCoordinatorData(null);
-        setImageError(false);
-        return;
-      }
-
-      cachedCoordinator = storedData;
-      coordinatorCacheTimestamp = Date.now();
-      setCoordinatorData(storedData);
-      setImageError(false);
-      setImageKey(Date.now());
-    };
-
-    window.addEventListener('storage', handleCoordinatorStorageChange);
+    window.addEventListener('coordinatorProfileUpdated', handleProfileUpdate);
     return () => {
-      window.removeEventListener('storage', handleCoordinatorStorageChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleCoordinatorUpdate = (event) => {
-      if (!event?.detail) return;
-      setCoordinatorData((prev) => {
-        const nextMerged = mergeCoordinatorData(prev, event.detail);
-        cachedCoordinator = nextMerged;
-        coordinatorCacheTimestamp = Date.now();
-        setImageError(false);
-        setImageKey(Date.now());
-        if (nextMerged.profilePicURL) {
-          setProfilePhotoUrl(nextMerged.profilePicURL);
-          cachedCoordinatorPicUrl = nextMerged.profilePicURL;
-          localStorage.setItem('cachedCoordinatorPicUrl', nextMerged.profilePicURL);
-        }
-        try {
-          localStorage.setItem('coordinatorData', JSON.stringify(nextMerged));
-        } catch (storageError) {
-          console.error('Failed to persist coordinator data update:', storageError);
-        }
-        return nextMerged;
-      });
-    };
-
-    window.addEventListener('coordinatorProfileUpdated', handleCoordinatorUpdate);
-    return () => {
-      window.removeEventListener('coordinatorProfileUpdated', handleCoordinatorUpdate);
+      window.removeEventListener('coordinatorProfileUpdated', handleProfileUpdate);
     };
   }, []);
 
@@ -477,10 +273,10 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
     <div className={sidebarClasses}>
       <div className={styles.userInfo}>
         <div className={styles.userDetails}>
-          {profilePhotoUrl && !imageError ? (
+          {coordinatorProfile?.profilePhoto && !imageError ? (
             <img
-              key={`${profilePhotoUrl}_${coordinatorData?.coordinatorId || ''}_${imageKey}`}
-              src={profilePhotoUrl}
+              key={imageKey}
+              src={coordinatorProfile.profilePhoto}
               alt="Coordinator"
               className={styles.coordinatorPhoto}
               onError={() => setImageError(true)}
@@ -494,7 +290,7 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
           )}
 
           <div className={styles.userText}>
-            <span>{coordinatorUsername}</span>
+            <span>{coordinatorProfile?.name || 'Coordinator'}</span>
           </div>
         </div>
       </div>
@@ -533,27 +329,23 @@ const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange }) => {
           localStorage.removeItem('coordinatorId');
           localStorage.removeItem('coordinatorUsername');
           localStorage.removeItem('isCoordinatorLoggedIn');
-          
-          // Clear legacy keys
           localStorage.removeItem('coordinatorData');
           localStorage.removeItem('coordinatorToken');
-          
-          // Clear cache
-          cachedCoordinator = null;
-          coordinatorCacheTimestamp = null;
-          cachedCoordinatorPicUrl = null;
-          if (cachedCoordinatorBlobUrl) {
-            URL.revokeObjectURL(cachedCoordinatorBlobUrl);
-            cachedCoordinatorBlobUrl = null;
-            cachedCoordinatorBlobSourceUrl = null;
-          }
-          localStorage.removeItem('cachedCoordinatorPicUrl');
-          
+          Object.keys(localStorage).forEach((key) => {
+            if (key === 'coordinatorProfileCache' || key.startsWith('coordinatorProfileCache_') || key === 'cachedCoordinatorPicUrl' || key.startsWith('cachedCoordinatorPicUrl_') || key === 'coordinatorProfileCacheTime' || key.startsWith('coordinatorProfileCacheTime_')) {
+              localStorage.removeItem(key);
+            }
+          });
+
+          // Clear module-level cache
+          cachedCoordinatorProfile = null;
+          cachedCoordinatorTimestamp = null;
+
           // Call AuthContext logout
           if (authLogout) {
             await authLogout();
           }
-          
+
           // Navigate to landing page
           navigate('/');
         }}>

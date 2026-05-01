@@ -1174,13 +1174,6 @@ class MongoDBService {
     });
   }
 
-  async submitAttendance(attendanceData) {
-    return await this.apiCall('/attendance/submit', {
-      method: 'POST',
-      body: JSON.stringify(attendanceData)
-    });
-  }
-
   // ============ USER AUTHENTICATION ============
   
   // ============ ADMIN OPERATIONS ============

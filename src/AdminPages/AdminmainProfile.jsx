@@ -5,9 +5,11 @@ import 'react-easy-crop/react-easy-crop.css';
 import '../components/alerts/AlertStyles.css';
 import useAdminAuth from '../utils/useAdminAuth';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
-import Ad_Calendar from '../components/Calendar/Ad_Calendar.jsx';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 import { API_BASE_URL } from '../utils/apiConfig';
 import gridfsService from '../services/gridfsService';
+import { saveProfileObjectCache } from '../hooks/useProfileCache';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 // Assuming these paths are correct for your existing files
 import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
@@ -260,18 +262,8 @@ const ImagePreviewModal = ({ src, isOpen, onClose, title = 'Preview Image', alt 
         setDownloadPopupState('progress');
 
         try {
-            let resolvedUrl = src;
-            const backendBaseUrl = API_BASE_URL.replace('/api', '');
-
-            if (/^[a-f0-9]{24}$/i.test(resolvedUrl)) {
-                resolvedUrl = `${backendBaseUrl}/file/${resolvedUrl}`;
-            } else if (resolvedUrl.startsWith('/api/file/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl.replace('/api', '')}`;
-            } else if (resolvedUrl.startsWith('/file/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
-            } else if (resolvedUrl.startsWith('/')) {
-                resolvedUrl = `${backendBaseUrl}${resolvedUrl}`;
-            }
+            // Resolve profile URL using shared resolver (handles ids, /api/file/* and runtime base fallback)
+            let resolvedUrl = resolveProfileUrl(src, API_BASE_URL);
 
             let hrefForDownload = resolvedUrl;
             let revokeObjectUrl = null;
@@ -786,6 +778,22 @@ const normalizeValue = (value) => {
     return String(value).trim();
 };
 
+// Sanitize cached URLs: if they point to localhost/loopback, strip host so
+// `resolveProfileUrl(..., API_BASE_URL)` can rebuild a proper production URL.
+const sanitizeCachedUrl = (value) => {
+    if (!value || typeof value !== 'string') return value;
+    try {
+        const parsed = new URL(value, window.location.origin);
+        const hostname = parsed.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return parsed.pathname + parsed.search + parsed.hash;
+        }
+    } catch (e) {
+        // not a full URL - leave as-is
+    }
+    return value;
+};
+
 const EMPTY_PROFILE_SNAPSHOT = {
     firstName: '',
     lastName: '',
@@ -1056,6 +1064,11 @@ function Admainprofile() {
         } catch (e) {}
         return '';
     });
+    const collegeLogoDisplaySrc = useMemo(() => {
+        const rawLogo = collegeLogoBase64 || collegeLogo || '';
+        if (!rawLogo) return '';
+        return resolveProfileUrl(sanitizeCachedUrl(rawLogo), API_BASE_URL);
+    }, [collegeLogo, collegeLogoBase64]);
     const [bannerUploadSuccess, setBannerUploadSuccess] = useState(false);
     const [naacUploadSuccess, setNaacUploadSuccess] = useState(false);
     const [nbaUploadSuccess, setNbaUploadSuccess] = useState(false);
@@ -1222,33 +1235,38 @@ function Admainprofile() {
 
                             // Load profile photo from cache (resolve GridFS URLs for display)
                             if (profileData.profilePhoto) {
-                                const resolvedPhoto = gridfsService.resolveImageUrl(profileData.profilePhoto);
+                                const sanitized = sanitizeCachedUrl(profileData.profilePhoto);
+                                const resolvedPhoto = resolveProfileUrl(sanitized, API_BASE_URL);
                                 setProfilePhoto(resolvedPhoto);
                                 setProfilePhotoBase64(resolvedPhoto);
                             }
 
                             // Load college images from cache if available (resolve GridFS URLs)
                             if (profileData.collegeBanner) {
-                                const resolved = gridfsService.resolveImageUrl(profileData.collegeBanner);
+                                const sanitized = sanitizeCachedUrl(profileData.collegeBanner);
+                                const resolved = resolveProfileUrl(sanitized, API_BASE_URL);
                                 setCollegeBanner(resolved);
                                 setCollegeBannerBase64(resolved);
                                 setCollegeBannerName(normalizeJpegFilename(profileData.collegeBannerName, 'banner.jpg'));
                                 console.log('âœ… College banner loaded from cache');
                             }
                             if (profileData.naacCertificate) {
-                                const resolved = gridfsService.resolveImageUrl(profileData.naacCertificate);
+                                const sanitized = sanitizeCachedUrl(profileData.naacCertificate);
+                                const resolved = resolveProfileUrl(sanitized, API_BASE_URL);
                                 setNaacCertificate(resolved);
                                 setNaacCertificateBase64(resolved);
                                 console.log('âœ… NAAC certificate loaded from cache');
                             }
                             if (profileData.nbaCertificate) {
-                                const resolved = gridfsService.resolveImageUrl(profileData.nbaCertificate);
+                                const sanitized = sanitizeCachedUrl(profileData.nbaCertificate);
+                                const resolved = resolveProfileUrl(sanitized, API_BASE_URL);
                                 setNbaCertificate(resolved);
                                 setNbaCertificateBase64(resolved);
                                 console.log('âœ… NBA certificate loaded from cache');
                             }
                             if (profileData.collegeLogo) {
-                                const resolved = gridfsService.resolveImageUrl(profileData.collegeLogo);
+                                const sanitized = sanitizeCachedUrl(profileData.collegeLogo);
+                                const resolved = resolveProfileUrl(sanitized, API_BASE_URL);
                                 setCollegeLogo(resolved);
                                 setCollegeLogoBase64(resolved);
                                 setCollegeLogoName(normalizeJpegFilename(profileData.collegeLogoName, 'logo.jpg'));
@@ -1260,11 +1278,11 @@ function Admainprofile() {
                             console.log('ðŸ”„ Keeping spinners visible while fetching fresh data from server...');
                             savedDataRef.current = {
                                 ...profileData,
-                                profilePhoto: normalizeValue(profileData.profilePhoto ? gridfsService.resolveImageUrl(profileData.profilePhoto) : ''),
-                                collegeBanner: normalizeValue(profileData.collegeBanner ? gridfsService.resolveImageUrl(profileData.collegeBanner) : ''),
-                                naacCertificate: normalizeValue(profileData.naacCertificate ? gridfsService.resolveImageUrl(profileData.naacCertificate) : ''),
-                                nbaCertificate: normalizeValue(profileData.nbaCertificate ? gridfsService.resolveImageUrl(profileData.nbaCertificate) : ''),
-                                collegeLogo: normalizeValue(profileData.collegeLogo ? gridfsService.resolveImageUrl(profileData.collegeLogo) : ''),
+                                profilePhoto: normalizeValue(profileData.profilePhoto ? resolveProfileUrl(sanitizeCachedUrl(profileData.profilePhoto), API_BASE_URL) : ''),
+                                collegeBanner: normalizeValue(profileData.collegeBanner ? resolveProfileUrl(sanitizeCachedUrl(profileData.collegeBanner), API_BASE_URL) : ''),
+                                naacCertificate: normalizeValue(profileData.naacCertificate ? resolveProfileUrl(sanitizeCachedUrl(profileData.naacCertificate), API_BASE_URL) : ''),
+                                nbaCertificate: normalizeValue(profileData.nbaCertificate ? resolveProfileUrl(sanitizeCachedUrl(profileData.nbaCertificate), API_BASE_URL) : ''),
+                                collegeLogo: normalizeValue(profileData.collegeLogo ? resolveProfileUrl(sanitizeCachedUrl(profileData.collegeLogo), API_BASE_URL) : ''),
                                 newLoginId: '',
                                 confirmLoginId: '',
                                 currentPassword: '',
@@ -1454,31 +1472,31 @@ function Admainprofile() {
                         timestamp: Date.now()
                     };
                     try {
-                        localStorage.setItem('adminProfileCache', JSON.stringify(profileCacheData));
+                        saveProfileObjectCache('adminProfileCache', profileCacheData);
                         localStorage.setItem('adminProfileCacheTime', Date.now().toString());
                         console.log('âœ… Admin profile cached successfully (including college images)');
                     } catch (quotaError) {
                         console.warn('âš ï¸ Could not cache profile due to storage quota - trying without images:', quotaError);
                         // Fallback: Cache without college images if quota exceeded
-                        try {
-                            const minimalCache = {
-                                adminLoginID: data.adminLoginID,
-                                firstName: data.firstName,
-                                lastName: data.lastName,
-                                dob: data.dob,
-                                gender: data.gender,
-                                emailId: data.emailId,
-                                domainMailId: data.domainMailId,
-                                phoneNumber: data.phoneNumber,
-                                department: data.department,
-                                profilePhoto: profilePhotoUrl,
-                                timestamp: Date.now()
-                            };
-                            localStorage.setItem('adminProfileCache', JSON.stringify(minimalCache));
-                            console.log('âœ… Admin profile cached without college images (quota limit)');
-                        } catch (fallbackError) {
-                            console.warn('âš ï¸ Could not cache even minimal profile:', fallbackError);
-                        }
+                            try {
+                                const minimalCache = {
+                                    adminLoginID: data.adminLoginID,
+                                    firstName: data.firstName,
+                                    lastName: data.lastName,
+                                    dob: data.dob,
+                                    gender: data.gender,
+                                    emailId: data.emailId,
+                                    domainMailId: data.domainMailId,
+                                    phoneNumber: data.phoneNumber,
+                                    department: data.department,
+                                    profilePhoto: profilePhotoUrl,
+                                    timestamp: Date.now()
+                                };
+                                saveProfileObjectCache('adminProfileCache', minimalCache);
+                                console.log('âœ… Admin profile cached without college images (quota limit)');
+                            } catch (fallbackError) {
+                                console.warn('âš ï¸ Could not cache even minimal profile:', fallbackError);
+                            }
                     }
 
                     setDataLoaded(true);
@@ -2260,7 +2278,7 @@ function Admainprofile() {
                                         <div className={styles['Admin-main-profile-field']}>
                                             <label className={styles['Admin-main-profile-field-label']} htmlFor="dob">Date Of Birth</label>
                                             <div id="dob" className={styles['Admin-main-profile-date-wrapper']}>
-                                                <Ad_Calendar value={formData.dob} onChange={handleDobChange} />
+                                                <AdCalendar value={formData.dob} onChange={handleDobChange} />
                                             </div>
                                         </div>
 
@@ -2534,8 +2552,17 @@ function Admainprofile() {
                                     >
                                         {isLogoLoading ? (
                                             <CollegeImageLoader />
-                                        ) : collegeLogo ? (
-                                            <img src={collegeLogo} alt="College Logo" className={styles['Admin-main-profile-college-image']} />
+                                        ) : collegeLogoDisplaySrc ? (
+                                            <img
+                                                src={collegeLogoDisplaySrc}
+                                                alt="College Logo"
+                                                className={styles['Admin-main-profile-college-image']}
+                                                onError={(event) => {
+                                                    if (collegeLogoBase64 && event.currentTarget.src !== collegeLogoBase64) {
+                                                        event.currentTarget.src = resolveProfileUrl(sanitizeCachedUrl(collegeLogoBase64), API_BASE_URL);
+                                                    }
+                                                }}
+                                            />
                                         ) : (
                                             <div className={styles['Admin-main-profile-college-placeholder']}>No Logo</div>
                                         )}

@@ -7,20 +7,13 @@ import {
   stopCoordinatorBlockStatusMonitor
 } from '../utils/blockStatusChecker';
 import { BLOCKED_INFO_STORAGE_KEY } from '../constants/storageKeys';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
+import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
 
 // Import the clearSidebarCache function
 import { clearSidebarCache } from '../components/Sidebar/Sidebar';
-
-// Utility to resolve GridFS profile URLs to full backend URLs
-const resolveProfileUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('data:') || url.startsWith('http') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/api/file/')) return `${API_BASE_URL}${url.replace('/api', '')}`;
-  if (url.startsWith('/file/')) return `${API_BASE_URL}${url}`;
-  if (/^[a-f0-9]{24}$/.test(url)) return `${API_BASE_URL}/file/${url}`;
-  return url;
-};
+import profileUtils from '../components/Sidebar/profileUtils';
+const { resolveProfileUrl: resolveProfileUrlShared, canonicalStorePath } = profileUtils;
 
 // Initial state with loading flag
 const initialState = {
@@ -345,7 +338,7 @@ export const AuthProvider = ({ children }) => {
           const adminData = {
             ...loginResult.admin,
             adminLoginID: loginResult.admin.adminLoginID || trimmedIdentifier,
-            profilePhoto: loginResult.admin.profilePhoto || null,
+            profilePhoto: canonicalStorePath(loginResult.admin.profilePhoto) || null,
             _loginTimestamp: Date.now()
           };
           
@@ -407,8 +400,8 @@ export const AuthProvider = ({ children }) => {
             ...loginResult.coordinator,
             coordinatorId: loginResult.coordinator.coordinatorId || trimmedIdentifier,
             username: loginResult.coordinator.username || trimmedIdentifier,
-            profilePhoto: loginResult.coordinator.profilePhoto || null,
-            profilePicURL: loginResult.coordinator.profilePicURL || loginResult.coordinator.profilePhoto || null,
+            profilePhoto: canonicalStorePath(loginResult.coordinator.profilePhoto) || null,
+            profilePicURL: canonicalStorePath(loginResult.coordinator.profilePicURL || loginResult.coordinator.profilePhoto) || null,
             _loginTimestamp: Date.now()
           };
           
@@ -417,11 +410,13 @@ export const AuthProvider = ({ children }) => {
           
           // Store profile photo in cache
           if (coordinatorData.profilePhoto || coordinatorData.profilePicURL) {
-            localStorage.setItem('coordinatorProfileCache', JSON.stringify({
+            const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', coordinatorData);
+            const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', coordinatorData);
+            localStorage.setItem(profileCacheKey, JSON.stringify({
               ...coordinatorData,
               hasProfilePhoto: true
             }));
-            localStorage.setItem('coordinatorProfileCacheTime', Date.now().toString());
+            localStorage.setItem(profileCacheTimeKey, Date.now().toString());
           }
           
           console.log('📦 AuthContext: Coordinator data cached:', {
@@ -499,13 +494,13 @@ export const AuthProvider = ({ children }) => {
           _loginTimestamp: Date.now()
         };
         
-        // 📸 Resolve and cache the profile pic URL immediately
+        // 📸 Canonicalize and cache the profile pic path immediately (store canonical path, resolve at runtime)
         if (completeStudentData.profilePicURL) {
-          const resolvedProfileUrl = resolveProfileUrl(completeStudentData.profilePicURL);
-          completeStudentData.profilePicURL = resolvedProfileUrl;
-          // Cache the resolved URL for immediate sidebar access
-          localStorage.setItem('cachedProfilePicUrl', resolvedProfileUrl);
-          console.log('📸 AuthContext: Profile pic URL resolved and cached:', resolvedProfileUrl);
+          const canonical = canonicalStorePath(completeStudentData.profilePicURL);
+          completeStudentData.profilePicURL = resolveProfileUrlShared(canonical);
+          // Cache the canonical path for immediate sidebar access (avoid absolute dev URLs)
+          localStorage.setItem('cachedProfilePicUrl', canonical);
+          console.log('📸 AuthContext: Profile pic canonical path cached:', canonical);
         }
         
         // 4. ⚡ OPTIMIZED: Only fetch ESSENTIAL data (profile + attendance) during login
@@ -541,7 +536,7 @@ export const AuthProvider = ({ children }) => {
             try {
               console.log('📄 Fetching resume status...');
               const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-              const resumeResponse = await fetch(`${API_BASE}/api/resume-builder/pdf/${completeStudentData._id}`, {
+              const resumeResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${completeStudentData._id}`), {
                 headers: {
                   'Content-Type': 'application/json',
                   ...(loginResult.token ? { 'Authorization': `Bearer ${loginResult.token}` } : {})
@@ -591,7 +586,7 @@ export const AuthProvider = ({ children }) => {
             try {
               const ATS_API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
               console.log('📊 Fetching ATS analysis...');
-              const atsResponse = await fetch(`${ATS_API_BASE}/api/resume-builder/ats-analysis/${completeStudentData._id}`, {
+              const atsResponse = await fetch(joinApiUrl(`/resume-builder/ats-analysis/${completeStudentData._id}`), {
                 headers: {
                   'Content-Type': 'application/json',
                   ...(loginResult.token ? { 'Authorization': `Bearer ${loginResult.token}` } : {})
@@ -640,7 +635,8 @@ export const AuthProvider = ({ children }) => {
                     console.log('⚠️ Profile pic failed to preload, continuing...');
                     resolve();
                   };
-                  img.src = profilePicURL;
+                  const preloadUrl = resolveProfileUrlShared(profilePicURL);
+                  img.src = preloadUrl;
                 });
               } catch (imgErr) {
                 console.warn('⚠️ Profile pic preload error:', imgErr);
@@ -710,7 +706,7 @@ export const AuthProvider = ({ children }) => {
         'coordinatorUsername', 'coordinatorToken', 'coordinatorId',
         'isCoordinatorLoggedIn'
       ];
-      coordinatorKeysToRemove.forEach(key => localStorage.removeItem(key));
+      clearCoordinatorScopedCache(coordinatorKeysToRemove);
       
       // Clear Student localStorage keys
       const studentKeysToRemove = [

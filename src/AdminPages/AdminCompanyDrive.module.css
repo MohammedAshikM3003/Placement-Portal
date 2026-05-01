@@ -249,14 +249,15 @@
 /* Action Cards Section */
 .Admin-cd-action-cards-section {
     display: flex;
-    flex: 0 0 auto; /* Changed to prevent shrinking */
-    gap: 12px;
+    flex: 0 0 auto;
+    gap: 12px; /* match Company Profile spacing */
     flex-wrap: nowrap;
     margin-left: 0px;
+    align-items: stretch;
 }
 
 .Admin-cd-action-card {
-    flex: 0 0 140px;
+    flex: 0 0 140px; /* smaller action cards like Company Profile */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -271,7 +272,7 @@
 
 .Admin-cd-action-addcard {
     text-align: center;
-    width: 211px;
+    width: 211px; /* large add card matches profile */
     flex-shrink: 0; /* Prevent shrinking */
     padding: 5px 15px;
     background-color: #ffffff;
@@ -391,8 +392,10 @@
 .Admin-cd-bottom-card {
     background-color: #ffffff;
     border-radius: 15px;
-    padding: 8px 20px;
-    margin-left: 10px;
+    padding: 10px 25px;
+    /* align with Company Profile bottom card */
+    margin-left: 0;
+    width: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -1294,6 +1297,10 @@
     .Admin-cd-action-btn {
         padding: 10px 25px;
         font-size: 0.9rem;
+
+    .Admin-cd-action-btn {
+        margin-top: auto;
+    }
         min-width: 100px;
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import "react-datepicker/dist/react-datepicker.css";
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import '../components/alerts/AlertStyles.css';
 
 import Navbar from '../components/Navbar/Conavbar.js';
@@ -422,7 +422,7 @@ function Coo_ManageStudentView({ onLogout, onViewChange }) {
 
             if (!resumeUrl) {
                 const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-                const fallbackResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/pdf/${studentId}`, {
+                const fallbackResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
                     headers: {
                         'Content-Type': 'application/json',
                         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})

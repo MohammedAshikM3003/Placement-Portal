@@ -9,6 +9,8 @@ import certificateuploadicon from "../assets/UploadCertificatecardicon.svg";
 import StuTrainingicon from "../assets/StuTrainingicon.svg";
 import mongoDBService from '../services/mongoDBService';
 import { fetchCollegeImages, getCachedCollegeLogo } from '../services/collegeImagesService';
+import { API_BASE_URL } from '../utils/apiConfig';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { changeFavicon, FAVICON_TYPES } from '../utils/faviconUtils';
 // Import CSS Module
@@ -87,7 +89,15 @@ const AttendanceChart = ({ present, absent, isLoading }) => {
 
 export default function StudentDashboard({ onLogout, onViewChange }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(() => getCachedCollegeLogo());
+  const [collegeLogoUrl, setCollegeLogoUrl] = React.useState(() => {
+    try {
+      const cached = getCachedCollegeLogo();
+      if (cached) return cached;
+      const raw = localStorage.getItem('collegeLogo');
+      if (raw) return resolveProfileUrl(raw, API_BASE_URL);
+    } catch (e) { /* ignore */ }
+    return null;
+  });
   const [showFireworkConfetti, setShowFireworkConfetti] = React.useState(false);
   const fireworkTimerRef = React.useRef(null);
 

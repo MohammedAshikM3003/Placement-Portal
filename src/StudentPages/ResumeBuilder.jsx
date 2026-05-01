@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar/Navbar.js';
 import Sidebar from '../components/Sidebar/Sidebar.jsx';
 import styles from './ResumeBuilder.module.css';
 import '../components/alerts/AlertStyles.css';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 
 // Lazy load popups
@@ -147,7 +147,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
       const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
       const resumeData = { ...currentData, ...updatedFields };
 
-      await fetch(`${API_BASE}/api/resume-builder/save`, {
+      await fetch(joinApiUrl('/resume-builder/save'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -859,7 +859,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
 
       if (studentId) {
         try {
-          const saveResponse = await fetch(`${API_BASE}/api/resume-builder/save`, {
+          const saveResponse = await fetch(joinApiUrl('/resume-builder/save'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -953,7 +953,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         if (studentId) {
           try {
             setCreateStatus('Saving AI-polished data...');
-            const polishedSaveResponse = await fetch(`${API_BASE}/api/resume-builder/save`, {
+            const polishedSaveResponse = await fetch(joinApiUrl('/resume-builder/save'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -983,7 +983,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         });
       }, 400);
 
-      const response = await fetch(`${API_BASE}/api/resume-builder/generate`, {
+      const response = await fetch(joinApiUrl('/resume-builder/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1130,7 +1130,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-          const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-data/${studentId}`, {
+          const response = await fetch(joinApiUrl(`/resume-builder/ats-data/${studentId}`), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -1172,7 +1172,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           const controller2 = new AbortController();
           const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
           targetProgress = 40;
-          const atsResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-result/${studentId}`, {
+          const atsResponse = await fetch(joinApiUrl(`/resume-builder/ats-result/${studentId}`), {
             headers: {
               'Content-Type': 'application/json',
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -1201,7 +1201,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         setAtsProgressMessage('AI analyzing content quality...');
         try {
           targetProgress = 60;
-          const atsCheckResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/ats-check`, {
+          const atsCheckResponse = await fetch(joinApiUrl('/resume-builder/ats-check'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1219,7 +1219,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               setAtsProgressMessage('Analysis complete!');
 
               // Save analysis to MongoDB in background
-              fetch(`${API_BASE_URL.replace('/api', '')}/api/resume-builder/save-ats-analysis`, {
+              fetch(joinApiUrl('/resume-builder/save-ats-analysis'), {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -1291,7 +1291,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         // 2. If not pre-fetched, fetch from MongoDB
         if (!saved && studentId) {
           try {
-            const response = await fetch(`${API_BASE}/api/resume-builder/load/${studentId}`, {
+            const response = await fetch(joinApiUrl(`/resume-builder/load/${studentId}`), {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
