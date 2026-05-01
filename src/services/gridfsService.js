@@ -283,12 +283,14 @@ class GridFSService {
     // Already a full https URL (production) — keep it
     if (value.startsWith('https://')) return value;
     
-    // Determine runtime backend base (fallback to window.location.origin if baseURL is not set or seems wrong)
-    const runtimeBase = (this.baseURL && this.baseURL.replace(/\/api\/?$/, '')) || (typeof window !== 'undefined' ? window.location.origin : '');
-    // GridFS path like /api/file/abc123 - baseURL already has /api
-    if (value.startsWith('/api/file/')) return `${runtimeBase}${value.replace('/api', '')}`;
+    // Determine runtime backend origin (strip any trailing /api)
+    const runtimeOrigin = (this.baseURL && this.baseURL.replace(/\/api\/?$/, '')) || (typeof window !== 'undefined' ? window.location.origin : '');
+    // GridFS path like /api/file/abc123 - keep the /api segment
+    if (value.startsWith('/api/file/')) return `${runtimeOrigin}${value}`;
+    // Legacy /file/abc123 path - normalize to /api/file/abc123
+    if (value.startsWith('/file/')) return `${runtimeOrigin}/api${value}`;
     // Raw ObjectId string — build URL
-    if (/^[a-f0-9]{24}$/.test(value)) return `${runtimeBase}/file/${value}`;
+    if (/^[a-f0-9]{24}$/.test(value)) return `${runtimeOrigin}/api/file/${value}`;
     // Anything else (could be a relative path or empty)
     return value;
   }
