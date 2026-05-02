@@ -18,10 +18,11 @@
   }
 
   .ad-tr-content {
-    max-height: calc(100vh - 55px);
+    height: calc(100vh - 45px);
     overflow-y: auto;
     overflow-x: hidden;
-    
+    box-sizing: border-box;
+    padding-bottom: 20px;
   }
 
   .ad-tr-content::-webkit-scrollbar {
@@ -80,10 +81,9 @@
 
 .ad-tr-top-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.3fr;
-  gap: 18px;
+  grid-template-columns: 195px 195px 195px minmax(335px, 1fr);
+  gap: 15px;
   align-items: stretch;
-  margin-bottom: 18px;
 }
 
 .ad-tr-action-card {
@@ -144,6 +144,138 @@
   bottom:17px;
   font-family: poppins;
   margin-top: 5px;
+}
+
+.ad-tr-filter-card {
+  border-radius: 18px;
+  background: #e8e8e8;
+  border: none;
+  padding: 14px 16px 16px;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-right: 0px;
+  box-shadow: none;
+}
+
+.ad-tr-filter-title {
+  background: #4EA24E;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 1rem;
+  text-align: center;
+  padding: 6px 0 9px;
+  border-radius: 30px;
+  width: 228px;
+  margin: 4px auto 12px;
+}
+
+.ad-tr-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0;
+}
+
+.ad-tr-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-top: 20px;
+}
+
+.ad-tr-filter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-left: 5px;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  line-height: 20px;
+}
+
+.ad-tr-filter-control {
+  width: 100%;
+  height: 45px;
+  border: none;
+  padding: 8px 15px 0;
+  background: transparent;
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+  font-family: poppins;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.ad-tr-filter-container {
+  position: relative;
+  border-radius: 8px;
+  border: 3px solid #ccc;
+  background-color: #ffffff;
+  overflow: hidden;
+  height: 45px;
+  transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.ad-tr-filter-container::after {
+  content: '\25BC';
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: #888;
+  pointer-events: none;
+}
+
+.ad-tr-filter-container:hover {
+  border-color: #4EA24E;
+}
+
+.ad-tr-filter-control:hover,
+.ad-tr-filter-control:focus {
+  outline: none;
+}
+
+.ad-tr-filter-control:disabled {
+  background-color: #ffffff;
+  color: #b2b2b2;
+  cursor: not-allowed;
+}
+
+.ad-tr-filter-control option {
+  color: #333;
+}
+
+.ad-tr-filter-control option:first-child {
+  color: #999;
+}
+
+.ad-tr-filter-clear-btn {
+  grid-column: 1 / -1;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: #e8e8e8;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: poppins;
+}
+
+.ad-tr-filter-clear-btn:hover {
+  background: #d0d0d0;
 }
 
 .ad-tr-summary-card {
@@ -279,23 +411,47 @@
   background: #3a9b4a;
   color: #fff;
   font-weight: 800;
-  text-align: center;
-  padding: 10px;
-  border-radius: 10px;
-  margin: 10px 0 14px;
+  padding: 10px 16px;
+  border-radius: 10px 10px 0 0;
+  margin: 10px 0 0;
   font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
+.ad-tr-section-archive-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ad-tr-section-archive-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 
 .ad-tr-training-grid {
   border: 1px solid #e6eef6;
   background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 0 0 12px 12px;
+  padding: 8px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 210px));
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 16px;
   min-height: 255px;
+  margin-top: -2px;
+  overflow-y: visible;
 }
+
+
 
 .ad-tr-training-empty {
   color: #4b5563;
@@ -312,9 +468,75 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: 6px;
-  /* position: relative;
-  top: 30px; */
+  position: relative;
+  min-height: 280px;
 }
+
+.ad-tr-training-card-menu {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.ad-tr-training-card-menu-btn {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ad-tr-training-card-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ad-tr-training-card-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ad-tr-training-card-menu-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e6eef6;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  min-width: 140px;
+}
+
+.ad-tr-training-card-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ad-tr-training-card-menu-item:hover {
+  background: #f0f2f5;
+}
+
+.ad-tr-training-card-menu-item:first-child {
+  border-bottom: 1px solid #e6eef6;
+}
+
 
 .ad-tr-training-card-alt {
   border-radius: 14px;
@@ -325,8 +547,59 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: 6px;
-  /* position: relative;
-  top: 30px; */
+  position: relative;
+  min-height: 280px;
+}
+
+.ad-tr-training-card-ended {
+  background: #9d9fa3;
+}
+
+.ad-tr-training-card-ended .ad-tr-training-logo,
+.ad-tr-training-card-ended .ad-tr-training-logo-alt {
+  background: rgba(255, 255, 255, 0.88);
+  color: #6d7178;
+}
+
+.ad-tr-training-card-ended .ad-tr-training-meta,
+.ad-tr-training-card-ended .ad-tr-training-name {
+  color: #ffffff;
+}
+
+.ad-tr-training-card-ended .ad-tr-training-card-menu-btn {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.ad-tr-training-card-ended .ad-tr-training-card-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.ad-tr-ended-badge {
+  width: 100%;
+  margin: 8px 0 4px;
+  border-radius: 24px;
+  background: rgba(130, 133, 138, 0.95);
+  color: #ffffff;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 8px 10px;
+  text-transform: uppercase;
+}
+
+.ad-tr-active-badge {
+  width: 100%;
+  margin: 8px 0 4px;
+  border-radius: 24px;
+  background: rgba(38, 154, 71, 0.95);
+  color: #ffffff;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 8px 10px;
+  text-transform: uppercase;
 }
 
 .ad-tr-training-logo,
@@ -361,16 +634,196 @@
   opacity: 0.95;
 }
 
-.ad-tr-att-popup-overlay {
+.ad-tr-popup-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 3000;
   padding: 20px;
+  animation: fadeIn 0.2s ease-out;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ad-tr-popup-container {
+  width: 380px;
+  max-width: 92vw;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  font-family: 'Poppins', sans-serif;
+  animation: popupScaleIn 0.3s ease-out;
+}
+
+.ad-tr-popup-header {
+  background: #3a9b4a;
+  color: #fff;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px 20px;
+}
+
+.ad-tr-popup-body {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.ad-tr-popup-body h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-body p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+  line-height: 1.5;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-body p strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.ad-tr-warning-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffa500;
+  border-radius: 50%;
+  animation: iconBounce 0.4s ease-out;
+}
+
+.ad-tr-warning-icon svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.ad-tr-warning-icon--circle {
+  fill: none;
+  stroke: #ffa500;
+  stroke-width: 2;
+}
+
+.ad-tr-warning-icon--exclamation {
+  fill: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ad-tr-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4EA24E;
+  border-radius: 50%;
+  animation: iconBounce 0.4s ease-out;
+}
+
+.ad-tr-icon-wrapper svg {
+  width: 40px;
+  height: 40px;
+  stroke: #ffffff;
+}
+
+.ad-tr-popup-footer {
+  background: #f9fafb;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ad-tr-popup-cancel-btn,
+.ad-tr-popup-delete-btn,
+.ad-tr-popup-close-btn {
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 11px 28px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 95px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-cancel-btn,
+.ad-tr-popup-close-btn {
+  background: #d1d5db;
+  color: #374151;
+}
+
+.ad-tr-popup-cancel-btn:hover:not(:disabled),
+.ad-tr-popup-close-btn:hover:not(:disabled) {
+  background: #676d74;
+}
+
+.ad-tr-popup-delete-btn {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.ad-tr-popup-delete-btn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.ad-tr-popup-cancel-btn:disabled,
+.ad-tr-popup-delete-btn:disabled,
+.ad-tr-popup-close-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 .ad-tr-att-popup-container {
   width: 460px;
@@ -754,13 +1207,14 @@
     padding: 8px;
   }
   .ad-tr-training-card{
-    width: 325px;
-    margin-left: 30px;
-    
+    width: 100%;
+    margin-left: 0;
+    max-width: 400px;
   }
   .ad-tr-training-card-alt{
-    width: 325px;
-    margin-left: 30px;
+    width: 100%;
+    margin-left: 0;
+    max-width: 400px;
   }
 
   .ad-tr-att-popup-grid {

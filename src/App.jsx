@@ -23,6 +23,7 @@ import MainRegistration from "./MainRegistration.jsx";
 
 // --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
 const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
+const SastuPage = lazy(() => import("./AdminPages/sastupage.jsx"));
 const AdminstudDB = lazy(() => import("./AdminPages/AdminstudDB.jsx"));
 const AdminCompanyprofile = lazy(() => import("./AdminPages/AdminCompanyprofile.jsx"));
 const AdminCompanyprofilePopup = lazy(() => import("./AdminPages/AdminCompanyprofilepopup.jsx"));
@@ -254,6 +255,7 @@ function AppContent() {
       <Route path="/signup" element={<MainSignUp onNavigateToLogin={() => navigate("/mainlogin")} onStartRegistration={() => navigate("/registration")} />} />
       <Route path="/registration" element={<MainRegistration onNavigateToLogin={() => navigate("/mainlogin")} />} />
       <Route path="/registration-debug" element={<RegistrationDebug />} />
+      <Route path="/sastu-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SastuPage /></Suspense></RouteErrorBoundary>} />
 
       {/* STUDENT AUTHENTICATED ROUTES - Wrapped in Error Boundary */}
       <Route path="/dashboard" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><PlacementPortalDashboard onLogout={handleStudentLogout} userEmail={userEmail} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />

@@ -8,17 +8,59 @@ import AttendanceTrainingIcon from '../assets/ad_at_attendance.svg';
 import styles from './Admin_Training.module.css';
 import mongoDBService from '../services/mongoDBService';
 
+const TRAINING_ARCHIVE_STORAGE_KEY = 'placement-portal-admin-training-archives';
+
+const getTrainingArchiveKey = (card) => card?.scheduleId || card?.id || card?.companyName || '';
+
+const readArchivedTrainings = () => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(TRAINING_ARCHIVE_STORAGE_KEY);
+    const parsedValue = storedValue ? JSON.parse(storedValue) : [];
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue
+      .map((card) => ({
+        ...card,
+        archiveKey: getTrainingArchiveKey(card),
+        archivedAt: card?.archivedAt || ''
+      }))
+      .filter((card) => Boolean(card.archiveKey));
+  } catch {
+    return [];
+  }
+};
+
+const writeArchivedTrainings = (cards) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(TRAINING_ARCHIVE_STORAGE_KEY, JSON.stringify(cards));
+};
+
 function AdminTraining({ onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const [companies, setCompanies] = useState([]);
-  const [batches, setBatches] = useState([]);
   const [trainingCards, setTrainingCards] = useState([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [openCardMenuId, setOpenCardMenuId] = useState('');
+  const [activePopup, setActivePopup] = useState(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState(null);
 
   const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedBatch, setSelectedBatch] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedStartDate, setSelectedStartDate] = useState('');
+  const [selectedEndDate, setSelectedEndDate] = useState('');
   const [isAttendancePopupOpen, setIsAttendancePopupOpen] = useState(false);
   const [attendancePopupLoading, setAttendancePopupLoading] = useState(false);
   const [attendanceSearchLoading, setAttendanceSearchLoading] = useState(false);
@@ -30,38 +72,21 @@ function AdminTraining({ onLogout }) {
   const [attendanceSelectedStartDate, setAttendanceSelectedStartDate] = useState('');
   const [attendanceSelectedEndDate, setAttendanceSelectedEndDate] = useState('');
 
-  const getPlaceholderText = () => {
-    if (selectedCompany && !selectedBatch) return 'Select the Batch';
-    if (!selectedCompany && selectedBatch) return 'Select the Company';
-    return 'Select Company and Batch';
-  };
-
-  const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-    return {
-      x: centerX + radius * Math.cos(angleInRadians),
-      y: centerY + radius * Math.sin(angleInRadians),
-    };
-  };
-
-  const getAbsentSlicePath = (absentPercent) => {
-    if (!absentPercent || absentPercent <= 0) return '';
-    if (absentPercent >= 1) {
-      return 'M60 20 A40 40 0 1 1 59.999 20 L60 60 Z';
-    }
-
-    const startAngle = 0;
-    const endAngle = absentPercent * 360;
-    const start = polarToCartesian(60, 60, 40, endAngle);
-    const end = polarToCartesian(60, 60, 40, startAngle);
-    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-    return `M ${start.x} ${start.y} A 40 40 0 ${largeArcFlag} 0 ${end.x} ${end.y} L 60 60 Z`;
-  };
-
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
     window.addEventListener('closeSidebar', handleCloseSidebar);
     return () => window.removeEventListener('closeSidebar', handleCloseSidebar);
+  }, []);
+
+  useEffect(() => {
+    const handleDocumentClick = (event) => {
+      if (!event.target.closest('[data-training-card-menu="true"]')) {
+        setOpenCardMenuId('');
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
   }, []);
 
   useEffect(() => {
@@ -77,6 +102,8 @@ function AdminTraining({ onLogout }) {
         const normalizedBatchAssignments = Array.isArray(batchAssignments) ? batchAssignments : [];
         const normalizedSchedules = Array.isArray(schedules) ? schedules : [];
         const normalizedTrainings = Array.isArray(trainings) ? trainings : [];
+        const archivedCards = readArchivedTrainings();
+        const archivedKeys = new Set(archivedCards.map((card) => getTrainingArchiveKey(card)));
 
         const companyList = [...new Set(
           normalizedBatchAssignments
@@ -84,13 +111,6 @@ function AdminTraining({ onLogout }) {
             .filter(Boolean)
         )];
         setCompanies(companyList);
-
-        const batchList = [...new Set(
-          normalizedBatchAssignments
-            .map((item) => (item?.batchName || '').toString().trim())
-            .filter(Boolean)
-        )];
-        setBatches(batchList);
 
         const trainingByCompany = new Map(
           normalizedTrainings.map((item) => [
@@ -101,28 +121,37 @@ function AdminTraining({ onLogout }) {
 
         const cards = normalizedSchedules.map((schedule) => {
           const companyName = (schedule?.companyName || '').toString().trim() || 'Training';
-          const trainingInfo = trainingByCompany.get(companyName);
-          const trainerCount = Array.isArray(trainingInfo?.trainers) ? trainingInfo.trainers.length : 0;
-          const firstCourse = Array.isArray(trainingInfo?.courses) && trainingInfo.courses[0]?.name
-            ? trainingInfo.courses[0].name
+           const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+          const phaseNumbers = [...new Set(
+            phases
+              .map((phase) => (phase?.phaseNumber || '').toString().trim())
+              .filter(Boolean)
+          )];
+          const applicableYears = [...new Set(
+            phases
+              .map((phase) => normalizeYearToken(phase?.applicableYear || ''))
+              .filter(Boolean)
+          )];
+
+          const yearText = applicableYears.length > 0
+            ? applicableYears.join(', ')
             : '-';
 
-          const batchNames = Array.isArray(schedule?.batches)
-            ? schedule.batches
-                .map((batch) => (batch?.batchName || '').toString().trim())
-                .filter(Boolean)
+          const yearTokens = applicableYears.length > 0
+            ? applicableYears
             : [];
 
-          const batchCount = batchNames.length;
-          const phaseCount = Array.isArray(schedule?.phases) ? schedule.phases.length : 0;
+          const phaseText = phaseNumbers.length > 0
+            ? phaseNumbers.join(', ')
+            : '-';
 
-          let durationText = 'Duration: -';
+          let durationText = '-';
           const start = new Date(schedule?.startDate);
           const end = new Date(schedule?.endDate);
           if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
             const diffMs = end.getTime() - start.getTime();
             const days = Math.max(1, Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1);
-            durationText = `Duration: ${days} Day${days > 1 ? 's' : ''}`;
+            durationText = `${days} Day${days > 1 ? 's' : ''}`;
           }
 
           return {
@@ -130,22 +159,33 @@ function AdminTraining({ onLogout }) {
             scheduleId: schedule?._id || '',
             companyName,
             logoText: companyName.charAt(0).toUpperCase() || 'T',
-            trainerCount,
-            firstCourse,
             startDate: schedule?.startDate || '',
             endDate: schedule?.endDate || '',
-            batchNames,
-            batchCount,
-            phaseCount,
+            yearText,
+            yearTokens,
+            phaseText,
             durationText
+            ,
+            isEnded: (() => {
+              try {
+                const ed = new Date(schedule?.endDate);
+                if (Number.isNaN(ed.getTime())) return false;
+                const today = new Date();
+                // compare date-only (ignore time)
+                const edDateOnly = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate());
+                const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                return edDateOnly < todayDateOnly;
+              } catch (e) {
+                return false;
+              }
+            })()
           };
         });
 
-        setTrainingCards(cards);
+        setTrainingCards(cards.filter((card) => !archivedKeys.has(getTrainingArchiveKey(card))));
       } catch (error) {
         console.error('Failed to load admin training dashboard data:', error);
         setCompanies([]);
-        setBatches([]);
         setTrainingCards([]);
       } finally {
         setIsLoadingCards(false);
@@ -161,21 +201,163 @@ function AdminTraining({ onLogout }) {
         return false;
       }
 
-      if (selectedBatch && !card.batchNames.includes(selectedBatch)) {
+      if (selectedYear) {
+        const cardYears = Array.isArray(card.yearTokens) ? card.yearTokens : [];
+        if (!cardYears.includes(selectedYear)) {
+          return false;
+        }
+      }
+
+      if (selectedStartDate && normalizeDateKey(card.startDate) !== selectedStartDate) {
+        return false;
+      }
+
+      if (selectedEndDate && normalizeDateKey(card.endDate) !== selectedEndDate) {
         return false;
       }
 
       return true;
     });
-  }, [trainingCards, selectedCompany, selectedBatch]);
+  }, [trainingCards, selectedCompany, selectedYear, selectedStartDate, selectedEndDate]);
 
-  const appliedSummary = useMemo(() => {
-    if (!selectedCompany || !selectedBatch) return null;
-    return filteredTrainingCards[0] || null;
-  }, [filteredTrainingCards, selectedCompany, selectedBatch]);
+  const yearOptions = useMemo(() => {
+    const order = ['I', 'II', 'III', 'IV'];
+    const years = [...new Set(
+      trainingCards
+        .flatMap((card) => (Array.isArray(card.yearTokens) ? card.yearTokens : []))
+        .map((year) => (year || '').toString().trim())
+        .filter(Boolean)
+    )];
+
+    return years.sort((a, b) => {
+      const aIndex = order.indexOf(a);
+      const bIndex = order.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [trainingCards]);
+
+  const baseCardsForDateOptions = useMemo(() => {
+    return trainingCards.filter((card) => {
+      if (selectedCompany && card.companyName !== selectedCompany) return false;
+      if (selectedYear) {
+        const cardYears = Array.isArray(card.yearTokens) ? card.yearTokens : [];
+        if (!cardYears.includes(selectedYear)) return false;
+      }
+      return true;
+    });
+  }, [trainingCards, selectedCompany, selectedYear]);
+
+  const startDateOptions = useMemo(() => {
+    return [...new Set(
+      baseCardsForDateOptions
+        .map((card) => normalizeDateKey(card.startDate))
+        .filter(Boolean)
+    )].sort((a, b) => new Date(a) - new Date(b));
+  }, [baseCardsForDateOptions]);
+
+  const endDateOptions = useMemo(() => {
+    if (!selectedStartDate) {
+      return [];
+    }
+
+    return [...new Set(
+      baseCardsForDateOptions
+        .filter((card) => normalizeDateKey(card.startDate) === selectedStartDate)
+        .map((card) => normalizeDateKey(card.endDate))
+        .filter(Boolean)
+    )].sort((a, b) => new Date(a) - new Date(b));
+  }, [baseCardsForDateOptions, selectedStartDate]);
+
+  useEffect(() => {
+    if (selectedStartDate && !startDateOptions.includes(selectedStartDate)) {
+      setSelectedStartDate('');
+    }
+
+    if (selectedEndDate && !endDateOptions.includes(selectedEndDate)) {
+      setSelectedEndDate('');
+    }
+  }, [selectedStartDate, selectedEndDate, startDateOptions, endDateOptions]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((v) => !v);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCompany('');
+    setSelectedYear('');
+    setSelectedStartDate('');
+    setSelectedEndDate('');
+  };
+
+  const persistArchivedCards = (cards) => {
+    const normalizedCards = cards.map((card) => ({
+      ...card,
+      archiveKey: getTrainingArchiveKey(card),
+      archivedAt: card.archivedAt || new Date().toISOString()
+    }));
+
+    writeArchivedTrainings(normalizedCards);
+  };
+
+  const handleArchiveCard = (card) => {
+    const archiveKey = getTrainingArchiveKey(card);
+    if (!archiveKey) {
+      return;
+    }
+
+    const currentArchivedCards = readArchivedTrainings();
+    const nextArchivedCards = [
+      {
+        ...card,
+        archiveKey,
+        archivedAt: new Date().toISOString()
+      },
+      ...currentArchivedCards.filter((item) => getTrainingArchiveKey(item) !== archiveKey)
+    ];
+
+    persistArchivedCards(nextArchivedCards);
+    setTrainingCards((prev) => prev.filter((item) => getTrainingArchiveKey(item) !== archiveKey));
+    setOpenCardMenuId('');
+    navigate('/admin-trainings-archive');
+  };
+
+  const handleDeleteCard = (card) => {
+    if (!card.scheduleId) {
+      alert('Scheduled training ID not found.');
+      return;
+    }
+    setCardToDelete(card);
+    setActivePopup('deleteWarning');
+    setOpenCardMenuId('');
+  };
+
+  const confirmDelete = async () => {
+    if (!cardToDelete) return;
+
+    setDeleteInProgress(true);
+    try {
+      await mongoDBService.deleteScheduledTraining(cardToDelete.scheduleId);
+      const archiveKey = getTrainingArchiveKey(cardToDelete);
+      setTrainingCards((prev) => prev.filter((item) => getTrainingArchiveKey(item) !== archiveKey));
+
+      const nextArchivedCards = readArchivedTrainings().filter((item) => getTrainingArchiveKey(item) !== archiveKey);
+      persistArchivedCards(nextArchivedCards);
+      setActivePopup('deleteSuccess');
+    } catch (error) {
+      console.error('Failed to delete scheduled training:', error);
+      alert(error.message || 'Failed to delete training.');
+      setActivePopup(null);
+    } finally {
+      setDeleteInProgress(false);
+    }
+  };
+
+  const closePopup = () => {
+    setActivePopup(null);
+    setCardToDelete(null);
   };
 
   const formatDateForDisplay = (rawDate) => {
@@ -204,7 +386,7 @@ function AdminTraining({ onLogout }) {
     return [...new Set(courses)];
   };
 
-  const normalizeDateKey = (rawDate) => {
+  function normalizeDateKey(rawDate) {
     if (!rawDate) return '';
     const parsed = new Date(rawDate);
     if (Number.isNaN(parsed.getTime())) {
@@ -212,9 +394,9 @@ function AdminTraining({ onLogout }) {
     }
 
     return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
-  };
+  }
 
-  const normalizeYearToken = (value = '') => {
+  function normalizeYearToken(value = '') {
     const raw = value.toString().trim().toUpperCase();
     if (!raw) return '';
     const compact = raw.replace(/[^A-Z0-9]/g, '');
@@ -228,7 +410,7 @@ function AdminTraining({ onLogout }) {
     };
 
     return yearAliases[compact] || compact;
-  };
+  }
 
   const parseSchedulePhases = (scheduleRecord) => {
     const phases = Array.isArray(scheduleRecord?.phases) ? scheduleRecord.phases : [];
@@ -486,7 +668,7 @@ function AdminTraining({ onLogout }) {
         state: {
           companyName: attendanceSelectedCompany,
           courseName: attendanceSelectedCourse,
-          batchName: selectedBatch || '-',
+          batchName: '-',
           scheduleId: selectedSchedule._id || '',
           startDate: selectedSchedule.startDate || '',
           endDate: attendanceSelectedEndDate || selectedSchedule.endDate || '',
@@ -559,6 +741,49 @@ function AdminTraining({ onLogout }) {
 
   return (
     <div className={styles['ad-tr-page']}>
+      {activePopup === 'deleteWarning' && (
+        <div className={styles['ad-tr-popup-overlay']}>
+          <div className={styles['ad-tr-popup-container']}>
+            <div className={styles['ad-tr-popup-header']}>Delete Training</div>
+            <div className={styles['ad-tr-popup-body']}>
+              <div className={styles['ad-tr-warning-icon']}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="55" fill="none" stroke="#ffa500" strokeWidth="2" />
+                  <text x="60" y="75" textAnchor="middle" fill="#ffffff" fontSize="48" fontWeight="700" fontFamily="Arial">!</text>
+                </svg>
+              </div>
+              <h2>Are you sure?</h2>
+              <p>Delete training for <strong>{cardToDelete?.companyName}</strong>? This action cannot be undone.</p>
+            </div>
+            <div className={styles['ad-tr-popup-footer']}>
+              <button onClick={closePopup} className={styles['ad-tr-popup-cancel-btn']} disabled={deleteInProgress}>Discard</button>
+              <button onClick={confirmDelete} className={styles['ad-tr-popup-delete-btn']} disabled={deleteInProgress}>
+                {deleteInProgress ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activePopup === 'deleteSuccess' && (
+        <div className={styles['ad-tr-popup-overlay']}>
+          <div className={styles['ad-tr-popup-container']}>
+            <div className={styles['ad-tr-popup-header']}>Deleted !</div>
+            <div className={styles['ad-tr-popup-body']}>
+              <div className={styles['ad-tr-icon-wrapper']}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h2>Training Deleted ✓</h2>
+              <p>The training has been deleted successfully!</p>
+            </div>
+            <div className={styles['ad-tr-popup-footer']}>
+              <button onClick={closePopup} className={styles['ad-tr-popup-close-btn']}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AdNavbar onToggleSidebar={toggleSidebar} />
       <AdSidebar isOpen={isSidebarOpen} onLogout={onLogout} />
 
@@ -579,123 +804,119 @@ function AdminTraining({ onLogout }) {
             <div className={styles['ad-tr-action-sub']}>Click to Add Training programs to develop Students skills</div>
           </button>
 
-          <button
-            type="button"
-            className={styles['ad-tr-action-card']}
-            onClick={() => navigate('/admin-schedule-training?mode=new')}
-          >
+          <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-schedule-training')}>
             <div className={styles['ad-tr-action-icon']}>
               <img src={ScheduleTrainingIcon} alt="Schedule Training" />
             </div>
             <div className={styles['ad-tr-action-title']}>Schedule Training</div>
-            <div className={styles['ad-tr-action-sub']}>Click to Schedule Training programs to develop Students skill</div>
+            <div className={styles['ad-tr-action-sub']}>Plan phases and schedule your training sessions</div>
           </button>
 
           <button
             type="button"
-            className={`${styles['ad-tr-action-card']} ${attendancePopupLoading ? styles['ad-tr-action-card-loading'] : ''}`}
+            className={styles['ad-tr-action-card']}
             onClick={handleOpenAttendancePopup}
             disabled={attendancePopupLoading}
           >
             <div className={styles['ad-tr-action-icon']}>
               <img src={AttendanceTrainingIcon} alt="Attendance and Student Info" />
             </div>
-            <div className={styles['ad-tr-action-title']}>Attendance & Student Info</div>
-            <div className={styles['ad-tr-action-sub']}>
-              {attendancePopupLoading ? 'Loading schedule data...' : 'Click to take Attendance and to view Student info'}
+            <div className={styles['ad-tr-action-title']}>
+              {attendancePopupLoading ? 'Loading...' : 'Attendance & Student Info'}
             </div>
+            <div className={styles['ad-tr-action-sub']}>View daily attendance status and student details</div>
           </button>
-
-          <div className={styles['ad-tr-summary-card']}>
-            <div className={styles['ad-tr-summary-filters']}>
-              <select
-                className={styles['ad-tr-select']}
-                value={selectedCompany}
-                onChange={(e) => setSelectedCompany(e.target.value)}
-              >
-                <option value="">Select Company</option>
-                {companies.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <select
-                className={styles['ad-tr-select']}
-                value={selectedBatch}
-                onChange={(e) => setSelectedBatch(e.target.value)}
-              >
-                <option value="">Select Batch</option>
-                {batches.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles['ad-tr-summary-body']}>
-              <div className={styles['ad-tr-summary-text']}>
-                {appliedSummary ? (
-                  <>
-                    <div className={styles['ad-tr-summary-line']}><span>Company :</span><strong>{appliedSummary.companyName}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Batches :</span><strong>{appliedSummary.batchCount}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Phases :</span><strong>{appliedSummary.phaseCount}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Course :</span><strong>{appliedSummary.firstCourse}</strong></div>
-                    <div className={styles['ad-tr-summary-line']}><span>Trainers :</span><strong>{appliedSummary.trainerCount}</strong></div>
-                  </>
-                ) : (
-                  <div className={styles['ad-tr-summary-placeholder']}>{getPlaceholderText()}</div>
-                )}
+          <div className={styles['ad-tr-filter-card']}>
+            <div className={styles['ad-tr-filter-title']}>Trainings</div>
+            <div className={styles['ad-tr-filter-grid']}>
+              <div className={styles['ad-tr-filter-field']}>
+                <label className={styles['ad-tr-filter-label']}>Company</label>
+                <div className={styles['ad-tr-filter-container']}>
+                  <select
+                    className={styles['ad-tr-filter-control']}
+                    value={selectedCompany}
+                    onChange={(e) => setSelectedCompany(e.target.value)}
+                  >
+                    <option value="">Select Company</option>
+                    {companies.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className={styles['ad-tr-summary-chart']}>
-                {(() => {
-                  const present = appliedSummary?.present ?? 0;
-                  const absent = appliedSummary?.absent ?? 0;
-                  const total = present + absent;
-                  const absentPercent = total > 0 ? absent / total : 0;
-                  const absentPath = getAbsentSlicePath(absentPercent);
-
-                  return (
-                    <>
-                      <svg viewBox="0 0 120 120" className={styles['ad-tr-pie']} aria-hidden="true">
-                        {/* Background circle for Present (green) */}
-                        <circle
-                          cx="60"
-                          cy="60"
-                          r="40"
-                          fill="#17c491"
-                        />
-                        {/* Absent slice (red) as a path */}
-                        {absentPath ? (
-                          <path
-                            d={absentPath}
-                            fill="#ff6b6b"
-                          />
-                        ) : null}
-                        {/* Labels inside pie */}
-                        <text x="70" y="55" className={styles['ad-tr-pie-label-present']}>Present</text>
-                        <text x="72" y="70" className={styles['ad-tr-pie-value-present']}>{present}</text>
-                        <text x="32" y="45" className={styles['ad-tr-pie-label-absent']}>Absent</text>
-                        <text x="35" y="60" className={styles['ad-tr-pie-value-absent']}>{absent}</text>
-                      </svg>
-
-                      <div className={styles['ad-tr-summary-legend']}>
-                        <div className={styles['ad-tr-legend-row']}>
-                          <span>Present</span>
-                          <strong className={styles['ad-tr-legend-present']}>{present}</strong>
-                        </div>
-                        <div className={styles['ad-tr-legend-row']}>
-                          <span>Absent</span>
-                          <strong className={styles['ad-tr-legend-absent']}>{absent}</strong>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
+              <div className={styles['ad-tr-filter-field']}>
+                <label className={styles['ad-tr-filter-label']}>Year</label>
+                <div className={styles['ad-tr-filter-container']}>
+                  <select
+                    className={styles['ad-tr-filter-control']}
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                  >
+                    <option value="">Select Year</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              <div className={styles['ad-tr-filter-field']}>
+                <label className={styles['ad-tr-filter-label']}>Start Date</label>
+                <div className={styles['ad-tr-filter-container']}>
+                  <select
+                    className={styles['ad-tr-filter-control']}
+                    value={selectedStartDate}
+                    onChange={(e) => setSelectedStartDate(e.target.value)}
+                    disabled={startDateOptions.length === 0}
+                  >
+                    <option value="">Select Start Date</option>
+                    {startDateOptions.map((dateValue) => (
+                      <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles['ad-tr-filter-field']}>
+                <label className={styles['ad-tr-filter-label']}>End Date</label>
+                <div className={styles['ad-tr-filter-container']}>
+                  <select
+                    className={styles['ad-tr-filter-control']}
+                    value={selectedEndDate}
+                    onChange={(e) => setSelectedEndDate(e.target.value)}
+                    disabled={endDateOptions.length === 0}
+                  >
+                    <option value="">Select End Date</option>
+                    {endDateOptions.map((dateValue) => (
+                      <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={styles['ad-tr-filter-clear-btn']}
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </button>
+
             </div>
           </div>
         </div>
 
-        <div className={styles['ad-tr-section-header']}>Trainings</div>
+        <div className={styles['ad-tr-section-header']}>
+          <div className={styles['ad-tr-section-header-title']}>Trainings</div>
+          <button
+            type="button"
+            className={styles['ad-tr-section-archive-btn']}
+            onClick={() => navigate('/admin-trainings-archive')}
+          >
+            Archive
+          </button>
+        </div>
 
         <div className={styles['ad-tr-training-grid']}>
           {isLoadingCards ? (
@@ -704,8 +925,10 @@ function AdminTraining({ onLogout }) {
             <div className={styles['ad-tr-training-empty']}>No scheduled trainings found.</div>
           ) : (
             filteredTrainingCards.map((card, index) => {
-              const cardClass = index % 2 === 0 ? styles['ad-tr-training-card'] : styles['ad-tr-training-card-alt'];
+              const baseCardClass = index % 2 === 0 ? styles['ad-tr-training-card'] : styles['ad-tr-training-card-alt'];
               const logoClass = index % 2 === 0 ? styles['ad-tr-training-logo'] : styles['ad-tr-training-logo-alt'];
+              const ended = Boolean(card.isEnded);
+              const cardClass = ended ? `${baseCardClass} ${styles['ad-tr-training-card-ended']}` : baseCardClass;
 
               const handleCardClick = () => {
                 const query = new URLSearchParams({
@@ -722,12 +945,58 @@ function AdminTraining({ onLogout }) {
 
               return (
                 <div key={card.id} className={cardClass} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+                  <div className={styles['ad-tr-training-card-menu']} data-training-card-menu="true">
+                    <button
+                      type="button"
+                      className={styles['ad-tr-training-card-menu-btn']}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenCardMenuId((current) => (current === card.id ? '' : card.id));
+                      }}
+                      aria-label="Open card actions"
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <circle cx="8" cy="3" r="1.4" />
+                        <circle cx="8" cy="8" r="1.4" />
+                        <circle cx="8" cy="13" r="1.4" />
+                      </svg>
+                    </button>
+
+                    {openCardMenuId === card.id && (
+                      <div className={styles['ad-tr-training-card-menu-dropdown']}>
+                        <button
+                          type="button"
+                          className={styles['ad-tr-training-card-menu-item']}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleArchiveCard(card);
+                          }}
+                        >
+                          Archive
+                        </button>
+                        <button
+                          type="button"
+                          className={styles['ad-tr-training-card-menu-item']}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteCard(card);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className={logoClass}>{card.logoText}</div>
+                  <div className={ended ? styles['ad-tr-ended-badge'] : styles['ad-tr-active-badge']}>
+                    {ended ? 'ENDED' : 'ACTIVE'}
+                  </div>
                   <div className={styles['ad-tr-training-name']}>{card.companyName}</div>
-                  <div className={styles['ad-tr-training-meta']}>Batches: {card.batchCount}</div>
-                  <div className={styles['ad-tr-training-meta']}>Phases: {card.phaseCount}</div>
-                  <div className={styles['ad-tr-training-meta']}>Trainers: {card.trainerCount}</div>
-                  <div className={styles['ad-tr-training-meta']}>{card.durationText}</div>
+                  <div className={styles['ad-tr-training-meta']}>Year: {card.yearText}</div>
+                  <div className={styles['ad-tr-training-meta']}>Phase: {card.phaseText}</div>
+                  <div className={styles['ad-tr-training-meta']}>Start Date: {formatDateForDisplay(card.startDate)}</div>
+                  <div className={styles['ad-tr-training-meta']}>End Date: {formatDateForDisplay(card.endDate)}</div>
+                  <div className={styles['ad-tr-training-meta']}>Duration: {card.durationText}</div>
                 </div>
               );
             })

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useCoordinatorAuth from "../utils/useCoordinatorAuth";
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
@@ -42,8 +42,10 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
   const navigate = useNavigate();
 
   const [selectedCompany, setSelectedCompany] = useState("");
-  const [selectedBatch, setSelectedBatch] = useState("");
-  const [appliedCompany, setAppliedCompany] = useState("");
+  const [selectedPhase, setSelectedPhase] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedStartDate, setSelectedStartDate] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
   const [isAttendancePopupOpen, setIsAttendancePopupOpen] = useState(false);
   const [attendanceCompany, setAttendanceCompany] = useState("");
   const [attendanceCourse, setAttendanceCourse] = useState("");
@@ -52,21 +54,43 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
   const [popupLoading, setPopupLoading] = useState(false);
   const [popupError, setPopupError] = useState("");
 
-  const companies = [
-    { id: "r-sequence", name: "R - Sequence", letter: "R", color: "#58c47c" },
-    { id: "x-plore", name: "X - Plore", letter: "X", color: "#5cb6c2" },
-    { id: "z-sequence", name: "Z - Sequence", letter: "Z", color: "#6d86c8" },
-    { id: "a-sequence", name: "A - Sequence", letter: "A", color: "#ff9800" },
-    { id: "b-sequence", name: "B - Sequence", letter: "B", color: "#9c27b0" },
-  ];
+  const trainingTileClassByIndex = [styles.trainingTileGreen, styles.trainingTileTeal, styles.trainingTileBlue];
 
-  const batches = [
-    { id: "batch-1", name: "Batch 1" },
-    { id: "batch-2", name: "Batch 2" },
-    { id: "batch-3", name: "Batch 3" },
-    { id: "batch-4", name: "Batch 4" },
-    { id: "batch-5", name: "Batch 5" },
-  ];
+  const normalizeDateKey = (rawDate) => {
+    if (!rawDate) return "";
+    const parsed = new Date(rawDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return rawDate.toString().trim();
+    }
+
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+  };
+
+  const normalizeYearToken = (value = "") => {
+    const raw = value.toString().trim().toUpperCase();
+    if (!raw) return "";
+    const compact = raw.replace(/[^A-Z0-9]/g, "");
+    if (!compact) return "";
+
+    const yearAliases = {
+      "1": "I", "01": "I", "1ST": "I", "1STYEAR": "I", FIRST: "I", FIRSTYEAR: "I", I: "I",
+      "2": "II", "02": "II", "2ND": "II", "2NDYEAR": "II", SECOND: "II", SECONDYEAR: "II", II: "II",
+      "3": "III", "03": "III", "3RD": "III", "3RDYEAR": "III", THIRD: "III", THIRDYEAR: "III", III: "III",
+      "4": "IV", "04": "IV", "4TH": "IV", "4THYEAR": "IV", FOURTH: "IV", FOURTHYEAR: "IV", IV: "IV",
+    };
+
+    return yearAliases[compact] || compact;
+  };
+
+  const parseSchedulePhases = (scheduleRecord) => {
+    const phases = Array.isArray(scheduleRecord?.phases) ? scheduleRecord.phases : [];
+    return phases
+      .map((phase) => ({
+        phaseNumber: (phase?.phaseNumber || "").toString().trim(),
+        applicableYear: normalizeYearToken(phase?.applicableYear || ""),
+      }))
+      .filter((phase) => phase.phaseNumber || phase.applicableYear);
+  };
 
   const loadPopupAssignments = async () => {
     setPopupLoading(true);
@@ -142,6 +166,10 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
     await loadPopupAssignments();
     setIsAttendancePopupOpen(true);
   };
+
+  useEffect(() => {
+    loadPopupAssignments();
+  }, []);
 
   const formatDateForDisplay = (rawDate) => {
     if (!rawDate) return "-";
@@ -244,13 +272,142 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
     setIsAttendancePopupOpen(false);
   };
 
-  const getSelectedCompany = () => companies.find(c => c.id === selectedCompany);
-  const getSelectedBatch = () => batches.find(b => b.id === selectedBatch);
-  const getAppliedCompany = () => companies.find(c => c.id === appliedCompany);
+  const trainingCards = useMemo(() => {
+    return popupAssignments.map((assignment, index) => {
+      const companyName = (assignment?.companyName || "").toString().trim() || "Training";
+      const phaseEntries = parseSchedulePhases(assignment);
+      const phaseTokens = [...new Set(phaseEntries.map((phase) => phase.phaseNumber).filter(Boolean))];
+      const phaseText = phaseTokens.length > 0 ? phaseTokens.join(", ") : "-";
 
-  const handleApplyFilters = () => {
-    setAppliedCompany(selectedCompany);
-  };
+      const topYear = normalizeYearToken(assignment?.applicableYear || "");
+      const phaseYears = phaseEntries.map((phase) => normalizeYearToken(phase.applicableYear)).filter(Boolean);
+      const yearTokens = [...new Set([topYear, ...phaseYears].filter(Boolean))];
+      const yearText = yearTokens.length > 0 ? yearTokens.join(", ") : "-";
+
+      const startDate = assignment?.startDate || "";
+      const endDate = assignment?.endDate || "";
+      let durationText = "-";
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        const diffMs = end.getTime() - start.getTime();
+        const days = Math.max(1, Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1);
+        durationText = `${days} Day${days > 1 ? "s" : ""}`;
+      }
+
+      return {
+        id: assignment?._id || `${companyName}-${startDate}-${endDate}-${index}`,
+        companyName,
+        courseName: (assignment?.courseName || "").toString().trim(),
+        logoText: companyName.charAt(0).toUpperCase() || "T",
+        yearText,
+        yearTokens,
+        phaseText,
+        phaseTokens,
+        startDate,
+        endDate,
+        durationText,
+      };
+    });
+  }, [popupAssignments]);
+
+  const companyOptions = useMemo(() => {
+    return [...new Set(trainingCards.map((card) => card.companyName).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }, [trainingCards]);
+
+  const yearOptions = useMemo(() => {
+    const order = ["I", "II", "III", "IV"];
+    const years = [...new Set(
+      trainingCards
+        .flatMap((card) => (Array.isArray(card.yearTokens) ? card.yearTokens : []))
+        .map((year) => (year || "").toString().trim())
+        .filter(Boolean)
+    )];
+
+    return years.sort((a, b) => {
+      const aIndex = order.indexOf(a);
+      const bIndex = order.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [trainingCards]);
+
+  const phaseOptions = useMemo(() => {
+    return [...new Set(
+      trainingCards
+        .filter((card) => {
+          if (selectedCompany && card.companyName !== selectedCompany) return false;
+          if (selectedYear && !(Array.isArray(card.yearTokens) ? card.yearTokens : []).includes(selectedYear)) return false;
+          return true;
+        })
+        .flatMap((card) => (Array.isArray(card.phaseTokens) ? card.phaseTokens : []))
+        .filter(Boolean)
+    )].sort((a, b) => {
+      const aNum = Number.parseInt(a, 10);
+      const bNum = Number.parseInt(b, 10);
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+      return a.localeCompare(b);
+    });
+  }, [trainingCards, selectedCompany, selectedYear]);
+
+  const baseCardsForDateOptions = useMemo(() => {
+    return trainingCards.filter((card) => {
+      if (selectedCompany && card.companyName !== selectedCompany) return false;
+      if (selectedYear && !(Array.isArray(card.yearTokens) ? card.yearTokens : []).includes(selectedYear)) return false;
+      if (selectedPhase && !(Array.isArray(card.phaseTokens) ? card.phaseTokens : []).includes(selectedPhase)) return false;
+      return true;
+    });
+  }, [trainingCards, selectedCompany, selectedYear, selectedPhase]);
+
+  const startDateOptions = useMemo(() => {
+    return [...new Set(
+      baseCardsForDateOptions
+        .map((card) => normalizeDateKey(card.startDate))
+        .filter(Boolean)
+    )].sort((a, b) => new Date(a) - new Date(b));
+  }, [baseCardsForDateOptions]);
+
+  const endDateOptions = useMemo(() => {
+    if (!selectedStartDate) {
+      return [];
+    }
+
+    return [...new Set(
+      baseCardsForDateOptions
+        .filter((card) => normalizeDateKey(card.startDate) === selectedStartDate)
+        .map((card) => normalizeDateKey(card.endDate))
+        .filter(Boolean)
+    )].sort((a, b) => new Date(a) - new Date(b));
+  }, [baseCardsForDateOptions, selectedStartDate]);
+
+  useEffect(() => {
+    if (selectedStartDate && !startDateOptions.includes(selectedStartDate)) {
+      setSelectedStartDate("");
+    }
+
+    if (selectedEndDate && !endDateOptions.includes(selectedEndDate)) {
+      setSelectedEndDate("");
+    }
+  }, [selectedStartDate, selectedEndDate, startDateOptions, endDateOptions]);
+
+  const filteredTrainingCards = useMemo(() => {
+    return trainingCards.filter((card) => {
+      if (selectedCompany && card.companyName !== selectedCompany) return false;
+      if (selectedYear) {
+        const cardYears = Array.isArray(card.yearTokens) ? card.yearTokens : [];
+        if (!cardYears.includes(selectedYear)) return false;
+      }
+      if (selectedPhase) {
+        const cardPhases = Array.isArray(card.phaseTokens) ? card.phaseTokens : [];
+        if (!cardPhases.includes(selectedPhase)) return false;
+      }
+      if (selectedStartDate && normalizeDateKey(card.startDate) !== selectedStartDate) return false;
+      if (selectedEndDate && normalizeDateKey(card.endDate) !== selectedEndDate) return false;
+      return true;
+    });
+  }, [trainingCards, selectedCompany, selectedYear, selectedPhase, selectedStartDate, selectedEndDate]);
 
   return (
     <div className={styles['coordinator-main-wrapper']}>
@@ -292,195 +449,173 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
                 </div>
               </div>
 
-              <div className={cx(styles.card, styles.trainingsCard)}>
-                <div className={styles.trainingsHeader}>Trainings</div>
-                <div className={styles.trainingsInner}>
-                  <div className={cx(styles.trainingTile, styles.trainingTileGreen)}>
-                    <div className={styles.trainingIconCircle}>R</div>
-                    <div className={styles.trainingTileText}>
-                      <div className={styles.trainingTitle}>R - Sequence</div>
-                      <div className={styles.trainingMeta}>Trainers : 8</div>
-                      <div className={styles.trainingMeta}>Duration : 21 Days</div>
-                    </div>
+              <div className={cx(styles.card, styles.trainingFiltersCard)}>
+                <div className={styles.trainingFiltersTitle}>Training Filters</div>
+                <div className={styles.trainingFiltersGrid}>
+                  <div className={styles.trainingFilterField}>
+                    <label className={styles.trainingFilterLabel}>Company Name</label>
+                    <select
+                      className={styles.trainingFilterControl}
+                      value={selectedCompany}
+                      onChange={(e) => {
+                        setSelectedCompany(e.target.value);
+                        setSelectedYear("");
+                        setSelectedPhase("");
+                        setSelectedStartDate("");
+                        setSelectedEndDate("");
+                      }}
+                    >
+                      <option value="">Select Company</option>
+                      {companyOptions.map((companyName) => (
+                        <option key={companyName} value={companyName}>{companyName}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className={cx(styles.trainingTile, styles.trainingTileTeal)}>
-                    <div className={styles.trainingIconCircle}>X</div>
-                    <div className={styles.trainingTileText}>
-                      <div className={styles.trainingTitle}>X - Plore</div>
-                      <div className={styles.trainingMeta}>Trainers : 3</div>
-                      <div className={styles.trainingMeta}>Duration : 21 Days</div>
-                    </div>
+                  <div className={styles.trainingFilterField}>
+                    <label className={styles.trainingFilterLabel}>Phase</label>
+                    <select
+                      className={styles.trainingFilterControl}
+                      value={selectedPhase}
+                      onChange={(e) => {
+                        setSelectedPhase(e.target.value);
+                        setSelectedStartDate("");
+                        setSelectedEndDate("");
+                      }}
+                    >
+                      <option value="">Select Phase</option>
+                      {phaseOptions.map((phaseValue) => (
+                        <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className={cx(styles.trainingTile, styles.trainingTileBlue)}>
-                    <div className={styles.trainingIconCircle}>Z</div>
-                    <div className={styles.trainingTileText}>
-                      <div className={styles.trainingTitle}>Z - Sequence</div>
-                      <div className={styles.trainingMeta}>Trainers : 1</div>
-                      <div className={styles.trainingMeta}>Duration : 21 Days</div>
-                    </div>
+                  <div className={styles.trainingFilterField}>
+                    <label className={styles.trainingFilterLabel}>Year</label>
+                    <select
+                      className={styles.trainingFilterControl}
+                      value={selectedYear}
+                      onChange={(e) => {
+                        setSelectedYear(e.target.value);
+                        setSelectedPhase("");
+                        setSelectedStartDate("");
+                        setSelectedEndDate("");
+                      }}
+                    >
+                      <option value="">Select Year</option>
+                      {yearOptions.map((yearValue) => (
+                        <option key={yearValue} value={yearValue}>{yearValue}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className={styles.trainingFilterField}>
+                    <label className={styles.trainingFilterLabel}>Start Date</label>
+                    <select
+                      className={styles.trainingFilterControl}
+                      value={selectedStartDate}
+                      onChange={(e) => {
+                        setSelectedStartDate(e.target.value);
+                        setSelectedEndDate("");
+                      }}
+                      disabled={startDateOptions.length === 0}
+                    >
+                      <option value="">Select Start Date</option>
+                      {startDateOptions.map((dateValue) => (
+                        <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className={styles.trainingFilterField}>
+                    <label className={styles.trainingFilterLabel}>End Date</label>
+                    <select
+                      className={styles.trainingFilterControl}
+                      value={selectedEndDate}
+                      onChange={(e) => setSelectedEndDate(e.target.value)}
+                      disabled={endDateOptions.length === 0}
+                    >
+                      <option value="">Select End Date</option>
+                      {endDateOptions.map((dateValue) => (
+                        <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className={styles.row2}>
-              <div className={cx(styles.statCard, styles.statTotal)}>
-                <div className={styles.statLabel}>Total Students</div>
-                <div className={styles.statValue}>40</div>
-              </div>
+              <div className={cx(styles.card, styles.trainingsCard)}>
+                <div className={styles.trainingsHeader}>Trainings</div>
+                <div className={styles.trainingsInner}>
+                  {filteredTrainingCards.length === 0 ? (
+                    <div className={styles.trainingsEmpty}>No trainings found for selected filters.</div>
+                  ) : (
+                    filteredTrainingCards.map((card, index) => {
+                      const handleTrainingCardClick = () => {
+                        let cardTrainingDayLabel = "Training Day -";
+                        if (card.startDate) {
+                          const start = new Date(card.startDate);
+                          const today = new Date();
+                          start.setHours(0, 0, 0, 0);
+                          today.setHours(0, 0, 0, 0);
+                          if (!Number.isNaN(start.getTime())) {
+                            const dayDiff = Math.floor((today.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+                            const clampedDay = Math.max(1, dayDiff);
+                            cardTrainingDayLabel = `Training Day ${clampedDay}`;
+                          }
+                        }
 
-              <div className={cx(styles.statCard, styles.statPresent)}>
-                <div className={styles.statLabel}>Present</div>
-                <div className={styles.statValue}>500</div>
-              </div>
+                        navigate("/coo-train-attendance-stuinfo", {
+                          state: {
+                            company: card.companyName,
+                            course: card.courseName,
+                            companyName: card.companyName,
+                            courseName: card.courseName,
+                            startDate: card.startDate,
+                            endDate: card.endDate,
+                            todayDate,
+                            trainingDayLabel: cardTrainingDayLabel,
+                          },
+                        });
+                      };
 
-              <div className={cx(styles.statCard, styles.statAbsent)}>
-                <div className={styles.statLabel}>Absent</div>
-                <div className={styles.statValue}>40</div>
-              </div>
-            </div>
-
-            <div className={styles.row3}>
-              <div className={cx(styles.card, styles.filtersCard)}>
-                <div className={styles.filtersTop}>
-                  <select 
-                    className={styles.select} 
-                    value={selectedCompany}
-                    onChange={(e) => {
-                      setSelectedCompany(e.target.value);
-                      setAppliedCompany(e.target.value);
-                    }}
-                  >
-                    <option value="">
-                      Select Company
-                    </option>
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select 
-                    className={styles.select} 
-                    value={selectedBatch}
-                    disabled={!selectedCompany}
-                    onChange={(e) => setSelectedBatch(e.target.value)}
-                  >
-                    <option value="">
-                      {selectedCompany ? "Select Batch" : "Select Company First"}
-                    </option>
-                    {batches.map((batch) => (
-                      <option key={batch.id} value={batch.id}>
-                        {batch.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.filtersInfoBox}>
-                  <div className={styles.filtersInfoLeft}>
-                    {selectedCompany && selectedBatch ? (
-                      <>
-                        <div className={styles.infoRow}>
-                          <div className={styles.infoKey}>Total Students :</div>
-                          <div className={styles.infoVal}>100</div>
-                        </div>
-                        <div className={styles.infoRow}>
-                          <div className={styles.infoKey}>Department :</div>
-                          <div className={styles.infoVal}>CSE</div>
-                        </div>
-                        <div className={styles.infoRow}>
-                          <div className={styles.infoKey}>Course :</div>
-                          <div className={styles.infoVal}>Java FSD</div>
-                        </div>
-                        <div className={styles.infoRow}>
-                          <div className={styles.infoKey}>Present :</div>
-                          <div className={styles.infoVal}>59</div>
-                        </div>
-                        <div className={styles.infoRow}>
-                          <div className={styles.infoKey}>Absent :</div>
-                          <div className={styles.infoVal}>41</div>
-                        </div>
-                      </>
-                    ) : selectedCompany ? (
-                      <div className={styles.filtersPlaceholder}>
-                        <div className={styles.filtersPlaceholderLine}>SELECT BATCH</div>
-                      </div>
-                    ) : (
-                      <div className={styles.filtersPlaceholder}>
-                        <div className={styles.filtersPlaceholderLine}>SELECT COMPANY</div>
-                        <div className={styles.filtersPlaceholderLine}>SELECT BATCH</div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.filtersInfoRight}>
-                    {appliedCompany && getAppliedCompany() && selectedBatch && getSelectedBatch() ? (
-                      <div 
-                        className={styles.companyCard}
-                        style={{ backgroundColor: getAppliedCompany()?.color || '#6d86c8' }}
+                      return (
+                      <div
+                        key={card.id}
+                        className={cx(styles.trainingTile, styles.trainingTileClickable, trainingTileClassByIndex[index % trainingTileClassByIndex.length])}
+                        role="button"
+                        tabIndex={0}
+                        onClick={handleTrainingCardClick}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleTrainingCardClick();
+                          }
+                        }}
                       >
-                        <div className={styles.companyIconCircle}>
-                          <span style={{ color: '#000', fontWeight: 700 }}>
-                            {getAppliedCompany()?.letter}
-                          </span>
-                        </div>
-                        <div className={styles.companyCardName}>
-                          {getAppliedCompany()?.name}
-                        </div>
-                        <div className={styles.companyCardBatch}>
-                          {getSelectedBatch()?.name}
+                        <div className={cx(styles.trainingIconCircle, index % 2 === 1 && styles.trainingIconCircleAlt)}>{card.logoText}</div>
+                        <div className={styles.trainingTileText}>
+                          <div className={styles.trainingTitle}>{card.companyName}</div>
+                          <div className={styles.trainingMeta}>Year: {card.yearText}</div>
+                          <div className={styles.trainingMeta}>Phase: {card.phaseText}</div>
+                          <div className={styles.trainingMeta}>Start Date: {formatDateForDisplay(card.startDate)}</div>
+                          <div className={styles.trainingMeta}>End Date: {formatDateForDisplay(card.endDate)}</div>
+                          <div className={styles.trainingMeta}>Duration: {card.durationText}</div>
                         </div>
                       </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div className={cx(styles.card, styles.attendanceCard)}>
-                <div className={styles.attendanceHeader}>Attendance</div>
-
-                <div className={styles.attendanceBody}>
-                  <div className={styles.attendanceChartWrapper}>
-                    <div 
-                      className={styles.attendanceDonutChart}
-                      style={{
-                        background: `conic-gradient(from 180deg, #00C495 0% 49%, #FF6B6B 49% 100%)`
-                      }}
-                    >
-                      <div className={styles.attendanceChartCenterText}>
-                        <div className={styles.attendanceChartCenterValue}>49%</div>
-                        <div className={styles.attendanceChartCenterLabel}>Present</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={styles.attendanceSideStats}>
-                    <div className={styles.sideStatBlock}>
-                      <div className={styles.sideStatLabel}>Present</div>
-                      <div className={cx(styles.sideStatValue, styles.presentValue)}>
-                        49
-                      </div>
-                    </div>
-                    <div className={styles.sideStatBlock}>
-                      <div className={styles.sideStatLabel}>Absent</div>
-                      <div className={cx(styles.sideStatValue, styles.absentValue)}>
-                        51
-                      </div>
-                    </div>
-                  </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
-
+    </div>
       {isAttendancePopupOpen && (
         <div className={styles['coo-tr-att-popup-overlay']}>
           <div className={styles['coo-tr-att-popup-container']}>

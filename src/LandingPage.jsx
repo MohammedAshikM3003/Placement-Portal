@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
@@ -35,6 +35,8 @@ import Twitter from './assets/Twittericon.svg';
 import TwitterHover from './assets/Twittericon-hover.svg';
 
 // --- College images are now loaded from the database (GridFS) ---
+
+const BANNER_CLICK_THRESHOLD = 11;
 
 // Navbar Component (integrated from LandingNavbar.js)
 const Navbar = () => {
@@ -160,7 +162,7 @@ const Navbar = () => {
   );
 };
 
-const HeroSection = ({ collegeImages, imagesLoading }) => {
+const HeroSection = ({ collegeImages, imagesLoading, onTopBannerClick }) => {
   // College images loaded from database (GridFS) - no static fallbacks
   const bannerLogo = collegeImages?.collegeBanner || null;
   const naacCert = collegeImages?.naacCertificate || null;
@@ -184,7 +186,19 @@ const HeroSection = ({ collegeImages, imagesLoading }) => {
                   src={bannerLogo} 
                   alt="College Logo" 
                   className={styles['ksr-logo']}
-                  style={!hasCertificates ? { maxWidth: '100%' } : {}}
+                  onClick={onTopBannerClick}
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    cursor: 'pointer',
+                    ...(!hasCertificates ? { maxWidth: '100%' } : {})
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onTopBannerClick();
+                    }
+                  }}
                 />
               )}
               {naacCert && <img src={naacCert} alt="NAAC Accreditation" className={styles['accreditation-logo']} />}
@@ -441,11 +455,130 @@ const PlacementSection = ({ companyDrivesData, isMobile }) => {
           </div>
         )}
       </section>
+      <section className={styles['department-section']}>
+        <h2>Developed by the Department of</h2>
+        <p className={styles['department-text']}>Computer Science and Engineering</p>
+      </section>
     </div>
   );
 };
 
-const KSRSection = ({ collegeImages, imagesLoading }) => {
+const teamMembers = [
+  {
+    name: 'Maneesh Adhithya S',
+    role: 'UI/UX & Graphics Designer',
+    color: '#4F46E5',
+    linkedin: 'https://www.linkedin.com/in/s-maneesh-adhithya-manju-8a72b6292/',
+    email: 'smaneeshmanju07@gmail.com'
+  },
+  {
+    name: 'Ravinder Singh',
+    role: 'Student Frontend Developer',
+    color: '#2085f6',
+    linkedin: 'https://www.linkedin.com/in/ravinder-singh-9b1147292',
+    email: 'singhravinder9680@gmail.com'
+  },
+  {
+    name: 'Gourinath S',
+    role: 'Coordinator Frontend Developer',
+    color: '#D23B42'
+  },
+  {
+    name: 'Kiruthika P',
+    role: 'Admin Frontend Developer',
+    color: '#3a9b4a',
+    linkedin: 'https://www.linkedin.com/in/kiruthika-palaniyappan',
+    email: 'pkiruthika59@gmail.com'
+  },
+  {
+    name: 'Teena S',
+    role: 'Testing & Code optimizer',
+    color: '#2568c5',
+    linkedin: 'https://www.linkedin.com/in/teenadevi/',
+    email: 'teenadevi5052@gmail.com'
+  },
+  {
+    name: 'Mohammed Ashik M',
+    role: 'Team Lead & Backend Developer',
+    color: '#FA7B20',
+    linkedin: 'https://www.linkedin.com/in/mohammedashikm3003/',
+    email: 'mmohammedashik2006@gmail.com'
+  }
+];
+
+const GraduationCapIcon = () => (
+  <svg viewBox="0 0 640 512" aria-hidden="true" focusable="false">
+    <path
+      fill="currentColor"
+      d="M320 32c-8.1 0-16.1 1.4-23.7 4.1L15.8 137.4C6.3 140.9 0 149.9 0 160s6.3 19.1 15.8 22.6l57.9 20.9C57.3 229.3 48 259.8 48 291.9V320c0 28.4-10.8 57.7-22.3 80.8c-6.5 13-13.9 25.8-22.5 37.6c-3.2 4.3-4.1 9.9-2.3 15s6 8.9 11.2 10.2l64 16c4.2 1.1 8.7.3 12.4-2s6.3-6.1 7.1-10.4c8.6-42.8 4.3-81.2-2.1-108.7c-3.2-14.2-7.5-28.7-13.5-42v-24.6c0-30.2 10.2-58.7 27.9-81.5c12.9-15.5 29.6-28 49.2-35.7l157-61.7c8.2-3.2 17.5.8 20.7 9s-.8 17.5-9 20.7l-157 61.7c-12.4 4.9-23.3 12.4-32.2 21.6l159.6 57.6c7.6 2.7 15.6 4.1 23.7 4.1s16.1-1.4 23.7-4.1l280.6-101c9.5-3.4 15.8-12.5 15.8-22.6s-6.3-19.1-15.8-22.6L343.7 36.1c-7.6-2.7-15.6-4.1-23.7-4.1M128 408c0 35.3 86 72 192 72s192-36.7 192-72l-15.3-145.4L354.5 314c-11.1 4-22.8 6-34.5 6s-23.5-2-34.5-6l-142.2-51.4z"
+    />
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <path fill="currentColor" fillRule="evenodd" d="M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm1.102 4.297a1.195 1.195 0 1 0 0-2.39a1.195 1.195 0 0 0 0 2.39m1 7.516V6.234h-2v6.579zM6.43 6.234h2v.881c.295-.462.943-1.084 2.148-1.084c1.438 0 2.219.953 2.219 2.766c0 .087.008.484.008.484v3.531h-2v-3.53c0-.485-.102-1.438-1.18-1.438c-1.079 0-1.17 1.198-1.195 1.982v2.986h-2z" clipRule="evenodd" />
+  </svg>
+);
+
+const GmailIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path fill="currentColor" fillRule="evenodd" d="M5 20a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3zM7.625 8.22a1 1 0 1 0-1.25 1.56l3.75 3.001a3 3 0 0 0 3.75 0l3.75-3a1 1 0 1 0-1.25-1.562l-3.75 3a1 1 0 0 1-1.25 0z" clipRule="evenodd" />
+  </svg>
+);
+
+const TeamSection = () => {
+  return (
+    <section className={styles['team-section']} aria-labelledby="team-section-title">
+      <h2 className={styles['team-section-title']} id="team-section-title">MEET OUR TEAM</h2>
+
+      <div className={styles['team-grid']}>
+        {teamMembers.map((member) => (
+          <article className={styles['team-card']} key={member.name} style={{ '--member-color': member.color }}>
+            <div className={styles['team-icon-circle']} style={{ backgroundColor: member.color }}>
+              <GraduationCapIcon />
+            </div>
+            <h3 className={styles['team-member-name']}>{member.name}</h3>
+            <p className={styles['team-member-role']}>{member.role}</p>
+            <div className={styles['team-contact-row']} aria-label={`${member.name} contact icons`}>
+              {member.linkedin ? (
+                <a
+                  className={styles['team-contact-icon']}
+                  href={member.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${member.name} LinkedIn profile`}
+                >
+                  <LinkedInIcon />
+                </a>
+              ) : (
+                <span className={styles['team-contact-icon']} aria-hidden="true">
+                  <LinkedInIcon />
+                </span>
+              )}
+              {member.email ? (
+                <a
+                  className={styles['team-contact-icon']}
+                  href={`mailto:${member.email}`}
+                  aria-label={`Email ${member.name}`}
+                >
+                  <GmailIcon />
+                </a>
+              ) : (
+                <span className={styles['team-contact-icon']} aria-hidden="true">
+                  <GmailIcon />
+                </span>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+
+    </section>
+  );
+};
+
+const KSRSection = ({ collegeImages, imagesLoading, onFooterBannerClick }) => {
   const footerBanner = collegeImages?.collegeBanner || null;
 
   return (
@@ -465,6 +598,16 @@ const KSRSection = ({ collegeImages, imagesLoading }) => {
                   src={footerBanner}
                   alt="College Logo"
                   className={styles['footer-logo-img']}
+                  onClick={onFooterBannerClick}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onFooterBannerClick();
+                    }
+                  }}
                 />
               </div>
               )
@@ -567,6 +710,7 @@ const KSRSection = ({ collegeImages, imagesLoading }) => {
 };
 
 const LandingPageContent = () => {
+  const navigate = useNavigate();
   // Hydrate from cache synchronously — avoids skeleton flash on re-mount
   const cached = useMemo(() => getCachedLandingData(), []);
   const hasCachedImages = !!cached.collegeImages;
@@ -579,6 +723,37 @@ const LandingPageContent = () => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
   });
+  const [footerBannerClicks, setFooterBannerClicks] = useState(0);
+  const [topBannerClicks, setTopBannerClicks] = useState(0);
+
+  useEffect(() => {
+    // Ensure old persisted counters from previous builds never carry over.
+    localStorage.removeItem('collegeBannerTopClickCount');
+    localStorage.removeItem('collegeBannerFooterClickCount');
+    localStorage.removeItem('sastuUnlockTopCountV2');
+    localStorage.removeItem('sastuUnlockFooterCountV2');
+  }, []);
+
+  const handleFooterBannerClick = () => {
+    const nextFooterCount = Math.min(BANNER_CLICK_THRESHOLD, footerBannerClicks + 1);
+    setFooterBannerClicks(nextFooterCount);
+  };
+
+  const handleTopBannerClick = () => {
+    // Sequence lock: top banner only starts counting after footer reaches 11.
+    if (footerBannerClicks < BANNER_CLICK_THRESHOLD) {
+      return;
+    }
+
+    const nextTopCount = Math.min(BANNER_CLICK_THRESHOLD, topBannerClicks + 1);
+    setTopBannerClicks(nextTopCount);
+
+    if (nextTopCount >= BANNER_CLICK_THRESHOLD) {
+      setFooterBannerClicks(0);
+      setTopBannerClicks(0);
+      navigate('/sastu-page');
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -663,10 +838,19 @@ const LandingPageContent = () => {
     <div className={styles['landing-page-container']}>
       <Navbar />
       <main className={styles['main-content']}>
-        <HeroSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
+        <HeroSection
+          collegeImages={collegeImages}
+          imagesLoading={imagesLoading}
+          onTopBannerClick={handleTopBannerClick}
+        />
         <PlacementPage placedStudentsData={placedStudentsData} isMobile={isMobile} />
         <PlacementSection companyDrivesData={companyDrivesData} isMobile={isMobile} />
-        <KSRSection collegeImages={collegeImages} imagesLoading={imagesLoading} />
+        <TeamSection />
+        <KSRSection
+          collegeImages={collegeImages}
+          imagesLoading={imagesLoading}
+          onFooterBannerClick={handleFooterBannerClick}
+        />
       </main>
     </div>
   );

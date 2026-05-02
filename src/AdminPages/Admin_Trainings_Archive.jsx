@@ -30,59 +30,11 @@ const writeArchivedTrainings = (cards) => {
   }
 };
 
-const DeleteConfirmationPopup = ({ onClose, onConfirm, cardName, isDeleting }) => (
-  <div className={styles['ad-tr-popup-overlay']}>
-    <div className={styles['ad-tr-popup-container']}>
-      <div className={styles['ad-tr-popup-header']}>Delete Training</div>
-      <div className={styles['ad-tr-popup-body']}>
-        <div className={styles['ad-tr-warning-icon']}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle className={styles['ad-tr-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
-            <path className={styles['ad-tr-warning-icon--exclamation']} d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
-          </svg>
-        </div>
-        <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
-        <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
-          Permanently delete training for <strong>{cardName}</strong>? This action cannot be undone.
-        </p>
-      </div>
-      <div className={styles['ad-tr-popup-footer']}>
-        <button onClick={onClose} className={styles['ad-tr-popup-cancel-btn']} disabled={isDeleting}>Cancel</button>
-        <button onClick={onConfirm} className={styles['ad-tr-popup-delete-btn']} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Delete'}</button>
-      </div>
-    </div>
-  </div>
-);
-
-const DeleteSuccessPopup = ({ onClose }) => (
-  <div className={styles['ad-tr-popup-overlay']}>
-    <div className={styles['ad-tr-popup-container']}>
-      <div className={styles['ad-tr-popup-header']}>Deleted !</div>
-      <div className={styles['ad-tr-popup-body']}>
-        <div className={styles['ad-tr-icon-wrapper']}>
-          <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            <line x1="10" y1="11" x2="10" y2="17"></line>
-            <line x1="14" y1="11" x2="14" y2="17"></line>
-          </svg>
-        </div>
-        <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Training Deleted ✓</h2>
-        <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The training has been permanently deleted!</p>
-      </div>
-      <div className={styles['ad-tr-popup-footer']}>
-        <button onClick={onClose} className={styles['ad-tr-popup-close-btn']}>Close</button>
-      </div>
-    </div>
-  </div>
-);
-
 function AdminTrainingsArchive({ onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const [archivedCards, setArchivedCards] = useState([]);
   const [openCardMenuId, setOpenCardMenuId] = useState('');
-
   const [activePopup, setActivePopup] = useState(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
@@ -183,9 +135,47 @@ function AdminTrainingsArchive({ onLogout }) {
   return (
     <div className={styles['ad-tr-page']}>
       {activePopup === 'deleteWarning' && (
-        <DeleteConfirmationPopup onClose={closePopup} onConfirm={confirmDelete} cardName={cardToDelete?.companyName || ''} isDeleting={deleteInProgress} />
+        <div className={styles['ad-tr-popup-overlay']}>
+          <div className={styles['ad-tr-popup-container']}>
+            <div className={styles['ad-tr-popup-header']}>Delete Training</div>
+            <div className={styles['ad-tr-popup-body']}>
+              <div className={styles['ad-tr-warning-icon']}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="55" fill="none" stroke="#ffa500" strokeWidth="2" />
+                  <text x="60" y="75" textAnchor="middle" fill="#ffffff" fontSize="48" fontWeight="700" fontFamily="Arial">!</text>
+                </svg>
+              </div>
+              <h2>Are you sure?</h2>
+              <p>Permanently delete training for <strong>{cardToDelete?.companyName}</strong>? This action cannot be undone.</p>
+            </div>
+            <div className={styles['ad-tr-popup-footer']}>
+              <button onClick={closePopup} className={styles['ad-tr-popup-cancel-btn']} disabled={deleteInProgress}>Discard</button>
+              <button onClick={confirmDelete} className={styles['ad-tr-popup-delete-btn']} disabled={deleteInProgress}>
+                {deleteInProgress ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-      {activePopup === 'deleteSuccess' && <DeleteSuccessPopup onClose={closePopup} />}
+      {activePopup === 'deleteSuccess' && (
+        <div className={styles['ad-tr-popup-overlay']}>
+          <div className={styles['ad-tr-popup-container']}>
+            <div className={styles['ad-tr-popup-header']}>Deleted !</div>
+            <div className={styles['ad-tr-popup-body']}>
+              <div className={styles['ad-tr-icon-wrapper']}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h2>Training Deleted ✓</h2>
+              <p>The training has been permanently deleted!</p>
+            </div>
+            <div className={styles['ad-tr-popup-footer']}>
+              <button onClick={closePopup} className={styles['ad-tr-popup-close-btn']}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AdNavbar onToggleSidebar={toggleSidebar} />
       <AdSidebar isOpen={isSidebarOpen} onLogout={onLogout} />

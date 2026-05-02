@@ -15,6 +15,7 @@ import API_BASE_URL from '../utils/apiConfig';
 import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 import { DownloadSuccessAlert, DownloadFailedAlert } from '../components/alerts/DownloadPreviewAlerts';
 import CoordinatorUnsavedChangesAlert from '../components/alerts/CoordinatorUnsavedChangesAlert';
+import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
 import { getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
 
 // Import CSS Module
@@ -534,6 +535,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
     const [changedFieldsList, setChangedFieldsList] = useState([]);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
+    const [showUnsavedBanner, setShowUnsavedBanner] = useState(false);
     const afterSaveNavRef = useRef(null);
     const getCurrentPhotoCacheKeys = useCallback((source = null) => {
         const photoKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', source);
@@ -808,6 +810,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
         const changed = getChangedFields(originalFormData, formData, originalPhotoValue, currentPhotoValue);
         setChangedFieldsList(changed);
         setHasUnsavedChanges(changed.length > 0);
+        setShowUnsavedBanner(changed.length > 0);
     }, [formData, profilePhoto, originalFormData, originalPhotoValue, getChangedFields, getPhotoCompareValue]);
 
     const actionableChangedFields = useMemo(() => {
@@ -977,6 +980,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 setOriginalPhotoValue(getPhotoCompareValue(data.profilePhoto || ''));
                 setChangedFieldsList([]);
                 setHasUnsavedChanges(false);
+                setShowUnsavedBanner(false);
             }
 
             setIsModalOpen(false);
@@ -1038,6 +1042,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 setOriginalPhotoValue(getPhotoCompareValue(resolvedPhotoUrl || ''));
                 setChangedFieldsList([]);
                 setHasUnsavedChanges(false);
+                setShowUnsavedBanner(false);
                 setIsSuccessPopupOpen(true);
 
                 // Non-blocking UI sync work (cache + sidebar event) after popup trigger.
@@ -1332,6 +1337,10 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             />
 
             <SuccessPopup isOpen={isSuccessPopupOpen} onClose={handleClosePopup} />
+            <FieldUpdateBanner
+                isVisible={showUnsavedBanner && hasUnsavedChanges}
+                updatedFields={changedFieldsList}
+            />
             <CoordinatorUnsavedChangesAlert
                 isOpen={showUnsavedModal}
                 onClose={() => {
