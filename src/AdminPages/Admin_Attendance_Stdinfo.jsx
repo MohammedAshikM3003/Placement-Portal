@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Adnavbar.js";
 import Sidebar from "../components/Sidebar/Adsidebar.js";
@@ -11,41 +12,50 @@ import 'react-datepicker/dist/react-datepicker.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
+const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => {
+  const content = (
     <div className={styles['Admin-ad-train-popup-overlay']}>
-        <div className={styles['Admin-ad-train-popup-container']}>
-            <div className={styles['Admin-ad-train-popup-header']}>Warning</div>
-            <div className={styles['Admin-ad-train-popup-body']}>
-                <div className={styles['Admin-ad-train-warning-icon']}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className={styles['Admin-ad-train-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
-                        <path className={styles['Admin-ad-train-warning-icon--exclamation']} d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
-                    </svg>
-                </div>
-                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Student Will Be Removed</h2>
-                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
-                    Remove {selectedCount} Student{selectedCount > 1 ? 's' : ''} from Placement Training?
-                </p>
-            </div>
-            <div className={styles['Admin-ad-train-popup-footer']}>
-                <button
-                    onClick={onClose}
-                    className={styles['Admin-ad-train-popup-cancel-btn']}
-                    disabled={isDeleting}
-                >
-                    Discard
-                </button>
-                <button
-                    onClick={onConfirm}
-                    className={styles['Admin-ad-train-popup-delete-btn']}
-                    disabled={isDeleting}
-                >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-            </div>
+      <div className={styles['Admin-ad-train-popup-container']}>
+        <div className={styles['Admin-ad-train-popup-header']}>Warning</div>
+        <div className={styles['Admin-ad-train-popup-body']}>
+          <div className={styles['Admin-ad-train-warning-icon']}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle className={styles['Admin-ad-train-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+              <path className={styles['Admin-ad-train-warning-icon--exclamation']} d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
+            </svg>
+          </div>
+          <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Student Will Be Removed</h2>
+          <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
+            Remove {selectedCount} Student{selectedCount > 1 ? 's' : ''} from Placement Training?
+          </p>
         </div>
+        <div className={styles['Admin-ad-train-popup-footer']}>
+          <button
+            onClick={onClose}
+            className={styles['Admin-ad-train-popup-cancel-btn']}
+            disabled={isDeleting}
+          >
+            Discard
+          </button>
+          <button
+            onClick={onConfirm}
+            className={styles['Admin-ad-train-popup-delete-btn']}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </div>
     </div>
-);
+  );
+
+  // Render popup into document body so it overlays fixed elements like the sidebar
+  if (typeof document !== 'undefined' && typeof createPortal === 'function') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
+};
 
 const parseDateValue = (value) => {
   if (!value) return null;
@@ -85,7 +95,7 @@ const normalizeTrainerSelection = (values) => {
 const UpdateSuccessPopup = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
-  return (
+  const content = (
     <div className={styles['ad-train-att-updated-popup-overlay']} onClick={onClose}>
       <div className={styles['ad-train-att-updated-popup-container']} onClick={(e) => e.stopPropagation()}>
         <div className={styles['ad-train-att-updated-popup-header']}>Updated !</div>
@@ -110,12 +120,18 @@ const UpdateSuccessPopup = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && typeof createPortal === 'function') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 };
 
 const AttenTrainAddedPopup = ({ isOpen, onClose, selectedCount }) => {
   if (!isOpen) return null;
 
-  return (
+  const content = (
     <div className={styles['atten-train-popup-overlay']} onClick={onClose}>
       <div
         className={`${styles['atten-train-popup-container']} ${styles['atten-train-is-success']}`}
@@ -143,6 +159,12 @@ const AttenTrainAddedPopup = ({ isOpen, onClose, selectedCount }) => {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && typeof createPortal === 'function') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 };
 
 const formatDateToISO = (date) => {
@@ -288,7 +310,7 @@ const AttenTrainProfilePopup = ({ isOpen, onClose, onSubmit, editingCompany, vie
 
   if (!isOpen) return null;
 
-  return (
+  const content = (
     <div className={styles['atten-train-popup-overlay']} onClick={handleClose}>
       <div
         className={`${styles['atten-train-popup-container']} ${showSuccess ? styles['atten-train-is-success'] : styles['atten-train-is-form']}`}
@@ -416,56 +438,48 @@ const AttenTrainProfilePopup = ({ isOpen, onClose, onSubmit, editingCompany, vie
                   <input type="text" name="bondPeriod" value={formData.bondPeriod} onChange={handleChange} placeholder="e.g., 2 Years" disabled={!!viewingCompany} />
                 </div>
               </div>
-
-              {viewingCompany ? (
-                <div className={styles['atten-train-popup-form-actions']}>
-                  <button type="button" className={styles['atten-train-popup-btn-submit']} onClick={handleClose} style={{ width: '100%' }}>
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <div className={styles['atten-train-popup-form-actions']}>
-                  <button type="button" className={styles['atten-train-popup-btn-cancel']} onClick={handleClose} disabled={isProcessing}>
-                    Cancel
-                  </button>
-                  <button type="submit" className={styles['atten-train-popup-btn-submit']} disabled={isProcessing}>
-                    {editingCompany ? (isProcessing ? 'UPDATING...' : 'UPDATE') : (isProcessing ? 'ADD...' : 'ADD')}
-                  </button>
-                  {submitError && (
-                    <p className={styles['atten-train-popup-error']}>
-                      {submitError}
-                    </p>
-                  )}
-                </div>
-              )}
             </form>
           </>
         )}
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && typeof createPortal === 'function') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 };
 
-const DeleteSuccessPopup = ({ onClose }) => (
-  <div className={styles['Admin-ad-train-popup-overlay']}>
-    <div className={styles['Admin-ad-train-popup-container']}>
-      <div className={styles['Admin-ad-train-popup-header']}>Removed !</div>
-      <div className={styles['Admin-ad-train-popup-body']}>
-        <svg className={styles['Admin-ad-train-delete-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-          <circle className={styles['Admin-ad-train-delete-success-icon--circle']} cx="26" cy="26" r="25" fill="none" />
-          <g className={styles['Admin-ad-train-delete-success-icon--bin']} fill="none" strokeWidth="2">
-            <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8" />
-          </g>
-        </svg>
-        <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Student Removed ✓</h2>
-        <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The selected student has been removed successfully!</p>
-      </div>
-      <div className={styles['Admin-ad-train-popup-footer']}>
-        <button onClick={onClose} className={styles['Admin-ad-train-popup-close-btn']}>Close</button>
+const DeleteSuccessPopup = ({ onClose }) => {
+  const content = (
+    <div className={styles['Admin-ad-train-popup-overlay']}>
+      <div className={styles['Admin-ad-train-popup-container']}>
+        <div className={styles['Admin-ad-train-popup-header']}>Removed !</div>
+        <div className={styles['Admin-ad-train-popup-body']}>
+          <svg className={styles['Admin-ad-train-delete-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle className={styles['Admin-ad-train-delete-success-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+            <g className={styles['Admin-ad-train-delete-success-icon--bin']} fill="none" strokeWidth="2">
+              <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8" />
+            </g>
+          </svg>
+          <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Student Removed ✓</h2>
+          <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The selected student has been removed successfully!</p>
+        </div>
+        <div className={styles['Admin-ad-train-popup-footer']}>
+          <button onClick={onClose} className={styles['Admin-ad-train-popup-close-btn']}>Close</button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+
+  if (typeof document !== 'undefined' && typeof createPortal === 'function') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
+};
 
 export default function AdminTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   const location = useLocation();

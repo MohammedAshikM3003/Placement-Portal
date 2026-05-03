@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom";
 import mongoDBService from "../services/mongoDBService.jsx";
 import styles from "./Cood_trainDBmain.module.css";
 
-import CalendarIcon from "../assets/cood_trainingDBCalendaricon.svg";
-
 const cx = (...classNames) => classNames.filter(Boolean).join(" ");
 
 const readStoredCoordinatorData = () => {
@@ -46,13 +44,8 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedStartDate, setSelectedStartDate] = useState("");
   const [selectedEndDate, setSelectedEndDate] = useState("");
-  const [isAttendancePopupOpen, setIsAttendancePopupOpen] = useState(false);
-  const [attendanceCompany, setAttendanceCompany] = useState("");
-  const [attendanceCourse, setAttendanceCourse] = useState("");
-  const [attendanceStartDate, setAttendanceStartDate] = useState("");
   const [popupAssignments, setPopupAssignments] = useState([]);
   const [popupLoading, setPopupLoading] = useState(false);
-  const [popupError, setPopupError] = useState("");
 
   const trainingTileClassByIndex = [styles.trainingTileGreen, styles.trainingTileTeal, styles.trainingTileBlue];
 
@@ -94,7 +87,6 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
 
   const loadPopupAssignments = async () => {
     setPopupLoading(true);
-    setPopupError("");
 
     try {
       const coordinatorData = readStoredCoordinatorData();
@@ -102,7 +94,6 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
 
       if (!coordinatorBranch) {
         setPopupAssignments([]);
-        setPopupError("Coordinator branch not found.");
         return;
       }
 
@@ -144,27 +135,12 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
       });
 
       setPopupAssignments(deduped);
-      if (deduped.length === 0) {
-        setPopupError(`No training assignments found for ${coordinatorBranch} students.`);
-      }
     } catch (error) {
       console.error("Failed to load training assignments for popup:", error);
       setPopupAssignments([]);
-      setPopupError("Failed to load training options.");
     } finally {
       setPopupLoading(false);
     }
-  };
-
-  const handleAttendanceCardClick = async () => {
-    if (popupLoading) return;
-
-    setAttendanceCompany("");
-    setAttendanceCourse("");
-    setAttendanceStartDate("");
-    setIsAttendancePopupOpen(false);
-    await loadPopupAssignments();
-    setIsAttendancePopupOpen(true);
   };
 
   useEffect(() => {
@@ -189,88 +165,6 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
     return `${day}-${month}-${year}`;
   }, []);
 
-  const attendanceCompanyOptions = useMemo(() => {
-    return [...new Set(
-      popupAssignments
-        .map((assignment) => (assignment?.companyName || "").toString().trim())
-        .filter(Boolean)
-    )].sort((a, b) => a.localeCompare(b));
-  }, [popupAssignments]);
-
-  const attendanceCourseOptions = useMemo(() => {
-    if (!attendanceCompany) return [];
-    return [...new Set(
-      popupAssignments
-        .filter((assignment) => (assignment?.companyName || "").toString().trim() === attendanceCompany)
-        .map((assignment) => (assignment?.courseName || "").toString().trim())
-        .filter(Boolean)
-    )].sort((a, b) => a.localeCompare(b));
-  }, [popupAssignments, attendanceCompany]);
-
-  const attendanceStartDateOptions = useMemo(() => {
-    if (!attendanceCompany || !attendanceCourse) return [];
-    return [...new Set(
-      popupAssignments
-        .filter((assignment) =>
-          (assignment?.companyName || "").toString().trim() === attendanceCompany &&
-          (assignment?.courseName || "").toString().trim() === attendanceCourse
-        )
-        .map((assignment) => (assignment?.startDate || "").toString().trim())
-        .filter(Boolean)
-    )].sort((a, b) => new Date(a) - new Date(b));
-  }, [popupAssignments, attendanceCompany, attendanceCourse]);
-
-  const selectedAttendanceSession = useMemo(() => {
-    if (!attendanceCompany || !attendanceCourse || !attendanceStartDate) return null;
-    return (
-      popupAssignments.find(
-        (assignment) =>
-          (assignment?.companyName || "").toString().trim() === attendanceCompany &&
-          (assignment?.courseName || "").toString().trim() === attendanceCourse &&
-          (assignment?.startDate || "").toString().trim() === attendanceStartDate
-      ) || null
-    );
-  }, [popupAssignments, attendanceCompany, attendanceCourse, attendanceStartDate]);
-
-  const trainingDayLabel = useMemo(() => {
-    if (!attendanceStartDate) return "Training Day -";
-    const start = new Date(attendanceStartDate);
-    const today = new Date();
-    start.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    const dayDiff = Math.floor((today.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-    const clampedDay = Math.max(1, dayDiff);
-    return `Training Day ${clampedDay}`;
-  }, [attendanceStartDate]);
-
-  const handleAttendanceCompanyChange = (value) => {
-    setAttendanceCompany(value);
-    setAttendanceCourse("");
-    setAttendanceStartDate("");
-  };
-
-  const handleAttendanceCourseChange = (value) => {
-    setAttendanceCourse(value);
-    setAttendanceStartDate("");
-  };
-
-  const handleAttendanceSearch = () => {
-    if (!attendanceCompany || !attendanceCourse || !attendanceStartDate) return;
-
-    navigate("/coo-train-attendance-stuinfo", {
-      state: {
-        company: attendanceCompany,
-        course: attendanceCourse,
-        companyName: attendanceCompany,
-        courseName: attendanceCourse,
-        startDate: attendanceStartDate,
-        endDate: selectedAttendanceSession?.endDate || "",
-        todayDate,
-        trainingDayLabel,
-      },
-    });
-    setIsAttendancePopupOpen(false);
-  };
 
   const trainingCards = useMemo(() => {
     return popupAssignments.map((assignment, index) => {
@@ -409,6 +303,30 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
     });
   }, [trainingCards, selectedCompany, selectedYear, selectedPhase, selectedStartDate, selectedEndDate]);
 
+  const trainingSummaryCounts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const ongoing = filteredTrainingCards.reduce((count, card) => {
+      const start = new Date(card.startDate);
+      const end = new Date(card.endDate);
+
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        return count;
+      }
+
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      return start <= today && end >= today ? count + 1 : count;
+    }, 0);
+
+    return {
+      ongoing,
+      total: filteredTrainingCards.length,
+    };
+  }, [filteredTrainingCards]);
+
   return (
     <div className={styles['coordinator-main-wrapper']}>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -423,129 +341,116 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
           <div className={styles['coo-training-container']}>
             <div className={styles['coo-training-dashboard-area']}>
               <div className={styles.rows}>
-            <div className={styles.row1}>
-              <div
-                className={cx(styles.card, styles.attendanceInfoCard, styles.clickableCard)}
-                onClick={handleAttendanceCardClick}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleAttendanceCardClick();
-                  }
-                }}
-              >
-                <img
-                  className={styles.calendarIcon}
-                  src={CalendarIcon}
-                  alt="Calendar"
-                />
-                <div className={styles.attendanceInfoTitle}>Attendance</div>
-                <div className={styles.attendanceInfoTitle}>&amp;</div>
-                <div className={styles.attendanceInfoTitle}>Student Info</div>
-                <div className={styles.attendanceInfoHint}>
-                  {popupLoading ? "Loading..." : "Click to Take Attendance and to view student info."}
-                </div>
-              </div>
-
-              <div className={cx(styles.card, styles.trainingFiltersCard)}>
-                <div className={styles.trainingFiltersTitle}>Training Filters</div>
-                <div className={styles.trainingFiltersGrid}>
-                  <div className={styles.trainingFilterField}>
-                    <label className={styles.trainingFilterLabel}>Company Name</label>
-                    <select
-                      className={styles.trainingFilterControl}
-                      value={selectedCompany}
-                      onChange={(e) => {
-                        setSelectedCompany(e.target.value);
-                        setSelectedYear("");
-                        setSelectedPhase("");
-                        setSelectedStartDate("");
-                        setSelectedEndDate("");
-                      }}
-                    >
-                      <option value="">Select Company</option>
-                      {companyOptions.map((companyName) => (
-                        <option key={companyName} value={companyName}>{companyName}</option>
-                      ))}
-                    </select>
+                <div className={styles.row1}>
+                  <div className={cx(styles.card, styles.trainingSummaryCard, styles.trainingSummaryOngoingCard)}>
+                    <div className={styles.trainingSummaryLabel}>This Month Trainings</div>
+                    <div className={styles.trainingSummaryValue}>{trainingSummaryCounts.ongoing}</div>
+                    <div className={styles.trainingSummaryHint}>Currently active trainings</div>
                   </div>
 
-                  <div className={styles.trainingFilterField}>
-                    <label className={styles.trainingFilterLabel}>Phase</label>
-                    <select
-                      className={styles.trainingFilterControl}
-                      value={selectedPhase}
-                      onChange={(e) => {
-                        setSelectedPhase(e.target.value);
-                        setSelectedStartDate("");
-                        setSelectedEndDate("");
-                      }}
-                    >
-                      <option value="">Select Phase</option>
-                      {phaseOptions.map((phaseValue) => (
-                        <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
-                      ))}
-                    </select>
+                  <div className={cx(styles.card, styles.trainingFiltersCard)}>
+                    <div className={styles.trainingFiltersTitle}>Training Filters</div>
+                    <div className={styles.trainingFiltersGrid}>
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>Company Name</label>
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedCompany}
+                          onChange={(e) => {
+                            setSelectedCompany(e.target.value);
+                            setSelectedYear("");
+                            setSelectedPhase("");
+                            setSelectedStartDate("");
+                            setSelectedEndDate("");
+                          }}
+                        >
+                          <option value="">Select Company</option>
+                          {companyOptions.map((companyName) => (
+                            <option key={companyName} value={companyName}>{companyName}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>Phase</label>
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedPhase}
+                          onChange={(e) => {
+                            setSelectedPhase(e.target.value);
+                            setSelectedStartDate("");
+                            setSelectedEndDate("");
+                          }}
+                        >
+                          <option value="">Select Phase</option>
+                          {phaseOptions.map((phaseValue) => (
+                            <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>Year</label>
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedYear}
+                          onChange={(e) => {
+                            setSelectedYear(e.target.value);
+                            setSelectedPhase("");
+                            setSelectedStartDate("");
+                            setSelectedEndDate("");
+                          }}
+                        >
+                          <option value="">Select Year</option>
+                          {yearOptions.map((yearValue) => (
+                            <option key={yearValue} value={yearValue}>{yearValue}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>Start Date</label>
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedStartDate}
+                          onChange={(e) => {
+                            setSelectedStartDate(e.target.value);
+                            setSelectedEndDate("");
+                          }}
+                          disabled={startDateOptions.length === 0}
+                        >
+                          <option value="">Select Start Date</option>
+                          {startDateOptions.map((dateValue) => (
+                            <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>End Date</label>
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedEndDate}
+                          onChange={(e) => setSelectedEndDate(e.target.value)}
+                          disabled={endDateOptions.length === 0}
+                        >
+                          <option value="">Select End Date</option>
+                          {endDateOptions.map((dateValue) => (
+                            <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className={styles.trainingFilterField}>
-                    <label className={styles.trainingFilterLabel}>Year</label>
-                    <select
-                      className={styles.trainingFilterControl}
-                      value={selectedYear}
-                      onChange={(e) => {
-                        setSelectedYear(e.target.value);
-                        setSelectedPhase("");
-                        setSelectedStartDate("");
-                        setSelectedEndDate("");
-                      }}
-                    >
-                      <option value="">Select Year</option>
-                      {yearOptions.map((yearValue) => (
-                        <option key={yearValue} value={yearValue}>{yearValue}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.trainingFilterField}>
-                    <label className={styles.trainingFilterLabel}>Start Date</label>
-                    <select
-                      className={styles.trainingFilterControl}
-                      value={selectedStartDate}
-                      onChange={(e) => {
-                        setSelectedStartDate(e.target.value);
-                        setSelectedEndDate("");
-                      }}
-                      disabled={startDateOptions.length === 0}
-                    >
-                      <option value="">Select Start Date</option>
-                      {startDateOptions.map((dateValue) => (
-                        <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.trainingFilterField}>
-                    <label className={styles.trainingFilterLabel}>End Date</label>
-                    <select
-                      className={styles.trainingFilterControl}
-                      value={selectedEndDate}
-                      onChange={(e) => setSelectedEndDate(e.target.value)}
-                      disabled={endDateOptions.length === 0}
-                    >
-                      <option value="">Select End Date</option>
-                      {endDateOptions.map((dateValue) => (
-                        <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
-                      ))}
-                    </select>
+                  <div className={cx(styles.card, styles.trainingSummaryCard, styles.trainingSummaryTotalCard)}>
+                    <div className={styles.trainingSummaryLabel}>Total Trainings</div>
+                    <div className={styles.trainingSummaryValue}>{trainingSummaryCounts.total}</div>
+                    <div className={styles.trainingSummaryHint}>Visible for the selected filters</div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className={styles.row2}>
+                <div className={styles.row2}>
               <div className={cx(styles.card, styles.trainingsCard)}>
                 <div className={styles.trainingsHeader}>Trainings</div>
                 <div className={styles.trainingsInner}>
@@ -610,108 +515,12 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
                   )}
                 </div>
               </div>
-            </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-      {isAttendancePopupOpen && (
-        <div className={styles['coo-tr-att-popup-overlay']}>
-          <div className={styles['coo-tr-att-popup-container']}>
-            <div className={styles['coo-tr-att-popup-header']}>Attendance &amp; Student Info</div>
-
-            <div className={styles['coo-tr-att-popup-body']}>
-              <div className={styles['coo-tr-att-popup-grid']}>
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>Company</label>
-                  <select
-                    className={styles['coo-tr-att-dropdown']}
-                    value={attendanceCompany}
-                    onChange={(e) => handleAttendanceCompanyChange(e.target.value)}
-                    disabled={popupLoading}
-                  >
-                    <option value="">Select Company</option>
-                    {attendanceCompanyOptions.map((companyName) => (
-                      <option key={companyName} value={companyName}>{companyName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>Course</label>
-                  <select
-                    className={styles['coo-tr-att-dropdown']}
-                    value={attendanceCourse}
-                    onChange={(e) => handleAttendanceCourseChange(e.target.value)}
-                    disabled={!attendanceCompany || popupLoading}
-                  >
-                    <option value="">Select Course</option>
-                    {attendanceCourseOptions.map((courseName) => (
-                      <option key={courseName} value={courseName}>{courseName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>Start Date</label>
-                  <select
-                    className={styles['coo-tr-att-dropdown']}
-                    value={attendanceStartDate}
-                    onChange={(e) => setAttendanceStartDate(e.target.value)}
-                    disabled={!attendanceCompany || !attendanceCourse || popupLoading}
-                  >
-                    <option value="">Select Start Date</option>
-                    {attendanceStartDateOptions.map((startDate) => (
-                      <option key={startDate} value={startDate}>{formatDateForDisplay(startDate)}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>End Date</label>
-                  <input
-                    className={styles['coo-tr-att-text']}
-                    value={formatDateForDisplay(selectedAttendanceSession?.endDate || "")}
-                    readOnly
-                  />
-                </div>
-
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>Today Date</label>
-                  <input className={styles['coo-tr-att-text']} value={todayDate} readOnly />
-                </div>
-
-                <div className={styles['coo-tr-att-input-wrapper']}>
-                  <label className={styles['coo-tr-att-static-label']}>Training Day</label>
-                  <input className={styles['coo-tr-att-text']} value={trainingDayLabel} readOnly />
-                </div>
-              </div>
-              {popupError && (
-                <p className={styles['coo-tr-att-popup-error']}>{popupError}</p>
-              )}
-            </div>
-
-            <div className={styles['coo-tr-att-popup-footer']}>
-              <button
-                type="button"
-                className={styles['coo-tr-att-popup-close-btn']}
-                onClick={() => setIsAttendancePopupOpen(false)}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className={styles['coo-tr-att-popup-search-btn']}
-                onClick={handleAttendanceSearch}
-                disabled={!attendanceCompany || !attendanceCourse || !attendanceStartDate || popupLoading}
-              >
-                Search
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

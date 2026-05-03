@@ -824,6 +824,29 @@
   cursor: not-allowed;
 }
 
+.ad-tr-att-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: ad-tr-att-popup-fade-in 0.3s ease-out;
+}
+
+@keyframes ad-tr-att-popup-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
 .ad-tr-att-popup-container {
   width: 460px;

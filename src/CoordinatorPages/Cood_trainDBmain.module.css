@@ -77,12 +77,12 @@
 .row1 {
   width: 100%;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
   gap: 18px;
   align-items: stretch;
 }
 
-.row1 > .attendanceInfoCard,
+.row1 > .trainingSummaryCard,
 .row1 > .trainingFiltersCard {
   height: 100%;
 }
@@ -110,37 +110,45 @@
   box-sizing: border-box;
 }
 
-.attendanceInfoCard {
-  padding: 18px 16px;
+.trainingSummaryCard {
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 10px;
   border:  2px solid #808080;
-}
-
-.calendarIcon {
-  width: 74px;
-  height: 70px;
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-
-.attendanceInfoTitle {
-   color: #333;
-    font-size: 1.9rem;
-    font-weight: 600;
-    line-height: 33px;
-}
-
-.attendanceInfoHint {
-  margin-top: 2px;
-  font-size: 12px;
-  color: #8a8a8a;
   text-align: center;
-  letter-spacing: 0.15px;
+  min-height: 100%;
+}
+
+.trainingSummaryOngoingCard {
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%);
+  border-color: rgba(88, 196, 124, 0.7);
+}
+
+.trainingSummaryTotalCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbf7f7 100%);
+  border-color: rgba(210, 59, 66, 0.55);
+}
+
+.trainingSummaryLabel {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #d23b42;
+  letter-spacing: 0.2px;
+}
+
+.trainingSummaryValue {
+  font-size: clamp(2.7rem, 4vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #232323;
+}
+
+.trainingSummaryHint {
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .clickableCard {
@@ -153,25 +161,32 @@
 }
 
 .trainingFiltersCard {
-  padding: 16px 18px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  border: 2px solid #808080;
-  background: #ffffff;
+  gap: 16px;
+  border: none;
+  background: #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .trainingFiltersTitle {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 700;
-  color: #d23b42;
-  margin: 0;
+  color: #ffffff;
+  margin: 0 auto;
+  background: #d23b42;
+  padding: 8px 20px;
+  border-radius: 20px;
+  display: inline-block;
+  letter-spacing: 0.5px;
 }
 
 .trainingFiltersGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .trainingFilterField {
@@ -181,23 +196,24 @@
 }
 
 .trainingFilterLabel {
-  font-size: 0.83rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #666;
-  margin-left: 3px;
+  color: #333;
+  margin-left: 2px;
 }
 
 .trainingFilterControl {
   width: 100%;
-  height: 40px;
-  border: 2px solid #d6d6d6;
+  height: 42px;
+  border: 1.5px solid #d0d0d0;
   border-radius: 8px;
-  background: #fff;
+  background: #ffffff;
   color: #333;
   font-size: 0.9rem;
-  padding: 0 10px;
+  padding: 0 12px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .trainingFilterControl:focus,
@@ -839,7 +855,7 @@
   }
 
   .trainingFiltersGrid {
-    grid-template-columns: repeat(2, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .trainingsInner {
@@ -888,7 +904,7 @@
 
   .trainingsCard,
   .filtersCard,
-  .attendanceCard,
+  .trainingSummaryCard,
   .topCard,
   .statCard {
     min-width: 0;
@@ -901,86 +917,14 @@
   .trainingsInner {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 6px 0 8px 0;
-    justify-content: stretch;
-  }
-
-  .trainingTile {
     min-height: 210px;
     margin-top: 0;
   }
 
-  /* Red horizontal scrollbar for Trainings on mobile */
-  .trainingsInner::-webkit-scrollbar {
-    height: 8px;
-  }
-  .trainingsInner::-webkit-scrollbar-button {
-    display: none;
-  }
-  .trainingsInner::-webkit-scrollbar-track {
-    background: #f0f2f5;
-    border-radius: 20px;
-  }
-  .trainingsInner::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 2px solid #f0f2f5;
-  }
-  .trainingsInner::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
-
-  .attendanceCard {
+  .trainingSummaryCard {
     width: calc(100% - 30px);
     margin: 0 auto;
-    padding: 15px;
-  }
-
-  .filtersCard {
-    width: calc(100% - 30px);
-    margin: 0 auto;
-  }
-
-  .attendanceHeader {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-
-  .attendanceBody {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    text-align: left;
-    padding: 0 10px;
-  }
-
-  .attendanceChartWrapper {
-    order: -1;
-    margin-left: 0;
-    width: 120px;
-    height: 120px;
-  }
-
-  .attendanceSideStats {
-    text-align: left;
-    gap: 15px;
-    order: 1;
-    flex-grow: 0;
-  }
-
-  .sideStatValue {
-    font-size: 28px;
-  }
-
-  .attendanceChartCenterValue {
-    font-size: 1.5rem;
-  }
-
-  .attendanceChartCenterLabel {
-    font-size: 0.7rem;
+    padding: 18px;
   }
 
   /* Red scrollbar on mobile - smaller width, no arrows */
