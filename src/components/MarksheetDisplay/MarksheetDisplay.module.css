@@ -1,0 +1,449 @@
+.container {
+  width: 100%;
+  margin: 20px 0;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.loading,
+.error,
+.noData {
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-left: 4px solid #dc2626;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Semester Tabs
+   ───────────────────────────────────────────────────────── */
+.semesterTabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: #3b82f6;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Marksheet Card
+   ───────────────────────────────────────────────────────── */
+.marksheetCard {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Card Header
+   ───────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerInfo {
+  flex: 1;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.examDate {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0;
+}
+
+.programme {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Stats
+   ───────────────────────────────────────────────────────── */
+.stats {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.stat.statWarning {
+  border-left-color: #f59e0b;
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stat.statWarning .statValue {
+  color: #f59e0b;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Table
+   ───────────────────────────────────────────────────────── */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead {
+  background-color: #f3f4f6;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+}
+
+.table thead th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.table tbody tr.fail {
+  background-color: #fff5f5;
+}
+
+.table tbody tr.arrear {
+  background-color: #fffbeb;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Table Cells
+   ───────────────────────────────────────────────────────── */
+.code {
+  font-weight: 600;
+  color: #3b82f6;
+  font-family: 'Courier New', monospace;
+}
+
+.name {
+  max-width: 300px;
+}
+
+.credits {
+  text-align: center;
+  font-weight: 600;
+}
+
+.grade {
+  text-align: center;
+}
+
+.result {
+  text-align: center;
+}
+
+.status {
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Badges
+   ───────────────────────────────────────────────────────── */
+.gradeBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.gradeOPlusAPlus {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.gradeOPlus,
+.gradeA {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.gradeBPlus,
+.gradeB {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.gradeC {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.gradeU {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.resultBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.resultBadge.pass {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.resultBadge.fail {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.arrearBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  background-color: #fed7aa;
+  color: #92400e;
+}
+
+.clearedBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  background-color: #ccfbf1;
+  color: #134e4a;
+}
+
+.completedBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Footer
+   ───────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 16px 20px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.footerStat {
+  display: flex;
+  gap: 8px;
+}
+
+.footerStat span {
+  color: #6b7280;
+}
+
+.footerStat strong {
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.footerStat.warning strong {
+  color: #f59e0b;
+}
+
+.earned {
+  color: #22c55e;
+}
+
+.uploadedInfo {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Responsive Design
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .stats {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 8px;
+  }
+
+  .footer {
+    gap: 12px;
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .uploadedInfo {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 15px;
+  }
+
+  .marksheetCard {
+    margin-bottom: 15px;
+  }
+
+  .semesterTabs {
+    margin-bottom: 15px;
+  }
+
+  .tab {
+    padding: 10px 15px;
+    font-size: 12px;
+  }
+
+  .title {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+
+  .stat {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  .statValue {
+    font-size: 16px;
+  }
+
+  .table {
+    font-size: 11px;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 6px;
+  }
+
+  .gradeBadge,
+  .resultBadge,
+  .arrearBadge,
+  .clearedBadge,
+  .completedBadge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+  }
+}

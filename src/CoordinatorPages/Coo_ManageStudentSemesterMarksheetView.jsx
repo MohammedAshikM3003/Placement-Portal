@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import UploadIcon from '../assets/Uploadblueiocn.svg';
 import StuBinIcon from '../assets/StuBinicon.svg';
 import StuEyeIcon from '../assets/purpleeyeiconn.svg';
+import mongoDBService from '../services/mongoDBService.jsx';
 
 const MdUpload = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
@@ -38,10 +39,28 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     const [extractedData, setExtractedData] = useState(null);
     const [showSubmitPopup, setShowSubmitPopup] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [ocrError, setOcrError] = useState('');
     const [creditError, setCreditError] = useState('');
     const [previewData, setPreviewData] = useState(null);
+    const [semesterRecords, setSemesterRecords] = useState([]);
+    const [semesterLoading, setSemesterLoading] = useState(false);
+    const [semesterError, setSemesterError] = useState('');
     const fileInputRef = useRef(null);
+
+    const semesterTableRows = semesterRecords.length > 0
+        ? semesterRecords
+        : (studentData ? [{
+            regNo: studentData.regNo || '--',
+            studentName: `${studentData.firstName || ''} ${studentData.lastName || ''}`.trim() || '--',
+            year: studentData.currentYear || '--',
+            semester: studentData.currentSemester || '--',
+            section: studentData.section || '--',
+            cleared: studentData.arrearStatus === 'NHA' ? '1' : '0',
+            arrear: studentData.arrearStatus === 'NHA' ? '0' : '1',
+            sgpa: studentData.sgpa || '--',
+            cgpa: studentData.overallCgpa || '--'
+        }] : []);
 
     const handleToggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -126,10 +145,105 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
         setShowSubmitPopup(true);
     };
 
+    useEffect(() => {
+        const loadSemesterRecords = async () => {
+            const regNo = studentData?.regNo || studentData?.registerNumber;
+            const semester = studentData?.currentSemester || studentData?.semester;
+
+            if (!regNo && !semester) {
+                return;
+            }
+
+            setSemesterLoading(true);
+            setSemesterError('');
+
+            try {
+                const response = await mongoDBService.getSemesterRecords({
+                    regNo,
+                    semester
+                });
+
+                setSemesterRecords(Array.isArray(response?.records) ? response.records : []);
+            } catch (error) {
+                setSemesterError(error.message || 'Failed to load semester records');
+                setSemesterRecords([]);
+            } finally {
+                setSemesterLoading(false);
+            }
+        };
+
+        loadSemesterRecords();
+    }, [studentData]);
+
     const confirmSubmit = async () => {
+        if (!extractedData || !Array.isArray(extractedData.courses) || extractedData.courses.length === 0) {
+            setShowSubmitPopup(false);
+            setOcrError('No extracted course data found to submit.');
+            return;
+        }
+
+        const regNo = studentData?.regNo || studentData?.registerNumber || extractedData?.regNo;
+        const studentName = `${studentData?.firstName || ''} ${studentData?.lastName || ''}`.trim() || extractedData?.studentName || 'Unknown Student';
+        const studentId = studentData?._id || studentData?.id || extractedData?.studentId;
+        const semester = Number(studentData?.currentSemester || extractedData?.semester || 0);
+
+        if (!regNo || !studentId || !semester) {
+            setShowSubmitPopup(false);
+            setOcrError('Missing student details (regNo, studentId, or semester).');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setOcrError('');
         setShowSubmitPopup(false);
-        // Add submit logic here
-        setShowSuccessPopup(true);
+
+        try {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+
+            const marksheetPayload = {
+                studentId,
+                regNo,
+                studentName,
+                programme: studentData?.branch || extractedData?.programme || '',
+                examDate: extractedData?.examDate || '',
+                subjects: extractedData.courses.map((course) => {
+                    const grade = String(course.grade || '').toUpperCase();
+                    const credits = Number(course.credits) || 0;
+                    const courseSemester = Number(course.semester || semester);
+                    return {
+                        semester: courseSemester,
+                        courseCode: String(course.courseCode || '').toUpperCase(),
+                        courseName: course.courseTitle || course.courseName || '',
+                        credits,
+                        grade,
+                        result: (grade === 'U' || grade === 'RA') ? 'F' : 'P'
+                    };
+                })
+            };
+
+            const response = await fetch(`${API_BASE_URL}/marksheets/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({
+                    marksheets: [marksheetPayload],
+                    semester
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to save marksheet');
+            }
+
+            setShowSuccessPopup(true);
+        } catch (error) {
+            setOcrError(error.message || 'Failed to submit marksheet');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Calculate SGPA
@@ -238,101 +352,82 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                             </div>
                         </div>
 
-                        {/* Right Side - Upload Section */}
+                        {/* Right Side - Subjects Table Section */}
                         <div className={styles.uploadSection}>
-                            {/* Upload Drop Zone */}
-                            <div
-                                className={`${styles.uploadDropZone} ${isDragging ? styles.dragging : ''}`}
-                                onDrop={handleDrop}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onClick={handleUploadClick}
-                            >
-                                {uploadedFile ? (
-                                    <div className={styles.fileUploadedView}>
-                                        <div className={styles.uploadActions}>
-                                            <button
-                                                className={styles.actionIconBtn}
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(); }}
-                                            >
-                                                <img src={StuBinIcon} alt="Delete" className={styles.actionIcon} />
-                                                <span>Delete</span>
-                                            </button>
-                                            <button
-                                                className={styles.actionIconBtn}
-                                                onClick={(e) => { e.stopPropagation(); handlePreview(); }}
-                                            >
-                                                <img src={StuEyeIcon} alt="Preview" className={styles.actionIconPreview} />
-                                                <span>Preview</span>
-                                            </button>
-                                        </div>
-                                        <svg className={styles.pdfIconLarge} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#D73D3D"/>
-                                            <path d="M14 2V8H20" fill="#B53138"/>
-                                            <text x="12" y="16" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">PDF</text>
-                                        </svg>
-                                        <span className={styles.uploadedFileName}>{uploadedFile.name}</span>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <img src={UploadIcon} alt="Upload" className={styles.uploadIconLarge} />
-                                        <h3 className={styles.uploadHeading}>
-                                            Drag & Drop or Click to Upload Marksheet
-                                        </h3>
-                                    </>
-                                )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={handleFileInputChange}
-                                    className={styles.hiddenInput}
-                                />
+                            {/* Action Boxes */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                                <div style={{ 
+                                    border: '1px solid #e0e0e0', 
+                                    borderRadius: '8px', 
+                                    padding: '20px', 
+                                    textAlign: 'center',
+                                    cursor: 'pointer'
+                                }}>
+                                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
+                                    <div style={{ fontWeight: '600', fontSize: '16px', color: '#333', marginBottom: '4px' }}>Edit Marksheet</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>Review, Edit and Update Student Semester Marksheet Records</div>
+                                </div>
+                                <div style={{ 
+                                    border: '1px solid #e0e0e0', 
+                                    borderRadius: '8px', 
+                                    padding: '20px', 
+                                    textAlign: 'center',
+                                    cursor: 'pointer'
+                                }}>
+                                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>⬇️</div>
+                                    <div style={{ fontWeight: '600', fontSize: '16px', color: '#333', marginBottom: '4px' }}>Download Marksheet</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>Download the student's current semester marksheet</div>
+                                </div>
                             </div>
 
-                            {/* Course Table */}
-                            {extractedData && extractedData.courses && (
-                                <div className={styles.tableOuter}>
-                                    <table className={styles.courseTableHeader}>
-                                        <thead>
-                                            <tr>
-                                                <th>S.No</th>
-                                                <th>Course Code</th>
-                                                <th>Course Title</th>
-                                                <th>Credits</th>
-                                                <th>Grade</th>
-                                                <th>Result</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                    <div className={styles.tableScroll}>
+                            {/* Subjects Table */}
+                            <div className={styles.tableOuter}>
+                                <table className={styles.courseTableHeader}>
+                                    <thead>
+                                        <tr>
+                                            <th>S.NO</th>
+                                            <th>Semester</th>
+                                            <th>Course Code</th>
+                                            <th>Course Name</th>
+                                            <th>Grade</th>
+                                            <th>Result</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <div className={styles.tableScroll}>
+                                    {semesterLoading ? (
+                                        <div style={{ padding: '24px', textAlign: 'center' }}>Loading subjects...</div>
+                                    ) : (
                                         <table className={styles.courseTableBody}>
                                             <tbody>
-                                                {extractedData.courses.map((course, index) => (
-                                                    <tr key={index}>
-                                                        <td>{index + 1}</td>
-                                                        <td>{course.courseCode}</td>
-                                                        <td>{course.courseTitle}</td>
-                                                        <td>{course.credits}</td>
-                                                        <td>{course.grade}</td>
-                                                        <td className={course.grade === 'U' || course.grade === 'RA' ? styles.failResult : styles.passResult}>
-                                                            {course.grade === 'U' || course.grade === 'RA' ? 'FAIL' : 'PASS'}
+                                                {extractedData?.courses && extractedData.courses.length > 0 ? (
+                                                    extractedData.courses.map((course, index) => (
+                                                        <tr key={index}>
+                                                            <td>{index + 1}</td>
+                                                            <td>{extractedData.semester || studentData?.currentSemester || '--'}</td>
+                                                            <td>{course.courseCode || course.code || '--'}</td>
+                                                            <td>{course.courseTitle || course.courseName || course.name || '--'}</td>
+                                                            <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>
+                                                            <td style={{ 
+                                                                color: (course.grade === 'U' || course.grade === 'RA') ? '#C53030' : '#4EA24E',
+                                                                fontWeight: '600'
+                                                            }}>
+                                                                {(course.grade === 'U' || course.grade === 'RA') ? 'F' : 'P'}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
+                                                            No subjects loaded yet. Upload a marksheet to view subjects.
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                )}
                                             </tbody>
                                         </table>
-                                    </div>
-
-                                    {/* SGPA Display */}
-                                    <div className={styles.cgpaInfo}>
-                                        <div className={styles.cgpaItem}>
-                                            <span className={styles.cgpaLabel}>Calculated SGPA: </span>
-                                            <span className={styles.cgpaValue}>{calculateSGPA()}</span>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
 
                             {/* Bottom Action Buttons */}
                             <div className={styles.bottomActionButtons}>
@@ -447,8 +542,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                             <button
                                 className={styles['Semester-popup-submit-btn']}
                                 onClick={confirmSubmit}
+                                disabled={isSubmitting}
                             >
-                                Submit
+                                {isSubmitting ? 'Submitting...' : 'Submit'}
                             </button>
                         </div>
                     </div>

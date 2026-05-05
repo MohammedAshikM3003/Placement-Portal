@@ -178,8 +178,8 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
         let allowedRegNos = new Set();
         if (coordinatorDepartment) {
           const [branchStudents, deptStudents] = await Promise.all([
-            mongoDBService.getStudents({ branch: coordinatorDepartment, limit: 3000, includeImages: "false" }),
-            mongoDBService.getStudents({ department: coordinatorDepartment, limit: 3000, includeImages: "false" }),
+            mongoDBService.getStudents({ branch: coordinatorDepartment, limit: 3000, includeImages: "false", includeArchived: 'true' }),
+            mongoDBService.getStudents({ department: coordinatorDepartment, limit: 3000, includeImages: "false", includeArchived: 'true' }),
           ]);
 
           const studentsA = Array.isArray(branchStudents) ? branchStudents : [];

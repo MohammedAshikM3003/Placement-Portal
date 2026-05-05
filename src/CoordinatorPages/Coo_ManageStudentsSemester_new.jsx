@@ -1,386 +1,433 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
+import { API_BASE_URL } from '../utils/apiConfig';
+import { CertificatePreviewProgressAlert } from '../components/alerts';
 import styles from './Coo_ManageStudentsSemester_new.module.css';
-import studentcapicon from "../assets/studentcapicon.svg";
 import Adminicon from "../assets/Adminicon.png";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import mongoDBService from "../services/mongoDBService.jsx";
+import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
 
-// Helper functions
-const readStoredCoordinatorData = () => {
-    if (typeof window === 'undefined') return null;
-    try {
-        const stored = window.localStorage.getItem('coordinatorData');
-        return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-        console.error('Error reading coordinator data:', error);
-        return null;
-    }
-};
+// Start with no subjects; show notice before upload
+const INITIAL_SUBJECTS = [];
 
-const normalizeId = (val) => {
-    if (!val) return '';
-    if (typeof val === 'object') {
-        return val._id ? normalizeId(val._id) : val.$oid ? String(val.$oid) : '';
-    }
-    const str = val.toString ? val.toString() : '';
-    return str && str !== '[object Object]' ? str : '';
-};
+const GRADE_OPTIONS = ['Select Credit', '4 Credits', '3 Credits', '2 Credits', '1 Credit'];
+const NO_FILE_SELECTED = 'No file selected';
 
-const resolveCoordinatorDepartment = (data) => {
-    if (!data) return null;
-    const deptValue =
-        data.department ||
-        data.branch ||
-        data.dept ||
-        data.departmentName ||
-        data.coordinatorDepartment ||
-        data.assignedDepartment;
-    return deptValue ? deptValue.toString().toUpperCase() : null;
-};
-
-// Icon components
-const SearchIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }}>
-    <circle cx="11" cy="11" r="8"></circle>
-    <path d="m21 21-4.35-4.35"></path>
+const BinIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14H6L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
   </svg>
 );
 
 const EyeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-    <circle cx="12" cy="12" r="3"></circle>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
-
-// Utility functions
-const toStringSafe = (value) => (value === undefined || value === null ? '' : String(value).trim());
-
-const toUpperSafe = (value) => toStringSafe(value).toUpperCase();
-
-const formatGpa = (value) => {
-  if (value === undefined || value === null || value === '') {
-    return '-';
-  }
-  const num = Number(value);
-  if (Number.isFinite(num)) {
-    return num.toFixed(1);
-  }
-  return String(value).trim();
-};
-
-const getDisplayValue = (value, fallback = '-') => (
-  value === undefined || value === null || value === '' ? fallback : value
-);
-
-// Sample data - replace with actual API call
-const generateSampleData = () => [
-  {
-    id: '1',
-    regNo: '7315XXXXXXX',
-    name: 'Ravinder',
-    year: 'III',
-    semester: '5',
-    section: 'B',
-    arrears: 0,
-    overallArrears: 0,
-    cgpa: '9.1',
-    overallCgpa: '9.1'
-  },
-  {
-    id: '2',
-    regNo: '7315XXXXXXX',
-    name: 'Alice',
-    year: 'II',
-    semester: '3',
-    section: 'A',
-    arrears: 2,
-    overallArrears: 6,
-    cgpa: '7.1',
-    overallCgpa: '7.4'
-  },
-  {
-    id: '3',
-    regNo: '7315XXXXXXX',
-    name: 'Jhon',
-    year: 'III',
-    semester: '6',
-    section: 'C',
-    arrears: 1,
-    overallArrears: 10,
-    cgpa: '6.8',
-    overallCgpa: '6.9'
-  },
-  {
-    id: '4',
-    regNo: '7315XXXXXXX',
-    name: 'Ashik',
-    year: 'IV',
-    semester: '7',
-    section: 'D',
-    arrears: 0,
-    overallArrears: 0,
-    cgpa: '9.1',
-    overallCgpa: '9.1'
-  },
-  {
-    id: '5',
-    regNo: '7315XXXXXXX',
-    name: 'Priya',
-    year: 'II',
-    semester: '4',
-    section: 'A',
-    arrears: 1,
-    overallArrears: 3,
-    cgpa: '8.2',
-    overallCgpa: '8.0'
-  },
-  {
-    id: '6',
-    regNo: '7315XXXXXXX',
-    name: 'Kumar',
-    year: 'III',
-    semester: '5',
-    section: 'B',
-    arrears: 0,
-    overallArrears: 2,
-    cgpa: '7.8',
-    overallCgpa: '7.9'
-  },
-  {
-    id: '7',
-    regNo: '7315XXXXXXX',
-    name: 'Sneha',
-    year: 'IV',
-    semester: '8',
-    section: 'C',
-    arrears: 0,
-    overallArrears: 0,
-    cgpa: '9.5',
-    overallCgpa: '9.4'
-  },
-  {
-    id: '8',
-    regNo: '7315XXXXXXX',
-    name: 'Rahul',
-    year: 'II',
-    semester: '3',
-    section: 'D',
-    arrears: 3,
-    overallArrears: 8,
-    cgpa: '6.5',
-    overallCgpa: '6.7'
-  },
-  {
-    id: '9',
-    regNo: '7315XXXXXXX',
-    name: 'Divya',
-    year: 'III',
-    semester: '6',
-    section: 'A',
-    arrears: 0,
-    overallArrears: 1,
-    cgpa: '8.8',
-    overallCgpa: '8.6'
-  },
-  {
-    id: '10',
-    regNo: '7315XXXXXXX',
-    name: 'Arjun',
-    year: 'IV',
-    semester: '7',
-    section: 'B',
-    arrears: 1,
-    overallArrears: 4,
-    cgpa: '7.5',
-    overallCgpa: '7.6'
-  }
-];
-
-const initialFilters = {
-  name: '',
-  regNo: '',
-  semester: '',
-  year: '',
-  section: '',
-};
 
 function ManageStudentsSemester({ onLogout, onViewChange }) {
   useCoordinatorAuth(); // JWT authentication verification
   const navigate = useNavigate();
-  
-  // Coordinator data and department
-  const [coordinatorData, setCoordinatorData] = useState(() => readStoredCoordinatorData());
-  const coordinatorDepartment = useMemo(
-    () => resolveCoordinatorDepartment(coordinatorData) || 'CSE',
-    [coordinatorData]
-  );
 
   // Sidebar toggle state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const uploadInputRef = useRef(null);
+  const previewUrlRef = useRef(null);
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+  const [fileName, setFileName] = useState(NO_FILE_SELECTED);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
+  const [masterSubjects, setMasterSubjects] = useState([]);
+  const [hasPreviewData, setHasPreviewData] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [showUploadingPopup, setShowUploadingPopup] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUploadFailedPopup, setShowUploadFailedPopup] = useState(false);
+  const [uploadFailedMessage, setUploadFailedMessage] = useState('');
+  const [isSavingSubjects, setIsSavingSubjects] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [extractedStudents, setExtractedStudents] = useState([]);
 
-  // Student and filter states
-  const [students, setStudents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState(initialFilters);
-  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
-  const [showPrintMenu, setShowPrintMenu] = useState(false);
-  
-  // Ref for tbody to control scroll position
-  const tbodyRef = useRef(null);
-  const printMenuRef = useRef(null);
-
-  // Load data on mount
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const data = generateSampleData();
-        setStudents(data);
-      } catch (error) {
-        console.error('Error loading students:', error);
-      } finally {
-        setIsLoading(false);
+    return () => {
+      if (previewUrlRef.current) {
+        window.URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
       }
     };
-
-    loadData();
   }, []);
 
-  // Ensure table scrolls to top when students data changes
   useEffect(() => {
-    if (tbodyRef.current) {
-      tbodyRef.current.scrollTop = 0;
-    }
-  }, [students]);
+    const loadMasterSubjects = async () => {
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/subjects`, {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+        });
 
-  // Filter students based on applied filters
-  const filteredStudents = useMemo(() => {
-    return students.filter(student => {
-      const nameMatch = !appliedFilters.name || 
-        toStringSafe(student.name).toUpperCase().includes(appliedFilters.name.toUpperCase());
-      
-      const regNoMatch = !appliedFilters.regNo || 
-        toStringSafe(student.regNo).toUpperCase().includes(appliedFilters.regNo.toUpperCase());
-      
-      const semesterMatch = !appliedFilters.semester || 
-        toStringSafe(student.semester) === appliedFilters.semester;
-      
-      const yearMatch = !appliedFilters.year || 
-        toUpperSafe(student.year).includes(appliedFilters.year.toUpperCase());
-      
-      const sectionMatch = !appliedFilters.section || 
-        toUpperSafe(student.section) === toUpperSafe(appliedFilters.section);
+        if (!response.ok) {
+          throw new Error('Failed to load subject master list');
+        }
 
-      return nameMatch && regNoMatch && semesterMatch && yearMatch && sectionMatch;
-    });
-  }, [students, appliedFilters]);
-
-  const handleFilterChange = (field) => (event) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
-  };
-
-  const handleApplyFilters = () => {
-    setAppliedFilters(filters);
-  };
-
-  const handleClearFilters = () => {
-    setFilters(initialFilters);
-    setAppliedFilters(initialFilters);
-  };
-
-  const handleViewStudent = (student) => {
-    console.log('View student:', student);
-    navigate('/coo-manage-students-semester/view', { state: { student } });
-  };
-
-  const togglePrintMenu = () => {
-    setShowPrintMenu(!showPrintMenu);
-  };
-
-  const handleExportToExcel = () => {
-    const exportData = filteredStudents.map((student, index) => ({
-      'S.No': index + 1,
-      'Register Number': student.regNo,
-      'Name': student.name,
-      'Year': student.year,
-      'Semester': student.semester,
-      'Section': student.section,
-      'Arrears': student.arrears,
-      'Overall Arrears': student.overallArrears,
-      'CGPA': student.cgpa,
-      'Overall CGPA': student.overallCgpa
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Students');
-    XLSX.writeFile(wb, 'Students_Data.xlsx');
-    setShowPrintMenu(false);
-  };
-
-  const handleSaveAsPDF = () => {
-    const doc = new jsPDF('landscape');
-    
-    doc.setFontSize(16);
-    doc.text('COMPUTER SCIENCE & ENGINEERING', 14, 15);
-    
-    const tableData = filteredStudents.map((student, index) => [
-      index + 1,
-      student.regNo,
-      student.name,
-      student.year,
-      student.semester,
-      student.section,
-      student.arrears,
-      student.overallArrears,
-      student.cgpa,
-      student.overallCgpa
-    ]);
-
-    autoTable(doc, {
-      head: [['S.No', 'Register Number', 'Name', 'Year', 'Semester', 'Section', 'Arrears', 'Overall Arrears', 'CGPA', 'Overall CGPA']],
-      body: tableData,
-      startY: 25,
-      theme: 'grid',
-      headStyles: { fillColor: [148, 148, 148] },
-      styles: { fontSize: 9, cellPadding: 3 }
-    });
-
-    doc.save('Students_Data.pdf');
-    setShowPrintMenu(false);
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (printMenuRef.current && !printMenuRef.current.contains(event.target)) {
-        setShowPrintMenu(false);
+        const data = await response.json();
+        setMasterSubjects(Array.isArray(data.subjects) ? data.subjects : []);
+      } catch (error) {
+        console.error('Error loading subject master list:', error);
+        setMasterSubjects([]);
       }
     };
 
-    if (showPrintMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+    loadMasterSubjects();
+  }, []);
+
+  const allCreditsSelected = useMemo(
+    () => subjects.every((subject) => {
+      // If subject exists in master with non-zero credits, it's considered filled.
+      if (subject.existsInMaster && (subject.masterCredits || 0) > 0) return true;
+      // Otherwise user must select a credit value
+      return Boolean(subject.grade && subject.grade !== 'Select Credit');
+    }),
+    [subjects]
+  );
+
+  const masterSubjectLookup = useMemo(() => {
+    const lookup = new Map();
+    for (const subject of masterSubjects) {
+      lookup.set(String(subject.courseCode || '').trim().toUpperCase(), subject);
+    }
+    return lookup;
+  }, [masterSubjects]);
+
+  const unavailableSubjects = useMemo(() => {
+    if (!hasPreviewData) {
+      return [];
     }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+    const uploadedCodes = new Set(
+      subjects.map((subject) => String(subject.code || subject.id || '').trim().toUpperCase()).filter(Boolean)
+    );
+
+    return masterSubjects
+      .filter((subject) => !uploadedCodes.has(String(subject.courseCode || '').trim().toUpperCase()))
+      .map((subject) => ({
+        id: subject.courseCode,
+        code: subject.courseCode,
+        name: subject.courseName,
+        credits: subject.credits ?? 0,
+      }));
+  }, [hasPreviewData, masterSubjects, subjects]);
+
+  const buildSubjectRows = (rawSubjects) => {
+    console.log('🔄 [buildSubjectRows] Received raw subjects:', rawSubjects.slice(0, 2).map(s => ({code: s.courseCode, semester: s.semester})));
+    const subjectMap = new Map();
+
+    for (const rawSubject of rawSubjects) {
+      const courseCode = String(rawSubject.courseCode || rawSubject.course_code || '').trim().toUpperCase();
+      if (!courseCode) continue;
+
+      if (!subjectMap.has(courseCode)) {
+        const masterSubject = masterSubjectLookup.get(courseCode);
+        // Fix: treat string 'undefined' as falsy
+        const rawSem = rawSubject.semester && rawSubject.semester !== 'undefined' ? rawSubject.semester : null;
+        const masterSem = masterSubject?.semester && masterSubject.semester !== 'undefined' ? masterSubject.semester : null;
+        const semesterValue = rawSem || masterSem || '';
+        console.log(`🔍 [${courseCode}] rawSem=${rawSem}, masterSem=${masterSem}, final=${semesterValue}`);
+        const semesterNumber = Number(semesterValue) || 0;
+        const yearValue = semesterNumber ? Math.ceil(semesterNumber / 2) : (masterSubject?.year || '');
+
+        subjectMap.set(courseCode, {
+          id: courseCode,
+          semester: semesterValue,
+          year: yearValue,
+          code: courseCode,
+          name: rawSubject.courseName || rawSubject.course_name || rawSubject.course_title || '',
+          grade: masterSubject && (masterSubject.credits || 0) > 0 ? `${masterSubject.credits} Credits` : '',
+          existsInMaster: Boolean(masterSubject),
+          masterCredits: masterSubject?.credits || 0,
+        });
+      }
+    }
+
+    return Array.from(subjectMap.values());
+  };
+
+  const handleGradeChange = (subjectId, grade) => {
+    setSubjects((prev) =>
+      prev.map((subject) => (subject.id === subjectId ? { ...subject, grade } : subject))
+    );
+  };
+
+  const handleDiscard = () => {
+    setSubjects([]);
+    setHasPreviewData(false);
+    setFileName(NO_FILE_SELECTED);
+    setSelectedFile(null);
+    if (uploadInputRef.current) uploadInputRef.current.value = '';
+  };
+
+  const handleConfirm = () => {
+    if (!allCreditsSelected) {
+      return;
+    }
+
+    setIsSavingSubjects(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    const saveSubjectsToDatabase = async () => {
+      try {
+        const subjectsToSave = subjects.map(function(subject) {
+          const semesterNum = parseInt(subject.semester, 10) || 0;
+          const yearNum = Number(subject.year) || Math.ceil(semesterNum / 2) || 0;
+          let credits = 0;
+          if (subject.grade && typeof subject.grade === 'string') {
+            const pattern = /(\d+)\s+Credit/;
+            const creditMatch = subject.grade.match(pattern);
+            if (creditMatch && creditMatch.length > 1) {
+              credits = parseInt(creditMatch[1], 10);
+            }
+          }
+          return {
+            courseCode: String(subject.code || '').trim().toUpperCase(),
+            courseName: subject.name,
+            credits: credits,
+            semester: semesterNum,
+            year: yearNum
+          };
+        });
+
+        const authToken = localStorage.getItem('authToken');
+        const fetchHeaders = {
+          'Content-Type': 'application/json'
+        };
+        if (authToken) {
+          fetchHeaders['Authorization'] = 'Bearer ' + authToken;
+        }
+
+        const response = await fetch(API_BASE_URL + '/subjects', {
+          method: 'POST',
+          headers: fetchHeaders,
+          body: JSON.stringify({ subjects: subjectsToSave })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save subjects');
+        }
+
+        const data = await response.json();
+        setSuccessMessage('Success! ' + data.saved + ' subjects saved.');
+        setShowSuccessPopup(true);
+
+        setTimeout(function() {
+          navigate('/coo-ms-semester-detail', {
+            state: {
+              fileName: fileName,
+              subjects: subjects,
+              selectedFile: selectedFile,
+              extractedStudents: extractedStudents
+            }
+          });
+        }, 2000);
+      } catch (error) {
+        console.error('Error saving subjects:', error);
+        setErrorMessage(error.message || 'Failed to save subjects');
+        setShowErrorPopup(true);
+      } finally {
+        setIsSavingSubjects(false);
+      }
     };
-  }, [showPrintMenu]);
+
+    saveSubjectsToDatabase();
+  };
+
+  const handleRemoveFile = () => {
+    setFileName(NO_FILE_SELECTED);
+    setSelectedFile(null);
+    setSubjects([]);
+    setHasPreviewData(false);
+    if (previewUrlRef.current) {
+      window.URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (uploadInputRef.current) {
+      uploadInputRef.current.click();
+    }
+  };
+
+  const handleFileSelected = (event) => {
+    const selectedFile = event.target.files && event.target.files[0];
+    if (!selectedFile) return;
+    setFileName(selectedFile.name);
+    setSelectedFile(selectedFile);
+    setHasPreviewData(false);
+    if (previewUrlRef.current) {
+      window.URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    // Upload file to backend for preview extraction and subject lookup
+    (async () => {
+      try {
+        setIsLoadingPreview(true);
+        setShowUploadingPopup(true);
+        setUploadProgress(10);
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const authToken = localStorage.getItem('authToken');
+        const resp = await fetch(`${API_BASE_URL}/marksheets/upload`, {
+          method: 'POST',
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          body: formData
+        });
+
+        // simulate progress to give user feedback if server doesn't stream progress
+        let fakeProgress = null;
+        const startFakeProgress = () => {
+          if (fakeProgress) return;
+          fakeProgress = setInterval(() => {
+            setUploadProgress((p) => {
+              const max = 94; // cap until server responds
+              if (p >= max) return p;
+              const delta = Math.random() * 3 + 0.5; // small smooth increments
+              return Math.min(max, +(p + delta).toFixed(1));
+            });
+          }, 200);
+        };
+        startFakeProgress();
+
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => 'Upload failed');
+          throw new Error(text || 'Preview upload failed');
+        }
+
+        const body = await resp.json();
+        if (fakeProgress) {
+          clearInterval(fakeProgress);
+          fakeProgress = null;
+        }
+
+        // smoothly animate to 100% using requestAnimationFrame
+        const animateTo100 = () => {
+          let animId = null;
+          const step = () => {
+            setUploadProgress((p) => {
+              if (p >= 100) {
+                if (animId) cancelAnimationFrame(animId);
+                return 100;
+              }
+              const remaining = 100 - p;
+              const inc = Math.max(0.6, Math.min(6, remaining * 0.08));
+              const next = Math.min(100, +(p + inc).toFixed(1));
+              return next;
+            });
+            animId = requestAnimationFrame(step);
+          };
+          step();
+          setTimeout(() => setShowUploadingPopup(false), 600);
+        };
+
+        animateTo100();
+        const extracted = Array.isArray(body.extractedMarksheets) ? body.extractedMarksheets : [];
+        console.log('📥 [Frontend] Extracted marksheets from backend:', JSON.stringify(extracted.map(m => ({regNo: m.regNo, semester: m.semester, subjectCount: m.subjects?.length}))));
+        
+        const uploadedSubjects = extracted.flatMap(function(marksheet) { 
+          if (!Array.isArray(marksheet.subjects)) return [];
+          // Add semester from marksheet to each subject (semester is at marksheet level, not per-subject)
+          console.log(`📥 [Frontend] Marksheet ${marksheet.regNo} semester=${marksheet.semester}, subjects count=${marksheet.subjects.length}`);
+          return marksheet.subjects.map(subject => ({
+            ...subject,
+            semester: subject.semester || marksheet.semester || ''
+          }));
+        });
+        
+        console.log('📋 [Frontend] After mapping subjects with semester:', uploadedSubjects.slice(0, 2).map(s => ({code: s.courseCode, sem: s.semester})));
+
+        let finalSubjects = buildSubjectRows(uploadedSubjects);
+        let studentData = extracted;
+
+        if (finalSubjects.length === 0 || extracted.length === 0) {
+          const parseFormData = new FormData();
+          parseFormData.append('file', selectedFile);
+
+          const parseResponse = await fetch(API_BASE_URL + '/marksheet/parse', {
+            method: 'POST',
+            body: parseFormData,
+          });
+
+          if (parseResponse.ok) {
+            const parseBody = await parseResponse.json();
+            const marksheetSemester = parseBody.student_info?.semester || 2;
+            // Add semester from marksheet to each subject
+            const enrichedSubjects = Array.isArray(parseBody.subjects) 
+              ? parseBody.subjects.map(subject => ({
+                  ...subject,
+                  semester: subject.semester || marksheetSemester
+                }))
+              : [];
+            finalSubjects = buildSubjectRows(enrichedSubjects);
+            
+            if (parseBody.student_info) {
+              const studentMarksheet = {
+                regNo: parseBody.student_info.register_number || '',
+                studentName: parseBody.student_info.name || '',
+                programme: parseBody.student_info.programme || '',
+                semester: marksheetSemester,
+                subjects: enrichedSubjects
+              };
+              studentData = [studentMarksheet];
+            }
+          }
+        }
+
+        setExtractedStudents(studentData);
+        setSubjects(finalSubjects);
+        setHasPreviewData(true);
+      } catch (err) {
+        console.error('Error extracting preview:', err);
+        setSubjects([]);
+        setHasPreviewData(false);
+        setUploadFailedMessage(err.message || 'Failed to process uploaded file');
+        setShowUploadFailedPopup(true);
+        setShowUploadingPopup(false);
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    })();
+  };
+
+  const handlePreviewFile = () => {
+    if (!selectedFile) {
+      return;
+    }
+
+    const previewUrl = window.URL.createObjectURL(selectedFile);
+    previewUrlRef.current = previewUrl;
+    const previewWindow = window.open(previewUrl, '_blank', 'noopener,noreferrer');
+
+    if (!previewWindow) {
+      window.URL.revokeObjectURL(previewUrl);
+      previewUrlRef.current = null;
+    }
+  };
 
   return (
     <>
@@ -392,206 +439,227 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           currentView="manage-students" 
           onViewChange={onViewChange} 
         />
-        <div className={styles['marks-main-content']}>
-          {/* Filter Section */}
-          <div className={styles['marks-filter-card-container']}>
-        <div className={styles['marks-filter-header']}>
-          <div className={styles['marks-filter-header-inner']}>
-            {/* Semester Badge */}
-            <button className={styles['marks-semester-btn']}>
-              Semester
-            </button>
+        <div className={styles['semester-main-content']}>
+          <section
+            className={styles['upload-panel']}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleUploadClick();
+              }
+            }}
+            aria-label="Upload semester file"
+          >
+            <input
+              ref={uploadInputRef}
+              type="file"
+              className={styles['upload-input']}
+              onChange={handleFileSelected}
+            />
+            <div className={styles['upload-icons']}>
+              <button type="button" className={styles['icon-action']} onClick={(event) => { event.stopPropagation(); handleRemoveFile(); }} aria-label="Remove uploaded file">
+                <BinIcon />
+              </button>
+              <button type="button" className={styles['icon-action']} onClick={(event) => { event.stopPropagation(); handlePreviewFile(); }} aria-label="Preview uploaded file">
+                <EyeIcon />
+              </button>
+            </div>
+            <div className={styles['upload-symbol']}>
+              <img src={semesterUploadIcon} alt="Upload" className={styles['upload-icon-image']} />
+            </div>
+            <h1 className={styles['upload-file-name']}>{fileName}</h1>
+          </section>
 
-            {/* Filter Inputs */}
-            <div className={styles['marks-filters-row']}>
-              {/* Row 1: Name, Semester, Year */}
-              {/* Search by Name */}
-              <div className={styles['marks-floating-field']}>
-                <input
-                  type="text"
-                  className={styles['marks-floating-input']}
-                  placeholder="Search by Name"
-                  value={filters.name}
-                  onChange={handleFilterChange('name')}
-                />
-                <span className={styles['marks-search-icon']}>
-                  <SearchIcon />
-                </span>
-              </div>
-
-              {/* Search by Sem */}
-              <div className={styles['marks-dropdown-wrapper']}>
-                <select
-                  className={styles['marks-dropdown']}
-                  value={filters.semester}
-                  onChange={handleFilterChange('semester')}
-                >
-                  <option value="">All Semesters</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                </select>
-              </div>
-
-              {/* Search by Year */}
-              <div className={styles['marks-floating-field']}>
-                <input
-                  type="text"
-                  className={styles['marks-floating-input']}
-                  placeholder="Search by Year"
-                  value={filters.year}
-                  onChange={handleFilterChange('year')}
-                />
-                <span className={styles['marks-search-icon']}>
-                  <SearchIcon />
-                </span>
-              </div>
-
-              {/* Row 2: Reg no, Buttons (centered), Section */}
-              {/* Search by Reg no. */}
-              <div className={styles['marks-floating-field']}>
-                <input
-                  type="text"
-                  className={styles['marks-floating-input']}
-                  placeholder="Search by Reg no."
-                  value={filters.regNo}
-                  onChange={handleFilterChange('regNo')}
-                />
-                <span className={styles['marks-search-icon']}>
-                  <SearchIcon />
-                </span>
-              </div>
-
-              {/* Filter Actions - Centered in middle column */}
-              <div className={styles['marks-filter-actions']}>
-                <button 
-                  className={styles['marks-filter-btn']}
-                  onClick={handleApplyFilters}
-                >
-                  Apply Filters
-                </button>
-                <button 
-                  className={styles['marks-filter-btn-clear']}
-                  onClick={handleClearFilters}
-                >
-                  Clear Filters
-                </button>
-              </div>
-
-              {/* Search by Section */}
-              <div className={styles['marks-dropdown-wrapper']}>
-                <select
-                  className={styles['marks-dropdown']}
-                  value={filters.section}
-                  onChange={handleFilterChange('section')}
-                >
-                  <option value="">All Sections</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                  <option value="D">D</option>
-                  <option value="E">E</option>
-                </select>
+          {/* Upload Failed Popup */}
+          {showUploadFailedPopup && (
+            <div className={styles['ms-popup-overlay']}>
+              <div className={styles['ms-popup-container']}>
+                <div className={styles['ms-popup-header']}>Upload Failed</div>
+                <div className={styles['ms-popup-body']}>
+                  <h2 className={styles['ms-status-title']}>Upload Error</h2>
+                  <p className={styles['ms-status-text']}>{uploadFailedMessage}</p>
+                </div>
+                <div className={styles['ms-popup-footer']}>
+                  <button onClick={() => setShowUploadFailedPopup(false)} className={styles['ms-popup-close-btn']}>Close</button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          )}
 
-      {/* Table Section */}
-      <div className={styles['marks-table-section']}>
-        <div className={styles['marks-table-header']}>
-          <h2 className={styles['marks-table-title']}>COMPUTER SCIENCE & ENGINEERING</h2>
-          <div className={styles['marks-print-menu-container']} ref={printMenuRef}>
-            <button 
-              className={styles['marks-print-btn']}
-              onClick={togglePrintMenu}
-            >
-              Print
-            </button>
-            {showPrintMenu && (
-              <div className={styles['marks-print-dropdown']}>
-                <button 
-                  className={styles['marks-dropdown-item']}
-                  onClick={handleExportToExcel}
-                >
-                  Export to Excel
+          <CertificatePreviewProgressAlert
+            isOpen={showUploadingPopup}
+            progress={uploadProgress}
+            title="Uploading..."
+            fileLabel="semester marksheet"
+            messages={{
+              initial: 'Extracting subjects from PDF...',
+              mid: 'Matching marksheets with students...',
+              final: 'Preparing preview...'
+            }}
+          />
+
+          {/* Success Popup */}
+          {showSuccessPopup && (
+            <div className={styles['ms-popup-overlay']}>
+              <div className={styles['ms-popup-container']}>
+                <div className={styles['ms-popup-header']} style={{ backgroundColor: '#4CAF50' }}>Success</div>
+                <div className={styles['ms-popup-body']}>
+                  <h2 className={styles['ms-status-title']}>Subjects Saved</h2>
+                  <p className={styles['ms-status-text']}>{successMessage}</p>
+                </div>
+                <div className={styles['ms-popup-footer']}>
+                  <button onClick={() => setShowSuccessPopup(false)} className={styles['ms-popup-close-btn']}>OK</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Popup */}
+          {showErrorPopup && (
+            <div className={styles['ms-popup-overlay']}>
+              <div className={styles['ms-popup-container']}>
+                <div className={styles['ms-popup-header']} style={{ backgroundColor: '#F44336' }}>Error</div>
+                <div className={styles['ms-popup-body']}>
+                  <h2 className={styles['ms-status-title']}>Failed to Save Subjects</h2>
+                  <p className={styles['ms-status-text']}>{errorMessage}</p>
+                </div>
+                <div className={styles['ms-popup-footer']}>
+                  <button onClick={() => setShowErrorPopup(false)} className={styles['ms-popup-close-btn']}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <section className={styles['subject-shell']}>
+            <div className={styles['subject-card']}>
+              <h2 className={styles['section-title']}>Unavailable Subjects in MongoDB</h2>
+
+              <div className={styles['table-wrap']}>
+                {!hasPreviewData ? (
+                  <div className={styles['empty-note']}>
+                    Upload a semester PDF to compare it against the Subject collection.
+                  </div>
+                ) : masterSubjects.length === 0 ? (
+                  <div className={styles['empty-note']}>
+                    The Subject collection is empty in MongoDB. Add master subjects first to show unavailable subjects.
+                  </div>
+                ) : unavailableSubjects.length === 0 ? (
+                  <div className={styles['empty-note']}>
+                    No unavailable subjects found. Every master subject is present in the uploaded PDF.
+                  </div>
+                ) : (
+                  <table className={styles['subject-table']}>
+                    <thead>
+                      <tr>
+                        <th>S.NO</th>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Credits</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unavailableSubjects.map((subject, index) => (
+                        <tr key={subject.id}>
+                          <td>{index + 1}</td>
+                          <td>{subject.code}</td>
+                          <td>{subject.name}</td>
+                          <td>{subject.credits}</td>
+                          <td>
+                            <span className={styles['credit-badge']}>Unavailable</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            <div className={styles['subject-card']}>
+              <h2 className={styles['section-title']}>Extracted Subjects</h2>
+
+              <div className={styles['table-wrap']}>
+                {subjects.length === 0 ? (
+                  <div className={styles['empty-note']}>
+                    {isLoadingPreview ? 'Extracting subjects from PDF...' : 'No subjects loaded. Upload a semester PDF to extract subject list.'}
+                  </div>
+                ) : (
+                  <table className={styles['subject-table']}>
+                    <thead>
+                      <tr>
+                        <th>S.NO</th>
+                        <th>Semester</th>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subjects.map((subject, index) => (
+                        <tr key={subject.id}>
+                          <td>{index + 1}</td>
+                          <td>
+                            {(subject.existsInMaster && subject.semester) ? (
+                              <span className={styles['credit-badge']}>Sem {subject.semester}</span>
+                            ) : (
+                              <span>{subject.semester || '--'}</span>
+                            )}
+                          </td>
+                          <td>{subject.code}</td>
+                          <td>{subject.name}</td>
+                          <td>
+                            {(subject.existsInMaster && (subject.masterCredits || 0) > 0) ? (
+                              <span className={styles['credit-badge']}>{subject.masterCredits} Credits</span>
+                            ) : (
+                              <select
+                                value={subject.grade || 'Select Credit'}
+                                onChange={(event) => handleGradeChange(subject.id, event.target.value)}
+                                className={styles['grade-select']}
+                                aria-label={`Select grade for ${subject.code}`}
+                              >
+                                {GRADE_OPTIONS.map((option) => (
+                                  <option key={`${subject.id}-${option}`} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            <div className={styles['right-rail']}>
+              <aside className={styles['note-panel']}>
+                <h3 className={styles['note-title']}>Note</h3>
+                <div className={styles['note-box']}>
+                  Before assigning credits to each subject, ensure that you are assigning suitable grades for the
+                  appropriate subjects, as this may affect students SGPA and CGPA.
+                </div>
+              </aside>
+
+              <div className={styles['action-row']}>
+                <button type="button" className={styles['discard-btn']} onClick={handleDiscard} disabled={isSavingSubjects}>
+                  Discard
                 </button>
-                <button 
-                  className={styles['marks-dropdown-item']}
-                  onClick={handleSaveAsPDF}
+                <button
+                  type="button"
+                  className={styles['confirm-btn']}
+                  onClick={handleConfirm}
+                  disabled={!allCreditsSelected || isSavingSubjects}
                 >
-                  Save as PDF
+                  {isSavingSubjects ? 'Saving...' : 'Confirm'}
                 </button>
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className={styles['marks-table-wrapper']}>
-          <table className={styles['marks-table']}>
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Register Number</th>
-                <th>Name</th>
-                <th>Year</th>
-                <th>Semester</th>
-                <th>Section</th>
-                <th>Arrears</th>
-                <th>Overall Arrears</th>
-                <th>CGPA</th>
-                <th>Overall CGPA</th>
-                <th>View</th>
-              </tr>
-            </thead>
-            <tbody ref={tbodyRef}>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="11" className={styles['marks-loading']}>
-                    Loading students...
-                  </td>
-                </tr>
-              ) : filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan="11" className={styles['marks-no-data']}>
-                    No students found
-                  </td>
-                </tr>
-              ) : (
-                filteredStudents.map((student, index) => (
-                  <tr key={student.id}>
-                    <td>{index + 1}</td>
-                    <td>{getDisplayValue(student.regNo)}</td>
-                    <td>{getDisplayValue(student.name)}</td>
-                    <td>{getDisplayValue(student.year)}</td>
-                    <td>{getDisplayValue(student.semester)}</td>
-                    <td>{getDisplayValue(student.section)}</td>
-                    <td>{getDisplayValue(student.arrears, '0')}</td>
-                    <td>{getDisplayValue(student.overallArrears, '0')}</td>
-                    <td>{formatGpa(student.cgpa)}</td>
-                    <td>{formatGpa(student.overallCgpa)}</td>
-                    <td>
-                      <button
-                        className={styles['marks-view-btn']}
-                        onClick={() => handleViewStudent(student)}
-                        aria-label="View student details"
-                      >
-                        <EyeIcon />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </div>
+          </section>
         </div>
       </div>
     </>

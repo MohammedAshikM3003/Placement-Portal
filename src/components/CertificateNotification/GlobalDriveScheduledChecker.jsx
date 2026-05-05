@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import mongoDBService from '../../services/mongoDBService.jsx';
 import DriveScheduledBanner from './DriveScheduledBanner';
 import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
+import { claimPlacementBannerNotification } from '../../services/placementBannerNotificationService';
 
 const POLL_INTERVAL_MS = 5000;
 const DRIVE_SCHEDULED_STORAGE_PREFIX = 'driveScheduledSeen';
@@ -286,8 +287,26 @@ const GlobalDriveScheduledChecker = () => {
             unseenDrive.companyName
           );
 
+            const signature = getDriveSignature(unseenDrive);
+            const claimResult = await claimPlacementBannerNotification({
+              studentId: studentId,
+              regNo: resolvedRegNo || '',
+              signature: `drive-scheduled:${signature}`,
+              status: 'drive-scheduled',
+              companyName: unseenDrive.companyName || '',
+              jobRole: unseenDrive.jobRole || unseenDrive.jobs || '',
+              roundName: '',
+              roundNumber: 0,
+              driveId: unseenDrive.driveId || unseenDrive.id || '',
+              source: 'drive-scheduled'
+            });
+
+            if (!claimResult?.claimed) {
+              markDriveAsShown(signature);
+              return;
+            }
+
           // Mark as shown IMMEDIATELY to prevent re-polling the same drive
-          const signature = getDriveSignature(unseenDrive);
           markDriveAsShown(signature);
 
           // Queue the drive
@@ -302,7 +321,7 @@ const GlobalDriveScheduledChecker = () => {
         console.error('❌ [DriveScheduledChecker] Polling error:', error);
       }
     },
-    [fetchEligibleDrives, isDriveNewlyAssigned, isDriveShown, getDriveSignature, markDriveAsShown, showNextDrive]
+      [fetchEligibleDrives, isDriveNewlyAssigned, isDriveShown, getDriveSignature, markDriveAsShown, showNextDrive, resolvedRegNo]
   );
 
   useEffect(() => {

@@ -243,7 +243,18 @@ class FastDataService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorBody = null;
+        try {
+          errorBody = await response.json();
+        } catch (_) {
+          // Ignore parse errors; fallback to status-only message below.
+        }
+
+        const backendMessage = errorBody?.details || errorBody?.error || '';
+        const message = backendMessage
+          ? `HTTP error! status: ${response.status} - ${backendMessage}`
+          : `HTTP error! status: ${response.status}`;
+        throw new Error(message);
       }
 
       const result = await response.json();

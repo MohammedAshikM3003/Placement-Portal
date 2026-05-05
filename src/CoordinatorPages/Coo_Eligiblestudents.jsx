@@ -107,7 +107,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
 
                 const [eligibleResponse, allStudents] = await Promise.all([
                     mongoDBService.getCoordinatorEligibleStudents(),
-                    mongoDBService.getStudents()
+                    mongoDBService.getStudents({ includeArchived: 'true' })
                 ]);
 
                 const branchFromApi = toNormalized(

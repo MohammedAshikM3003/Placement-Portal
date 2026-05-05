@@ -3035,7 +3035,18 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     return semestersToShow.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button type="button" className={styles.viewMarksheetBtn}>
+                                            <button 
+                                                type="button" 
+                                                className={styles.viewMarksheetBtn}
+                                                onClick={() => navigate('/coo-manage-students-semester/marksheet', {
+                                                    state: { 
+                                                        student: {
+                                                            ...studentData,
+                                                            currentSemester: semesterNumber
+                                                        }
+                                                    }
+                                                })}
+                                            >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
                                         </div>

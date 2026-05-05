@@ -486,10 +486,56 @@
     color: #333;
 }
 
+.Admin-DB-table-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admin-DB-table-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
 .Admin-DB-table-actions {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.Admin-DB-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-DB-page-btn {
+    border: 1px solid #4ea24e;
+    background: #ffffff;
+    color: #2f7d31;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.Admin-DB-page-btn:hover:not(:disabled) {
+    background: #ecf8ec;
+}
+
+.Admin-DB-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.Admin-DB-page-indicator {
+    min-width: 56px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2f7d31;
 }
 
 .Admin-DB-print-button-container {
@@ -876,6 +922,17 @@
         align-items: center;
         justify-content: space-between;
         gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .Admin-DB-table-actions {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .Admin-DB-pagination-controls {
+        order: -1;
     }
 
     .Admin-DB-table-container {

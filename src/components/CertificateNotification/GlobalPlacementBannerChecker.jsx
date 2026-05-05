@@ -3,6 +3,7 @@ import mongoDBService from '../../services/mongoDBService.jsx';
 import PlacementStatusBanner from './PlacementStatusBanner';
 import ExactDiwaliBurst from '../Confetti/ExactDiwaliBurst';
 import useBannerQueueSlot from '../../hooks/useBannerQueueSlot';
+import { claimPlacementBannerNotification } from '../../services/placementBannerNotificationService';
 import {
 	fetchUnreadOfferNotifications,
 	markOfferNotificationsAsRead
@@ -363,11 +364,41 @@ const GlobalPlacementBannerChecker = () => {
 		console.log('🔔 [PlacementChecker] Marked signature as seen:', normalizedSignature, 'keys:', keys);
 	}, [getSeenStorageKeys, readSeenSignatures, writeSeenSignatures]);
 
+	const claimBannerIfNeeded = useCallback(async (payload, extraStudentId = null) => {
+		const normalizedPayload = normalizeIncomingBannerPayload(payload);
+		const normalizedStudentId = normalizeStudentId(extraStudentId || normalizedPayload?.studentId || studentId || studentRegNo);
+		const normalizedSignature = normalizeText(normalizedPayload?.signature);
+
+		if (!normalizedStudentId || !normalizedSignature) {
+			return false;
+		}
+
+		if (hasSeenSignature(normalizedSignature, normalizedStudentId)) {
+			return false;
+		}
+
+		const claimResult = await claimPlacementBannerNotification({
+			studentId: normalizedStudentId,
+			regNo: studentRegNo || '',
+			signature: normalizedSignature,
+			status: normalizedPayload?.status || 'placed',
+			companyName: normalizedPayload?.companyName || '',
+			jobRole: normalizedPayload?.jobRole || '',
+			roundName: normalizedPayload?.roundName || '',
+			roundNumber: normalizedPayload?.roundNumber,
+			driveId: normalizedPayload?.driveId || '',
+			source: normalizedPayload?.source || 'placement-banner'
+		});
+
+		markSignatureAsSeen(normalizedSignature, normalizedStudentId);
+		return Boolean(claimResult?.claimed);
+	}, [hasSeenSignature, markSignatureAsSeen, studentId, studentRegNo]);
+
 	useEffect(() => {
 		console.log('🔔 [PlacementChecker] Mounted on route:', window.location.pathname);
 		resolveStudentId();
 
-		const handleStorage = (event) => {
+		const handleStorage = async (event) => {
 			resolveStudentId();
 
 			if (event?.key !== 'placementBannerBroadcast' || !event.newValue) {
@@ -383,13 +414,13 @@ const GlobalPlacementBannerChecker = () => {
 					return;
 				}
 
-				if (hasSeenSignature(payload?.signature, payloadStudentId)) {
-					console.log('🔔 [PlacementChecker] Storage event ignored (already seen):', payload?.signature);
+				const canShow = await claimBannerIfNeeded(payload, payloadStudentId);
+				if (!canShow) {
+					console.log('🔔 [PlacementChecker] Storage event ignored (already claimed):', payload?.signature);
 					return;
 				}
 
 				console.log('🔔 [PlacementChecker] Received storage broadcast for current student:', payload);
-				markSignatureAsSeen(payload?.signature, payloadStudentId);
 				showingRef.current = true;
 				setBannerData(payload);
 			} catch (error) {
@@ -398,7 +429,7 @@ const GlobalPlacementBannerChecker = () => {
 		};
 
 		// Listen for round result events from AdminCompanyDrivedet
-		const handleRoundResultEvent = (event) => {
+		const handleRoundResultEvent = async (event) => {
 			console.log('🔔 [PlacementChecker] Round result event received:', event.detail);
 
 			// Verify the event is for the current student
@@ -416,13 +447,13 @@ const GlobalPlacementBannerChecker = () => {
 					// so they are consistent across devices.
 					return;
 				}
-				if (hasSeenSignature(normalizedPayload?.signature, eventStudentId)) {
-					console.log('🔔 [PlacementChecker] Event ignored (already seen):', normalizedPayload?.signature);
+				const canShow = await claimBannerIfNeeded(normalizedPayload, eventStudentId);
+				if (!canShow) {
+					console.log('🔔 [PlacementChecker] Event ignored (already claimed):', normalizedPayload?.signature);
 					return;
 				}
 
 				console.log('🔔 [PlacementChecker] Event is for current student, showing banner');
-				markSignatureAsSeen(normalizedPayload?.signature, eventStudentId);
 				showingRef.current = true;
 				setBannerData(normalizedPayload);
 			} else if (!studentId) {
@@ -444,7 +475,7 @@ const GlobalPlacementBannerChecker = () => {
 			window.removeEventListener('studentDataUpdated', handleStorage);
 			window.removeEventListener('roundResultNotification', handleRoundResultEvent);
 		};
-	}, [resolveStudentId, studentId, hasSeenSignature, markSignatureAsSeen]);
+	}, [resolveStudentId, studentId, hasSeenSignature, markSignatureAsSeen, claimBannerIfNeeded]);
 
 	const pollPlacement = useCallback(async () => {
 		if ((!studentId && !studentRegNo) || showingRef.current) return;
@@ -517,11 +548,16 @@ const GlobalPlacementBannerChecker = () => {
 					snapshot?.packageName || ''
 				].join(':');
 
-				if (hasSeenSignature(fallbackSignature, identifier)) {
+				const canShow = await claimBannerIfNeeded({
+					...snapshot,
+					studentId: identifier,
+					regNo: studentRegNo,
+					signature: fallbackSignature,
+					source: 'placement-snapshot'
+				}, identifier);
+				if (!canShow) {
 					return;
 				}
-
-				markSignatureAsSeen(fallbackSignature, identifier);
 				showingRef.current = true;
 				setBannerData({
 					...snapshot,
@@ -548,7 +584,7 @@ const GlobalPlacementBannerChecker = () => {
 		} catch (error) {
 			console.error('❌ [PlacementChecker] Poll failed:', error);
 		}
-	}, [studentId, studentRegNo, hasSeenSignature, markSignatureAsSeen]);
+	}, [studentId, studentRegNo, hasSeenSignature, markSignatureAsSeen, claimBannerIfNeeded]);
 
 	useEffect(() => {
 		if (!studentId && !studentRegNo) return;

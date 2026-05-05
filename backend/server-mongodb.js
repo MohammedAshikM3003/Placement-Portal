@@ -53,10 +53,11 @@ process.on('uncaughtException', (error) => {
 });
 
 // File upload configuration (Multer - memory storage for upload routes)
+// Increase global limit to 200MB to avoid accidental rejections for large PDFs
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
+        fileSize: 200 * 1024 * 1024 // 200MB limit
     }
 });
 
@@ -483,6 +484,39 @@ try {
     console.log('✅ Marksheet OCR routes loaded successfully');
 } catch (error) {
     console.error('❌ Failed to load marksheet OCR routes:', error.message);
+}
+
+// -------------------------------------------------
+// Marksheet PDF Upload & Extraction APIs
+// -------------------------------------------------
+try {
+    const marksheetsUploadRoutes = require('./routes/marksheetsUpload');
+    app.use('/api/marksheets', authenticateToken, marksheetsUploadRoutes);
+    console.log('✅ Marksheet upload & extraction routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load marksheet upload routes:', error.message);
+}
+
+// -------------------------------------------------
+// Subject Master APIs
+// -------------------------------------------------
+try {
+    const subjectRoutes = require('./routes/subjects');
+    app.use('/api/subjects', authenticateToken, subjectRoutes);
+    console.log('✅ Subject routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load subject routes:', error.message);
+}
+
+// -------------------------------------------------
+// Semester Records APIs
+// -------------------------------------------------
+try {
+    const semesterRecordRoutes = require('./routes/semesterRecords');
+    app.use('/api/semester-records', authenticateToken, semesterRecordRoutes);
+    console.log('✅ Semester record routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load semester record routes:', error.message);
 }
 
 // -------------------------------------------------
@@ -3888,6 +3922,77 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
     }
 });
 
+// Claim a placement/drive banner so it only appears once per student and signature.
+app.post('/api/placement-banner-notifications/claim', authenticateToken, checkRole('student', 'admin', 'coordinator'), async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
+        }
+
+        const {
+            studentId,
+            regNo,
+            signature,
+            status,
+            companyName,
+            jobRole,
+            roundName,
+            roundNumber,
+            driveId,
+            source
+        } = req.body || {};
+
+        const normalizedStudentId = String(studentId || '').trim();
+        const normalizedRegNo = String(regNo || '').trim();
+        const normalizedSignature = String(signature || '').trim();
+        const normalizedStatus = String(status || '').trim();
+
+        if (!normalizedStudentId || !normalizedSignature || !normalizedStatus) {
+            return res.status(400).json({ error: 'studentId, signature, and status are required' });
+        }
+
+        const existingNotification = await PlacementBannerNotification.findOne({
+            studentId: normalizedStudentId,
+            signature: normalizedSignature
+        }).lean();
+
+        if (existingNotification) {
+            return res.json({
+                success: true,
+                claimed: false,
+                notification: existingNotification
+            });
+        }
+
+        const notification = await PlacementBannerNotification.create({
+            studentId: normalizedStudentId,
+            regNo: normalizedRegNo,
+            signature: normalizedSignature,
+            status: normalizedStatus,
+            companyName: companyName || '',
+            jobRole: jobRole || '',
+            roundName: roundName || '',
+            roundNumber: Number.isFinite(Number(roundNumber)) ? Number(roundNumber) : undefined,
+            driveId: driveId ? String(driveId).trim() : '',
+            source: source || 'placement-banner',
+            claimedAt: new Date()
+        });
+
+        return res.json({
+            success: true,
+            claimed: true,
+            notification: notification.toObject()
+        });
+    } catch (error) {
+        if (error?.code === 11000) {
+            return res.json({ success: true, claimed: false });
+        }
+
+        console.error('Placement banner claim error:', error);
+        return res.status(500).json({ error: 'Failed to claim placement banner', details: error.message });
+    }
+});
+
 // ============ PLACED STUDENTS ENDPOINTS ============
 
 // Save placed students (students who passed the final round)
@@ -5793,9 +5898,9 @@ const resumeAnalysisSchema = new mongoose.Schema({
 }, { strict: false });
 
 // Use your actual collection name here - common names: 'students', 'studentnews', 'student_data'
-const Student = mongoose.model('Student', studentSchema, 'students');
-const User = mongoose.model('User', userSchema, 'users');
-const ResumeAnalysis = mongoose.model('ResumeAnalysis', resumeAnalysisSchema, 'resumeanalyses');
+const Student = mongoose.models.Student || mongoose.model('Student', studentSchema, 'students');
+const User = mongoose.models.User || mongoose.model('User', userSchema, 'users');
+const ResumeAnalysis = mongoose.models.ResumeAnalysis || mongoose.model('ResumeAnalysis', resumeAnalysisSchema, 'resumeanalyses');
 
 // Resume Schema for storing resume files
 const resumeSchema = new mongoose.Schema({
@@ -5810,7 +5915,7 @@ const resumeSchema = new mongoose.Schema({
     analysisResult: { type: Object } // Store analysis results
 }, { strict: false });
 
-const Resume = mongoose.model('Resume', resumeSchema, 'resume');
+const Resume = mongoose.models.Resume || mongoose.model('Resume', resumeSchema, 'resume');
 
 const coordinatorSchema = new mongoose.Schema({
     coordinatorId: { type: String, required: true, unique: true, index: true },
@@ -5932,6 +6037,24 @@ studentApplicationSchema.index({ status: 1 });
 studentApplicationSchema.index({ appliedDate: -1 });
 
 const StudentApplication = mongoose.model('StudentApplication', studentApplicationSchema, 'student_applications');
+    
+    const placementBannerNotificationSchema = new mongoose.Schema({
+        studentId: { type: String, required: true, trim: true },
+        regNo: { type: String, trim: true },
+        signature: { type: String, required: true, trim: true },
+        status: { type: String, required: true, trim: true },
+        companyName: { type: String, trim: true },
+        jobRole: { type: String, trim: true },
+        roundName: { type: String, trim: true },
+        roundNumber: { type: Number },
+        driveId: { type: String, trim: true },
+        source: { type: String, trim: true },
+        claimedAt: { type: Date, default: Date.now }
+    }, { timestamps: true });
+    
+    placementBannerNotificationSchema.index({ studentId: 1, signature: 1 }, { unique: true });
+    
+    const PlacementBannerNotification = mongoose.model('PlacementBannerNotification', placementBannerNotificationSchema, 'placement_banner_notifications');
 
 const branchSchema = new mongoose.Schema({
     degreeFullName: { type: String, required: true, trim: true },
@@ -6896,6 +7019,7 @@ app.post('/api/students', async (req, res) => {
                     _id: student._id,
                     regNo: student.regNo,
                     firstName: student.firstName,
+
                     lastName: student.lastName,
                     primaryEmail: student.primaryEmail,
                     branch: student.branch,
@@ -7903,9 +8027,10 @@ app.get('/api/students/check/:regNo', async (req, res) => {
 });
 
 app.get('/api/students', async (req, res) => {
-    const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false' } = req.query;
+    const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false' } = req.query;
     
-    console.log('📋 Students Request:', { page, limit, includeImages, filters: { name, regNo, department, branch, batch } });
+    const startTime = Date.now();
+    console.log('📋 Students Request:', { page, limit, includeImages, includeArchived, filters: { name, regNo, department, branch, batch } });
     console.log('🔌 MongoDB Status:', mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED');
 
     try {
@@ -7916,25 +8041,30 @@ app.get('/api/students', async (req, res) => {
             console.log('✅ Using MongoDB for students query');
             const query = {};
 
-            // IMPORTANT: Exclude archived students by default
-            query.isArchived = { $ne: true };
+            // IMPORTANT: Exclude archived students by default unless includeArchived is true
+            if (includeArchived !== 'true') {
+                query.isArchived = { $ne: true };
+            }
 
-            // Build optimized query
-            if (regNo) query.regNo = { $regex: regNo, $options: 'i' };
+            // Build optimized query - prioritize filters that use indexes
             if (department) query.department = department;
             if (branch) query.branch = branch;
             if (batch) {
                 query.$or = [{ batch }, { year: batch }];
             }
+            if (regNo) {
+                // Use exact match for regNo when possible (faster than regex)
+                query.regNo = regNo.trim();
+            }
             if (name) {
-                // Use $or for name search across first and last names
+                // Use text search if available, fallback to regex
                 query.$or = [
-                    { firstName: { $regex: name, $options: 'i' } },
-                    { lastName: { $regex: name, $options: 'i' } }
+                    { firstName: { $regex: name.trim(), $options: 'i' } },
+                    { lastName: { $regex: name.trim(), $options: 'i' } }
                 ];
             }
 
-            // Pagination settings - default to 50 for better performance
+            // Pagination settings - max 100 per page for memory safety
             const pageNum = Math.max(1, parseInt(page) || 1);
             const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
             const skip = (pageNum - 1) * limitNum;
@@ -7945,6 +8075,7 @@ app.get('/api/students', async (req, res) => {
                 : '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
 
             // Execute optimized query with lean() for 50% faster execution
+            const queryStartTime = Date.now();
             const [list, total] = await Promise.all([
                 Student.find(query)
                     .select(selectFields)
@@ -7955,6 +8086,14 @@ app.get('/api/students', async (req, res) => {
                     .exec(),
                 Student.countDocuments(query)
             ]);
+            const queryTime = Date.now() - queryStartTime;
+
+            // Warn if query is slow
+            if (queryTime > 1000) {
+                console.warn(`⚠️ Slow query detected: ${queryTime}ms for page ${pageNum} with ${total} total results`);
+            }
+
+            console.log(`✅ Query completed in ${queryTime}ms | Returning ${list.length} of ${total} students`);
 
             // Return paginated response with all metadata
             res.json({
@@ -7964,6 +8103,7 @@ app.get('/api/students', async (req, res) => {
                 currentPage: pageNum,
                 page: pageNum,
                 limit: limitNum,
+                queryTimeMs: queryTime,
                 pagination: {
                     page: pageNum,
                     limit: limitNum,
@@ -7976,7 +8116,9 @@ app.get('/api/students', async (req, res) => {
             // Fallback for when MongoDB is not connected
             let list = students.slice();
             // Filter out archived students
-            list = list.filter(s => !s.isArchived);
+            if (includeArchived !== 'true') {
+                list = list.filter(s => !s.isArchived);
+            }
             if (regNo) list = list.filter(s => String(s.regNo).toLowerCase().includes(String(regNo).toLowerCase()));
             if (department) list = list.filter(s => (s.department || s.branch) === department);
             if (branch) list = list.filter(s => s.branch === branch);
@@ -7991,6 +8133,108 @@ app.get('/api/students', async (req, res) => {
     } catch (error) {
         console.error('List students error:', error);
         res.status(500).json({ error: 'Failed to list students', details: error.message });
+    }
+});
+
+// 🔍 OPTIMIZED TEXT SEARCH - Search across ALL students efficiently
+// Uses MongoDB text index for 50-100x faster search than regex
+app.get('/api/students/search/text', async (req, res) => {
+    const { query: searchQuery, page = '1', limit = '50', includeArchived = 'false' } = req.query;
+    
+    const startTime = Date.now();
+    console.log('🔍 Text Search Request:', { searchQuery, page, limit, includeArchived });
+
+    try {
+        if (!searchQuery || searchQuery.trim() === '') {
+            return res.status(400).json({ error: 'Search query is required' });
+        }
+
+        const isMongoConnected = mongoose.connection.readyState === 1 || await ensureConnection();
+        
+        if (isMongoConnected) {
+            console.log('✅ Using MongoDB text search');
+            
+            const query = {
+                $text: { $search: searchQuery.trim() }
+            };
+
+            // IMPORTANT: Exclude archived students by default
+            if (includeArchived !== 'true') {
+                query.isArchived = { $ne: true };
+            }
+
+            // Pagination
+            const pageNum = Math.max(1, parseInt(page) || 1);
+            const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+            const skip = (pageNum - 1) * limitNum;
+
+            // Exclude heavy fields
+            const selectFields = '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
+
+            // Execute text search with relevance score sorting
+            const queryStartTime = Date.now();
+            const [results, total] = await Promise.all([
+                Student.find(query)
+                    .select(selectFields)
+                    .sort({ score: { $meta: 'textScore' } })  // Sort by relevance
+                    .limit(limitNum)
+                    .skip(skip)
+                    .lean()
+                    .exec(),
+                Student.countDocuments(query)
+            ]);
+            const queryTime = Date.now() - queryStartTime;
+
+            console.log(`✅ Text search completed in ${queryTime}ms | Found ${total} results`);
+
+            // Warn if query is slow
+            if (queryTime > 1000) {
+                console.warn(`⚠️ Slow text search: ${queryTime}ms for "${searchQuery}"`);
+            }
+
+            res.json({
+                results,
+                total,
+                query: searchQuery.trim(),
+                totalPages: Math.ceil(total / limitNum),
+                currentPage: pageNum,
+                page: pageNum,
+                limit: limitNum,
+                queryTimeMs: queryTime,
+                indexUsed: 'text',
+                pagination: {
+                    page: pageNum,
+                    limit: limitNum,
+                    total,
+                    totalPages: Math.ceil(total / limitNum),
+                    hasMore: skip + results.length < total
+                }
+            });
+        } else {
+            // Fallback: Client-side search on mock data
+            let list = students.slice();
+            if (includeArchived !== 'true') {
+                list = list.filter(s => !s.isArchived);
+            }
+            
+            const searchLower = searchQuery.toLowerCase();
+            list = list.filter(s => 
+                (s.firstName && s.firstName.toLowerCase().includes(searchLower)) ||
+                (s.lastName && s.lastName.toLowerCase().includes(searchLower)) ||
+                (s.regNo && s.regNo.toLowerCase().includes(searchLower))
+            );
+            
+            res.json({ 
+                results: list, 
+                total: list.length,
+                query: searchQuery.trim(),
+                pagination: { page: 1, limit: list.length, total: list.length, totalPages: 1, hasMore: false },
+                indexUsed: 'none (fallback)'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Text search error:', error);
+        res.status(500).json({ error: 'Search failed', details: error.message });
     }
 });
 
@@ -8790,33 +9034,58 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { studentId } = req.params;
     const updateData = req.body;
+    const normalizedStudentId = (studentId || '').toString().trim();
     
     console.log('=== PROFILE UPDATE REQUEST ===');
-    console.log('Student ID:', studentId);
+    console.log('Student ID:', normalizedStudentId);
     console.log('MongoDB Connected:', isMongoConnected);
-    console.log('Update Data Keys:', Object.keys(updateData));
+    console.log('Update Data Keys:', Object.keys(updateData || {}));
     console.log('Update Data:', JSON.stringify(updateData, null, 2));
     
     try {
+        if (!normalizedStudentId) {
+            return res.status(400).json({ error: 'Student ID is required' });
+        }
+
+        // Prevent accidental writes to immutable/system-managed fields.
+        const safeUpdateData = { ...(updateData || {}) };
+        ['_id', 'id', '__v', 'createdAt', 'updatedAt'].forEach((key) => delete safeUpdateData[key]);
+
+        // Normalize known frontend alias to match schema naming.
+        if (!safeUpdateData.guardianNumber && safeUpdateData.guardianMobile) {
+            safeUpdateData.guardianNumber = safeUpdateData.guardianMobile;
+        }
+
         if (isMongoConnected) {
-            // Use findByIdAndUpdate with proper options
-            const updatedStudent = await Student.findByIdAndUpdate(
-                studentId, 
-                { $set: updateData }, // Use $set to ensure all fields are updated
+            const identityQuery = mongoose.Types.ObjectId.isValid(normalizedStudentId)
+                ? { _id: normalizedStudentId }
+                : {
+                    $or: [
+                        { regNo: normalizedStudentId },
+                        { loginRegNo: normalizedStudentId },
+                        { studentId: normalizedStudentId }
+                    ]
+                };
+
+            // Use findOneAndUpdate to support both ObjectId and regNo-style identifiers.
+            const updatedStudent = await Student.findOneAndUpdate(
+                identityQuery,
+                { $set: safeUpdateData },
                 { 
-                    new: true, // Return the updated document
-                    runValidators: false, // Don't run validators to allow empty fields
-                    strict: false // Allow fields not in schema
+                    new: true,
+                    runValidators: false,
+                    strict: false,
+                    context: 'query'
                 }
             );
             
             if (!updatedStudent) {
-                console.log('Student not found with ID:', studentId);
+                console.log('Student not found with ID:', normalizedStudentId);
                 return res.status(404).json({ error: 'Student not found' });
             }
             
             console.log('Profile updated successfully');
-            console.log('Updated fields:', Object.keys(updateData));
+            console.log('Updated fields:', Object.keys(safeUpdateData));
             
             res.json({ 
                 success: true, 
@@ -8825,12 +9094,18 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
             });
         } else {
             // In-memory update
-            const studentIndex = students.findIndex(s => (s._id || s.id) === studentId);
+            const studentIndex = students.findIndex((s) => {
+                const idCandidates = [s._id, s.id, s.regNo, s.loginRegNo, s.studentId]
+                    .filter(Boolean)
+                    .map((v) => v.toString().trim());
+                return idCandidates.includes(normalizedStudentId);
+            });
+
             if (studentIndex === -1) {
                 return res.status(404).json({ error: 'Student not found' });
             }
             
-            students[studentIndex] = { ...students[studentIndex], ...updateData };
+            students[studentIndex] = { ...students[studentIndex], ...safeUpdateData };
             res.json({ 
                 success: true, 
                 message: 'Profile updated successfully (in-memory)', 
@@ -8840,6 +9115,16 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
     } catch (error) {
         console.error('Profile update error:', error);
         console.error('Error stack:', error.stack);
+
+        if (error && error.code === 11000) {
+            const duplicateField = Object.keys(error.keyPattern || {})[0] || 'field';
+            return res.status(409).json({
+                error: 'Duplicate value error',
+                field: duplicateField,
+                details: `${duplicateField} already exists`
+            });
+        }
+
         res.status(500).json({ error: 'Failed to update profile', details: error.message });
     }
 });

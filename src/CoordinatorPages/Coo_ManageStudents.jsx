@@ -632,7 +632,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 );
 
                 let response = await mongoDBService.getStudents({
-                    department: normalizedDept
+                    department: normalizedDept,
+                    includeArchived: 'true'  // Include archived students to show all
                 });
 
                 if (!isMounted) return;
@@ -640,13 +641,18 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 let list = resolveList(response);
 
                 if ((!list || list.length === 0) && normalizedDept) {
-                    response = await mongoDBService.getStudents({ branch: normalizedDept });
+                    response = await mongoDBService.getStudents({ 
+                        branch: normalizedDept,
+                        includeArchived: 'true'  // Include archived students to show all
+                    });
                     if (!isMounted) return;
                     list = resolveList(response);
                 }
 
                 if ((!list || list.length === 0)) {
-                    response = await mongoDBService.getStudents();
+                    response = await mongoDBService.getStudents({
+                        includeArchived: 'true'  // Include archived students to show all
+                    });
                     if (!isMounted) return;
                     list = resolveList(response);
                 }

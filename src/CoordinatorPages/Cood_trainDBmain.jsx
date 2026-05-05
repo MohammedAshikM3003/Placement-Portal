@@ -99,8 +99,8 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
 
       const [assignments, branchStudentsByBranch, branchStudentsByDept] = await Promise.all([
         mongoDBService.getScheduledTrainingBatchAssignments(),
-        mongoDBService.getStudents({ branch: coordinatorBranch, limit: 2000, includeImages: "false" }),
-        mongoDBService.getStudents({ department: coordinatorBranch, limit: 2000, includeImages: "false" }),
+        mongoDBService.getStudents({ branch: coordinatorBranch, limit: 2000, includeImages: "false", includeArchived: 'true' }),
+        mongoDBService.getStudents({ department: coordinatorBranch, limit: 2000, includeImages: "false", includeArchived: 'true' }),
       ]);
 
       const normalizedAssignments = Array.isArray(assignments) ? assignments : [];

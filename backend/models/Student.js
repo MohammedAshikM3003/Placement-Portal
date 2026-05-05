@@ -410,6 +410,61 @@ const studentSchema = new mongoose.Schema({
       percentage: Number
     }
   },
+  
+  // Marksheet & Arrear Tracking
+  arrearHistory: [{
+    _id: false,
+    semester: {
+      type: Number,
+      required: true
+    },
+    courseCode: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    courseName: {
+      type: String,
+      trim: true
+    },
+    failedGrade: {
+      type: String,
+      default: 'U'
+    },
+    clearedInSemester: {
+      type: Number,
+      default: null
+    },
+    clearedGrade: {
+      type: String,
+      default: null
+    }
+  }],
+  currentArears: [{
+    _id: false,
+    courseCode: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    courseName: {
+      type: String,
+      trim: true
+    },
+    semester: {
+      type: Number,
+      required: true
+    },
+    grade: {
+      type: String,
+      default: 'U'
+    }
+  }],
+  lastMarksheetUpdate: {
+    type: Date,
+    default: null
+  },
+  
   isBlocked: {
     type: Boolean,
     default: false
@@ -436,8 +491,12 @@ studentSchema.index({ lastName: 1 });
 studentSchema.index({ isBlocked: 1 });
 studentSchema.index({ blocked: 1 });
 studentSchema.index({ createdAt: -1 });
+studentSchema.index({ isArchived: 1 }); // CRITICAL: For archive filtering queries
 
 // Compound indexes for common filter combinations (most specific first)
+// Include isArchived in compound indexes for the most common admin queries
+studentSchema.index({ isArchived: 1, department: 1, batch: 1, regNo: 1 }); // For admin list with archive filter
+studentSchema.index({ isArchived: 1, regNo: 1 }); // Fast lookup by regNo with archive check
 studentSchema.index({ department: 1, batch: 1, regNo: 1 });
 studentSchema.index({ branch: 1, batch: 1, regNo: 1 });
 studentSchema.index({ department: 1, batch: 1 });
@@ -447,4 +506,4 @@ studentSchema.index({ firstName: 1, lastName: 1 });
 // Text index for name search (optional but powerful for fuzzy search)
 studentSchema.index({ firstName: 'text', lastName: 'text' });
 
-module.exports = mongoose.model('Student', studentSchema);
+module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);

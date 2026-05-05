@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar.js';
@@ -244,8 +244,7 @@ function AdminstudDB() {
     const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
     const [exportProgress, setExportProgress] = useState(0);
     const [exportType, setExportType] = useState('Excel'); // 'Excel' or 'PDF'
-    const fetchInitiatedRef = useRef(false);
-    
+
     // NEW: Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -800,12 +799,6 @@ function AdminstudDB() {
     };
 
     useEffect(() => {
-        // Prevent multiple simultaneous fetches
-        if (fetchInitiatedRef.current) {
-            return;
-        }
-        
-        fetchInitiatedRef.current = true;
         let isMounted = true;
         
         const fetchPaginatedStudents = async () => {
@@ -813,10 +806,12 @@ function AdminstudDB() {
                 console.log('🔄 Fetching students page:', currentPage);
                 
                 // EMERGENCY: No images due to slow 4.26 Mbps connection from India to AWS US
+                // FIXED: Include archived students to show all 31 instead of just active 20
                 const response = await mongoDBService.getStudentsPaginated({ 
                     page: currentPage, 
                     limit: studentsPerPage, 
-                    includeImages: false // Disabled for slow connection
+                    includeImages: false, // Disabled for slow connection
+                    includeArchived: 'true' // Include archived students in admin view
                 });
                 
                 console.log('✅ Students response:', response);
@@ -893,6 +888,22 @@ function AdminstudDB() {
     const visibleStudents = viewBlocklist ? blockedStudents : filteredStudents;
     const aiColumns = aiFilterActive ? aiFilterColumns.filter((column) => AI_EXTRA_COLUMNS[column]) : [];
     const tableColumnCount = 9 + aiColumns.length;
+    const pageStartSerial = (currentPage - 1) * studentsPerPage + 1;
+    const shouldShowPagination = !aiFilterActive && totalPages > 1;
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+            setSelectedStudentIds(new Set());
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+            setSelectedStudentIds(new Set());
+        }
+    };
 
     const getExportColumns = () => {
         const baseColumns = [
@@ -1189,10 +1200,40 @@ function AdminstudDB() {
                     {/* --- Bottom Card (Student Table) --- */}
                     <div className={styles['Admin-DB-bottom-card']}>
                         <div className={styles['Admin-DB-table-header-row']}>
-                            <h3 className={styles['Admin-DB-table-title']}>
-                                {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${visibleStudents.length}`}
-                            </h3>
+                            <div className={styles['Admin-DB-table-title-wrap']}>
+                                <h3 className={styles['Admin-DB-table-title']}>
+                                    {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${totalStudents}`}
+                                </h3>
+                                {!isInitialLoading && !aiFilterActive && (
+                                    <div className={styles['Admin-DB-table-subtitle']}>
+                                        Page {currentPage} of {totalPages} | Showing {visibleStudents.length} on this page
+                                    </div>
+                                )}
+                            </div>
                             <div className={styles['Admin-DB-table-actions']}>
+                                {shouldShowPagination && (
+                                    <div className={styles['Admin-DB-pagination-controls']}>
+                                        <button
+                                            type="button"
+                                            className={styles['Admin-DB-page-btn']}
+                                            onClick={handlePrevPage}
+                                            disabled={currentPage <= 1 || isTableLoading}
+                                        >
+                                            Prev
+                                        </button>
+                                        <span className={styles['Admin-DB-page-indicator']}>
+                                            {currentPage} / {totalPages}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className={styles['Admin-DB-page-btn']}
+                                            onClick={handleNextPage}
+                                            disabled={currentPage >= totalPages || isTableLoading}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                )}
                                 <button
                                     className={styles['Admin-DB-zip-btn']}
                                     onClick={() => navigate('/admin/active-zip/student-database', { state: { driveData: null, source: 'student-database' } })}
@@ -1263,7 +1304,7 @@ function AdminstudDB() {
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-select']}`} onClick={(e) => e.stopPropagation()}>
                                                     <input type="checkbox" className={styles['Admin-DB-select-checkbox']} checked={selectedStudentIds.has(student.id)} onChange={() => handleStudentSelect(student.id)} />
                                                 </td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-sno']}`}>{index + 1}</td>
+                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-sno']}`}>{pageStartSerial + index}</td>
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-register-number']}`}>{student.regNo}</td>
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-name']}`}>{student.name}</td>
                                                 <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-department']}`}>{student.department}</td>

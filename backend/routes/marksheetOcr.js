@@ -16,11 +16,13 @@ const axios = require('axios');
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'minicpm-v';
 
-// Multer: store file in memory (max 5MB for marksheet PDFs)
+// Multer: store file in memory
 const ALLOWED_MIMES = ['application/pdf'];
+const UPLOAD_LIMIT_BYTES = 50 * 1024 * 1024; // 50MB
+console.log(`🔼 Marksheet OCR multer upload limit set to ${UPLOAD_LIMIT_BYTES} bytes`);
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: UPLOAD_LIMIT_BYTES },
     fileFilter: (req, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
             cb(null, true);
@@ -499,20 +501,27 @@ async function ocrFromImageOllama(imageBuffer) {
 }
 
 async function ocrFromPDFOllama(buffer) {
-    const { convert } = await import('pdf-to-img');
-    const allResponses = [];
+    try {
+        const { convert } = await import('pdf-to-img');
+        const allResponses = [];
 
-    const pages = await convert(buffer, { scale: 2.0 });
-    let pageNum = 0;
-    for await (const pageImage of pages) {
-        pageNum++;
-        console.log(`📷 Ollama OCR processing page ${pageNum}...`);
-        const base64 = Buffer.from(pageImage).toString('base64');
-        const pageResponse = await ocrWithOllama(base64);
-        allResponses.push(pageResponse);
+        const pages = await convert(buffer, { scale: 2.0 });
+        let pageNum = 0;
+        for await (const pageImage of pages) {
+            pageNum++;
+            console.log(`📷 Ollama OCR processing page ${pageNum}...`);
+            const base64 = Buffer.from(pageImage).toString('base64');
+            const pageResponse = await ocrWithOllama(base64);
+            allResponses.push(pageResponse);
+        }
+
+        return allResponses;
+    } catch (err) {
+        // Log full stack for debugging (helps diagnose native dependency issues)
+        console.error('❌ ocrFromPDFOllama failed:', err && err.stack ? err.stack : err);
+        // Return empty array so caller can fall back or return a controlled error
+        return [];
     }
-
-    return allResponses;
 }
 
 // Helper: normalize Ollama vision JSON into standard response shape
@@ -576,7 +585,9 @@ async function tryVisionExtraction(fileBuffer, isImage) {
 // POST /parse
 // ─────────────────────────────────────────────────────────
 
-router.post('/parse', upload.single('file'), async (req, res) => {
+// Use Busboy instead of Multer for /parse to avoid multer size-limit issues and allow larger uploads
+
+async function processParseRequest(req, res) {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
@@ -586,8 +597,6 @@ router.post('/parse', upload.single('file'), async (req, res) => {
 
         const forceVision = req.query.forceVision === 'true' || req.body?.forceVision === true;
 
-        // ── PDF uploads only ──
-        // If forceVision is set, skip pdf-parse entirely and send PDF pages as images
         if (forceVision) {
             console.log('🔬 forceVision=true, skipping pdf-parse, sending PDF to vision model...');
             const result = await tryVisionExtraction(req.file.buffer, false);
@@ -608,7 +617,6 @@ router.post('/parse', upload.single('file'), async (req, res) => {
                 return res.json(buildVisionResponse(result.parsed));
             }
 
-            // Raw text fallback
             const fullText = result.rawText || '';
             if (!fullText.trim()) {
                 return res.status(400).json({ success: false, error: 'Vision model could not extract text from this PDF.' });
@@ -631,12 +639,10 @@ router.post('/parse', upload.single('file'), async (req, res) => {
             });
         }
 
-        // ── Path C: Normal PDF — try digital text first, fallback to vision ──
         const pdfData = await pdfParse(req.file.buffer);
         let fullText = pdfData.text || '';
 
         if (!fullText.trim()) {
-            // No embedded text — scanned PDF
             console.log('📷 No text in PDF, using Ollama vision model...');
             const result = await tryVisionExtraction(req.file.buffer, false);
 
@@ -647,7 +653,7 @@ router.post('/parse', upload.single('file'), async (req, res) => {
                 }
                 return res.status(503).json({
                     success: false,
-                    error: `Vision model "${OLLAMA_VISION_MODEL}" not found. Pull it with: ollama pull ${OLLAMA_VISION_MODEL}`,
+                    error: `Vision model "${OLLAMA_VISION_MODEL}" not found. Pull it with: ollama pull ${OLLAMA_VISION_MODEL}\nAvailable models: ${vs.models.join(', ') || 'none'}`,
                 });
             }
 
@@ -665,7 +671,6 @@ router.post('/parse', upload.single('file'), async (req, res) => {
             }
         }
 
-        // Have text — try regex extraction
         console.log(`📝 Extracted ${fullText.length} characters (digital PDF)`);
         console.log(`📄 Raw text (first 1500 chars):\n${fullText.substring(0, 1500)}`);
 
@@ -674,14 +679,12 @@ router.post('/parse', upload.single('file'), async (req, res) => {
         const subjects = extractSubjects(fullText);
         console.log(`📋 Document type: ${docType} | 👤 Student fields: ${Object.keys(studentInfo).length} | 📚 Subjects: ${subjects.length}`);
 
-        // ── Smart fallback: if regex yielded poor results, try vision model ──
         if (isExtractionWeak(studentInfo, subjects)) {
             console.log('⚠️ Regex extraction yielded weak results, trying Ollama vision fallback...');
             try {
                 const result = await tryVisionExtraction(req.file.buffer, false);
                 if (result.available && result.parsed) {
                     const visionSubjects = (result.parsed.subjects || []);
-                    // Only use vision result if it's actually better
                     if (visionSubjects.length > subjects.length) {
                         console.log(`✅ Vision fallback found ${visionSubjects.length} subjects (regex found ${subjects.length})`);
                         return res.json(buildVisionResponse(result.parsed));
@@ -692,7 +695,6 @@ router.post('/parse', upload.single('file'), async (req, res) => {
             }
         }
 
-        // Calculate SGPA if not extracted from text (temporary marksheets)
         const gpaInfo = {};
         if (studentInfo.sgpa) {
             gpaInfo.sgpa = studentInfo.sgpa;
@@ -713,12 +715,20 @@ router.post('/parse', upload.single('file'), async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Marksheet parse error:', error.message);
+        console.error('❌ Marksheet parse error:', error && error.stack ? error.stack : error);
         return res.status(500).json({
             success: false,
             error: 'Failed to parse the marksheet. Please try again.',
+            details: error.message || String(error)
         });
     }
+}
+
+router.post('/parse', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No file uploaded' });
+    }
+    await processParseRequest(req, res);
 });
 
 // ─────────────────────────────────────────────────────────

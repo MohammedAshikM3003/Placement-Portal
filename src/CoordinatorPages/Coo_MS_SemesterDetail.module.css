@@ -1,0 +1,355 @@
+.co-semester-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f6f7fb;
+  padding-top: 70px;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: "Roboto", sans-serif;
+}
+
+.co-semester-layout * {
+  font-family: inherit;
+}
+
+.semester-content {
+  flex: 1;
+  margin-left: 288px;
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  height: 244px;
+}
+
+.stats-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.stat-card {
+  min-height: 196px;
+  border-radius: 22px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 22px 16px;
+  color: #ffffff;
+}
+
+.stat-card:nth-child(1) {
+  background: linear-gradient(180deg, #0c56a6 0%, #06438b 100%);
+}
+
+.stat-card:nth-child(2) {
+  background: linear-gradient(180deg, #19b86d 0%, #0fa85e 100%);
+}
+
+.stat-card:nth-child(3) {
+  background: linear-gradient(180deg, #e24848 0%, #d73d3d 100%);
+}
+
+.stat-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.stat-count {
+  margin-top: 18px;
+  min-width: 92px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 2.55rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+
+.upload-panel {
+  position: relative;
+  background: linear-gradient(180deg, #fff7f7 0%, #fffefe 100%);
+  border: 2px dashed #f08a8a;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 18px 20px;
+  min-height: 188px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.upload-icons {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  overflow: hidden;
+  border: 2px solid #5f5f5f;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.icon-action {
+  width: 54px;
+  height: 46px;
+  border: none;
+  background: transparent;
+  color: #d73d3d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-action + .icon-action {
+  border-left: 2px solid #5f5f5f;
+  color: #7d63df;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  width: 100%;
+  padding-top: 6px;
+}
+
+.upload-graphic {
+  color: #d73d3d;
+  line-height: 0;
+}
+
+.upload-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.2;
+}
+
+.upload-file-name {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.95vw, 1.6rem);
+  font-weight: 700;
+  color: #1b1b1b;
+  word-break: break-word;
+}
+
+.upload-subtext {
+  font-size: 1rem;
+  color: #707070;
+  font-weight: 500;
+}
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 22px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.print-button {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  background: #d73d3d;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.table-wrap {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.subject-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.subject-table th,
+.subject-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #f1f1f1;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.96rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subject-table th {
+  color: #888;
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.15;
+}
+
+.subject-table td {
+  font-weight: 500;
+}
+
+.subject-table tbody tr:hover {
+  background: #fff6f6;
+}
+
+.subject-table th:nth-child(1),
+.subject-table td:nth-child(1) {
+  width: 6%;
+}
+
+.subject-table th:nth-child(2),
+.subject-table td:nth-child(2) {
+  width: 14%;
+}
+
+.subject-table th:nth-child(3),
+.subject-table td:nth-child(3) {
+  width: 15%;
+}
+
+.subject-table th:nth-child(4),
+.subject-table td:nth-child(4) {
+  width: 7%;
+}
+
+.subject-table th:nth-child(5),
+.subject-table td:nth-child(5) {
+  width: 8%;
+}
+
+.subject-table th:nth-child(6),
+.subject-table td:nth-child(6) {
+  width: 7%;
+}
+
+.subject-table th:nth-child(7),
+.subject-table td:nth-child(7) {
+  width: 7%;
+}
+
+.subject-table th:nth-child(8),
+.subject-table td:nth-child(8) {
+  width: 10%;
+}
+
+.subject-table th:nth-child(9),
+.subject-table td:nth-child(9) {
+  width: 8%;
+}
+
+.subject-table th:nth-child(10),
+.subject-table td:nth-child(10) {
+  width: 11%;
+}
+
+.subject-table th:nth-child(11),
+.subject-table td:nth-child(11) {
+  width: 7%;
+}
+
+.view-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #e36f6f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  color: #777;
+  font-weight: 700;
+  padding: 28px 16px;
+}
+
+@media (max-width: 1240px) {
+  .semester-content {
+    margin-left: 0;
+    padding: 14px 12px 16px;
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .co-semester-layout {
+    padding-top: 60px;
+  }
+
+  .upload-panel {
+    min-height: 170px;
+  }
+
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .upload-title {
+    font-size: 1.35rem;
+  }
+}

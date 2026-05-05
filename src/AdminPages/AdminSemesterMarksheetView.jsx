@@ -54,25 +54,11 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
     { sno: 10, semester: 5, courseCode: '20CS519', courseName: 'Cloud Computing', grade: 'B+', result: 'P' },
   ];
 
-  // Default student data if none provided
-  const defaultStudent = {
-    name: 'Ravinder Kumar',
-    regNo: '7315XXXX001',
-    dob: '15-08-2003',
-    year: 'III',
-    semester: '5',
-    programme: 'B.E CSE',
-    examDate: 'DEC 2025',
-    currentSgpa: '8.45',
-    overallCgpa: '8.12',
-    published: '15-01-2026',
-    attempted: '30',
-    cleared: '27',
-    pending: '3'
+  // Use provided student data; avoid using mock defaults
+  const student = studentData || {
+    name: '', regNo: '', dob: '', year: '', semester: '', programme: '', examDate: '',
+    currentSgpa: '', overallCgpa: '', published: '', attempted: '', cleared: '', pending: ''
   };
-
-  // Merge studentData with defaultStudent to fill missing fields
-  const student = studentData ? { ...defaultStudent, ...studentData } : defaultStudent;
 
   const handleDiscard = () => {
     // Navigate back to student profile view
