@@ -20,7 +20,8 @@
     background: #fff;
     position: relative;
     width: calc(100% - 290px);
-    padding: 15px;
+    padding: 15px 0 15px 15px;
+    box-sizing: border-box;
     overflow: hidden;
     overflow-x: hidden;
 }
@@ -141,6 +142,23 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    overflow-y: auto;
+    padding-right: 15px;
+}
+
+.uploadSection::-webkit-scrollbar {
+    width: 10px;
+}
+.uploadSection::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+.uploadSection::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+.uploadSection::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34;
 }
 
 /* Upload Drop Zone */
@@ -329,23 +347,18 @@
     overflow-x: hidden;
 }
 
-/* Red scrollbar for coordinator theme */
 .tableScroll::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
-
 .tableScroll::-webkit-scrollbar-track {
-    background: #f0f2f5;
+    background: transparent;
 }
-
 .tableScroll::-webkit-scrollbar-thumb {
-    background: #D73D3D;
-    border-radius: 20px;
-    border: 2px solid #f0f2f5;
+    background: rgba(215, 61, 61, 0.5);
+    border-radius: 10px;
 }
-
 .tableScroll::-webkit-scrollbar-thumb:hover {
-    background: #b53138;
+    background: rgba(215, 61, 61, 0.8);
 }
 
 /* Table Header - RED THEME */
@@ -362,39 +375,36 @@
 }
 
 .courseTableHeader th {
-    padding: 1rem;
+    padding: 0.55rem 0.5rem;
     text-align: center;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     background-color: #D73D3D;
 }
 
 .courseTableHeader th:first-child {
     text-align: center;
-    width: 60px;
+    width: 44px;
 }
 
 .courseTableHeader th:nth-child(2) {
-    width: 120px;
+    width: 110px;
 }
 
 .courseTableHeader th:nth-child(3) {
     width: auto;
     text-align: left;
-    padding-left: 1.5rem;
+    padding-left: 0.6rem;
 }
 
-.courseTableHeader th:nth-child(4) {
-    width: 80px;
-}
-
-.courseTableHeader th:nth-child(5) {
-    width: 80px;
+.courseTableHeader th:nth-child(4),
+.courseTableHeader th:nth-child(5),
+.courseTableHeader th:nth-child(6) {
+    width: 72px;
 }
 
 .courseTableHeader th:last-child {
     text-align: center;
-    width: 80px;
 }
 
 /* Table Body */
@@ -405,42 +415,41 @@
 }
 
 .courseTableBody td {
-    padding: 1rem;
+    padding: 0.55rem 0.5rem;
     border-bottom: 1px solid #f0f2f5;
     color: #333;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     text-align: center;
+    line-height: 1.2;
 }
 
 .courseTableBody td:first-child {
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #333333;
-    width: 60px;
+    width: 44px;
 }
 
 .courseTableBody td:nth-child(2) {
-    width: 120px;
+    width: 110px;
 }
 
 .courseTableBody td:nth-child(3) {
     width: auto;
     text-align: left;
-    padding-left: 1.5rem;
+    padding-left: 0.6rem;
+    word-break: break-word;
 }
 
-.courseTableBody td:nth-child(4) {
-    width: 80px;
-}
-
-.courseTableBody td:nth-child(5) {
-    width: 80px;
+.courseTableBody td:nth-child(4),
+.courseTableBody td:nth-child(5),
+.courseTableBody td:nth-child(6) {
+    width: 72px;
 }
 
 .courseTableBody td:last-child {
     text-align: center;
     font-weight: 600;
-    width: 80px;
 }
 
 .courseTableBody tbody tr:hover {
@@ -767,21 +776,21 @@
 
     /* Red scrollbar for dashboard area */
     .dashboardArea::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
-
     .dashboardArea::-webkit-scrollbar-track {
         background: #f0f2f5;
     }
-
     .dashboardArea::-webkit-scrollbar-thumb {
-        background-color: #D73D3D;
+        background-color: #d23b42;
         border-radius: 20px;
-        border: 2px solid #f0f2f5;
+        border: 3px solid #f0f2f5;
+    }
+    .dashboardArea::-webkit-scrollbar-thumb:hover {
+        background-color: #b32d34;
     }
 
-    .dashboardArea::-webkit-scrollbar-thumb:hover {
-        background-color: #b53138;
+    .dashboardArea {
     }
 }
 

@@ -3,6 +3,9 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const { Readable } = require('stream');
+const { spawn } = require('child_process');
+const http = require('http');
+const net = require('net');
 // const fs = require('fs'); // Unused - commented out
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -41,6 +44,143 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+const logRouteDebug = (message) => {
+    if (process.env.ROUTE_DEBUG === '1') {
+        console.log(`🧭 ROUTE_DEBUG: ${message}`);
+    }
+};
+
+// ========================================
+// OCR SERVICE AUTO-START (DEV ONLY)
+// ========================================
+const OCR_HOST = process.env.OCR_HOST || '127.0.0.1';
+const OCR_PORT = Number(process.env.OCR_PORT || 5001);
+const OCR_HEALTH_PATH = process.env.OCR_HEALTH_PATH || '/health';
+const OCR_PYTHON_EXE = process.env.OCR_PYTHON_EXE || path.resolve(__dirname, '..', '.venv310', 'Scripts', 'python.exe');
+const OCR_SERVER_SCRIPT = process.env.OCR_SERVER_SCRIPT || path.resolve(__dirname, 'ocr-service', 'ocr_server.py');
+const OCR_AUTOSTART = process.env.OCR_AUTOSTART !== '0';
+
+let ocrProcess = null;
+
+const _logOcrLines = (prefix, data) => {
+    const lines = data.toString().split(/\r?\n/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        console.log(`${prefix} ${trimmed}`);
+    }
+};
+
+const _checkPortOpen = (host, port, timeoutMs = 500) => new Promise((resolve) => {
+    const socket = new net.Socket();
+    let resolved = false;
+
+    const finish = (isOpen) => {
+        if (resolved) return;
+        resolved = true;
+        socket.destroy();
+        resolve(isOpen);
+    };
+
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+    socket.connect(port, host);
+});
+
+const _checkOcrHealth = (timeoutMs = 1000) => new Promise((resolve) => {
+    const request = http.request(
+        {
+            hostname: OCR_HOST,
+            port: OCR_PORT,
+            path: OCR_HEALTH_PATH,
+            method: 'GET',
+            timeout: timeoutMs,
+        },
+        (response) => {
+            response.resume();
+            resolve(response.statusCode >= 200 && response.statusCode < 300);
+        }
+    );
+
+    request.on('error', () => resolve(false));
+    request.on('timeout', () => {
+        request.destroy();
+        resolve(false);
+    });
+    request.end();
+});
+
+const _waitForOcrHealth = async (retries = 20, delayMs = 500) => {
+    for (let attempt = 0; attempt < retries; attempt += 1) {
+        const healthy = await _checkOcrHealth(1000);
+        if (healthy) {
+            return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    return false;
+};
+
+const startOcrService = async () => {
+    if (ocrProcess) {
+        return;
+    }
+
+    const portOpen = await _checkPortOpen(OCR_HOST, OCR_PORT);
+    if (portOpen) {
+        const healthy = await _checkOcrHealth(1000);
+        if (healthy) {
+            console.log(`[OCR] OCR service already running on http://${OCR_HOST}:${OCR_PORT}`);
+            return;
+        }
+
+        console.log(`[OCR] Port ${OCR_PORT} is open. Waiting for OCR healthcheck...`);
+        const ready = await _waitForOcrHealth();
+        if (ready) {
+            console.log(`[OCR] Running on http://${OCR_HOST}:${OCR_PORT}`);
+        } else {
+            console.warn(`[OCR] Port ${OCR_PORT} is open but OCR healthcheck failed. Skipping auto-start.`);
+        }
+        return;
+    }
+
+    console.log('[OCR] Starting OCR service...');
+    ocrProcess = spawn(OCR_PYTHON_EXE, [OCR_SERVER_SCRIPT], {
+        cwd: path.dirname(OCR_SERVER_SCRIPT),
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+    });
+
+    ocrProcess.stdout.on('data', (data) => _logOcrLines('[OCR]', data));
+    ocrProcess.stderr.on('data', (data) => _logOcrLines('[OCR ERROR]', data));
+
+    ocrProcess.on('exit', (code, signal) => {
+        console.log(`[OCR] OCR process exited (code=${code}, signal=${signal || 'none'})`);
+        ocrProcess = null;
+    });
+
+    ocrProcess.on('error', (error) => {
+        console.error(`[OCR ERROR] Failed to start OCR service: ${error.message}`);
+        ocrProcess = null;
+    });
+
+    const ready = await _waitForOcrHealth();
+    if (ready) {
+        console.log(`[OCR] Running on http://${OCR_HOST}:${OCR_PORT}`);
+    } else {
+        console.warn('[OCR ERROR] OCR healthcheck failed after retries');
+    }
+};
+
+const stopOcrService = () => {
+    if (ocrProcess && !ocrProcess.killed) {
+        console.log('[OCR] Stopping OCR service...');
+        ocrProcess.kill('SIGTERM');
+    }
+};
+
 // Register fatal process handlers early, before any async startup work begins.
 process.on('unhandledRejection', (reason, promise) => {
     console.error('⚠️  Unhandled Rejection at:', promise, 'reason:', reason);
@@ -50,6 +190,16 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (error) => {
     console.error('⚠️  Uncaught Exception:', error);
     // Keep process alive to preserve local development availability.
+});
+
+process.on('SIGINT', () => {
+    stopOcrService();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    stopOcrService();
+    process.exit(0);
 });
 
 // File upload configuration (Multer - memory storage for upload routes)
@@ -493,8 +643,21 @@ try {
     const marksheetsUploadRoutes = require('./routes/marksheetsUpload');
     app.use('/api/marksheets', authenticateToken, marksheetsUploadRoutes);
     console.log('✅ Marksheet upload & extraction routes loaded successfully');
+    logRouteDebug('Mounted /api/marksheets/* (POST /upload, POST /confirm, GET /student/:id, GET /semester/:id/:semester)');
 } catch (error) {
-    console.error('❌ Failed to load marksheet upload routes:', error.message);
+    console.error('❌ Failed to load marksheet upload routes:', error.stack || error.message);
+    process.exit(1);
+}
+
+// -------------------------------------------------
+// Marksheet Review Queue APIs
+// -------------------------------------------------
+try {
+    const marksheetReviewRoutes = require('./routes/marksheetReview');
+    app.use('/api/marksheets/review', authenticateToken, marksheetReviewRoutes);
+    console.log('✅ Marksheet review queue routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load marksheet review routes:', error.message);
 }
 
 // -------------------------------------------------
@@ -506,17 +669,6 @@ try {
     console.log('✅ Subject routes loaded successfully');
 } catch (error) {
     console.error('❌ Failed to load subject routes:', error.message);
-}
-
-// -------------------------------------------------
-// Semester Records APIs
-// -------------------------------------------------
-try {
-    const semesterRecordRoutes = require('./routes/semesterRecords');
-    app.use('/api/semester-records', authenticateToken, semesterRecordRoutes);
-    console.log('✅ Semester record routes loaded successfully');
-} catch (error) {
-    console.error('❌ Failed to load semester record routes:', error.message);
 }
 
 // -------------------------------------------------
@@ -8029,7 +8181,6 @@ app.get('/api/students/check/:regNo', async (req, res) => {
 app.get('/api/students', async (req, res) => {
     const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false' } = req.query;
     
-    const startTime = Date.now();
     console.log('📋 Students Request:', { page, limit, includeImages, includeArchived, filters: { name, regNo, department, branch, batch } });
     console.log('🔌 MongoDB Status:', mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED');
 
@@ -8046,25 +8197,22 @@ app.get('/api/students', async (req, res) => {
                 query.isArchived = { $ne: true };
             }
 
-            // Build optimized query - prioritize filters that use indexes
+            // Build optimized query
+            if (regNo) query.regNo = { $regex: regNo, $options: 'i' };
             if (department) query.department = department;
             if (branch) query.branch = branch;
             if (batch) {
                 query.$or = [{ batch }, { year: batch }];
             }
-            if (regNo) {
-                // Use exact match for regNo when possible (faster than regex)
-                query.regNo = regNo.trim();
-            }
             if (name) {
-                // Use text search if available, fallback to regex
+                // Use $or for name search across first and last names
                 query.$or = [
-                    { firstName: { $regex: name.trim(), $options: 'i' } },
-                    { lastName: { $regex: name.trim(), $options: 'i' } }
+                    { firstName: { $regex: name, $options: 'i' } },
+                    { lastName: { $regex: name, $options: 'i' } }
                 ];
             }
 
-            // Pagination settings - max 100 per page for memory safety
+            // Pagination settings - default to 50 for better performance
             const pageNum = Math.max(1, parseInt(page) || 1);
             const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
             const skip = (pageNum - 1) * limitNum;
@@ -8075,7 +8223,6 @@ app.get('/api/students', async (req, res) => {
                 : '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
 
             // Execute optimized query with lean() for 50% faster execution
-            const queryStartTime = Date.now();
             const [list, total] = await Promise.all([
                 Student.find(query)
                     .select(selectFields)
@@ -8086,14 +8233,6 @@ app.get('/api/students', async (req, res) => {
                     .exec(),
                 Student.countDocuments(query)
             ]);
-            const queryTime = Date.now() - queryStartTime;
-
-            // Warn if query is slow
-            if (queryTime > 1000) {
-                console.warn(`⚠️ Slow query detected: ${queryTime}ms for page ${pageNum} with ${total} total results`);
-            }
-
-            console.log(`✅ Query completed in ${queryTime}ms | Returning ${list.length} of ${total} students`);
 
             // Return paginated response with all metadata
             res.json({
@@ -8103,7 +8242,6 @@ app.get('/api/students', async (req, res) => {
                 currentPage: pageNum,
                 page: pageNum,
                 limit: limitNum,
-                queryTimeMs: queryTime,
                 pagination: {
                     page: pageNum,
                     limit: limitNum,
@@ -8116,9 +8254,7 @@ app.get('/api/students', async (req, res) => {
             // Fallback for when MongoDB is not connected
             let list = students.slice();
             // Filter out archived students
-            if (includeArchived !== 'true') {
-                list = list.filter(s => !s.isArchived);
-            }
+            list = list.filter(s => !s.isArchived);
             if (regNo) list = list.filter(s => String(s.regNo).toLowerCase().includes(String(regNo).toLowerCase()));
             if (department) list = list.filter(s => (s.department || s.branch) === department);
             if (branch) list = list.filter(s => s.branch === branch);
@@ -8133,108 +8269,6 @@ app.get('/api/students', async (req, res) => {
     } catch (error) {
         console.error('List students error:', error);
         res.status(500).json({ error: 'Failed to list students', details: error.message });
-    }
-});
-
-// 🔍 OPTIMIZED TEXT SEARCH - Search across ALL students efficiently
-// Uses MongoDB text index for 50-100x faster search than regex
-app.get('/api/students/search/text', async (req, res) => {
-    const { query: searchQuery, page = '1', limit = '50', includeArchived = 'false' } = req.query;
-    
-    const startTime = Date.now();
-    console.log('🔍 Text Search Request:', { searchQuery, page, limit, includeArchived });
-
-    try {
-        if (!searchQuery || searchQuery.trim() === '') {
-            return res.status(400).json({ error: 'Search query is required' });
-        }
-
-        const isMongoConnected = mongoose.connection.readyState === 1 || await ensureConnection();
-        
-        if (isMongoConnected) {
-            console.log('✅ Using MongoDB text search');
-            
-            const query = {
-                $text: { $search: searchQuery.trim() }
-            };
-
-            // IMPORTANT: Exclude archived students by default
-            if (includeArchived !== 'true') {
-                query.isArchived = { $ne: true };
-            }
-
-            // Pagination
-            const pageNum = Math.max(1, parseInt(page) || 1);
-            const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
-            const skip = (pageNum - 1) * limitNum;
-
-            // Exclude heavy fields
-            const selectFields = '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
-
-            // Execute text search with relevance score sorting
-            const queryStartTime = Date.now();
-            const [results, total] = await Promise.all([
-                Student.find(query)
-                    .select(selectFields)
-                    .sort({ score: { $meta: 'textScore' } })  // Sort by relevance
-                    .limit(limitNum)
-                    .skip(skip)
-                    .lean()
-                    .exec(),
-                Student.countDocuments(query)
-            ]);
-            const queryTime = Date.now() - queryStartTime;
-
-            console.log(`✅ Text search completed in ${queryTime}ms | Found ${total} results`);
-
-            // Warn if query is slow
-            if (queryTime > 1000) {
-                console.warn(`⚠️ Slow text search: ${queryTime}ms for "${searchQuery}"`);
-            }
-
-            res.json({
-                results,
-                total,
-                query: searchQuery.trim(),
-                totalPages: Math.ceil(total / limitNum),
-                currentPage: pageNum,
-                page: pageNum,
-                limit: limitNum,
-                queryTimeMs: queryTime,
-                indexUsed: 'text',
-                pagination: {
-                    page: pageNum,
-                    limit: limitNum,
-                    total,
-                    totalPages: Math.ceil(total / limitNum),
-                    hasMore: skip + results.length < total
-                }
-            });
-        } else {
-            // Fallback: Client-side search on mock data
-            let list = students.slice();
-            if (includeArchived !== 'true') {
-                list = list.filter(s => !s.isArchived);
-            }
-            
-            const searchLower = searchQuery.toLowerCase();
-            list = list.filter(s => 
-                (s.firstName && s.firstName.toLowerCase().includes(searchLower)) ||
-                (s.lastName && s.lastName.toLowerCase().includes(searchLower)) ||
-                (s.regNo && s.regNo.toLowerCase().includes(searchLower))
-            );
-            
-            res.json({ 
-                results: list, 
-                total: list.length,
-                query: searchQuery.trim(),
-                pagination: { page: 1, limit: list.length, total: list.length, totalPages: 1, hasMore: false },
-                indexUsed: 'none (fallback)'
-            });
-        }
-    } catch (error) {
-        console.error('❌ Text search error:', error);
-        res.status(500).json({ error: 'Search failed', details: error.message });
     }
 });
 
@@ -10683,6 +10717,12 @@ if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
         console.log('   ✅ Coordinator routes protected');
         console.log('   ✅ Role-based access control enabled\n');
     });
+
+    if (OCR_AUTOSTART && process.env.NODE_ENV !== 'production') {
+        startOcrService().catch((error) => {
+            console.error(`[OCR ERROR] Auto-start failed: ${error.message}`);
+        });
+    }
 
     Promise.resolve().then(async () => {
         try {

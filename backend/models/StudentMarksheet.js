@@ -123,6 +123,18 @@ const studentMarksheetSchema = new mongoose.Schema({
     type: String,
     default: '' // Name of the PDF from which this was extracted
   },
+  extractionConfidence: {
+    type: Number,
+    default: null
+  },
+  extractionWarnings: {
+    type: [String],
+    default: []
+  },
+  extractionMeta: {
+    type: Object,
+    default: {}
+  },
   
   // Status
   verified: {

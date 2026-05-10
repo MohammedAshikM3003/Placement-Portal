@@ -52,13 +52,15 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
         name: marksheet.studentName || '',
         year: '1',
         semester: marksheet.semester || '1',
+        examDate: marksheet.examDate || marksheet.exam_month_year || '',
         section: 'A',
         arrears: '0',
         overallArrears: '0',
         sgpa: '0.0',
         overallCgpa: '0.0',
         // CRITICAL: Attach subjects directly to each display student for fast lookup
-        subjects: marksheet.subjects || []
+        subjects: marksheet.subjects || [],
+        pdfPage: index + 1 // Assuming each student corresponds to one page sequentially
       };
       console.log('[Coo_MS_SemesterDetail] Display student', index, ':', { regNo: display.registerNumber, name: display.name, subjectsCount: display.subjects.length });
       return display;
@@ -102,8 +104,11 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   const handleViewStudent = (row) => {
     console.log('🔍 Eye icon clicked for student:', row);
     
+    // CRITICAL: Find the full record to get programme, examDate, etc.
+    const fullRecord = extractedStudents.find(s => s.regNo === row.registerNumber);
+    
     // CRITICAL: The subjects are now attached directly to row from displayStudents
-    const subjects = row.subjects || [];
+    const subjects = fullRecord?.subjects || row.subjects || [];
     console.log('📊 Subjects found on row:', subjects.length, 'items');
     console.log('📊 Full subjects data:', JSON.stringify(subjects.slice(0, 2))); // Log first 2 subjects as sample
 
@@ -122,6 +127,8 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
       state: {
         student: {
           ...row,
+          programme: fullRecord?.programme || '',
+          examDate: fullRecord?.examDate || '',
           studentId: row.id,
           regNo: row.registerNumber,
           registerNumber: row.registerNumber,
@@ -139,7 +146,10 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
           semesterRecord: row,
           isPreview: true, // Flag to prevent 404 API calls on the next page
           subjects: subjects,
+          pdfPage: row.pdfPage
         },
+        previewUrl: resolvedPreviewUrl || previewUrl, 
+        fileData: selectedFile
       },
     });
   };

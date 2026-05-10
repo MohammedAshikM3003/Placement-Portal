@@ -22,6 +22,12 @@
   min-width: 0;
   box-sizing: border-box;
   overflow: auto;
+  scrollbar-width: none;
+}
+
+.semester-content::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 
 .top-grid {
@@ -202,6 +208,12 @@
 .table-wrap {
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.table-wrap::-webkit-scrollbar {
+  display: none;
 }
 
 .subject-table {

@@ -12,7 +12,7 @@ import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
 // Start with no subjects; show notice before upload
 const INITIAL_SUBJECTS = [];
 
-const GRADE_OPTIONS = ['Select Credit', '4 Credits', '3 Credits', '2 Credits', '1 Credit'];
+const GRADE_OPTIONS = ['Select Credit', '4 Credits', '3 Credits', '2 Credits', '1 Credit','0 Credit'];
 const NO_FILE_SELECTED = 'No file selected';
 
 const BinIcon = () => (
@@ -94,8 +94,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
 
   const allCreditsSelected = useMemo(
     () => subjects.every((subject) => {
-      // If subject exists in master with non-zero credits, it's considered filled.
-      if (subject.existsInMaster && (subject.masterCredits || 0) > 0) return true;
+      // If subject exists in master with explicit credits (including 0), it's considered filled.
+      if (subject.existsInMaster && subject.masterCredits !== null && subject.masterCredits !== undefined) return true;
       // Otherwise user must select a credit value
       return Boolean(subject.grade && subject.grade !== 'Select Credit');
     }),
@@ -125,7 +125,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         id: subject.courseCode,
         code: subject.courseCode,
         name: subject.courseName,
-        credits: subject.credits ?? 0,
+        credits: subject.credits ?? null,
       }));
   }, [hasPreviewData, masterSubjects, subjects]);
 
@@ -137,25 +137,31 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
       const courseCode = String(rawSubject.courseCode || rawSubject.course_code || '').trim().toUpperCase();
       if (!courseCode) continue;
 
-      if (!subjectMap.has(courseCode)) {
-        const masterSubject = masterSubjectLookup.get(courseCode);
-        // Fix: treat string 'undefined' as falsy
-        const rawSem = rawSubject.semester && rawSubject.semester !== 'undefined' ? rawSubject.semester : null;
-        const masterSem = masterSubject?.semester && masterSubject.semester !== 'undefined' ? masterSubject.semester : null;
-        const semesterValue = rawSem || masterSem || '';
-        console.log(`🔍 [${courseCode}] rawSem=${rawSem}, masterSem=${masterSem}, final=${semesterValue}`);
+      const masterSubject = masterSubjectLookup.get(courseCode);
+      // Fix: treat string 'undefined' as falsy
+      const rawSemCandidate = rawSubject.semester ?? rawSubject.sem ?? null;
+      const rawSem = rawSemCandidate && rawSemCandidate !== 'undefined' ? rawSemCandidate : null;
+      const semesterValue = rawSem || '';
+      const semesterKey = semesterValue ? String(semesterValue) : 'NA';
+      const mapKey = `${courseCode}_${semesterKey}`;
+
+      if (!subjectMap.has(mapKey)) {
+        console.log(`🔍 [${courseCode}] rawSem=${rawSem}, final=${semesterValue}`);
         const semesterNumber = Number(semesterValue) || 0;
         const yearValue = semesterNumber ? Math.ceil(semesterNumber / 2) : (masterSubject?.year || '');
 
-        subjectMap.set(courseCode, {
-          id: courseCode,
+        subjectMap.set(mapKey, {
+          id: mapKey,
           semester: semesterValue,
           year: yearValue,
           code: courseCode,
           name: rawSubject.courseName || rawSubject.course_name || rawSubject.course_title || '',
-          grade: masterSubject && (masterSubject.credits || 0) > 0 ? `${masterSubject.credits} Credits` : '',
+          grade: masterSubject && masterSubject.credits !== null && masterSubject.credits !== undefined
+            ? `${masterSubject.credits} Credits`
+            : '',
           existsInMaster: Boolean(masterSubject),
-          masterCredits: masterSubject?.credits || 0,
+          masterCredits: masterSubject?.credits ?? null,
+          sem: rawSubject.sem ?? null,
         });
       }
     }
@@ -355,7 +361,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           console.log(`📥 [Frontend] Marksheet ${marksheet.regNo} semester=${marksheet.semester}, subjects count=${marksheet.subjects.length}`);
           return marksheet.subjects.map(subject => ({
             ...subject,
-            semester: subject.semester || marksheet.semester || ''
+            semester: subject.semester || subject.sem || marksheet.semester || marksheet.sem || ''
           }));
         });
         
@@ -375,12 +381,12 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
 
           if (parseResponse.ok) {
             const parseBody = await parseResponse.json();
-            const marksheetSemester = parseBody.student_info?.semester || 2;
+            const marksheetSemester = parseBody.student_info?.semester ?? null;
             // Add semester from marksheet to each subject
             const enrichedSubjects = Array.isArray(parseBody.subjects) 
               ? parseBody.subjects.map(subject => ({
                   ...subject,
-                  semester: subject.semester || marksheetSemester
+                  semester: subject.semester || subject.sem || marksheetSemester || ''
                 }))
               : [];
             finalSubjects = buildSubjectRows(enrichedSubjects);
@@ -390,6 +396,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                 regNo: parseBody.student_info.register_number || '',
                 studentName: parseBody.student_info.name || '',
                 programme: parseBody.student_info.programme || '',
+                examDate: parseBody.student_info.examDate || parseBody.student_info.exam_month_year || '',
                 semester: marksheetSemester,
                 subjects: enrichedSubjects
               };
@@ -566,7 +573,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                           <td>{index + 1}</td>
                           <td>{subject.code}</td>
                           <td>{subject.name}</td>
-                          <td>{subject.credits}</td>
+                          <td>{subject.credits ?? '--'}</td>
                           <td>
                             <span className={styles['credit-badge']}>Unavailable</span>
                           </td>
@@ -598,20 +605,22 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {subjects.map((subject, index) => (
+                      {subjects.map((subject, index) => {
+                        const displaySemester = subject.semester || subject.sem || null;
+                        return (
                         <tr key={subject.id}>
                           <td>{index + 1}</td>
                           <td>
-                            {(subject.existsInMaster && subject.semester) ? (
-                              <span className={styles['credit-badge']}>Sem {subject.semester}</span>
+                            {(subject.existsInMaster && displaySemester) ? (
+                              <span className={styles['credit-badge']}>Sem {displaySemester}</span>
                             ) : (
-                              <span>{subject.semester || '--'}</span>
+                              <span>{displaySemester || '--'}</span>
                             )}
                           </td>
                           <td>{subject.code}</td>
                           <td>{subject.name}</td>
                           <td>
-                            {(subject.existsInMaster && (subject.masterCredits || 0) > 0) ? (
+                            {(subject.existsInMaster && subject.masterCredits !== null && subject.masterCredits !== undefined) ? (
                               <span className={styles['credit-badge']}>{subject.masterCredits} Credits</span>
                             ) : (
                               <select
@@ -629,7 +638,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                             )}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}

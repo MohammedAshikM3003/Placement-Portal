@@ -32,7 +32,8 @@
   background: #fff;
   position: relative;
   width: calc(100% - 290px);
-  padding: 10px 15px;
+  padding: 15px 0 15px 15px;
+  box-sizing: border-box;
   overflow: hidden;
   margin-top: 65px;
   z-index: 1;
@@ -64,26 +65,27 @@
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 100%;
-  padding-right: 5px;
+  padding-right: 15px;
   padding-bottom: 20px;
 }
 
-/* Hide scrollbar for right column */
+/* Red scrollbar for right column */
 .view-right-column::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
 }
 
 .view-right-column::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f0f2f5;
 }
 
 .view-right-column::-webkit-scrollbar-thumb {
-  background: rgba(231, 76, 60, 0.3);
-  border-radius: 10px;
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
 }
 
 .view-right-column::-webkit-scrollbar-thumb:hover {
-  background: rgba(231, 76, 60, 0.5);
+  background-color: #b32d34;
 }
 
 /* Student Details Card */
@@ -247,13 +249,13 @@
 }
 
 .view-table-scroll::-webkit-scrollbar-thumb {
-  background: #c33137;
+  background-color: #d23b42;
   border-radius: 20px;
-  border: 2px solid #f0f2f5;
+  border: 3px solid #f0f2f5;
 }
 
 .view-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: #c63329;
+  background-color: #b32d34;
 }
 
 /* Table Header (Outside scroll) */
@@ -493,8 +495,8 @@
     overflow-x: hidden;
     height: calc(100vh - 65px);
     margin-top: 65px;
-    padding: 20px;
-    padding-bottom: 40px;
+    padding: 20px 0 40px 20px;
+    box-sizing: border-box;
   }
 
   .view-content-wrapper {
@@ -503,7 +505,7 @@
     min-height: 100%;
   }
 
-  /* Medium green scrollbar - always visible */
+  /* Medium red scrollbar - always visible */
   .view-content::-webkit-scrollbar {
     width: 7px;
     display: block;
@@ -514,12 +516,12 @@
   }
 
   .view-content::-webkit-scrollbar-thumb {
-    background: #4EA24E;
+    background-color: #d23b42;
     border-radius: 10px;
   }
 
   .view-content::-webkit-scrollbar-thumb:hover {
-    background: #3d8a3d;
+    background-color: #b32d34;
   }
 
   .view-action-title {
@@ -633,7 +635,7 @@
     overflow-x: auto;
   }
 
-  /* Green scrollbar for table */
+  /* Red scrollbar for table */
   .view-table-container::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -644,31 +646,21 @@
   }
 
   .view-table-container::-webkit-scrollbar-thumb {
-    background: #4EA24E;
+    background-color: #d23b42;
     border-radius: 20px;
     border: 2px solid #f0f2f5;
   }
 
   .view-table-container::-webkit-scrollbar-thumb:hover {
-    background: #3d8a3d;
-  }
-
-  /* Silver horizontal scrollbar */
-  .view-table-container::-webkit-scrollbar-thumb:horizontal {
-    background: #c0c0c0;
-    border-radius: 20px;
-  }
-
-  .view-table-container::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #a0a0a0;
+    background-color: #b32d34;
   }
 }
 
 @media (max-width: 768px) {
   .view-content {
     margin-left: 0;
-    padding: 20px;
-    padding-bottom: 40px;
+    padding: 20px 0 40px 20px;
+    box-sizing: border-box;
     max-width: 100vw;
     overflow-y: scroll !important;
     overflow-x: hidden;
@@ -751,8 +743,8 @@
 
 @media (max-width: 480px) {
   .view-content {
-    padding: 15px;
-    padding-bottom: 40px;
+    padding: 15px 0 40px 15px;
+    box-sizing: border-box;
     overflow-y: scroll !important;
     overflow-x: hidden;
     height: calc(100vh - 65px);

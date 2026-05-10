@@ -16,13 +16,28 @@ const mongoose = require('mongoose');
 const Student = require('../models/Student');
 const StudentMarksheet = require('../models/StudentMarksheet');
 const Subject = require('../models/Subject');
+const MarksheetReview = require('../models/MarksheetReview');
+const MarksheetAuditLog = require('../models/MarksheetAuditLog');
+const { marksheetQueue } = require('../queues/marksheetQueue');
 
 // Service
 const {
   extractAllMarksheetsFromPDF,
-  validateMarksheetData,
   matchStudentFromDatabase
 } = require('../services/marksheetExtractionService');
+
+const {
+  validateMarksheetData,
+  scoreMarksheetConfidence,
+  requiresManualReview
+} = require('../services/marksheetValidation');
+
+const {
+  buildSubjectLookup,
+  buildSubjectNameLookup,
+  matchCourseCode,
+  matchSubjectName
+} = require('../services/subjectMatcher');
 
 const getAcademicYearFromSemester = (semester) => {
   const sem = Number(semester);
@@ -32,6 +47,11 @@ const getAcademicYearFromSemester = (semester) => {
 
 // Middleware - Verify coordinator role
 const coordinatorAuth = (req, res, next) => {
+  if (process.env.MARKSHEET_UPLOAD_BYPASS_AUTH === '1') {
+    console.warn('[Marksheet Upload] Auth bypass enabled (MARKSHEET_UPLOAD_BYPASS_AUTH=1)');
+    return next();
+  }
+
   if (req.user?.role !== 'coordinator' && req.user?.role !== 'admin') {
     return res.status(403).json({ error: 'Only coordinators can upload marksheets' });
   }
@@ -81,7 +101,9 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     // ─────────────────────────────────────────────────────────
     let marksheets;
     try {
-      marksheets = await extractAllMarksheetsFromPDF(req.file.buffer);
+      marksheets = await extractAllMarksheetsFromPDF(req.file.buffer, {
+        semester: req.body?.semester ? Number(req.body.semester) : null
+      });
     } catch (error) {
       console.error('[Marksheet Upload] Extraction failed:', error);
       return res.status(400).json({
@@ -107,7 +129,33 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
 
     for (const marksheet of marksheets) {
       // Validate marksheet data
-      const validation = validateMarksheetData(marksheet);
+      const validation = marksheet.validation || validateMarksheetData(marksheet);
+      const confidence = Number.isFinite(marksheet.extractionConfidence)
+        ? marksheet.extractionConfidence
+        : scoreMarksheetConfidence(marksheet, marksheet.ocrMeta || {}, validation);
+      const needsReview = marksheet.requiresReview === true
+        ? true
+        : requiresManualReview(confidence, validation);
+
+      marksheet.validation = validation;
+      marksheet.extractionConfidence = confidence;
+      marksheet.requiresReview = needsReview;
+
+      try {
+        await MarksheetAuditLog.create({
+          regNo: marksheet.regNo || '',
+          studentName: marksheet.studentName || '',
+          semester: marksheet.semester || null,
+          page: marksheet.ocrMeta?.page || null,
+          ocrMeta: marksheet.ocrMeta || {},
+          rawText: marksheet.rawText || '',
+          extracted: marksheet,
+          validation,
+          confidence
+        });
+      } catch (err) {
+        console.warn('[Marksheet Upload] Failed to write audit log:', err.message);
+      }
       if (!validation.isValid) {
         console.log(`[Marksheet Upload] Validation failed for regNo ${marksheet.regNo}:`, validation.errors);
         warnings.push({
@@ -119,6 +167,28 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         marksheet.matched = false;
         marksheet.isValid = false;
         marksheet.validationErrors = validation.errors;
+        marksheet.validationWarnings = validation.warnings;
+        marksheet.extractionConfidence = confidence;
+        marksheet.requiresReview = true;
+
+        try {
+          const review = await MarksheetReview.create({
+            status: 'pending',
+            regNo: marksheet.regNo || '',
+            studentName: marksheet.studentName || '',
+            semester: marksheet.semester || null,
+            page: marksheet.ocrMeta?.page || null,
+            confidence,
+            validation,
+            extracted: marksheet,
+            ocrMeta: marksheet.ocrMeta || {},
+            source: 'PDF_UPLOAD',
+            uploadedBy: req.user?._id || null
+          });
+          marksheet.reviewId = review._id;
+        } catch (err) {
+          console.warn('[Marksheet Upload] Failed to create review queue item:', err.message);
+        }
         console.log(`[Marksheet Upload] Adding invalid marksheet to extractedMarksheets:`, marksheet.regNo);
         extractedMarksheets.push(marksheet);
         continue;
@@ -153,6 +223,33 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         // Add student info to marksheet
         marksheet.studentId = match.student._id;
         marksheet.matched = true;
+        marksheet.isValid = validation.isValid;
+        marksheet.validationErrors = validation.errors;
+        marksheet.validationWarnings = validation.warnings;
+        marksheet.extractionConfidence = confidence;
+        marksheet.requiresReview = needsReview;
+
+        if (needsReview) {
+          try {
+            const review = await MarksheetReview.create({
+              status: 'pending',
+              regNo: marksheet.regNo || '',
+              studentName: marksheet.studentName || '',
+              semester: marksheet.semester || null,
+              page: marksheet.ocrMeta?.page || null,
+              confidence,
+              validation,
+              extracted: marksheet,
+              ocrMeta: marksheet.ocrMeta || {},
+              source: 'PDF_UPLOAD',
+              uploadedBy: req.user?._id || null
+            });
+            marksheet.reviewId = review._id;
+          } catch (err) {
+            console.warn('[Marksheet Upload] Failed to create review queue item:', err.message);
+          }
+        }
+
         extractedMarksheets.push(marksheet);
         totalMatched++;
       } catch (error) {
@@ -174,37 +271,132 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     // ─────────────────────────────────────────────────────────
     // Annotate extracted subjects with existing Subject info (credits) if present
     try {
-      // Collect unique course codes
+      // Collect unique course codes, names, and semesters for deterministic lookups
       const courseCodes = new Set();
+      const semesters = new Set();
       for (const m of extractedMarksheets) {
+        const marksheetSemester = Number(m.semester);
+        if (Number.isFinite(marksheetSemester) && marksheetSemester > 0) {
+          semesters.add(marksheetSemester);
+        }
         if (Array.isArray(m.subjects)) {
           for (const s of m.subjects) {
-            if (s.courseCode) courseCodes.add(s.courseCode);
+            const codeValue = String(s.courseCode || '').trim().toUpperCase();
+            const subjectSemester = Number(s.semester ?? s.sem ?? null);
+
+            if (codeValue) courseCodes.add(codeValue);
+            if (Number.isFinite(subjectSemester) && subjectSemester > 0) {
+              semesters.add(subjectSemester);
+            }
           }
         }
       }
 
-      if (courseCodes.size > 0) {
-        const codesArray = Array.from(courseCodes);
-        const existingSubjects = await Subject.find({ courseCode: { $in: codesArray } }).lean();
-        const subjectLookup = {};
-        for (const es of existingSubjects) {
-          subjectLookup[es.courseCode] = es;
+      const codesArray = Array.from(courseCodes);
+      const semesterArray = Array.from(semesters);
+      const orFilters = [];
+      if (semesterArray.length > 0) {
+        orFilters.push({ semester: { $in: semesterArray } }, { semester: null });
+      }
+      if (codesArray.length > 0) {
+        orFilters.push({ courseCode: { $in: codesArray } });
+      }
+
+      const subjectQuery = orFilters.length > 0 ? { $or: orFilters } : {};
+      const existingSubjects = await Subject.find(
+        subjectQuery,
+        'courseCode courseName credits semester year'
+      ).lean();
+      const subjectLookup = buildSubjectLookup(existingSubjects);
+      const subjectNameLookup = buildSubjectNameLookup(existingSubjects);
+
+      // Attach flags to extracted marksheets and apply corrections
+      for (const m of extractedMarksheets) {
+        if (!Array.isArray(m.subjects)) continue;
+        let correctionCount = 0;
+
+        for (const s of m.subjects) {
+          const rawCode = String(s.courseCode || '').trim().toUpperCase();
+          const rawName = String(s.courseName || '').trim();
+
+          if (rawCode) {
+            s.courseCode = rawCode;
+          }
+
+          const exactMatch = rawCode ? subjectLookup[rawCode] : null;
+          if (exactMatch) {
+            s.existsInMaster = true;
+            s.masterCredits = exactMatch.credits ?? null;
+            s.masterSemester = exactMatch.semester ?? null;
+            s.masterYear = exactMatch.year ?? null;
+            s.credits = exactMatch.credits ?? null;
+            if (s.semester === undefined || s.semester === null || s.semester === '') {
+              s.semester = exactMatch.semester ?? null;
+            }
+            if (s.year === undefined || s.year === null || s.year === '') {
+              s.year = exactMatch.year ?? null;
+            }
+            console.log(`[MATCH FOUND] ${rawCode} -> credits=${s.credits}`);
+            continue;
+          }
+
+          const corrected = rawCode ? matchCourseCode(rawCode, subjectLookup, 1) : { match: null };
+          if (corrected.match) {
+            correctionCount += 1;
+            s.correctedCourseCode = corrected.correctedCode;
+            s.courseCode = corrected.correctedCode;
+            s.courseName = corrected.match.courseName || s.courseName;
+            s.masterCredits = corrected.match.credits ?? null;
+            s.masterSemester = corrected.match.semester ?? null;
+            s.masterYear = corrected.match.year ?? null;
+            s.credits = corrected.match.credits ?? null;
+            if (s.semester === undefined || s.semester === null || s.semester === '') {
+              s.semester = corrected.match.semester ?? null;
+            }
+            if (s.year === undefined || s.year === null || s.year === '') {
+              s.year = corrected.match.year ?? null;
+            }
+            s.existsInMaster = true;
+            s.correctedFromMaster = true;
+            console.log(`[MATCH FOUND] ${rawCode} -> corrected=${corrected.correctedCode} credits=${s.credits}`);
+            continue;
+          }
+
+          const nameMatch = rawName ? matchSubjectName(rawName, subjectNameLookup) : null;
+          if (nameMatch) {
+            s.existsInMaster = true;
+            s.masterCredits = nameMatch.credits ?? null;
+            s.masterSemester = nameMatch.semester ?? null;
+            s.masterYear = nameMatch.year ?? null;
+            s.credits = nameMatch.credits ?? null;
+            if (!rawCode && nameMatch.courseCode) {
+              s.courseCode = String(nameMatch.courseCode).trim().toUpperCase();
+            }
+            if (!rawName && nameMatch.courseName) {
+              s.courseName = nameMatch.courseName;
+            }
+            if (s.semester === undefined || s.semester === null || s.semester === '') {
+              s.semester = nameMatch.semester ?? null;
+            }
+            if (s.year === undefined || s.year === null || s.year === '') {
+              s.year = nameMatch.year ?? null;
+            }
+            console.log(`[NAME MATCH] "${rawName || '--'}" matched DB subject ${nameMatch.courseCode || ''}`);
+            continue;
+          }
+
+          s.existsInMaster = false;
+          s.masterCredits = null;
+          s.masterSemester = null;
+          s.masterYear = null;
+          s.credits = null;
+          console.log(`[MATCH FAILED] ${rawCode || rawName || 'UNKNOWN'} -> no subject found`);
         }
 
-        // Attach flags to extracted marksheets
-        for (const m of extractedMarksheets) {
-          if (!Array.isArray(m.subjects)) continue;
-          for (const s of m.subjects) {
-            const found = subjectLookup[s.courseCode];
-            if (found) {
-              s.existsInMaster = true;
-              s.masterCredits = found.credits || 0;
-            } else {
-              s.existsInMaster = false;
-              s.masterCredits = 0;
-            }
-          }
+        if (correctionCount > 0) {
+          m.validationWarnings = m.validationWarnings || [];
+          m.validationWarnings.push(`Auto-corrected ${correctionCount} course code(s) from master list`);
+          m.extractionConfidence = Math.max(0, (m.extractionConfidence || 0) - (0.02 * correctionCount));
         }
       }
     } catch (err) {
@@ -233,6 +425,28 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
 });
 
 /**
+ * POST /upload-async
+ * Enqueue OCR extraction for background processing
+ */
+router.post('/upload-async', coordinatorAuth, upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  try {
+    const job = await marksheetQueue.add('extract', {
+      pdfBase64: req.file.buffer.toString('base64'),
+      semester: req.body?.semester ? Number(req.body.semester) : null,
+      uploaderId: req.user?._id || null
+    });
+
+    return res.status(202).json({ success: true, jobId: job.id });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to enqueue OCR job', details: err.message });
+  }
+});
+
+/**
  * POST /confirm
  * Confirm extracted marksheets and save to database
  * 
@@ -246,7 +460,7 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
  */
 router.post('/confirm', coordinatorAuth, async (req, res) => {
   try {
-    const { marksheets, semester } = req.body;
+    const { marksheets, semester, forceSave } = req.body;
     const coordinatorId = req.user._id;
 
     if (!marksheets || !Array.isArray(marksheets) || marksheets.length === 0) {
@@ -312,6 +526,14 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
     try {
       await session.withTransaction(async () => {
         for (const marksheet of marksheets) {
+          if (marksheet.requiresReview && !forceSave) {
+            failed.push({
+              regNo: marksheet.regNo,
+              error: 'Marksheet requires manual review before saving',
+              reviewId: marksheet.reviewId || null
+            });
+            continue;
+          }
           try {
             const studentId = marksheet.studentId;
             const currentSem = parseInt(semester, 10);
@@ -419,7 +641,10 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
               totalCredits,
               uploadedBy: coordinatorId,
               importedFrom: 'PDF_UPLOAD',
-              pdfFileName: req.file?.originalname || 'imported'
+              pdfFileName: req.file?.originalname || 'imported',
+              extractionConfidence: marksheet.extractionConfidence || null,
+              extractionWarnings: marksheet.validationWarnings || [],
+              extractionMeta: marksheet.ocrMeta || {}
             };
 
             // Upsert current semester marksheet
@@ -483,6 +708,14 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
             }
 
             await student.save({ session });
+
+            if (marksheet.reviewId) {
+              await MarksheetReview.updateOne(
+                { _id: marksheet.reviewId },
+                { $set: { status: 'resolved', resolvedBy: coordinatorId, resolvedAt: new Date() } },
+                { session }
+              );
+            }
 
             saved.push({ regNo: marksheet.regNo, studentName: marksheet.studentName, studentId, success: true });
           } catch (innerErr) {

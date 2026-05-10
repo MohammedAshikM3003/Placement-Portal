@@ -1,25 +1,48 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+// Forced rewrite to trigger React HMR
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_ManageStudentSemesterMarksheetView.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig';
-import UploadIcon from '../assets/Uploadblueiocn.svg';
-import StuBinIcon from '../assets/StuBinicon.svg';
-import StuEyeIcon from '../assets/purpleeyeiconn.svg';
 import mongoDBService from '../services/mongoDBService.jsx';
 
-const MdUpload = () => (
-    <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"></path>
-    </svg>
-);
-
-// Grade to grade-point mapping (K.S.R. College grading system)
+// Grade to grade-point mapping
 const GRADE_POINTS = {
     'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
     'C': 5, 'U': 0, 'RA': 0, 'AB': 0, 'SA': 0, 'W': 0,
+};
+
+const formatExamDate = (value) => {
+    if (!value) return '--';
+
+    const text = String(value).trim();
+    if (!text) return '--';
+
+    const parsedDate = new Date(text);
+    if (!Number.isNaN(parsedDate.getTime())) {
+        return parsedDate.toLocaleDateString('en-GB', {
+            month: '2-digit',
+            year: '2-digit'
+        });
+    }
+
+    const monthYearMatch = text.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*[-/]\s*(\d{4})$/i);
+    if (monthYearMatch) {
+        const monthIndex = {
+            jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+            jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+        }[monthYearMatch[1].slice(0, 3).toLowerCase()];
+        return `${monthIndex}/${monthYearMatch[2].slice(-2)}`;
+    }
+
+    const compactMonthYearMatch = text.match(/^(\d{2})\s*[-/]\s*(\d{4})$/);
+    if (compactMonthYearMatch) {
+        return `${compactMonthYearMatch[1]}/${compactMonthYearMatch[2].slice(-2)}`;
+    }
+
+    return text;
 };
 
 function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
@@ -28,39 +51,28 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [studentData, setStudentData] = useState(location.state?.student || null);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [showSizeExceededPopup, setShowSizeExceededPopup] = useState(false);
-    const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
-    const [showAnalysingPopup, setShowAnalysingPopup] = useState(false);
-    const [analyseProgress, setAnalyseProgress] = useState(0);
-    const [showPreviewingPopup, setShowPreviewingPopup] = useState(false);
-    const [previewProgress, setPreviewProgress] = useState(0);
-    const [extractedData, setExtractedData] = useState(null);
-    const [showSubmitPopup, setShowSubmitPopup] = useState(false);
-    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [ocrError, setOcrError] = useState('');
-    const [creditError, setCreditError] = useState('');
-    const [previewData, setPreviewData] = useState(null);
-    const [semesterRecords, setSemesterRecords] = useState([]);
+    const [extractedData, setExtractedData] = useState(location.state?.student || null); // Initialize with student data
     const [semesterLoading, setSemesterLoading] = useState(false);
     const [semesterError, setSemesterError] = useState('');
-    const fileInputRef = useRef(null);
+    const [masterSubjects, setMasterSubjects] = useState([]);
 
-    const semesterTableRows = semesterRecords.length > 0
-        ? semesterRecords
-        : (studentData ? [{
-            regNo: studentData.regNo || '--',
-            studentName: `${studentData.firstName || ''} ${studentData.lastName || ''}`.trim() || '--',
-            year: studentData.currentYear || '--',
-            semester: studentData.currentSemester || '--',
-            section: studentData.section || '--',
-            cleared: studentData.arrearStatus === 'NHA' ? '1' : '0',
-            arrear: studentData.arrearStatus === 'NHA' ? '0' : '1',
-            sgpa: studentData.sgpa || '--',
-            cgpa: studentData.overallCgpa || '--'
-        }] : []);
+    // Calculate SGPA
+    const calculateSGPA = useCallback(() => {
+        if (!extractedData || !extractedData.subjects) return studentData?.sgpa || '0.0';
+
+        let totalCredits = 0;
+        let totalGradePoints = 0;
+
+        extractedData.subjects.forEach(course => {
+            const credits = parseFloat(course.credits) || 0;
+            const gradePoint = GRADE_POINTS[course.grade] || 0;
+            totalCredits += credits;
+            totalGradePoints += credits * gradePoint;
+        });
+
+        if (totalCredits === 0) return '0.0';
+        return (totalGradePoints / totalCredits).toFixed(2);
+    }, [extractedData, studentData]);
 
     const handleToggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -73,208 +85,57 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
         setIsSidebarOpen(false);
     };
 
-    const handleDiscard = () => {
+    const handleBack = () => {
         navigate(-1);
     };
 
-    const handleFileSelect = (file) => {
-        if (!file) return;
-
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            setFileSizeErrorKB((file.size / 1024).toFixed(1));
-            setShowSizeExceededPopup(true);
-            return;
+    useEffect(() => {
+        // If data is passed from a previous page, use it directly
+        if (location.state?.student) {
+            setStudentData(location.state.student);
+            setExtractedData(location.state.student); // Use this for display
         }
-
-        if (file.type !== 'application/pdf') {
-            alert('Please upload a PDF file');
-            return;
-        }
-
-        setUploadedFile(file);
-        setOcrError('');
-        setCreditError('');
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const file = e.dataTransfer.files[0];
-        handleFileSelect(file);
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleFileInputChange = (e) => {
-        const file = e.target.files[0];
-        handleFileSelect(file);
-    };
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleDeleteFile = () => {
-        setUploadedFile(null);
-        setExtractedData(null);
-        setOcrError('');
-        setCreditError('');
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const handlePreview = () => {
-        if (!uploadedFile) return;
-
-        // Create blob URL for preview
-        const blobUrl = URL.createObjectURL(uploadedFile);
-        window.open(blobUrl, '_blank');
-    };
-
-    const handleSubmit = () => {
-        setShowSubmitPopup(true);
-    };
+    }, [location.state]);
 
     useEffect(() => {
-        const loadSemesterRecords = async () => {
-            const regNo = studentData?.regNo || studentData?.registerNumber;
-            const semester = studentData?.currentSemester || studentData?.semester;
-
-            if (!regNo && !semester) {
-                return;
-            }
-
-            setSemesterLoading(true);
-            setSemesterError('');
-
+        const loadMasterSubjects = async () => {
             try {
-                const response = await mongoDBService.getSemesterRecords({
-                    regNo,
-                    semester
+                const authToken = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/subjects`, {
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
                 });
 
-                setSemesterRecords(Array.isArray(response?.records) ? response.records : []);
+                if (!response.ok) {
+                    throw new Error('Failed to load subject master list');
+                }
+
+                const data = await response.json();
+                setMasterSubjects(Array.isArray(data.subjects) ? data.subjects : []);
             } catch (error) {
-                setSemesterError(error.message || 'Failed to load semester records');
-                setSemesterRecords([]);
-            } finally {
-                setSemesterLoading(false);
+                console.error('Error loading subject master list:', error);
+                setMasterSubjects([]);
             }
         };
 
-        loadSemesterRecords();
-    }, [studentData]);
+        loadMasterSubjects();
+    }, []);
 
-    const confirmSubmit = async () => {
-        if (!extractedData || !Array.isArray(extractedData.courses) || extractedData.courses.length === 0) {
-            setShowSubmitPopup(false);
-            setOcrError('No extracted course data found to submit.');
-            return;
+    const masterCreditLookup = useMemo(() => {
+        const lookup = new Map();
+        for (const subject of masterSubjects) {
+            const code = String(subject.courseCode || '').trim().toUpperCase();
+            if (!code) continue;
+            lookup.set(code, subject.credits ?? null);
         }
-
-        const regNo = studentData?.regNo || studentData?.registerNumber || extractedData?.regNo;
-        const studentName = `${studentData?.firstName || ''} ${studentData?.lastName || ''}`.trim() || extractedData?.studentName || 'Unknown Student';
-        const studentId = studentData?._id || studentData?.id || extractedData?.studentId;
-        const semester = Number(studentData?.currentSemester || extractedData?.semester || 0);
-
-        if (!regNo || !studentId || !semester) {
-            setShowSubmitPopup(false);
-            setOcrError('Missing student details (regNo, studentId, or semester).');
-            return;
-        }
-
-        setIsSubmitting(true);
-        setOcrError('');
-        setShowSubmitPopup(false);
-
-        try {
-            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-
-            const marksheetPayload = {
-                studentId,
-                regNo,
-                studentName,
-                programme: studentData?.branch || extractedData?.programme || '',
-                examDate: extractedData?.examDate || '',
-                subjects: extractedData.courses.map((course) => {
-                    const grade = String(course.grade || '').toUpperCase();
-                    const credits = Number(course.credits) || 0;
-                    const courseSemester = Number(course.semester || semester);
-                    return {
-                        semester: courseSemester,
-                        courseCode: String(course.courseCode || '').toUpperCase(),
-                        courseName: course.courseTitle || course.courseName || '',
-                        credits,
-                        grade,
-                        result: (grade === 'U' || grade === 'RA') ? 'F' : 'P'
-                    };
-                })
-            };
-
-            const response = await fetch(`${API_BASE_URL}/marksheets/confirm`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify({
-                    marksheets: [marksheetPayload],
-                    semester
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to save marksheet');
-            }
-
-            setShowSuccessPopup(true);
-        } catch (error) {
-            setOcrError(error.message || 'Failed to submit marksheet');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // Calculate SGPA
-    const calculateSGPA = useCallback(() => {
-        if (!extractedData || !extractedData.courses) return null;
-
-        let totalCredits = 0;
-        let totalGradePoints = 0;
-
-        extractedData.courses.forEach(course => {
-            const credits = parseFloat(course.credits) || 0;
-            const gradePoint = GRADE_POINTS[course.grade] || 0;
-            totalCredits += credits;
-            totalGradePoints += credits * gradePoint;
-        });
-
-        if (totalCredits === 0) return 0;
-        return (totalGradePoints / totalCredits).toFixed(2);
-    }, [extractedData]);
+        return lookup;
+    }, [masterSubjects]);
 
     if (isInitialLoading) {
         return (
             <div className={styles.container}>
                 <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
                 <div className={styles.main}>
-                    <Sidebar
-                        isOpen={isSidebarOpen}
-                        onLogout={onLogout}
-                        currentView="manage-students"
-                        onViewChange={handleViewChange}
-                    />
+                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
                     <div className={styles.dashboardArea}>
                         <div className={styles.initialLoaderOverlay}>
                             <div className={styles.initialLoaderCard}>
@@ -288,41 +149,29 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
         );
     }
 
+    const attemptedSubjects = extractedData?.subjects?.length || 0;
+    const clearedSubjects = extractedData?.subjects?.filter(c => c.grade !== 'U' && c.grade !== 'RA').length || 0;
+    const pendingSubjects = attemptedSubjects - clearedSubjects;
+
     return (
         <div className={styles.container}>
             <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
             <div className={styles.main}>
-                <Sidebar
-                    isOpen={isSidebarOpen}
-                    onLogout={onLogout}
-                    currentView="manage-students"
-                    onViewChange={handleViewChange}
-                />
-                {isSidebarOpen && (
-                    <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />
-                )}
+                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
+                {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
+                
                 <div className={styles.dashboardArea}>
                     <div className={styles.contentWrapper}>
                         {/* Left Side - Profile Card */}
                         <div className={styles.profileCard}>
                             <div className={styles.profileIconContainer}>
-                                {studentData?.profilePicURL ? (
-                                    <img
-                                        src={studentData.profilePicURL}
-                                        alt="Profile"
-                                        className={styles.profileIcon}
-                                    />
-                                ) : (
-                                    <img src={Adminicon} alt="Profile" className={styles.profileIcon} />
-                                )}
+                                <img src={studentData?.profilePicURL || Adminicon} alt="Profile" className={styles.profileIcon} />
                             </div>
                             <div className={styles.profileInfo}>
                                 <div className={styles.infoRow}>
                                     <span className={styles.infoLabel}>Name</span>
                                     <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>
-                                        {studentData?.firstName || ''} {studentData?.lastName || ''}
-                                    </span>
+                                    <span className={styles.infoValue}>{studentData?.name || `${studentData?.firstName || ''} ${studentData?.lastName || ''}`}</span>
                                 </div>
                                 <div className={styles.infoRow}>
                                     <span className={styles.infoLabel}>Reg No</span>
@@ -332,65 +181,75 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                 <div className={styles.infoRow}>
                                     <span className={styles.infoLabel}>Year</span>
                                     <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.currentYear || '--'}</span>
+                                    <span className={styles.infoValue}>{studentData?.year || studentData?.currentYear || '--'}</span>
                                 </div>
                                 <div className={styles.infoRow}>
                                     <span className={styles.infoLabel}>Semester</span>
                                     <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.currentSemester || '--'}</span>
+                                    <span className={styles.infoValue}>{studentData?.semester || studentData?.currentSemester || '--'}</span>
                                 </div>
                                 <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Branch</span>
+                                    <span className={styles.infoLabel}>Current SGPA</span>
                                     <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.branch || '--'}</span>
+                                    <span className={styles.infoValue}>{calculateSGPA()}</span>
                                 </div>
                                 <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Section</span>
+                                    <span className={styles.infoLabel}>Overall CGPA</span>
                                     <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.section || '--'}</span>
+                                    <span className={styles.infoValue}>{studentData?.overallCgpa || '0.0'}</span>
+                                </div>
+                                <div className={styles.infoRow}>
+                                    <span className={styles.infoLabel}>Exam Date MM/YY</span>
+                                    <span className={styles.infoColon}>:</span>
+                                    <span className={styles.infoValue}>{formatExamDate(extractedData?.examDate || extractedData?.exam_month_year || extractedData?.student_info?.exam_month_year)}</span>
+                                </div>
+                                <div className={styles.infoRow}>
+                                    <span className={styles.infoLabel}>Attempted</span>
+                                    <span className={styles.infoColon}>:</span>
+                                    <span className={styles.infoValue}>{attemptedSubjects !== null ? attemptedSubjects : '--'}</span>
+                                </div>
+                                <div className={styles.infoRow}>
+                                    <span className={styles.infoLabel}>Cleared</span>
+                                    <span className={styles.infoColon}>:</span>
+                                    <span className={styles.infoValue}>{clearedSubjects !== null ? clearedSubjects : '--'}</span>
+                                </div>
+                                <div className={styles.infoRow}>
+                                    <span className={styles.infoLabel}>Pending</span>
+                                    <span className={styles.infoColon}>:</span>
+                                    <span className={styles.infoValue}>{pendingSubjects !== null ? pendingSubjects : '--'}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Right Side - Subjects Table Section */}
                         <div className={styles.uploadSection}>
-                            {/* Action Boxes */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                                <div style={{ 
-                                    border: '1px solid #e0e0e0', 
-                                    borderRadius: '8px', 
-                                    padding: '20px', 
-                                    textAlign: 'center',
-                                    cursor: 'pointer'
-                                }}>
-                                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
-                                    <div style={{ fontWeight: '600', fontSize: '16px', color: '#333', marginBottom: '4px' }}>Edit Marksheet</div>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>Review, Edit and Update Student Semester Marksheet Records</div>
+                                <div className={styles.actionBox}>
+                                    <div className={styles.actionBoxIcon}>👁️</div>
+                                    <div className={styles.actionBoxTitle}>Preview Marksheet</div>
+                                    <div className={styles.actionBoxSubtitle}>View and analyse the student's current semester marksheet.</div>
                                 </div>
-                                <div style={{ 
-                                    border: '1px solid #e0e0e0', 
-                                    borderRadius: '8px', 
-                                    padding: '20px', 
-                                    textAlign: 'center',
-                                    cursor: 'pointer'
-                                }}>
-                                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>⬇️</div>
-                                    <div style={{ fontWeight: '600', fontSize: '16px', color: '#333', marginBottom: '4px' }}>Download Marksheet</div>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>Download the student's current semester marksheet</div>
+                                <div className={styles.actionBox}>
+                                    <div className={styles.actionBoxIcon}>⬇️</div>
+                                    <div className={styles.actionBoxTitle}>Download Marksheet</div>
+                                    <div className={styles.actionBoxSubtitle}>Download the student's current semester marksheet.</div>
                                 </div>
                             </div>
 
-                            {/* Subjects Table */}
                             <div className={styles.tableOuter}>
+                                <div className={styles.subjectsHeader}>
+                                    <h2>Semester {studentData?.semester || studentData?.currentSemester || ''} - Subjects ({attemptedSubjects})</h2>
+                                    <button type="button" className={styles.backButton} onClick={handleBack}>Back</button>
+                                </div>
                                 <table className={styles.courseTableHeader}>
                                     <thead>
                                         <tr>
                                             <th>S.NO</th>
-                                            <th>Semester</th>
-                                            <th>Course Code</th>
-                                            <th>Course Name</th>
-                                            <th>Grade</th>
-                                            <th>Result</th>
+                                            <th>COURSE CODE</th>
+                                            <th>COURSE NAME</th>
+                                            <th>CREDITS</th>
+                                            <th>GRADE</th>
+                                            <th>RESULT</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -400,26 +259,41 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                     ) : (
                                         <table className={styles.courseTableBody}>
                                             <tbody>
-                                                {extractedData?.courses && extractedData.courses.length > 0 ? (
-                                                    extractedData.courses.map((course, index) => (
-                                                        <tr key={index}>
-                                                            <td>{index + 1}</td>
-                                                            <td>{extractedData.semester || studentData?.currentSemester || '--'}</td>
-                                                            <td>{course.courseCode || course.code || '--'}</td>
-                                                            <td>{course.courseTitle || course.courseName || course.name || '--'}</td>
-                                                            <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>
-                                                            <td style={{ 
-                                                                color: (course.grade === 'U' || course.grade === 'RA') ? '#C53030' : '#4EA24E',
-                                                                fontWeight: '600'
-                                                            }}>
-                                                                {(course.grade === 'U' || course.grade === 'RA') ? 'F' : 'P'}
-                                                            </td>
-                                                        </tr>
-                                                    ))
+                                                {extractedData?.subjects && extractedData.subjects.length > 0 ? (
+                                                    extractedData.subjects.map((course, index) => {
+                                                        const courseCode = String(course.courseCode || '').trim().toUpperCase();
+                                                        const masterCredits = masterCreditLookup.get(courseCode);
+                                                        const rawCredits = course.credits;
+                                                        const normalizedCredits = (rawCredits === '' || rawCredits === null || rawCredits === undefined)
+                                                            ? null
+                                                            : rawCredits;
+                                                        const creditsValue = normalizedCredits ?? masterCredits;
+                                                        const creditsDisplay = (creditsValue === null || creditsValue === undefined || creditsValue === '')
+                                                            ? '--'
+                                                            : creditsValue;
+                                                        const rawResult = (course.result || '').toString().trim().toUpperCase();
+                                                        const resultValue = rawResult === 'PASS' ? 'P' : rawResult === 'FAIL' ? 'F' : rawResult;
+                                                        const isFail = resultValue
+                                                            ? resultValue === 'F'
+                                                            : (course.grade === 'U' || course.grade === 'RA');
+
+                                                        return (
+                                                            <tr key={index}>
+                                                                <td>{index + 1}</td>
+                                                                <td>{course.courseCode || '--'}</td>
+                                                                <td>{course.courseName || '--'}</td>
+                                                                <td>{creditsDisplay}</td>
+                                                                <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>
+                                                                <td style={{ color: isFail ? '#C53030' : '#4EA24E', fontWeight: '600' }}>
+                                                                    {resultValue || (isFail ? 'F' : 'P')}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })
                                                 ) : (
                                                     <tr>
                                                         <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
-                                                            No subjects loaded yet. Upload a marksheet to view subjects.
+                                                            No subjects found for this semester.
                                                         </td>
                                                     </tr>
                                                 )}
@@ -428,128 +302,10 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Bottom Action Buttons */}
-                            <div className={styles.bottomActionButtons}>
-                                <button
-                                    type="button"
-                                    className={styles.discardTopBtn}
-                                    onClick={handleDiscard}
-                                >
-                                    Discard
-                                </button>
-                                {extractedData && (
-                                    <button
-                                        type="button"
-                                        className={styles.submitBtn}
-                                        onClick={handleSubmit}
-                                    >
-                                        Submit
-                                    </button>
-                                )}
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* Size Exceeded Popup */}
-            {showSizeExceededPopup && (
-                <div className={styles['Semester-popup-overlay']} onClick={() => setShowSizeExceededPopup(false)}>
-                    <div className={styles['Semester-popup-container']} onClick={e => e.stopPropagation()}>
-                        <div className={styles['Semester-popup-header']}>File Too Large!</div>
-                        <div className={styles['Semester-popup-body']}>
-                            <div className={styles['Semester-status-icon']}>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="15" y1="9" x2="9" y2="15"/>
-                                    <line x1="9" y1="9" x2="15" y2="15"/>
-                                </svg>
-                            </div>
-                            <h2 className={styles['Semester-status-title']}>File Size Exceeded</h2>
-                            <p className={styles['Semester-status-text']}>
-                                Maximum allowed: 5MB<br/>
-                                Your file: {fileSizeErrorKB}KB
-                            </p>
-                        </div>
-                        <div className={styles['Semester-popup-footer']}>
-                            <button
-                                className={styles['Semester-popup-close-btn']}
-                                onClick={() => setShowSizeExceededPopup(false)}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Success Popup */}
-            {showSuccessPopup && (
-                <div className={styles['Semester-popup-overlay']} onClick={() => setShowSuccessPopup(false)}>
-                    <div className={styles['Semester-popup-container']} onClick={e => e.stopPropagation()}>
-                        <div className={styles['Semester-popup-header']}>Success!</div>
-                        <div className={styles['Semester-popup-body']}>
-                            <svg className={styles['Semester-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                <circle className={styles['Semester-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                                <path className={styles['Semester-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                            </svg>
-                            <h2 className={styles['Semester-status-title']}>Marksheet Saved!</h2>
-                            <p className={styles['Semester-status-text']}>
-                                The marksheet has been successfully saved.
-                            </p>
-                        </div>
-                        <div className={styles['Semester-popup-footer']}>
-                            <button
-                                className={styles['Semester-popup-close-btn']}
-                                onClick={() => {
-                                    setShowSuccessPopup(false);
-                                    navigate(-1);
-                                }}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Submit Confirmation Popup */}
-            {showSubmitPopup && (
-                <div className={styles['Semester-popup-overlay']}>
-                    <div className={styles['Semester-popup-container']} onClick={e => e.stopPropagation()}>
-                        <div className={styles['Semester-popup-header']}>Confirm Submit</div>
-                        <div className={styles['Semester-popup-body']}>
-                            <div className={styles['Semester-status-icon']}>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="12"/>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                </svg>
-                            </div>
-                            <h2 className={styles['Semester-status-title']}>Are you sure?</h2>
-                            <p className={styles['Semester-status-text']}>
-                                Do you want to submit this marksheet data?
-                            </p>
-                        </div>
-                        <div className={styles['Semester-popup-footer']}>
-                            <button
-                                className={styles['Semester-popup-close-btn']}
-                                onClick={() => setShowSubmitPopup(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className={styles['Semester-popup-submit-btn']}
-                                onClick={confirmSubmit}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Submitting...' : 'Submit'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
