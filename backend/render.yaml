@@ -20,4 +20,15 @@ services:
         value: https://unsyllabled-summer-proscience.ngrok-free.dev
       - key: OLLAMA_MODEL
         value: llama3:8b
+      - key: OCR_SERVICE_URL
+        value: https://placement-portal-ocr.onrender.com
     healthCheckPath: /api/health
+
+  - type: web
+    name: placement-portal-ocr
+    env: python
+    plan: free
+    rootDir: backend/ocr-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: python ocr_server.py
+    healthCheckPath: /health

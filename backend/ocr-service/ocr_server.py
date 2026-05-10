@@ -547,6 +547,7 @@ def parse_marksheet():
         return jsonify({"success": False, "error": "Empty filename"}), 400
     
     try:
+        print(f"[OCR REQUEST] /parse-marksheet file={file.filename}")
         file_bytes = file.read()
         filename_lower = file.filename.lower()
         
@@ -585,6 +586,7 @@ def parse_marksheet():
         semester_map = extract_row_semesters(all_lines)
         subjects = apply_row_semesters(subjects, semester_map)
         
+        print(f"[OCR RESPONSE] /parse-marksheet completed subjects={len(subjects)}")
         return jsonify({
             "success": True,
             "document_type": doc_type,
@@ -594,6 +596,7 @@ def parse_marksheet():
         })
     
     except Exception as e:
+        print(f"[OCR ERROR] /parse-marksheet failed: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -612,6 +615,7 @@ def parse_marksheet_pages():
         return jsonify({"success": False, "error": "Empty filename"}), 400
 
     try:
+        print(f"[OCR REQUEST] /parse-marksheet-pages file={file.filename}")
         file_bytes = file.read()
         filename_lower = file.filename.lower()
 
@@ -653,6 +657,7 @@ def parse_marksheet_pages():
 
             pages.append(payload)
 
+        print(f"[OCR RESPONSE] /parse-marksheet-pages completed pages={len(pages)}")
         return jsonify({
             "success": True,
             "total_pages": len(pages),
@@ -660,6 +665,7 @@ def parse_marksheet_pages():
         })
 
     except Exception as e:
+        print(f"[OCR ERROR] /parse-marksheet-pages failed: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -747,6 +753,7 @@ def parse_marksheet_pages_v2():
         return jsonify({"success": False, "error": "Empty filename"}), 400
 
     try:
+        print(f"[OCR REQUEST] /parse-marksheet-pages-v2 file={file.filename}")
         file_bytes = file.read()
         filename_lower = file.filename.lower()
 
@@ -833,6 +840,7 @@ def parse_marksheet_pages_v2():
         else:
             return jsonify({"success": False, "error": "Unsupported file type. Use PDF or image."}), 400
 
+        print(f"[OCR RESPONSE] /parse-marksheet-pages-v2 completed pages={len(pages)}")
         return jsonify({
             "success": True,
             "total_pages": len(pages),
@@ -840,13 +848,15 @@ def parse_marksheet_pages_v2():
         })
 
     except Exception as e:
+        print(f"[OCR ERROR] /parse-marksheet-pages-v2 failed: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("OCR_PORT", 5001))
-    print(f"[ocr] Marksheet OCR Service starting on port {port}")
-    print(f"   POST /parse-marksheet  — Upload PDF/image for extraction")
-    print(f"   GET  /health           — Health check")
+    port = int(os.environ.get("OCR_PORT") or os.environ.get("PORT", 5001))
+    print(f"[OCR SERVICE] Started successfully on port {port}")
+    print(f"   POST /parse-marksheet         - Upload PDF/image for extraction")
+    print(f"   POST /parse-marksheet-pages-v2 - Per-page extraction (v2)")
+    print(f"   GET  /health                  - Health check")
     app.run(host="0.0.0.0", port=port, debug=False)

@@ -10,6 +10,7 @@ import Download from "../assets/Downloadsemesterviewicon.svg";
 import Previewicon from "../assets/Adminpreviewmarksheeticon.svg";
 import Adminicons from "../assets/AdmingreenCapicon.svg";
 import mongoDBService from '../services/mongoDBService.jsx';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 const emptyStudent = {
   name: '',

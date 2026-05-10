@@ -17,6 +17,32 @@ const {
 
 const OCR_SERVICE_URL = process.env.OCR_SERVICE_URL || 'http://localhost:5001';
 const OCR_V2_ENDPOINT = '/parse-marksheet-pages-v2';
+const OCR_HEALTH_ENDPOINT = '/health';
+
+const buildOcrUrl = (path) => `${OCR_SERVICE_URL}${path}`;
+
+async function checkOcrHealth() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(buildOcrUrl(OCR_HEALTH_ENDPOINT), {
+      method: 'GET',
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`OCR health check failed (status ${response.status})`);
+    }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.status !== 'ok') {
+      throw new Error('OCR health check returned non-ok status');
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 const normalizeSubject = (subject = {}) => ({
   sno: subject.sno,
@@ -29,21 +55,32 @@ const normalizeSubject = (subject = {}) => ({
 });
 
 async function callOcrServiceForPages(pdfBuffer) {
-  const formData = new FormData();
-  const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
-  formData.append('file', pdfBlob, 'marksheet.pdf');
+  try {
+    await checkOcrHealth();
+    console.log(`[OCR REQUEST] Sending file to OCR service: ${buildOcrUrl(OCR_V2_ENDPOINT)}`);
 
-  const response = await fetch(`${OCR_SERVICE_URL}${OCR_V2_ENDPOINT}`, {
-    method: 'POST',
-    body: formData
-  });
+    const formData = new FormData();
+    const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
+    formData.append('file', pdfBlob, 'marksheet.pdf');
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(text || 'OCR service failed to parse PDF');
+    const response = await fetch(buildOcrUrl(OCR_V2_ENDPOINT), {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error('[OCR ERROR] OCR service returned non-200 status');
+      throw new Error(text || 'OCR service failed to parse PDF');
+    }
+
+    const result = await response.json();
+    console.log('[OCR RESPONSE] Extraction completed');
+    return result;
+  } catch (error) {
+    console.error('[OCR ERROR] Connection failed:', error.message);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
