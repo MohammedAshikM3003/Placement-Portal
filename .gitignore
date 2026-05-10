@@ -36,3 +36,41 @@ yarn-error.log*
 *-TROUBLESHOOT.md
 forceDeploy.txt
 query
+
+# Python
+.venv/
+.venv310/
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Env
+.env
+
+# OCR temp
+uploads/
+temp/
+
+# Python virtual environments
+.venv/
+.venv310/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+.venv/
+.venv310/
+__pycache__/
+*.pyc
