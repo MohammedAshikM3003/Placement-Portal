@@ -209,7 +209,7 @@ class MongoDBService {
     });
   }
 
-  // Semester records (no-cache fetch for live edits)
+  // Semester records (no-cache fetch for coordinator marksheet view)
   async getStudentMarksheetByStudentId(studentId, semester) {
     if (!studentId || !semester) return null;
     const timestamp = Date.now();

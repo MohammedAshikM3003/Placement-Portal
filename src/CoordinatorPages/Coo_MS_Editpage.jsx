@@ -33,6 +33,7 @@ const DEFAULT_STUDENT = {
 };
 
 const DEFAULT_SUBJECTS = [];
+const SEMESTER_CACHE_KEY = 'cooSemesterMarksheetState';
 
 const normalizeSubjects = (rawSubjects) => {
   const source = Array.isArray(rawSubjects) ? rawSubjects : [];
@@ -75,14 +76,28 @@ function CooMsEditPage({ onLogout, onViewChange }) {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const student = location.state?.student || DEFAULT_STUDENT;
+  const persistedState = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return JSON.parse(sessionStorage.getItem(SEMESTER_CACHE_KEY) || 'null');
+    } catch (error) {
+      console.warn('⚠️ Unable to read cached semester edit state:', error.message);
+      return null;
+    }
+  }, [location.key]);
+
+  const student = location.state?.student || persistedState?.student || DEFAULT_STUDENT;
   const initialSubjects = useMemo(
-    () => normalizeSubjects(location.state?.subjects || DEFAULT_SUBJECTS),
-    [location.state?.subjects]
+    () => normalizeSubjects(location.state?.subjects || persistedState?.subjects || DEFAULT_SUBJECTS),
+    [location.state?.subjects, persistedState?.subjects]
   );
+  const initialSelectedSubjectId = location.state?.selectedSubjectId
+    || persistedState?.selectedSubjectId
+    || initialSubjects[0]?.id
+    || '';
   const [subjects, setSubjects] = useState(initialSubjects);
   const initialSubjectsRef = useRef(initialSubjects);
-  const [activeSubjectId, setActiveSubjectId] = useState(initialSubjects[0]?.id || '');
+  const [activeSubjectId, setActiveSubjectId] = useState(initialSelectedSubjectId);
   const activeCardRef = useRef(null);
   const subjectNameRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,9 +118,9 @@ function CooMsEditPage({ onLogout, onViewChange }) {
 
   useEffect(() => {
     setSubjects(initialSubjects);
-    setActiveSubjectId(initialSubjects[0]?.id || '');
+    setActiveSubjectId(initialSelectedSubjectId || initialSubjects[0]?.id || '');
     initialSubjectsRef.current = initialSubjects;
-  }, [initialSubjects]);
+  }, [initialSubjects, initialSelectedSubjectId]);
 
   useEffect(() => {
     if (!subjects.length) {
@@ -158,15 +173,38 @@ function CooMsEditPage({ onLogout, onViewChange }) {
     )));
   };
 
-  const handleDiscard = () => {
-    const returnPath = location.state?.returnPath || '/coo-manage-students-semester/marksheet';
-    navigate(returnPath, {
-      state: {
+  useEffect(() => {
+    if (!student?.regNo && !student?.name) return;
+    try {
+      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify({
         student,
         subjects: initialSubjectsRef.current,
-        refreshToken: Date.now()
-      }
-    });
+        semesterRecord: location.state?.semesterRecord || null,
+        selectedSubjectId: activeSubjectId
+      }));
+    } catch (error) {
+      console.warn('⚠️ Unable to cache semester edit state:', error.message);
+    }
+  }, [student, activeSubjectId, location.state?.semesterRecord]);
+
+  const handleDiscard = () => {
+    const returnPath = location.state?.returnPath || '/coo-manage-students-semester/marksheet';
+    const payload = {
+      refresh: true,
+      refreshToken: Date.now(),
+      student,
+      subjects: initialSubjectsRef.current,
+      semesterRecord: location.state?.semesterRecord || null,
+      selectedSubjectId: activeSubjectId
+    };
+
+    try {
+      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('⚠️ Unable to cache semester view payload:', error.message);
+    }
+
+    navigate(returnPath, { state: payload });
   };
 
   const handleUpdate = async () => {

@@ -28,26 +28,42 @@ const emptyStudent = {
   pending: ''
 };
 
+const SEMESTER_CACHE_KEY = 'cooSemesterMarksheetState';
+
 const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const persistedState = useMemo(() => {
     if (typeof window === 'undefined') return null;
     try {
-      return JSON.parse(sessionStorage.getItem('cooSemesterViewState') || 'null');
+      return JSON.parse(sessionStorage.getItem(SEMESTER_CACHE_KEY) || 'null');
     } catch (error) {
       console.warn('⚠️ Unable to read cached semester view state:', error.message);
       return null;
     }
-  }, []);
+  }, [location.key]);
 
-  const studentData = location.state?.student || persistedState?.student;
-  const persistedSubjects = location.state?.subjects || persistedState?.subjects;
+  const incomingStudent = location.state?.student || null;
+  const cachedStudent = persistedState?.student || null;
+  const hasNewStudent = Boolean(
+    incomingStudent?.regNo
+    && cachedStudent?.regNo
+    && String(incomingStudent.regNo) !== String(cachedStudent.regNo)
+  );
+
+  const studentData = incomingStudent || cachedStudent;
+  const persistedSubjects = hasNewStudent
+    ? []
+    : (location.state?.subjects || persistedState?.subjects || []);
+  const persistedSemesterRecord = hasNewStudent
+    ? null
+    : (location.state?.semesterRecord || persistedState?.semesterRecord || null);
+  const refreshToken = location.state?.refresh || location.state?.refreshToken || persistedState?.refreshToken || null;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [semesterRecord, setSemesterRecord] = useState(null);
+  const [semesterRecord, setSemesterRecord] = useState(persistedSemesterRecord);
   const [isLoading, setIsLoading] = useState(true);
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState(Array.isArray(persistedSubjects) ? persistedSubjects : []);
   const [masterSubjects, setMasterSubjects] = useState([]);
   const normalizeCourseCode = (value) => String(value || '')
     .toUpperCase()
@@ -59,29 +75,30 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const [processingType, setProcessingType] = useState('Previewing'); // 'Previewing' or 'Downloading'
   const [progress, setProgress] = useState(0);
 
-  const studentId = studentData?.studentId || studentData?._id || studentData?.id || '';
-  const currentSemester = studentData?.currentSemester || studentData?.semester || '';
-  const displayName = studentData?.name
-    || studentData?.studentName
-    || `${studentData?.firstName || ''} ${studentData?.lastName || ''}`.trim()
-    || studentData?.fullName
+  const studentSource = studentData || semesterRecord || persistedSemesterRecord || {};
+  const studentId = studentSource?.studentId || studentSource?._id || studentSource?.id || '';
+  const currentSemester = studentSource?.currentSemester || studentSource?.semester || '';
+  const displayName = studentSource?.name
+    || studentSource?.studentName
+    || `${studentSource?.firstName || ''} ${studentSource?.lastName || ''}`.trim()
+    || studentSource?.fullName
     || '';
 
   const student = {
     ...emptyStudent,
-    ...studentData,
-    name: displayName || studentData?.name || '',
-    regNo: studentData?.regNo || studentData?.registerNumber || '',
-    year: studentData?.currentYear || studentData?.year || '',
+    ...studentSource,
+    name: displayName || studentSource?.name || '',
+    regNo: studentSource?.regNo || studentSource?.registerNumber || '',
+    year: studentSource?.currentYear || studentSource?.year || '',
     semester: currentSemester,
-    programme: studentData?.programme || '',
-    examDate: studentData?.examDate || '',
-    currentSgpa: studentData?.currentSgpa || studentData?.sgpa || '',
-    overallCgpa: studentData?.overallCgpa || studentData?.cgpa || '',
-    published: studentData?.examDate || studentData?.published || '',
-    attempted: studentData?.subjects ? studentData.subjects.length : (studentData?.attempted ?? ''),
-    cleared: studentData?.subjects ? studentData.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length : (studentData?.cleared ?? ''),
-    pending: studentData?.subjects ? (studentData.subjects.length - studentData.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length) : (studentData?.pending ?? '')
+    programme: studentSource?.programme || '',
+    examDate: studentSource?.examDate || '',
+    currentSgpa: studentSource?.currentSgpa || studentSource?.sgpa || '',
+    overallCgpa: studentSource?.overallCgpa || studentSource?.cgpa || '',
+    published: studentSource?.examDate || studentSource?.published || '',
+    attempted: studentSource?.subjects ? studentSource.subjects.length : (studentSource?.attempted ?? ''),
+    cleared: studentSource?.subjects ? studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length : (studentSource?.cleared ?? ''),
+    pending: studentSource?.subjects ? (studentSource.subjects.length - studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length) : (studentSource?.pending ?? '')
   };
 
   const handleToggleSidebar = () => {
@@ -103,19 +120,18 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [students, isLoading]);
 
   useEffect(() => {
-    if (!location.state?.student || location.state?.student?.isPreview) {
-      return;
-    }
-
+    if (!studentData && !semesterRecord) return;
     try {
-      sessionStorage.setItem('cooSemesterViewState', JSON.stringify({
-        student: location.state.student,
-        subjects: location.state.subjects || []
+      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify({
+        student: studentData || studentSource,
+        subjects: students,
+        semesterRecord: semesterRecord || persistedSemesterRecord || null,
+        selectedSubjectId: location.state?.selectedSubjectId || persistedState?.selectedSubjectId || ''
       }));
     } catch (error) {
       console.warn('⚠️ Unable to cache semester view state:', error.message);
     }
-  }, [location.state?.student, location.state?.subjects]);
+  }, [studentData, semesterRecord, students, location.state?.selectedSubjectId, persistedState?.selectedSubjectId]);
 
   useEffect(() => {
     const loadMasterSubjects = async () => {
@@ -156,7 +172,11 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   useEffect(() => {
     const loadSemesterData = async () => {
       try {
+        setIsLoading(true);
         if (!currentSemester) {
+          if (Array.isArray(persistedSubjects) && persistedSubjects.length > 0) {
+            setStudents(persistedSubjects);
+          }
           setIsLoading(false);
           return;
         }
@@ -168,7 +188,6 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         });
 
         let response = null;
-
         const fallbackSubjects = Array.isArray(persistedSubjects) ? persistedSubjects : [];
         const previewSubjects = Array.isArray(studentData?.subjects) ? studentData.subjects : fallbackSubjects;
         const isPreviewData = Boolean(studentData?.isPreview);
@@ -188,10 +207,19 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           return;
         }
 
+        if (student.regNo) {
+          try {
+            response = await mongoDBService.getSemesterRecordByStudent(student.regNo, currentSemester, student.year || '');
+            console.log('✅ Semester record loaded:', response);
+          } catch (legacyError) {
+            console.warn('⚠️ Legacy semester-record lookup failed:', legacyError.message);
+          }
+        }
+
         // Only try ObjectId lookup if studentId looks like a valid MongoDB ObjectId (24 hex chars)
         const isValidObjectId = /^[0-9a-f]{24}$/i.test(studentId);
         
-        if (studentId && isValidObjectId) {
+        if (!response && studentId && isValidObjectId) {
           try {
             response = await mongoDBService.getStudentMarksheetByStudentId(studentId, currentSemester);
             console.log('✅ Student marksheet loaded:', response);
@@ -200,15 +228,6 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           }
         } else if (studentId) {
           console.log('⚠️ Invalid ObjectId format:', studentId, '- skipping ObjectId lookup, using regNo fallback');
-        }
-
-        if (!response && student.regNo) {
-          try {
-            response = await mongoDBService.getSemesterRecordByStudent(student.regNo, currentSemester, student.year || student.currentYear || '');
-            console.log('✅ Semester record loaded:', response);
-          } catch (legacyError) {
-            console.warn('⚠️ Legacy semester-record lookup failed:', legacyError.message);
-          }
         }
 
         if (response?.marksheet) {
@@ -221,11 +240,11 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         } else if (response?.students && Array.isArray(response.students)) {
           setSemesterRecord(response);
           setStudents(response.students);
-        } else if (fallbackSubjects.length > 0) {
+        } else if (previewSubjects.length > 0) {
           // This allows viewing extracted PDF data before it is 'Submitted' to DB
           console.log('✅ Using extracted PDF data from navigation state');
           setSemesterRecord(studentData);
-          setStudents(fallbackSubjects);
+          setStudents(previewSubjects);
         } else {
           setSemesterRecord(null);
           setStudents([]);
@@ -234,10 +253,10 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         console.error('❌ Error loading data:', error);
         
         // --- BULLETPROOF FALLBACK ---
-        if (studentData?.subjects) {
+        if (Array.isArray(persistedSubjects) && persistedSubjects.length > 0) {
           console.log('✅ 404/Error encountered: Falling back to state-provided subjects.');
-          setSemesterRecord(studentData);
-          setStudents(studentData.subjects);
+          setSemesterRecord(studentData || persistedSemesterRecord || null);
+          setStudents(persistedSubjects);
         } else {
           setSemesterRecord(null);
           setStudents([]);
@@ -248,7 +267,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     };
 
     loadSemesterData();
-  }, [studentData, location.key]);
+  }, [studentData, student.regNo, student.year, currentSemester, studentId, location.key, refreshToken]);
 
   const handleViewChange = (view) => {
     console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
@@ -321,11 +340,24 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   };
 
   const handlePreviewMarksheet = async () => {
+    try {
+      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify({
+        student,
+        subjects: students,
+        semesterRecord,
+        selectedSubjectId: location.state?.selectedSubjectId || ''
+      }));
+    } catch (error) {
+      console.warn('⚠️ Unable to cache semester view before edit:', error.message);
+    }
+
     navigate('/coo-manage-students-semester/edit', {
       state: {
         student,
         subjects: students,
-        returnPath: location.pathname
+        semesterRecord,
+        returnPath: location.pathname,
+        selectedSubjectId: location.state?.selectedSubjectId || ''
       }
     });
   };
@@ -358,6 +390,13 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
          setTimeout(() => URL.revokeObjectURL(url), 100);
       }
     }, 500);
+  };
+
+  const showLoadingCard = isLoading && !(student.name || student.regNo);
+  const renderValue = (value) => {
+    if (showLoadingCard) return 'Loading...';
+    if (value === '' || value === null || value === undefined) return '--';
+    return value;
   };
 
   return (
@@ -413,64 +452,76 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
               </div>
 
               <div className={styles['view-student-details']}>
+                {showLoadingCard && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', border: '4px solid #f3f3f3', borderTop: '4px solid #d32f2f', animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+                    <style>{`
+                      @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                      }
+                    `}</style>
+                    <span style={{ fontSize: '13px', color: '#777' }}>Loading student record...</span>
+                  </div>
+                )}
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Name</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.name || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.name)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Reg No</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.regNo || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.regNo)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Year</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.year || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.year)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Semester</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.semester || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.semester)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Current SGPA</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.currentSgpa || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.currentSgpa)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Overall CGPA</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.overallCgpa || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.overallCgpa)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Exam Date</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.published || '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.published)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Attempted</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.attempted !== '' && student.attempted !== null ? student.attempted : '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.attempted)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Cleared</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.cleared !== '' && student.cleared !== null ? student.cleared : '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.cleared)}</span>
                 </div>
 
                 <div className={styles['view-detail-row']}>
                   <span className={styles['view-detail-label']}>Pending</span>
                   <span className={styles['view-detail-colon']}>:</span>
-                  <span className={styles['view-detail-value']}>{student.pending !== '' && student.pending !== null ? student.pending : '--'}</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.pending)}</span>
                 </div>
               </div>
             </div>
