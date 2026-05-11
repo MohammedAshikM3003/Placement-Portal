@@ -17,6 +17,7 @@ const semesterRecordSchema = new mongoose.Schema({
   recordKey: { type: String, required: true, unique: true, index: true, trim: true },
   studentId: { type: String, trim: true },
   regNo: { type: String, required: true, trim: true },
+  registerNumber: { type: String, trim: true },
   studentName: { type: String, required: true, trim: true },
   department: { type: String, trim: true },
   batch: { type: String, trim: true },
@@ -31,8 +32,18 @@ const semesterRecordSchema = new mongoose.Schema({
   subjects: [{
     courseCode: { type: String, trim: true },
     courseName: { type: String, trim: true },
-    credits: { type: Number, default: 0 }
+    subjectCode: { type: String, trim: true },
+    subjectName: { type: String, trim: true },
+    credits: { type: Number, default: 0 },
+    grade: { type: String, trim: true },
+    status: { type: String, trim: true }
   }],
+  extractedPdfName: { type: String, trim: true },
+  extractedAt: { type: Date, default: Date.now },
+  reviewed: { type: Boolean, default: false },
+  submitted: { type: Boolean, default: false },
+  submittedAt: { type: Date },
+  extractionStatus: { type: String, trim: true },
   students: [semesterStudentSchema],
   uploadedBy: { type: String, trim: true },
   uploadedAt: { type: Date, default: Date.now }
@@ -41,5 +52,6 @@ const semesterRecordSchema = new mongoose.Schema({
 semesterRecordSchema.index({ regNo: 1, semester: 1 });
 semesterRecordSchema.index({ studentId: 1, semester: 1 });
 semesterRecordSchema.index({ department: 1, batch: 1, semester: 1 });
+semesterRecordSchema.index({ regNo: 1, semester: 1, year: 1 }, { unique: true });
 
 module.exports = mongoose.models.SemesterRecord || mongoose.model('SemesterRecord', semesterRecordSchema, 'semester');

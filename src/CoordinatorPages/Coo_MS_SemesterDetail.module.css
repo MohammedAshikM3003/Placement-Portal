@@ -305,12 +305,28 @@
 
 .subject-table th:nth-child(10),
 .subject-table td:nth-child(10) {
-  width: 11%;
+  width: 8%;
 }
 
-.subject-table th:nth-child(11),
-.subject-table td:nth-child(11) {
-  width: 7%;
+.yes-badge,
+.no-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.yes-badge {
+  background: #e7f6ee;
+  color: #1f7a4a;
+}
+
+.no-badge {
+  background: #fdeaea;
+  color: #c53333;
 }
 
 .view-button {

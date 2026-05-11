@@ -13,6 +13,7 @@ import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
 const INITIAL_SUBJECTS = [];
 
 const GRADE_OPTIONS = ['Select Credit', '4 Credits', '3 Credits', '2 Credits', '1 Credit','0 Credit'];
+const SEMESTER_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const NO_FILE_SELECTED = 'No file selected';
 
 const BinIcon = () => (
@@ -59,6 +60,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [extractedStudents, setExtractedStudents] = useState([]);
+  const [extractedPdfName, setExtractedPdfName] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     return () => {
@@ -180,6 +183,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
     setHasPreviewData(false);
     setFileName(NO_FILE_SELECTED);
     setSelectedFile(null);
+    setExtractedPdfName('');
     if (uploadInputRef.current) uploadInputRef.current.value = '';
   };
 
@@ -243,7 +247,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
               fileName: fileName,
               subjects: subjects,
               selectedFile: selectedFile,
-              extractedStudents: extractedStudents
+              extractedStudents: extractedStudents,
+              extractedPdfName: extractedPdfName
             }
           });
         }, 2000);
@@ -264,6 +269,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
     setSelectedFile(null);
     setSubjects([]);
     setHasPreviewData(false);
+    setExtractedPdfName('');
     if (previewUrlRef.current) {
       window.URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
@@ -297,9 +303,13 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         setUploadProgress(10);
         const formData = new FormData();
         formData.append('file', selectedFile);
+        formData.append('semester', selectedSemester);
+        console.log('📘 Selected Semester:', selectedSemester);
 
         const authToken = localStorage.getItem('authToken');
-        const resp = await fetch(`${API_BASE_URL}/marksheets/upload`, {
+        const uploadUrl = `${API_BASE_URL}/marksheets/upload`;
+        console.log('📤 Upload URL:', uploadUrl);
+        const resp = await fetch(uploadUrl, {
           method: 'POST',
           headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
           body: formData
@@ -326,6 +336,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         }
 
         const body = await resp.json();
+        console.log('✅ Upload response:', body);
         if (fakeProgress) {
           clearInterval(fakeProgress);
           fakeProgress = null;
@@ -353,6 +364,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
 
         animateTo100();
         const extracted = Array.isArray(body.extractedMarksheets) ? body.extractedMarksheets : [];
+        const extractedPdf = body.extractedPdfName || selectedFile.name || '';
+        setExtractedPdfName(extractedPdf);
         console.log('📥 [Frontend] Extracted marksheets from backend:', JSON.stringify(extracted.map(m => ({regNo: m.regNo, semester: m.semester, subjectCount: m.subjects?.length}))));
         
         const uploadedSubjects = extracted.flatMap(function(marksheet) { 
@@ -368,13 +381,19 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         console.log('📋 [Frontend] After mapping subjects with semester:', uploadedSubjects.slice(0, 2).map(s => ({code: s.courseCode, sem: s.semester})));
 
         let finalSubjects = buildSubjectRows(uploadedSubjects);
-        let studentData = extracted;
+        let studentData = extracted.map((marksheet) => ({
+          ...marksheet,
+          extractedPdfName: extractedPdf,
+          submitted: Boolean(marksheet.submitted)
+        }));
 
         if (finalSubjects.length === 0 || extracted.length === 0) {
           const parseFormData = new FormData();
           parseFormData.append('file', selectedFile);
 
-          const parseResponse = await fetch(API_BASE_URL + '/marksheet/parse', {
+          const parseUrl = API_BASE_URL + '/marksheet/parse';
+          console.log('📤 Upload URL:', parseUrl);
+          const parseResponse = await fetch(parseUrl, {
             method: 'POST',
             body: parseFormData,
           });
@@ -400,7 +419,11 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                 semester: marksheetSemester,
                 subjects: enrichedSubjects
               };
-              studentData = [studentMarksheet];
+              studentData = [{
+                ...studentMarksheet,
+                extractedPdfName: extractedPdf,
+                submitted: Boolean(studentMarksheet.submitted)
+              }];
             }
           }
         }
@@ -447,6 +470,22 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           onViewChange={onViewChange} 
         />
         <div className={styles['semester-main-content']}>
+          <div className={styles['semester-controls']}>
+            <label htmlFor="semester-select" className={styles['semester-label']}>Semester</label>
+            <select
+              id="semester-select"
+              className={styles['semester-select']}
+              value={selectedSemester}
+              onChange={(event) => setSelectedSemester(event.target.value)}
+            >
+              <option value="">Select semester</option>
+              {SEMESTER_OPTIONS.map((option) => (
+                <option key={`semester-${option}`} value={option}>
+                  Semester {option}
+                </option>
+              ))}
+            </select>
+          </div>
           <section
             className={styles['upload-panel']}
             role="button"

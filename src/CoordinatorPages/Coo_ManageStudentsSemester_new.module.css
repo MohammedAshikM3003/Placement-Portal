@@ -24,6 +24,37 @@
   box-sizing: border-box;
 }
 
+.semester-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 4px 0;
+}
+
+.semester-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.semester-select {
+  min-width: 200px;
+  border: 1px solid var(--coo-red-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #333;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.semester-select:focus {
+  border-color: var(--coo-red);
+  box-shadow: 0 0 0 2px var(--coo-red-focus);
+}
+
 .upload-panel {
   background: linear-gradient(180deg, #fff7f8 0%, var(--coo-red-tint) 100%);
   border: 2px dashed var(--coo-red-border);
@@ -373,6 +404,14 @@
   .co-ms-layout {
     padding-top: 60px;
     overflow: auto;
+  }
+
+  .semester-controls {
+    align-items: stretch;
+  }
+
+  .semester-select {
+    width: 100%;
   }
 
   .upload-panel {

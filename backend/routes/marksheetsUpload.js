@@ -19,6 +19,7 @@ const Subject = require('../models/Subject');
 const MarksheetReview = require('../models/MarksheetReview');
 const MarksheetAuditLog = require('../models/MarksheetAuditLog');
 const { marksheetQueue } = require('../queues/marksheetQueue');
+const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 
 // Service
 const {
@@ -94,6 +95,10 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log('📤 Upload request received');
+    console.log('📄 File:', req.file?.originalname || 'unknown');
+    console.log('📘 Incoming semester:', req.body?.semester);
+
     console.log(`[Marksheet Upload] Processing file: ${req.file.originalname} (${req.file.size} bytes)`);
 
     // ─────────────────────────────────────────────────────────
@@ -119,6 +124,7 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     }
 
     console.log(`[Marksheet Upload] Extracted ${marksheets.length} marksheets`);
+    console.log('🧠 OCR extraction completed');
 
     // ─────────────────────────────────────────────────────────
     // 3. Validate and match with students
@@ -403,9 +409,36 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       console.warn('[Marksheet Upload] Could not annotate subjects with master list:', err.message);
     }
 
+    const extractedPdfName = req.file?.originalname || '';
+
+    extractedMarksheets.forEach((marksheet) => {
+      if (marksheet.submitted === undefined) {
+        marksheet.submitted = false;
+      }
+      if (!marksheet.extractedPdfName) {
+        marksheet.extractedPdfName = extractedPdfName;
+      }
+    });
+
+    let autoSaveResult = { saved: 0 };
+    try {
+      console.log('📦 AUTO SAVING SEMESTER RECORDS...', extractedMarksheets.length);
+      autoSaveResult = await autoSaveSemesterRecords({
+        extractedMarksheets,
+        extractedPdfName,
+        uploadedBy: req.user?.fullName || req.user?.username || 'Coordinator',
+        semester: req.body?.semester
+      });
+      console.log(`✅ Semester records saved: ${autoSaveResult.saved}`);
+    } catch (autoSaveError) {
+      console.error('Semester auto-save failed', autoSaveError);
+    }
+
     res.status(200).json({
       success: true,
       extractedMarksheets,
+      extractedPdfName,
+      savedCount: autoSaveResult.saved,
       warnings,
       summary: {
         totalExtracted: marksheets.length,

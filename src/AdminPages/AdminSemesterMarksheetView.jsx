@@ -396,9 +396,9 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
             <div className={styles['view-action-cards']}>
               <div className={styles['view-action-card']} onClick={handlePreviewMarksheet}>
                 <img src={Previewicon} alt="Preview" className={styles['view-action-icon']} />
-                <h3 className={styles['view-action-title']}>Preview Marksheet</h3>
+                <h3 className={styles['view-action-title']}>Edit Marksheet</h3>
                 <p className={styles['view-action-description']}>
-                  View and analyse the student's current semester marksheet.
+                  Review, Edit and Update Student Semester Marksheet Records
                 </p>
               </div>
 

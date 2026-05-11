@@ -661,6 +661,18 @@ try {
 }
 
 // -------------------------------------------------
+// Semester Records APIs
+// -------------------------------------------------
+try {
+    const semesterRoutes = require('./routes/semester');
+    app.use('/api/semester', authenticateToken, semesterRoutes);
+    app.use('/api/semester-records', authenticateToken, semesterRoutes);
+    console.log('✅ Semester routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load semester routes:', error.message);
+}
+
+// -------------------------------------------------
 // Subject Master APIs
 // -------------------------------------------------
 try {

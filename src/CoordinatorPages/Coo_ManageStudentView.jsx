@@ -287,26 +287,12 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   };
 
   const handlePreviewMarksheet = async () => {
-    setProcessingType("Previewing");
-    setIsProcessing(true);
-    setProgress(10);
-    
-    // Simulate initial loading
-    const interval = setInterval(() => {
-        setProgress(p => Math.min(p + 15, 30));
-    }, 100);
-
-    const blob = await extractPdfPage();
-    clearInterval(interval);
-    setProgress(100);
-    
-    setTimeout(() => {
-      setIsProcessing(false);
-      if (blob) {
-         const url = URL.createObjectURL(blob);
-         window.open(url, '_blank');
+    navigate('/coo-manage-students-semester/edit', {
+      state: {
+        student,
+        subjects: students
       }
-    }, 500);
+    });
   };
 
   const handleDownloadMarksheet = async () => {
@@ -461,9 +447,9 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
             <div className={styles['view-action-cards']}>
               <div className={styles['view-action-card']} onClick={handlePreviewMarksheet}>
                 <img src={Previewicon} alt="Preview" className={styles['view-action-icon']} />
-                <h3 className={styles['view-action-title']}>Preview Marksheet</h3>
+                <h3 className={styles['view-action-title']}>Edit Marksheet</h3>
                 <p className={styles['view-action-description']}>
-                  View and analyse the student's current semester marksheet.
+                  Review, Edit and Update Student Semester Marksheet Records.
                 </p>
               </div>
 
@@ -494,11 +480,12 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
                   <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
-                    fontSize: '13px'
+                    fontSize: '14px'
                   }}>
                     <thead>
                       <tr style={{ backgroundColor: '#E63946', borderBottom: '2px solid #C94855' }}>
                         <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '50px' }}>S.NO</th>
+                        <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '60px' }}>Sem</th>
                         <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px' }}>Course Code</th>
                         <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px' }}>Course Name</th>
                         <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '80px' }}>Credits</th>
@@ -518,9 +505,11 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
                         const creditsDisplay = (creditsValue === null || creditsValue === undefined || creditsValue === '')
                           ? '--'
                           : creditsValue;
+                        const semesterValue = student.semester || student.sem || currentSemester || '--';
                         return (
                           <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                             <td style={{ padding: '8px', textAlign: 'center' }}>{index + 1}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{semesterValue}</td>
                             <td style={{ padding: '8px' }}>{student.courseCode || '-'}</td>
                             <td style={{ padding: '8px' }}>{student.courseName || student.subjectName || '-'}</td>
                             <td style={{ padding: '8px', textAlign: 'center' }}>{creditsDisplay}</td>

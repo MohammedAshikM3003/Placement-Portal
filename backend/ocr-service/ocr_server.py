@@ -16,6 +16,8 @@ import re
 import json
 import tempfile
 import traceback
+import logging
+import sys
 from io import BytesIO
 
 from flask import Flask, request, jsonify
@@ -25,6 +27,16 @@ import numpy as np
 
 # PaddleOCR imports
 from paddleocr import PaddleOCR
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Logging Configuration (Production-safe)
+# ─────────────────────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 from preprocess import build_preprocess_variants
 from pdf_text import extract_pdf_words
@@ -672,7 +684,14 @@ def parse_marksheet_pages():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "service": "marksheet-ocr"})
+    logger.info("[HEALTHZ] Health check requested")
+    return jsonify({"status": "ok", "service": "marksheet-ocr", "version": "2.0"})
+
+
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    logger.info("[HEALTHZ] /healthz requested")
+    return jsonify({"status": "healthy"})
 
 
 @app.route("/debug-overlay", methods=["POST"])
@@ -746,36 +765,44 @@ def parse_marksheet_pages_v2():
     V2 endpoint: returns OCR lines, reconstructed subjects, and confidence metadata per page.
     """
     if "file" not in request.files:
+        logger.error("[OCR ERROR] No file uploaded in request")
         return jsonify({"success": False, "error": "No file uploaded"}), 400
 
     file = request.files["file"]
     if not file.filename:
+        logger.error("[OCR ERROR] Empty filename")
         return jsonify({"success": False, "error": "Empty filename"}), 400
 
     try:
-        print(f"[OCR REQUEST] /parse-marksheet-pages-v2 file={file.filename}")
+        logger.info(f"[OCR REQUEST] /parse-marksheet-pages-v2 file={file.filename}")
         file_bytes = file.read()
         filename_lower = file.filename.lower()
 
         pages = []
 
         if filename_lower.endswith(".pdf"):
+            logger.info(f"[OCR PROCESS] Processing PDF: {file.filename}")
             pdf_pages = None
             try:
                 pdf_pages = extract_pdf_words(file_bytes, min_words=30)
-            except Exception:
+            except Exception as e:
+                logger.warning(f"[OCR PROCESS] PDF text extraction failed: {str(e)}")
                 pdf_pages = None
 
             images = None
             if pdf_pages is None or any(p is None for p in pdf_pages):
+                logger.info("[OCR PROCESS] Falling back to image-based OCR")
                 images = pdf_to_images(file_bytes, dpi=OCR_BASE_DPI)
                 if not images and OCR_RETRY_DPI > OCR_BASE_DPI:
+                    logger.info(f"[OCR PROCESS] Retrying with higher DPI ({OCR_RETRY_DPI})")
                     images = pdf_to_images(file_bytes, dpi=OCR_RETRY_DPI)
 
             if pdf_pages is None and not images:
+                logger.error("[OCR ERROR] Could not process the uploaded file - no pages extracted")
                 return jsonify({"success": False, "error": "Could not process the uploaded file."}), 400
 
             total_pages = len(pdf_pages) if pdf_pages is not None else len(images)
+            logger.info(f"[OCR PROCESS] Processing {total_pages} page(s)")
 
             for idx in range(total_pages):
                 lines = None
@@ -855,8 +882,14 @@ def parse_marksheet_pages_v2():
 
 if __name__ == "__main__":
     port = int(os.environ.get("OCR_PORT") or os.environ.get("PORT", 5001))
-    print(f"[OCR SERVICE] Started successfully on port {port}")
-    print(f"   POST /parse-marksheet         - Upload PDF/image for extraction")
-    print(f"   POST /parse-marksheet-pages-v2 - Per-page extraction (v2)")
-    print(f"   GET  /health                  - Health check")
+    logger.info("=" * 75)
+    logger.info("[OCR START] Marksheet OCR Service Starting")
+    logger.info("=" * 75)
+    logger.info(f"[OCR START] Listening on 0.0.0.0:{port}")
+    logger.info("[OCR START] Endpoints available:")
+    logger.info("  ✓ POST /parse-marksheet         - Upload PDF/image for extraction")
+    logger.info("  ✓ POST /parse-marksheet-pages-v2 - Per-page extraction (v2)")
+    logger.info("  ✓ GET  /health                  - Health check")
+    logger.info("[OCR START] PaddleOCR engine initialized and ready")
+    logger.info("=" * 75)
     app.run(host="0.0.0.0", port=port, debug=False)

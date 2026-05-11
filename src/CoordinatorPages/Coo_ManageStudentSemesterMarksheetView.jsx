@@ -225,9 +225,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                         <div className={styles.uploadSection}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                                 <div className={styles.actionBox}>
-                                    <div className={styles.actionBoxIcon}>👁️</div>
-                                    <div className={styles.actionBoxTitle}>Preview Marksheet</div>
-                                    <div className={styles.actionBoxSubtitle}>View and analyse the student's current semester marksheet.</div>
+                                    <div className={styles.actionBoxIcon}>✏️</div>
+                                    <div className={styles.actionBoxTitle}>Edit Marksheet</div>
+                                    <div className={styles.actionBoxSubtitle}>Review, Edit and Update Student Semester Marksheet Records.</div>
                                 </div>
                                 <div className={styles.actionBox}>
                                     <div className={styles.actionBoxIcon}>⬇️</div>
@@ -245,6 +245,7 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                     <thead>
                                         <tr>
                                             <th>S.NO</th>
+                                            <th>SEM</th>
                                             <th>COURSE CODE</th>
                                             <th>COURSE NAME</th>
                                             <th>CREDITS</th>
@@ -280,6 +281,7 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                                         return (
                                                             <tr key={index}>
                                                                 <td>{index + 1}</td>
+                                                                <td>{course.semester || course.sem || studentData?.semester || studentData?.currentSemester || '--'}</td>
                                                                 <td>{course.courseCode || '--'}</td>
                                                                 <td>{course.courseName || '--'}</td>
                                                                 <td>{creditsDisplay}</td>
@@ -292,7 +294,7 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                                     })
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
+                                                        <td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
                                                             No subjects found for this semester.
                                                         </td>
                                                     </tr>
