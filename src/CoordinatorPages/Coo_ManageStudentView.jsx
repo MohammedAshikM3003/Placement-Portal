@@ -31,7 +31,18 @@ const emptyStudent = {
 const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const studentData = location.state?.student;
+  const persistedState = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return JSON.parse(sessionStorage.getItem('cooSemesterViewState') || 'null');
+    } catch (error) {
+      console.warn('⚠️ Unable to read cached semester view state:', error.message);
+      return null;
+    }
+  }, []);
+
+  const studentData = location.state?.student || persistedState?.student;
+  const persistedSubjects = location.state?.subjects || persistedState?.subjects;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [semesterRecord, setSemesterRecord] = useState(null);
@@ -92,6 +103,21 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [students, isLoading]);
 
   useEffect(() => {
+    if (!location.state?.student || location.state?.student?.isPreview) {
+      return;
+    }
+
+    try {
+      sessionStorage.setItem('cooSemesterViewState', JSON.stringify({
+        student: location.state.student,
+        subjects: location.state.subjects || []
+      }));
+    } catch (error) {
+      console.warn('⚠️ Unable to cache semester view state:', error.message);
+    }
+  }, [location.state?.student, location.state?.subjects]);
+
+  useEffect(() => {
     const loadMasterSubjects = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/subjects`, {
@@ -143,17 +169,21 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
 
         let response = null;
 
+        const fallbackSubjects = Array.isArray(persistedSubjects) ? persistedSubjects : [];
+        const previewSubjects = Array.isArray(studentData?.subjects) ? studentData.subjects : fallbackSubjects;
+        const isPreviewData = Boolean(studentData?.isPreview);
+
         // Skip DB lookups entirely if we know this is unsaved preview data
-        if (studentData?.isPreview || (studentData?.subjects && !/^[0-9a-f]{24}$/i.test(studentId))) {
+        if (isPreviewData && previewSubjects.length > 0) {
           console.log('✅ Unsaved extracted data detected. Loading preview data.', {
             isPreview: studentData?.isPreview,
-            subjectsCount: studentData?.subjects?.length || 0,
+            subjectsCount: previewSubjects.length,
             studentId,
             regNo: studentData?.regNo
           });
           setSemesterRecord(studentData);
-          setStudents(Array.isArray(studentData.subjects) ? studentData.subjects : []);
-          console.log('✅ Preview data loaded:', Array.isArray(studentData.subjects) ? studentData.subjects.length : 0, 'subjects');
+          setStudents(previewSubjects);
+          console.log('✅ Preview data loaded:', previewSubjects.length, 'subjects');
           setIsLoading(false);
           return;
         }
@@ -174,7 +204,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
 
         if (!response && student.regNo) {
           try {
-            response = await mongoDBService.getSemesterRecordByStudent(student.regNo, currentSemester);
+            response = await mongoDBService.getSemesterRecordByStudent(student.regNo, currentSemester, student.year || student.currentYear || '');
             console.log('✅ Semester record loaded:', response);
           } catch (legacyError) {
             console.warn('⚠️ Legacy semester-record lookup failed:', legacyError.message);
@@ -184,14 +214,18 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         if (response?.marksheet) {
           setSemesterRecord(response.marksheet);
           setStudents(Array.isArray(response.marksheet.subjects) ? response.marksheet.subjects : []);
+        } else if (response?.records && Array.isArray(response.records) && response.records.length > 0) {
+          const latestRecord = response.records[0];
+          setSemesterRecord(latestRecord);
+          setStudents(Array.isArray(latestRecord.subjects) ? latestRecord.subjects : []);
         } else if (response?.students && Array.isArray(response.students)) {
           setSemesterRecord(response);
           setStudents(response.students);
-        } else if (studentData?.subjects) {
+        } else if (fallbackSubjects.length > 0) {
           // This allows viewing extracted PDF data before it is 'Submitted' to DB
           console.log('✅ Using extracted PDF data from navigation state');
           setSemesterRecord(studentData);
-          setStudents(studentData.subjects);
+          setStudents(fallbackSubjects);
         } else {
           setSemesterRecord(null);
           setStudents([]);
@@ -214,7 +248,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     };
 
     loadSemesterData();
-  }, [studentData]);
+  }, [studentData, location.key]);
 
   const handleViewChange = (view) => {
     console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
@@ -290,7 +324,8 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     navigate('/coo-manage-students-semester/edit', {
       state: {
         student,
-        subjects: students
+        subjects: students,
+        returnPath: location.pathname
       }
     });
   };

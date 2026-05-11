@@ -209,6 +209,38 @@ class MongoDBService {
     });
   }
 
+  // Semester records (no-cache fetch for live edits)
+  async getStudentMarksheetByStudentId(studentId, semester) {
+    if (!studentId || !semester) return null;
+    const timestamp = Date.now();
+    return await this.apiCall(`/marksheets/semester/${encodeURIComponent(studentId)}/${encodeURIComponent(semester)}?_ts=${timestamp}`, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      }
+    });
+  }
+
+  async getSemesterRecordByStudent(regNo, semester, year = '') {
+    if (!regNo || !semester) return null;
+    const params = new URLSearchParams();
+    params.append('regNo', String(regNo).trim());
+    params.append('semester', String(semester).trim());
+    if (year) params.append('year', String(year).trim());
+    params.append('_ts', Date.now().toString());
+
+    return await this.apiCall(`/semester/list?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      }
+    });
+  }
+
   // Lazy load profile image for a single student
   async getStudentProfileImage(studentId) {
     const authToken = localStorage.getItem('authToken');

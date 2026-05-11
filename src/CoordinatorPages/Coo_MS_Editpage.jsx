@@ -159,7 +159,14 @@ function CooMsEditPage({ onLogout, onViewChange }) {
   };
 
   const handleDiscard = () => {
-    navigate(-1);
+    const returnPath = location.state?.returnPath || '/coo-manage-students-semester/marksheet';
+    navigate(returnPath, {
+      state: {
+        student,
+        subjects: initialSubjectsRef.current,
+        refreshToken: Date.now()
+      }
+    });
   };
 
   const handleUpdate = async () => {
