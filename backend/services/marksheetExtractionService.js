@@ -15,6 +15,86 @@ const {
   calculateSgpa
 } = require('./marksheetValidation');
 
+const normalizeStudentName = (name = '') => {
+  return String(name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .split(' ')
+    .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
+    .join(' ')
+    .trim();
+};
+
+const formatStudentName = (name = '') => normalizeStudentName(name);
+
+const NAME_LABEL_RE = /Name\s+of\s+the\s+Candidate\s*[:\-]?\s*(.*)/i;
+const NAME_TAIL_CLEAN_RE = /\s+(REG(?:ISTER)?(?:\s*NO|\s*NUMBER)?|SEMESTER|PROGRAMME|DOB|DATE\s+OF\s+BIRTH|EXAM|SGPA|CGPA|YEAR)\b.*$/i;
+const looksLikeNameLine = (line = '') => {
+  const cleaned = String(line || '').trim();
+  if (!cleaned) return false;
+  if (NAME_TAIL_CLEAN_RE.test(cleaned)) return false;
+  return /^[A-Z .]+$/i.test(cleaned);
+};
+
+const extractLeadingNameSegment = (line = '') => {
+  const cleaned = String(line || '').replace(NAME_TAIL_CLEAN_RE, '').trim();
+  if (!cleaned) return '';
+  const match = cleaned.match(/^([A-Z][A-Z.\s]*)(?=\s+\d|\s+REG|\s+REGISTER|$)/i);
+  if (match && match[1]) {
+    return match[1].replace(/\s+/g, ' ').trim();
+  }
+  if (/^[A-Z.\s]+$/i.test(cleaned)) {
+    return cleaned.replace(/\s+/g, ' ').trim();
+  }
+  return '';
+};
+
+const extractNameFromRawText = (rawText = '') => {
+  const text = String(rawText || '');
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const labelRegex = /Name\s+of\s+the\s+Candidate/i;
+  const candidateRegex = /Name\s+of\s+the\s+Candidate\s*:\s*([A-Z\s.]{3,})/im;
+
+  let rawLine = '';
+  let extractedName = '';
+
+  const match = text.match(candidateRegex);
+  if (match && match[1]) {
+    extractedName = match[1].replace(/\s+/g, ' ').trim();
+  }
+
+  if (lines.length > 0) {
+    rawLine = lines.find((line) => labelRegex.test(line)) || '';
+  }
+
+  if (!extractedName && rawLine) {
+    const colonIndex = rawLine.indexOf(':');
+    if (colonIndex !== -1) {
+      extractedName = rawLine.slice(colonIndex + 1).trim();
+    } else {
+      extractedName = rawLine.replace(labelRegex, '').replace(/^[-–:]+/, '').trim();
+    }
+  }
+
+  if (!extractedName && rawLine) {
+    const rawIndex = lines.findIndex((line) => labelRegex.test(line));
+    if (rawIndex !== -1 && lines[rawIndex + 1]) {
+      extractedName = lines[rawIndex + 1].trim();
+    }
+  }
+
+  extractedName = extractedName.replace(NAME_TAIL_CLEAN_RE, '').trim();
+
+  console.log('📄 OCR RAW LINE:', rawLine);
+  console.log('📛 RAW OCR NAME (text):', extractedName);
+
+  return extractedName;
+};
+
 const OCR_SERVICE_URL = process.env.OCR_SERVICE_URL || 'http://localhost:5001';
 const OCR_V2_ENDPOINT = '/parse-marksheet-pages-v2';
 const OCR_HEALTH_ENDPOINT = '/health';
@@ -105,10 +185,21 @@ async function extractAllMarksheetsFromPDF(pdfBuffer, options = {}) {
         : [];
 
       const semester = info.semester || options.semester || null;
+      const rawNameFromInfo = info.name || '';
+      const rawNameFromText = extractNameFromRawText(page.raw_text || '');
+      const rawName = rawNameFromText.length >= rawNameFromInfo.length
+        ? rawNameFromText
+        : (rawNameFromInfo || rawNameFromText);
+      const formattedName = normalizeStudentName(rawName);
+
+      console.log('📛 RAW OCR NAME (info):', rawNameFromInfo);
+      console.log('📛 RAW OCR NAME (text):', rawNameFromText);
+      console.log('📛 RAW OCR NAME (picked):', rawName);
+      console.log('✅ FORMATTED OCR NAME:', formattedName);
 
       const marksheet = {
         regNo: info.register_number || '',
-        studentName: info.name || 'Unknown',
+        studentName: formattedName || rawName || (info.name ? info.name : 'Unknown'),
         programme: info.programme || '',
         examDate: info.exam_month_year || '',
         dob: info.date_of_birth || '--',
@@ -188,5 +279,7 @@ async function matchStudentFromDatabase(regNo, studentName, Student) {
 
 module.exports = {
   extractAllMarksheetsFromPDF,
-  matchStudentFromDatabase
+  matchStudentFromDatabase,
+  formatStudentName,
+  normalizeStudentName
 };

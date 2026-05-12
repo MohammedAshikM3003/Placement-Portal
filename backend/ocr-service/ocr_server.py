@@ -203,22 +203,99 @@ def detect_document_type(full_text):
 # Student Info Extraction
 # ---------------------------------------------------------------------------
 
+def normalize_candidate_name(name=""):
+    cleaned = re.sub(r"\s+", " ", str(name or "")).strip()
+    if not cleaned:
+        return ""
+    lower = cleaned.lower()
+    return re.sub(r"\b\w", lambda m: m.group(0).upper(), lower)
+
+
+def extract_candidate_name(full_text):
+    name_patterns = [
+        re.compile(r"NAME\s*(?:OF\s*(?:THE\s*)?CANDIDATE)?\s*[:;\-]?\s*(.+)", re.I),
+        re.compile(r"STUDENT\s*NAME\s*[:;\-]?\s*(.+)", re.I),
+        re.compile(r"NAME\s*[:;\-]?\s*(.+)", re.I),
+    ]
+
+    lines = [line.strip() for line in str(full_text or "").splitlines() if line.strip()]
+    for index, line in enumerate(lines):
+        for pat in name_patterns:
+            match = pat.search(line)
+            if not match:
+                continue
+
+            raw_name = match.group(1).strip()
+            next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
+            next_upper = next_line.upper()
+
+            if not raw_name and next_line and re.fullmatch(r"[A-Z .]+", next_upper or ""):
+                raw_name = next_line
+            elif next_line:
+                initial_match = re.match(r"^([A-Z])(?:\.|\s)?(?:\d+.*)?$", next_upper or "")
+                if initial_match:
+                    raw_name = f"{raw_name} {initial_match.group(1)}".strip()
+
+            return raw_name, line
+
+    return "", ""
+
+
+def extract_name_from_full_text(full_text):
+    match = re.search(
+        r"NAME\s*(?:OF\s*(?:THE\s*)?CANDIDATE)?\s*[:;\-]?\s*([A-Z .\n]+)",
+        str(full_text or ""),
+        re.I
+    )
+    if not match:
+        return ""
+
+    raw = match.group(1)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    raw = re.split(
+        r"\b(?:REG(?:ISTER)?(?:\s*NO|\s*NUMBER)?|SEMESTER|PROGRAMME|DOB|DATE\s+OF\s+BIRTH|EXAM|SGPA|CGPA|YEAR)\b",
+        raw,
+        1,
+        flags=re.I
+    )[0].strip()
+    raw = re.split(r"\d{6,}", raw, 1)[0].strip()
+    return raw
+
+
 def extract_student_info(full_text):
     """Extract student details from OCR text using regex patterns."""
     info = {}
     upper = full_text.upper()
 
     # Name
-    name_patterns = [
-        r"NAME\s*(?:OF\s*(?:THE\s*)?CANDIDATE)?\s*[:;]\s*(.+)",
-        r"STUDENT\s*NAME\s*[:;]\s*(.+)",
-        r"NAME\s*[:;]\s*(.+)",
-    ]
-    for pat in name_patterns:
-        m = re.search(pat, upper)
-        if m:
-            info["name"] = m.group(1).strip().title()
-            break
+    raw_name, raw_line = extract_candidate_name(full_text)
+    raw_name_alt = ""
+    if raw_name:
+        raw_name_alt = extract_name_from_full_text(full_text)
+        if raw_name_alt and len(raw_name_alt.split()) > len(raw_name.split()):
+            raw_name = raw_name_alt
+
+    if raw_name:
+        logger.info("NAME RAW OCR LINE: %s", raw_line)
+        if raw_name_alt:
+            logger.info("NAME RAW OCR FULLTEXT: %s", raw_name_alt)
+        logger.info("NAME EXTRACTED FULL: %s", raw_name)
+        normalized_name = normalize_candidate_name(raw_name)
+        logger.info("NAME FINAL SAVED: %s", normalized_name)
+        info["name"] = normalized_name
+    else:
+        name_patterns = [
+            r"NAME\s*(?:OF\s*(?:THE\s*)?CANDIDATE)?\s*[:;]\s*(.+)",
+            r"STUDENT\s*NAME\s*[:;]\s*(.+)",
+            r"NAME\s*[:;]\s*(.+)",
+        ]
+        for pat in name_patterns:
+            m = re.search(pat, upper)
+            if m:
+                normalized_name = normalize_candidate_name(m.group(1))
+                logger.info("NAME FINAL SAVED: %s", normalized_name)
+                info["name"] = normalized_name
+                break
 
     # Register Number
     reg_patterns = [

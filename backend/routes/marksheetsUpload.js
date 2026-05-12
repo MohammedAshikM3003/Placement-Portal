@@ -24,7 +24,9 @@ const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 // Service
 const {
   extractAllMarksheetsFromPDF,
-  matchStudentFromDatabase
+  matchStudentFromDatabase,
+  formatStudentName,
+  normalizeStudentName
 } = require('../services/marksheetExtractionService');
 
 const {
@@ -45,6 +47,51 @@ const getAcademicYearFromSemester = (semester) => {
   if (!Number.isFinite(sem) || sem < 1) return null;
   return Math.ceil(sem / 2);
 };
+
+const normalizeNameValue = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+const countNameWords = (value) => {
+  const normalized = normalizeNameValue(value);
+  return normalized ? normalized.split(/\s+/).filter(Boolean).length : 0;
+};
+const pickMostCompleteName = (candidates = []) => {
+  let best = '';
+  for (const candidate of candidates) {
+    const normalized = normalizeNameValue(candidate);
+    if (!normalized) continue;
+    if (!best) {
+      best = normalized;
+      continue;
+    }
+    const bestParts = countNameWords(best);
+    const nextParts = countNameWords(normalized);
+    if (nextParts > bestParts || (nextParts === bestParts && normalized.length > best.length)) {
+      best = normalized;
+    }
+  }
+  return best;
+};
+const buildStudentFullName = (student) => {
+  if (!student) return '';
+
+  const explicitCandidates = [
+    student.studentName,
+    student.fullName,
+    student.name
+  ].filter(Boolean);
+
+  const partCandidates = [
+    student.firstName,
+    student.middleName,
+    student.lastName,
+    student.initials,
+    student.suffix
+  ].filter(Boolean);
+
+  const derived = partCandidates.length > 0 ? partCandidates.join(' ').trim() : '';
+  const allCandidates = derived ? [...explicitCandidates, derived] : explicitCandidates;
+  return pickMostCompleteName(allCandidates);
+};
+
 
 // Middleware - Verify coordinator role
 const coordinatorAuth = (req, res, next) => {
@@ -227,6 +274,17 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         }
 
         // Add student info to marksheet
+        const ocrName = (marksheet.studentName || '').trim();
+        const dbName = buildStudentFullName(match.student);
+        const finalName = dbName || ocrName;
+        const normalizedFinalName = normalizeStudentName(finalName);
+
+        marksheet.studentName = normalizedFinalName;
+
+        console.log('📛 OCR NAME:', ocrName);
+        console.log('📛 DB NAME:', dbName);
+        console.log('✅ FINAL NAME:', normalizedFinalName);
+
         marksheet.studentId = match.student._id;
         marksheet.matched = true;
         marksheet.isValid = validation.isValid;
@@ -433,6 +491,11 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     } catch (autoSaveError) {
       console.error('Semester auto-save failed', autoSaveError);
     }
+
+    console.log('[Marksheet Upload] Response names:', extractedMarksheets.map((m) => ({
+      regNo: m.regNo,
+      studentName: m.studentName
+    })));
 
     res.status(200).json({
       success: true,

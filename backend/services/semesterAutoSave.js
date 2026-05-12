@@ -76,6 +76,8 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       continue;
     }
 
+    console.log('✅ SAVED NAME:', studentName);
+
     console.log('📘 FINAL SEMESTER:', resolvedSemester);
 
     const recordKey = buildRecordKey(regNo, resolvedSemester, year);
