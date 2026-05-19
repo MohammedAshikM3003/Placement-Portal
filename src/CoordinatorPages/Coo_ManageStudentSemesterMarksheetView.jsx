@@ -86,7 +86,7 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     };
 
     const handleBack = () => {
-        navigate(-1);
+        navigate('/coo-ms-semester-detail');
     };
 
     useEffect(() => {

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import useAdminAuth from '../utils/useAdminAuth';
+import Ad_Calendar from '../components/Calendar/Ad_Calendar';
 
 import Navbar from "../components/Navbar/Adnavbar.js";
 import Sidebar from "../components/Sidebar/Adsidebar.js";
 import styles from './AdminCompanyDriveAD.module.css';
 import mongoDBService from '../services/mongoDBService';
+import { clearCompanyDrivesCache } from '../services/landingPageCacheService';
 import Adminicon from "../assets/Adminicon.png";
 
 // Define the initial state for the form
@@ -21,8 +21,8 @@ const initialFormData = {
     package: '',
     companyType: '',
     bondPeriod: '',
-    startingDate: null,
-    endingDate: null,
+    startingDate: '',
+    endingDate: '',
     domain: '',
     hrName: '',
     hrContact: '',
@@ -86,6 +86,18 @@ function Adcompanydrivead({ onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const formatDateForCalendar = (dateValue) => {
+        if (!dateValue) return '';
+        const dateObj = dateValue instanceof Date ? dateValue : new Date(dateValue);
+        if (Number.isNaN(dateObj.getTime())) {
+            return '';
+        }
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const formatDateForInput = (dateValue) => {
         if (!dateValue) return null;
         const dateObj = new Date(dateValue);
@@ -125,8 +137,8 @@ function Adcompanydrivead({ onLogout }) {
             package: drive.package || '',
             companyType: drive.companyType || '',
             bondPeriod: drive.bondPeriod || '',
-            startingDate: formatDateForInput(drive.startingDate),
-            endingDate: formatDateForInput(drive.endingDate),
+            startingDate: formatDateForCalendar(drive.startingDate),
+            endingDate: formatDateForCalendar(drive.endingDate),
             domain: drive.domain || '',
             hrName: drive.hrName || '',
             hrContact: drive.hrContact || '',
@@ -291,6 +303,17 @@ function Adcompanydrivead({ onLogout }) {
         });
     };
 
+    const handleCalendarDateChange = (fieldName, dateValue) => {
+        setFormData(prev => ({ ...prev, [fieldName]: dateValue }));
+        if (validationWarnings[fieldName]) {
+            setValidationWarnings(prev => {
+                const updated = { ...prev };
+                delete updated[fieldName];
+                return updated;
+            });
+        }
+    };
+
     const handleDiscard = () => {
         navigate('/admin-company-drive');
     };
@@ -380,6 +403,9 @@ function Adcompanydrivead({ onLogout }) {
             // Format dates to simple YYYY-MM-DD string
             const formatDateForSubmit = (date) => {
                 if (!date) return '';
+                if (typeof date === 'string') {
+                    return date;
+                }
                 if (date instanceof Date && !isNaN(date.getTime())) {
                     // Format as YYYY-MM-DD using local timezone to avoid UTC conversion
                     const year = date.getFullYear();
@@ -411,6 +437,20 @@ function Adcompanydrivead({ onLogout }) {
                 await mongoDBService.createCompanyDrive(payload);
                 setSuccessMode('create');
             }
+
+            clearCompanyDrivesCache();
+            window.dispatchEvent(new Event('companyDrivesUpdated'));
+            if (typeof BroadcastChannel !== 'undefined') {
+                const companyDrivesChannel = new BroadcastChannel('company-drives-channel');
+                companyDrivesChannel.postMessage({ type: 'companyDrivesUpdated', timestamp: Date.now() });
+                companyDrivesChannel.close();
+            }
+            try {
+                localStorage.setItem('companyDrivesUpdatedSignal', Date.now().toString());
+            } catch (storageError) {
+                console.warn('Unable to write company drives update signal:', storageError.message);
+            }
+
             setShowSuccessPopup(true);
         } catch (error) {
             console.error('Error adding drive:', error);
@@ -585,17 +625,20 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <input
-                                        type="number"
-                                        name="package"
-                                        value={formData.package}
-                                        onChange={handleInputChange}
-                                        placeholder="Package :"
-                                        className={styles['Admin-Drive-AD-input']}
-                                        required
-                                        readOnly={viewMode}
-                                        disabled={viewMode}
-                                    />
+                                    <div className={styles['Admin-Drive-AD-input-with-chip']}>
+                                        <input
+                                            type="number"
+                                            name="package"
+                                            value={formData.package}
+                                            onChange={handleInputChange}
+                                            placeholder="Package :"
+                                            className={styles['Admin-Drive-AD-input']}
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                        <span className={styles['Admin-Drive-AD-chip']}>LPA</span>
+                                    </div>
                                     {validationWarnings.package && (
                                         <>
                                             <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
@@ -633,18 +676,23 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <input
-                                        type="number"
-                                        name="bondPeriod"
-                                        value={formData.bondPeriod}
-                                        onChange={handleInputChange}
-                                        placeholder="Bond Period :"
-                                        className={styles['Admin-Drive-AD-input']}
-                                        min="0"
-                                        required
-                                        readOnly={viewMode}
-                                        disabled={viewMode}
-                                    />
+                                    <div className={styles['Admin-Drive-AD-input-with-chip']}>
+                                        <input
+                                            type="number"
+                                            name="bondPeriod"
+                                            value={formData.bondPeriod}
+                                            onChange={handleInputChange}
+                                            placeholder="Bond Period :"
+                                            className={styles['Admin-Drive-AD-input']}
+                                            min="0"
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                        <span className={styles['Admin-Drive-AD-chip']}>
+                                            {formData.bondPeriod > 1 ? 'Years' : 'Year'}
+                                        </span>
+                                    </div>
                                     {validationWarnings.bondPeriod && (
                                         <>
                                             <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
@@ -656,33 +704,13 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <div className={styles['Admin-Drive-AD-datepicker-wrapper']}>
-                                        <DatePicker
-                                            selected={formData.startingDate}
-                                            onChange={(date) => {
-                                                setFormData(prev => ({ ...prev, startingDate: date }));
-                                                if (validationWarnings.startingDate) {
-                                                    setValidationWarnings(prev => {
-                                                        const updated = { ...prev };
-                                                        delete updated.startingDate;
-                                                        return updated;
-                                                    });
-                                                }
-                                            }}
-                                            dateFormat="dd-MM-yyyy"
-                                            placeholderText="Start Date"
-                                            className={styles['Admin-Drive-AD-input']}
-                                            showPopperArrow={false}
-                                            showMonthDropdown
-                                            showYearDropdown
-                                            dropdownMode="select"
-                                            yearDropdownItemNumber={7}
-                                            scrollableYearDropdown
-                                            minDate={new Date(new Date().getFullYear() - 1, 0, 1)}
-                                            maxDate={new Date(new Date().getFullYear() + 5, 11, 31)}
-                                            required
-                                            disabled={viewMode}
-                                            readOnly={viewMode}
+                                    <div
+                                        className={styles['Admin-Drive-AD-datepicker-wrapper']}
+                                        style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
+                                    >
+                                        <Ad_Calendar
+                                            value={formData.startingDate}
+                                            onChange={(dateValue) => handleCalendarDateChange('startingDate', dateValue)}
                                         />
                                     </div>
                                     {validationWarnings.startingDate && (
@@ -696,33 +724,13 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <div className={styles['Admin-Drive-AD-datepicker-wrapper']}>
-                                        <DatePicker
-                                            selected={formData.endingDate}
-                                            onChange={(date) => {
-                                                setFormData(prev => ({ ...prev, endingDate: date }));
-                                                if (validationWarnings.endingDate) {
-                                                    setValidationWarnings(prev => {
-                                                        const updated = { ...prev };
-                                                        delete updated.endingDate;
-                                                        return updated;
-                                                    });
-                                                }
-                                            }}
-                                            dateFormat="dd-MM-yyyy"
-                                            placeholderText="End Date"
-                                            className={styles['Admin-Drive-AD-input']}
-                                            showPopperArrow={false}
-                                            showMonthDropdown
-                                            showYearDropdown
-                                            dropdownMode="select"
-                                            yearDropdownItemNumber={7}
-                                            scrollableYearDropdown
-                                            minDate={new Date(new Date().getFullYear() - 1, 0, 1)}
-                                            maxDate={new Date(new Date().getFullYear() + 5, 11, 31)}
-                                            required
-                                            disabled={viewMode}
-                                            readOnly={viewMode}
+                                    <div
+                                        className={styles['Admin-Drive-AD-datepicker-wrapper']}
+                                        style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
+                                    >
+                                        <Ad_Calendar
+                                            value={formData.endingDate}
+                                            onChange={(dateValue) => handleCalendarDateChange('endingDate', dateValue)}
                                         />
                                     </div>
                                     {validationWarnings.endingDate && (
@@ -777,10 +785,7 @@ function Adcompanydrivead({ onLogout }) {
                                             <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                         </svg>
                                         <div className={styles['Admin-Drive-AD-btn-text']}>
-                                            <span>{isLoading ? (isEditing ? 'Updating...' : 'Adding...') : isEditing ? 'Update Drive' : 'Add Drive'}</span><br/>
-                                            <span className={styles['Admin-Drive-AD-btn-subtitle1']}>
-                                                {isEditing ? 'Save changes to the drive' : 'Add drive to the placements'}
-                                            </span>
+                                            <span>{isLoading ? (isEditing ? 'Updating...' : 'Adding...') : isEditing ? 'Update Drive' : 'Add Drive'}</span>
                                         </div>
                                     </button>
 
@@ -797,10 +802,7 @@ function Adcompanydrivead({ onLogout }) {
                                                 <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                             </svg>
                                             <div className={styles['Admin-Drive-AD-btn-text']}>
-                                                <span>{isEditing ? 'Reset' : 'Discard'}</span><br/>
-                                                <span className={styles['Admin-Drive-AD-btn-subtitle']}>
-                                                    {isEditing ? 'Revert to existing details' : 'Cancel changes'}
-                                                </span>
+                                                <span>{isEditing ? 'Reset' : 'Discard'}</span>
                                             </div>
                                         </button>
                                     </>
@@ -876,7 +878,10 @@ function Adcompanydrivead({ onLogout }) {
 
                                 <div className={styles['Admin-Drive-AD-detail-row']}>
                                     <label>Package</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.package || ''}</div>
+                                    <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                        <span style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', fontSize: '0.86rem', fontWeight: '500', color: '#666666', minWidth: 0 }}>{formData.package || ''}</span>
+                                        <span className={styles['Admin-Drive-AD-detail-chip']}>LPA</span>
+                                    </div>
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-detail-row']}>
@@ -886,7 +891,12 @@ function Adcompanydrivead({ onLogout }) {
 
                                 <div className={styles['Admin-Drive-AD-detail-row']}>
                                     <label>Bond Period</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.bondPeriod || ''}</div>
+                                    <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                        <span style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', fontSize: '0.86rem', fontWeight: '500', color: '#666666', minWidth: 0 }}>{formData.bondPeriod || ''}</span>
+                                        <span className={styles['Admin-Drive-AD-detail-chip']}>
+                                            {formData.bondPeriod > 1 ? 'Years' : 'Year'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

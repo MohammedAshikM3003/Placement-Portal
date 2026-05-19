@@ -250,6 +250,67 @@
     border-color: #333 transparent transparent transparent;
 }
 
+/* Input with Chip Container - Following percentageInputWrapper pattern */
+.Admin-Drive-AD-input-with-chip {
+    display: flex;
+    width: 100%;
+    border: 2px solid #c8e6c9;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    height: 44px;
+    align-items: stretch;
+    transition: all 0.3s ease;
+}
+
+.Admin-Drive-AD-input-with-chip:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-Drive-AD-input-with-chip .Admin-Drive-AD-input {
+    flex: 1;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    color: #333333;
+    font-family: inherit;
+    min-width: 0;
+    height: 100%;
+    line-height: 1.2;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.Admin-Drive-AD-input-with-chip .Admin-Drive-AD-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.Admin-Drive-AD-input-with-chip .Admin-Drive-AD-input::placeholder {
+    color: #aaaaaa;
+}
+
+/* Chip Badge Styling - Like percentSuffix */
+.Admin-Drive-AD-chip {
+    min-width: 60px;
+    background-color: #4EA24E;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 12px;
+    white-space: nowrap;
+    user-select: none;
+}
+
 /* DatePicker Styling */
 .Admin-Drive-AD-datepicker-wrapper {
     width: 100%;
@@ -625,7 +686,7 @@
 /* Action Buttons */
 .Admin-Drive-AD-action-buttons {
     display: flex;
-    gap: 25px;
+    gap: 10px;
     justify-content: center;
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -641,9 +702,9 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 12px 20px;
+    padding: 15px 15px;
     border: none;
-    border-radius: 25px;
+    border-radius: 10px;
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
@@ -673,8 +734,8 @@
 }
 
 .Admin-Drive-AD-btn-icon {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
 }
 
@@ -782,6 +843,43 @@
 .Admin-Drive-AD-detail-value:hover {
     border-color: #4EA24E;
     box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+/* Detail Value with Chip - Following detail styling */
+.Admin-Drive-AD-detail-value-with-chip {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    border: 2px solid #c8e6c9;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    height: 44px;
+    align-items: stretch;
+    transition: all 0.3s ease;
+}
+
+.Admin-Drive-AD-detail-value-with-chip:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+/* Detail Chip Badge */
+.Admin-Drive-AD-detail-chip {
+    min-width: 60px;
+    background-color: #4EA24E;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    user-select: none;
+    line-height: 1;
 }
 
  /* Responsive Design */
@@ -977,8 +1075,8 @@
 
     .Admin-Drive-AD-btn-icon {
         flex-shrink: 0;
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
         position: absolute;
         left: 18px;
     }
@@ -991,7 +1089,6 @@
         gap: 0px;
         width: 100%;
         position:relative;
-        top:10px;
         left:15px;
 
     }
@@ -1090,31 +1187,34 @@
 
     .Admin-Drive-AD-add-btn,
     .Admin-Drive-AD-discard-btn {
-        padding: 16px 16px;
-        width: 100%;
-        box-sizing: border-box;
-        justify-content: center;
-        gap: 12px;
-        align-items: center;
-        position: relative;
-    }
+            padding: 8px 10px;
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+            gap: 6px;
+            align-items: center;
+            position: relative;
+            min-height: 36px;
+            font-size: 0.92rem;
+        }
 
     .Admin-Drive-AD-btn-icon {
-        width: 50px;
-        height: 50px;
-        flex-shrink: 0;
-        position: absolute;
-        left: 16px;
-    }
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            position: absolute;
+            left: 10px;
+        }
 
     .Admin-Drive-AD-btn-text {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        width: 100%;
-    }
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            width: 100%;
+            padding-left: 38px;
+        }
 
     .Admin-Drive-AD-btn-title {
         font-size: 1.2rem;
@@ -1125,12 +1225,8 @@
 
     .Admin-Drive-AD-btn-subtitle,
     .Admin-Drive-AD-btn-subtitle1 {
-        white-space: nowrap;
-        line-height: 1.1;
-        font-size: 0.7rem;
-        font-weight: 400;
-        text-align: center;
-    }
+            display: none;
+        }
 }
 
 

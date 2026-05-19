@@ -6,6 +6,7 @@ import Sidebar from '../components/Sidebar/Cosidebar.js';
 import Adminicon from '../assets/Adminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig.js';
 import { SuccessAlert, ErrorAlert, useAlert } from '../components/alerts';
+import SemesterMarksheetConfirmation from '../components/alerts/SemesterMarksheetConfirmation';
 import styles from './Coo_MS_Editpage.module.css';
 
 const GRADE_POINTS = {
@@ -103,7 +104,38 @@ function CooMsEditPage({ onLogout, onViewChange }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [changedSubjects, setChangedSubjects] = useState([]);
   const { alerts, showSuccess, showError, closeAlert } = useAlert();
+
+  // Detect changed subjects
+  const detectChangedSubjects = () => {
+    const changed = [];
+    
+    subjects.forEach((currentSubject) => {
+      const originalSubject = initialSubjectsRef.current.find(
+        (orig) => orig.id === currentSubject.id || orig.code === currentSubject.code
+      );
+      
+      if (originalSubject) {
+        const oldGrade = originalSubject.grade || 'U';
+        const newGrade = currentSubject.grade || 'U';
+        
+        if (oldGrade !== newGrade) {
+          console.log(`📘 Subject changed: ${currentSubject.name} (${oldGrade} → ${newGrade})`);
+          changed.push({
+            subjectName: currentSubject.name,
+            oldGrade,
+            newGrade,
+            id: currentSubject.id
+          });
+        }
+      }
+    });
+    
+    console.log('📘 Changed subjects:', changed);
+    return changed;
+  };
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((open) => !open);
@@ -188,26 +220,39 @@ function CooMsEditPage({ onLogout, onViewChange }) {
   }, [student, activeSubjectId, location.state?.semesterRecord]);
 
   const handleDiscard = () => {
-    const returnPath = location.state?.returnPath || '/coo-manage-students-semester/marksheet';
-    const payload = {
-      refresh: true,
-      refreshToken: Date.now(),
-      student,
-      subjects: initialSubjectsRef.current,
-      semesterRecord: location.state?.semesterRecord || null,
-      selectedSubjectId: activeSubjectId
-    };
-
-    try {
-      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify(payload));
-    } catch (error) {
-      console.warn('⚠️ Unable to cache semester view payload:', error.message);
-    }
-
-    navigate(returnPath, { state: payload });
+    const studentData = student;
+    navigate('/coo-manage-students-semester/marksheet', {
+      state: {
+        regNo: studentData.registerNumber || studentData.regNo || '',
+        semester: studentData.semester || studentData.currentSemester || '',
+        year: studentData.year || studentData.currentYear || '',
+        refresh: true,
+        discard: true,
+        updatedAt: Date.now()
+      }
+    });
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
+    // Detect changes
+    const changed = detectChangedSubjects();
+    
+    if (changed.length === 0) {
+      showError('No Changes', 'No grade changes detected');
+      return;
+    }
+    
+    // Show confirmation modal
+    setChangedSubjects(changed);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmationDiscard = () => {
+    setShowConfirmation(false);
+    setChangedSubjects([]);
+  };
+
+  const performSave = async () => {
     if (isSaving) return;
 
     setIsSaving(true);
@@ -273,6 +318,17 @@ function CooMsEditPage({ onLogout, onViewChange }) {
       }
 
       const updatedRecord = data?.updatedRecord || null;
+      const updatedData = {
+        ...(updatedRecord || {}),
+        regNo: updatedRecord?.regNo || regNo,
+        registerNumber: updatedRecord?.registerNumber || regNo,
+        studentName: updatedRecord?.studentName || studentName,
+        year: updatedRecord?.year || year,
+        semester: updatedRecord?.semester || semester,
+        sgpa: updatedRecord?.sgpa || sgpa,
+        cgpa: updatedRecord?.cgpa || cgpa,
+        subjects: updatedRecord?.subjects || normalizedSubjects
+      };
       if (updatedRecord?.subjects) {
         const refreshedSubjects = normalizeSubjects(updatedRecord.subjects);
         const selectedKey = activeSubject?.code || activeSubject?.id || activeSubjectId;
@@ -288,8 +344,31 @@ function CooMsEditPage({ onLogout, onViewChange }) {
         }
       }
 
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('current_student_marksheet');
+          localStorage.setItem('current_student_marksheet', JSON.stringify(updatedData));
+        } catch (storageError) {
+          console.warn('⚠️ Unable to update marksheet cache:', storageError.message);
+        }
+      }
+
       setSaveMessage('Semester record updated successfully.');
       showSuccess('Updated', 'Semester record updated successfully.');
+      
+      console.log('✅ Semester changes confirmed');
+      setShowConfirmation(false);
+      setChangedSubjects([]);
+
+      navigate('/coo-manage-students-semester/marksheet', {
+        state: {
+          regNo,
+          semester,
+          year,
+          refresh: true,
+          updatedAt: Date.now()
+        }
+      });
     } catch (error) {
       const message = error.message || 'Failed to update semester record';
       setSaveError(message);
@@ -331,6 +410,14 @@ function CooMsEditPage({ onLogout, onViewChange }) {
         onClose={() => closeAlert('error')}
         title={alerts.error.title}
         message={alerts.error.message}
+      />
+      <SemesterMarksheetConfirmation
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onSave={performSave}
+        onDiscard={handleConfirmationDiscard}
+        changedSubjects={changedSubjects}
+        isSaving={isSaving}
       />
       <div className={styles.main}>
         <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />

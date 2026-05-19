@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
 import navbarStyles from './components/Navbar/LandingNavbar.module.css';
-import { fetchAllLandingData, clearCollegeImagesCache, fetchCollegeImagesPublic, getCachedLandingData } from './services/landingPageCacheService';
+import { fetchAllLandingData, clearCollegeImagesCache, clearCompanyDrivesCache, fetchCollegeImagesPublic, fetchCompanyDrives, getCachedLandingData } from './services/landingPageCacheService';
 import { PlacedStudentsSkeleton, DrivesSkeleton, BannerSkeleton, FooterBannerSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import { API_BASE_URL } from './utils/apiConfig';
@@ -372,17 +372,52 @@ const PlacementSection = ({ companyDrivesData, isMobile }) => {
     }
 
     const drives = companyDrivesData.drives || [];
+
+    const parseDriveDate = (dateValue) => {
+      if (!dateValue) return null;
+
+      if (dateValue instanceof Date && !Number.isNaN(dateValue.getTime())) {
+        return dateValue;
+      }
+
+      if (typeof dateValue === 'string') {
+        // Handle DD-MM-YYYY explicitly.
+        const ddmmyyyy = dateValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (ddmmyyyy) {
+          const [, day, month, year] = ddmmyyyy;
+          const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+          return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+      }
+
+      const parsed = new Date(dateValue);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+    
+    // Get today's date at start of day (midnight) for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Filter to show only today's and future drives (not expired)
+    const futureDrives = drives.filter(drive => {
+      if (!drive.startingDate) return false;
+      const driveDate = parseDriveDate(drive.startingDate);
+      if (!driveDate) return false;
+      driveDate.setHours(0, 0, 0, 0);
+      return driveDate.getTime() >= today.getTime();
+    });
     
     // Sort drives by startingDate in ascending order (earliest first)
-    const sortedDrives = [...drives].sort((a, b) => {
-      const dateA = a.startingDate ? new Date(a.startingDate) : new Date('9999-12-31');
-      const dateB = b.startingDate ? new Date(b.startingDate) : new Date('9999-12-31');
+    const sortedDrives = futureDrives.sort((a, b) => {
+      const dateA = parseDriveDate(a.startingDate) || new Date('9999-12-31');
+      const dateB = parseDriveDate(b.startingDate) || new Date('9999-12-31');
       return dateA - dateB;
     });
 
     const formatDate = (dateString) => {
       if (!dateString) return 'TBA';
-      const date = new Date(dateString);
+      const date = parseDriveDate(dateString);
+      if (!date) return 'TBA';
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const year = date.getFullYear();
@@ -479,9 +514,12 @@ const teamMembers = [
     email: 'singhravinder9680@gmail.com'
   },
   {
-    name: 'Gourinath S',
+    name: 'Gowrinath S',
     role: 'Coordinator Frontend Developer',
     color: '#D23B42'
+    ,
+    linkedin: 'https://www.linkedin.com/in/gowrinathsivkumar?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
+    email: 'gowrinathsivkumar2427@gmail.com'
   },
   {
     name: 'Kiruthika P',
@@ -718,6 +756,7 @@ const LandingPageContent = () => {
   const [collegeImages, setCollegeImages] = useState(cached.collegeImages);
   const [placedStudentsData, setPlacedStudentsData] = useState(cached.placedStudents);
   const [companyDrivesData, setCompanyDrivesData] = useState(cached.companyDrives);
+  const companyDrivesSignatureRef = useRef(JSON.stringify(cached.companyDrives?.drives || []));
   const [imagesLoading, setImagesLoading] = useState(!hasCachedImages);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -725,6 +764,15 @@ const LandingPageContent = () => {
   });
   const [footerBannerClicks, setFooterBannerClicks] = useState(0);
   const [topBannerClicks, setTopBannerClicks] = useState(0);
+
+  const applyCompanyDrivesData = (nextDrivesData) => {
+    const normalized = nextDrivesData || { drives: [] };
+    const nextSignature = JSON.stringify(normalized.drives || []);
+    if (nextSignature !== companyDrivesSignatureRef.current) {
+      companyDrivesSignatureRef.current = nextSignature;
+      setCompanyDrivesData(normalized);
+    }
+  };
 
   useEffect(() => {
     // Ensure old persisted counters from previous builds never carry over.
@@ -777,7 +825,7 @@ const LandingPageContent = () => {
         
         // Set all state at once - React batches these updates
         setPlacedStudentsData(placedStudents);
-        setCompanyDrivesData(companyDrives);
+        applyCompanyDrivesData(companyDrives);
         if (images) setCollegeImages(images);
       } catch (error) {
         console.error('Landing page data fetch error:', error);
@@ -814,6 +862,29 @@ const LandingPageContent = () => {
         setImagesLoading(false);
       }
     };
+
+    const handleCompanyDrivesUpdate = async () => {
+      console.log('🔔 Company drives updated event received - refreshing upcoming drives...');
+      try {
+        clearCompanyDrivesCache();
+        const drives = await fetchCompanyDrives({ forceFresh: true });
+        applyCompanyDrivesData(drives);
+        console.log('✅ Upcoming drives refreshed on landing page');
+      } catch (error) {
+        console.error('Failed to refresh company drives:', error);
+      }
+    };
+
+    let companyDrivesChannel = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      companyDrivesChannel = new BroadcastChannel('company-drives-channel');
+      companyDrivesChannel.onmessage = (event) => {
+        if (event?.data?.type === 'companyDrivesUpdated') {
+          console.log('🔔 Broadcast company drives update detected');
+          handleCompanyDrivesUpdate();
+        }
+      };
+    }
     
     // Cross-tab sync: listen for localStorage changes from admin profile (different tab)
     const handleStorageChange = (e) => {
@@ -822,14 +893,58 @@ const LandingPageContent = () => {
         console.log('🔔 Cross-tab college images update detected');
         handleCollegeImagesUpdate();
       }
+
+      if (e.key === 'companyDrivesUpdatedSignal') {
+        console.log('🔔 Cross-tab company drives update detected');
+        handleCompanyDrivesUpdate();
+      }
     };
     
     window.addEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+    window.addEventListener('companyDrivesUpdated', handleCompanyDrivesUpdate);
     window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('collegeImagesUpdated', handleCollegeImagesUpdate);
+      window.removeEventListener('companyDrivesUpdated', handleCompanyDrivesUpdate);
       window.removeEventListener('storage', handleStorageChange);
+      if (companyDrivesChannel) {
+        companyDrivesChannel.close();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const syncCompanyDrives = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+
+      try {
+        const drives = await fetchCompanyDrives({ forceFresh: true });
+        if (isCancelled) return;
+        applyCompanyDrivesData(drives);
+      } catch (error) {
+        // Keep polling resilient; event-based refresh path still works.
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncCompanyDrives();
+      }
+    };
+
+    syncCompanyDrives();
+    const intervalId = window.setInterval(syncCompanyDrives, 1000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

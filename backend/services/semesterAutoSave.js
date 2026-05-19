@@ -39,12 +39,24 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
 
   for (const [index, marksheet] of marksheets.entries()) {
     const regNo = (marksheet.regNo || marksheet.registerNumber || '').toString().trim();
-    const studentName = (marksheet.studentName || marksheet.name || '').toString().trim();
+    const studentNameRaw = (marksheet.studentName || marksheet.name || '').toString().trim();
+    const studentName = studentNameRaw || 'Unknown';
     const resolvedSemester = resolveSemester(marksheet.semester, semester);
     const year = extractExamYear(marksheet.examDate || marksheet.exam_month_year || marksheet.examYear || marksheet.year);
     const subjects = Array.isArray(marksheet.subjects) ? marksheet.subjects : [];
     const matchedStatus = marksheet.matched;
     const sgpaValue = marksheet.sgpa ?? '0.0';
+    const cgpaValue = marksheet.cgpa ?? marksheet.overallCgpa ?? '0.0';
+    const saveAllowed = Boolean(regNo);
+
+    console.log('================================');
+    console.log('📘 STUDENT:', studentNameRaw || '(missing)');
+    console.log('🆔 REG NO:', regNo || '(missing)');
+    console.log('📚 SEMESTER:', resolvedSemester || '(missing)');
+    console.log('📄 SUBJECT COUNT:', subjects.length);
+    console.log('📊 SGPA:', sgpaValue);
+    console.log('📊 CGPA:', cgpaValue);
+    console.log('📦 READY FOR SAVE:', saveAllowed);
 
     console.log('[Semester AutoSave] Record candidate:', {
       index,
@@ -58,22 +70,25 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       sgpa: sgpaValue
     });
 
-    if (matchedStatus === false) {
-      console.warn(`❌ STUDENT MATCH FAILED: ${regNo || 'UNKNOWN'}`);
+    if (!regNo) {
+      console.warn('❌ SKIPPED: Missing register number');
       continue;
+    }
+
+    if (matchedStatus === false) {
+      console.warn('⚠️ STUDENT MATCH FAILED: continuing insert');
+    }
+
+    if (!studentNameRaw) {
+      console.warn('⚠️ MISSING STUDENT NAME: using fallback');
+    }
+
+    if (!resolvedSemester) {
+      console.warn('⚠️ MISSING SEMESTER: continuing insert');
     }
 
     if (!subjects.length) {
-      console.warn('❌ SUBJECTS EMPTY');
-    }
-
-    if (!regNo || !studentName || !resolvedSemester) {
-      console.warn('[Semester AutoSave] Skipping record due to missing fields', {
-        regNo,
-        studentName,
-        semester: resolvedSemester
-      });
-      continue;
+      console.warn('⚠️ EMPTY SUBJECTS: continuing insert');
     }
 
     console.log('✅ SAVED NAME:', studentName);
@@ -124,6 +139,7 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
     };
 
     recordsToInsert.push(payload);
+    console.log('📦 RECORD ADDED:', regNo);
   }
 
   console.log('📦 FINAL SEMESTER RECORDS:', JSON.stringify(recordsToInsert, null, 2));
@@ -136,11 +152,14 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
 
   for (const payload of recordsToInsert) {
     try {
-      const existing = await SemesterRecord.findOne({
+      const duplicateQuery = {
         regNo: payload.regNo,
         semester: payload.semester,
         year: payload.year
-      }).lean();
+      };
+      console.log('🔍 DUPLICATE CHECK:', duplicateQuery);
+
+      const existing = await SemesterRecord.findOne(duplicateQuery).lean();
 
       if (existing) {
         console.warn('⚠️ DUPLICATE RECORD FOUND, updating existing', {
@@ -151,7 +170,7 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       }
 
       const saved = await SemesterRecord.findOneAndUpdate(
-        { regNo: payload.regNo, semester: payload.semester, year: payload.year },
+        duplicateQuery,
         { $set: payload },
         { upsert: true, new: true }
       ).lean();
@@ -163,9 +182,24 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
         year: payload.year
       });
     } catch (error) {
-      console.error('❌ Semester auto-save insert failed:', error);
+      if (error?.code === 11000) {
+        console.error('❌ SKIPPED: Duplicate semester record', {
+          regNo: payload.regNo,
+          semester: payload.semester,
+          year: payload.year,
+          recordKey: payload.recordKey
+        });
+      } else if (error?.name === 'ValidationError') {
+        console.error('❌ SKIPPED: Validation failed', error.errors || error.message);
+      } else {
+        console.error('❌ SKIPPED: Mongo insert error', error);
+      }
     }
   }
+
+  console.log('📊 EXTRACTED:', marksheets.length);
+  console.log('📊 PREPARED:', recordsToInsert.length);
+  console.log('📊 INSERTED:', savedRecords.length);
 
   return { saved: savedRecords.length, records: savedRecords };
 };

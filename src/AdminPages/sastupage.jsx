@@ -60,7 +60,12 @@ function SastuPage({ onLogout, onViewChange }) {
   return (
     <div className={styles.pageShell}>
       <Sanavbar onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
-      <Sasidebar isOpen={isSidebarOpen} onLogout={handleLogout} onViewChange={onViewChange} />
+      <Sasidebar
+        isOpen={isSidebarOpen}
+        onLogout={handleLogout}
+        onViewChange={() => {}}
+        currentView="admin-student-database"
+      />
 
       {isSidebarOpen ? <button type="button" className={styles.backdrop} onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar" /> : null}
 

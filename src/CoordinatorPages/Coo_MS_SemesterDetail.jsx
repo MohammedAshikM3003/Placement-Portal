@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../utils/apiConfig.js';
 import styles from './Coo_MS_SemesterDetail.module.css';
 
 const SEMESTER_DETAIL_CACHE_KEY = 'coo-ms-semester-detail-cache';
+const SEMESTER_DETAIL_LOCAL_CACHE_KEY = 'semester_detail_cache';
 
 const readSemesterDetailCache = () => {
   if (typeof window === 'undefined') {
@@ -86,7 +87,11 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
     previewUrl = '', 
     fileType = 'application/pdf',
     extractedStudents = [],
-    extractedPdfName = ''
+    extractedPdfName = '',
+    selectedDepartment = '',
+    selectedSemester = '',
+    selectedYear = '',
+    extractedData = null
   } = hydratedState || {};
   const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState(previewUrl || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,6 +204,49 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   }, [location.state]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      const savedCache = localStorage.getItem(SEMESTER_DETAIL_LOCAL_CACHE_KEY);
+      if (!savedCache) {
+        return;
+      }
+
+      const parsed = JSON.parse(savedCache);
+      console.log('📦 Restoring semester cache:', parsed);
+
+      if (parsed?.extractedStudents && parsed.extractedStudents.length > 0) {
+        setHydratedState((current) => {
+          const currentStudents = current?.extractedStudents;
+          if (Array.isArray(currentStudents) && currentStudents.length > 0) {
+            return current;
+          }
+
+          return {
+            ...current,
+            extractedStudents: parsed.extractedStudents,
+            fileName: parsed.uploadedFileName || parsed.fileName || current?.fileName || 'No file selected',
+            extractedPdfName: parsed.extractedPdfName || current?.extractedPdfName || '',
+            previewUrl: parsed.previewUrl || current?.previewUrl || '',
+            fileType: parsed.fileType || current?.fileType || 'application/pdf',
+            subjects: parsed.subjects || current?.subjects || [],
+            selectedDepartment: parsed.selectedDepartment || current?.selectedDepartment || '',
+            selectedSemester: parsed.selectedSemester || current?.selectedSemester || '',
+            selectedYear: parsed.selectedYear || current?.selectedYear || '',
+            extractedData: parsed.extractedData || current?.extractedData || null
+          };
+        });
+
+        console.log('✅ Semester detail restored from cache');
+      }
+    } catch (error) {
+      console.error('❌ Failed to restore semester cache', error);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!Array.isArray(extractedStudents) || extractedStudents.length === 0) {
       return;
     }
@@ -241,12 +289,66 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   const arrearStudents = totalStudents - allClearStudents;
   const allSubmitted = displayStudents.length > 0 && displayStudents.every((student) => student.submitted);
 
+  useEffect(() => {
+    if (!Array.isArray(extractedStudents) || extractedStudents.length === 0) {
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const cacheData = {
+      extractedStudents,
+      uploadedFileName: fileName,
+      stats: {
+        totalStudents,
+        allClearStudents,
+        arrearStudents
+      },
+      selectedDepartment,
+      selectedSemester,
+      selectedYear,
+      extractedData,
+      fileName,
+      extractedPdfName: effectivePdfName,
+      previewUrl,
+      fileType,
+      subjects,
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem(SEMESTER_DETAIL_LOCAL_CACHE_KEY, JSON.stringify(cacheData));
+    console.log('📦 Semester detail cache saved:', extractedStudents.length);
+  }, [
+    extractedStudents,
+    fileName,
+    totalStudents,
+    allClearStudents,
+    arrearStudents,
+    selectedDepartment,
+    selectedSemester,
+    selectedYear,
+    extractedData,
+    effectivePdfName,
+    previewUrl,
+    fileType,
+    subjects
+  ]);
+
   const handleBack = () => {
     navigate('/coo-manage-students-semester');
   };
 
   const handleRemoveFile = () => {
     clearSemesterDetailCache();
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(SEMESTER_DETAIL_LOCAL_CACHE_KEY);
+      } catch (error) {
+        console.warn('Failed to clear semester detail local cache:', error);
+      }
+    }
     setResolvedPreviewUrl('');
     setHydratedState({});
   };

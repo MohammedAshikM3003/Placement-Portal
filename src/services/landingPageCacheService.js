@@ -152,15 +152,21 @@ const fetchPlacedStudents = async () => {
 /**
  * Fetch company drives (public data)
  */
-const fetchCompanyDrives = async () => {
+export const fetchCompanyDrives = async (options = {}) => {
+  const { forceFresh = false } = options;
   const key = CACHE_KEYS.COMPANY_DRIVES;
 
-  if (isCacheFresh(key, CACHE_DURATION.COMPANY_DRIVES)) {
+  if (!forceFresh && isCacheFresh(key, CACHE_DURATION.COMPANY_DRIVES)) {
     return getCached(key);
   }
 
   try {
-    const data = await fastFetch(`${API_BASE_URL}/company-drives`);
+    const drivesUrl = forceFresh
+      ? `${API_BASE_URL}/company-drives?t=${Date.now()}`
+      : `${API_BASE_URL}/company-drives`;
+    const data = await fastFetch(drivesUrl, {
+      cache: forceFresh ? 'no-store' : 'default',
+    });
     
     // Validate that essential fields exist for landing page
     if (data?.drives?.length > 0) {
@@ -196,6 +202,23 @@ export const clearCollegeImagesCache = () => {
       : '✅ Landing page college images cache cleared (was already empty)');
   } catch (e) {
     console.warn('⚠️ Failed to clear college images cache:', e);
+  }
+};
+
+/**
+ * Clear company drives cache (used when admin adds or updates a drive)
+ */
+export const clearCompanyDrivesCache = () => {
+  try {
+    const hadCache = memoryCache.has(CACHE_KEYS.COMPANY_DRIVES) || sessionStorage.getItem(CACHE_KEYS.COMPANY_DRIVES);
+    sessionStorage.removeItem(CACHE_KEYS.COMPANY_DRIVES);
+    sessionStorage.removeItem(CACHE_KEYS.COMPANY_DRIVES_TIME);
+    memoryCache.delete(CACHE_KEYS.COMPANY_DRIVES);
+    console.log(hadCache
+      ? '✅ Landing page company drives cache cleared (had stale data)'
+      : '✅ Landing page company drives cache cleared (was already empty)');
+  } catch (e) {
+    console.warn('⚠️ Failed to clear company drives cache:', e);
   }
 };
 
@@ -355,6 +378,7 @@ const landingPageCacheService = {
   warmUpBackend,
   clearLandingCache,
   clearCollegeImagesCache,
+  clearCompanyDrivesCache,
   getCachedLandingData,
 };
 

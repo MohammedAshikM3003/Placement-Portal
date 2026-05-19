@@ -38,18 +38,20 @@
   .sasidebar {
     transform: translateX(-100%);
   }
+
   .sasidebar.open {
     transform: translateX(0);
   }
 }
 
 .sasidebar .sa-user-info {
-  padding: 0px 20px 0px 20px;
+  padding: 15px 20px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   flex-shrink: 0;
+  margin-top: 15px;
 }
 
 .sasidebar .sa-user-details {
@@ -101,7 +103,7 @@
   border-radius: 0;
   background: transparent;
   flex-shrink: 0;
-  filter: brightness(0) saturate(100%) invert(64%) sepia(64%) saturate(2028%) hue-rotate(351deg) brightness(100%) contrast(97%);
+  filter: brightness(0) saturate(100%);
 }
 
 .sasidebar .sa-user-text {
@@ -129,12 +131,13 @@
   justify-content: flex-start;
   gap: 0;
   min-height: 0;
+  flex: 1;
 }
 
 .sasidebar .sa-nav-section {
   display: flex;
   flex-direction: column;
-  gap: 0px;
+  gap: 0;
   flex-shrink: 0;
 }
 
@@ -146,10 +149,28 @@
   color: #222;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.18s ease;
   gap: 15px;
   border-left: 4px solid transparent;
   margin: 3px 0;
+}
+
+.sasidebar .sa-nav-icon {
+  width: 28px;
+  height: 23px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+}
+
+.sasidebar .sa-nav-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: currentColor;
+  color: inherit;
 }
 
 .sasidebar .sa-nav-text {
@@ -163,24 +184,15 @@
   font-weight: 600;
 }
 
-.sasidebar .sa-nav-item.selected img {
-  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
-}
-
 .sasidebar .sa-nav-item:hover:not(.selected) {
   background: #f8f8f8;
   border-left: 4px solid #FA7B20;
   color: #FA7B20;
 }
 
-.sasidebar .sa-nav-item:hover:not(.selected) img {
-  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
-}
-
-.sasidebar .sa-nav-item img {
-  width: 28px;
-  height: 23px;
-  transition: transform 0.2s;
+.sasidebar .sa-nav-item:hover:not(.selected) .sa-nav-icon,
+.sasidebar .sa-nav-item.selected .sa-nav-icon {
+  color: #FA7B20;
 }
 
 .sasidebar .sa-nav-divider {
@@ -204,10 +216,7 @@
   transition: background 0.2s;
   flex-shrink: 0;
   width: calc(100% - 40px);
-  margin: 5px 20px 20px 20px;
-  position: relative;
-  z-index: 10;
-  pointer-events: auto;
+  margin: auto 20px 20px;
 }
 
 .sasidebar .sa-logout-btn:hover {

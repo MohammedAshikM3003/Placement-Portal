@@ -340,6 +340,31 @@
     flex-direction: column;
 }
 
+.backButton {
+    background: #6b6b6b;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: none;
+    transform: none;
+    transition: background-color 0.15s ease;
+}
+
+.backButton:hover {
+    background: #5d5d5d;
+    box-shadow: none;
+    transform: none;
+}
+
+.backButton:focus-visible {
+    outline: 2px solid rgba(215, 61, 61, 0.6);
+    outline-offset: 2px;
+}
+
 /* Table Scroll Container */
 .tableScroll {
     max-height: 300px;

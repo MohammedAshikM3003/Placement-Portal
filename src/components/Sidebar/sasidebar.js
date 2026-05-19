@@ -33,6 +33,27 @@ import AdProfileicon from "../../assets/adprofileicon.svg";
 
 import AdminProfileGraduationcap from "../../assets/Admincapsidebar.svg";
 
+const StudentSidebarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true" focusable="false">
+    <path d="M0 0h256v256H0z" fill="none" />
+    <path fill="currentColor" d="m225.9 58.31l-96-32a6 6 0 0 0-3.8 0l-96 32A6 6 0 0 0 26 64v80a6 6 0 0 0 12 0V72.32l38.68 12.9A62 62 0 0 0 99 174.75c-19.25 6.53-36 19.59-48 38a6 6 0 0 0 10 6.53C76.47 195.59 100.88 182 128 182s51.53 13.59 67 37.28a6 6 0 0 0 10-6.56c-12-18.38-28.73-31.44-48-38a62 62 0 0 0 22.27-89.53l46.63-15.5a6 6 0 0 0 0-11.38M178 120a50 50 0 1 1-89.37-30.8l37.47 12.49a6 6 0 0 0 3.8 0l37.47-12.49A49.78 49.78 0 0 1 178 120m-50-30.32L51 64l77-25.68L205 64Z" />
+  </svg>
+);
+
+const CoordinatorSidebarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true" focusable="false">
+    <path d="M0 0h256v256H0z" fill="none" />
+    <path fill="currentColor" d="M216 42H40a14 14 0 0 0-14 14v144a14 14 0 0 0 14 14h13.39a6 6 0 0 0 5.42-3.43a50 50 0 0 1 90.38 0a6 6 0 0 0 5.42 3.43H216a14 14 0 0 0 14-14V56a14 14 0 0 0-14-14M78 144a26 26 0 1 1 26 26a26 26 0 0 1-26-26m140 56a2 2 0 0 1-2 2h-57.73a62.34 62.34 0 0 0-31.48-27.61a38 38 0 1 0-45.58 0A62.34 62.34 0 0 0 49.73 202H40a2 2 0 0 1-2-2V56a2 2 0 0 1 2-2h176a2 2 0 0 1 2 2ZM198 80v96a6 6 0 0 1-6 6h-16a6 6 0 0 1 0-12h10V86H70v10a6 6 0 0 1-12 0V80a6 6 0 0 1 6-6h128a6 6 0 0 1 6 6" />
+  </svg>
+);
+
+const AdminSidebarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M0 0h24v24H0z" fill="none" />
+    <path fill="currentColor" d="M12 14v2a6 6 0 0 0-6 6H4a8 8 0 0 1 8-8m0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6s6 2.685 6 6s-2.685 6-6 6m0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4s-4 1.79-4 4s1.79 4 4 4m9 6h1v5h-8v-5h1v-1a3 3 0 1 1 6 0zm-2 0v-1a1 1 0 1 0-2 0v1z" />
+  </svg>
+);
+
 // Module-level cache (persists across component unmount/remount - PREVENTS FLICKERING!)
 let cachedAdminProfile = null;
 let cachedProfileTimestamp = null;
@@ -42,9 +63,9 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 // Navigation items reduced to three: Students, Coordinators, Admin
 const sidebarItems = [
-  { icon: ManageStudents, text: 'Students', view: 'admin-student-database' },
-  { icon: AdAddBranch, text: 'Coordinators', view: 'admin-manage-coordinators' },
-  { icon: AdProfileicon, text: 'Admin', view: 'admin-profile-main' },
+  { icon: StudentSidebarIcon, text: 'Students', view: 'admin-student-database' },
+  { icon: CoordinatorSidebarIcon, text: 'Coordinators', view: 'admin-manage-coordinators' },
+  { icon: AdminSidebarIcon, text: 'Admin', view: 'admin-profile-main' },
 ];
 
 
@@ -461,14 +482,18 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
                 }
               }}
             >
-              <img src={item.icon} alt={item.text} />
+              <span className={styles['sa-nav-icon']} aria-hidden="true">
+                <item.icon />
+              </span>
               <span className={styles['sa-nav-text']}>{item.text}</span>
             </NavLink>
           ))}
         </div>
-
-        
       </nav>
+
+      <button type="button" className={styles['sa-logout-btn']} onClick={handleLogoutClick}>
+        Logout
+      </button>
 
     </div>
   );
