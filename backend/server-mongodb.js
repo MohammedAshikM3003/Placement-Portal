@@ -7158,7 +7158,8 @@ app.post('/api/students', async (req, res) => {
             const studentDataWithDefaults = {
                 ...studentData,
                 gender: studentData.gender || 'male',
-                primaryEmail: studentData.primaryEmail || `${studentData.regNo}@college.edu`
+                primaryEmail: studentData.primaryEmail || studentData.email || `${studentData.regNo}@college.edu`,
+                email: studentData.email || studentData.primaryEmail || `${studentData.regNo}@college.edu`
             };
 
             console.log('Student data with defaults:', studentDataWithDefaults);
@@ -7169,7 +7170,7 @@ app.post('/api/students', async (req, res) => {
 
             // Create user record
             const user = new User({
-                email: studentDataWithDefaults.primaryEmail,
+                email: studentDataWithDefaults.email,
                 password: studentDataWithDefaults.loginPassword,
                 role: 'student',
                 userId: student._id
@@ -7185,6 +7186,7 @@ app.post('/api/students', async (req, res) => {
                     firstName: student.firstName,
 
                     lastName: student.lastName,
+                    email: student.email,
                     primaryEmail: student.primaryEmail,
                     branch: student.branch,
                     degree: student.degree
@@ -7196,7 +7198,7 @@ app.post('/api/students', async (req, res) => {
             students.push(newStudent);
             
             const newUser = {
-                email: studentData.primaryEmail,
+                email: studentData.email || studentData.primaryEmail,
                 password: studentData.loginPassword,
                 role: 'student',
                 userId: newStudent.id

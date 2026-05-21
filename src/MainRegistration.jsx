@@ -23,7 +23,7 @@ import mongoDBService from './services/mongoDBService';
 import gridfsService from './services/gridfsService';
 import DOBDatePicker from './components/Calendar/DOBDatePicker';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
-import Confetti from './components/Confetti';
+import ConfettiSideCannons from './components/Confetti/ConfettiSideCannons';
 
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
@@ -717,7 +717,7 @@ function MainRegistration() {
   const [currentYear, setCurrentYear] = useState("");
   const [currentSemester, setCurrentSemester] = useState("");
   const [isPopupOpen, setPopupOpen] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiSignal, setConfettiSignal] = useState(0);
   const [profileImage, setProfileImage] = useState(null);
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [uploadInfo, setUploadInfo] = useState({ name: "", date: "" });
@@ -830,47 +830,106 @@ function MainRegistration() {
     return branch.branchAbbreviation || branch.branchFullName || branch.branchName || branch.branch;
   }, []);
 
+  const getSectionRequiredFields = useCallback(
+    (key) => {
+      const sharedPersonalFields = [
+        "firstName",
+        "lastName",
+        "regNo",
+        "batch",
+        "dob",
+        "degree",
+        "branch",
+        "currentYear",
+        "currentSemester",
+        "section",
+        "gender",
+        "address",
+        "city",
+        "primaryEmail",
+        "domainEmail",
+        "mobileNo",
+        "fatherName",
+        "fatherMobile",
+        "motherName",
+        "motherMobile",
+        "community",
+        "mediumOfStudy",
+        "aadhaarNo",
+      ];
+
+      const otherFields = [
+        "residentialStatus",
+        "quota",
+        "firstGraduate",
+        "skillSet",
+        "rationCardNo",
+        "familyAnnualIncome",
+        "panNo",
+        "willingToSignBond",
+        "preferredModeOfDrive",
+        "companyTypes",
+        "preferredJobLocation",
+      ];
+
+      const loginFields = ["loginRegNo", "loginPassword", "confirmPassword"];
+
+      if (key === "academic") {
+        const academicFields = [
+          "tenthInstitution",
+          "tenthBoard",
+          "tenthPercentage",
+          "tenthYear",
+        ];
+
+        if (studyCategory === "12th" || studyCategory === "both") {
+          academicFields.push(
+            "twelfthInstitution",
+            "twelfthBoard",
+            "twelfthPercentage",
+            "twelfthYear",
+            "twelfthCutoff"
+          );
+        }
+
+        if (studyCategory === "diploma" || studyCategory === "both") {
+          academicFields.push(
+            "diplomaInstitution",
+            "diplomaBranch",
+            "diplomaPercentage",
+            "diplomaYear"
+          );
+        }
+
+        return academicFields;
+      }
+
+      if (key === "other") return otherFields;
+      if (key === "login") return loginFields;
+      return sharedPersonalFields;
+    },
+    [studyCategory]
+  );
+
   /* ── Section Completion ── */
 
   const checkSectionComplete = useCallback(
     (key) => {
-      const sectionRef = sectionRefs[key]?.current;
-      if (!sectionRef) return false;
+      if (!formRef.current) return false;
 
-      if (key === "academic") {
-        if (!studyCategory) return false;
-        const alwaysRequired = ["tenthInstitution", "tenthBoard", "tenthPercentage", "tenthYear"];
-        const twelfthRequired = studyCategory === "12th" || studyCategory === "both"
-          ? ["twelfthInstitution", "twelfthBoard", "twelfthPercentage", "twelfthYear", "twelfthCutoff"]
-          : [];
-        const diplomaRequired = studyCategory === "diploma" || studyCategory === "both"
-          ? ["diplomaInstitution", "diplomaBranch", "diplomaPercentage", "diplomaYear"]
-          : [];
-        const requiredSelectors = [...alwaysRequired, ...twelfthRequired, ...diplomaRequired];
-        return requiredSelectors.every((fieldName) => {
-          const input = sectionRef.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"]`);
-          return input && input.value.trim() !== "";
-        });
-      }
+      const formData = new FormData(formRef.current);
+      const requiredFields = getSectionRequiredFields(key);
 
-      const requiredInputs = sectionRef.querySelectorAll("input[required], select[required]");
-      if (!requiredInputs.length) return false;
-
-      const seenRadio = new Set();
-      for (const input of requiredInputs) {
-        if (input.type === "radio") {
-          if (seenRadio.has(input.name)) continue;
-          const radios = sectionRef.querySelectorAll(`input[type="radio"][name="${input.name}"]`);
-          const checked = Array.from(radios).some((radio) => radio.checked);
-          seenRadio.add(input.name);
-          if (!checked) return false;
-        } else if (!input.value || input.value.trim() === "") {
-          return false;
+      return requiredFields.every((fieldName) => {
+        if (fieldName === "dob") {
+          return Boolean(dob && /^\d{4}-\d{2}-\d{2}$/.test(dob));
         }
-      }
-      return true;
+
+        const value = formData.get(fieldName);
+        return value !== null && String(value).trim() !== "";
+      });
     },
-    [sectionRefs, studyCategory]
+    [dob, getSectionRequiredFields]
   );
 
   /* ── Scroll to Field & Blink ── */
@@ -1194,14 +1253,9 @@ function MainRegistration() {
   /* ── Popup Close Handlers ── */
   const closePopup = useCallback(() => {
     setPopupOpen(false);
-    setShowConfetti(false);
   }, []);
   const triggerConfetti = useCallback(() => {
-    // Force a fresh confetti cycle even if it is already active.
-    setShowConfetti(false);
-    requestAnimationFrame(() => {
-      setShowConfetti(true);
-    });
+    setConfettiSignal((prev) => prev + 1);
   }, []);
   const closeExistingRegNoPopup = useCallback(() => setExistingRegNoPopupOpen(false), []);
   const closeMismatchedRegNoPopup = useCallback(() => setMismatchedRegNoPopupOpen(false), []);
@@ -1315,6 +1369,51 @@ function MainRegistration() {
     },
     [sectionRefs]
   );
+
+  useEffect(() => {
+    const scrollContainer = document.getElementById("mr-dashboard-area");
+    if (!scrollContainer) return undefined;
+
+    const updateActiveSectionFromScroll = () => {
+      if (isScrollingRef.current) return;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const activationLine = 160;
+      let bestVisibleKey = null;
+      let bestVisibleTop = -Infinity;
+      let fallbackKey = sectionList[0]?.key || "personal";
+      let fallbackTop = Infinity;
+
+      for (const { key } of sectionList) {
+        const sectionElement = sectionRefs[key]?.current;
+        if (!sectionElement) continue;
+
+        const rect = sectionElement.getBoundingClientRect();
+        const top = rect.top - containerRect.top;
+
+        if (top <= activationLine && top > bestVisibleTop) {
+          bestVisibleTop = top;
+          bestVisibleKey = key;
+        }
+
+        if (top < fallbackTop) {
+          fallbackTop = top;
+          fallbackKey = key;
+        }
+      }
+
+      setActiveSection(bestVisibleKey || fallbackKey);
+    };
+
+    updateActiveSectionFromScroll();
+    scrollContainer.addEventListener("scroll", updateActiveSectionFromScroll, { passive: true });
+    window.addEventListener("resize", updateActiveSectionFromScroll);
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", updateActiveSectionFromScroll);
+      window.removeEventListener("resize", updateActiveSectionFromScroll);
+    };
+  }, [sectionList, sectionRefs]);
 
   /* ── Image Upload Handler ── */
   /* NO accept attribute on file input = Windows shows ALL files.
@@ -1550,6 +1649,7 @@ function MainRegistration() {
           gender: formData.get("gender") || "",
           address: formData.get("address") || "",
           city: formData.get("city") || "",
+          email: formData.get("primaryEmail") || formData.get("domainEmail") || "",
           primaryEmail: formData.get("primaryEmail") || "",
           domainEmail: formData.get("domainEmail") || "",
           mobileNo: "+91" + (formData.get("mobileNo") || ""),
@@ -1651,14 +1751,13 @@ function MainRegistration() {
           URL.revokeObjectURL(profileImage);
         }
 
-        // Start confetti immediately
-        triggerConfetti();
+        // Show the success popup immediately; confetti is triggered after the popup opens.
+        setPopupOpen(true);
+        setIsRegistering(false);
 
-        // Show popup after short delay so confetti starts first
-        setTimeout(() => {
-          setPopupOpen(true);
-          setIsRegistering(false);
-        }, 400);
+        window.setTimeout(() => {
+          triggerConfetti();
+        }, 250);
       } catch (error) {
         console.error("Error saving student data:", error);
         setValidationErrorMessage(`Error saving data: ${error.message}. Check console for details.`);
@@ -1682,7 +1781,6 @@ function MainRegistration() {
       residentialStatus,
       quota,
       firstGraduate,
-      triggerConfetti,
     ]
   );
 
@@ -2367,6 +2465,15 @@ function MainRegistration() {
                 >
                   Cancel
                 </button>
+                <ConfettiSideCannons
+                  type="button"
+                  className={styles.confettiButton}
+                  fireSignal={confettiSignal}
+                  disabled={isRegistering}
+                  onClick={triggerConfetti}
+                >
+                  Confetti
+                </ConfettiSideCannons>
                 <button
                   type="submit"
                   className={cx("mr-save-btn", !isRegisterEnabled ? "mr-save-btn-disabled" : "")}
@@ -2462,7 +2569,6 @@ function MainRegistration() {
       {isSidebarOpen && <div className={cx("mr-overlay")} onClick={() => setIsSidebarOpen(false)} />}
 
       <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
-      <Confetti isActive={showConfetti} />
       <ConfirmDiscardPopup isOpen={isDiscardPopupOpen} onConfirm={handleConfirmDiscard} onCancel={handleCancelDiscard} />
       <ExistingRegNoPopup isOpen={isExistingRegNoPopupOpen} onClose={closeExistingRegNoPopup} regNo={existingRegNo} />
       <MismatchedRegNoPopup isOpen={isMismatchedRegNoPopupOpen} onClose={closeMismatchedRegNoPopup} personalRegNo={personalRegNo} loginRegNo={loginRegNo} />
