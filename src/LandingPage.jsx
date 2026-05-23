@@ -566,50 +566,102 @@ const GmailIcon = () => (
 );
 
 const TeamSection = () => {
+  const marqueeContainerRef = useRef(null);
+  const singleRowRef = useRef(null);
+  const [shouldAnimateTeam, setShouldAnimateTeam] = useState(false);
+
+  const renderTeamCard = (member, keyPrefix) => (
+    <article className={styles['team-card']} key={`${keyPrefix}-${member.name}`} style={{ '--member-color': member.color }}>
+      <div className={styles['team-icon-circle']} style={{ backgroundColor: member.color }}>
+        <GraduationCapIcon />
+      </div>
+      <h3 className={styles['team-member-name']}>{member.name}</h3>
+      <p className={styles['team-member-role']}>{member.role}</p>
+      <div className={styles['team-contact-row']} aria-label={`${member.name} contact icons`}>
+        {member.linkedin ? (
+          <a
+            className={styles['team-contact-icon']}
+            href={member.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${member.name} LinkedIn profile`}
+          >
+            <LinkedInIcon />
+          </a>
+        ) : (
+          <span className={styles['team-contact-icon']} aria-hidden="true">
+            <LinkedInIcon />
+          </span>
+        )}
+        {member.email ? (
+          <a
+            className={styles['team-contact-icon']}
+            href={`mailto:${member.email}`}
+            aria-label={`Email ${member.name}`}
+          >
+            <GmailIcon />
+          </a>
+        ) : (
+          <span className={styles['team-contact-icon']} aria-hidden="true">
+            <GmailIcon />
+          </span>
+        )}
+      </div>
+    </article>
+  );
+
+  useEffect(() => {
+    const updateAnimationState = () => {
+      const container = marqueeContainerRef.current;
+      const singleRow = singleRowRef.current;
+
+      if (!container || !singleRow) {
+        return;
+      }
+
+      setShouldAnimateTeam(singleRow.offsetWidth > container.clientWidth);
+    };
+
+    updateAnimationState();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updateAnimationState)
+      : null;
+
+    if (resizeObserver && marqueeContainerRef.current) {
+      resizeObserver.observe(marqueeContainerRef.current);
+    }
+
+    window.addEventListener('resize', updateAnimationState);
+
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      window.removeEventListener('resize', updateAnimationState);
+    };
+  }, []);
+
   return (
     <section className={styles['team-section']} aria-labelledby="team-section-title">
       <h2 className={styles['team-section-title']} id="team-section-title">MEET OUR TEAM</h2>
 
-      <div className={styles['team-grid']}>
-        {teamMembers.map((member) => (
-          <article className={styles['team-card']} key={member.name} style={{ '--member-color': member.color }}>
-            <div className={styles['team-icon-circle']} style={{ backgroundColor: member.color }}>
-              <GraduationCapIcon />
-            </div>
-            <h3 className={styles['team-member-name']}>{member.name}</h3>
-            <p className={styles['team-member-role']}>{member.role}</p>
-            <div className={styles['team-contact-row']} aria-label={`${member.name} contact icons`}>
-              {member.linkedin ? (
-                <a
-                  className={styles['team-contact-icon']}
-                  href={member.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${member.name} LinkedIn profile`}
-                >
-                  <LinkedInIcon />
-                </a>
-              ) : (
-                <span className={styles['team-contact-icon']} aria-hidden="true">
-                  <LinkedInIcon />
-                </span>
-              )}
-              {member.email ? (
-                <a
-                  className={styles['team-contact-icon']}
-                  href={`mailto:${member.email}`}
-                  aria-label={`Email ${member.name}`}
-                >
-                  <GmailIcon />
-                </a>
-              ) : (
-                <span className={styles['team-contact-icon']} aria-hidden="true">
-                  <GmailIcon />
-                </span>
-              )}
-            </div>
-          </article>
-        ))}
+      <div className={styles['team-marquee-container']} ref={marqueeContainerRef}>
+        <div className={`${styles['team-grid']} ${shouldAnimateTeam ? styles['animate-team-marquee'] : ''}`}>
+          <div ref={singleRowRef} className={styles['team-row']}>
+            {teamMembers.map((member) => renderTeamCard(member, 'team-a'))}
+          </div>
+          {shouldAnimateTeam && (
+            <>
+              <div className={styles['team-row']} aria-hidden="true">
+                {teamMembers.map((member) => renderTeamCard(member, 'team-b'))}
+              </div>
+              <div className={styles['team-row']} aria-hidden="true">
+                {teamMembers.map((member) => renderTeamCard(member, 'team-c'))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
     </section>

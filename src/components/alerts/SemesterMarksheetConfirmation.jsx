@@ -9,8 +9,6 @@ const SemesterMarksheetConfirmation = ({
   changedSubjects = [],
   isSaving = false
 }) => {
-  if (!isOpen) return null;
-
   // Generate toast subtitle with changed subject names
   const toastSubtitle = useMemo(() => {
     if (!changedSubjects.length) return '';
@@ -22,6 +20,8 @@ const SemesterMarksheetConfirmation = ({
       ? `${subjectNames}, +${moreCount} more`
       : subjectNames;
   }, [changedSubjects]);
+
+  if (!isOpen) return null;
 
   const handleSave = () => {
     if (isSaving) return;
