@@ -389,7 +389,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
       console.warn('⚠️ Unable to cache semester view before edit:', error.message);
     }
 
-    navigate('/coo-manage-students-semester/edit', {
+    navigate('/coo-manage-students-semester/sem', {
       state: {
         student,
         subjects: students,

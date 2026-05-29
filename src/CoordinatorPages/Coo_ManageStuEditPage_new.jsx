@@ -3069,14 +3069,14 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             <button 
                                                 type="button" 
                                                 className={styles.viewMarksheetBtn}
-                                                onClick={() => navigate('/coo-manage-students-semester/marksheet', {
-                                                    state: { 
-                                                        student: {
-                                                            ...studentData,
-                                                            currentSemester: semesterNumber
+                                                onClick={() => navigate('/coo-manage-students-semester/sem', {
+                                                        state: { 
+                                                            student: {
+                                                                ...studentData,
+                                                                currentSemester: semesterNumber
+                                                            }
                                                         }
-                                                    }
-                                                })}
+                                                    })}
                                             >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
@@ -3086,7 +3086,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     <button
                                         type="button"
                                         className={styles.uploadMarksheetBtnFull}
-                                        onClick={() => navigate('/coo-manage-students-semester/marksheet', {
+                                        onClick={() => navigate('/coo-manage-students-semester/sem', {
                                             state: { student: studentData }
                                         })}
                                     >

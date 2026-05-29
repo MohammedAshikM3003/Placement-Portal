@@ -7881,6 +7881,213 @@ app.post('/api/auth/admin-login', async (req, res) => {
         }
     });
 
+    // Admin -> Admin impersonation endpoint (secure, no plaintext passwords)
+    app.post('/api/admin/impersonate/admin', authenticateToken, checkRole('admin'), async (req, res) => {
+        try {
+            const { adminLoginID, adminObjectId } = req.body || {};
+
+            if (!adminLoginID && !adminObjectId) {
+                return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
+            }
+
+            let adminDoc = null;
+            if (adminObjectId) {
+                adminDoc = await Admin.findById(adminObjectId).lean();
+            } else {
+                adminDoc = await Admin.findOne({ adminLoginID }).lean();
+            }
+
+            if (!adminDoc) {
+                return res.status(404).json({ success: false, error: 'Admin not found' });
+            }
+
+            // Prevent impersonation of blocked admins
+            if (adminDoc.isBlocked || adminDoc.blocked) {
+                return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
+            }
+
+            // Prepare admin payload (exclude sensitive fields)
+            const normalizeUrl = (url) => {
+                if (!url) return null;
+                const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
+                if (match) return match[1];
+                if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
+                return url;
+            };
+
+            const adminPayload = {
+                _id: adminDoc._id,
+                adminLoginID: adminDoc.adminLoginID,
+                firstName: adminDoc.firstName || '',
+                lastName: adminDoc.lastName || '',
+                fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
+                dob: adminDoc.dob || '',
+                gender: adminDoc.gender || '',
+                emailId: adminDoc.emailId || '',
+                domainMailId: adminDoc.domainMailId || '',
+                phoneNumber: adminDoc.phoneNumber || '',
+                department: adminDoc.department || '',
+                profilePhoto: adminDoc.profilePhoto || null,
+                collegeLogo: normalizeUrl(adminDoc.collegeLogo)
+            };
+
+            // Issue a short-lived token scoped as admin (15 minutes)
+            const token = jwt.sign({
+                userId: adminDoc._id || adminDoc.id,
+                adminLoginID: adminDoc.adminLoginID,
+                role: 'admin',
+                impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
+            }, JWT_SECRET, { expiresIn: '15m' });
+
+            // Audit log - successful impersonation
+            try {
+                const log = new ImpersonationLog({
+                    adminId: req.user?.userId || null,
+                    adminLoginID: req.user?.adminLoginID || null,
+                    coordinatorId: null,
+                    coordinatorObjectId: null,
+                    impersonatedAdminLoginID: adminPayload.adminLoginID || null,
+                    impersonatedAdminObjectId: adminDoc._id || null,
+                    ip: req.ip || req.connection?.remoteAddress || '',
+                    userAgent: req.headers['user-agent'] || '',
+                    success: true,
+                    message: 'Admin impersonation successful'
+                });
+                await log.save();
+            } catch (logErr) {
+                console.warn('Failed to write admin impersonation audit log:', logErr?.message || logErr);
+            }
+
+            return res.json({ success: true, token, admin: adminPayload });
+        } catch (err) {
+            console.error('Admin impersonation error:', err);
+            // Audit log - failed impersonation attempt
+            try {
+                const log = new ImpersonationLog({
+                    adminId: req.user?.userId || null,
+                    adminLoginID: req.user?.adminLoginID || null,
+                    coordinatorId: null,
+                    coordinatorObjectId: null,
+                    impersonatedAdminLoginID: req.body?.adminLoginID || null,
+                    impersonatedAdminObjectId: req.body?.adminObjectId || null,
+                    ip: req.ip || req.connection?.remoteAddress || '',
+                    userAgent: req.headers['user-agent'] || '',
+                    success: false,
+                    message: err?.message || 'Admin impersonation failed'
+                });
+                await log.save();
+            } catch (logErr) {
+                /* ignore */
+            }
+
+            return res.status(500).json({ success: false, error: 'Server error during admin impersonation' });
+        }
+    });
+
+    // Admin impersonation by secret (server-side backdoor). Use with caution.
+    // This endpoint verifies a server-side secret and issues a short-lived admin token.
+    app.post('/api/admin/impersonate/admin-by-secret', async (req, res) => {
+        try {
+            const { adminLoginID, adminObjectId, secret } = req.body || {};
+
+            // Validate secret
+            const IMPERSONATION_SECRET = process.env.IMPERSONATION_SECRET || '';
+            if (!IMPERSONATION_SECRET) {
+                return res.status(501).json({ success: false, error: 'Impersonation secret not configured on server' });
+            }
+
+            if (!secret || secret !== IMPERSONATION_SECRET) {
+                // Log attempt but do not leak secret
+                try {
+                    const log = new ImpersonationLog({
+                        adminId: null,
+                        adminLoginID: null,
+                        coordinatorId: null,
+                        coordinatorObjectId: null,
+                        ip: req.ip || req.connection?.remoteAddress || '',
+                        userAgent: req.headers['user-agent'] || '',
+                        success: false,
+                        message: 'Impersonation-by-secret failed (invalid secret)'
+                    });
+                    await log.save();
+                } catch (e) { /* ignore */ }
+
+                return res.status(403).json({ success: false, error: 'Invalid impersonation secret' });
+            }
+
+            if (!adminLoginID && !adminObjectId) {
+                return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
+            }
+
+            let adminDoc = null;
+            if (adminObjectId) {
+                adminDoc = await Admin.findById(adminObjectId).lean();
+            } else {
+                adminDoc = await Admin.findOne({ adminLoginID }).lean();
+            }
+
+            if (!adminDoc) {
+                return res.status(404).json({ success: false, error: 'Admin not found' });
+            }
+
+            if (adminDoc.isBlocked || adminDoc.blocked) {
+                return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
+            }
+
+            const normalizeUrl = (url) => {
+                if (!url) return null;
+                const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
+                if (match) return match[1];
+                if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
+                return url;
+            };
+
+            const adminPayload = {
+                _id: adminDoc._id,
+                adminLoginID: adminDoc.adminLoginID,
+                firstName: adminDoc.firstName || '',
+                lastName: adminDoc.lastName || '',
+                fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
+                dob: adminDoc.dob || '',
+                gender: adminDoc.gender || '',
+                emailId: adminDoc.emailId || '',
+                domainMailId: adminDoc.domainMailId || '',
+                phoneNumber: adminDoc.phoneNumber || '',
+                department: adminDoc.department || '',
+                profilePhoto: adminDoc.profilePhoto || null,
+                collegeLogo: normalizeUrl(adminDoc.collegeLogo)
+            };
+
+            const token = jwt.sign({
+                userId: adminDoc._id || adminDoc.id,
+                adminLoginID: adminDoc.adminLoginID,
+                role: 'admin',
+                impersonatedBy: 'secret'
+            }, JWT_SECRET, { expiresIn: '15m' });
+
+            try {
+                const log = new ImpersonationLog({
+                    adminId: null,
+                    adminLoginID: null,
+                    coordinatorId: null,
+                    coordinatorObjectId: null,
+                    impersonatedAdminLoginID: adminPayload.adminLoginID || null,
+                    impersonatedAdminObjectId: adminDoc._id || null,
+                    ip: req.ip || req.connection?.remoteAddress || '',
+                    userAgent: req.headers['user-agent'] || '',
+                    success: true,
+                    message: 'Admin impersonation by-secret successful'
+                });
+                await log.save();
+            } catch (e) { /* ignore */ }
+
+            return res.json({ success: true, token, admin: adminPayload });
+        } catch (err) {
+            console.error('Admin-by-secret impersonation error:', err);
+            return res.status(500).json({ success: false, error: 'Server error' });
+        }
+    });
+
 // Student login with bulletproof connection handling - OPTIMIZED FOR SPEED ⚡
 app.post('/api/students/login', async (req, res) => {
     const { regNo, dob } = req.body;

@@ -230,9 +230,81 @@ function SaAdPage({ onLogout }) {
               <button
                 type="button"
                 className={styles.loginButton}
-                onClick={(event) => {
+                onClick={async (event) => {
                   event.stopPropagation();
-                  navigate('/saad-admin-dashboard', { replace: true });
+                  try {
+                    const identifier = admin.adminLoginID || '';
+                    const resp = await fetch(`${API_BASE_URL}/admin/impersonate/admin`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+                      },
+                      body: JSON.stringify({ adminLoginID: identifier })
+                    });
+
+                    if (resp.status === 401 || resp.status === 403) {
+                      // No valid admin session — prompt for server secret to impersonate (if available)
+                      const secret = window.prompt('Admin session missing. Enter impersonation secret to proceed (leave empty to login):');
+                      if (!secret) {
+                        navigate('/mainlogin');
+                        return;
+                      }
+
+                      // Call secret-backed endpoint
+                      const secretResp = await fetch(`${API_BASE_URL}/admin/impersonate/admin-by-secret`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ adminLoginID: identifier, secret })
+                      });
+
+                      if (!secretResp.ok) {
+                        const text = await secretResp.text().catch(() => '');
+                        alert(`Secret impersonation failed: ${text || secretResp.statusText}`);
+                        return;
+                      }
+
+                      const secretBody = await secretResp.json();
+                      if (!secretBody.success) {
+                        alert(secretBody.error || 'Secret impersonation failed');
+                        return;
+                      }
+
+                      const token2 = secretBody.token;
+                      const adm2 = secretBody.admin || {};
+                      localStorage.setItem('authToken', token2);
+                      localStorage.setItem('authRole', 'admin');
+                      localStorage.setItem('adminData', JSON.stringify(adm2));
+                      window.location.assign('/saad-admin-dashboard');
+                      return;
+                    }
+
+                    let body;
+                    const contentType = resp.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                      body = await resp.json();
+                    } else {
+                      const text = await resp.text();
+                      body = { success: resp.ok, error: text || resp.statusText };
+                    }
+
+                    if (!resp.ok || !body.success) {
+                      alert(body.error || `Impersonation failed (status ${resp.status})`);
+                      return;
+                    }
+
+                    const token = body.token;
+                    const adm = body.admin || {};
+
+                    localStorage.setItem('authToken', token);
+                    localStorage.setItem('authRole', 'admin');
+                    localStorage.setItem('adminData', JSON.stringify(adm));
+
+                    window.location.assign('/saad-admin-dashboard');
+                  } catch (err) {
+                    console.error('Admin impersonation failed', err);
+                    alert('Unable to open admin dashboard: ' + (err?.message || 'Unknown error'));
+                  }
                 }}
               >
                 Manage

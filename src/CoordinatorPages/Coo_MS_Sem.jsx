@@ -1,315 +1,700 @@
-// Forced rewrite to trigger React HMR
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Navbar from "../components/Navbar/Conavbar.js";
-import Sidebar from "../components/Sidebar/Cosidebar.js";
+import { PDFDocument } from 'pdf-lib';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import Navbar from "../components/Navbar/Conavbar";
+import Sidebar from "../components/Sidebar/Cosidebar";
 import styles from './Coo_MS_Sem.module.css';
-import Adminicon from '../assets/Adminicon.png';
-import { API_BASE_URL } from '../utils/apiConfig';
+import Download from "../assets/Downloadsemesterviewicon.svg";
+import Previewicon from "../assets/Adminpreviewmarksheeticon.svg";
+import Adminicons from "../assets/AdmingreenCapicon.svg";
+import { CertificateDownloadProgressAlert } from '../components/alerts';
 import mongoDBService from '../services/mongoDBService.jsx';
+import { API_BASE_URL } from '../utils/apiConfig';
 
-// Grade to grade-point mapping
-const GRADE_POINTS = {
-    'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
-    'C': 5, 'U': 0, 'RA': 0, 'AB': 0, 'SA': 0, 'W': 0,
+const emptyStudent = {
+  name: '',
+  regNo: '',
+  dob: '',
+  year: '',
+  semester: '',
+  programme: '',
+  examDate: '',
+  currentSgpa: '',
+  overallCgpa: '',
+  published: '',
+  attempted: '',
+  cleared: '',
+  pending: ''
 };
 
-const formatExamDate = (value) => {
-    if (!value) return '--';
+const SEMESTER_CACHE_KEY = 'cooSemesterMarksheetState';
+const MIN_LOADING_DURATION_MS = 900;
 
-    const text = String(value).trim();
-    if (!text) return '--';
+const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const loadStartedAtRef = useRef(Date.now());
+  const studentData = location.state?.student || null;
+  const initialSubjects = Array.isArray(location.state?.subjects) ? location.state.subjects : [];
+  const initialSemesterRecord = location.state?.semesterRecord || null;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [semesterRecord, setSemesterRecord] = useState(initialSemesterRecord);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(18);
+  const [students, setStudents] = useState(initialSubjects);
+  const [masterSubjects, setMasterSubjects] = useState([]);
+  const normalizeCourseCode = (value) => String(value || '')
+    .toUpperCase()
+    .replace(/\s+/g, '')
+    .replace(/[^A-Z0-9]/g, '');
+  
+  // States for PDF splitting & loading UI
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingType, setProcessingType] = useState('Previewing'); // 'Previewing' or 'Downloading'
+  const [progress, setProgress] = useState(0);
 
-    const parsedDate = new Date(text);
-    if (!Number.isNaN(parsedDate.getTime())) {
-        return parsedDate.toLocaleDateString('en-GB', {
-            month: '2-digit',
-            year: '2-digit'
+  const studentSource = studentData?.isPreview
+    ? (studentData || semesterRecord || {})
+    : (semesterRecord || studentData || {});
+  const studentId = studentSource?.studentId || studentSource?._id || studentSource?.id || '';
+  const currentSemester = studentSource?.currentSemester || studentSource?.semester || '';
+  const displayName = studentSource?.name
+    || studentSource?.studentName
+    || `${studentSource?.firstName || ''} ${studentSource?.lastName || ''}`.trim()
+    || studentSource?.fullName
+    || '';
+
+  const student = {
+    ...emptyStudent,
+    ...studentSource,
+    name: displayName || studentSource?.name || '',
+    regNo: studentSource?.regNo || studentSource?.registerNumber || '',
+    year: studentSource?.currentYear || studentSource?.year || '',
+    semester: currentSemester,
+    programme: studentSource?.programme || '',
+    examDate: studentSource?.examDate || '',
+    currentSgpa: studentSource?.currentSgpa || studentSource?.sgpa || '',
+    overallCgpa: studentSource?.overallCgpa || studentSource?.cgpa || '',
+    published: studentSource?.examDate || studentSource?.published || '',
+    attempted: studentSource?.subjects ? studentSource.subjects.length : (studentSource?.attempted ?? ''),
+    cleared: studentSource?.subjects ? studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length : (studentSource?.cleared ?? ''),
+    pending: studentSource?.subjects ? (studentSource.subjects.length - studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length) : (studentSource?.pending ?? '')
+  };
+
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // DEBUG: Log state at render time
+  useEffect(() => {
+    console.log('🔍 [RENDER DEBUG] Coo_ManageStudentView state snapshot:', {
+      studentDataExists: !!studentData,
+      studentDataKeys: studentData ? Object.keys(studentData) : [],
+      studentDataSubjects: studentData?.subjects,
+      studentDataSubjectsLength: Array.isArray(studentData?.subjects) ? studentData.subjects.length : 'NOT_ARRAY',
+      studentsStateLength: students.length,
+      isLoading,
+      studentId,
+      currentSemester
+    });
+  }, [students, isLoading]);
+
+  useEffect(() => {
+    const loadMasterSubjects = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/subjects`, {
+          headers: localStorage.getItem('authToken')
+            ? { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            : {}
         });
+
+        if (!response.ok) {
+          throw new Error('Failed to load subject master list');
+        }
+
+        const data = await response.json();
+
+        setMasterSubjects(Array.isArray(data.subjects) ? data.subjects : []);
+      } catch (error) {
+        console.error('Error loading subject master list:', error);
+        setMasterSubjects([]);
+      }
+    };
+
+    loadMasterSubjects();
+  }, []);
+
+  const masterCreditLookup = useMemo(() => {
+    const lookup = new Map();
+    for (const subject of masterSubjects) {
+      const code = normalizeCourseCode(subject.courseCode);
+      if (!code) continue;
+      lookup.set(code, subject.credits ?? null);
+    }
+    return lookup;
+  }, [masterSubjects]);
+
+  const fetchLatestStudentMarksheet = useCallback(async (options = {}) => {
+    const shouldManageLoadingState = options.setLoading !== false;
+    const targetRegNo = options.regNo
+      || location.state?.regNo
+      || studentData?.regNo
+      || studentData?.registerNumber
+      || student.regNo;
+    const targetSemester = options.semester
+      || location.state?.semester
+      || currentSemester
+      || studentData?.semester
+      || student.semester;
+    const targetYear = options.year
+      || location.state?.year
+      || studentData?.year
+      || student.year
+      || '';
+
+    if (!targetRegNo || !targetSemester) {
+      console.warn('⚠️ Missing regNo/semester for refresh fetch', { targetRegNo, targetSemester });
+      return;
     }
 
-    const monthYearMatch = text.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*[-/]\s*(\d{4})$/i);
-    if (monthYearMatch) {
-        const monthIndex = {
-            jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-            jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
-        }[monthYearMatch[1].slice(0, 3).toLowerCase()];
-        return `${monthIndex}/${monthYearMatch[2].slice(-2)}`;
+    if (shouldManageLoadingState) {
+      setIsLoading(true);
     }
 
-    const compactMonthYearMatch = text.match(/^(\d{2})\s*[-/]\s*(\d{4})$/);
-    if (compactMonthYearMatch) {
-        return `${compactMonthYearMatch[1]}/${compactMonthYearMatch[2].slice(-2)}`;
+    try {
+      console.log('🔄 Fetching latest marksheet...');
+      const response = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, targetYear);
+      let record = response?.marksheet
+        || response?.record
+        || (Array.isArray(response?.records) ? response.records[0] : null);
+
+      if (!record && targetYear) {
+        console.log('🔄 Retrying marksheet fetch without year filter...');
+        const fallbackResponse = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, '');
+        record = fallbackResponse?.marksheet
+          || fallbackResponse?.record
+          || (Array.isArray(fallbackResponse?.records) ? fallbackResponse.records[0] : null);
+      }
+
+      if (record) {
+        setSemesterRecord(record);
+        setStudents(Array.isArray(record.subjects) ? record.subjects : []);
+
+        console.log('✅ Fresh marksheet received');
+        return record;
+      } else {
+        console.warn('⚠️ No marksheet record found for refresh', {
+          regNo: targetRegNo,
+          semester: targetSemester,
+          year: targetYear
+        });
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Fetch failed', error);
+      return null;
+    } finally {
+      if (shouldManageLoadingState) {
+        setIsLoading(false);
+      }
+    }
+  }, [location.state?.regNo, location.state?.semester, location.state?.year, studentData, student.regNo, student.year, currentSemester, student.semester]);
+
+  useEffect(() => {
+    if (location.state?.refresh || location.state?.discard) {
+      console.log('🔄 Refetching latest marksheet after discard');
+      fetchLatestStudentMarksheet({
+        regNo: location.state?.regNo,
+        semester: location.state?.semester,
+        year: location.state?.year,
+        setLoading: false
+      });
+    }
+  }, [location.state?.refresh, location.state?.discard, location.state?.regNo, location.state?.semester, location.state?.year, fetchLatestStudentMarksheet]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingProgress(100);
+      return;
     }
 
-    return text;
-};
+    setLoadingProgress(18);
+    const intervalId = setInterval(() => {
+      setLoadingProgress((currentProgress) => {
+        if (currentProgress >= 92) return currentProgress;
+        if (currentProgress >= 70) return Math.min(currentProgress + 2, 92);
+        if (currentProgress >= 35) return Math.min(currentProgress + 4, 70);
+        return Math.min(currentProgress + 6, 35);
+      });
+    }, 140);
 
-function Coo_MS_Sem({ onLogout, onViewChange }) {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [studentData, setStudentData] = useState(location.state?.student || null);
-    const [isInitialLoading, setIsInitialLoading] = useState(false);
-    const [extractedData, setExtractedData] = useState(location.state?.student || null); // Initialize with student data
-    const [semesterLoading, setSemesterLoading] = useState(false);
-    const [semesterError, setSemesterError] = useState('');
-    const [masterSubjects, setMasterSubjects] = useState([]);
+    return () => clearInterval(intervalId);
+  }, [isLoading]);
 
-    // Calculate SGPA
-    const calculateSGPA = useCallback(() => {
-        if (!extractedData || !extractedData.subjects) return studentData?.sgpa || '0.0';
+  useEffect(() => {
+    console.log('📚 Subjects loaded:', students?.length || 0);
+  }, [students]);
 
-        let totalCredits = 0;
-        let totalGradePoints = 0;
+  const finishLoading = useCallback(async () => {
+    const elapsed = Date.now() - loadStartedAtRef.current;
+    if (elapsed < MIN_LOADING_DURATION_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_DURATION_MS - elapsed));
+    }
+    setIsLoading(false);
+  }, []);
 
-        extractedData.subjects.forEach(course => {
-            const credits = parseFloat(course.credits) || 0;
-            const gradePoint = GRADE_POINTS[course.grade] || 0;
-            totalCredits += credits;
-            totalGradePoints += credits * gradePoint;
+  // Load semester record on component mount
+  useEffect(() => {
+    const loadSemesterData = async () => {
+      try {
+        loadStartedAtRef.current = Date.now();
+        setIsLoading(true);
+        if (!currentSemester) {
+          if (Array.isArray(initialSubjects) && initialSubjects.length > 0) {
+            setStudents(initialSubjects);
+          }
+          await finishLoading();
+          return;
+        }
+
+        console.log('📚 Loading semester data for:', {
+          studentId,
+          regNo: student.regNo,
+          semester: currentSemester
         });
 
-        if (totalCredits === 0) return '0.0';
-        return (totalGradePoints / totalCredits).toFixed(2);
-    }, [extractedData, studentData]);
+        const fallbackSubjects = Array.isArray(initialSubjects) ? initialSubjects : [];
+        const previewSubjects = Array.isArray(studentData?.subjects) ? studentData.subjects : fallbackSubjects;
+        const isPreviewData = Boolean(studentData?.isPreview) && !location.state?.refresh && !location.state?.discard;
 
-    const handleToggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
-
-    const handleViewChange = (view) => {
-        if (onViewChange && typeof onViewChange === 'function') {
-            onViewChange(view);
+        // Skip DB lookups entirely if we know this is unsaved preview data
+        if (isPreviewData && previewSubjects.length > 0) {
+          console.log('✅ Unsaved extracted data detected. Loading preview data.', {
+            isPreview: studentData?.isPreview,
+            subjectsCount: previewSubjects.length,
+            studentId,
+            regNo: studentData?.regNo
+          });
+          setSemesterRecord(studentData);
+          setStudents(previewSubjects);
+          console.log('✅ Preview data loaded:', previewSubjects.length, 'subjects');
+          await finishLoading();
+          return;
         }
-        setIsSidebarOpen(false);
-    };
+        const fetchedRecord = await fetchLatestStudentMarksheet({
+          regNo: student.regNo,
+          semester: currentSemester,
+          year: student.year || '',
+          setLoading: false
+        });
 
-    const handleBack = () => {
-        navigate(-1);
-    };
-
-    useEffect(() => {
-        // If data is passed from a previous page, use it directly
-        if (location.state?.student) {
-            setStudentData(location.state.student);
-            setExtractedData(location.state.student); // Use this for display
+        if (fetchedRecord?.subjects && Array.isArray(fetchedRecord.subjects)) {
+          setSemesterRecord(fetchedRecord);
+          setStudents(fetchedRecord.subjects);
         }
-    }, [location.state]);
+      } catch (error) {
+        console.error('❌ Error loading data:', error);
+        setSemesterRecord(null);
+        setStudents(Array.isArray(initialSubjects) ? initialSubjects : []);
+      } finally {
+        await finishLoading();
+      }
+    };
 
-    useEffect(() => {
-        const loadMasterSubjects = async () => {
-            try {
-                const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/subjects`, {
-                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-                });
+    loadSemesterData();
+  }, [studentData, student.regNo, student.year, currentSemester, studentId, location.key, fetchLatestStudentMarksheet, finishLoading]);
 
-                if (!response.ok) {
-                    throw new Error('Failed to load subject master list');
+  const handleViewChange = (view) => {
+    console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
+    console.log('🔹 onViewChange prop exists:', !!onViewChange);
+    console.log('🔹 onViewChange type:', typeof onViewChange);
+
+    if (onViewChange && typeof onViewChange === 'function') {
+      console.log('🔹 Calling onViewChange with view:', view);
+      try {
+        onViewChange(view);
+        console.log('✅ onViewChange called successfully');
+      } catch (error) {
+        console.error('❌ Error calling onViewChange:', error);
+      }
+    } else {
+      console.error('❌ onViewChange is not a function!');
+    }
+
+    setIsSidebarOpen(false);
+    console.log('🔹 Sidebar closed');
+  };
+
+  // Use provided student data; avoid using mock defaults
+  const handleDiscard = () => {
+    const returnPath = location.state?.returnPath;
+    if (returnPath) {
+      navigate(returnPath);
+      return;
+    }
+
+    // Fallback to the specific student view requested by the user
+    navigate('/coo-manage-students/view/69df25e3dc5b86752f83c97a');
+  };
+
+  const extractPdfPage = async () => {
+    try {
+      const sourceUrl = location.state?.previewUrl;
+      const pageNum = studentData?.pdfPage; // 1-indexed
+
+      if (!sourceUrl) {
+        alert("Original PDF data not found. Please re-upload.");
+        return null;
+      }
+      if (!pageNum) {
+        alert("Could not identify the page number for this student.");
+        return null;
+      }
+
+      console.log(`Fetching PDF from ${sourceUrl} to extract page ${pageNum}`);
+      const existingPdfBytes = await fetch(sourceUrl).then(res => res.arrayBuffer());
+      
+      setProgress(50); // halfway
+
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const newPdfDoc = await PDFDocument.create();
+      
+      const totalPages = pdfDoc.getPageCount();
+      if (pageNum > totalPages) {
+        alert(`Page number ${pageNum} exceeds total pages ${totalPages} in PDF.`);
+        return null;
+      }
+      
+      // pdfPage is 1-indexed, copyPages uses 0-indexed
+      const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageNum - 1]);
+      newPdfDoc.addPage(copiedPage);
+      
+      setProgress(85); 
+
+      const pdfBytes = await newPdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      return blob;
+    } catch (e) {
+      console.error('PDF extraction failed:', e);
+      alert("Failed to extract marksheet page from original PDF.");
+      return null;
+    }
+  };
+
+  const handlePreviewMarksheet = async () => {
+    try {
+      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify({
+        student,
+        subjects: students,
+        semesterRecord,
+        selectedSubjectId: location.state?.selectedSubjectId || ''
+      }));
+    } catch (error) {
+      console.warn('⚠️ Unable to cache semester view before edit:', error.message);
+    }
+
+    navigate('/coo-manage-students-semester/edit', {
+      state: {
+        student,
+        subjects: students,
+        semesterRecord,
+        returnPath: location.pathname,
+        selectedSubjectId: location.state?.selectedSubjectId || ''
+      }
+    });
+  };
+
+  const handleDownloadMarksheet = async () => {
+    setProcessingType("Downloading");
+    setIsProcessing(true);
+    setProgress(10);
+    
+    const interval = setInterval(() => {
+        setProgress(p => Math.min(p + 15, 30));
+    }, 100);
+
+    const blob = await extractPdfPage();
+    clearInterval(interval);
+    setProgress(100);
+    
+    setTimeout(() => {
+      setIsProcessing(false);
+      if (blob) {
+         const url = URL.createObjectURL(blob);
+         const a = document.createElement('a');
+         a.href = url;
+         a.download = `Marksheet_${student.regNo || 'Unknown'}_Sem${student.semester || 'Unknown'}.pdf`;
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         
+         // Cleanup
+         setTimeout(() => URL.revokeObjectURL(url), 100);
+      }
+    }, 500);
+  };
+
+  const showLoadingCard = isLoading && !(student.name || student.regNo);
+  const renderValue = (value) => {
+    if (showLoadingCard) return 'Loading...';
+    if (value === '' || value === null || value === undefined) return '--';
+    return value;
+  };
+
+  return (
+    <div className={styles['view-page-container']}>
+      <CertificateDownloadProgressAlert
+        isOpen={isLoading}
+        progress={loadingProgress}
+        fileLabel="student marksheet"
+        title="Loading..."
+        color="#D23B42"
+        progressColor="#D23B42"
+        messages={{
+          initial: 'Fetching student semester marksheet...',
+          mid: 'Loading latest marksheet record...',
+          final: 'Preparing page...'
+        }}
+      />
+      <Navbar onLogout={onLogout} onToggleSidebar={handleToggleSidebar} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onLogout={onLogout}
+        currentView={'manage-students'}
+        onViewChange={handleViewChange}
+      />
+
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div
+          className={styles['sidebar-overlay']}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Processing Modal (Like Image 2) */}
+      {isProcessing && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '350px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: '#d32f2f', color: 'white', padding: '16px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
+              {processingType}...
+            </div>
+            
+            <div style={{ padding: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '50%', border: '4px solid #f3f3f3', borderTop: '4px solid #d32f2f', animation: 'spin 1s linear infinite', marginBottom: '20px' }} />
+              <style>{`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
                 }
-
-                const data = await response.json();
-                setMasterSubjects(Array.isArray(data.subjects) ? data.subjects : []);
-            } catch (error) {
-                console.error('Error loading subject master list:', error);
-                setMasterSubjects([]);
-            }
-        };
-
-        loadMasterSubjects();
-    }, []);
-
-    const masterCreditLookup = useMemo(() => {
-        const lookup = new Map();
-        for (const subject of masterSubjects) {
-            const code = String(subject.courseCode || '').trim().toUpperCase();
-            if (!code) continue;
-            lookup.set(code, subject.credits ?? null);
-        }
-        return lookup;
-    }, [masterSubjects]);
-
-    if (isInitialLoading) {
-        return (
-            <div className={styles.container}>
-                <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
-                <div className={styles.main}>
-                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
-                    <div className={styles.dashboardArea}>
-                        <div className={styles.initialLoaderOverlay}>
-                            <div className={styles.initialLoaderCard}>
-                                <div className={styles.loadingSpinner}></div>
-                                <p>Loading marksheet view...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              `}</style>
+              
+              <h2 style={{ margin: '0 0 10px 0', fontSize: '20px', color: '#333' }}>Loading {progress}%</h2>
+              <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>Fetching marksheet from original PDF...</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>Please wait...</p>
             </div>
-        );
-    }
-
-    const attemptedSubjects = extractedData?.subjects?.length || 0;
-    const clearedSubjects = extractedData?.subjects?.filter(c => c.grade !== 'U' && c.grade !== 'RA').length || 0;
-    const pendingSubjects = attemptedSubjects - clearedSubjects;
-
-    return (
-        <div className={styles.container}>
-            <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
-            <div className={styles.main}>
-                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
-                {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
-                
-                <div className={styles.dashboardArea}>
-                    <div className={styles.contentWrapper}>
-                        {/* Left Side - Profile Card */}
-                        <div className={styles.profileCard}>
-                            <div className={styles.profileIconContainer}>
-                                <img src={studentData?.profilePicURL || Adminicon} alt="Profile" className={styles.profileIcon} />
-                            </div>
-                            <div className={styles.profileInfo}>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Name</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.name || `${studentData?.firstName || ''} ${studentData?.lastName || ''}`}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Reg No</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.regNo || '--'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Year</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.year || studentData?.currentYear || '--'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Semester</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.semester || studentData?.currentSemester || '--'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Current SGPA</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{calculateSGPA()}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Overall CGPA</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{studentData?.overallCgpa || '0.0'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Exam Date MM/YY</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{formatExamDate(extractedData?.examDate || extractedData?.exam_month_year || extractedData?.student_info?.exam_month_year)}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Attempted</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{attemptedSubjects !== null ? attemptedSubjects : '--'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Cleared</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{clearedSubjects !== null ? clearedSubjects : '--'}</span>
-                                </div>
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>Pending</span>
-                                    <span className={styles.infoColon}>:</span>
-                                    <span className={styles.infoValue}>{pendingSubjects !== null ? pendingSubjects : '--'}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Side - Subjects Table Section */}
-                        <div className={styles.uploadSection}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                                <div className={styles.actionBox}>
-                                    <div className={styles.actionBoxIcon}>✏️</div>
-                                    <div className={styles.actionBoxTitle}>Edit Marksheet</div>
-                                    <div className={styles.actionBoxSubtitle}>Review, Edit and Update Student Semester Marksheet Records.</div>
-                                </div>
-                                <div className={styles.actionBox}>
-                                    <div className={styles.actionBoxIcon}>⬇️</div>
-                                    <div className={styles.actionBoxTitle}>Download Marksheet</div>
-                                    <div className={styles.actionBoxSubtitle}>Download the student's current semester marksheet.</div>
-                                </div>
-                            </div>
-
-                            <div className={styles.tableOuter}>
-                                <div className={styles.subjectsHeader}>
-                                    <h2>Semester {studentData?.semester || studentData?.currentSemester || ''} - Subjects ({attemptedSubjects})</h2>
-                                    <button type="button" className={styles.backButton} onClick={handleBack}>Back</button>
-                                </div>
-                                <table className={styles.courseTableHeader}>
-                                    <thead>
-                                        <tr>
-                                            <th>S.NO</th>
-                                            <th>SEM</th>
-                                            <th>COURSE CODE</th>
-                                            <th>COURSE NAME</th>
-                                            <th>CREDITS</th>
-                                            <th>GRADE</th>
-                                            <th>RESULT</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                                <div className={styles.tableScroll}>
-                                    {semesterLoading ? (
-                                        <div style={{ padding: '24px', textAlign: 'center' }}>Loading subjects...</div>
-                                    ) : (
-                                        <table className={styles.courseTableBody}>
-                                            <tbody>
-                                                {extractedData?.subjects && extractedData.subjects.length > 0 ? (
-                                                    extractedData.subjects.map((course, index) => {
-                                                        const courseCode = String(course.courseCode || '').trim().toUpperCase();
-                                                        const masterCredits = masterCreditLookup.get(courseCode);
-                                                        const rawCredits = course.credits;
-                                                        const normalizedCredits = (rawCredits === '' || rawCredits === null || rawCredits === undefined)
-                                                            ? null
-                                                            : rawCredits;
-                                                        const creditsValue = normalizedCredits ?? masterCredits;
-                                                        const creditsDisplay = (creditsValue === null || creditsValue === undefined || creditsValue === '')
-                                                            ? '--'
-                                                            : creditsValue;
-                                                        const rawResult = (course.result || '').toString().trim().toUpperCase();
-                                                        const resultValue = rawResult === 'PASS' ? 'P' : rawResult === 'FAIL' ? 'F' : rawResult;
-                                                        const isFail = resultValue
-                                                            ? resultValue === 'F'
-                                                            : (course.grade === 'U' || course.grade === 'RA');
-
-                                                        return (
-                                                            <tr key={index}>
-                                                                <td>{index + 1}</td>
-                                                                <td>{course.semester || course.sem || studentData?.semester || studentData?.currentSemester || '--'}</td>
-                                                                <td>{course.courseCode || '--'}</td>
-                                                                <td>{course.courseName || '--'}</td>
-                                                                <td>{creditsDisplay}</td>
-                                                                <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>
-                                                                <td style={{ color: isFail ? '#C53030' : '#4EA24E', fontWeight: '600' }}>
-                                                                    {resultValue || (isFail ? 'F' : 'P')}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                ) : (
-                                                    <tr>
-                                                        <td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
-                                                            No subjects found for this semester.
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-    );
-}
+      )}
 
-export default Coo_MS_Sem;
+      <div
+        className={styles['view-content']}
+        style={{ opacity: isLoading ? 0.22 : 1, pointerEvents: isLoading ? 'none' : 'auto' }}
+      >
+        <div className={styles['view-content-wrapper']}>
+          {/* Left Column - Student Card */}
+          <div className={styles['view-left-column']}>
+            <div className={styles['view-student-card']}>
+              <div className={styles['view-student-header']}>
+                <img src={Adminicons} alt="Graduation Cap" className={styles['view-cap-icon']} />
+              </div>
+
+              <div className={styles['view-student-details']}>
+                {showLoadingCard && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', border: '4px solid #f3f3f3', borderTop: '4px solid #d32f2f', animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+                    <style>{`
+                      @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                      }
+                    `}</style>
+                    <span style={{ fontSize: '13px', color: '#777' }}>Loading student record...</span>
+                  </div>
+                )}
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Name</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.name)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Reg No</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.regNo)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Year</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.year)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Semester</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.semester)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Current SGPA</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.currentSgpa)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Overall CGPA</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.overallCgpa)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Exam Date</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.published)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Attempted</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.attempted)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Cleared</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.cleared)}</span>
+                </div>
+
+                <div className={styles['view-detail-row']}>
+                  <span className={styles['view-detail-label']}>Pending</span>
+                  <span className={styles['view-detail-colon']}>:</span>
+                  <span className={styles['view-detail-value']}>{renderValue(student.pending)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - White Cards + Table */}
+          <div className={styles['view-right-column']}>
+            {/* Preview & Download Cards */}
+            <div className={styles['view-action-cards']}>
+              <div className={styles['view-action-card']} onClick={handlePreviewMarksheet}>
+                <img src={Previewicon} alt="Preview" className={styles['view-action-icon']} />
+                <h3 className={styles['view-action-title']}>Edit Marksheet</h3>
+                <p className={styles['view-action-description']}>
+                  Review, Edits and Update Student Semester Marksheet Records.
+                </p>
+              </div>
+
+              <div className={styles['view-action-card']} onClick={handleDownloadMarksheet}>
+                <img src={Download} alt="Download" className={styles['view-action-icon-download']} />
+                <h3 className={styles['view-action-title']}>Download Marksheet</h3>
+                <p className={styles['view-action-description']}>
+                  Download the student's current semester marksheet.
+                </p>
+              </div>
+            </div>
+
+            {/* Semester Students Table Section */}
+            {(() => {
+              const hasSubjects = Array.isArray(students) && students.length > 0;
+
+              if (hasSubjects) {
+                return (
+                  <div className={styles['view-info-note']} style={{ marginTop: '5px', paddingTop: '0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0' }}>
+                      <h3 className={styles['view-note-title']} style={{ margin: '0 0 0 0' }}>Semester {student.semester} - Subjects ({students.length})</h3>
+                      <button className={styles['view-discard-btn']} onClick={handleDiscard} style={{ marginTop: '0', width: 'auto', padding: '8px 24px' }}>
+                        Back
+                      </button>
+                    </div>
+                    <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+                      {console.log('🎯 [TABLE RENDER DEBUG] Rendering table with', students.length, 'subjects')}
+                      <table style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '14px'
+                      }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#E63946', borderBottom: '2px solid #C94855' }}>
+                            <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '50px' }}>S.NO</th>
+                            <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '60px' }}>Sem</th>
+                            <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px' }}>Course Code</th>
+                            <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px' }}>Course Name</th>
+                            <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '80px' }}>Credits</th>
+                            <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '80px' }}>Grade</th>
+                            <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', color: '#fff', textTransform: 'uppercase', fontSize: '12px', width: '80px' }}>Result</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students.map((subject, index) => {
+                            const courseCode = normalizeCourseCode(subject.courseCode);
+                            const masterCredits = masterCreditLookup.get(courseCode);
+                            const rawCredits = subject.credits;
+                            const normalizedCredits = (rawCredits === '' || rawCredits === null || rawCredits === undefined)
+                              ? null
+                              : rawCredits;
+                            const creditsValue = normalizedCredits ?? masterCredits;
+                            const creditsDisplay = (creditsValue === null || creditsValue === undefined || creditsValue === '')
+                              ? '--'
+                              : creditsValue;
+                            const semesterValue = subject.semester || subject.sem || currentSemester || '--';
+                            return (
+                              <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '8px', textAlign: 'center' }}>{index + 1}</td>
+                                <td style={{ padding: '8px', textAlign: 'center' }}>{semesterValue}</td>
+                                <td style={{ padding: '8px' }}>{subject.courseCode || ''}</td>
+                                <td style={{ padding: '8px' }}>{subject.courseName || subject.subjectName || ''}</td>
+                                <td style={{ padding: '8px', textAlign: 'center' }}>{creditsDisplay}</td>
+                                <td style={{ padding: '8px', textAlign: 'center' }}>{subject.grade || ''}</td>
+                                <td style={{ padding: '8px', textAlign: 'center', color: (subject.result === 'F' || subject.grade === 'U' || subject.grade === 'RA') ? '#C53030' : '#4EA24E', fontWeight: '500' }}>
+                                  {subject.result || ((subject.grade === 'U' || subject.grade === 'RA') ? 'F' : 'P')}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (isLoading) {
+                return (
+                  <div className={styles['view-info-note']}>
+                    <p style={{ textAlign: 'center', color: '#666' }}>Loading semester data...</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className={styles['view-info-note']}>
+                  <p style={{ textAlign: 'center', color: '#666' }}>No subjects found.</p>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+      
+      {/* Export Popups removed (no longer used) */}
+    </div>
+  );
+};
+
+export default CoordinatorManageStudentView;

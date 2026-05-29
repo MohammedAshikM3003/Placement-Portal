@@ -1,5 +1,5 @@
 // Forced rewrite to trigger React HMR
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
@@ -54,7 +54,6 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     const [extractedData, setExtractedData] = useState(location.state?.student || null); // Initialize with student data
     const [semesterLoading, setSemesterLoading] = useState(false);
     const [semesterError, setSemesterError] = useState('');
-    const [masterSubjects, setMasterSubjects] = useState([]);
 
     // Calculate SGPA
     const calculateSGPA = useCallback(() => {
@@ -86,7 +85,15 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     };
 
     const handleBack = () => {
-        navigate(-1);
+        // Prefer an explicit path back to the semester detail listing
+        // if caller did not provide an explicit returnPath.
+        const returnPath = location.state?.returnPath;
+        if (returnPath) {
+            navigate(returnPath);
+            return;
+        }
+
+        navigate('/coo-ms-semester-detail');
     };
 
     useEffect(() => {
@@ -96,39 +103,6 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
             setExtractedData(location.state.student); // Use this for display
         }
     }, [location.state]);
-
-    useEffect(() => {
-        const loadMasterSubjects = async () => {
-            try {
-                const authToken = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/subjects`, {
-                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load subject master list');
-                }
-
-                const data = await response.json();
-                setMasterSubjects(Array.isArray(data.subjects) ? data.subjects : []);
-            } catch (error) {
-                console.error('Error loading subject master list:', error);
-                setMasterSubjects([]);
-            }
-        };
-
-        loadMasterSubjects();
-    }, []);
-
-    const masterCreditLookup = useMemo(() => {
-        const lookup = new Map();
-        for (const subject of masterSubjects) {
-            const code = String(subject.courseCode || '').trim().toUpperCase();
-            if (!code) continue;
-            lookup.set(code, subject.credits ?? null);
-        }
-        return lookup;
-    }, [masterSubjects]);
 
     if (isInitialLoading) {
         return (
@@ -225,9 +199,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                         <div className={styles.uploadSection}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                                 <div className={styles.actionBox}>
-                                    <div className={styles.actionBoxIcon}>✏️</div>
-                                    <div className={styles.actionBoxTitle}>Edit Marksheet</div>
-                                    <div className={styles.actionBoxSubtitle}>Review, Edit and Update Student Semester Marksheet Records.</div>
+                                    <div className={styles.actionBoxIcon}>👁️</div>
+                                    <div className={styles.actionBoxTitle}>Preview Marksheet</div>
+                                    <div className={styles.actionBoxSubtitle}>View and analyse the student's current semester marksheet.</div>
                                 </div>
                                 <div className={styles.actionBox}>
                                     <div className={styles.actionBoxIcon}>⬇️</div>
@@ -244,8 +218,6 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                 <table className={styles.courseTableHeader}>
                                     <thead>
                                         <tr>
-                                            <th>S.NO</th>
-                                            <th>SEM</th>
                                             <th>COURSE CODE</th>
                                             <th>COURSE NAME</th>
                                             <th>CREDITS</th>
@@ -262,16 +234,6 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                             <tbody>
                                                 {extractedData?.subjects && extractedData.subjects.length > 0 ? (
                                                     extractedData.subjects.map((course, index) => {
-                                                        const courseCode = String(course.courseCode || '').trim().toUpperCase();
-                                                        const masterCredits = masterCreditLookup.get(courseCode);
-                                                        const rawCredits = course.credits;
-                                                        const normalizedCredits = (rawCredits === '' || rawCredits === null || rawCredits === undefined)
-                                                            ? null
-                                                            : rawCredits;
-                                                        const creditsValue = normalizedCredits ?? masterCredits;
-                                                        const creditsDisplay = (creditsValue === null || creditsValue === undefined || creditsValue === '')
-                                                            ? '--'
-                                                            : creditsValue;
                                                         const rawResult = (course.result || '').toString().trim().toUpperCase();
                                                         const resultValue = rawResult === 'PASS' ? 'P' : rawResult === 'FAIL' ? 'F' : rawResult;
                                                         const isFail = resultValue
@@ -280,11 +242,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
 
                                                         return (
                                                             <tr key={index}>
-                                                                <td>{index + 1}</td>
-                                                                <td>{course.semester || course.sem || studentData?.semester || studentData?.currentSemester || '--'}</td>
                                                                 <td>{course.courseCode || '--'}</td>
                                                                 <td>{course.courseName || '--'}</td>
-                                                                <td>{creditsDisplay}</td>
+                                                                <td>{course.credits || '0'}</td>
                                                                 <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>
                                                                 <td style={{ color: isFail ? '#C53030' : '#4EA24E', fontWeight: '600' }}>
                                                                     {resultValue || (isFail ? 'F' : 'P')}
@@ -294,7 +254,7 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                                     })
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
+                                                        <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
                                                             No subjects found for this semester.
                                                         </td>
                                                     </tr>
