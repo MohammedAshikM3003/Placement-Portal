@@ -23,6 +23,33 @@ const resolveProfileUrl = (url) => {
   return url;
 };
 
+const resolveResumeUrl = (source) => {
+  if (!source) return '';
+
+  const candidate = typeof source === 'string'
+    ? source
+    : source.gridfsFileUrl || source.url || source.resumeURL || source.pdfUrl || '';
+
+  if (!candidate) return '';
+  if (candidate.startsWith('data:') || candidate.startsWith('blob:') || candidate.startsWith('http')) {
+    return candidate;
+  }
+  if (candidate.startsWith('/api/file/')) return joinApiUrl(candidate);
+  if (candidate.startsWith('/file/')) return joinApiUrl(candidate);
+  if (/^[a-f0-9]{24}$/.test(candidate)) return joinApiUrl(`/file/${candidate}`);
+
+  if (/^[A-Za-z0-9+/=\s]+$/.test(candidate) && candidate.length > 200) {
+    return `data:application/pdf;base64,${candidate}`;
+  }
+
+  return candidate;
+};
+
+const isRemotePdfUrl = (url) => {
+  if (!url) return false;
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/api/file/') || url.startsWith('/file/');
+};
+
 // --- Success Popup (Scoped Styles) ---
 const SuccessPopup = ({ onClose }) => (
   <div className={styles['Resume-popup-container']}>
@@ -944,7 +971,7 @@ function MainContent({ onViewChange }) {
 
     try {
       // Priority: fetch from MongoDB, then fallback to localStorage
-      let resumeUrl = resumeFromDB?.url || studentData?.resumeData?.url || studentData?.resumeURL;
+      let resumeUrl = resolveResumeUrl(resumeFromDB || studentData?.resumeData || studentData?.resumeURL);
       
       console.log('🔍 Resume URL source:', resumeFromDB ? 'MongoDB' : (studentData?.resumeData?.url ? 'localStorage resumeData' : 'localStorage resumeURL'));
       console.log('🔍 Resume URL length:', resumeUrl?.length);
@@ -964,7 +991,6 @@ function MainContent({ onViewChange }) {
         }
 
         try {
-          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
           const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
@@ -976,8 +1002,8 @@ function MainContent({ onViewChange }) {
           
           if (response.ok) {
             const result = await response.json();
-            if (result.success && result.resume?.url) {
-              resumeUrl = result.resume.url;
+            if (result.success && result.resume) {
+              resumeUrl = resolveResumeUrl(result.resume);
               setResumeFromDB(result.resume);
               console.log('✅ Resume fetched from MongoDB');
             }
@@ -1003,15 +1029,8 @@ function MainContent({ onViewChange }) {
         // Open resume in new tab/window
         setTimeout(() => {
           setPreviewPopupState('none');
-
-          // Convert relative URLs to absolute URLs
-          let fullUrl = resumeUrl;
-          if (resumeUrl.startsWith('/api/file/') || resumeUrl.startsWith('/file/')) {
-            fullUrl = `${API_BASE_URL.replace('/api', '')}${resumeUrl}`;
-            console.log('✅ Converted to full URL:', fullUrl);
-          }
-
-          window.open(fullUrl, '_blank', 'noopener,noreferrer');
+          sessionStorage.setItem('resumePreviewUrl', resumeUrl);
+          window.open('/resume-preview', '_blank');
         }, 500);
       }, 500);
       
@@ -1041,7 +1060,7 @@ function MainContent({ onViewChange }) {
 
     try {
       // Priority: fetch from MongoDB, then fallback to localStorage
-      let resumeUrl = resumeFromDB?.url || studentData?.resumeData?.url || studentData?.resumeURL;
+      let resumeUrl = resolveResumeUrl(resumeFromDB || studentData?.resumeData || studentData?.resumeURL);
       const resumeName = resumeFromDB?.name || studentData?.resumeData?.name || `${studentData?.firstName}_${studentData?.lastName}_Resume.pdf` || 'resume.pdf';
       
       console.log('📥 Resume URL source:', resumeFromDB ? 'MongoDB' : (studentData?.resumeData?.url ? 'localStorage resumeData' : 'localStorage resumeURL'));
@@ -1062,7 +1081,6 @@ function MainContent({ onViewChange }) {
         }
 
         try {
-          const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
           const authToken = localStorage.getItem('authToken');
           
           const response = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
@@ -1074,8 +1092,8 @@ function MainContent({ onViewChange }) {
           
           if (response.ok) {
             const result = await response.json();
-            if (result.success && result.resume?.url) {
-              resumeUrl = result.resume.url;
+            if (result.success && result.resume) {
+              resumeUrl = resolveResumeUrl(result.resume);
               setResumeFromDB(result.resume);
               console.log('✅ Resume fetched from MongoDB');
             }
@@ -1099,14 +1117,12 @@ function MainContent({ onViewChange }) {
         setDownloadProgress(100);
 
         try {
-          // Check if it's a GridFS URL
-          if (resumeUrl.startsWith('/api/file/') || resumeUrl.includes('/api/file/')) {
+          // Check if it's a GridFS or remote URL and fetch as a blob for download.
+          if (isRemotePdfUrl(resumeUrl)) {
             console.log('✅ GridFS URL detected, fetching as blob for download');
-            const fullUrl = resumeUrl.startsWith('http') ? resumeUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${resumeUrl}`;
-
             try {
               // Fetch as blob to force download instead of opening in browser
-              const response = await fetch(fullUrl);
+              const response = await fetch(resumeUrl);
               if (!response.ok) throw new Error('Failed to fetch file');
 
               const blob = await response.blob();
@@ -1132,33 +1148,14 @@ function MainContent({ onViewChange }) {
             return;
           }
 
-          // Ensure proper format
-          let formattedData = resumeUrl;
-          
           console.log('📥 Resume URL type:', typeof resumeUrl);
           console.log('📥 Resume URL length:', resumeUrl.length);
-          
-          if (!resumeUrl.startsWith('data:')) {
+
+          let formattedData = resumeUrl;
+
+          if (!resumeUrl.startsWith('data:') && !resumeUrl.startsWith('blob:') && !isRemotePdfUrl(resumeUrl)) {
             formattedData = `data:application/pdf;base64,${resumeUrl}`;
-            console.log('✅ Added data URL prefix');
-          } else {
-            console.log('✅ URL already has data prefix');
-          }
-          
-          // Check if data is comma-separated bytes and convert to proper data URL
-          if (formattedData.startsWith('data:application/pdf;base64,')) {
-            const commaIndex = formattedData.indexOf(',');
-            const dataAfterPrefix = formattedData.substring(commaIndex + 1);
-            
-            // Check if it's comma-separated bytes
-            if (dataAfterPrefix.includes(',') && /^[\d,]+$/.test(dataAfterPrefix.substring(0, 100))) {
-              console.log('🔧 Converting comma-separated bytes for download...');
-              const byteStrings = dataAfterPrefix.split(',');
-              const byteArray = new Uint8Array(byteStrings.map(str => parseInt(str, 10)));
-              const blob = new Blob([byteArray], { type: 'application/pdf' });
-              formattedData = URL.createObjectURL(blob);
-              console.log('✅ Converted to blob URL for download');
-            }
+            console.log('✅ Added data URL prefix for inline base64 content');
           }
           
           // Direct download

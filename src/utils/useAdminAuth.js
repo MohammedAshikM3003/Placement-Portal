@@ -10,7 +10,7 @@ const CACHE_TTL = 3000; // 3 seconds
  * Uses in-memory cache to avoid redundant localStorage reads across renders
  * @returns {Object} Authentication state and admin info
  */
-const useAdminAuth = () => {
+const useAdminAuth = ({ allowUnauthenticated = false, redirectTo = '/admin-login' } = {}) => {
   const navigate = useNavigate();
 
   const authState = useMemo(() => {
@@ -29,6 +29,10 @@ const useAdminAuth = () => {
 
   useEffect(() => {
     if (!authState.valid) {
+      if (allowUnauthenticated) {
+        return;
+      }
+
       // Clear invalid session data
       localStorage.removeItem('authToken');
       localStorage.removeItem('adminId');
@@ -36,9 +40,9 @@ const useAdminAuth = () => {
       localStorage.removeItem('authRole');
       localStorage.removeItem('isLoggedIn');
       _adminAuthCache = { valid: false, token: null, role: null, adminId: null, ts: 0 };
-      navigate('/admin-login', { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [navigate, authState.valid]);
+  }, [allowUnauthenticated, navigate, redirectTo, authState.valid]);
 
   return {
     isAuthenticated: authState.valid,

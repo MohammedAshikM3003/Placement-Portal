@@ -560,7 +560,7 @@ function AdminstudDB() {
             })
             .catch((error) => {
                 console.error('AI filter failed:', error);
-                alert(error.message || 'AI filter failed. Please make sure Ollama is running and try again.');
+                alert(error.message || 'AI filter failed. Please make sure the local AI service is running and try again.');
                 setAiFilteredStudents([]);
                 setAiFilterColumns([]);
                 setAiFilterActive(false);

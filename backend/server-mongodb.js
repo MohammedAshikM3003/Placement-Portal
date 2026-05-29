@@ -10,6 +10,7 @@ const net = require('net');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const Admin = require('./models/Admin');
 mongoose.set('bufferCommands', false);
 mongoose.set('bufferTimeoutMS', 0);
 // Load environment variables from backend directory
@@ -48,6 +49,20 @@ const logRouteDebug = (message) => {
     if (process.env.ROUTE_DEBUG === '1') {
         console.log(`🧭 ROUTE_DEBUG: ${message}`);
     }
+};
+
+const stripLocalhostUrls = (data) => {
+    if (!data) return data;
+    const fields = ['profilePhoto', 'collegeBanner', 'naacCertificate', 'nbaCertificate', 'collegeLogo'];
+    for (const field of fields) {
+        if (data[field] && typeof data[field] === 'string') {
+            const match = data[field].match(/(\/api\/file\/[a-f0-9]{24})/i);
+            if (match) {
+                data[field] = match[1];
+            }
+        }
+    }
+    return data;
 };
 
 // ========================================
@@ -596,6 +611,40 @@ app.get('/api/coordinators', async (req, res) => {
     }
 });
 
+// Public admin collection endpoint for list views that only need sanitized admin rows
+app.get('/api/public/admins', async (req, res) => {
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    try {
+        if (!isMongoConnected) {
+            return res.status(503).json({
+                success: false,
+                message: 'Database not connected',
+                details: 'Please retry after MongoDB connection is established.'
+            });
+        }
+
+        const admins = await Admin.find({})
+            .select('-adminPassword')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const sanitizedAdmins = admins.map((admin) => stripLocalhostUrls({ ...admin }));
+
+        return res.json({
+            success: true,
+            data: sanitizedAdmins
+        });
+    } catch (error) {
+        console.error('Get public admins error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch admins',
+            details: error.message
+        });
+    }
+});
+
 // -------------------------------------------------
 // Admin Profile APIs
 // -------------------------------------------------
@@ -623,6 +672,17 @@ try {
     console.log('✅ Resume builder routes loaded successfully');
 } catch (error) {
     console.error('❌ Failed to load resume builder routes:', error.message);
+}
+
+// -------------------------------------------------
+// Rule-Based AI Service APIs
+// -------------------------------------------------
+try {
+    const aiServiceRoutes = require('./routes/aiService');
+    app.use('/api/ai', aiServiceRoutes);
+    console.log('✅ AI service routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load AI service routes:', error.message);
 }
 
 // -------------------------------------------------
@@ -684,15 +744,15 @@ try {
 }
 
 // -------------------------------------------------
-// Ollama AI Status API
+// Rule-Based AI Status API
 // -------------------------------------------------
 app.get('/api/ai/status', async (req, res) => {
     try {
-        const { checkOllamaStatus } = require('./ollamaService');
-        const status = await checkOllamaStatus();
+        const { health } = require('./services/aiService');
+        const status = await health();
         res.json({ success: true, ...status });
     } catch (error) {
-        res.json({ success: false, running: false, error: error.message });
+        res.json({ success: false, status: 'unavailable', error: error.message });
     }
 });
 
@@ -715,48 +775,25 @@ app.post('/api/feedback/generate', authenticateToken, checkRole('admin'), async 
             return res.status(400).json({ error: 'feedbackType must be passed or failed' });
         }
 
-        const { callOllama, checkOllamaStatus } = require('./ollamaService');
-        const status = await checkOllamaStatus();
-
-        if (!status?.running) {
-            return res.status(503).json({
-                error: 'Ollama is not running. Please start Ollama on your machine.',
-                details: 'Run: ollama serve'
-            });
-        }
+        const { enhanceResume } = require('./services/aiService');
 
         const normalizedType = String(feedbackType).toLowerCase();
-        const audienceLabel = normalizedType === 'passed' ? 'passed students' : 'failed students';
-        const prompt = `You are an HR/Admin assistant.
-Rewrite and improve the following placement round feedback in clear, grammatical, professional English.
+        const draftText = (baseText || '').toString().trim() || (normalizedType === 'passed'
+            ? 'Students showed good performance in communication, technical knowledge, and overall attitude.'
+            : 'Students need improvement in technical fundamentals, confidence, and communication clarity.');
 
-Rules:
-- Keep the feedback concise (80-140 words).
-- Keep the meaning aligned with the admin intent.
-- Be respectful, specific, and easy to understand.
-- Do not include markdown, bullets, headings, or quotes.
-
-Context:
-- Company: ${companyName || 'N/A'}
-- Job Role: ${jobRole || 'N/A'}
-- Round Number: ${roundNumber || 'N/A'}
-- Round Name: ${roundName || 'N/A'}
-- Audience: ${audienceLabel}
-- Student Count: ${Number(studentCount) || 0}
-
-Admin Draft:
-${(baseText || '').toString().trim() || (normalizedType === 'passed'
-    ? 'Students showed good performance in communication, technical knowledge, and overall attitude.'
-    : 'Students need improvement in technical fundamentals, confidence, and communication clarity.')}
-
-Return only the improved feedback paragraph.`;
-
-        const generatedText = await callOllama(prompt, { temperature: 0.35, max_tokens: 220 });
+        let improvedText = draftText;
+        try {
+            const enhanced = await enhanceResume(draftText);
+            improvedText = (enhanced.enhanced || enhanced.corrected || draftText).toString().trim();
+        } catch (aiError) {
+            console.warn('AI enhancement failed, using draft text:', aiError.message);
+        }
 
         return res.json({
             success: true,
-            feedback: (generatedText || '').toString().trim(),
-            model: status?.requiredModel || process.env.OLLAMA_MODEL || 'ollama'
+            feedback: improvedText,
+            model: 'rule-based'
         });
     } catch (error) {
         console.error('Admin feedback generate error:', error);
@@ -925,71 +962,30 @@ app.post('/api/student-feedback/generate', authenticateToken, checkRole('student
             return res.status(400).json({ error: 'textType must be feedback or suggestion' });
         }
 
-        const { callOllama, checkOllamaStatus } = require('./ollamaService');
-        const status = await checkOllamaStatus();
-
-        if (!status?.running) {
-            return res.status(503).json({
-                error: 'Ollama is not running. Please start Ollama on your machine.',
-                details: 'Run: ollama serve'
-            });
-        }
+        const { enhanceResume } = require('./services/aiService');
 
         const normalizedDifficulty = String(difficulty || '').trim() || 'N/A';
         const normalizedRoundStatus = String(roundStatus || '').trim() || 'N/A';
         const draftText = (baseText || '').toString().trim();
 
-        const prompt = normalizedTextType === 'feedback'
-            ? `You are a placement coaching assistant.
-Rewrite and improve the student's round feedback in clear, professional English.
+        const fallbackText = normalizedTextType === 'feedback'
+            ? 'I attended this round and tried to answer with clarity and confidence while applying my technical knowledge.'
+            : 'I should improve technical depth, revise core concepts regularly, and practice clear communication in mock interviews.';
 
-Rules:
-- Keep it concise (70-120 words).
-- Keep it in first person (student perspective).
-- Mention performance highlights and communication quality.
-- Do not include markdown, bullets, headings, or quotes.
-
-Context:
-- Company: ${companyName || 'N/A'}
-- Job Role: ${jobRole || 'N/A'}
-- Round Number: ${roundNumber || 'N/A'}
-- Round Name: ${roundName || 'N/A'}
-- Difficulty: ${normalizedDifficulty}
-- Round Status: ${normalizedRoundStatus}
-
-Student Draft:
-${draftText || 'I attended this round and tried to answer with clarity and confidence while applying my technical knowledge.'}
-
-Return only the improved feedback paragraph.`
-            : `You are a placement coaching assistant.
-Rewrite and improve the student's suggestion text into practical and actionable improvement points as one concise paragraph.
-
-Rules:
-- Keep it concise (70-120 words).
-- Keep it in first person (student perspective).
-- Focus on specific next steps for preparation.
-- Do not include markdown, bullets, headings, or quotes.
-
-Context:
-- Company: ${companyName || 'N/A'}
-- Job Role: ${jobRole || 'N/A'}
-- Round Number: ${roundNumber || 'N/A'}
-- Round Name: ${roundName || 'N/A'}
-- Difficulty: ${normalizedDifficulty}
-- Round Status: ${normalizedRoundStatus}
-
-Student Draft:
-${draftText || 'I should improve technical depth, revise core concepts regularly, and practice clear communication in mock interviews.'}
-
-Return only the improved suggestion paragraph.`;
-
-        const generatedText = await callOllama(prompt, { temperature: 0.35, max_tokens: 220 });
+        const baseDraft = draftText || fallbackText;
+        let improvedText = baseDraft;
+        try {
+            const enhanced = await enhanceResume(baseDraft);
+            improvedText = (enhanced.enhanced || enhanced.corrected || baseDraft).toString().trim();
+        } catch (aiError) {
+            console.warn('AI enhancement failed, using draft text:', aiError.message);
+        }
 
         return res.json({
             success: true,
             textType: normalizedTextType,
-            text: (generatedText || '').toString().trim(),
-            model: status?.requiredModel || process.env.OLLAMA_MODEL || 'ollama'
+            text: improvedText,
+            model: 'rule-based'
         });
     } catch (error) {
         console.error('Student feedback generate error:', error);
@@ -6110,6 +6106,21 @@ coordinatorSchema.index({ createdAt: -1 });
 
 const Coordinator = mongoose.model('Coordinator', coordinatorSchema, 'coordinators');
 
+// Impersonation audit log schema
+const impersonationLogSchema = new mongoose.Schema({
+    adminId: { type: String },
+    adminLoginID: { type: String },
+    coordinatorId: { type: String },
+    coordinatorObjectId: { type: String },
+    ip: { type: String },
+    userAgent: { type: String },
+    success: { type: Boolean, default: false },
+    message: { type: String },
+    timestamp: { type: Date, default: Date.now }
+}, { strict: false });
+
+const ImpersonationLog = mongoose.model('ImpersonationLog', impersonationLogSchema, 'impersonation_logs');
+
 const companySchema = new mongoose.Schema({
     companyName: { type: String, required: true, trim: true },
     domain: { type: String, trim: true },
@@ -7445,22 +7456,39 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
         coordinatorPayload.coordinatorId = coordinatorDoc.coordinatorId;
     }
 
-    const token = jwt.sign({
-        userId: coordinatorDoc._id || coordinatorDoc.id || coordinatorPayload._id,
-        coordinatorId: coordinatorPayload.coordinatorId,
-        role: 'coordinator'
-    }, JWT_SECRET, { expiresIn: '6h' });
+        const token = jwt.sign({
+            userId: coordinatorDoc._id || coordinatorDoc.id || coordinatorPayload._id,
+            coordinatorId: coordinatorPayload.coordinatorId,
+            role: 'coordinator'
+        }, JWT_SECRET, { expiresIn: '6h' });
 
-    console.log('✅ Coordinator login successful:', {
-        coordinatorId: coordinatorPayload.coordinatorId,
-        name: coordinatorPayload.fullName || coordinatorPayload.username || 'N/A'
-    });
+        console.log('✅ Coordinator login successful:', {
+            coordinatorId: coordinatorPayload.coordinatorId,
+            name: coordinatorPayload.fullName || coordinatorPayload.username || 'N/A'
+        });
 
-    return res.json({
-        message: 'Coordinator login successful',
-        token,
-        coordinator: coordinatorPayload
-    });
+        // Audit: coordinator login (normal coordinator login) - write a log entry
+        try {
+            const logEntry = new ImpersonationLog({
+                adminId: null,
+                adminLoginID: null,
+                coordinatorId: coordinatorPayload.coordinatorId,
+                coordinatorObjectId: coordinatorDoc._id,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: true,
+                message: 'Coordinator login (direct)'
+            });
+            logEntry.save().catch(() => { /* non-blocking */ });
+        } catch (e) {
+            // ignore
+        }
+
+        return res.json({
+            message: 'Coordinator login successful',
+            token,
+            coordinator: coordinatorPayload
+        });
 });
 
 // Initialize default admin account (for first-time setup) - PUBLIC ENDPOINT
@@ -7776,6 +7804,82 @@ app.post('/api/auth/admin-login', async (req, res) => {
         admin: adminPayload
     });
 });
+
+    // Admin impersonation endpoint — issue a short-lived coordinator token for admins
+    app.post('/api/admin/impersonate/coordinator', authenticateToken, checkRole('admin'), async (req, res) => {
+        try {
+            const { coordinatorId, coordinatorObjectId } = req.body || {};
+
+            if (!coordinatorId && !coordinatorObjectId) {
+                return res.status(400).json({ success: false, error: 'coordinatorId or coordinatorObjectId is required' });
+            }
+
+            let coordinatorDoc = null;
+            if (coordinatorObjectId) {
+                coordinatorDoc = await Coordinator.findById(coordinatorObjectId).lean();
+            } else {
+                coordinatorDoc = await Coordinator.findOne({ coordinatorId }).lean();
+            }
+
+            if (!coordinatorDoc) {
+                return res.status(404).json({ success: false, error: 'Coordinator not found' });
+            }
+
+            // Prevent impersonation of blocked coordinators
+            if (coordinatorDoc.isBlocked || coordinatorDoc.blocked) {
+                return res.status(403).json({ success: false, isBlocked: true, error: 'Coordinator is blocked' });
+            }
+
+            const coordinatorPayload = sanitizeCoordinator(coordinatorDoc) || {};
+
+            // Issue a short-lived token scoped as coordinator (15 minutes)
+            const token = jwt.sign({
+                userId: coordinatorDoc._id || coordinatorDoc.id,
+                coordinatorId: coordinatorPayload.coordinatorId || coordinatorDoc.coordinatorId,
+                role: 'coordinator',
+                impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
+            }, JWT_SECRET, { expiresIn: '15m' });
+
+            // Audit log - successful impersonation
+            try {
+                const log = new ImpersonationLog({
+                    adminId: req.user?.userId || null,
+                    adminLoginID: req.user?.adminLoginID || null,
+                    coordinatorId: coordinatorPayload.coordinatorId || null,
+                    coordinatorObjectId: coordinatorDoc._id || null,
+                    ip: req.ip || req.connection?.remoteAddress || '',
+                    userAgent: req.headers['user-agent'] || '',
+                    success: true,
+                    message: 'Impersonation successful'
+                });
+                await log.save();
+            } catch (logErr) {
+                console.warn('Failed to write impersonation audit log:', logErr?.message || logErr);
+            }
+
+            return res.json({ success: true, token, coordinator: coordinatorPayload });
+        } catch (err) {
+            console.error('Impersonation error:', err);
+            // Audit log - failed impersonation attempt
+            try {
+                const log = new ImpersonationLog({
+                    adminId: req.user?.userId || null,
+                    adminLoginID: req.user?.adminLoginID || null,
+                    coordinatorId: req.body?.coordinatorId || null,
+                    coordinatorObjectId: req.body?.coordinatorObjectId || null,
+                    ip: req.ip || req.connection?.remoteAddress || '',
+                    userAgent: req.headers['user-agent'] || '',
+                    success: false,
+                    message: err?.message || 'Impersonation failed'
+                });
+                await log.save();
+            } catch (logErr) {
+                /* ignore */
+            }
+
+            return res.status(500).json({ success: false, error: 'Server error during impersonation' });
+        }
+    });
 
 // Student login with bulletproof connection handling - OPTIMIZED FOR SPEED ⚡
 app.post('/api/students/login', async (req, res) => {
@@ -8193,7 +8297,7 @@ app.get('/api/students/check/:regNo', async (req, res) => {
 });
 
 app.get('/api/students', async (req, res) => {
-    const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false' } = req.query;
+    const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false', all = 'false' } = req.query;
     
     console.log('📋 Students Request:', { page, limit, includeImages, includeArchived, filters: { name, regNo, department, branch, batch } });
     console.log('🔌 MongoDB Status:', mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED');
@@ -8237,6 +8341,30 @@ app.get('/api/students', async (req, res) => {
                 : '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
 
             // Execute optimized query with lean() for 50% faster execution
+            if (all === 'true') {
+                const list = await Student.find(query)
+                    .select(selectFields)
+                    .sort({ regNo: 1 })
+                    .lean()
+                    .exec();
+
+                return res.json({
+                    students: list,
+                    total: list.length,
+                    totalPages: 1,
+                    currentPage: 1,
+                    page: 1,
+                    limit: list.length,
+                    pagination: {
+                        page: 1,
+                        limit: list.length,
+                        total: list.length,
+                        totalPages: 1,
+                        hasMore: false
+                    }
+                });
+            }
+
             const [list, total] = await Promise.all([
                 Student.find(query)
                     .select(selectFields)
@@ -8297,16 +8425,8 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
             return res.status(400).json({ error: 'Missing prompt' });
         }
 
-        const { parseStudentFilterQuery, checkOllamaStatus } = require('./ollamaService');
+        const { parseStudentFilterQuery } = require('./services/studentFilterService');
         const PlacedStudent = require('./models/PlacedStudent');
-
-        const ollamaStatus = await checkOllamaStatus();
-        if (!ollamaStatus.running) {
-            return res.status(503).json({
-                error: 'Ollama is not running. Please start Ollama on your machine.',
-                details: 'Run: ollama serve'
-            });
-        }
 
         // Use enhanced AI parsing
         const parsed = await parseStudentFilterQuery(prompt) || {};
@@ -8712,7 +8832,7 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
             columns,
             filters,
             reason: parsed.reason || '',
-            model: 'ollama',
+            model: 'rule-based',
         });
     } catch (error) {
         console.error('AI student filter error:', error);

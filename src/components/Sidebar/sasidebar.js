@@ -63,9 +63,9 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 // Navigation items reduced to three: Students, Coordinators, Admin
 const sidebarItems = [
-  { icon: StudentSidebarIcon, text: 'Students', view: 'admin-student-database' },
-  { icon: CoordinatorSidebarIcon, text: 'Coordinators', view: 'admin-manage-coordinators' },
-  { icon: AdminSidebarIcon, text: 'Admin', view: 'admin-profile-main' },
+  { icon: StudentSidebarIcon, text: 'Students', view: 'sastu-page' },
+  { icon: CoordinatorSidebarIcon, text: 'Coordinators', view: 'sacoo-page' },
+  { icon: AdminSidebarIcon, text: 'Admin', view: 'saad-page' },
 ];
 
 
@@ -150,6 +150,31 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
       const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
       const authToken = localStorage.getItem('authToken');
 
+      if (!authToken) {
+        const cachedProfile = localStorage.getItem('adminProfileCache');
+        if (cachedProfile) {
+          try {
+            const data = JSON.parse(cachedProfile);
+            if (data) {
+              const fullName = (data.firstName || data.lastName)
+                ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+                : data.name || 'Admin';
+
+              const profileData = {
+                name: fullName,
+                profilePhoto: normalizeSidebarProfilePhoto(data.profilePhoto)
+              };
+
+              cachedAdminProfile = profileData;
+              cachedProfileTimestamp = Date.now();
+              setAdminProfile(profileData);
+            }
+          } catch (_) {}
+        }
+
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -219,9 +244,30 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
             img.src = profilePhotoUrl;
           }
         }
+      } else if (response.status === 401 || response.status === 403) {
+        const cachedProfile = localStorage.getItem('adminProfileCache');
+        if (cachedProfile) {
+          try {
+            const data = JSON.parse(cachedProfile);
+            const fullName = (data.firstName || data.lastName)
+              ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+              : data.name || 'Admin';
+
+            const profileData = {
+              name: fullName,
+              profilePhoto: normalizeSidebarProfilePhoto(data.profilePhoto)
+            };
+
+            cachedAdminProfile = profileData;
+            cachedProfileTimestamp = Date.now();
+            setAdminProfile(profileData);
+          } catch (_) {}
+        }
       }
     } catch (error) {
-      console.error('Error fetching admin profile:', error);
+      if (error?.name !== 'AbortError') {
+        console.error('Error fetching admin profile:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -360,6 +406,8 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
 
   const isAdminProfilePage = window.location.pathname.startsWith('/admin-profile/');
   const isSastuPage = window.location.pathname === '/sastu-page';
+  const isSaCooPage = window.location.pathname === '/sacoo-page';
+  const isSaAdPage = window.location.pathname === '/saad-page';
   const isCertificateViewPage = window.location.pathname.startsWith('/admin-student-certificates/');
   const isAdminStudentViewPage = window.location.pathname.startsWith('/admin-student-view/');
   const isAdminStudentEditPage = window.location.pathname.startsWith('/admin-student-edit/');
@@ -446,12 +494,16 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
               to={viewToPath(item.view)}
               data-view={item.view}
               className={({ isActive }) => {
-                if (item.view === 'admin-student-database') {
-                  const shouldHighlight = isActive || isSastuPage || isAdminProfilePage || isCertificateViewPage || isAdminStudentViewPage || isAdminStudentEditPage || isAdminSemesterMarksheetViewPage || isActiveZipPage;
+                if (item.view === 'sastu-page') {
+                  const shouldHighlight = isActive || isSastuPage || window.location.pathname === '/admin-student-database' || isAdminProfilePage || isCertificateViewPage || isAdminStudentViewPage || isAdminStudentEditPage || isAdminSemesterMarksheetViewPage || isActiveZipPage;
                   return `${styles['sa-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
                 }
-                if (item.view === 'admin-manage-coordinators') {
-                  const shouldHighlight = isActive || isAddBranchPage || isManageCoordinatorsPage;
+                if (item.view === 'sacoo-page') {
+                  const shouldHighlight = isActive || isSaCooPage || isAddBranchPage || isManageCoordinatorsPage || isCoordinatorDetailPage;
+                  return `${styles['sa-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
+                }
+                if (item.view === 'saad-page') {
+                  const shouldHighlight = isActive || isSaAdPage || window.location.pathname === '/admin-profile-main' || isAdminProfilePage;
                   return `${styles['sa-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
                 }
                 if (item.view === 'admin-student-application') {
@@ -474,7 +526,6 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
               }}
               onClick={(e) => {
                 if (onViewChange) {
-                  e.preventDefault();
                   onViewChange(item.view);
                 }
                 if (window.innerWidth <= 992 && isOpen) {

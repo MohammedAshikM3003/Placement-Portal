@@ -332,6 +332,7 @@ router.get('/pdf/:studentId', optionalAuth, async (req, res) => {
       resume: {
         name: resume.name,
         url: resumeUrl,
+        gridfsFileUrl: resume.gridfsFileUrl || '',
         regNo: resume.regNo,
         createdAt: resume.createdAt,
         updatedAt: resume.updatedAt,
@@ -413,127 +414,53 @@ router.post('/score', optionalAuth, async (req, res) => {
   }
 });
 
-// ===== AI GENERATE DESCRIPTION (via Ollama local AI) =====
+// ===== AI RESUME ENHANCEMENT (rule-based) =====
 router.post('/ai-generate', optionalAuth, async (req, res) => {
-  // Extend Express timeout for batch AI requests
-  req.setTimeout(120000); // 120s
-  res.setTimeout(120000); // 120s
-  
+  req.setTimeout(120000);
+  res.setTimeout(120000);
+
   try {
-    const { prompt, type } = req.body;
-    if (!prompt) {
-      return res.status(400).json({ error: 'Missing prompt' });
+    const { sections, text } = req.body || {};
+    const { enhanceResume } = require('../services/aiService');
+
+    const enhanceText = async (value) => {
+      const raw = (value || '').toString().trim();
+      if (!raw) return '';
+      const result = await enhanceResume(raw);
+      return (result.enhanced || result.corrected || raw).toString().trim();
+    };
+
+    if (text) {
+      const enhanced = await enhanceText(text);
+      return res.json({ success: true, text: enhanced, model: 'rule-based' });
     }
 
-    const { callOllama, checkOllamaStatus } = require('../ollamaService');
-
-    // Check if Ollama is running
-    const status = await checkOllamaStatus();
-    if (!status.running) {
-      return res.status(503).json({ 
-        error: 'Ollama is not running. Please start Ollama on your machine.',
-        details: 'Run: ollama serve'
-      });
+    if (!sections || typeof sections !== 'object') {
+      return res.status(400).json({ error: 'Missing sections or text' });
     }
 
-    const MIN_WORDS = 30;
-    const MAX_RETRIES = 2;
+    const summary = await enhanceText(sections.summary || '');
+    const experiences = Array.isArray(sections.experiences)
+      ? await Promise.all(sections.experiences.map(enhanceText))
+      : [];
+    const projects = Array.isArray(sections.projects)
+      ? await Promise.all(sections.projects.map(enhanceText))
+      : [];
+    const certifications = Array.isArray(sections.certifications)
+      ? await Promise.all(sections.certifications.map(enhanceText))
+      : [];
+    const achievements = Array.isArray(sections.achievements)
+      ? await Promise.all(sections.achievements.map(enhanceText))
+      : [];
 
-    // Helper: clean AI response text
-    function cleanText(raw) {
-      return raw.trim()
-        .replace(/^["'`]+|["'`]+$/g, '')
-        .replace(/^(Professional Summary|Summary|Here is|Here's|Here is your|Sure)[:\s,]*/i, '')
-        .replace(/\*\*/g, '').replace(/\*/g, '')
-        .replace(/^["'`]+|["'`]+$/g, '')
-        .trim();
-    }
-
-    // Helper: ensure text ends with punctuation
-    function fixPunctuation(text) {
-      const lastChar = text[text.length - 1];
-      if (['.', '!', '?'].includes(lastChar)) return text;
-      const lastEnd = Math.max(text.lastIndexOf('.'), text.lastIndexOf('!'), text.lastIndexOf('?'));
-      if (lastEnd > text.length * 0.6) {
-        return text.substring(0, lastEnd + 1).trim();
-      }
-      return text + '.';
-    }
-
-    let lastError = null;
-    let bestResponse = null;
-
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      try {
-        let currentPrompt = prompt;
-        if (attempt > 0) {
-          currentPrompt = `IMPORTANT: Your previous response was too short. You MUST write AT LEAST 60 words. Do NOT write less than 50 words under any circumstances.\n\n${prompt}\n\nREMINDER: The response MUST be 60-80 words long. Count your words before responding.`;
-        }
-
-        const systemPrompt = 'You are an expert Technical Recruiter and Professional Resume Writer specializing in the software engineering industry. Use strong action verbs and a confident, professional tone. Emphasize technical implementation and project impact. Ensure all output is ATS-friendly with industry-specific keywords.';
-        const fullPrompt = `${systemPrompt}\n\n${currentPrompt}${type === 'json' ? '\n\nIMPORTANT: Return ONLY valid JSON, no markdown code blocks, no extra text.' : ''}`;
-
-        console.log(`🤖 Backend: Ollama attempt ${attempt + 1}...`);
-        const text_raw = await callOllama(fullPrompt, {
-          temperature: 0.7,
-          max_tokens: type === 'json' ? 4096 : 1024,
-        });
-
-        if (!text_raw) {
-          lastError = new Error('Empty response from Ollama');
-          break;
-        }
-
-        let text = text_raw.trim();
-
-        // Special handling for JSON batch requests
-        if (type && type === 'json') {
-          text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
-          console.log(`✅ Backend: JSON generated via Ollama (length=${text.length})`);
-          return res.json({ success: true, text, model: 'ollama', wordCount: text.length });
-        }
-
-        text = cleanText(text);
-        const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-        console.log(`📊 Ollama: cleaned wordCount=${wordCount}`);
-
-        if (!bestResponse || wordCount > bestResponse.wordCount) {
-          bestResponse = { text, wordCount, model: 'ollama' };
-        }
-
-        if (wordCount >= MIN_WORDS) {
-          text = fixPunctuation(text);
-          console.log(`✅ Backend: Content generated via Ollama (${wordCount} words)`);
-          return res.json({ success: true, text, model: 'ollama', wordCount });
-        }
-
-        console.warn(`⚠️ Ollama: Only ${wordCount} words (need ${MIN_WORDS}+), ${attempt === 0 ? 'retrying with enhanced prompt...' : 'using best response...'}`);
-        lastError = new Error(`Response too short: ${wordCount} words`);
-        
-      } catch (err) {
-        console.error(`❌ Ollama failed:`, err.message);
-        lastError = err;
-        break;
-      }
-    }
-
-    // If we got any response, use the best one
-    if (bestResponse && bestResponse.wordCount >= 10) {
-      const text = fixPunctuation(bestResponse.text);
-      console.warn(`⚠️ Using best available response (${bestResponse.wordCount} words)`);
-      return res.json({ 
-        success: true, 
-        text, 
-        model: 'ollama', 
-        wordCount: bestResponse.wordCount, 
-        partial: true 
-      });
-    }
-
-    throw lastError || new Error('AI generation failed');
+    return res.json({
+      success: true,
+      data: { summary, experiences, projects, certifications, achievements },
+      model: 'rule-based'
+    });
   } catch (error) {
     console.error('AI generate error:', error);
-    res.status(500).json({ error: 'AI generation failed: ' + error.message });
+    res.status(500).json({ error: 'AI enhancement failed: ' + error.message });
   }
 });
 
@@ -992,50 +919,7 @@ router.post('/ats-check', optionalAuth, async (req, res) => {
 
     const analysis = performATSAnalysis(resumeData);
 
-    // Try AI-enhanced analysis with Ollama (local)
-    try {
-      const { analyzeATS } = require('../ollamaService');
-      const resumeText = buildPlainText(resumeData);
-      const aiAnalysis = await analyzeATS(resumeText);
-      
-      if (aiAnalysis) {
-        // Merge AI insights into our analysis
-        if (aiAnalysis.atsParseRate !== undefined) {
-          analysis.categories.content.checks[0].score = Math.min(100, aiAnalysis.atsParseRate);
-          analysis.categories.content.checks[0].status = aiAnalysis.atsParseRate >= 70 ? 'pass' : 'fail';
-        }
-        if (aiAnalysis.quantifyingImpact !== undefined) {
-          analysis.categories.content.checks[1].score = Math.min(100, aiAnalysis.quantifyingImpact);
-          analysis.categories.content.checks[1].status = aiAnalysis.quantifyingImpact >= 60 ? 'pass' : 'fail';
-        }
-        if (aiAnalysis.repetition !== undefined) {
-          analysis.categories.content.checks[2].score = Math.min(100, aiAnalysis.repetition);
-          analysis.categories.content.checks[2].status = aiAnalysis.repetition >= 70 ? 'pass' : 'fail';
-        }
-        if (aiAnalysis.spellingGrammar !== undefined) {
-          analysis.categories.content.checks[3].score = Math.min(100, aiAnalysis.spellingGrammar);
-          analysis.categories.content.checks[3].status = aiAnalysis.spellingGrammar >= 80 ? 'pass' : 'fail';
-        }
-        // Add AI issues
-        if (aiAnalysis.contentIssues?.length) analysis.categories.content.issues = aiAnalysis.contentIssues;
-        if (aiAnalysis.formatIssues?.length) analysis.categories.formatBrevity.issues = aiAnalysis.formatIssues;
-        if (aiAnalysis.styleIssues?.length) analysis.categories.style.issues = aiAnalysis.styleIssues;
-        if (aiAnalysis.sectionIssues?.length) analysis.categories.sections.issues = aiAnalysis.sectionIssues;
-        if (aiAnalysis.skillsIssues?.length) analysis.categories.skills.issues = aiAnalysis.skillsIssues;
-        if (aiAnalysis.strengths?.length) analysis.strengths = aiAnalysis.strengths;
-        if (aiAnalysis.criticalFixes?.length) analysis.criticalFixes = aiAnalysis.criticalFixes;
-        if (aiAnalysis.overallTips?.length) analysis.overallTips = aiAnalysis.overallTips;
-
-        // Recalculate overall score with AI data
-        recalculateOverallScore(analysis);
-        analysis.aiEnhanced = true;
-      } else {
-        analysis.aiEnhanced = false;
-      }
-    } catch (aiErr) {
-      console.warn('AI analysis failed, using rule-based:', aiErr.message);
-      analysis.aiEnhanced = false;
-    }
+    analysis.aiEnhanced = false;
 
     res.json({ success: true, analysis });
 
@@ -1099,7 +983,7 @@ router.post('/ats-check', optionalAuth, async (req, res) => {
             fileName: 'Resume Builder',
             fileType: 'builder',
             extractedText: buildPlainText(resumeData),
-            apiProvider: analysis.aiEnhanced ? 'ollama' : 'rule-based',
+            apiProvider: 'rule-based',
             processingTime,
             isResumeFile: false,
             updatedAt: new Date()

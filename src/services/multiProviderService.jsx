@@ -1,14 +1,14 @@
 // Multi-Provider Resume Analysis Service
-// Now uses Ollama (local AI) via backend — no API keys, no rate limits
+// Now uses the local AI service via backend — no cloud API keys required
 
 class MultiProviderAnalysisService {
   constructor() {
     this.apiBase = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-    console.log('✅ Resume Analysis Service initialized (Ollama via backend)');
+    console.log('✅ Resume Analysis Service initialized (local AI via backend)');
   }
 
   getAvailableProviders() {
-    return [{ name: 'ollama', isAvailable: true, cost: 'free' }];
+    return [{ name: 'local-ai', isAvailable: true, cost: 'free' }];
   }
 
   // Extract text from PDF/DOC/DOCX — uses local parsing (no cloud API)
@@ -117,7 +117,7 @@ Achievements
     return 'document file content text information data';
   }
 
-  // Analyze resume content using local pattern matching + Ollama AI via backend
+  // Analyze resume content using local pattern matching + backend AI
   async analyzeResumeContent(text) {
     console.log('🧠 Analyzing resume content...');
 
@@ -256,9 +256,9 @@ Achievements
   // Get provider status
   getProviderStatus() {
     return {
-      available: [{ name: 'ollama', isAvailable: true, cost: 'free' }],
+      available: [{ name: 'local-ai', isAvailable: true, cost: 'free' }],
       total: 1,
-      recommended: 'ollama'
+      recommended: 'local-ai'
     };
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import jsPDF from 'jspdf';
@@ -9,6 +9,7 @@ import styles from './Coo_ManageStudentView.module.css';
 import Download from "../assets/Downloadsemesterviewicon.svg";
 import Previewicon from "../assets/Adminpreviewmarksheeticon.svg";
 import Adminicons from "../assets/AdmingreenCapicon.svg";
+import { CertificateDownloadProgressAlert } from '../components/alerts';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { API_BASE_URL } from '../utils/apiConfig';
 
@@ -29,42 +30,21 @@ const emptyStudent = {
 };
 
 const SEMESTER_CACHE_KEY = 'cooSemesterMarksheetState';
-const CURRENT_MARKSHEET_CACHE_KEY = 'current_student_marksheet';
+const MIN_LOADING_DURATION_MS = 900;
 
 const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const persistedState = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return JSON.parse(sessionStorage.getItem(SEMESTER_CACHE_KEY) || 'null');
-    } catch (error) {
-      console.warn('⚠️ Unable to read cached semester view state:', error.message);
-      return null;
-    }
-  }, [location.key]);
-
-  const incomingStudent = location.state?.student || null;
-  const cachedStudent = persistedState?.student || null;
-  const hasNewStudent = Boolean(
-    incomingStudent?.regNo
-    && cachedStudent?.regNo
-    && String(incomingStudent.regNo) !== String(cachedStudent.regNo)
-  );
-
-  const studentData = incomingStudent || cachedStudent;
-  const persistedSubjects = hasNewStudent
-    ? []
-    : (location.state?.subjects || persistedState?.subjects || []);
-  const persistedSemesterRecord = hasNewStudent
-    ? null
-    : (location.state?.semesterRecord || persistedState?.semesterRecord || null);
-  const refreshToken = location.state?.refresh || location.state?.refreshToken || persistedState?.refreshToken || null;
+  const loadStartedAtRef = useRef(Date.now());
+  const studentData = location.state?.student || null;
+  const initialSubjects = Array.isArray(location.state?.subjects) ? location.state.subjects : [];
+  const initialSemesterRecord = location.state?.semesterRecord || null;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [semesterRecord, setSemesterRecord] = useState(persistedSemesterRecord);
+  const [semesterRecord, setSemesterRecord] = useState(initialSemesterRecord);
   const [isLoading, setIsLoading] = useState(true);
-  const [students, setStudents] = useState(Array.isArray(persistedSubjects) ? persistedSubjects : []);
+  const [loadingProgress, setLoadingProgress] = useState(18);
+  const [students, setStudents] = useState(initialSubjects);
   const [masterSubjects, setMasterSubjects] = useState([]);
   const normalizeCourseCode = (value) => String(value || '')
     .toUpperCase()
@@ -77,8 +57,8 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const [progress, setProgress] = useState(0);
 
   const studentSource = studentData?.isPreview
-    ? (studentData || semesterRecord || persistedSemesterRecord || {})
-    : (semesterRecord || studentData || persistedSemesterRecord || {});
+    ? (studentData || semesterRecord || {})
+    : (semesterRecord || studentData || {});
   const studentId = studentSource?.studentId || studentSource?._id || studentSource?.id || '';
   const currentSemester = studentSource?.currentSemester || studentSource?.semester || '';
   const displayName = studentSource?.name
@@ -123,21 +103,6 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [students, isLoading]);
 
   useEffect(() => {
-    if (!studentData && !semesterRecord) return;
-    try {
-      sessionStorage.setItem(SEMESTER_CACHE_KEY, JSON.stringify({
-        student: studentData || studentSource,
-        subjects: students,
-        semesterRecord: semesterRecord || persistedSemesterRecord || null,
-        selectedSubjectId: location.state?.selectedSubjectId || persistedState?.selectedSubjectId || ''
-      }));
-    } catch (error) {
-      console.warn('⚠️ Unable to cache semester view state:', error.message);
-    }
-  }, [studentData, semesterRecord, students, location.state?.selectedSubjectId, persistedState?.selectedSubjectId]);
-
-
-  useEffect(() => {
     const loadMasterSubjects = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/subjects`, {
@@ -173,6 +138,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [masterSubjects]);
 
   const fetchLatestStudentMarksheet = useCallback(async (options = {}) => {
+    const shouldManageLoadingState = options.setLoading !== false;
     const targetRegNo = options.regNo
       || location.state?.regNo
       || studentData?.regNo
@@ -194,37 +160,46 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
       return;
     }
 
-    if (options.setLoading !== false) {
+    if (shouldManageLoadingState) {
       setIsLoading(true);
     }
 
     try {
       console.log('🔄 Fetching latest marksheet...');
       const response = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, targetYear);
-      const record = response?.marksheet
+      let record = response?.marksheet
         || response?.record
         || (Array.isArray(response?.records) ? response.records[0] : null);
+
+      if (!record && targetYear) {
+        console.log('🔄 Retrying marksheet fetch without year filter...');
+        const fallbackResponse = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, '');
+        record = fallbackResponse?.marksheet
+          || fallbackResponse?.record
+          || (Array.isArray(fallbackResponse?.records) ? fallbackResponse.records[0] : null);
+      }
 
       if (record) {
         setSemesterRecord(record);
         setStudents(Array.isArray(record.subjects) ? record.subjects : []);
 
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(CURRENT_MARKSHEET_CACHE_KEY, JSON.stringify(record));
-        }
-
         console.log('✅ Fresh marksheet received');
+        return record;
       } else {
         console.warn('⚠️ No marksheet record found for refresh', {
           regNo: targetRegNo,
           semester: targetSemester,
           year: targetYear
         });
+        return null;
       }
     } catch (error) {
       console.error('❌ Fetch failed', error);
+      return null;
     } finally {
-      setIsLoading(false);
+      if (shouldManageLoadingState) {
+        setIsLoading(false);
+      }
     }
   }, [location.state?.regNo, location.state?.semester, location.state?.year, studentData, student.regNo, student.year, currentSemester, student.semester]);
 
@@ -241,52 +216,47 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [location.state?.refresh, location.state?.discard, location.state?.regNo, location.state?.semester, location.state?.year, fetchLatestStudentMarksheet]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!isLoading) {
+      setLoadingProgress(100);
       return;
     }
 
-    try {
-      const cached = localStorage.getItem(CURRENT_MARKSHEET_CACHE_KEY);
-      if (!cached) {
-        return;
-      }
+    setLoadingProgress(18);
+    const intervalId = setInterval(() => {
+      setLoadingProgress((currentProgress) => {
+        if (currentProgress >= 92) return currentProgress;
+        if (currentProgress >= 70) return Math.min(currentProgress + 2, 92);
+        if (currentProgress >= 35) return Math.min(currentProgress + 4, 70);
+        return Math.min(currentProgress + 6, 35);
+      });
+    }, 140);
 
-      const parsed = JSON.parse(cached);
-      if (parsed?.subjects && parsed.subjects.length > 0) {
-        console.log('⚡ Rendering cached subjects immediately');
-        setSemesterRecord(parsed);
-        setStudents(parsed.subjects);
-        setIsLoading(false);
-        fetchLatestStudentMarksheet({ setLoading: false });
-      }
-    } catch (error) {
-      console.warn('⚠️ Unable to read marksheet cache:', error.message);
-    }
-  }, [fetchLatestStudentMarksheet]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.warn('⚠ Loading timeout fallback');
-      setIsLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(timeout);
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [isLoading]);
 
   useEffect(() => {
     console.log('📚 Subjects loaded:', students?.length || 0);
   }, [students]);
 
+  const finishLoading = useCallback(async () => {
+    const elapsed = Date.now() - loadStartedAtRef.current;
+    if (elapsed < MIN_LOADING_DURATION_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_DURATION_MS - elapsed));
+    }
+    setIsLoading(false);
+  }, []);
+
   // Load semester record on component mount
   useEffect(() => {
     const loadSemesterData = async () => {
       try {
+        loadStartedAtRef.current = Date.now();
         setIsLoading(true);
         if (!currentSemester) {
-          if (Array.isArray(persistedSubjects) && persistedSubjects.length > 0) {
-            setStudents(persistedSubjects);
+          if (Array.isArray(initialSubjects) && initialSubjects.length > 0) {
+            setStudents(initialSubjects);
           }
-          setIsLoading(false);
+          await finishLoading();
           return;
         }
 
@@ -296,8 +266,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           semester: currentSemester
         });
 
-        let response = null;
-        const fallbackSubjects = Array.isArray(persistedSubjects) ? persistedSubjects : [];
+        const fallbackSubjects = Array.isArray(initialSubjects) ? initialSubjects : [];
         const previewSubjects = Array.isArray(studentData?.subjects) ? studentData.subjects : fallbackSubjects;
         const isPreviewData = Boolean(studentData?.isPreview) && !location.state?.refresh && !location.state?.discard;
 
@@ -312,39 +281,31 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           setSemesterRecord(studentData);
           setStudents(previewSubjects);
           console.log('✅ Preview data loaded:', previewSubjects.length, 'subjects');
-          setIsLoading(false);
+          await finishLoading();
           return;
         }
-        await fetchLatestStudentMarksheet({
+        const fetchedRecord = await fetchLatestStudentMarksheet({
           regNo: student.regNo,
           semester: currentSemester,
           year: student.year || '',
           setLoading: false
         });
+
+        if (fetchedRecord?.subjects && Array.isArray(fetchedRecord.subjects)) {
+          setSemesterRecord(fetchedRecord);
+          setStudents(fetchedRecord.subjects);
+        }
       } catch (error) {
         console.error('❌ Error loading data:', error);
-        
-        // --- BULLETPROOF FALLBACK ---
-        if (!location.state?.refresh && !location.state?.discard) {
-          if (Array.isArray(persistedSubjects) && persistedSubjects.length > 0) {
-            console.log('✅ 404/Error encountered: Falling back to state-provided subjects.');
-            setSemesterRecord(studentData || persistedSemesterRecord || null);
-            setStudents(persistedSubjects);
-          } else {
-            setSemesterRecord(null);
-            setStudents([]);
-          }
-        } else {
-          setSemesterRecord(null);
-          setStudents([]);
-        }
+        setSemesterRecord(null);
+        setStudents(Array.isArray(initialSubjects) ? initialSubjects : []);
       } finally {
-        setIsLoading(false);
+        await finishLoading();
       }
     };
 
     loadSemesterData();
-  }, [studentData, student.regNo, student.year, currentSemester, studentId, location.key, refreshToken]);
+  }, [studentData, student.regNo, student.year, currentSemester, studentId, location.key, fetchLatestStudentMarksheet, finishLoading]);
 
   const handleViewChange = (view) => {
     console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
@@ -478,6 +439,19 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
 
   return (
     <div className={styles['view-page-container']}>
+      <CertificateDownloadProgressAlert
+        isOpen={isLoading}
+        progress={loadingProgress}
+        fileLabel="student marksheet"
+        title="Loading..."
+        color="#D23B42"
+        progressColor="#D23B42"
+        messages={{
+          initial: 'Fetching student semester marksheet...',
+          mid: 'Loading latest marksheet record...',
+          final: 'Preparing page...'
+        }}
+      />
       <Navbar onLogout={onLogout} onToggleSidebar={handleToggleSidebar} />
       <Sidebar
         isOpen={isSidebarOpen}
@@ -519,7 +493,10 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         </div>
       )}
 
-      <div className={styles['view-content']}>
+      <div
+        className={styles['view-content']}
+        style={{ opacity: isLoading ? 0.22 : 1, pointerEvents: isLoading ? 'none' : 'auto' }}
+      >
         <div className={styles['view-content-wrapper']}>
           {/* Left Column - Student Card */}
           <div className={styles['view-left-column']}>

@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
-import styles from './Coo_ManageStudentSemesterMarksheetView.module.css';
+import styles from './Coo_MS_Sem.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig';
 import mongoDBService from '../services/mongoDBService.jsx';
@@ -45,7 +45,7 @@ const formatExamDate = (value) => {
     return text;
 };
 
-function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
+function Coo_MS_Sem({ onLogout, onViewChange }) {
     const location = useLocation();
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -312,4 +312,4 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     );
 }
 
-export default Coo_ManageStudentSemesterMarksheetView;
+export default Coo_MS_Sem;

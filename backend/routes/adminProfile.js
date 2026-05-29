@@ -120,6 +120,30 @@ router.get('/profile/:adminLoginID', async (req, res) => {
   }
 });
 
+// GET all admins for the admin collection page
+router.get('/admins', async (req, res) => {
+  try {
+    const admins = await Admin.find({})
+      .select('-adminPassword')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const sanitizedAdmins = admins.map((admin) => stripLocalhostUrls({ ...admin }));
+
+    res.json({
+      success: true,
+      data: sanitizedAdmins
+    });
+  } catch (error) {
+    console.error('Error fetching admins collection:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching admins collection',
+      error: error.message
+    });
+  }
+});
+
 // POST or PUT - Save/Update admin profile
 router.post('/profile', async (req, res) => {
   try {

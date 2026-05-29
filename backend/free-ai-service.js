@@ -1,13 +1,7 @@
-// Free AI Resume Analysis Service using Ollama (local AI, no API key required)
+// Free AI Resume Analysis Service using local analysis only (no API key required)
 class FreeResumeAnalysisService {
   constructor() {
-    // Ollama — runs fully locally, no API key required
-    this.ollamaService = null;
-    try {
-      this.ollamaService = require('./ollamaService');
-    } catch (e) {
-      console.warn('⚠️ ollamaService not available, using local analysis only');
-    }
+    this.localOnly = true;
   }
 
   async analyzeResume(fileData, fileName) {
@@ -18,27 +12,9 @@ class FreeResumeAnalysisService {
       const extractedText = await this.extractTextFromFile(fileData, fileName);
       console.log('📄 Extracted text length:', extractedText.length);
       
-      // Step 2: Try Ollama AI first (local, free, no rate limits)
-      let analysis;
-      if (this.ollamaService) {
-        try {
-          const status = await this.ollamaService.checkOllamaStatus();
-          if (status.running) {
-            analysis = await this.analyzeWithOllama(extractedText);
-            console.log('✅ Ollama AI analysis completed');
-          } else {
-            console.warn('⚠️ Ollama not running, using local pattern analysis');
-            analysis = await this.analyzeTextContent(extractedText);
-          }
-        } catch (ollamaError) {
-          console.warn('⚠️ Ollama failed, using local pattern analysis:', ollamaError.message);
-          analysis = await this.analyzeTextContent(extractedText);
-          console.log('✅ Local pattern analysis completed');
-        }
-      } else {
-        analysis = await this.analyzeTextContent(extractedText);
-        console.log('✅ Local pattern analysis completed');
-      }
+      // Step 2: Use local pattern analysis
+      const analysis = await this.analyzeTextContent(extractedText);
+      console.log('✅ Local pattern analysis completed');
       
       return analysis;
       
@@ -46,28 +22,6 @@ class FreeResumeAnalysisService {
       console.error('❌ AI analysis failed:', error);
       return this.getEnhancedFallbackAnalysis(fileData, fileName);
     }
-  }
-
-  async analyzeWithOllama(text) {
-    const { analyzeResume: ollamaAnalyze } = this.ollamaService;
-    const result = await ollamaAnalyze(text);
-    
-    if (result) {
-      // Convert Ollama result to our standard format
-      return {
-        percentage: result.ats_score || 50,
-        totalScore: Math.round((result.ats_score || 50) / 100 * 13),
-        maxScore: 13,
-        grade: this.getGrade(result.ats_score || 50),
-        description: `Ollama AI analysis completed - ATS Score: ${result.ats_score || 50}%`,
-        suggestions: result.suggestions || [],
-        missing_keywords: result.missing_keywords || [],
-        checklistResults: this.buildChecklistFromText(text)
-      };
-    }
-    
-    // Fallback to local analysis
-    return this.analyzeTextContent(text);
   }
 
   async extractTextFromFile(fileData, fileName) {

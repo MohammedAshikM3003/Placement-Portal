@@ -1,61 +1,44 @@
-// Ollama AI Service for Resume Builder
-// Routes all AI calls through the Node backend → Ollama (local)
-// No API keys needed, no rate limits, unlimited usage
+// Local AI bridge for Resume Builder
+// Routes AI calls through the Node backend -> local AI service
+// No API keys needed for local rule-based service
 
 import { joinApiUrl } from '../utils/apiConfig';
 
-class OllamaService {
+class AiService {
   constructor() {
-    this.isAvailable = true; // Always available (Ollama runs locally)
-    console.log('✅ Ollama AI Service initialized (local AI via backend)');
+    this.isAvailable = true; // Assume local AI service is available
+    console.log('✅ Local AI service bridge initialized');
   }
 
-  // Helper: Clean JSON response — handles common LLM JSON quirks
   cleanJson(text) {
     if (!text) return null;
 
-    // Log raw AI output for debugging
     console.log('🔍 Raw AI response (first 500 chars):', text.substring(0, 500));
 
-    // Step 1: Remove markdown code fences
     let cleaned = text
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim();
 
-    // Step 2: Extract JSON object
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) cleaned = jsonMatch[0];
 
-    // Step 3: Try parsing as-is first
     try {
       return JSON.parse(cleaned);
     } catch (firstErr) {
       console.log('🔧 First parse failed, repairing JSON...', firstErr.message);
 
-      // Step 4: Aggressive multi-pass repair
       let fixed = cleaned;
-
-      // 4a: Remove comments
       fixed = fixed.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-
-      // 4b: Remove trailing commas
       fixed = fixed.replace(/,\s*([\]}])/g, '$1');
-
-      // 4c: Remove control characters (keep newlines/tabs for structure)
       // eslint-disable-next-line no-control-regex
       fixed = fixed.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
 
-      // 4d: Rebuild JSON string by extracting key-value pairs manually
-      // This handles cases where the LLM puts unescaped newlines, extra text, etc.
       try {
         return JSON.parse(fixed);
       } catch (secondErr) {
         console.log('🔧 Second parse failed, trying line-by-line rebuild...', secondErr.message);
 
-        // 4e: Try to rebuild by joining lines and fixing string boundaries
-        // Replace actual newlines inside string values with spaces
-        // Strategy: walk through char by char tracking string state
         try {
           let result = '';
           let inString = false;
@@ -78,28 +61,23 @@ class OllamaService {
               continue;
             }
             if (inString && (ch === '\n' || ch === '\r')) {
-              result += ' '; // Replace newlines inside strings with spaces
+              result += ' ';
               continue;
             }
             result += ch;
           }
-          // Remove trailing commas again after rebuild
           result = result.replace(/,\s*([\]}])/g, '$1');
           return JSON.parse(result);
         } catch (thirdErr) {
           console.log('🔧 Char-by-char rebuild failed, trying field extraction...', thirdErr.message);
         }
 
-        // Step 5: Last resort — extract individual fields via regex
         try {
           const result = {};
           const src = fixed.replace(/\n/g, ' ').replace(/\r/g, '');
-          
-          // Extract summary
           const summaryMatch = src.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
           if (summaryMatch) result.summary = summaryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, ' ');
-          
-          // Extract arrays
+
           const arrayFields = ['experiences', 'projects', 'certifications', 'achievements'];
           for (const field of arrayFields) {
             const arrMatch = src.match(new RegExp(`"${field}"\\s*:\\s*\\[([^\\]]*?)\\]`));
@@ -113,7 +91,7 @@ class OllamaService {
               if (strings.length) result[field] = strings;
             }
           }
-          
+
           if (Object.keys(result).length > 0) {
             console.log('✅ Recovered partial JSON via field extraction:', Object.keys(result));
             return result;
@@ -128,43 +106,47 @@ class OllamaService {
     }
   }
 
-  // Generate content from a prompt (used by Resume Builder)
-  // Routes through backend → Ollama
   async generateContent(prompt, type = 'summary') {
     try {
-      console.log(`🤖 Calling backend Ollama proxy (type=${type})...`);
-      const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      console.log(`🤖 Calling backend AI proxy (type=${type})...`);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout
+      const timeout = setTimeout(() => controller.abort(), 120000);
 
-      const resp = await fetch(joinApiUrl('/resume-builder/ai-generate'), {
+      if (type === 'json') {
+        const resp = await fetch(joinApiUrl('/ai/resume/enhance-batch'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({ sections: prompt && typeof prompt === 'object' ? prompt : {} }),
+        });
+        clearTimeout(timeout);
+        if (resp.ok) {
+          const data = await resp.json();
+          console.log('✅ Batch AI content generated via AI service');
+          return JSON.stringify(data);
+        }
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `AI generation failed (status ${resp.status})`);
+      }
+
+      const resp = await fetch(joinApiUrl('/ai/resume/enhance'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
-        body: JSON.stringify({ prompt, type }),
+        body: JSON.stringify({ text: prompt }),
       });
       clearTimeout(timeout);
 
       if (resp.ok) {
         const data = await resp.json();
-
-        // For JSON requests, return the raw text for client to parse
-        if (type === 'json' && data.text) {
-          console.log('✅ JSON content generated via Ollama');
-          return data.text;
-        }
-
-        if (data.text) {
-          const wordCount = data.text.split(/\s+/).filter(w => w.length > 0).length;
-          console.log(`✅ Content generated via Ollama (${wordCount} words)`);
-          return data.text;
-        }
+        if (data.enhanced) return data.enhanced;
+        if (data.corrected) return data.corrected;
+        if (typeof data === 'string') return data;
       }
 
       const errData = await resp.json().catch(() => ({}));
-      console.error('❌ Ollama backend error:', resp.status, errData.error || '');
+      console.error('❌ AI backend error:', resp.status, errData.error || '');
       throw new Error(errData.error || `AI generation failed (status ${resp.status})`);
-
     } catch (error) {
       if (error.name === 'AbortError') {
         throw new Error('AI request timed out. Please try again.');
@@ -174,11 +156,10 @@ class OllamaService {
     }
   }
 
-  // Check if service is available
   isServiceAvailable() {
     return this.isAvailable;
   }
 }
 
-const ollamaService = new OllamaService();
-export default ollamaService;
+const aiService = new AiService();
+export default aiService;

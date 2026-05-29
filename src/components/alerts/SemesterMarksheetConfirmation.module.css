@@ -11,7 +11,7 @@
   min-width: 260px;
   animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   font-family: 'Poppins', sans-serif;
 }
@@ -37,9 +37,35 @@
   font-size: 13px;
   color: #b0b0b0;
   opacity: 1;
-  line-height: 1.4;
+  line-height: 1.2;
   margin: 0;
   padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitleScroller {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.subtitleInner {
+  display: inline-block;
+  white-space: nowrap;
+  padding-right: 40px; /* spacing for loop */
+  will-change: transform;
+  animation: marquee 16s linear infinite;
+}
+
+.subtitleScroller:hover .subtitleInner {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
 }
 
 .overlay {

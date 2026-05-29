@@ -1,7 +1,7 @@
 .pageShell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top right, rgba(250, 123, 32, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(40, 52, 90, 0.09), transparent 30%),
     linear-gradient(180deg, #fafafa 0%, #f5f6fb 100%);
   font-family: 'Poppins', sans-serif;
   height: 100vh;
@@ -56,14 +56,14 @@
   top: 0;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #fa7b20;
+  background: #2f3f6b;
   color: #fff;
   border-radius: 999px;
   padding: 10px 26px;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.2px;
-  box-shadow: 0 10px 18px rgba(250, 123, 32, 0.24);
+  box-shadow: 0 10px 18px rgba(47, 63, 107, 0.24);
 }
 
 .filterGrid {
@@ -77,7 +77,7 @@
   width: 100%;
   height: 40px;
   border-radius: 12px;
-  border: 1.5px solid #fa7b20;
+  border: 1.5px solid #2f3f6b;
   background: #fff;
   color: #222;
   padding: 0 14px;
@@ -120,21 +120,21 @@
 }
 
 .primaryAction {
-  min-width: 164px;
+  min-width: 152px;
   height: 34px;
   padding: 0 22px;
   color: #fff;
-  background: linear-gradient(180deg, #ff8e2a 0%, #f47b14 100%);
-  box-shadow: 0 8px 16px rgba(250, 123, 32, 0.3);
+  background: linear-gradient(180deg, #42588f 0%, #2f3f6b 100%);
+  box-shadow: 0 8px 16px rgba(47, 63, 107, 0.3);
 }
 
 .secondaryAction {
-  min-width: 108px;
+  min-width: 122px;
   height: 34px;
   padding: 0 18px;
   color: #fff;
-  background: linear-gradient(180deg, #e44c54 0%, #d83e49 100%);
-  box-shadow: 0 8px 16px rgba(216, 62, 73, 0.28);
+  background: linear-gradient(180deg, #4a6bb0 0%, #37518a 100%);
+  box-shadow: 0 8px 16px rgba(55, 81, 138, 0.28);
 }
 
 .statsGrid {
@@ -155,11 +155,11 @@
 }
 
 .statCard.one {
-  background: linear-gradient(180deg, #4073be 0%, #3f67ad 100%);
+  background: linear-gradient(180deg, #42588f 0%, #2f3f6b 100%);
 }
 
 .statCard.two {
-  background: linear-gradient(180deg, #3f6bb8 0%, #4069a8 100%);
+  background: linear-gradient(180deg, #4b6ba4 0%, #3b5687 100%);
 }
 
 .statLabel {
@@ -251,11 +251,11 @@
 }
 
 .loginButton {
-  min-width: 122px;
+  min-width: 112px;
   height: 38px;
   padding: 0 18px;
-  background: #d4f3ec;
-  color: #14b79b;
+  background: #dde4ff;
+  color: #2f3f6b;
   font-size: 0.98rem;
 }
 
@@ -327,8 +327,4 @@
   .studentText h3 {
     font-size: 1.4rem;
   }
-}
-
-.fieldWide {
-  grid-column: 1 / -1;
 }

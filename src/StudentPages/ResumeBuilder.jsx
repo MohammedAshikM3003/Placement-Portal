@@ -450,7 +450,7 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
     const projWordLimit = pageLimit === '1' ? '20-35' : pageLimit === '2' ? '35-55' : '45-70';
     
     try {
-      const { default: aiService } = await import('../services/ollamaService.jsx');
+      const { default: aiService } = await import('../services/aiService.jsx');
       
       // 1. BATCH AI GENERATION (Replaces individual loops)
       
@@ -1000,7 +1000,12 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
       setCreateStatus('Downloading PDF...');
 
       const blob = await response.blob();
-      const pdfUrl = URL.createObjectURL(blob);
+      const pdfUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || '');
+        reader.onerror = () => reject(new Error('Failed to prepare PDF preview'));
+        reader.readAsDataURL(blob);
+      });
       setResumePdfUrl(pdfUrl);
 
       // Step 6: Upload to GridFS & save
@@ -1023,6 +1028,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
       const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || '{}');
       updatedStudentData.resumeData = {
         url: resumeUrl,
+        gridfsFileUrl: gridfsUrl || '',
         name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
         createdAt: new Date().toISOString()
       };
@@ -1037,6 +1043,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
       localStorage.setItem('studentResumeData', JSON.stringify({
         resume: {
           url: resumeUrl,
+          gridfsFileUrl: gridfsUrl || '',
           name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
           createdAt: new Date().toISOString()
         },
@@ -1069,7 +1076,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         setCreateProgress(0);
         setTimeout(() => {
           setIsCreating(false);
-          alert('AI generation failed. Please make sure Ollama is running and try again. Your data is saved.');
+          alert('AI generation failed. Please make sure the local AI service is running and try again. Your data is saved.');
         }, 500);
         return;
       }
@@ -1973,11 +1980,15 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 onClick={() => {
                   if (!resumePdfUrl || isPreviewing) return;
                   setIsPreviewing(true);
-                  window.open(resumePdfUrl, '_blank');
-                  // Reset after a delay
-                  setTimeout(() => {
-                    setIsPreviewing(false);
-                  }, 2000);
+                  try {
+                    sessionStorage.setItem('resumePreviewUrl', resumePdfUrl);
+                    window.open('/resume-preview', '_blank');
+                  } finally {
+                    // Reset after a delay
+                    setTimeout(() => {
+                      setIsPreviewing(false);
+                    }, 2000);
+                  }
                 }}
                 className="achievement-popup-close-btn"
                 disabled={isPreviewing || !resumePdfUrl}

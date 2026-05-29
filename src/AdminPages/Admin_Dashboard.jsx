@@ -127,7 +127,7 @@ const ModernAttendanceChart = ({ present, absent, isLoading }) => {
 // ====================================================================
 function AdminDashboard({ onLogout, currentView, onViewChange }) {
   const navigate = useNavigate();
-  useAdminAuth(); // JWT authentication verification
+  useAdminAuth({ allowUnauthenticated: true }); // JWT auth when available, but allow direct super-admin entry
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0 });
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);

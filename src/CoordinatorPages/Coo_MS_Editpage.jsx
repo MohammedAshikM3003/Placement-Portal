@@ -106,6 +106,7 @@ function CooMsEditPage({ onLogout, onViewChange }) {
   const [saveMessage, setSaveMessage] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [changedSubjects, setChangedSubjects] = useState([]);
+  const [showUnsavedToast, setShowUnsavedToast] = useState(false);
   const { alerts, showSuccess, showError, closeAlert } = useAlert();
 
   // Detect changed subjects
@@ -113,21 +114,32 @@ function CooMsEditPage({ onLogout, onViewChange }) {
     const changed = [];
     
     subjects.forEach((currentSubject) => {
-      const originalSubject = initialSubjectsRef.current.find(
+      const originalSubject = (initialSubjectsRef.current || []).find(
         (orig) => orig.id === currentSubject.id || orig.code === currentSubject.code
       );
-      
+
       if (originalSubject) {
         const oldGrade = originalSubject.grade || 'U';
         const newGrade = currentSubject.grade || 'U';
-        
-        if (oldGrade !== newGrade) {
-          console.log(`📘 Subject changed: ${currentSubject.name} (${oldGrade} → ${newGrade})`);
+        const oldName = (originalSubject.name || '').toString();
+        const newName = (currentSubject.name || '').toString();
+        const oldCode = (originalSubject.code || '').toString();
+        const newCode = (currentSubject.code || '').toString();
+        const oldCredits = String(originalSubject.credits ?? '');
+        const newCredits = String(currentSubject.credits ?? '');
+
+        const fieldChanges = [];
+        if (oldGrade !== newGrade) fieldChanges.push({ field: 'grade', from: oldGrade, to: newGrade });
+        if (oldName !== newName) fieldChanges.push({ field: 'name', from: oldName, to: newName });
+        if (oldCode !== newCode) fieldChanges.push({ field: 'code', from: oldCode, to: newCode });
+        if (oldCredits !== newCredits) fieldChanges.push({ field: 'credits', from: oldCredits, to: newCredits });
+
+        if (fieldChanges.length > 0) {
+          console.log(`📘 Subject changed: ${currentSubject.name}`, fieldChanges);
           changed.push({
-            subjectName: currentSubject.name,
-            oldGrade,
-            newGrade,
-            id: currentSubject.id
+            subjectName: currentSubject.name || originalSubject.name || '',
+            id: currentSubject.id,
+            changes: fieldChanges
           });
         }
       }
@@ -172,6 +184,13 @@ function CooMsEditPage({ onLogout, onViewChange }) {
     () => subjects.find((subject) => subject.id === activeSubjectId) || null,
     [subjects, activeSubjectId]
   );
+
+  // Build select options from original cached subjects so dropdown doesn't reflect in-card edits
+  const selectOptions = useMemo(() => {
+    const originals = Array.isArray(initialSubjectsRef.current) ? initialSubjectsRef.current : [];
+    const extras = subjects.filter(s => !originals.some(o => o.id === s.id));
+    return [...originals, ...extras];
+  }, [subjects]);
 
   useEffect(() => {
     if (!activeSubject?.isNew) {
@@ -221,6 +240,8 @@ function CooMsEditPage({ onLogout, onViewChange }) {
 
   const handleDiscard = () => {
     const studentData = student;
+    // hide unsaved toast when discarding/navigating away
+    setShowUnsavedToast(false);
     navigate('/coo-manage-students-semester/marksheet', {
       state: {
         regNo: studentData.registerNumber || studentData.regNo || '',
@@ -245,11 +266,36 @@ function CooMsEditPage({ onLogout, onViewChange }) {
     // Show confirmation modal
     setChangedSubjects(changed);
     setShowConfirmation(true);
+    // also show the toast immediately
+    setShowUnsavedToast(true);
+  };
+
+  const handleToggleEdit = (subjectId) => {
+    setSubjects((prev) => prev.map((s) => {
+      if (s.id !== subjectId) return s;
+
+      // if currently editing, revert changes to original and stop editing
+      if (s.isEditing) {
+        const orig = (initialSubjectsRef.current || []).find(o => o.id === s.id || o.code === s.code) || null;
+        if (orig) {
+          return { ...s, name: orig.name || '', code: orig.code || '', credits: orig.credits ?? '', grade: orig.grade || 'U', isEditing: false, isNew: false };
+        }
+        return { ...s, isEditing: false };
+      }
+
+      // start editing
+      return { ...s, isEditing: true };
+    }));
+    // keep focus on the same subject in the dropdown (do not mutate select labels from edits)
+    setActiveSubjectId(subjectId);
+    // do not show unsaved toast just for entering edit mode
+    setShowUnsavedToast(false);
   };
 
   const handleConfirmationDiscard = () => {
     setShowConfirmation(false);
     setChangedSubjects([]);
+    setShowUnsavedToast(false);
   };
 
   const performSave = async () => {
@@ -359,6 +405,7 @@ function CooMsEditPage({ onLogout, onViewChange }) {
       console.log('✅ Semester changes confirmed');
       setShowConfirmation(false);
       setChangedSubjects([]);
+      setShowUnsavedToast(false);
 
       navigate('/coo-manage-students-semester/marksheet', {
         state: {
@@ -377,6 +424,22 @@ function CooMsEditPage({ onLogout, onViewChange }) {
       setIsSaving(false);
     }
   };
+
+    // Auto-detect changes and show toast immediately when subjects deviate from initial state
+    useEffect(() => {
+      try {
+        const changed = detectChangedSubjects();
+        if (changed.length > 0) {
+          setChangedSubjects(changed);
+          setShowUnsavedToast(true);
+        } else {
+          setChangedSubjects([]);
+          setShowUnsavedToast(false);
+        }
+      } catch (err) {
+        console.warn('Failed to detect subject changes for toast:', err);
+      }
+    }, [subjects]);
 
   const sgpa = useMemo(() => {
     const totals = subjects.reduce((acc, subject) => {
@@ -419,6 +482,16 @@ function CooMsEditPage({ onLogout, onViewChange }) {
         changedSubjects={changedSubjects}
         isSaving={isSaving}
       />
+      {/* Lightweight toast-only banner shown immediately on edits */}
+      <SemesterMarksheetConfirmation
+        isOpen={showUnsavedToast}
+        toastOnly={true}
+        onClose={() => setShowUnsavedToast(false)}
+        onSave={performSave}
+        onDiscard={() => { handleConfirmationDiscard(); setShowUnsavedToast(false); }}
+        changedSubjects={changedSubjects}
+        isSaving={isSaving}
+      />
       <div className={styles.main}>
         <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
         {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
@@ -444,8 +517,8 @@ function CooMsEditPage({ onLogout, onViewChange }) {
                     onChange={(event) => setActiveSubjectId(event.target.value)}
                     disabled={!subjects.length}
                   >
-                    {subjects.length ? (
-                      subjects.map((subject) => (
+                    {selectOptions.length ? (
+                      selectOptions.map((subject) => (
                         <option key={subject.id} value={subject.id}>
                           {buildSubjectLabel(subject)}
                         </option>
@@ -490,54 +563,75 @@ function CooMsEditPage({ onLogout, onViewChange }) {
                   ref={activeCardRef}
                 >
                   <div className={styles.subjectHeader}>
-                    {activeSubject.isNew ? (
-                      <>
-                        <h3 className={styles.subjectTitle}>New Subject</h3>
-                        <div className={styles.newSubjectInputs}>
-                          <input
-                            ref={subjectNameRef}
-                            className={`${styles.subjectInput} ${styles.subjectInputTitle}`}
-                            type="text"
-                            value={activeSubject.name}
-                            placeholder="Enter Subject Name"
-                            onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'name', event.target.value)}
-                          />
-                          <div className={styles.newSubjectRow}>
+                    <div className={styles.subjectHeaderLeft}>
+                      {activeSubject.isNew || activeSubject.isEditing ? (
+                        <>
+                          <h3 className={styles.subjectTitle}>{activeSubject.isNew ? 'New Subject' : activeSubject.name}</h3>
+                          <div className={styles.newSubjectInputs}>
                             <input
-                              className={styles.subjectInput}
+                              ref={subjectNameRef}
+                              className={`${styles.subjectInput} ${styles.subjectInputTitle}`}
                               type="text"
-                              value={activeSubject.code}
-                              placeholder="Enter Subject Code"
-                              onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'code', event.target.value)}
+                              value={activeSubject.name}
+                              placeholder="Enter Subject Name"
+                              onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'name', event.target.value)}
                             />
-                            <input
-                              className={`${styles.subjectInput} ${styles.subjectInputSmall}`}
-                              type="text"
-                              inputMode="numeric"
-                              value={activeSubject.credits}
-                              placeholder="Credits"
-                              onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'credits', event.target.value)}
-                            />
+                            <div className={styles.newSubjectRow}>
+                              <input
+                                className={styles.subjectInput}
+                                type="text"
+                                value={activeSubject.code}
+                                placeholder="Enter Subject Code"
+                                onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'code', event.target.value)}
+                              />
+                              <input
+                                className={`${styles.subjectInput} ${styles.subjectInputSmall}`}
+                                type="text"
+                                inputMode="numeric"
+                                value={activeSubject.credits}
+                                placeholder="Credits"
+                                onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'credits', event.target.value)}
+                              />
+                            </div>
                           </div>
-                        </div>
-                        <div className={styles.subjectMeta}>
-                          <span className={styles.currentGrade}>
-                            Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
-                          </span>
-                        </div>
-                      </>
+                          <div className={styles.subjectMeta}>
+                            <span className={styles.currentGrade}>
+                              Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
+                            </span>
+                          </div>
+                        </>
                     ) : (
-                      <>
-                        <h3 className={styles.subjectTitle}>{activeSubject.name}</h3>
-                        <div className={styles.subjectMeta}>
-                          <span className={styles.subjectCode}>{activeSubject.code || activeSubject.id}</span>
-                          <span className={styles.currentGrade}>
-                            Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
-                          </span>
-                          <span className={styles.credits}>Credits : {activeSubject.credits || '--'}</span>
-                        </div>
-                      </>
-                    )}
+                        <>
+                          <h3 className={styles.subjectTitle}>{activeSubject.name}</h3>
+                          <div className={styles.subjectMeta}>
+                            <span className={styles.subjectCode}>{activeSubject.code || activeSubject.id}</span>
+                            <span className={styles.currentGrade}>
+                              Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
+                            </span>
+                            <span className={styles.credits}>Credits : {activeSubject.credits || '--'}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.editIconButton}
+                      title={activeSubject?.isEditing ? 'Discard edits' : 'Edit subject'}
+                      onClick={() => handleToggleEdit(activeSubject.id)}
+                    >
+                      {activeSubject?.isEditing ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z" fill="#fff" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="#fff"/>
+                          <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="#fff"/>
+                        </svg>
+                      )}
+                    </button>
+
                   </div>
 
                   <div className={styles.gradeSection}>

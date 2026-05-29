@@ -24,6 +24,8 @@ import MainRegistration from "./MainRegistration.jsx";
 // --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
 const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
 const SastuPage = lazy(() => import("./AdminPages/sastupage.jsx"));
+const SaCooPage = lazy(() => import("./AdminPages/sacoopage.jsx"));
+const SaAdPage = lazy(() => import("./AdminPages/saadpage.jsx"));
 const AdminstudDB = lazy(() => import("./AdminPages/AdminstudDB.jsx"));
 const AdminCompanyprofile = lazy(() => import("./AdminPages/AdminCompanyprofile.jsx"));
 const AdminCompanyprofilePopup = lazy(() => import("./AdminPages/AdminCompanyprofilepopup.jsx"));
@@ -105,6 +107,7 @@ const CoordinatorSemesterMarksheetView = lazy(() => import("./CoordinatorPages/C
 const PlacementPortalDashboard = lazy(() => import("./StudentPages/dashboard.jsx"));
 const Resume = lazy(() => import("./StudentPages/resume.jsx"));
 const ResumeBuilder = lazy(() => import("./StudentPages/ResumeBuilder.jsx"));
+const ResumePreviewPage = lazy(() => import("./StudentPages/ResumePreviewPage.jsx"));
 const ATSChecker = lazy(() => import("./StudentPages/ATSChecker.jsx"));
 const Training = lazy(() => import("./StudentPages/Training.jsx"));
 const Achievements = lazy(() => import("./StudentPages/achievements.jsx"));
@@ -258,11 +261,14 @@ function AppContent() {
       <Route path="/registration" element={<MainRegistration onNavigateToLogin={() => navigate("/mainlogin")} />} />
       <Route path="/registration-debug" element={<RegistrationDebug />} />
       <Route path="/sastu-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SastuPage /></Suspense></RouteErrorBoundary>} />
+      <Route path="/sacoo-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SaCooPage /></Suspense></RouteErrorBoundary>} />
+      <Route path="/saad-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SaAdPage /></Suspense></RouteErrorBoundary>} />
 
       {/* STUDENT AUTHENTICATED ROUTES - Wrapped in Error Boundary */}
       <Route path="/dashboard" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><PlacementPortalDashboard onLogout={handleStudentLogout} userEmail={userEmail} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/resume" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Resume..." showAnimatedDots={true} />}><Resume onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/resume-builder" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Resume Builder..." showAnimatedDots={true} />}><ResumeBuilder onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/resume-preview" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Resume Preview..." showAnimatedDots={true} />}><ResumePreviewPage /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/ats-checker" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading ATS Checker..." showAnimatedDots={true} />}><ATSChecker onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/training" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Training..." showAnimatedDots={true} />}><Training onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/achievements" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Achievements..." showAnimatedDots={true} />}><Achievements onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
@@ -299,6 +305,7 @@ function AppContent() {
 
       {/* ADMIN ROUTES - Wrapped in Error Boundary */}
       <Route path="/admin-dashboard" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><AdminDashboard onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/saad-admin-dashboard" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><AdminDashboard onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary>} />
       <Route path="/admin-student-database" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminstudDB onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-placement-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

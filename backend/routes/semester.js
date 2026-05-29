@@ -4,6 +4,62 @@ const router = express.Router();
 const SemesterRecord = require('../models/SemesterRecord');
 const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 
+const normalizeLookupValue = (value) => String(value || '').trim();
+
+const buildSemesterSearchVariants = (query = {}) => {
+  const extractedPdfName = normalizeLookupValue(query.extractedPdfName);
+  const regNo = normalizeLookupValue(query.regNo);
+  const registerNumber = normalizeLookupValue(query.registerNumber);
+  const studentId = normalizeLookupValue(query.studentId);
+  const semester = normalizeLookupValue(query.semester);
+  const year = normalizeLookupValue(query.year);
+  const submitted = query.submitted !== undefined ? String(query.submitted) === 'true' : undefined;
+
+  const baseQuery = {};
+  if (extractedPdfName) baseQuery.extractedPdfName = extractedPdfName;
+  if (semester) baseQuery.semester = semester;
+  if (submitted !== undefined) baseQuery.submitted = submitted;
+
+  const identifierValues = [...new Set([regNo, registerNumber, studentId].filter(Boolean))];
+  const identifierQueries = identifierValues.length
+    ? identifierValues.flatMap((identifier) => ([
+        { regNo: identifier },
+        { registerNumber: identifier },
+        { studentId: identifier }
+      ]))
+    : [{}];
+
+  const variants = [];
+  for (const identifierQuery of identifierQueries) {
+    if (year) {
+      variants.push({ ...baseQuery, ...identifierQuery, year });
+    }
+    variants.push({ ...baseQuery, ...identifierQuery });
+  }
+
+  if (!variants.length) {
+    variants.push(baseQuery);
+  }
+
+  return variants;
+};
+
+const findSemesterRecords = async (query = {}) => {
+  const variants = buildSemesterSearchVariants(query);
+
+  for (const variant of variants) {
+    const records = await SemesterRecord.find(variant)
+      .sort({ extractedAt: -1, uploadedAt: -1 })
+      .lean();
+
+    if (records.length) {
+      return { records, matchedQuery: variant };
+    }
+  }
+
+  return { records: [], matchedQuery: null };
+};
+
 const FAIL_GRADES = new Set(['U', 'RA', 'SA', 'W', 'WD', 'AB']);
 const GRADE_POINTS = {
   O: 10,
@@ -195,22 +251,12 @@ router.put('/submit', async (req, res) => {
 
 router.get('/list', async (req, res) => {
   try {
-    const { extractedPdfName, regNo, semester, year, submitted } = req.query || {};
-    const query = {};
-
-    if (extractedPdfName) query.extractedPdfName = String(extractedPdfName).trim();
-    if (regNo) query.regNo = String(regNo).trim();
-    if (semester) query.semester = String(semester).trim();
-    if (year) query.year = String(year).trim();
-    if (submitted !== undefined) query.submitted = String(submitted) === 'true';
-
-    const records = await SemesterRecord.find(query)
-      .sort({ extractedAt: -1, uploadedAt: -1 })
-      .lean();
+    const { records, matchedQuery } = await findSemesterRecords(req.query || {});
 
     return res.status(200).json({
       success: true,
       records,
+      matchedQuery,
       total: records.length
     });
   } catch (error) {

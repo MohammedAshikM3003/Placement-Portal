@@ -833,6 +833,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
+    const [availableSemesters, setAvailableSemesters] = useState([]);
     const [selectedSection, setSelectedSection] = useState('');
     const [degrees, setDegrees] = useState([]);
     const [selectedDegree, setSelectedDegree] = useState('');
@@ -1935,6 +1936,39 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             });
         }
 
+        // Fetch available semester records for this student (to show only existing semesters)
+        (async () => {
+            try {
+                const regNo = merged.regNo || merged.registerNumber || merged.regNo || merged.register_number || '';
+                if (!regNo) return;
+                const authToken = localStorage.getItem('authToken');
+                const resp = await fetch(`${API_BASE_URL}/semester/list?regNo=${encodeURIComponent(String(regNo).trim())}`, {
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+                });
+                if (!resp.ok) {
+                    throw new Error('Failed to fetch semester list');
+                }
+                const body = await resp.json();
+                const records = Array.isArray(body.records) ? body.records : [];
+                const semSet = new Set();
+                records.forEach(r => {
+                    const sem = (r.semester !== undefined && r.semester !== null) ? String(r.semester).trim() : '';
+                    if (sem !== '') semSet.add(Number.isNaN(Number(sem)) ? sem : Number(sem));
+                });
+                const sems = Array.from(semSet).sort((a, b) => {
+                    // sort numerically when possible
+                    const na = Number(a);
+                    const nb = Number(b);
+                    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+                    return String(a).localeCompare(String(b));
+                });
+                setAvailableSemesters(sems);
+            } catch (err) {
+                console.warn('Failed to load available semesters:', err.message || err);
+                setAvailableSemesters([]);
+            }
+        })();
+
         setIsInitialLoading(false);
     };
 
@@ -3025,14 +3059,11 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                         </div>
 
                             {/* --- SEMESTER --- */}
-                        <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Semester</h3>
-                            <div className={styles.marksheetGrid}>
-                                {/* Show semesters 1 to current semester only */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
-                                    return semestersToShow.map((semesterNumber) => (
+                        {Array.isArray(availableSemesters) && availableSemesters.length > 0 && (
+                            <div className={styles.profileSectionContainer}>
+                                <h3 className={styles.sectionHeader}>Semester</h3>
+                                <div className={styles.marksheetGrid}>
+                                    {availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
                                             <button 
@@ -3050,31 +3081,27 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
                                         </div>
-                                    ));
-                                })()}
+                                    ))}
 
-                                {/* Upload button for current semester */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    return (
-                                        <button
-                                            type="button"
-                                            className={styles.uploadMarksheetBtnFull}
-                                            onClick={() => navigate('/coo-manage-students-semester/marksheet', {
-                                                state: { student: studentData }
-                                            })}
-                                        >
-                                            <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
-                                            <span>Upload Sem {currentSem} Marksheet</span>
-                                        </button>
-                                    );
-                                })()}
+                                    <button
+                                        type="button"
+                                        className={styles.uploadMarksheetBtnFull}
+                                        onClick={() => navigate('/coo-manage-students-semester/marksheet', {
+                                            state: { student: studentData }
+                                        })}
+                                    >
+                                        <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
+                                        <span>Upload Marksheet</span>
+                                    </button>
+                                </div>
+
+                                {/* Separator line */}
+                                <div className={styles.semesterSeparator}></div>
                             </div>
+                        )}
 
-                            {/* Separator line */}
-                            <div className={styles.semesterSeparator}></div>
-
-                            <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
+                            <div className={styles.profileSectionContainer}>
+                                <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <div className={styles.field}>
                                     <label>CGPA</label>
                                     <input
@@ -3130,8 +3157,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         disabled={isSaving || isViewMode}
                                     />
                                 </div>
+                                </div>
                             </div>
-                        </div>
 
                         {hasTrainingData && (
                             <div className={styles.profileSectionContainer}>
@@ -3788,7 +3815,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
                             </div>
                         </div>
-
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Login Details</h3>
                             <div className={styles.formGrid}>
