@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import useAdminAuth from '../utils/useAdminAuth';
+import Adnavbar from '../components/Navbar/Adnavbar.js';
+import Adsidebar from '../components/Sidebar/Adsidebar.js';
+import styles from './AdAddBranchPage.module.css';
+import Adminicon from "../assets/Adminicon.png";
+import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
+import BranchIcon from "../assets/adaddbranchicon.svg";
+import mongoDBService from '../services/mongoDBService';
 
 const RequiredStar = () => <span className={styles['Admin-add-branch-required-star']}>*</span>;
 
@@ -9,14 +16,6 @@ const DropdownIcon = () => (
     <path fill="#999" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
   </svg>
 );
-
-import Adnavbar from '../components/Navbar/Adnavbar.js';
-import Adsidebar from '../components/Sidebar/Adsidebar.js';
-import styles from './AdAddBranchPage.module.css';
-import Adminicon from "../assets/Adminicon.png";
-import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
-import BranchIcon from "../assets/adaddbranchicon.svg";
-import mongoDBService from '../services/mongoDBService';
 
 function AdminABN() {
   useAdminAuth(); // JWT authentication verification

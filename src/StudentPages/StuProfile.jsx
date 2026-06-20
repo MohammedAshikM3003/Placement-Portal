@@ -21,7 +21,7 @@ import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
 import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
 import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
-import { CertificateDownloadProgressAlert } from '../components/alerts';
+import { CertificateDownloadProgressAlert, DownloadSuccessAlert, DownloadFailedAlert } from '../components/alerts';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
