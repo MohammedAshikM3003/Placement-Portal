@@ -60,9 +60,10 @@
     display: flex;
     gap: 20px;
     align-items: stretch;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     margin-left: 15px;
-    height: 245px;
+    height: auto;
+    min-height: 245px;
 }
 
 /* Filter Section */
@@ -552,7 +553,7 @@ position: relative;
 /* ---------------------------------------------------------------------- */
 
 /* Tablet and below: remove fixed left margin, allow vertical scrolling */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
     .Admin-cp-layout {
         flex-direction: column;
        
@@ -729,7 +730,7 @@ position: relative;
    MOBILE RESPONSIVENESS
    ============================================================================ */
 
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1200px) {
     /* 1. Reset Fixed Margins used in Desktop */
     .Admin-cp-top-card, .Admin-cp-bottom-card {
         margin-left: 0;

@@ -155,4 +155,4 @@ async function check() {
   await client.close();
 }
 
-check().catch(e => console.error('Error:', e.message));
+check().catch(e => console.error('Error:', e.stack));

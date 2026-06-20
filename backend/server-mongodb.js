@@ -65,6 +65,93 @@ const stripLocalhostUrls = (data) => {
     return data;
 };
 
+const matchDOB = (enteredPassword, storedDob) => {
+    if (!enteredPassword || !storedDob) return false;
+
+    // Convert storedDob to Date object if possible
+    let storedDate = null;
+    if (storedDob instanceof Date || (typeof storedDob === 'object' && typeof storedDob.getMonth === 'function')) {
+        storedDate = storedDob;
+    } else if (typeof storedDob === 'string') {
+        let dateStr = storedDob;
+        if (/^\d{2}-\d{2}-\d{4}$/.test(storedDob)) {
+            const parts = storedDob.split('-');
+            dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(storedDob)) {
+            const parts = storedDob.split('/');
+            dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            storedDate = d;
+        }
+    }
+
+    // Convert enteredPassword to Date object if it contains T (common for ISO strings)
+    let enteredDate = null;
+    if (typeof enteredPassword === 'string' && (enteredPassword.includes('T') || enteredPassword.includes('t'))) {
+        const d = new Date(enteredPassword);
+        if (!isNaN(d.getTime())) {
+            enteredDate = d;
+        }
+    }
+
+    // Direct Calendar date check if both are valid Date objects (timezone-safe: checks both UTC and Local)
+    if (storedDate && enteredDate) {
+        const matchLocal = (
+            storedDate.getFullYear() === enteredDate.getFullYear() &&
+            storedDate.getMonth() === enteredDate.getMonth() &&
+            storedDate.getDate() === enteredDate.getDate()
+        );
+        const matchUTC = (
+            storedDate.getUTCFullYear() === enteredDate.getUTCFullYear() &&
+            storedDate.getUTCMonth() === enteredDate.getUTCMonth() &&
+            storedDate.getUTCDate() === enteredDate.getUTCDate()
+        );
+        if (matchLocal || matchUTC) return true;
+    }
+
+    // Clean entered password to only contain digits
+    const enteredClean = enteredPassword.replace(/[^0-9]/g, '');
+    if (!enteredClean) return false;
+
+    // String cleanup comparison fallback
+    if (typeof storedDob === 'string') {
+        const storedClean = storedDob.replace(/[^0-9]/g, '');
+        if (enteredClean === storedClean && enteredClean.length > 0) {
+            return true;
+        }
+    }
+
+    // Generate standard 8-digit representations from storedDate
+    if (storedDate) {
+        try {
+            const day = String(storedDate.getDate()).padStart(2, '0');
+            const month = String(storedDate.getMonth() + 1).padStart(2, '0');
+            const year = String(storedDate.getFullYear());
+
+            const formatDDMMYYYY = `${day}${month}${year}`;
+            const formatYYYYMMDD = `${year}${month}${day}`;
+
+            const dayUTC = String(storedDate.getUTCDate()).padStart(2, '0');
+            const monthUTC = String(storedDate.getUTCMonth() + 1).padStart(2, '0');
+            const yearUTC = String(storedDate.getUTCFullYear());
+
+            const formatDDMMYYYY_UTC = `${dayUTC}${monthUTC}${yearUTC}`;
+            const formatYYYYMMDD_UTC = `${yearUTC}${monthUTC}${dayUTC}`;
+
+            if (enteredClean === formatDDMMYYYY || enteredClean === formatYYYYMMDD ||
+                enteredClean === formatDDMMYYYY_UTC || enteredClean === formatYYYYMMDD_UTC) {
+                return true;
+            }
+        } catch (e) {
+            console.error('Error matching Date DOB:', e);
+        }
+    }
+
+    return false;
+};
+
 // ========================================
 // OCR SERVICE AUTO-START (DEV ONLY)
 // ========================================
@@ -73,7 +160,7 @@ const OCR_PORT = Number(process.env.OCR_PORT || 5001);
 const OCR_HEALTH_PATH = process.env.OCR_HEALTH_PATH || '/health';
 const OCR_PYTHON_EXE = process.env.OCR_PYTHON_EXE || path.resolve(__dirname, '..', '.venv310', 'Scripts', 'python.exe');
 const OCR_SERVER_SCRIPT = process.env.OCR_SERVER_SCRIPT || path.resolve(__dirname, 'ocr-service', 'ocr_server.py');
-const OCR_AUTOSTART = process.env.OCR_AUTOSTART !== '0';
+const OCR_AUTOSTART = false;
 
 let ocrProcess = null;
 
@@ -383,25 +470,25 @@ const invalidateStudentLoginCache = (studentDoc) => {
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    
+
     if (!token) {
         return res.sendStatus(401);
     }
-    
+
     // Check cache first
     const cached = jwtCache.get(token);
     if (cached && (Date.now() - cached.cachedAt < JWT_CACHE_TTL_MS)) {
         req.user = cached.user;
         return next();
     }
-    
+
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
             // Remove from cache if it was there
             jwtCache.delete(token);
             return res.sendStatus(403);
         }
-        
+
         // Cache the decoded token
         if (jwtCache.size >= JWT_CACHE_MAX_SIZE) {
             // Evict oldest entry
@@ -409,7 +496,7 @@ const authenticateToken = (req, res, next) => {
             jwtCache.delete(firstKey);
         }
         jwtCache.set(token, { user, cachedAt: Date.now() });
-        
+
         req.user = user;
         next();
     });
@@ -419,21 +506,21 @@ const authenticateToken = (req, res, next) => {
 const checkRole = (...allowedRoles) => {
     return (req, res, next) => {
         console.log(`🎯 Role Check: User role '${req.user?.role}', Required: [${allowedRoles.join(', ')}]`);
-        
+
         if (!req.user) {
             console.log('❌ Role Check: No user in request');
             return res.status(401).json({ message: 'Authentication required' });
         }
-        
+
         if (!allowedRoles.includes(req.user.role)) {
             console.log(`❌ Role Check: Access denied for role '${req.user.role}'`);
-            return res.status(403).json({ 
+            return res.status(403).json({
                 message: 'Access denied. Insufficient permissions.',
                 requiredRoles: allowedRoles,
                 currentRole: req.user.role
             });
         }
-        
+
         console.log(`✅ Role Check: Access granted for role '${req.user.role}'`);
         next();
     };
@@ -459,15 +546,7 @@ const connectDB = async (retryCount = 0) => {
 
         // Check if already connected and healthy
         if (mongoose.connection.readyState === 1) {
-            // Verify connection is actually working
-            try {
-                await mongoose.connection.db.admin().ping();
-                return true;
-            } catch (pingError) {
-                console.log('⚠️ Connection exists but ping failed, reconnecting...');
-                // Force disconnect to reconnect fresh
-                await mongoose.connection.close().catch(() => {});
-            }
+            return true;
         }
 
         // Close any existing partial connection
@@ -479,10 +558,25 @@ const connectDB = async (retryCount = 0) => {
             }
         }
 
+        let detectedFamily = undefined;
+        try {
+            const match = process.env.MONGODB_URI.match(/@([^:\/\?]+)/);
+            if (match && match[1]) {
+                const firstHost = match[1].split(',')[0];
+                const dns = require('dns').promises;
+                const lookup = await dns.lookup(firstHost);
+                detectedFamily = lookup.family;
+                console.log(`📡 Network auto-detected: forcing family ${detectedFamily} for host ${firstHost}`);
+            }
+        } catch (dnsError) {
+            console.warn('⚠️ Network auto-detection failed, using default routing:', dnsError.message);
+        }
+
         // Advanced connection options for maximum reliability
         const connectionOptions = {
+            family: detectedFamily,
+
             // DNS resolution - Force IPv4 to avoid IPv6 connection issues
-            family: 4,
 
             // Timeout settings - Increased for Atlas Free Tier cold starts
             serverSelectionTimeoutMS: 45000, // 45 seconds for cluster wake-up
@@ -506,38 +600,36 @@ const connectDB = async (retryCount = 0) => {
         };
 
         console.log(`🔄 Attempting MongoDB connection (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`);
-        
+
         const conn = await mongoose.connect(process.env.MONGODB_URI, connectionOptions);
-        
-        // Verify connection with ping
-        await conn.connection.db.admin().ping();
-        
+
+
         connectionAttempts = 0; // Reset on success
         console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
-        
+
         // Set up comprehensive connection event handlers
         setupConnectionHandlers();
-        
+
         return true;
-        
+
     } catch (error) {
         connectionAttempts++;
-        
+
         console.error(`❌ MongoDB connection failed (attempt ${retryCount + 1}):`, error.message);
-        
+
         // Retry with exponential backoff
         if (retryCount < MAX_RETRIES) {
             const delay = RETRY_DELAYS[retryCount] || 15000;
-            console.log(`⏳ Retrying in ${delay/1000} seconds...`);
-            
+            console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
+
             await new Promise(resolve => setTimeout(resolve, delay));
             return connectDB(retryCount + 1); // Recursive retry
         }
-        
+
         // All retries exhausted
         console.error('❌ All MongoDB connection attempts failed. Using in-memory storage.');
         console.error('Error details:', error.message);
-        
+
         // Clean up any partial connection
         if (mongoose.connection.readyState !== 0) {
             try {
@@ -546,7 +638,7 @@ const connectDB = async (retryCount = 0) => {
                 // Ignore close errors
             }
         }
-        
+
         return false;
     }
 };
@@ -555,7 +647,7 @@ const connectDB = async (retryCount = 0) => {
 function setupConnectionHandlers() {
     // Remove existing listeners to prevent duplicates
     mongoose.connection.removeAllListeners();
-    
+
     mongoose.connection.on('error', (err) => {
         console.error('⚠️ MongoDB connection error:', err.message);
         // Don't close - let it auto-reconnect
@@ -650,12 +742,12 @@ app.get('/api/public/admins', async (req, res) => {
 // -------------------------------------------------
 try {
     const adminProfileRoutes = require('./routes/adminProfile');
-    
+
     // PUBLIC ROUTE: College images (no authentication required)
     // This must come BEFORE the authenticated routes to match first
     app.use('/api/public', adminProfileRoutes);
     console.log('✅ Public college images route loaded successfully');
-    
+
     // Apply JWT authentication to all other admin profile routes
     app.use('/api/admin', authenticateToken, adminProfileRoutes);
     console.log('✅ Admin profile routes loaded successfully with JWT authentication');
@@ -775,7 +867,7 @@ app.post('/api/feedback/generate', authenticateToken, checkRole('admin'), async 
             return res.status(400).json({ error: 'feedbackType must be passed or failed' });
         }
 
-        const { enhanceResume } = require('./services/aiService');
+        const { conciseFeedback } = require('./services/aiService');
 
         const normalizedType = String(feedbackType).toLowerCase();
         const draftText = (baseText || '').toString().trim() || (normalizedType === 'passed'
@@ -784,10 +876,10 @@ app.post('/api/feedback/generate', authenticateToken, checkRole('admin'), async 
 
         let improvedText = draftText;
         try {
-            const enhanced = await enhanceResume(draftText);
-            improvedText = (enhanced.enhanced || enhanced.corrected || draftText).toString().trim();
+            const result = await conciseFeedback(draftText);
+            improvedText = (result.concise || draftText).toString().trim();
         } catch (aiError) {
-            console.warn('AI enhancement failed, using draft text:', aiError.message);
+            console.warn('Feedback conciser failed, using draft text:', aiError.message);
         }
 
         return res.json({
@@ -962,7 +1054,7 @@ app.post('/api/student-feedback/generate', authenticateToken, checkRole('student
             return res.status(400).json({ error: 'textType must be feedback or suggestion' });
         }
 
-        const { enhanceResume } = require('./services/aiService');
+        const { conciseFeedback } = require('./services/aiService');
 
         const normalizedDifficulty = String(difficulty || '').trim() || 'N/A';
         const normalizedRoundStatus = String(roundStatus || '').trim() || 'N/A';
@@ -975,10 +1067,10 @@ app.post('/api/student-feedback/generate', authenticateToken, checkRole('student
         const baseDraft = draftText || fallbackText;
         let improvedText = baseDraft;
         try {
-            const enhanced = await enhanceResume(baseDraft);
-            improvedText = (enhanced.enhanced || enhanced.corrected || baseDraft).toString().trim();
+            const result = await conciseFeedback(baseDraft);
+            improvedText = (result.concise || baseDraft).toString().trim();
         } catch (aiError) {
-            console.warn('AI enhancement failed, using draft text:', aiError.message);
+            console.warn('Feedback conciser failed, using draft text:', aiError.message);
         }
 
         return res.json({
@@ -1211,7 +1303,7 @@ app.get('/api/student-feedback', authenticateToken, checkRole('student', 'admin'
 app.get('/api/branches', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
             return res.status(503).json({
                 success: false,
@@ -1221,9 +1313,9 @@ app.get('/api/branches', async (req, res) => {
         }
 
         const { degree, degreeAbbreviation } = req.query;
-        
+
         let query = { isActive: { $ne: false } };
-        
+
         // Filter by degree if provided
         if (degree || degreeAbbreviation) {
             const degreeFilter = degree || degreeAbbreviation;
@@ -1234,16 +1326,16 @@ app.get('/api/branches', async (req, res) => {
         }
 
         const branches = await Branch.find(query).sort({ branchFullName: 1 });
-        
+
         res.json({
             success: true,
             branches: branches
         });
     } catch (error) {
         console.error('Get branches error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to fetch branches', 
+            error: 'Failed to fetch branches',
             details: error.message,
             branches: []
         });
@@ -1254,7 +1346,7 @@ app.get('/api/branches', async (req, res) => {
 app.post('/api/branches', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
             return res.status(503).json({
                 success: false,
@@ -1263,7 +1355,7 @@ app.post('/api/branches', async (req, res) => {
         }
 
         const { degreeFullName, degreeAbbreviation, branchFullName, branchAbbreviation } = req.body;
-        
+
         if (!degreeFullName || !degreeAbbreviation || !branchFullName || !branchAbbreviation) {
             return res.status(400).json({
                 success: false,
@@ -1280,7 +1372,7 @@ app.post('/api/branches', async (req, res) => {
         });
 
         await newBranch.save();
-        
+
         res.status(201).json({
             success: true,
             message: 'Branch created successfully',
@@ -1288,10 +1380,10 @@ app.post('/api/branches', async (req, res) => {
         });
     } catch (error) {
         console.error('Create branch error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to create branch', 
-            details: error.message 
+            error: 'Failed to create branch',
+            details: error.message
         });
     }
 });
@@ -1300,7 +1392,7 @@ app.post('/api/branches', async (req, res) => {
 app.delete('/api/branches/:branchCode', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
             return res.status(503).json({
                 success: false,
@@ -1309,7 +1401,7 @@ app.delete('/api/branches/:branchCode', async (req, res) => {
         }
 
         const { branchCode } = req.params;
-        
+
         // Try to find and delete by abbreviation or full name
         const result = await Branch.findOneAndDelete({
             $or: [
@@ -1324,17 +1416,17 @@ app.delete('/api/branches/:branchCode', async (req, res) => {
                 error: 'Branch not found'
             });
         }
-        
+
         res.json({
             success: true,
             message: 'Branch deleted successfully'
         });
     } catch (error) {
         console.error('Delete branch error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to delete branch', 
-            details: error.message 
+            error: 'Failed to delete branch',
+            details: error.message
         });
     }
 });
@@ -1400,7 +1492,7 @@ app.get('/api/admin/branches-summary', async (req, res) => {
 app.get('/api/degrees', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
             return res.status(503).json({
                 success: false,
@@ -1410,16 +1502,16 @@ app.get('/api/degrees', async (req, res) => {
         }
 
         const degrees = await Degree.find({ isActive: { $ne: false } }).sort({ degreeFullName: 1 });
-        
+
         res.json({
             success: true,
             degrees: degrees
         });
     } catch (error) {
         console.error('Get degrees error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to fetch degrees', 
+            error: 'Failed to fetch degrees',
             details: error.message,
             degrees: []
         });
@@ -1430,7 +1522,7 @@ app.get('/api/degrees', async (req, res) => {
 app.post('/api/degrees', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
             return res.status(503).json({
                 success: false,
@@ -1439,7 +1531,7 @@ app.post('/api/degrees', async (req, res) => {
         }
 
         const { degreeFullName, degreeAbbreviation } = req.body;
-        
+
         if (!degreeFullName || !degreeAbbreviation) {
             return res.status(400).json({
                 success: false,
@@ -1454,7 +1546,7 @@ app.post('/api/degrees', async (req, res) => {
         });
 
         await newDegree.save();
-        
+
         res.status(201).json({
             success: true,
             message: 'Degree created successfully',
@@ -1462,10 +1554,10 @@ app.post('/api/degrees', async (req, res) => {
         });
     } catch (error) {
         console.error('Create degree error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to create degree', 
-            details: error.message 
+            error: 'Failed to create degree',
+            details: error.message
         });
     }
 });
@@ -2550,7 +2642,7 @@ app.delete('/api/company-drives/:id', async (req, res) => {
         // CASCADE DELETE 3: Remove round results from Reports collection for this specific drive
         const Reports = mongoose.connection.collection('Reports');
         const reportsDeleted = await Reports.deleteOne({ driveId: driveId });
-        
+
         console.log(`✅ Deleted ${reportsDeleted.deletedCount} round results document(s)`);
 
         // CASCADE DELETE 4: Remove any student applications for this specific drive
@@ -2563,9 +2655,9 @@ app.delete('/api/company-drives/:id', async (req, res) => {
 
         console.log(`✅ Deleted ${applicationsDeleted.deletedCount} student application records`);
 
-        res.status(200).json({ 
+        res.status(200).json({
             success: true,
-            message: 'Company drive and ALL related data deleted successfully', 
+            message: 'Company drive and ALL related data deleted successfully',
             drive: {
                 companyName: deletedDrive.companyName,
                 jobRole: deletedDrive.jobRole,
@@ -2636,7 +2728,7 @@ app.get('/api/company-drives', async (req, res) => {
                 console.log('⚠️ Company drives query timeout:', err.message);
                 return [];
             });
-        
+
         // Validate that critical fields exist to prevent future issues
         if (drives && drives.length > 0) {
             const requiredFields = ['companyName', 'jobRole', 'startingDate', 'endingDate', 'rounds', 'mode', 'department', 'eligibleBranches'];
@@ -2647,7 +2739,7 @@ app.get('/api/company-drives', async (req, res) => {
                 console.warn('⚠️ This may cause issues in admin/coordinator pages');
             }
         }
-        
+
         res.status(200).json({ drives: drives || [] });
     } catch (error) {
         console.error('Fetch company drives error:', error);
@@ -2691,7 +2783,7 @@ app.post('/api/student-applications', authenticateToken, checkRole('student', 'a
 
         // Fetch student details to get register numbers
         const students = await Student.find({ _id: { $in: studentIds } }).select('_id regNo');
-        
+
         const applications = students.map(student => ({
             studentId: String(student._id),
             regNo: student.regNo,
@@ -2716,10 +2808,10 @@ app.post('/api/student-applications', authenticateToken, checkRole('student', 'a
 
         const result = await StudentApplication.bulkWrite(bulkOps);
 
-        res.status(201).json({ 
-            message: 'Student applications created successfully', 
+        res.status(201).json({
+            message: 'Student applications created successfully',
             count: applications.length,
-            result 
+            result
         });
     } catch (error) {
         console.error('Create student applications error:', error);
@@ -2801,10 +2893,10 @@ app.post('/api/eligible-students', authenticateToken, checkRole('admin', 'coordi
             if (!driveStartDate) missingFields.push('driveStartDate');
             if (!students) missingFields.push('students');
             if (students && students.length === 0) missingFields.push('students (empty array)');
-            
+
             console.error('Missing required fields:', missingFields);
-            return res.status(400).json({ 
-                error: 'Missing required fields', 
+            return res.status(400).json({
+                error: 'Missing required fields',
                 missingFields,
                 received: { driveId, companyName, driveStartDate, studentsCount: students?.length }
             });
@@ -2852,9 +2944,9 @@ app.post('/api/eligible-students', authenticateToken, checkRole('admin', 'coordi
             // Don't fail the entire request if application creation fails
         }
 
-        res.json({ 
-            message: 'Eligible students stored successfully', 
-            data: eligibleStudentDoc 
+        res.json({
+            message: 'Eligible students stored successfully',
+            data: eligibleStudentDoc
         });
     } catch (error) {
         console.error('Store eligible students error:', error);
@@ -2871,7 +2963,7 @@ app.post('/api/sync-student-applications', async (req, res) => {
 
         // Fetch all eligible students
         const eligibleStudents = await EligibleStudent.find({});
-        
+
         let totalCreated = 0;
         let totalUpdated = 0;
 
@@ -2903,7 +2995,7 @@ app.post('/api/sync-student-applications', async (req, res) => {
             totalUpdated += result.modifiedCount || 0;
         }
 
-        res.json({ 
+        res.json({
             message: 'Student applications synced successfully',
             created: totalCreated,
             updated: totalUpdated
@@ -3105,7 +3197,7 @@ app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', '
         }
 
         const attendanceData = req.body;
-        
+
         console.log('Attendance Submit Request:', {
             driveId: attendanceData.driveId,
             companyName: attendanceData.companyName,
@@ -3119,7 +3211,7 @@ app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', '
         if (!attendanceData.driveId || !attendanceData.companyName || !attendanceData.jobRole || !attendanceData.startDate) {
             return res.status(400).json({ error: 'Missing required fields (driveId, companyName, jobRole, startDate)' });
         }
-        
+
         // Convert date strings to Date objects without timezone conversion
         // Parse dates assuming they are in YYYY-MM-DD format
         const parseDate = (dateString) => {
@@ -3130,7 +3222,7 @@ app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', '
             const [year, month, day] = dateString.split('T')[0].split('-');
             return new Date(year, month - 1, day, 0, 0, 0, 0);
         };
-        
+
         // Create attendance object with explicit field mapping to avoid any spread operator issues
         const attendanceDocData = {
             driveId: attendanceData.driveId, // Explicitly set driveId
@@ -3145,39 +3237,39 @@ app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', '
             students: attendanceData.students,
             submittedBy: attendanceData.submittedBy || 'Admin'
         };
-        
+
         console.log('📝 Attendance data prepared for save:', {
             driveId: attendanceDocData.driveId,
             companyName: attendanceDocData.companyName,
             jobRole: attendanceDocData.jobRole,
-            hasAllFields: !!attendanceDocData.driveId && 
-                          !!attendanceDocData.companyName && 
-                          !!attendanceDocData.jobRole
+            hasAllFields: !!attendanceDocData.driveId &&
+                !!attendanceDocData.companyName &&
+                !!attendanceDocData.jobRole
         });
-        
+
         console.log('🔍 Full attendanceDocData object:', JSON.stringify(attendanceDocData, null, 2));
-        
+
         // Create new attendance record
         const attendance = new Attendance(attendanceDocData);
-        
+
         console.log('🔍 Mongoose document created, driveId value:', attendance.driveId);
         console.log('🔍 Full mongoose document:', JSON.stringify(attendance.toObject(), null, 2));
-        
+
         console.log('📝 Attendance document BEFORE save:', {
             driveId: attendance.driveId,
             companyName: attendance.companyName,
             jobRole: attendance.jobRole
         });
-        
+
         await attendance.save();
-        
+
         console.log('✅ Attendance document AFTER save:', {
             _id: attendance._id,
             driveId: attendance.driveId,
             companyName: attendance.companyName,
             jobRole: attendance.jobRole
         });
-        
+
         res.status(201).json({
             success: true,
             message: 'Attendance submitted successfully',
@@ -3221,11 +3313,11 @@ app.get('/api/attendance/student/:studentId', async (req, res) => {
         }
 
         const { studentId } = req.params;
-        
+
         const attendances = await Attendance.find({
             'students.studentId': studentId
         }).sort({ startDate: -1 }).lean();
-        
+
         // Extract only the relevant student data from each attendance record
         const studentAttendances = attendances.map(attendance => {
             const studentData = attendance.students.find(s => s.studentId === studentId);
@@ -3241,7 +3333,7 @@ app.get('/api/attendance/student/:studentId', async (req, res) => {
                 updatedAt: attendance.updatedAt || attendance.submittedAt || null
             };
         });
-        
+
         res.json({
             success: true,
             data: studentAttendances
@@ -3263,11 +3355,11 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
         }
 
         const { regNo } = req.params;
-        
+
         const attendances = await Attendance.find({
             'students.regNo': regNo
         }).sort({ startDate: -1 }).lean();
-        
+
         // Extract only the relevant student data from each attendance record
         const studentAttendances = attendances.map(attendance => {
             const studentData = attendance.students.find(s => s.regNo === regNo);
@@ -3283,7 +3375,7 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
                 updatedAt: attendance.updatedAt || attendance.submittedAt || null
             };
         });
-        
+
         res.json({
             success: true,
             data: studentAttendances
@@ -3297,54 +3389,54 @@ app.get('/api/attendance/student/regNo/:regNo', async (req, res) => {
     }
 });
 
-    app.get('/api/training-attendance/student/regNo/:regNo', async (req, res) => {
-        try {
-            if (mongoose.connection.readyState !== 1) {
-                return res.status(503).json({ error: 'Database not connected' });
-            }
-
-            const { regNo } = req.params;
-            const normalizedRegNo = (regNo || '').toString().trim();
-
-            if (!normalizedRegNo) {
-                return res.status(400).json({ error: 'Registration number is required' });
-            }
-
-            const attendances = await TrainingAttendance.find({
-                'students.regNo': normalizedRegNo
-            }).sort({ attendanceDate: -1, createdAt: -1 }).lean();
-
-            const studentAttendances = attendances.map((attendance) => {
-                const studentData = Array.isArray(attendance.students)
-                    ? attendance.students.find((student) => (student?.regNo || '').toString().trim() === normalizedRegNo)
-                    : null;
-
-                return {
-                    _id: attendance._id,
-                    companyName: attendance.companyName,
-                    courseName: attendance.courseName,
-                    batchName: attendance.batchName,
-                    batchNumber: attendance.batchNumber,
-                    trainer: attendance.trainer || '',
-                    phaseNumber: attendance.phaseNumber,
-                    attendanceDate: attendance.attendanceDate,
-                    attendanceDateKey: attendance.attendanceDateKey,
-                    status: studentData?.status || '-'
-                };
-            });
-
-            return res.json({
-                success: true,
-                data: studentAttendances
-            });
-        } catch (error) {
-            console.error('Error fetching training attendance by regNo:', error);
-            return res.status(500).json({
-                error: 'Failed to fetch training attendance',
-                details: error.message
-            });
+app.get('/api/training-attendance/student/regNo/:regNo', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: 'Database not connected' });
         }
-    });
+
+        const { regNo } = req.params;
+        const normalizedRegNo = (regNo || '').toString().trim();
+
+        if (!normalizedRegNo) {
+            return res.status(400).json({ error: 'Registration number is required' });
+        }
+
+        const attendances = await TrainingAttendance.find({
+            'students.regNo': normalizedRegNo
+        }).sort({ attendanceDate: -1, createdAt: -1 }).lean();
+
+        const studentAttendances = attendances.map((attendance) => {
+            const studentData = Array.isArray(attendance.students)
+                ? attendance.students.find((student) => (student?.regNo || '').toString().trim() === normalizedRegNo)
+                : null;
+
+            return {
+                _id: attendance._id,
+                companyName: attendance.companyName,
+                courseName: attendance.courseName,
+                batchName: attendance.batchName,
+                batchNumber: attendance.batchNumber,
+                trainer: attendance.trainer || '',
+                phaseNumber: attendance.phaseNumber,
+                attendanceDate: attendance.attendanceDate,
+                attendanceDateKey: attendance.attendanceDateKey,
+                status: studentData?.status || '-'
+            };
+        });
+
+        return res.json({
+            success: true,
+            data: studentAttendances
+        });
+    } catch (error) {
+        console.error('Error fetching training attendance by regNo:', error);
+        return res.status(500).json({
+            error: 'Failed to fetch training attendance',
+            details: error.message
+        });
+    }
+});
 
 // Update attendance record
 app.put('/api/attendance/:id', async (req, res) => {
@@ -3355,7 +3447,7 @@ app.put('/api/attendance/:id', async (req, res) => {
 
         const { id } = req.params;
         const attendanceData = req.body;
-        
+
         console.log('Attendance Update Request:', {
             id,
             companyName: attendanceData.companyName,
@@ -3369,7 +3461,7 @@ app.put('/api/attendance/:id', async (req, res) => {
             const [year, month, day] = dateString.split('T')[0].split('-');
             return new Date(year, month - 1, day, 0, 0, 0, 0);
         };
-        
+
         const attendanceDataWithParsedDates = {
             ...attendanceData,
             startDate: parseDate(attendanceData.startDate),
@@ -3382,11 +3474,11 @@ app.put('/api/attendance/:id', async (req, res) => {
             attendanceDataWithParsedDates,
             { new: true, runValidators: true }
         );
-        
+
         if (!updatedAttendance) {
             return res.status(404).json({ error: 'Attendance record not found' });
         }
-        
+
         res.json({
             success: true,
             message: 'Attendance updated successfully',
@@ -3411,7 +3503,7 @@ app.post('/api/round-results/save', async (req, res) => {
         }
 
         const { companyName, jobRole, roundNumber, roundName, students, date, totalRounds, startingDate, endingDate, driveId } = req.body;
-        
+
         console.log('Round Results Save Request:', {
             driveId,
             companyName,
@@ -3430,9 +3522,9 @@ app.post('/api/round-results/save', async (req, res) => {
 
         // Validate that roundNumber starts from 1 (not 0)
         if (roundNumber < 1) {
-            return res.status(400).json({ 
-                error: 'Invalid roundNumber', 
-                message: 'Round number must start from 1 (not 0). Please use 1-indexed rounds.' 
+            return res.status(400).json({
+                error: 'Invalid roundNumber',
+                message: 'Round number must start from 1 (not 0). Please use 1-indexed rounds.'
             });
         }
 
@@ -3466,7 +3558,7 @@ app.post('/api/round-results/save', async (req, res) => {
         if (existingDrive) {
             // Update existing drive - update or add round
             const existingRoundIndex = existingDrive.rounds?.findIndex(r => r.roundNumber === roundNumber);
-            
+
             if (existingRoundIndex !== undefined && existingRoundIndex >= 0) {
                 // Update existing round
                 const updateResult = await Reports.updateOne(
@@ -3490,11 +3582,11 @@ app.post('/api/round-results/save', async (req, res) => {
                     { driveId },
                     {
                         $push: { rounds: roundData },
-                        $set: { 
+                        $set: {
                             totalRounds: totalRounds || existingDrive.totalRounds,
                             startingDate: startingDate || existingDrive.startingDate,
                             endingDate: endingDate || existingDrive.endingDate,
-                            updatedAt: new Date() 
+                            updatedAt: new Date()
                         }
                     }
                 );
@@ -3542,22 +3634,22 @@ app.get('/api/round-results', async (req, res) => {
         }
 
         const { roundNumber, driveId } = req.query;
-        
+
         if (!driveId || !roundNumber) {
             return res.status(400).json({ error: 'Missing required query parameters (driveId, roundNumber)' });
         }
 
         // Use driveId directly - no complex identifier generation needed
         const Reports = mongoose.connection.collection('Reports');
-        
+
         const drive = await Reports.findOne({ driveId });
-        
+
         if (!drive) {
             return res.status(404).json({ error: 'Drive not found' });
         }
 
         const round = drive.rounds?.find(r => r.roundNumber === parseInt(roundNumber));
-        
+
         if (!round) {
             return res.status(404).json({ error: 'Round results not found' });
         }
@@ -3588,14 +3680,14 @@ app.get('/api/round-results/all', async (req, res) => {
         }
 
         const { driveId } = req.query;
-        
+
         if (!driveId) {
             return res.status(400).json({ error: 'Missing required query parameter: driveId' });
         }
 
         // Use driveId directly
         const Reports = mongoose.connection.collection('Reports');
-        
+
         const drive = await Reports.findOne({ driveId });
 
         if (!drive) {
@@ -3637,13 +3729,13 @@ app.get('/api/reports/all', async (req, res) => {
 
         // Flatten the nested structure for easier consumption by analysis pages
         const flattenedReports = [];
-        
+
         drives.forEach(drive => {
             if (drive.rounds && drive.rounds.length > 0) {
                 console.log(`  Drive: ${drive.companyName} - ${drive.jobRole} has ${drive.rounds.length} round(s)`);
                 drive.rounds.forEach(round => {
                     console.log(`    Round ${round.roundNumber} (${round.roundName}): ${round.passedCount} passed, ${round.failedCount} failed, ${round.absentCount} absent`);
-                    
+
                     // Add each student from passed list
                     round.passedStudents?.forEach(student => {
                         flattenedReports.push({
@@ -3715,7 +3807,7 @@ app.get('/api/reports/filtered', async (req, res) => {
 
         const Reports = mongoose.connection.collection('Reports');
         let query = {};
-        
+
         if (companyName && companyName !== 'All Companies') {
             query.companyName = companyName;
         }
@@ -3724,7 +3816,7 @@ app.get('/api/reports/filtered', async (req, res) => {
 
         // Flatten and filter
         let flattenedReports = [];
-        
+
         drives.forEach(drive => {
             if (drive.rounds && drive.rounds.length > 0) {
                 drive.rounds.forEach(round => {
@@ -3785,15 +3877,15 @@ app.get('/api/reports/company-wise-analysis', async (req, res) => {
         console.log('📊 Company-wise analysis request:', { companyName, startDate, endDate });
 
         const Reports = mongoose.connection.collection('Reports');
-        
+
         // If no company selected, return list of all companies with their drives and dates
         if (!companyName || companyName === 'All Companies') {
             const allDrives = await CompanyDrive.find({}).lean();
             // const allReports = await Reports.find({}).toArray(); // Unused - commented out
-            
+
             // Group drives by company and job role
             const companyGroups = {};
-            
+
             allDrives.forEach(drive => {
                 const key = `${drive.companyName}|||${drive.jobRole}`;
                 if (!companyGroups[key]) {
@@ -3809,7 +3901,7 @@ app.get('/api/reports/company-wise-analysis', async (req, res) => {
                     _id: drive._id
                 });
             });
-            
+
             return res.json({
                 success: true,
                 data: Object.values(companyGroups)
@@ -3844,7 +3936,7 @@ app.get('/api/reports/company-wise-analysis', async (req, res) => {
 
             // Flatten student data
             const students = [];
-            
+
             reports.forEach(report => {
                 if (report.rounds && report.rounds.length > 0) {
                     report.rounds.forEach(round => {
@@ -3939,7 +4031,7 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
         }
 
         const { companyName, jobRole, roundNumber, roundName, students, driveId, startingDate, endingDate, totalRounds } = req.body;
-        
+
         console.log('Update Student Applications Request:', {
             driveId,
             companyName,
@@ -4042,7 +4134,7 @@ app.post('/api/student-applications/update-rounds', async (req, res) => {
                     const numericRound = Number(currentRound?.roundNumber || 0);
                     return numericRound > max ? numericRound : max;
                 }, 0);
-                
+
                 if (hasAbsent) {
                     application.status = 'Absent';
                 } else if (hasFailed) {
@@ -4163,7 +4255,7 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
         }
 
         const { companyName, jobRole, students } = req.body;
-        
+
         console.log('Placed Students Save Request:', {
             companyName,
             jobRole,
@@ -4210,10 +4302,10 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
         // Check for existing records and update or insert
         const bulkOperations = placedStudentsData.map(student => ({
             updateOne: {
-                filter: { 
-                    regNo: student.regNo, 
+                filter: {
+                    regNo: student.regNo,
                     company: companyName,
-                    role: jobRole 
+                    role: jobRole
                 },
                 update: {
                     $set: student,
@@ -4613,7 +4705,7 @@ app.get('/api/public/college-images', async (req, res) => {
         res.set('Cache-Control', 'public, max-age=1800, s-maxage=3600');
 
         const AdminModel = require('./models/Admin');
-        
+
         // OPTIMIZATION: Add timeout protection and error handling
         const admin = await AdminModel.findOne({ adminLoginID: 'admin1000' })
             .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
@@ -4683,7 +4775,7 @@ app.get('/api/placed-students', async (req, res) => {
         if (offerStatus) query.offerStatus = String(offerStatus).trim();
 
         const PlacedStudents = mongoose.connection.collection('placed_students');
-        
+
         // OPTIMIZATION: Field selection - only return essential fields (avoid large base64 images)
         // Landing page only needs: name, dept, company, pkg, role, profilePicURL
         const projection = {
@@ -5079,9 +5171,9 @@ app.delete('/api/student-applications/student/:studentId', async (req, res) => {
         const { studentId } = req.params;
         const result = await StudentApplication.deleteMany({ studentId });
 
-        res.json({ 
-            message: 'All applications deleted successfully', 
-            deletedCount: result.deletedCount 
+        res.json({
+            message: 'All applications deleted successfully',
+            deletedCount: result.deletedCount
         });
     } catch (error) {
         console.error('Delete all student applications error:', error);
@@ -5097,7 +5189,7 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
         }
 
         const { studentId } = req.params;
-        
+
         // Find all eligible student documents where this student is in the students array
         const eligibleEntries = await EligibleStudent.find({
             'students.studentId': studentId
@@ -5108,7 +5200,7 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
             const startDate = entry.driveStartDate || entry.companyDriveDate;
             const endDate = entry.driveEndDate || entry.driveStartDate || entry.companyDriveDate;
             let matchedDrive = null;
-            
+
             // Fetch roundDetails from companies drives collection
             let roundDetails = [];
             let totalRounds = 0;
@@ -5153,7 +5245,7 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
                             { companyName: entry.companyName }
                         ]
                     }).sort({ createdAt: -1 });
-                    
+
                     if (fallbackDrive) {
                         matchedDrive = fallbackDrive;
                     }
@@ -5173,7 +5265,7 @@ app.get('/api/eligible-students/student/:studentId', async (req, res) => {
             const driveMode = matchedDrive?.mode || matchedDrive?.driveMode || entry.filterCriteria?.mode || '';
             const drivePackage = matchedDrive?.package || matchedDrive?.packageOffer || matchedDrive?.ctc || matchedDrive?.salaryPackage || entry.filterCriteria?.package || '';
             const driveBondPeriod = matchedDrive?.bondPeriod || matchedDrive?.bondperiod || matchedDrive?.bond || '';
-            
+
             return {
                 _id: entry._id,
                 driveId: entry.driveId || '',
@@ -5384,7 +5476,7 @@ app.get('/api/eligible-students', authenticateToken, checkRole('admin', 'coordin
         }
 
         const eligibleStudents = await EligibleStudent.find().sort({ createdAt: -1 });
-        
+
         console.log('Eligible students fetched:', eligibleStudents.length);
         if (eligibleStudents.length > 0) {
             console.log('First eligible student:', JSON.stringify(eligibleStudents[0], null, 2));
@@ -5472,7 +5564,7 @@ app.get('/api/coordinators', async (req, res) => {
                 .sort({ createdAt: -1 })
                 .lean()
                 .exec();
-            
+
             const sanitized = coordinators.map(sanitizeCoordinator);
             return res.json({ coordinators: sanitized });
         }
@@ -5606,7 +5698,7 @@ app.post('/api/coordinators', async (req, res) => {
                         : 'Coordinator with the provided ID, email, domain email, or username already exists.'
                 });
             }
- 
+
             try {
                 const coordinatorDoc = await Coordinator.create(coordinatorPayload);
 
@@ -5957,58 +6049,44 @@ app.delete('/api/coordinators/:coordinatorId', async (req, res) => {
 // This makes MongoDB connection persistent and always connected
 const ensureConnection = async () => {
     try {
-        // If already connected, verify it's working
+        // If already connected, return true
         if (mongoose.connection.readyState === 1) {
-            try {
-                // Quick ping to verify connection is alive (with timeout)
-                const pingPromise = mongoose.connection.db.admin().ping();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Ping timeout')), 3000)
-                );
-                await Promise.race([pingPromise, timeoutPromise]);
-                return true; // Connection is working
-            } catch (error) {
-                console.log('⚠️ Connection ping failed, reconnecting...');
-                // Connection exists but not working - force reconnect
-                await mongoose.connection.close().catch(() => {});
-                // Retry connection
-                return await connectDB(0); // Start from retry 0
-            }
-        } 
-        
+            return true;
+        }
+
+
         // Not connected (readyState 0) - ALWAYS try to connect
         if (mongoose.connection.readyState === 0) {
             console.log('🔄 MongoDB not connected, attempting connection...');
             return await connectDB(0); // Start from retry 0
         }
-        
+
         // Connecting (readyState 2) - connection in progress
-        // Wait a bit and check again (for serverless, don't wait too long)
+        // Wait for connection to establish (up to 15 seconds)
         if (mongoose.connection.readyState === 2) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            // Check again after waiting
-            if (mongoose.connection.readyState === 1) {
-                return true;
+            for (let i = 0; i < 30; i++) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (mongoose.connection.readyState === 1) {
+                    return true;
+                }
             }
-            // Still connecting or failed - try fresh connection
-            await mongoose.connection.close().catch(() => {});
-            return await connectDB(0);
+            return false;
         }
-        
-        // Disconnecting (readyState 3) - close and reconnect
+
+        // Disconnecting (readyState 3) - wait for it to complete
         if (mongoose.connection.readyState === 3) {
-            await mongoose.connection.close().catch(() => {});
-            return await connectDB(0);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return mongoose.connection.readyState === 1;
         }
-        
+
         // Default: try to connect
         return await connectDB(0);
-        
+
     } catch (error) {
         console.error('ensureConnection error:', error.message);
         // Even if error, try one more time
         try {
-            await mongoose.connection.close().catch(() => {});
+            await mongoose.connection.close().catch(() => { });
             return await connectDB(0);
         } catch (retryError) {
             return false;
@@ -6194,7 +6272,7 @@ const studentApplicationSchema = new mongoose.Schema({
     jobRole: { type: String, required: true },
     driveId: { type: String },
     status: { type: String, enum: ['Pending', 'Placed', 'Rejected', 'Absent'], default: 'Pending' },
-    rounds: [{ 
+    rounds: [{
         roundNumber: { type: Number },
         name: { type: String },
         roundName: { type: String },
@@ -6212,24 +6290,24 @@ studentApplicationSchema.index({ status: 1 });
 studentApplicationSchema.index({ appliedDate: -1 });
 
 const StudentApplication = mongoose.model('StudentApplication', studentApplicationSchema, 'student_applications');
-    
-    const placementBannerNotificationSchema = new mongoose.Schema({
-        studentId: { type: String, required: true, trim: true },
-        regNo: { type: String, trim: true },
-        signature: { type: String, required: true, trim: true },
-        status: { type: String, required: true, trim: true },
-        companyName: { type: String, trim: true },
-        jobRole: { type: String, trim: true },
-        roundName: { type: String, trim: true },
-        roundNumber: { type: Number },
-        driveId: { type: String, trim: true },
-        source: { type: String, trim: true },
-        claimedAt: { type: Date, default: Date.now }
-    }, { timestamps: true });
-    
-    placementBannerNotificationSchema.index({ studentId: 1, signature: 1 }, { unique: true });
-    
-    const PlacementBannerNotification = mongoose.model('PlacementBannerNotification', placementBannerNotificationSchema, 'placement_banner_notifications');
+
+const placementBannerNotificationSchema = new mongoose.Schema({
+    studentId: { type: String, required: true, trim: true },
+    regNo: { type: String, trim: true },
+    signature: { type: String, required: true, trim: true },
+    status: { type: String, required: true, trim: true },
+    companyName: { type: String, trim: true },
+    jobRole: { type: String, trim: true },
+    roundName: { type: String, trim: true },
+    roundNumber: { type: Number },
+    driveId: { type: String, trim: true },
+    source: { type: String, trim: true },
+    claimedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+placementBannerNotificationSchema.index({ studentId: 1, signature: 1 }, { unique: true });
+
+const PlacementBannerNotification = mongoose.model('PlacementBannerNotification', placementBannerNotificationSchema, 'placement_banner_notifications');
 
 const branchSchema = new mongoose.Schema({
     degreeFullName: { type: String, required: true, trim: true },
@@ -6382,13 +6460,13 @@ const attendanceSchema = new mongoose.Schema({
     jobRole: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    
+
     // Overall Statistics
     totalStudents: { type: Number, required: true },
     totalPresent: { type: Number, required: true },
     totalAbsent: { type: Number, required: true },
     percentage: { type: Number, required: true },
-    
+
     // Student Details
     students: [{
         studentId: { type: String, required: true },
@@ -6401,7 +6479,7 @@ const attendanceSchema = new mongoose.Schema({
         phoneNo: { type: String, required: true },
         status: { type: String, required: true, enum: ['Present', 'Absent', '-'] }
     }],
-    
+
     // Metadata
     submittedAt: { type: Date, default: Date.now },
     submittedBy: { type: String, default: 'Admin' }
@@ -6554,7 +6632,7 @@ const sanitizeCoordinator = (coordinatorDoc) => {
     const plain = coordinatorDoc.toObject ? coordinatorDoc.toObject() : { ...coordinatorDoc };
     delete plain.passwordHash;
     delete plain.password;
-    
+
     // CRITICAL FIX: Strip localhost URLs from profile photo before sending to frontend
     // This prevents mixed content errors on Vercel deployment
     if (plain.profilePhoto && typeof plain.profilePhoto === 'string') {
@@ -6569,7 +6647,7 @@ const sanitizeCoordinator = (coordinatorDoc) => {
             plain.profilePicURL = match[1]; // Return just the relative path
         }
     }
-    
+
     return plain;
 };
 
@@ -6701,7 +6779,7 @@ const warmupLoginIndexes = async () => {
             .maxTimeMS(2000)
             .catch(() => null);
         console.log('✅ Admin login index warmed up');
-        
+
         // Warm up coordinator indexes
         await Coordinator.findOne({})
             .select('coordinatorId username')
@@ -6709,7 +6787,7 @@ const warmupLoginIndexes = async () => {
             .maxTimeMS(2000)
             .catch(() => null);
         console.log('✅ Coordinator login index warmed up');
-        
+
         // Warm up student indexes
         await Student.findOne({})
             .select('regNo dob')
@@ -6727,13 +6805,13 @@ const startServer = async () => {
     try {
         const isMongoConnected = await ensureConnection();
         console.log(`Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Storage'}`);
-        
+
         // Warm up login indexes for faster first login (admin, coordinator, student)
         if (isMongoConnected) {
             await migrateTrainingCollection();
             setTimeout(() => warmupLoginIndexes(), 2000); // Run after 2s delay
         }
-        
+
         return isMongoConnected;
     } catch (error) {
         console.error('Database initialization error:', error.message);
@@ -6769,7 +6847,7 @@ app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
         return next();
     }
-    
+
     // ALWAYS try to ensure MongoDB connection is active
     // This makes the connection persistent and always connected
     if (mongoose.connection.readyState !== 1) {
@@ -6777,7 +6855,7 @@ app.use((req, res, next) => {
         if (!dbInitialized) {
             dbInitialized = true;
         }
-        
+
         // Start connection in background - fire and forget
         Promise.resolve().then(async () => {
             try {
@@ -6789,23 +6867,8 @@ app.use((req, res, next) => {
         }).catch(err => {
             console.error('Connection promise error:', err?.message || err);
         });
-    } else {
-        // Already connected - verify it's still working
-        Promise.resolve().then(async () => {
-            try {
-                // Quick ping to verify connection is alive
-                await mongoose.connection.db.admin().ping();
-            } catch (pingError) {
-                // Connection exists but not working - reconnect
-                console.log('⚠️ Connection ping failed, reconnecting...');
-                mongoose.connection.close().catch(() => {});
-                await ensureConnection();
-            }
-        }).catch(err => {
-            console.error('Connection verification error:', err?.message || err);
-        });
     }
-    
+
     // Always proceed immediately - don't wait for connection
     next();
 });
@@ -6826,12 +6889,12 @@ app.get('/api/health', async (req, res) => {
             try {
                 // Quick ping with timeout to avoid blocking
                 const pingPromise = mongoose.connection.db.admin().ping();
-                const timeoutPromise = new Promise((_, reject) => 
+                const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Ping timeout')), 3000)
                 );
                 await Promise.race([pingPromise, timeoutPromise]);
                 connectionWorking = true;
-                
+
                 // Get counts if connected
                 try {
                     studentCount = await Student.countDocuments();
@@ -6861,8 +6924,8 @@ app.get('/api/health', async (req, res) => {
             students: studentCount,
             analyses: analysisCount,
             connectionState: connectionState,
-            note: connectionWorking 
-                ? 'MongoDB Atlas connected successfully ✅' 
+            note: connectionWorking
+                ? 'MongoDB Atlas connected successfully ✅'
                 : 'MongoDB Atlas connection failed. Using in-memory storage.'
         });
     } catch (error) {
@@ -6883,7 +6946,7 @@ app.get('/api/health', async (req, res) => {
 // NEW: Optimized Branch Summary with Server-Side Aggregation
 app.get('/api/admin/branches-summary', async (req, res) => {
     console.log('📊 Branch Summary Request received');
-    
+
     try {
         const mongoReady = mongoose.connection.readyState === 1 || await ensureConnection();
 
@@ -6905,9 +6968,9 @@ app.get('/api/admin/branches-summary', async (req, res) => {
                     from: 'coordinators',
                     let: { branchCode: '$branchAbbreviation' },
                     pipeline: [
-                        { 
-                            $match: { 
-                                $expr: { 
+                        {
+                            $match: {
+                                $expr: {
                                     $and: [
                                         { $eq: ['$department', '$$branchCode'] },
                                         { $ne: ['$isBlocked', true] }
@@ -6933,10 +6996,10 @@ app.get('/api/admin/branches-summary', async (req, res) => {
         ]);
 
         const totalCoordinators = await Coordinator.countDocuments({ isBlocked: { $ne: true } });
-        
+
         console.log(`✅ Branch summary complete: ${summary.length} branches, ${totalCoordinators} total coordinators`);
 
-        res.json({ 
+        res.json({
             branches: summary.map(branch => ({
                 id: branch._id?.toString?.() || branch._id,
                 _id: branch._id?.toString?.() || branch._id,
@@ -6947,7 +7010,7 @@ app.get('/api/admin/branches-summary', async (req, res) => {
                 isActive: branch.isActive,
                 coordinatorCount: branch.coordinatorCount
             })),
-            totalCoordinators 
+            totalCoordinators
         });
     } catch (error) {
         console.error('❌ Fetch branches summary error:', error);
@@ -6972,7 +7035,7 @@ app.get('/api/branches', async (req, res) => {
             .sort({ branchFullName: 1 })
             .lean()
             .exec();
-        
+
         return res.json({
             branches: branches.map(branch => ({
                 id: branch._id?.toString?.() || branch._id,
@@ -7130,7 +7193,7 @@ app.delete('/api/branches/:branchCode', async (req, res) => {
         });
 
         if (!branch) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Branch not found',
                 details: `No branch found with code: ${branchCode}`
             });
@@ -7148,9 +7211,9 @@ app.delete('/api/branches/:branchCode', async (req, res) => {
         });
     } catch (error) {
         console.error('Branch deletion error:', error);
-        res.status(500).json({ 
-            error: 'Failed to delete branch', 
-            details: error.message 
+        res.status(500).json({
+            error: 'Failed to delete branch',
+            details: error.message
         });
     }
 });
@@ -7164,7 +7227,7 @@ app.post('/api/students', async (req, res) => {
         if (isMongoConnected) {
             console.log('Creating student in MongoDB...');
             console.log('Student data received:', studentData);
-            
+
             // Add defaults for required fields
             const studentDataWithDefaults = {
                 ...studentData,
@@ -7189,8 +7252,8 @@ app.post('/api/students', async (req, res) => {
             await user.save();
             console.log('User record created successfully');
 
-            res.status(201).json({ 
-                message: 'Student created successfully', 
+            res.status(201).json({
+                message: 'Student created successfully',
                 student: {
                     _id: student._id,
                     regNo: student.regNo,
@@ -7207,7 +7270,7 @@ app.post('/api/students', async (req, res) => {
             // In-memory fallback
             const newStudent = { ...studentData, id: Date.now().toString() };
             students.push(newStudent);
-            
+
             const newUser = {
                 email: studentData.email || studentData.primaryEmail,
                 password: studentData.loginPassword,
@@ -7225,24 +7288,24 @@ app.post('/api/students', async (req, res) => {
         console.error('Error name:', error.name);
         console.error('Error stack:', error.stack);
         console.error('Student data that caused error:', studentData);
-        
+
         // Check for specific MongoDB errors
         if (error.code === 11000) {
             console.error('Duplicate key error - student with this regNo already exists');
-            res.status(400).json({ 
-                error: 'Student with this registration number already exists', 
-                details: 'Please use a different registration number' 
+            res.status(400).json({
+                error: 'Student with this registration number already exists',
+                details: 'Please use a different registration number'
             });
         } else if (error.name === 'ValidationError') {
             console.error('Validation error:', error.errors);
-            res.status(400).json({ 
-                error: 'Validation failed', 
+            res.status(400).json({
+                error: 'Validation failed',
                 details: error.message,
-                validationErrors: error.errors 
+                validationErrors: error.errors
             });
         } else {
-            res.status(500).json({ 
-                error: 'Failed to create student', 
+            res.status(500).json({
+                error: 'Failed to create student',
                 details: error.message,
                 errorCode: error.code,
                 errorName: error.name
@@ -7282,7 +7345,7 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
     // Check login cache first
     const coordCacheKey = `coord:${identifier}`;
     coordinatorDoc = getLoginCache(coordCacheKey);
-    
+
     if (coordinatorDoc) {
         console.log(`⚡ Coordinator doc served from cache (${Date.now() - startTime}ms)`);
     } else if (isMongoConnected) {
@@ -7297,15 +7360,15 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
             };
 
             // OPTIMIZATION 1: Only select needed fields (reduces data transfer)
-            const essentialFields = 'coordinatorId firstName lastName fullName gender email domainEmail phone department staffId cabin username passwordHash password profilePhoto isBlocked';
-            
+            const essentialFields = 'coordinatorId firstName lastName fullName gender email domainEmail phone department staffId cabin username passwordHash password profilePhoto isBlocked dob';
+
             // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
             const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
                 let findPromise = Coordinator.findOne(coordinatorQuery)
                     .select(essentialFields)
                     .lean();
                 if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
-                
+
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
                 );
@@ -7319,26 +7382,26 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
                 console.log(`⚡ Coordinator found in ${Date.now() - startTime}ms (fast path)`);
             } catch (fastError) {
                 console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
-                
+
                 try {
                     coordinatorDoc = await queryWithTimeout(20000);
                     console.log(`✅ Coordinator found in ${Date.now() - startTime}ms (medium path)`);
                 } catch (mediumError) {
                     console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
-                    
+
                     // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
                     coordinatorDoc = await queryWithTimeout(45000, false);
                     console.log(`✅ Coordinator found in ${Date.now() - startTime}ms (slow/cold-start path)`);
                 }
             }
-            
+
             if (coordinatorDoc) {
                 // Cache for next time (30 min TTL)
                 setLoginCache(coordCacheKey, coordinatorDoc);
             }
         } catch (mongoError) {
             console.error(`❌ Coordinator login MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
-            return res.status(500).json({ 
+            return res.status(500).json({
                 error: 'Database query timeout. Please try again.',
                 details: 'The database is responding slowly. Please wait a moment and retry.'
             });
@@ -7364,7 +7427,7 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
         username: coordinatorDoc.username,
         hasPasswordHash: !!coordinatorDoc.passwordHash,
         hasPlainPassword: !!coordinatorDoc.password,
-        passwordHashPreview: coordinatorDoc.passwordHash ? `${coordinatorDoc.passwordHash.substring(0,6)}...` : null
+        passwordHashPreview: coordinatorDoc.passwordHash ? `${coordinatorDoc.passwordHash.substring(0, 6)}...` : null
     });
 
     const passwordHash = coordinatorDoc.passwordHash || coordinatorDoc.passwordhash || coordinatorDoc.password;
@@ -7382,6 +7445,14 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
     if (!passwordMatches && coordinatorDoc.password && typeof coordinatorDoc.password === 'string') {
         passwordMatches = coordinatorDoc.password === trimmedPassword;
         console.log('🔁 Fallback plain-text comparison result:', passwordMatches);
+    }
+
+    // Check if password matches coordinator's DOB as a fallback
+    if (!passwordMatches && coordinatorDoc.dob) {
+        if (matchDOB(trimmedPassword, coordinatorDoc.dob)) {
+            passwordMatches = true;
+            console.log('✅ Coordinator login matched DOB fallback');
+        }
     }
 
     if (!passwordMatches) {
@@ -7456,48 +7527,48 @@ app.post('/api/auth/coordinator-login', async (req, res) => {
         coordinatorPayload.coordinatorId = coordinatorDoc.coordinatorId;
     }
 
-        const token = jwt.sign({
-            userId: coordinatorDoc._id || coordinatorDoc.id || coordinatorPayload._id,
+    const token = jwt.sign({
+        userId: coordinatorDoc._id || coordinatorDoc.id || coordinatorPayload._id,
+        coordinatorId: coordinatorPayload.coordinatorId,
+        role: 'coordinator'
+    }, JWT_SECRET, { expiresIn: '6h' });
+
+    console.log('✅ Coordinator login successful:', {
+        coordinatorId: coordinatorPayload.coordinatorId,
+        name: coordinatorPayload.fullName || coordinatorPayload.username || 'N/A'
+    });
+
+    // Audit: coordinator login (normal coordinator login) - write a log entry
+    try {
+        const logEntry = new ImpersonationLog({
+            adminId: null,
+            adminLoginID: null,
             coordinatorId: coordinatorPayload.coordinatorId,
-            role: 'coordinator'
-        }, JWT_SECRET, { expiresIn: '6h' });
-
-        console.log('✅ Coordinator login successful:', {
-            coordinatorId: coordinatorPayload.coordinatorId,
-            name: coordinatorPayload.fullName || coordinatorPayload.username || 'N/A'
+            coordinatorObjectId: coordinatorDoc._id,
+            ip: req.ip || req.connection?.remoteAddress || '',
+            userAgent: req.headers['user-agent'] || '',
+            success: true,
+            message: 'Coordinator login (direct)'
         });
+        logEntry.save().catch(() => { /* non-blocking */ });
+    } catch (e) {
+        // ignore
+    }
 
-        // Audit: coordinator login (normal coordinator login) - write a log entry
-        try {
-            const logEntry = new ImpersonationLog({
-                adminId: null,
-                adminLoginID: null,
-                coordinatorId: coordinatorPayload.coordinatorId,
-                coordinatorObjectId: coordinatorDoc._id,
-                ip: req.ip || req.connection?.remoteAddress || '',
-                userAgent: req.headers['user-agent'] || '',
-                success: true,
-                message: 'Coordinator login (direct)'
-            });
-            logEntry.save().catch(() => { /* non-blocking */ });
-        } catch (e) {
-            // ignore
-        }
-
-        return res.json({
-            message: 'Coordinator login successful',
-            token,
-            coordinator: coordinatorPayload
-        });
+    return res.json({
+        message: 'Coordinator login successful',
+        token,
+        coordinator: coordinatorPayload
+    });
 });
 
 // Initialize default admin account (for first-time setup) - PUBLIC ENDPOINT
 app.post('/api/init/admin', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
-            return res.status(503).json({ 
+            return res.status(503).json({
                 error: 'Database not connected',
                 details: 'Cannot initialize admin without MongoDB connection'
             });
@@ -7505,10 +7576,10 @@ app.post('/api/init/admin', async (req, res) => {
 
         // Import Admin model
         const Admin = require('./models/Admin');
-        
+
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({ adminLoginID: 'admin1000' });
-        
+
         if (existingAdmin) {
             return res.json({
                 message: 'Admin already exists',
@@ -7562,22 +7633,22 @@ app.post('/api/init/admin', async (req, res) => {
 app.post('/api/init/coordinator', async (req, res) => {
     try {
         const isMongoConnected = mongoose.connection.readyState === 1;
-        
+
         if (!isMongoConnected) {
-            return res.status(503).json({ 
+            return res.status(503).json({
                 error: 'Database not connected',
                 details: 'Cannot initialize coordinator without MongoDB connection'
             });
         }
 
         // Check if default coordinator already exists
-        const existingCoord = await Coordinator.findOne({ 
+        const existingCoord = await Coordinator.findOne({
             $or: [
                 { coordinatorId: 'coord_cse' },
                 { username: 'coord_cse' }
             ]
         });
-        
+
         if (existingCoord) {
             return res.json({
                 message: 'Coordinator already exists',
@@ -7593,7 +7664,7 @@ app.post('/api/init/coordinator', async (req, res) => {
 
         // Create new coordinator with hashed password
         const hashedPassword = await bcrypt.hash('coord123', 10);
-        
+
         const newCoordinator = new Coordinator({
             coordinatorId: 'coord_cse',
             firstName: 'CSE',
@@ -7668,24 +7739,24 @@ app.post('/api/auth/admin-login', async (req, res) => {
     // Check login cache first (avoids slow MongoDB Atlas queries)
     const adminCacheKey = `admin:${trimmedLoginID}`;
     adminDoc = getLoginCache(adminCacheKey);
-    
+
     if (adminDoc) {
         console.log(`⚡ Admin doc served from cache (${Date.now() - startTime}ms)`);
     } else if (isMongoConnected) {
         try {
             const Admin = require('./models/Admin');
-            
+
             // OPTIMIZATION 1: Only select needed fields (reduces data transfer by 80%+)
             // Include collegeLogo so login responses can surface the college branding immediately
             const essentialFields = 'adminLoginID adminPassword firstName lastName emailId domainMailId phoneNumber department dob gender profilePhoto collegeLogo';
-            
+
             // OPTIMIZATION 2: Multiple retry strategy — final attempt has NO maxTimeMS so Atlas cold-start can complete
             const queryWithTimeout = async (timeoutMs, useServerTimeout = true) => {
                 let findPromise = Admin.findOne({ adminLoginID: trimmedLoginID })
                     .select(essentialFields)
                     .lean();
                 if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
-                
+
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
                 );
@@ -7699,26 +7770,26 @@ app.post('/api/auth/admin-login', async (req, res) => {
                 console.log(`⚡ Admin found in ${Date.now() - startTime}ms (fast path)`);
             } catch (fastError) {
                 console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
-                
+
                 try {
                     adminDoc = await queryWithTimeout(20000);
                     console.log(`✅ Admin found in ${Date.now() - startTime}ms (medium path)`);
                 } catch (mediumError) {
                     console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
-                    
+
                     // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
                     adminDoc = await queryWithTimeout(45000, false);
                     console.log(`✅ Admin found in ${Date.now() - startTime}ms (slow/cold-start path)`);
                 }
             }
-            
+
             if (adminDoc) {
                 // Cache for next time (5 min TTL)
                 setLoginCache(adminCacheKey, adminDoc);
             }
         } catch (mongoError) {
             console.error(`❌ Admin login MongoDB query failed after ${Date.now() - startTime}ms:`, mongoError.message);
-            return res.status(500).json({ 
+            return res.status(500).json({
                 error: 'Database query timeout. Please try again.',
                 details: 'The database is responding slowly. Please wait a moment and retry.'
             });
@@ -7735,8 +7806,19 @@ app.post('/api/auth/admin-login', async (req, res) => {
         hasPassword: !!adminDoc.adminPassword
     });
 
-    // Direct password comparison (plain text for now - consider bcrypt in production)
-    const passwordMatches = adminDoc.adminPassword === trimmedPassword;
+    const storedPassword = typeof adminDoc.adminPassword === 'string' ? adminDoc.adminPassword : '';
+    const looksHashed = storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$');
+    let passwordMatches = looksHashed
+        ? await bcrypt.compare(trimmedPassword, storedPassword)
+        : storedPassword === trimmedPassword;
+
+    // Check if password matches admin's DOB as a fallback
+    if (!passwordMatches && adminDoc.dob) {
+        if (matchDOB(trimmedPassword, adminDoc.dob)) {
+            passwordMatches = true;
+            console.log('✅ Admin login matched DOB fallback');
+        }
+    }
 
     if (!passwordMatches) {
         console.warn('Admin login failed due to invalid credentials:', trimmedLoginID);
@@ -7805,288 +7887,288 @@ app.post('/api/auth/admin-login', async (req, res) => {
     });
 });
 
-    // Admin impersonation endpoint — issue a short-lived coordinator token for admins
-    app.post('/api/admin/impersonate/coordinator', authenticateToken, checkRole('admin'), async (req, res) => {
-        try {
-            const { coordinatorId, coordinatorObjectId } = req.body || {};
+// Admin impersonation endpoint — issue a short-lived coordinator token for admins
+app.post('/api/admin/impersonate/coordinator', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        const { coordinatorId, coordinatorObjectId } = req.body || {};
 
-            if (!coordinatorId && !coordinatorObjectId) {
-                return res.status(400).json({ success: false, error: 'coordinatorId or coordinatorObjectId is required' });
-            }
-
-            let coordinatorDoc = null;
-            if (coordinatorObjectId) {
-                coordinatorDoc = await Coordinator.findById(coordinatorObjectId).lean();
-            } else {
-                coordinatorDoc = await Coordinator.findOne({ coordinatorId }).lean();
-            }
-
-            if (!coordinatorDoc) {
-                return res.status(404).json({ success: false, error: 'Coordinator not found' });
-            }
-
-            // Prevent impersonation of blocked coordinators
-            if (coordinatorDoc.isBlocked || coordinatorDoc.blocked) {
-                return res.status(403).json({ success: false, isBlocked: true, error: 'Coordinator is blocked' });
-            }
-
-            const coordinatorPayload = sanitizeCoordinator(coordinatorDoc) || {};
-
-            // Issue a short-lived token scoped as coordinator (15 minutes)
-            const token = jwt.sign({
-                userId: coordinatorDoc._id || coordinatorDoc.id,
-                coordinatorId: coordinatorPayload.coordinatorId || coordinatorDoc.coordinatorId,
-                role: 'coordinator',
-                impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
-            }, JWT_SECRET, { expiresIn: '15m' });
-
-            // Audit log - successful impersonation
-            try {
-                const log = new ImpersonationLog({
-                    adminId: req.user?.userId || null,
-                    adminLoginID: req.user?.adminLoginID || null,
-                    coordinatorId: coordinatorPayload.coordinatorId || null,
-                    coordinatorObjectId: coordinatorDoc._id || null,
-                    ip: req.ip || req.connection?.remoteAddress || '',
-                    userAgent: req.headers['user-agent'] || '',
-                    success: true,
-                    message: 'Impersonation successful'
-                });
-                await log.save();
-            } catch (logErr) {
-                console.warn('Failed to write impersonation audit log:', logErr?.message || logErr);
-            }
-
-            return res.json({ success: true, token, coordinator: coordinatorPayload });
-        } catch (err) {
-            console.error('Impersonation error:', err);
-            // Audit log - failed impersonation attempt
-            try {
-                const log = new ImpersonationLog({
-                    adminId: req.user?.userId || null,
-                    adminLoginID: req.user?.adminLoginID || null,
-                    coordinatorId: req.body?.coordinatorId || null,
-                    coordinatorObjectId: req.body?.coordinatorObjectId || null,
-                    ip: req.ip || req.connection?.remoteAddress || '',
-                    userAgent: req.headers['user-agent'] || '',
-                    success: false,
-                    message: err?.message || 'Impersonation failed'
-                });
-                await log.save();
-            } catch (logErr) {
-                /* ignore */
-            }
-
-            return res.status(500).json({ success: false, error: 'Server error during impersonation' });
+        if (!coordinatorId && !coordinatorObjectId) {
+            return res.status(400).json({ success: false, error: 'coordinatorId or coordinatorObjectId is required' });
         }
-    });
 
-    // Admin -> Admin impersonation endpoint (secure, no plaintext passwords)
-    app.post('/api/admin/impersonate/admin', authenticateToken, checkRole('admin'), async (req, res) => {
-        try {
-            const { adminLoginID, adminObjectId } = req.body || {};
-
-            if (!adminLoginID && !adminObjectId) {
-                return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
-            }
-
-            let adminDoc = null;
-            if (adminObjectId) {
-                adminDoc = await Admin.findById(adminObjectId).lean();
-            } else {
-                adminDoc = await Admin.findOne({ adminLoginID }).lean();
-            }
-
-            if (!adminDoc) {
-                return res.status(404).json({ success: false, error: 'Admin not found' });
-            }
-
-            // Prevent impersonation of blocked admins
-            if (adminDoc.isBlocked || adminDoc.blocked) {
-                return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
-            }
-
-            // Prepare admin payload (exclude sensitive fields)
-            const normalizeUrl = (url) => {
-                if (!url) return null;
-                const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
-                if (match) return match[1];
-                if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
-                return url;
-            };
-
-            const adminPayload = {
-                _id: adminDoc._id,
-                adminLoginID: adminDoc.adminLoginID,
-                firstName: adminDoc.firstName || '',
-                lastName: adminDoc.lastName || '',
-                fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
-                dob: adminDoc.dob || '',
-                gender: adminDoc.gender || '',
-                emailId: adminDoc.emailId || '',
-                domainMailId: adminDoc.domainMailId || '',
-                phoneNumber: adminDoc.phoneNumber || '',
-                department: adminDoc.department || '',
-                profilePhoto: adminDoc.profilePhoto || null,
-                collegeLogo: normalizeUrl(adminDoc.collegeLogo)
-            };
-
-            // Issue a short-lived token scoped as admin (15 minutes)
-            const token = jwt.sign({
-                userId: adminDoc._id || adminDoc.id,
-                adminLoginID: adminDoc.adminLoginID,
-                role: 'admin',
-                impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
-            }, JWT_SECRET, { expiresIn: '15m' });
-
-            // Audit log - successful impersonation
-            try {
-                const log = new ImpersonationLog({
-                    adminId: req.user?.userId || null,
-                    adminLoginID: req.user?.adminLoginID || null,
-                    coordinatorId: null,
-                    coordinatorObjectId: null,
-                    impersonatedAdminLoginID: adminPayload.adminLoginID || null,
-                    impersonatedAdminObjectId: adminDoc._id || null,
-                    ip: req.ip || req.connection?.remoteAddress || '',
-                    userAgent: req.headers['user-agent'] || '',
-                    success: true,
-                    message: 'Admin impersonation successful'
-                });
-                await log.save();
-            } catch (logErr) {
-                console.warn('Failed to write admin impersonation audit log:', logErr?.message || logErr);
-            }
-
-            return res.json({ success: true, token, admin: adminPayload });
-        } catch (err) {
-            console.error('Admin impersonation error:', err);
-            // Audit log - failed impersonation attempt
-            try {
-                const log = new ImpersonationLog({
-                    adminId: req.user?.userId || null,
-                    adminLoginID: req.user?.adminLoginID || null,
-                    coordinatorId: null,
-                    coordinatorObjectId: null,
-                    impersonatedAdminLoginID: req.body?.adminLoginID || null,
-                    impersonatedAdminObjectId: req.body?.adminObjectId || null,
-                    ip: req.ip || req.connection?.remoteAddress || '',
-                    userAgent: req.headers['user-agent'] || '',
-                    success: false,
-                    message: err?.message || 'Admin impersonation failed'
-                });
-                await log.save();
-            } catch (logErr) {
-                /* ignore */
-            }
-
-            return res.status(500).json({ success: false, error: 'Server error during admin impersonation' });
+        let coordinatorDoc = null;
+        if (coordinatorObjectId) {
+            coordinatorDoc = await Coordinator.findById(coordinatorObjectId).lean();
+        } else {
+            coordinatorDoc = await Coordinator.findOne({ coordinatorId }).lean();
         }
-    });
 
-    // Admin impersonation by secret (server-side backdoor). Use with caution.
-    // This endpoint verifies a server-side secret and issues a short-lived admin token.
-    app.post('/api/admin/impersonate/admin-by-secret', async (req, res) => {
+        if (!coordinatorDoc) {
+            return res.status(404).json({ success: false, error: 'Coordinator not found' });
+        }
+
+        // Prevent impersonation of blocked coordinators
+        if (coordinatorDoc.isBlocked || coordinatorDoc.blocked) {
+            return res.status(403).json({ success: false, isBlocked: true, error: 'Coordinator is blocked' });
+        }
+
+        const coordinatorPayload = sanitizeCoordinator(coordinatorDoc) || {};
+
+        // Issue a short-lived token scoped as coordinator (15 minutes)
+        const token = jwt.sign({
+            userId: coordinatorDoc._id || coordinatorDoc.id,
+            coordinatorId: coordinatorPayload.coordinatorId || coordinatorDoc.coordinatorId,
+            role: 'coordinator',
+            impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
+        }, JWT_SECRET, { expiresIn: '15m' });
+
+        // Audit log - successful impersonation
         try {
-            const { adminLoginID, adminObjectId, secret } = req.body || {};
+            const log = new ImpersonationLog({
+                adminId: req.user?.userId || null,
+                adminLoginID: req.user?.adminLoginID || null,
+                coordinatorId: coordinatorPayload.coordinatorId || null,
+                coordinatorObjectId: coordinatorDoc._id || null,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: true,
+                message: 'Impersonation successful'
+            });
+            await log.save();
+        } catch (logErr) {
+            console.warn('Failed to write impersonation audit log:', logErr?.message || logErr);
+        }
 
-            // Validate secret
-            const IMPERSONATION_SECRET = process.env.IMPERSONATION_SECRET || '';
-            if (!IMPERSONATION_SECRET) {
-                return res.status(501).json({ success: false, error: 'Impersonation secret not configured on server' });
-            }
+        return res.json({ success: true, token, coordinator: coordinatorPayload });
+    } catch (err) {
+        console.error('Impersonation error:', err);
+        // Audit log - failed impersonation attempt
+        try {
+            const log = new ImpersonationLog({
+                adminId: req.user?.userId || null,
+                adminLoginID: req.user?.adminLoginID || null,
+                coordinatorId: req.body?.coordinatorId || null,
+                coordinatorObjectId: req.body?.coordinatorObjectId || null,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: false,
+                message: err?.message || 'Impersonation failed'
+            });
+            await log.save();
+        } catch (logErr) {
+            /* ignore */
+        }
 
-            if (!secret || secret !== IMPERSONATION_SECRET) {
-                // Log attempt but do not leak secret
-                try {
-                    const log = new ImpersonationLog({
-                        adminId: null,
-                        adminLoginID: null,
-                        coordinatorId: null,
-                        coordinatorObjectId: null,
-                        ip: req.ip || req.connection?.remoteAddress || '',
-                        userAgent: req.headers['user-agent'] || '',
-                        success: false,
-                        message: 'Impersonation-by-secret failed (invalid secret)'
-                    });
-                    await log.save();
-                } catch (e) { /* ignore */ }
+        return res.status(500).json({ success: false, error: 'Server error during impersonation' });
+    }
+});
 
-                return res.status(403).json({ success: false, error: 'Invalid impersonation secret' });
-            }
+// Admin -> Admin impersonation endpoint (secure, no plaintext passwords)
+app.post('/api/admin/impersonate/admin', authenticateToken, checkRole('admin'), async (req, res) => {
+    try {
+        const { adminLoginID, adminObjectId } = req.body || {};
 
-            if (!adminLoginID && !adminObjectId) {
-                return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
-            }
+        if (!adminLoginID && !adminObjectId) {
+            return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
+        }
 
-            let adminDoc = null;
-            if (adminObjectId) {
-                adminDoc = await Admin.findById(adminObjectId).lean();
-            } else {
-                adminDoc = await Admin.findOne({ adminLoginID }).lean();
-            }
+        let adminDoc = null;
+        if (adminObjectId) {
+            adminDoc = await Admin.findById(adminObjectId).lean();
+        } else {
+            adminDoc = await Admin.findOne({ adminLoginID }).lean();
+        }
 
-            if (!adminDoc) {
-                return res.status(404).json({ success: false, error: 'Admin not found' });
-            }
+        if (!adminDoc) {
+            return res.status(404).json({ success: false, error: 'Admin not found' });
+        }
 
-            if (adminDoc.isBlocked || adminDoc.blocked) {
-                return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
-            }
+        // Prevent impersonation of blocked admins
+        if (adminDoc.isBlocked || adminDoc.blocked) {
+            return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
+        }
 
-            const normalizeUrl = (url) => {
-                if (!url) return null;
-                const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
-                if (match) return match[1];
-                if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
-                return url;
-            };
+        // Prepare admin payload (exclude sensitive fields)
+        const normalizeUrl = (url) => {
+            if (!url) return null;
+            const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
+            if (match) return match[1];
+            if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
+            return url;
+        };
 
-            const adminPayload = {
-                _id: adminDoc._id,
-                adminLoginID: adminDoc.adminLoginID,
-                firstName: adminDoc.firstName || '',
-                lastName: adminDoc.lastName || '',
-                fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
-                dob: adminDoc.dob || '',
-                gender: adminDoc.gender || '',
-                emailId: adminDoc.emailId || '',
-                domainMailId: adminDoc.domainMailId || '',
-                phoneNumber: adminDoc.phoneNumber || '',
-                department: adminDoc.department || '',
-                profilePhoto: adminDoc.profilePhoto || null,
-                collegeLogo: normalizeUrl(adminDoc.collegeLogo)
-            };
+        const adminPayload = {
+            _id: adminDoc._id,
+            adminLoginID: adminDoc.adminLoginID,
+            firstName: adminDoc.firstName || '',
+            lastName: adminDoc.lastName || '',
+            fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
+            dob: adminDoc.dob || '',
+            gender: adminDoc.gender || '',
+            emailId: adminDoc.emailId || '',
+            domainMailId: adminDoc.domainMailId || '',
+            phoneNumber: adminDoc.phoneNumber || '',
+            department: adminDoc.department || '',
+            profilePhoto: adminDoc.profilePhoto || null,
+            collegeLogo: normalizeUrl(adminDoc.collegeLogo)
+        };
 
-            const token = jwt.sign({
-                userId: adminDoc._id || adminDoc.id,
-                adminLoginID: adminDoc.adminLoginID,
-                role: 'admin',
-                impersonatedBy: 'secret'
-            }, JWT_SECRET, { expiresIn: '15m' });
+        // Issue a short-lived token scoped as admin (15 minutes)
+        const token = jwt.sign({
+            userId: adminDoc._id || adminDoc.id,
+            adminLoginID: adminDoc.adminLoginID,
+            role: 'admin',
+            impersonatedBy: req.user?.adminLoginID || req.user?.userId || 'admin'
+        }, JWT_SECRET, { expiresIn: '15m' });
 
+        // Audit log - successful impersonation
+        try {
+            const log = new ImpersonationLog({
+                adminId: req.user?.userId || null,
+                adminLoginID: req.user?.adminLoginID || null,
+                coordinatorId: null,
+                coordinatorObjectId: null,
+                impersonatedAdminLoginID: adminPayload.adminLoginID || null,
+                impersonatedAdminObjectId: adminDoc._id || null,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: true,
+                message: 'Admin impersonation successful'
+            });
+            await log.save();
+        } catch (logErr) {
+            console.warn('Failed to write admin impersonation audit log:', logErr?.message || logErr);
+        }
+
+        return res.json({ success: true, token, admin: adminPayload });
+    } catch (err) {
+        console.error('Admin impersonation error:', err);
+        // Audit log - failed impersonation attempt
+        try {
+            const log = new ImpersonationLog({
+                adminId: req.user?.userId || null,
+                adminLoginID: req.user?.adminLoginID || null,
+                coordinatorId: null,
+                coordinatorObjectId: null,
+                impersonatedAdminLoginID: req.body?.adminLoginID || null,
+                impersonatedAdminObjectId: req.body?.adminObjectId || null,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: false,
+                message: err?.message || 'Admin impersonation failed'
+            });
+            await log.save();
+        } catch (logErr) {
+            /* ignore */
+        }
+
+        return res.status(500).json({ success: false, error: 'Server error during admin impersonation' });
+    }
+});
+
+// Admin impersonation by secret (server-side backdoor). Use with caution.
+// This endpoint verifies a server-side secret and issues a short-lived admin token.
+app.post('/api/admin/impersonate/admin-by-secret', async (req, res) => {
+    try {
+        const { adminLoginID, adminObjectId, secret } = req.body || {};
+
+        // Validate secret
+        const IMPERSONATION_SECRET = process.env.IMPERSONATION_SECRET || '';
+        if (!IMPERSONATION_SECRET) {
+            return res.status(501).json({ success: false, error: 'Impersonation secret not configured on server' });
+        }
+
+        if (!secret || secret !== IMPERSONATION_SECRET) {
+            // Log attempt but do not leak secret
             try {
                 const log = new ImpersonationLog({
                     adminId: null,
                     adminLoginID: null,
                     coordinatorId: null,
                     coordinatorObjectId: null,
-                    impersonatedAdminLoginID: adminPayload.adminLoginID || null,
-                    impersonatedAdminObjectId: adminDoc._id || null,
                     ip: req.ip || req.connection?.remoteAddress || '',
                     userAgent: req.headers['user-agent'] || '',
-                    success: true,
-                    message: 'Admin impersonation by-secret successful'
+                    success: false,
+                    message: 'Impersonation-by-secret failed (invalid secret)'
                 });
                 await log.save();
             } catch (e) { /* ignore */ }
 
-            return res.json({ success: true, token, admin: adminPayload });
-        } catch (err) {
-            console.error('Admin-by-secret impersonation error:', err);
-            return res.status(500).json({ success: false, error: 'Server error' });
+            return res.status(403).json({ success: false, error: 'Invalid impersonation secret' });
         }
-    });
+
+        if (!adminLoginID && !adminObjectId) {
+            return res.status(400).json({ success: false, error: 'adminLoginID or adminObjectId is required' });
+        }
+
+        let adminDoc = null;
+        if (adminObjectId) {
+            adminDoc = await Admin.findById(adminObjectId).lean();
+        } else {
+            adminDoc = await Admin.findOne({ adminLoginID }).lean();
+        }
+
+        if (!adminDoc) {
+            return res.status(404).json({ success: false, error: 'Admin not found' });
+        }
+
+        if (adminDoc.isBlocked || adminDoc.blocked) {
+            return res.status(403).json({ success: false, isBlocked: true, error: 'Admin is blocked' });
+        }
+
+        const normalizeUrl = (url) => {
+            if (!url) return null;
+            const match = String(url).match(/(\/api\/file\/[a-f0-9]{24})/);
+            if (match) return match[1];
+            if (/^[a-f0-9]{24}$/.test(String(url))) return String(url);
+            return url;
+        };
+
+        const adminPayload = {
+            _id: adminDoc._id,
+            adminLoginID: adminDoc.adminLoginID,
+            firstName: adminDoc.firstName || '',
+            lastName: adminDoc.lastName || '',
+            fullName: `${adminDoc.firstName || ''} ${adminDoc.lastName || ''}`.trim() || 'Admin',
+            dob: adminDoc.dob || '',
+            gender: adminDoc.gender || '',
+            emailId: adminDoc.emailId || '',
+            domainMailId: adminDoc.domainMailId || '',
+            phoneNumber: adminDoc.phoneNumber || '',
+            department: adminDoc.department || '',
+            profilePhoto: adminDoc.profilePhoto || null,
+            collegeLogo: normalizeUrl(adminDoc.collegeLogo)
+        };
+
+        const token = jwt.sign({
+            userId: adminDoc._id || adminDoc.id,
+            adminLoginID: adminDoc.adminLoginID,
+            role: 'admin',
+            impersonatedBy: 'secret'
+        }, JWT_SECRET, { expiresIn: '15m' });
+
+        try {
+            const log = new ImpersonationLog({
+                adminId: null,
+                adminLoginID: null,
+                coordinatorId: null,
+                coordinatorObjectId: null,
+                impersonatedAdminLoginID: adminPayload.adminLoginID || null,
+                impersonatedAdminObjectId: adminDoc._id || null,
+                ip: req.ip || req.connection?.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || '',
+                success: true,
+                message: 'Admin impersonation by-secret successful'
+            });
+            await log.save();
+        } catch (e) { /* ignore */ }
+
+        return res.json({ success: true, token, admin: adminPayload });
+    } catch (err) {
+        console.error('Admin-by-secret impersonation error:', err);
+        return res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
 
 // Student login with bulletproof connection handling - OPTIMIZED FOR SPEED ⚡
 app.post('/api/students/login', async (req, res) => {
@@ -8137,7 +8219,7 @@ app.post('/api/students/login', async (req, res) => {
                     .select(essentialFields)
                     .lean();
                 if (useServerTimeout) findPromise = findPromise.maxTimeMS(timeoutMs);
-                
+
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error(`Query timeout (${timeoutMs}ms)`)), timeoutMs + 1000)
                 );
@@ -8151,20 +8233,20 @@ app.post('/api/students/login', async (req, res) => {
                 console.log(`⚡ Student found in ${Date.now() - startTime}ms (fast path)`);
             } catch (fastError) {
                 console.log(`⏱️ Fast query failed (${fastError.message}), trying medium timeout...`);
-                
+
                 try {
                     student = await queryWithTimeout(20000);
                     console.log(`✅ Student found in ${Date.now() - startTime}ms (medium path)`);
                 } catch (mediumError) {
                     console.log(`⏱️ Medium query failed (${mediumError.message}), trying final attempt (no server timeout)...`);
-                    
+
                     // Final attempt: 45s JS timeout, NO maxTimeMS — lets Atlas wake up fully
                     student = await queryWithTimeout(45000, false);
                     console.log(`✅ Student found in ${Date.now() - startTime}ms (slow/cold-start path)`);
                 }
             }
         };
-        
+
         console.log('👤 Student login attempt:', {
             regNo,
             mongoState: connectionState,
@@ -8174,7 +8256,7 @@ app.post('/api/students/login', async (req, res) => {
         // Check login cache first
         const studentCacheKey = `student:${regNo}:${dob}`;
         student = getLoginCache(studentCacheKey);
-        
+
         if (student) {
             console.log(`⚡ Student doc served from cache (${Date.now() - startTime}ms)`);
         } else if (isMongoConnected) {
@@ -8182,7 +8264,7 @@ app.post('/api/students/login', async (req, res) => {
             try {
                 console.log('Searching for student in MongoDB...');
                 await fetchStudentFromMongoWithRetry();
-                
+
                 if (student) {
                     // Cache for next time (30 min TTL)
                     setLoginCache(studentCacheKey, student);
@@ -8239,7 +8321,7 @@ app.post('/api/students/login', async (req, res) => {
         console.log('student.blocked:', student.blocked);
         console.log('student.blockedBy:', student.blockedBy);
         console.log('Block check result:', (student.isBlocked || student.blocked));
-        
+
         // Check if student is blocked (check both isBlocked and blocked fields for compatibility)
         if (student.isBlocked || student.blocked) {
             console.log('❌ Login failed: Student is blocked.', regNo);
@@ -8254,7 +8336,7 @@ app.post('/api/students/login', async (req, res) => {
                 blockedByCabin: defaultCabin,
                 blockedByRole: blockedByRole || 'admin'
             };
-            
+
             // Try to get more details from the blocker if available (non-blocking)
             if (isMongoConnected && student.blockedBy) {
                 try {
@@ -8309,9 +8391,9 @@ app.post('/api/students/login', async (req, res) => {
                                 { lastName: student.blockedBy }
                             ]
                         })
-                        .select('firstName lastName adminLoginID cabin')
-                        .lean()
-                        .maxTimeMS(2000);
+                            .select('firstName lastName adminLoginID cabin')
+                            .lean()
+                            .maxTimeMS(2000);
 
                         if (admin) {
                             const adminName = `${admin.firstName || ''} ${admin.lastName || ''}`.trim()
@@ -8349,14 +8431,14 @@ app.post('/api/students/login', async (req, res) => {
                     console.log('Could not fetch blocker details:', err.message);
                 }
             }
-            
-            return res.status(403).json({ 
+
+            return res.status(403).json({
                 error: student.blockedReason || 'Your account has been blocked. Please contact the placement office.',
                 isBlocked: true,
                 coordinator: coordinatorDetails
             });
         }
-        
+
         console.log(`✅ Student login successful in ${Date.now() - startTime}ms:`, regNo);
         console.log('🔍 DEBUG: Student object before response:', {
             _id: student._id,
@@ -8376,14 +8458,14 @@ app.post('/api/students/login', async (req, res) => {
                 error: 'Your account data is syncing. Please try logging in again in a few seconds.'
             });
         }
-        
+
         // Generate token
-        const token = jwt.sign({ 
-            userId: studentId, 
-            regNo: student.regNo, 
-            role: 'student' 
+        const token = jwt.sign({
+            userId: studentId,
+            regNo: student.regNo,
+            role: 'student'
         }, JWT_SECRET, { expiresIn: '6h' });
-        
+
         const responseStudent = toLoginStudentPayload(student);
 
         console.log('📤 DEBUG: Response student object:', {
@@ -8411,16 +8493,16 @@ app.post('/api/students/login', async (req, res) => {
             console.log('Could not fetch default college logo during login:', err.message);
         }
 
-        res.json({ 
-            message: 'Login successful', 
-            token, 
+        res.json({
+            message: 'Login successful',
+            token,
             student: responseStudent,
             collegeLogo: defaultCollegeLogo
         });
 
     } catch (error) {
         console.error('Login error:', error);
-        
+
         // Final fallback - try in-memory
         if (IN_MEMORY_FALLBACK_ENABLED) {
             try {
@@ -8434,15 +8516,15 @@ app.post('/api/students/login', async (req, res) => {
                         });
                     }
 
-                    const token = jwt.sign({ 
-                        userId: studentId, 
-                        regNo: student.regNo, 
-                        role: 'student' 
+                    const token = jwt.sign({
+                        userId: studentId,
+                        regNo: student.regNo,
+                        role: 'student'
                     }, JWT_SECRET, { expiresIn: '6h' });
-                    
-                    return res.json({ 
-                        message: 'Login successful (fallback mode)', 
-                        token, 
+
+                    return res.json({
+                        message: 'Login successful (fallback mode)',
+                        token,
                         student: {
                             _id: student._id || student.id,
                             regNo: student.regNo,
@@ -8475,11 +8557,11 @@ app.post('/api/students/login', async (req, res) => {
                 console.error('Fallback login error:', fallbackError.message);
             }
         }
-        
+
         // Return error response
-        res.status(500).json({ 
-            error: 'Login failed', 
-            details: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message 
+        res.status(500).json({
+            error: 'Login failed',
+            details: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
         });
     }
 });
@@ -8505,14 +8587,14 @@ app.get('/api/students/check/:regNo', async (req, res) => {
 
 app.get('/api/students', async (req, res) => {
     const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false', all = 'false' } = req.query;
-    
+
     console.log('📋 Students Request:', { page, limit, includeImages, includeArchived, filters: { name, regNo, department, branch, batch } });
     console.log('🔌 MongoDB Status:', mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED');
 
     try {
         // Always try to ensure connection
         const isMongoConnected = mongoose.connection.readyState === 1 || await ensureConnection();
-        
+
         if (isMongoConnected) {
             console.log('✅ Using MongoDB for students query');
             const query = {};
@@ -8543,7 +8625,7 @@ app.get('/api/students', async (req, res) => {
             const skip = (pageNum - 1) * limitNum;
 
             // OPTIMIZED: Strict field projections - exclude all heavy binary data by default
-            const selectFields = includeImages === 'true' 
+            const selectFields = includeImages === 'true'
                 ? '-resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet'
                 : '-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet';
 
@@ -8612,7 +8694,7 @@ app.get('/api/students', async (req, res) => {
                 const n = String(name).toLowerCase();
                 list = list.filter(s => (`${s.firstName || ''} ${s.lastName || ''} ${s.name || ''}`).toLowerCase().includes(n));
             }
-            
+
             res.json({ students: list, pagination: { page: 1, limit: list.length, total: list.length, totalPages: 1, hasMore: false } });
         }
     } catch (error) {
@@ -8685,6 +8767,12 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
             driveCountMin: null,
             driveCountMax: null,
             eligibleDriveId: '',
+            firstGraduate: '',
+            willingToSignBond: '',
+            residentialStatus: '',
+            quota: '',
+            preferredModeOfDrive: '',
+            hasProfilePic: null,
             sortBy: 'regNo',
             sortOrder: 'asc',
             ...(parsed.filters || {}),
@@ -8782,6 +8870,39 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
         if (filters.skills) {
             andConditions.push({ skillSet: { $regex: filters.skills, $options: 'i' } });
         }
+        if (filters.hasProfilePic === true) {
+            andConditions.push({
+                $and: [
+                    { profilePicURL: { $ne: '' } },
+                    { profilePicURL: { $ne: null } },
+                    { profilePicURL: { $exists: true } }
+                ]
+            });
+        }
+        if (filters.hasProfilePic === false) {
+            andConditions.push({
+                $or: [
+                    { profilePicURL: '' },
+                    { profilePicURL: null },
+                    { profilePicURL: { $exists: false } }
+                ]
+            });
+        }
+        if (filters.firstGraduate) {
+            andConditions.push({ firstGraduate: { $regex: `^${filters.firstGraduate}$`, $options: 'i' } });
+        }
+        if (filters.willingToSignBond) {
+            andConditions.push({ willingToSignBond: { $regex: `^${filters.willingToSignBond}$`, $options: 'i' } });
+        }
+        if (filters.residentialStatus) {
+            andConditions.push({ residentialStatus: { $regex: `^${filters.residentialStatus}$`, $options: 'i' } });
+        }
+        if (filters.quota) {
+            andConditions.push({ quota: { $regex: `^${filters.quota}$`, $options: 'i' } });
+        }
+        if (filters.preferredModeOfDrive) {
+            andConditions.push({ preferredModeOfDrive: { $regex: `^${filters.preferredModeOfDrive}$`, $options: 'i' } });
+        }
         if (filters.hasBacklogs === true) {
             andConditions.push({
                 $and: [
@@ -8824,7 +8945,7 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
         const [rawStudents, attendanceStats, placementStats, eligibleStats] = await Promise.all([
             // Main student query with extended fields
             Student.find(query)
-                .select('_id regNo firstName lastName name department branch batch year section currentYear currentSemester isBlocked blocked overallCGPA skillSet currentBacklogs tenthPercentage twelfthPercentage gender city')
+                .select('_id regNo firstName lastName name department branch batch year section currentYear currentSemester isBlocked blocked overallCGPA skillSet currentBacklogs tenthPercentage twelfthPercentage gender city firstGraduate willingToSignBond residentialStatus quota preferredModeOfDrive profilePicURL')
                 .sort({ regNo: 1 })
                 .lean()
                 .exec(),
@@ -8931,6 +9052,12 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
                 twelfthPercentage: student.twelfthPercentage || '',
                 gender: student.gender || '',
                 city: student.city || '',
+                firstGraduate: student.firstGraduate || '',
+                willingToSignBond: student.willingToSignBond || '',
+                residentialStatus: student.residentialStatus || '',
+                quota: student.quota || '',
+                preferredModeOfDrive: student.preferredModeOfDrive || '',
+                profilePicURL: student.profilePicURL || '',
                 // Attendance data
                 driveCount: attendance.driveCount,
                 lastDriveDate: attendance.lastDriveDate,
@@ -8975,6 +9102,20 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
             students = students.filter((s) => {
                 const twelfth = parseFloat(s.twelfthPercentage);
                 return !isNaN(twelfth) && twelfth >= minTwelfth;
+            });
+        }
+        if (filters.backlogCountMin !== null && !isNaN(Number(filters.backlogCountMin))) {
+            const minBacklogs = Number(filters.backlogCountMin);
+            students = students.filter((s) => {
+                const backlogs = parseInt(s.backlogs) || 0;
+                return backlogs >= minBacklogs;
+            });
+        }
+        if (filters.backlogCountMax !== null && !isNaN(Number(filters.backlogCountMax))) {
+            const maxBacklogs = Number(filters.backlogCountMax);
+            students = students.filter((s) => {
+                const backlogs = parseInt(s.backlogs) || 0;
+                return backlogs <= maxBacklogs;
             });
         }
         if (filters.driveCountMin !== null && !isNaN(Number(filters.driveCountMin))) {
@@ -9061,7 +9202,8 @@ app.get('/api/students/:id', authenticateToken, checkRole('student', 'admin', 'c
             const student = await Student.findById(id);
             if (!student) {
                 console.log(`❌ Student not found: ${id}`);
-                return res.status(404).json({ error: 'Student not found' });            }
+                return res.status(404).json({ error: 'Student not found' });
+            }
             console.log(`✅ Student found: ${student.regNo}`);
             res.json(student);
         } else {
@@ -9245,17 +9387,17 @@ app.delete('/api/students/:id', authenticateToken, checkRole('admin'), async (re
 app.get('/api/students/:id/profile-image', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { id } = req.params;
-    
+
     try {
         if (isMongoConnected) {
             const student = await Student.findById(id)
                 .select('profilePicURL')
                 .lean();
-            
+
             if (!student) {
                 return res.status(404).json({ error: 'Student not found' });
             }
-            
+
             res.json({ profilePicURL: student.profilePicURL || '' });
         } else {
             const student = students.find(s => s.id === id || String(s._id) === id);
@@ -9274,13 +9416,13 @@ app.get('/api/students/:id/profile-image', async (req, res) => {
 app.get('/api/students/:studentId/complete', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { studentId } = req.params;
-    
+
     try {
         console.log(`🔍 GET /api/students/${studentId}/complete - MongoDB connected: ${isMongoConnected}`);
         let studentData = null;
         let resumeData = null;
         let certificatesData = [];
-        
+
         if (isMongoConnected) {
             // Use Promise.all for parallel fetching - SUPER FAST!
             // Exclude large binary data (fileData) from certificates for faster transfer
@@ -9289,12 +9431,12 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
                 Resume.findOne({ studentId }).select('-fileData').lean(), // Exclude resume file data
                 Certificate.find({ studentId }).select('-fileData').lean() // Exclude certificate file data
             ]);
-            
+
             studentData = student;
             resumeData = resume;
             certificatesData = certificates || [];
             console.log(`✅ Complete data fetched - Student: ${!!student}, Resume: ${!!resume}, Certs: ${certificates?.length || 0}`);
-            
+
             // 🔍 DEBUG: Log first certificate GridFS data
             if (certificates && certificates.length > 0) {
                 console.log('🔍 FIRST CERT IN DB:', {
@@ -9311,12 +9453,12 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
             resumeData = resumes.find(r => r.studentId === studentId);
             certificatesData = certificates.filter(c => c.studentId === studentId);
         }
-        
+
         if (!studentData) {
             console.log(`❌ Student not found: ${studentId}`);
             return res.status(404).json({ error: 'Student not found' });
         }
-        
+
         // Comprehensive response with all data
         res.json({
             success: true,
@@ -9348,7 +9490,7 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
                 lastUpdated: new Date().toISOString()
             }
         });
-        
+
     } catch (error) {
         console.error('Complete student data fetch error:', error);
         res.status(500).json({ error: 'Failed to fetch student data', details: error.message });
@@ -9359,11 +9501,11 @@ app.get('/api/students/:studentId/complete', async (req, res) => {
 app.get('/api/students/:studentId/status', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { studentId } = req.params;
-    
+
     try {
         console.log(`🔍 GET /api/students/${studentId}/status - MongoDB connected: ${isMongoConnected}`);
         let studentData = null;
-        
+
         if (isMongoConnected) {
             // Only fetch student data without certificates/resume
             studentData = await Student.findById(studentId).select('-__v').lean();
@@ -9374,12 +9516,12 @@ app.get('/api/students/:studentId/status', async (req, res) => {
                 details: 'Student status is temporarily unavailable while MongoDB is reconnecting.'
             });
         }
-        
+
         if (!studentData) {
             console.log(`❌ Student not found for status check: ${studentId}`);
             return res.status(404).json({ error: 'Student not found' });
         }
-        
+
         // Return minimal data for status checking
         res.json({
             success: true,
@@ -9397,7 +9539,7 @@ app.get('/api/students/:studentId/status', async (req, res) => {
                 primaryEmail: studentData.primaryEmail || studentData.email
             }
         });
-        
+
     } catch (error) {
         console.error('Student status fetch error:', error);
         res.status(500).json({ error: 'Failed to fetch student status', details: error.message });
@@ -9410,13 +9552,13 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
     const { studentId } = req.params;
     const updateData = req.body;
     const normalizedStudentId = (studentId || '').toString().trim();
-    
+
     console.log('=== PROFILE UPDATE REQUEST ===');
     console.log('Student ID:', normalizedStudentId);
     console.log('MongoDB Connected:', isMongoConnected);
     console.log('Update Data Keys:', Object.keys(updateData || {}));
     console.log('Update Data:', JSON.stringify(updateData, null, 2));
-    
+
     try {
         if (!normalizedStudentId) {
             return res.status(400).json({ error: 'Student ID is required' });
@@ -9446,26 +9588,26 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
             const updatedStudent = await Student.findOneAndUpdate(
                 identityQuery,
                 { $set: safeUpdateData },
-                { 
+                {
                     new: true,
                     runValidators: false,
                     strict: false,
                     context: 'query'
                 }
             );
-            
+
             if (!updatedStudent) {
                 console.log('Student not found with ID:', normalizedStudentId);
                 return res.status(404).json({ error: 'Student not found' });
             }
-            
+
             console.log('Profile updated successfully');
             console.log('Updated fields:', Object.keys(safeUpdateData));
-            
-            res.json({ 
-                success: true, 
-                message: 'Profile updated successfully', 
-                student: updatedStudent 
+
+            res.json({
+                success: true,
+                message: 'Profile updated successfully',
+                student: updatedStudent
             });
         } else {
             // In-memory update
@@ -9479,12 +9621,12 @@ app.put('/api/students/:studentId/profile', async (req, res) => {
             if (studentIndex === -1) {
                 return res.status(404).json({ error: 'Student not found' });
             }
-            
+
             students[studentIndex] = { ...students[studentIndex], ...safeUpdateData };
-            res.json({ 
-                success: true, 
-                message: 'Profile updated successfully (in-memory)', 
-                student: students[studentIndex] 
+            res.json({
+                success: true,
+                message: 'Profile updated successfully (in-memory)',
+                student: students[studentIndex]
             });
         }
     } catch (error) {
@@ -9517,7 +9659,7 @@ app.post('/api/resume/upload', authenticateToken, checkRole('student'), upload.s
 
         // Convert file to base64
         const fileData = file.buffer.toString('base64');
-        
+
         const resumeData = {
             studentId,
             fileName: file.originalname,
@@ -9530,7 +9672,7 @@ app.post('/api/resume/upload', authenticateToken, checkRole('student'), upload.s
         if (isMongoConnected) {
             // Check if resume already exists for this student
             const existingResume = await Resume.findOne({ studentId });
-            
+
             if (existingResume) {
                 // Update existing resume
                 existingResume.fileName = file.originalname;
@@ -9607,7 +9749,7 @@ app.post('/api/resume/analyze', async (req, res) => {
                 if (!resume) {
                     return res.status(404).json({ error: 'Resume not found' });
                 }
-                
+
                 resume.analysisResult = analysisResult;
                 await resume.save();
                 res.json({ message: 'Analysis saved successfully', resume, analysisResult });
@@ -9616,7 +9758,7 @@ app.post('/api/resume/analyze', async (req, res) => {
                 if (resumeIndex === -1) {
                     return res.status(404).json({ error: 'Resume not found' });
                 }
-                
+
                 resumes[resumeIndex].analysisResult = analysisResult;
                 res.json({ message: 'Analysis saved successfully (in-memory)', resume: resumes[resumeIndex], analysisResult });
             }
@@ -9626,10 +9768,10 @@ app.post('/api/resume/analyze', async (req, res) => {
         // If fileData is provided, perform AI analysis
         if (fileData && fileName) {
             console.log('Performing AI analysis for file:', fileName);
-            
+
             // Call free AI service for analysis (no API key required)
             const aiAnalysisResult = await callFreeAIService(fileData, fileName);
-            
+
             // Save analysis to database if resume exists
             if (isMongoConnected) {
                 const resume = await Resume.findOne({ studentId });
@@ -9643,17 +9785,17 @@ app.post('/api/resume/analyze', async (req, res) => {
                     resumes[resumeIndex].analysisResult = aiAnalysisResult;
                 }
             }
-            
-            res.json({ 
-                message: 'AI analysis completed successfully', 
-                analysisResult: aiAnalysisResult 
+
+            res.json({
+                message: 'AI analysis completed successfully',
+                analysisResult: aiAnalysisResult
             });
             return;
         }
 
         // If neither analysisResult nor fileData is provided
         res.status(400).json({ error: 'Either analysisResult or fileData must be provided' });
-        
+
     } catch (error) {
         console.error('Resume analysis error:', error);
         res.status(500).json({ error: 'Failed to analyze resume', details: error.message });
@@ -9667,10 +9809,10 @@ async function callFreeAIService(fileData, fileName) {
         // Use free AI service (no API key required)
         const FreeResumeAnalysisService = require('./free-ai-service');
         const aiService = new FreeResumeAnalysisService();
-        
+
         const result = await aiService.analyzeResume(fileData, fileName);
         return result;
-        
+
     } catch (error) {
         console.error('Free AI service call failed:', error);
         // Fallback to mock server
@@ -9682,7 +9824,7 @@ async function callFreeAIService(fileData, fileName) {
 async function callMockAPIService(fileData, fileName) {
     try {
         const mockAPIUrl = process.env.MOCK_API_URL || 'http://localhost:3001/resume/analyze';
-        
+
         const response = await fetch(mockAPIUrl, {
             method: 'POST',
             headers: {
@@ -9700,7 +9842,7 @@ async function callMockAPIService(fileData, fileName) {
 
         const result = await response.json();
         return result.analysisResult || result;
-        
+
     } catch (error) {
         console.error('Mock API call failed:', error);
         // Return basic fallback analysis
@@ -10045,8 +10187,8 @@ app.get('/api/certificates/student/:studentId/achievement/:achievementId', async
     const { studentId, achievementId } = req.params;
 
     console.log('🔍 Backend: Looking for certificate:', { studentId, achievementId });
-    console.log('🔍 Backend: Data types:', { 
-        studentIdType: typeof studentId, 
+    console.log('🔍 Backend: Data types:', {
+        studentIdType: typeof studentId,
         achievementIdType: typeof achievementId,
         studentIdValue: studentId,
         achievementIdValue: achievementId
@@ -10224,7 +10366,7 @@ app.get('/api/certificates/department/:department', async (req, res) => {
     req.query.includeFileData = includeFileData;
 
     // Delegate to the generic handler by reusing request values
-    return app._router.handle(req, res, () => {}, 'get', '/api/certificates');
+    return app._router.handle(req, res, () => { }, 'get', '/api/certificates');
 });
 
 app.put('/api/certificates/:id', async (req, res) => {
@@ -10335,28 +10477,28 @@ app.post('/api/certificates/upload', async (req, res) => {
         ...req.body,
         coordinatorNotificationRead: false
     };
-    
+
     try {
         if (!certificateData.studentId || !certificateData.fileName || !certificateData.fileData) {
             return res.status(400).json({ error: 'Missing required fields: studentId, fileName, fileData' });
         }
-        
+
         console.log('🚀 FAST: Uploading certificate to MongoDB...', {
             studentId: certificateData.studentId,
             fileName: certificateData.fileName,
             fileSize: certificateData.fileSize
         });
-        
+
         if (isMongoConnected) {
             // Create new certificate in MongoDB
             const newCertificate = new Certificate(certificateData);
             await newCertificate.save();
-            
+
             console.log('✅ Certificate uploaded to MongoDB:', newCertificate._id);
-            res.json({ 
-                success: true, 
-                message: 'Certificate uploaded successfully', 
-                certificate: newCertificate 
+            res.json({
+                success: true,
+                message: 'Certificate uploaded successfully',
+                certificate: newCertificate
             });
         } else {
             // In-memory storage fallback
@@ -10366,12 +10508,12 @@ app.post('/api/certificates/upload', async (req, res) => {
                 _id: Date.now().toString()
             };
             certificates.push(certificateWithId);
-            
+
             console.log('✅ Certificate stored in memory');
-            res.json({ 
-                success: true, 
-                message: 'Certificate uploaded successfully (in-memory)', 
-                certificate: certificateWithId 
+            res.json({
+                success: true,
+                message: 'Certificate uploaded successfully (in-memory)',
+                certificate: certificateWithId
             });
         }
     } catch (error) {
@@ -10384,7 +10526,7 @@ app.post('/api/certificates/upload', async (req, res) => {
 app.delete('/api/certificates/student/:studentId/achievement/:achievementId', async (req, res) => {
     const isMongoConnected = mongoose.connection.readyState === 1;
     const { studentId, achievementId } = req.params;
-    
+
     try {
         if (isMongoConnected) {
             const certificate = await Certificate.findOneAndDelete({ studentId, achievementId });
@@ -10395,7 +10537,7 @@ app.delete('/api/certificates/student/:studentId/achievement/:achievementId', as
             res.json({ success: true, message: 'Certificate deleted successfully' });
         } else {
             // In-memory storage fallback
-            const certificateIndex = certificates.findIndex(c => 
+            const certificateIndex = certificates.findIndex(c =>
                 c.studentId === studentId && c.achievementId === achievementId
             );
             if (certificateIndex === -1) {
@@ -10740,8 +10882,8 @@ app.post('/api/block-notifications', authenticateToken, checkRole('admin', 'coor
     const normalizedActorRole = (actor?.role || '').toString().trim().toLowerCase();
     const inferredTargetRole = (targetRole || recipientRole || role || '').toString().trim().toLowerCase() || (
         normalizedActorRole === 'admin' ? 'coordinator' :
-        normalizedActorRole === 'coordinator' ? 'admin' :
-        ''
+            normalizedActorRole === 'coordinator' ? 'admin' :
+                ''
     );
     const rawActionType = (actionType || type || status || state || '').toString().trim().toLowerCase();
     const normalizedActionType =
@@ -11059,11 +11201,7 @@ if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
         console.log('   ✅ Role-based access control enabled\n');
     });
 
-    if (OCR_AUTOSTART && process.env.NODE_ENV !== 'production') {
-        startOcrService().catch((error) => {
-            console.error(`[OCR ERROR] Auto-start failed: ${error.message}`);
-        });
-    }
+    // OCR service auto-start disabled by request
 
     Promise.resolve().then(async () => {
         try {

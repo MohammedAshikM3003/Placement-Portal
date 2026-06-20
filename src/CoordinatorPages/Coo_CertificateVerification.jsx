@@ -770,7 +770,8 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                     onLogout={onLogout}
                     currentView="certificate-verification"
                     onViewChange={onViewChange}
-                />
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <main className={styles["co-cert-main-content"]}>
                     <div className={styles["co-cert-top-row"]}>
                         <div

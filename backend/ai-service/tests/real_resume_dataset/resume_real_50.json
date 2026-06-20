@@ -1,0 +1,85 @@
+{
+  "personalInfo": {
+    "name": "Aisha Menon",
+    "mobile": "7854832682",
+    "email": "aisha.menon50@anonymized.in",
+    "linkedin": "linkedin.com/in/aishamenon",
+    "github": "github.com/aishamenon",
+    "portfolio": ""
+  },
+  "summary": "MERN stack developer student. builded full stack sites. fast learner.",
+  "education": {
+    "college": "Amrita School of Engineering",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "8.38",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Full Stack Developer Intern",
+      "companyName": "Verizon",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "done full stack intern at TCS. helped team in web page creation and bugs fixing.",
+      "technologies": [
+        "HTML",
+        "CSS"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "i builded online shopping website. did database and payment gateway setup.",
+      "technologies": [
+        "React",
+        "Node.js",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "Oracle Certified Java Professional",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aisha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Java Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

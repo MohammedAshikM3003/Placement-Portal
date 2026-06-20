@@ -1,3 +1,5 @@
+const aiService = require('./aiService');
+
 const DEPARTMENTS = {
   cse: 'CSE',
   ece: 'ECE',
@@ -20,7 +22,19 @@ const YEAR_MAP = {
   '4th year': 'IV',
 };
 
-function parseStudentFilterQuery(prompt) {
+async function parseStudentFilterQuery(prompt) {
+  try {
+    // Attempt parsing using Python AI microservice
+    const result = await aiService.parseAiFilter(prompt);
+    if (result && result.filters) {
+      console.log('🤖 Student AI Filter: Successfully parsed query using Python AI Service');
+      return result;
+    }
+  } catch (error) {
+    console.warn('⚠️ Python AI Student Filter Service error, falling back to local JS parser:', error.message);
+  }
+
+  // Fallback local JS regex parser
   const text = String(prompt || '').trim();
   const lower = text.toLowerCase();
   const filters = {};
@@ -77,11 +91,51 @@ function parseStudentFilterQuery(prompt) {
     filters.isPlaced = true;
   }
 
+  // Profile pic status
+  if (/(?:no|without|missing|not uploaded)\s+profile\s+(?:photo|pic|picture)/i.test(lower)) {
+    filters.hasProfilePic = false;
+  } else if (/(?:with|has|uploaded)\s+profile\s+(?:photo|pic|picture)/i.test(lower)) {
+    filters.hasProfilePic = true;
+  }
+
+  // Extra profile fields
+  if (/first\s+graduate/i.test(lower)) {
+    filters.firstGraduate = 'Yes';
+  }
+  if (/willing\s+to\s+sign\s+bond|willing\s+to\s+bond/i.test(lower)) {
+    filters.willingToSignBond = 'Yes';
+  }
+  if (/dayscholar/i.test(lower)) {
+    filters.residentialStatus = 'Dayscholar';
+  } else if (/hosteller/i.test(lower)) {
+    filters.residentialStatus = 'Hosteller';
+  }
+  if (/counselling/i.test(lower)) {
+    filters.quota = 'Counselling';
+  } else if (/management/i.test(lower)) {
+    filters.quota = 'Management';
+  }
+  if (/hybrid/i.test(lower)) {
+    filters.preferredModeOfDrive = 'Hybrid';
+  } else if (/on-campus|on\s+campus/i.test(lower)) {
+    filters.preferredModeOfDrive = 'On-Campus';
+  } else if (/online/i.test(lower)) {
+    filters.preferredModeOfDrive = 'Online';
+  }
+
+  // Drive count parsing for JS fallback
+  const drivesMinMatch = lower.match(/(?:drives?|drives\s+attended|attended)\s*(?:above|greater than|>=|>|more than|at least)\s*(\d+)/i) || 
+                         lower.match(/(\d+)\s*(?:drives?)\s*(?:and|or)?\s*(?:above|more|greater|at least|\+)/i);
+  if (drivesMinMatch) {
+    filters.driveCountMin = Number(drivesMinMatch[1]);
+  }
+
   return {
     filters,
     columns: [],
-    reason: 'Rule-based parsing',
+    reason: 'Rule-based parsing (JS Fallback)',
   };
 }
 
 module.exports = { parseStudentFilterQuery };
+

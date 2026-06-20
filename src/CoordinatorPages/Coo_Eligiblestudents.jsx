@@ -515,7 +515,9 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         <div className={styles['coordinator-main-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
             <div className={styles['coordinator-main-layout']}>
-                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="eligible-students" onViewChange={onViewChange} />
+                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="eligible-students" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles['coordinator-content-area']}>
                     <div className={styles['co-es-container']}>
                         <div className={styles['co-es-dashboard-area']}>

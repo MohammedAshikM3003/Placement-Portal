@@ -1215,7 +1215,7 @@
   background: linear-gradient(135deg, #1a9e62, #158f55);
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .dashboardArea {
     margin-left: 0 !important;
     width: 100% !important;

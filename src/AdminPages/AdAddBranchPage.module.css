@@ -219,23 +219,76 @@
   align-items: start;
 }
 
+.Admin-add-branch-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.Admin-add-branch-field-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #4b4b4b;
+  letter-spacing: 0.02em;
+}
+
+.Admin-add-branch-required-star {
+  color: #d32f2f;
+  margin-left: 2px;
+  display: inline;
+  font-weight: 700;
+}
+
+.Admin-add-branch-label-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.Admin-add-branch-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.Admin-add-branch-dropdown-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  width: 10px;
+  height: 10px;
+}
+
+.Admin-add-branch-form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
 .Admin-add-branch-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
+  height: 53.6px;
+  padding: 12px 15px;
+  border: 1px solid #def4dd;
+  border-radius: 6px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.95rem;
-  background-color: #f9f9f9;
-  transition: all 0.3s ease;
+  font-size: 1rem;
+  color: #333;
+  background-color: #f9fff9;
   box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .Admin-add-branch-input:focus {
   outline: none;
-  background-color: #fff;
+  background-color: #f9fff9;
   border-color: #4EA24E;
-  box-shadow: 0 0 0 4px rgba(78, 162, 78, 0.1);
+  box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
 }
 
 .Admin-add-branch-datepicker-wrapper {
@@ -306,47 +359,63 @@
 .Admin-add-branch-btn {
   display: flex;
   align-items: center;
-  padding: 10px 25px;
-  border-radius: 18px; 
+  justify-content: center;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
   border: none;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  color: white;
-  transition: transform 0.2s, opacity 0.2s;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  gap: 15px;
+  transition: all 0.3s ease;
 }
 
-.Admin-add-branch-btn:hover {
-  opacity: 0.95;
-  transform: translateY(-2px);
+.Admin-add-branch-btn-add-coord { 
+  background-color: #E55353; 
+  color: white; 
+} 
+
+.Admin-add-branch-btn-icon {
+  width: 20px;
+  height: auto;
+  margin-right: 10px;
+  display: inline-block;
 }
 
-.Admin-add-branch-btn-add-coord { background-color: #D64545; } 
-.Admin-add-branch-btn-discard   { background-color: #757575; } 
-.Admin-add-branch-btn-save      { background-color: #55A655; } 
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
+.Admin-add-branch-btn-add-coord:not(:disabled):hover {
+  background-color: #c94545;
 }
 
-.btn-content {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
+.Admin-add-branch-btn-discard { 
+  background-color: #e8e8e8; 
+  color: #666; 
+} 
+
+.Admin-add-branch-btn-discard:not(:disabled):hover {
+  background-color: #d4d4d4;
 }
 
-.btn-text-main { 
-  font-size: 1.4rem; 
-  font-weight: 800; 
-  line-height: 1;
-  width:85px;
+.Admin-add-branch-btn-save { 
+  background-color: #4EA24E; 
+  color: white; 
+} 
+
+.Admin-add-branch-btn-save:not(:disabled):hover {
+  background-color: #45924b;
 }
 
-.btn-text-sub { 
-  font-size: 0.75rem; 
-  opacity: 0.9; 
-  font-weight: 300; 
+.Admin-add-branch-btn:disabled {
+  background-color: #d1d5db !important;
+  color: #9ca3af !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.Admin-add-branch-field-error {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 4px;
+  display: block;
 }
 
 /* ============================================================ */

@@ -117,16 +117,16 @@
 
 .stu-db-dashboard-area {
   flex: 1;
-  padding: 50px 32px 15px 32px;
+  padding: 25px 32px 15px 32px;
   background: #fff;
-  overflow: hidden; /* CRITICAL: Prevents scrollbar on desktop */
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: margin-left 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* Move content to bottom */
-  align-items: center; /* Center content horizontally */
-  min-height: calc(100vh - 65px);
-  max-height: calc(100vh - 80px); /* Prevent vertical overflow on desktop */
+  justify-content: flex-start;
+  align-items: center;
+  height: calc(100vh - 65px);
   margin-left: 230px;
   box-sizing: border-box;
 }
@@ -339,7 +339,7 @@
 /* ===== TABLET RESPONSIVENESS ===== */
 /* =================================== */
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .stu-db-dashboard-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
@@ -534,11 +534,27 @@
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .stu-db-dashboard-area {
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
   }
 }
+
+/* ============================================================
+   SQUARE SHAPE MONITOR & MEDIUM DESKTOP RESPONSIVENESS
+   ============================================================ */
+@media screen and (max-width: 1280px) and (min-width: 901px) {
+  .stu-db-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: auto !important;
+    gap: 20px !important;
+  }
+  
+  .stu-db-attendance-card {
+    grid-column: span 2 !important;
+  }
+}
+
 

@@ -35,7 +35,7 @@
 }
 
 /* Mobile Scrollbar */
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .mr-dashboard-area::-webkit-scrollbar {
         width: 10px;
     }
@@ -1293,7 +1293,7 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .mr-container { overflow: hidden; }
     .mr-main { margin-top: 50px; height: auto; }
     .mr-dashboard-area { 

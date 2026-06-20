@@ -427,7 +427,8 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
         onLogout={onLogout}
         currentView="manage-marksheets"
         onViewChange={handleViewChange}
-      />
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
       {isSidebarOpen && (
         <div

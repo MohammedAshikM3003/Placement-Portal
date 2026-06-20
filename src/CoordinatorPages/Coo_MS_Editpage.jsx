@@ -493,7 +493,9 @@ function CooMsEditPage({ onLogout, onViewChange }) {
         isSaving={isSaving}
       />
       <div className={styles.main}>
-        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
+        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
         {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
 
         <div className={styles.content}>

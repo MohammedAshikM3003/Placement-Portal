@@ -15,6 +15,8 @@
     gap: 20px;
     overflow: hidden;
     position: relative;
+    height: calc(100vh - 65px);
+    margin-top: 65px;
 }
 
 /* --- Sidebar Overlay (Mobile) --- */
@@ -40,20 +42,19 @@
     align-items: stretch;
     flex-wrap: nowrap;
     margin-left: 280px; 
-    margin-top: 55px;
+    margin-top: 0px;
     flex-shrink: 0;
 }
 
 .Admin-DB-filter-section {
     flex: 0 0 500px;
     background-color: #e8e8e8;
-    padding: 20px;
+    padding: 15px 20px;
     border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 250px;
-    height: auto;
+    height: 200px;
 }
 
 /* AI mode should size to content instead of keeping the default tall filter card height. */
@@ -121,12 +122,11 @@
     font-weight: 500;
     background-color: #4EA24E;
     color: white;
-    padding: 6px 0px 9px 0px;
+    padding: 6px 0px 8px 0px;
     border-radius: 30px;
     display: block;
     width: 228px;
-    margin-left: 100px;
-    margin-top:-12px;
+    margin: -10px auto 10px auto;
 }
 
 .Admin-DB-filter-icon-container {
@@ -141,10 +141,10 @@
 .Admin-DB-filter-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 12px;
     flex-grow: 1;
     position:relative;
-    top:-10px;
+    top:0px;
 }
 
 .Admin-DB-ai-filter-content {
@@ -405,33 +405,32 @@
     align-items: center;
     justify-content: space-between;
     text-align: center;
-    padding: 20px 15px;
+    padding: 15px 10px;
     background-color: #ffffff;
     border-radius: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 2px solid #808080;
-    height:250px;
+    height: 200px;
 }
 
 .Admin-DB-action-header {
-    font-size: 1.4rem;
-    font-weight: 720;
-    margin-bottom: -20px;
-    margin-top: -10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
     color: #4EA24E;
 }
 
 .Admin-DB-action-description {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     color: #666;
-    margin-bottom: 15px;
+    margin: 8px 0;
     padding: 0 5px;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.3;
     flex-grow: 1;
     display: flex;
     align-items: center;
-    text-align: center;
+    justify-content: center;
 }
 
 .Admin-DB-action-btn {
@@ -821,10 +820,8 @@
 /* ---------------------------------------------------------------------- */
 /* --- MOBILE RESPONSIVENESS --- */
 /* ---------------------------------------------------------------------- */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
 .Admin-DB-top-card, .Admin-DB-bottom-card { margin-left: 0; }
-.Admin-DB-top-card { flex-wrap: wrap; }
-.Admin-DB-filter-section { flex: 1 1 100%; }
 }
 
 @media (max-width: 900px) {

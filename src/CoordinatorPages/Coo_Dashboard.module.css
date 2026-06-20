@@ -30,14 +30,14 @@
 .coordinator-dashboard-page .co-db-main {
   display: flex;
   flex: 1;
-  margin-top: 64px;
+  margin-top: 65px;
   align-items: stretch;
 }
 
 /* --- DASHBOARD CONTENT AREA --- */
 .coordinator-dashboard-page .co-db-dashboard-area {
   flex: 1;
-  padding: 15px 35px 15px 35px;
+  padding: 20px 25px 17px 25px;
   background: #fff;
   overflow-y: auto;
   overflow-x: hidden;
@@ -47,7 +47,7 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 65px);
   box-sizing: border-box;
 }
 
@@ -87,6 +87,7 @@
   max-width: 1200px; /* Increased width for 4 columns */
   width: 100%;
   align-self: stretch;
+  margin-bottom: 50px;
 }
 
 .coordinator-dashboard-page .co-db-card {
@@ -293,7 +294,14 @@
 }
 
 /* --- MOBILE RESPONSIVENESS --- */
-@media (max-width: 992px) {
+@media screen and (max-width: 1280px) and (min-width: 901px) {
+  .coordinator-dashboard-page .co-db-dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 1200px) {
   /* Red scrollbar on mobile */
   .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar {
     width: 10px;

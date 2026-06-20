@@ -79,17 +79,44 @@ class AuthService {
 
       // Handle network errors and non-JSON responses
       let data;
+      let rawText = '';
       try {
-        data = await response.json();
+        rawText = await response.text();
+        data = rawText ? JSON.parse(rawText) : null;
       } catch (parseError) {
         console.error('Failed to parse response as JSON:', parseError);
         if (!response.ok) {
-          throw new Error(`Network error: Unable to connect to server. Please check your internet connection.`);
+          if (response.status === 401 || response.status === 403) {
+            console.warn('Session expired or unauthorized. Logging out...');
+            this.logout();
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('admin') || currentPath.includes('coordinator')) {
+              window.location.href = '/admin-login';
+            } else {
+              window.location.href = '/';
+            }
+            const error = new Error(`Authentication/Authorization error: ${response.status} Forbidden`);
+            error.status = response.status;
+            throw error;
+          }
+          const error = new Error(`Server error: ${response.status} ${rawText || response.statusText}`);
+          error.status = response.status;
+          throw error;
         }
         throw new Error('Server returned invalid response format.');
       }
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          console.warn('Session expired or unauthorized. Logging out...');
+          this.logout();
+          const currentPath = window.location.pathname;
+          if (currentPath.includes('admin') || currentPath.includes('coordinator')) {
+            window.location.href = '/admin-login';
+          } else {
+            window.location.href = '/';
+          }
+        }
         const message = data?.message || data?.error || `Server error: ${response.status} ${response.statusText}`;
         const error = new Error(message);
         error.status = response.status;

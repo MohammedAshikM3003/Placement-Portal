@@ -1148,6 +1148,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
+    const [availableSemesters, setAvailableSemesters] = useState([]);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isResumeChooserOpen, setIsResumeChooserOpen] = useState(false);
@@ -1879,6 +1880,38 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
             if (completeData && completeData.student) {
                 didPopulate = true;
                 populateFormFields(completeData.student);
+
+                // Fetch available semesters from SemesterRecord
+                const regNo = completeData.student.regNo || completeData.student.registerNumber || '';
+                if (regNo) {
+                    try {
+                        const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const resp = await fetch(`${API_BASE_URL}/semester/list?regNo=${encodeURIComponent(String(regNo).trim())}`, {
+                            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+                        });
+                        if (resp.ok) {
+                            const body = await resp.json();
+                            const records = Array.isArray(body.records) ? body.records : [];
+                            const semSet = new Set();
+                            records.forEach(r => {
+                                 const hasSubjects = Array.isArray(r.subjects) && r.subjects.length > 0;
+                                 const extractionFailed = r.extractionStatus === 'failed';
+                                 if (!hasSubjects || extractionFailed) return;
+                                 const sem = (r.semester !== undefined && r.semester !== null) ? String(r.semester).trim() : '';
+                                 if (sem !== '') semSet.add(Number.isNaN(Number(sem)) ? sem : Number(sem));
+                             });
+                            const sems = Array.from(semSet).sort((a, b) => {
+                                const na = Number(a);
+                                const nb = Number(b);
+                                if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+                                return String(a).localeCompare(String(b));
+                            });
+                            setAvailableSemesters(sems);
+                        }
+                    } catch (err) {
+                        console.warn('Failed to load available semesters:', err);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading student data:', error);
@@ -1904,6 +1937,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
         setCurrentSemester('');
         setSelectedSection('');
         setSkills([]);
+        setAvailableSemesters([]);
         setUploadInfo({ name: '', date: '' });
         setStudyCategory('12th');
 
@@ -3296,32 +3330,53 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Semester</h3>
+                            <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
                             <div className={styles.marksheetGrid}>
-                                {/* Show semesters 1 to current semester only */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
-                                    return semestersToShow.map((semesterNumber) => (
+                                {availableSemesters.length === 0 ? (
+                                    <div style={{ padding: '10px 0', color: '#666', gridColumn: '1 / -1' }}>
+                                        No semester records uploaded yet.
+                                    </div>
+                                ) : (
+                                    availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button type="button" className={styles.viewMarksheetBtn}>
+                                            <button 
+                                                type="button" 
+                                                className={styles.viewMarksheetBtn}
+                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { 
+                                                    state: { 
+                                                        student: {
+                                                            ...studentData,
+                                                            currentSemester: semesterNumber
+                                                        } 
+                                                    } 
+                                                })}
+                                            >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
                                         </div>
-                                    ));
-                                })()}
+                                    ))
+                                )}
 
-                                {/* Upload button for current semester */}
+                                {/* View button for current semester */}
                                 {(() => {
                                     const currentSem = parseInt(currentSemester) || 1;
+                                    const exists = availableSemesters.includes(currentSem);
+                                    if (!exists) return null;
                                     return (
                                         <button
                                             type="button"
                                             className={styles.uploadMarksheetBtnFull}
-                                            onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`)}
+                                            onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { 
+                                                state: { 
+                                                    student: {
+                                                        ...studentData,
+                                                        currentSemester: currentSem
+                                                    } 
+                                                } 
+                                            })}
                                         >
-                                            <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
+                                            <img src={StuUploadMarksheetIcon} alt="View" className={styles.uploadIcon} />
                                             <span>View Sem {currentSem} Marksheet</span>
                                         </button>
                                     );

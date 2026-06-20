@@ -40,7 +40,7 @@
   background: #e36b10;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .sasidebar {
     transform: translateX(-100%);
   }

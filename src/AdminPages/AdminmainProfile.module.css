@@ -1,5 +1,203 @@
 /* FIXED: Removed global * and ::-webkit-scrollbar tags to prevent clashing */
 
+/* ============================================================
+   VALIDATION / MISSING FIELDS CARD — mirrors coordinator form
+   ============================================================ */
+
+/* Required star */
+.Admin-profile-required-star {
+    color: #d32f2f;
+    margin-left: 2px;
+    display: inline;
+    font-weight: 700;
+}
+
+/* Label with required star */
+.Admin-profile-label-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+/* Blink animation for missing fields */
+@keyframes Admin-profile-field-blink {
+    0%, 100% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    25% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    50% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    75% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+.Admin-profile-field-highlight {
+    animation: Admin-profile-field-blink 1.5s ease-in-out 2;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Phone number wrapper highlight */
+.Admin-profile-field-highlight-wrapper {
+    animation: Admin-profile-field-blink 1.5s ease-in-out 2;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Select wrapper with dropdown icon */
+.Admin-profile-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.Admin-profile-dropdown-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+}
+
+/* Validation yellow warning box */
+.Admin-profile-validation-box {
+    width: 100%;
+    background-color: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.Admin-profile-validation-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0.9rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a6110;
+}
+
+.Admin-profile-validation-icon {
+    color: #f39c12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-profile-validation-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #8a6110;
+}
+
+.Admin-profile-validation-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    list-style-position: inside;
+    position: relative;
+    line-height: 1.35;
+}
+
+.Admin-profile-validation-item:hover {
+    background-color: #ffeaa7;
+    color: #664d03;
+    font-weight: 600;
+    transform: translateX(5px);
+}
+
+.Admin-profile-validation-item:focus-visible {
+    outline: 2px solid #4EA24E;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.Admin-profile-validation-toggle {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid #ffe69c;
+    display: flex;
+    justify-content: center;
+}
+
+.Admin-profile-show-more-btn {
+    background-color: #f39c12;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-profile-show-more-btn:hover {
+    background-color: #e67e22;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-profile-show-more-caret {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: inherit;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Pointer tooltip */
+.Admin-profile-validation-pointer-tooltip {
+    position: fixed;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+/* Save button disabled with enough visual difference */
+.Admin-main-profile-save-btn:disabled {
+    background-color: #d1d5db !important; /* Muted gray (dull) */
+    color: #9ca3af !important; /* Muted text */
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    box-shadow: none !important;
+    border-color: #e5e7eb !important;
+}
+
 /* --- Global Layout --- */
 .Admin-main-profile-layout {
     display: flex;
@@ -65,7 +263,7 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 30px;
-    margin-top: -25px;
+    margin-top: 0;
     align-items: start;
     flex: 1;
 }
@@ -187,6 +385,31 @@
     border-color: #4EA24E;
     box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
     background-color: #f9fff9;
+}
+
+.Admin-main-profile-password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 35%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.Admin-main-profile-password-toggle:hover {
+    color: #4EA24E;
+}
+
+.Admin-main-profile-password-toggle svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Mobile Input with Country Code - Green Theme */
@@ -403,7 +626,7 @@
 
 /* --- Login Details Section --- */
 .Admin-main-profile-login-details {
-    margin-top: 30px;
+    margin-top: 24px;
     padding-top: 20px;
     animation: slideDown 0.3s ease-out;
 }
@@ -516,6 +739,10 @@
 
 /* --- Form Select --- */
 .Admin-main-profile-form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 40px;
     cursor: pointer;
 }
 

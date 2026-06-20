@@ -253,7 +253,7 @@ Please compress your PDF or choose a smaller file.`);
       section: formData.section,
       department: formData.department,
       degree: formData.degree,
-      date: formattedDate,
+      date: formData.date,
       comp: formData.comp,
       prize: formData.prize,
       status: "pending",

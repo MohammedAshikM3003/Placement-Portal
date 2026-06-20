@@ -1,21 +1,40 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
-
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 
 import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
-// FIXED: Import CSS as a Module
+import Ad_Calendar from '../components/Calendar/Ad_Calendar.jsx';
 import styles from './AdAddCoordinatorform.module.css';
-import Adminicon from "../assets/Adminicon.png"; 
+import Adminicon from "../assets/Adminicon.png";
 import ProfileGraduationcap from "../assets/VectorGC.svg";
+import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
 import mongoDBService from "../services/mongoDBService.jsx";
-import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts.js';
+import { PreviewProgressAlert, DownloadSuccessAlert, DownloadFailedAlert } from '../components/alerts/DownloadPreviewAlerts.js';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
+import API_BASE_URL from '../utils/apiConfig';
 
-// --- Icon components (Updated to use 'styles') ---
+const REQUIRED_COORDINATOR_FIELDS = [
+    { field: 'firstName', label: 'First Name' },
+    { field: 'lastName', label: 'Last Name' },
+    { field: 'dob', label: 'DOB' },
+    { field: 'gender', label: 'Gender' },
+    { field: 'emailId', label: 'Email ID' },
+    { field: 'domainMailId', label: 'Domain Mail ID' },
+    { field: 'phoneNumber', label: 'Phone Number' },
+    { field: 'degree', label: 'Degree' },
+    { field: 'branch', label: 'Branch' },
+    { field: 'coordinatorId', label: 'Coordinator ID' },
+    { field: 'password', label: 'Enter Password' },
+    { field: 'confirmPassword', label: 'Confirm Password' }
+];
+
+const RequiredStar = () => <span className={styles['Admin-cood-detail-required-star']}>*</span>;
+
 const MdUpload = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
         <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"></path>
@@ -28,32 +47,12 @@ const IoMdClose = () => (
     </svg>
 );
 
-const FileIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-    </svg>
-);
-
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-    </svg>
-);
-
 const DropdownIcon = () => (
-    // UPDATED: Use styles['Admin-cood-detail-dropdown-icon']
     <svg xmlns="http://www.w3.org/2000/svg" width="292.4" height="292.4" viewBox="0 0 292.4 292.4" className={styles['Admin-cood-detail-dropdown-icon']}>
-        <path fill="#999" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z"/>
+        <path fill="#999" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
     </svg>
 );
 
-// FileSizeErrorPopup Component
 const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     if (!isOpen) return null;
 
@@ -78,7 +77,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                             </g>
                         </svg>
                     </div>
-                    <h2 style={{ color: '#d32f2f' }}>Image Size Exceeded ✗</h2>
+                    <h2 style={{ color: '#d32f2f' }}>Image Size Exceeded Γ£ù</h2>
                     <p style={{ marginBottom: '16px', marginTop: '20px' }}>
                         Maximum allowed: <strong>500KB</strong>
                     </p>
@@ -97,6 +96,230 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     );
 };
 
+const MissingFieldsCard = ({ missingFields, onFieldClick, showAllErrors, onToggleShowAll, errorTooltip, supportsPointerTooltip, onTooltipMove, onTooltipLeave }) => {
+    if (!missingFields.length) return null;
+
+    const visibleFields = showAllErrors ? missingFields : missingFields.slice(0, 10);
+
+    return (
+        <div className={styles['Admin-cood-detail-validation-box']}>
+            <h4 className={styles['Admin-cood-detail-validation-heading']}>
+                <span className={styles['Admin-cood-detail-validation-icon']} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                        <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                    </svg>
+                </span>
+                Required Fields Missing:
+            </h4>
+            <ul className={styles['Admin-cood-detail-validation-list']}>
+                {visibleFields.map((error, index) => (
+                    <li
+                        key={`${error.field}-${index}`}
+                        className={styles['Admin-cood-detail-validation-item']}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Click to navigate"
+                        onClick={() => {
+                            console.log('[DEBUG] Missing field item clicked:', error.field);
+                            onFieldClick(error.field);
+                        }}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                console.log('[DEBUG] Missing field item activated via keyboard:', error.field);
+                                onFieldClick(error.field);
+                            }
+                        }}
+                        onMouseEnter={supportsPointerTooltip ? onTooltipMove : undefined}
+                        onMouseMove={supportsPointerTooltip ? onTooltipMove : undefined}
+                        onMouseLeave={supportsPointerTooltip ? onTooltipLeave : undefined}
+                    >
+                        {error.customMessage || `${error.label} is required`}
+                    </li>
+                ))}
+            </ul>
+            {supportsPointerTooltip && errorTooltip.visible && (
+                <div
+                    className={styles['Admin-cood-detail-validation-pointer-tooltip']}
+                    style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+                >
+                    Click to navigate
+                </div>
+            )}
+            {missingFields.length > 10 && (
+                <div className={styles['Admin-cood-detail-validation-toggle']}>
+                    <button type="button" onClick={onToggleShowAll} className={styles['Admin-cood-detail-show-more-btn']}>
+                        <span>{showAllErrors ? 'Show Less' : `Show More (${missingFields.length - 10} more)`}</span>
+                        <span className={styles['Admin-cood-detail-show-more-caret']} aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="14" height="14" focusable="false">
+                                {showAllErrors ? (
+                                    <path d="M7 14l5-5 5 5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                ) : (
+                                    <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                )}
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const createImage = (url) =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener('load', () => resolve(image));
+        image.addEventListener('error', (error) => reject(error));
+        image.setAttribute('crossOrigin', 'anonymous');
+        image.src = url;
+    });
+
+const normalizeJpegFilename = (fileName, fallbackName = 'profile-photo.jpg') => {
+    const baseName = (fileName || fallbackName || 'profile-photo.jpg').trim() || 'profile-photo.jpg';
+    return baseName.replace(/\.[^.]+$/, '') + '.jpg';
+};
+
+const PhotoCropModal = ({ isOpen, imageSrc, fileName, onSave, onDiscard, onClose }) => {
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [rotation, setRotation] = useState(0);
+    const [aspect, setAspect] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+        setAspect(1);
+        setCroppedAreaPixels(null);
+    }, [imageSrc, isOpen]);
+
+    const onCropComplete = useCallback((_, areaPixels) => {
+        setCroppedAreaPixels(areaPixels);
+    }, []);
+
+    const createCroppedImage = useCallback(async () => {
+        if (!imageSrc || !croppedAreaPixels) return null;
+
+        try {
+            const image = await createImage(imageSrc);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) return null;
+
+            const { width, height, x, y } = croppedAreaPixels;
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.save();
+            if (rotation !== 0) {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                ctx.translate(centerX, centerY);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.translate(-centerX, -centerY);
+            }
+
+            ctx.drawImage(image, x, y, width, height, 0, 0, width, height);
+            ctx.restore();
+
+            return await new Promise((resolve) => {
+                canvas.toBlob((blob) => resolve(blob || null), 'image/jpeg', 0.95);
+            });
+        } catch (error) {
+            console.error('Error creating cropped image:', error);
+            return null;
+        }
+    }, [croppedAreaPixels, imageSrc, rotation]);
+
+    const handleSave = async () => {
+        const croppedBlob = await createCroppedImage();
+        if (croppedBlob) {
+            onSave(croppedBlob, normalizeJpegFilename(fileName));
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles['Admin-cood-detail-crop-overlay']} onClick={onClose}>
+            <div className={styles['Admin-cood-detail-crop-container']} onClick={(event) => event.stopPropagation()}>
+                <div className={styles['Admin-cood-detail-crop-header']}>Crop Image</div>
+                <div className={styles['Admin-cood-detail-crop-content']}>
+                    <div className={styles['Admin-cood-detail-crop-preview-area']}>
+                        {imageSrc && (
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                rotation={rotation}
+                                aspect={aspect}
+                                onCropChange={setCrop}
+                                onZoomChange={setZoom}
+                                onRotationChange={setRotation}
+                                onCropComplete={onCropComplete}
+                                cropShape="rect"
+                                restrictPosition={true}
+                                showGrid={true}
+                            />
+                        )}
+                    </div>
+
+                    <div className={styles['Admin-cood-detail-crop-controls']}>
+                        <div className={styles['Admin-cood-detail-control-group']}>
+                            <label className={styles['Admin-cood-detail-control-label']}>Rotate</label>
+                            <div className={styles['Admin-cood-detail-rotate-control']}>
+                                <button type="button" onClick={() => setRotation((value) => (value - 10 + 360) % 360)} className={styles['Admin-cood-detail-rotate-btn']}>↺</button>
+                                <span className={styles['Admin-cood-detail-angle-value']}>{rotation}°</span>
+                                <button type="button" onClick={() => setRotation((value) => (value + 10) % 360)} className={styles['Admin-cood-detail-rotate-btn']}>↻</button>
+                            </div>
+                            <input
+                                type="range"
+                                min="-180"
+                                max="180"
+                                value={rotation}
+                                onChange={(event) => setRotation(Number(event.target.value))}
+                                className={styles['Admin-cood-detail-angle-slider']}
+                            />
+                            <button type="button" onClick={() => setRotation(0)} className={styles['Admin-cood-detail-reset-btn']}>Reset</button>
+                        </div>
+
+                        <div className={styles['Admin-cood-detail-control-group']}>
+                            <label className={styles['Admin-cood-detail-control-label']}>Aspect Ratio</label>
+                            <div className={styles['Admin-cood-detail-aspect-ratio-buttons']}>
+                                <button type="button" onClick={() => setAspect(1)} className={`${styles['Admin-cood-detail-aspect-btn']} ${aspect === 1 ? styles['Admin-cood-detail-aspect-active'] : ''}`}>1:1</button>
+                                <button type="button" onClick={() => setAspect(4 / 3)} className={`${styles['Admin-cood-detail-aspect-btn']} ${aspect === 4 / 3 ? styles['Admin-cood-detail-aspect-active'] : ''}`}>4:3</button>
+                                <button type="button" onClick={() => setAspect(3 / 4)} className={`${styles['Admin-cood-detail-aspect-btn']} ${aspect === 3 / 4 ? styles['Admin-cood-detail-aspect-active'] : ''}`}>3:4</button>
+                            </div>
+                        </div>
+
+                        <div className={styles['Admin-cood-detail-control-group']}>
+                            <label className={styles['Admin-cood-detail-control-label']}>Zoom</label>
+                            <input
+                                type="range"
+                                min="1"
+                                max="3"
+                                step="0.1"
+                                value={zoom}
+                                onChange={(event) => setZoom(Number(event.target.value))}
+                                className={styles['Admin-cood-detail-zoom-slider']}
+                            />
+                            <span className={styles['Admin-cood-detail-zoom-value']}>{(zoom * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div className={styles['Admin-cood-detail-crop-footer']}>
+                    <button type="button" onClick={onDiscard} className={`${styles['Admin-cood-detail-crop-btn']} ${styles['Admin-cood-detail-crop-discard-btn']}`}>Discard</button>
+                    <button type="button" onClick={handleSave} className={`${styles['Admin-cood-detail-crop-btn']} ${styles['Admin-cood-detail-crop-upload-btn']}`}>Upload</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const normalizeString = (value) => {
     if (value === null || value === undefined) return '';
     return value.toString().trim();
@@ -108,8 +331,575 @@ const normalizeForMatch = (value) => normalizeString(value).toUpperCase();
 
 const branchSelectValue = (branch) => normalizeString(branch?.branchAbbreviation) || normalizeString(branch?.branchFullName) || normalizeString(branch?.branchCode) || normalizeString(branch?.id) || normalizeString(branch?._id);
 
+const formatDobForPassword = (date) => {
+    if (!date) return '';
+    const dob = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(dob.getTime())) return '';
+    const day = String(dob.getDate()).padStart(2, '0');
+    const month = String(dob.getMonth() + 1).padStart(2, '0');
+    const year = dob.getFullYear();
+    return `${day}${month}${year}`;
+};
+
+const isLikelyBase64 = (value) => {
+    if (!value || typeof value !== 'string') return false;
+    if (value.startsWith('data:') || value.startsWith('http') || value.startsWith('blob:')) {
+        return false;
+    }
+    const cleaned = value.replace(/\s+/g, '');
+    return /^[A-Za-z0-9+/=]+$/.test(cleaned) && cleaned.length > 64;
+};
+
+const getMimeFromName = (name) => {
+    if (!name || typeof name !== 'string') return 'image/jpeg';
+    const lower = name.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+};
+
+const normalizeProfilePhotoUrl = (photo, photoName, apiBaseUrl) => {
+    if (!photo) return null;
+
+    if (photo.startsWith('data:') || photo.startsWith('http') || photo.startsWith('blob:')) {
+        return photo;
+    }
+
+    if (isLikelyBase64(photo)) {
+        const mime = getMimeFromName(photoName);
+        return `data:${mime};base64,${photo}`;
+    }
+
+    try {
+        return resolveProfileUrl(photo, apiBaseUrl);
+    } catch (err) {
+        console.error('resolveProfileUrl failed, falling back to basic join:', err);
+        if (String(photo).startsWith('/api/file/')) {
+            const backendBase = apiBaseUrl.replace('/api', '');
+            return `${backendBase}${photo}`;
+        }
+        return photo;
+    }
+};
+
+const formatDobForCalendar = (date) => {
+    if (!date) return '';
+    const dob = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(dob.getTime())) return '';
+    const day = String(dob.getDate()).padStart(2, '0');
+    const month = String(dob.getMonth() + 1).padStart(2, '0');
+    const year = dob.getFullYear();
+    return `${year}-${month}-${day}`;
+};
+
+const parseCalendarDate = (value) => {
+    if (!value) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+};
+
 function AdminCoDet() {
-    useAdminAuth(); // JWT authentication verification
+    /*
+    return (
+        <>
+            <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
+            <div className={styles['Admin-cood-detail-layout']}>
+                <AdSidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
+
+                <div className={`${styles['Admin-cood-detail-main-content']} ${isSidebarOpen ? styles['sidebar-open'] : ''}`}>
+                    {isInitialLoading && (
+                        <PreviewProgressAlert
+                            isOpen={true}
+                            progress={loadingProgress}
+                            title="Loading..."
+                            messages={{
+                                initial: 'Fetching coordinator details...',
+                                mid: 'Preparing form...',
+                                final: 'Opening editor...'
+                            }}
+                            color="#4EA24E"
+                            progressColor="#4EA24E"
+                        />
+                    )}
+
+                    <div className={styles['Admin-cood-detail-main-card']}>
+                        <div className={styles['Admin-cood-detail-credentials-card']}>
+                            <h3 className={styles['Admin-cood-detail-card-title']}>Coordinator Details</h3>
+
+                            <div className={styles['Admin-cood-detail-details-grid']}>
+                                <div className={styles['Admin-cood-detail-main-column']}>
+                                    <div className={styles['Admin-cood-detail-card-content']}>
+                                        <section className={styles['Admin-cood-detail-section']}>
+                                            <div className={styles['Admin-cood-detail-input-grid']}>
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        First Name <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        name="firstName"
+                                                        placeholder="First Name"
+                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.firstName ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        value={formData.firstName}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Last Name <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        name="lastName"
+                                                        placeholder="Last Name"
+                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.lastName ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        value={formData.lastName}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        DOB <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-calendar-wrapper']}>
+                                                        <Ad_Calendar
+                                                            value={formatDobForCalendar(formData.dob)}
+                                                            onChange={handleDobChange}
+                                                            maxDate={new Date()}
+                                                            disabled={isViewMode}
+                                                        />
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Gender <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={genderSelectRef}
+                                                            name="gender"
+                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                            value={formData.gender}
+                                                            onChange={handleInputChange}
+                                                            disabled={isViewMode}
+                                                        >
+                                                            <option value="" disabled>Select Gender</option>
+                                                            <option value="Male">Male</option>
+                                                            <option value="Female">Female</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(genderSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Email ID <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        type="email"
+                                                        name="emailId"
+                                                        placeholder="Email id"
+                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.emailId ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        value={formData.emailId}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    Domain Mail ID
+                                                    <input
+                                                        type="email"
+                                                        name="domainMailId"
+                                                        placeholder="Domain Mail id"
+                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.domainMailId ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        value={formData.domainMailId}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Phone Number <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        type="tel"
+                                                        name="phoneNumber"
+                                                        placeholder="Phone number"
+                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.phoneNumber ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        value={formData.phoneNumber}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    Cabin
+                                                    <input
+                                                        type="text"
+                                                        name="cabin"
+                                                        placeholder="Cabin"
+                                                        className={styles['Admin-cood-detail-form-input']}
+                                                        value={formData.cabin}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Degree <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={degreeSelectRef}
+                                                            name="degree"
+                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                            value={selectedDegree}
+                                                            onChange={(event) => {
+                                                                const degreeValue = event.target.value;
+                                                                setSelectedDegree(degreeValue);
+                                                                handleInputChange({ target: { name: 'degree', value: degreeValue } });
+                                                                if (!lockedBranchMeta) {
+                                                                    handleInputChange({ target: { name: 'branch', value: '' } });
+                                                                }
+                                                            }}
+                                                            disabled={Boolean(lockedBranchMeta) || isViewMode}
+                                                        >
+                                                            <option value="" disabled>Select Degree</option>
+                                                            {degrees.map((degree) => {
+                                                                const value = degreeOptionValue(degree);
+                                                                const label = degree?.degreeFullName && degree?.degreeAbbreviation
+                                                                    ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                                    : degree?.degreeFullName || degree?.degreeAbbreviation || value;
+                                                                return (
+                                                                    <option key={degree.id || degree._id || value} value={value}>
+                                                                        {label}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(degreeSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Branch <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={branchSelectRef}
+                                                            name="branch"
+                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                            value={formData.branch}
+                                                            onChange={handleInputChange}
+                                                            disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
+                                                        >
+                                                            <option value="" disabled>
+                                                                {filteredBranches.length ? 'Select Branch' : 'No branches available'}
+                                                            </option>
+                                                            {filteredBranches.map((branch) => {
+                                                                const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                                    ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                                    : branch?.branchFullName || branch?.branchAbbreviation;
+                                                                const value = branchSelectValue(branch);
+                                                                return (
+                                                                    <option key={branch.id || branch._id || value} value={value}>
+                                                                        {label}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(branchSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+
+                                <div className={`${styles['Admin-cood-detail-photo-wrapper']} ${errors.profilePhoto ? styles['Admin-cood-detail-input-error'] : ''}`}>
+                                    <div className={styles['Admin-cood-detail-photo-box']}>
+                                        <h3 className={styles['Admin-cood-detail-photo-title']}>Profile Photo</h3>
+                                        <div className={styles['Admin-cood-detail-profile-icon-container']}>
+                                            {profilePhoto ? (
+                                                <img
+                                                    src={profilePhoto}
+                                                    alt="Profile Preview"
+                                                    className={styles['Admin-cood-detail-profile-preview-img']}
+                                                    onClick={handleImageClick}
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={ProfileGraduationcap}
+                                                    alt="Graduation Cap"
+                                                    className={styles['Admin-cood-detail-graduation-cap-icon']}
+                                                    useAdminAuth(); // JWT authentication verification
+                                                    const navigate = useNavigate();
+                                                    const location = useLocation();
+                                                    const urlSearchParams = useMemo(() => new URLSearchParams(location.search || ''), [location.search]);
+                                                    const branchParam = normalizeString(urlSearchParams.get('branch'));
+                                                    const editIdParam = normalizeString(urlSearchParams.get('editId'));
+                                                    const viewIdParam = normalizeString(urlSearchParams.get('viewId'));
+                                                    const branchState = normalizeString(location.state?.branchCode);
+                                                    const preselectedBranchRaw = branchState || branchParam;
+                                                    const preselectedBranchCode = normalizeForMatch(preselectedBranchRaw);
+                                                    const isEditMode = Boolean(editIdParam);
+                                                    const isViewMode = Boolean(viewIdParam);
+
+                                                    const [formData, setFormData] = useState({
+                                                        firstName: '',
+                                                        lastName: '',
+                                                        dob: null,
+                                                        gender: '',
+                                                        emailId: '',
+                                                        domainMailId: '',
+                                                        phoneNumber: '',
+                                                        coordinatorId: '',
+                                                        cabin: '',
+                                                        password: '',
+                                                        confirmPassword: '',
+                                                        degree: '',
+                                                        branch: ''
+                                                    });
+
+                                                    const [errors, setErrors] = useState({});
+                                                    const [profilePhoto, setProfilePhoto] = useState(null);
+                                                    const [profilePhotoData, setProfilePhotoData] = useState(null);
+                                                    const [photoDetails, setPhotoDetails] = useState({ fileName: null, uploadDate: null });
+                                                    const [isModalOpen, setIsModalOpen] = useState(false);
+                                                    const [saveStatus, setSaveStatus] = useState(null);
+                                                    const [popupMessage, setPopupMessage] = useState(null);
+                                                    const [degrees, setDegrees] = useState([]);
+                                                    const [branches, setBranches] = useState([]);
+                                                    const [selectedDegree, setSelectedDegree] = useState('');
+                                                    const [lockedBranchMeta, setLockedBranchMeta] = useState(null);
+                                                    const [lockedDegreeValue, setLockedDegreeValue] = useState('');
+                                                    const [isSaving, setIsSaving] = useState(false);
+                                                    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+                                                    const [showSuccessModal, setShowSuccessModal] = useState(false);
+                                                    const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
+                                                    const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
+                                                    const [isInitialLoading, setIsInitialLoading] = useState(false);
+                                                    const [loadingProgress, setLoadingProgress] = useState(0);
+
+                                                    const genderSelectRef = useRef(null);
+                                                    const degreeSelectRef = useRef(null);
+                                                    const branchSelectRef = useRef(null);
+                                                    const previewObjectUrlRef = useRef(null);
+
+                                                />
+                                            )}
+                                        </div>
+                                        <div className={styles['Admin-cood-detail-upload-action-area']}>
+                                            {!isViewMode && (
+                                                <div className={styles['Admin-cood-detail-upload-btn-wrapper']}>
+                                                    <label htmlFor="file-upload" className={styles['Admin-cood-detail-profile-upload-btn']}>
+                                                        <div className={styles['Admin-cood-detail-upload-btn-content']}>
+                                                            <MdUpload />
+                                                            <span>Upload</span>
+                                                        </div>
+                                                    </label>
+                                                    {profilePhoto && (
+                                                        <button
+                                                            onClick={handleRemovePhoto}
+                                                            className={styles['Admin-cood-detail-remove-image-btn']}
+                                                            aria-label="Remove image"
+                                                        >
+                                                            <IoMdClose />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {!isViewMode && (
+                                                <>
+                                                    <input
+                                                        id="file-upload"
+                                                        type="file"
+                                                        className={styles['Admin-cood-detail-hidden-input']}
+                                                        onChange={handlePhotoUpload}
+                                                    />
+                                                    {popupMessage && typeof popupMessage === 'object' && (
+                                                        <p
+                                                            className={popupMessage.type === 'success' ? styles['Admin-cood-detail-upload-success-message'] : styles['Admin-cood-detail-status-error']}
+                                                            style={{ textAlign: 'center', fontSize: '0.85rem', fontWeight: '500', margin: '8px 0 0 0' }}
+                                                        >
+                                                            {popupMessage.text}
+                                                        </p>
+                                                    )}
+                                                    <p className={styles['Admin-cood-detail-upload-hint']}>*JPG and WebP formats allowed.</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={`${styles['Admin-cood-detail-credentials-card']} ${styles['Admin-cood-detail-login-card']}`}>
+                            <h3 className={styles['Admin-cood-detail-card-title']}>Coordinator Login Credentials</h3>
+                            <div className={styles['Admin-cood-detail-card-content']}>
+                                <div className={styles['Admin-cood-detail-login-fields']}>
+                                    <label className={styles['Admin-cood-detail-field-label']}>
+                                        <span className={styles['Admin-cood-detail-label-heading']}>
+                                            Coordinator ID <RequiredStar />
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="coordinatorId"
+                                            placeholder="Coordinator ID"
+                                            className={`${styles['Admin-cood-detail-form-input']} ${errors.coordinatorId ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                            value={formData.coordinatorId}
+                                            onChange={handleInputChange}
+                                            disabled={isViewMode}
+                                        />
+                                    </label>
+                                    {!isViewMode && (
+                                        <>
+                                            <label className={styles['Admin-cood-detail-field-label']}>
+                                                Enter Password
+                                                <input
+                                                    type="password"
+                                                    name="password"
+                                                    placeholder="Enter Password"
+                                                    className={`${styles['Admin-cood-detail-form-input']} ${errors.password ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </label>
+                                            <div className={styles['Admin-cood-detail-password-hint']}>
+                                                Password should be: <span>{formatDobForPassword(formData.dob) || 'DDMMYYYY'}</span> (based on DOB)
+                                            </div>
+                                            <label className={styles['Admin-cood-detail-field-label']}>
+                                                Confirm Password
+                                                <input
+                                                    type="password"
+                                                    name="confirmPassword"
+                                                    placeholder="Confirm Password"
+                                                    className={`${styles['Admin-cood-detail-form-input']} ${errors.confirmPassword ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </label>
+                                        </>
+                                    )}
+                                    {!isViewMode && (
+                                        <div className={styles['Admin-cood-detail-login-buttons-desktop']}>
+                                            <button
+                                                type="button"
+                                                className={styles['Admin-cood-detail-discard-btn']}
+                                                onClick={handleDiscard}
+                                            >
+                                                Discard
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={styles['Admin-cood-detail-confirm-save-btn']}
+                                                onClick={handleConfirmSave}
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {!isViewMode && (
+                            <div className={styles['Admin-cood-detail-mobile-actions']}>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cood-detail-discard-btn']}
+                                    onClick={handleDiscard}
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cood-detail-confirm-save-btn']}
+                                    onClick={handleConfirmSave}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {isCropModalOpen && cropImageSrc && (
+                <PhotoCropModal
+                    isOpen={isCropModalOpen}
+                    imageSrc={cropImageSrc}
+                    fileName={cropImageName}
+                    onSave={handleCropSave}
+                    onDiscard={handleCropDiscard}
+                    onClose={handleCropDiscard}
+                />
+            )}
+
+            {isModalOpen && profilePhoto && (
+                <div className={styles['co-modal-overlay']} onClick={handleModalClose}>
+                    <div className={styles['co-modal-content']} onClick={(e) => e.stopPropagation()}>
+                        <span className={styles['co-modal-close']} onClick={handleModalClose}>&times;</span>
+                        <img src={profilePhoto} alt="Full Profile Preview" className={styles['co-modal-image']} />
+                    </div>
+                </div>
+            )}
+
+            {showSuccessModal && (
+                <div className={styles['success-modal-overlay']}>
+                    <div className={styles['success-modal-content']}>
+                        <div className={styles['success-modal-header']}>
+                            {isEditMode ? 'Updated!' : 'Added!'}
+                        </div>
+                        <div className={styles['success-modal-body']}>
+                            <div className={styles['success-modal-icon-wrapper']}>
+                                <img src={ProfileGraduationcap} alt="Success" className={styles['success-modal-icon']} />
+                            </div>
+                            <h2>{isEditMode ? 'Co-ordinator Updated ' : 'Co-ordinator Added '}</h2>
+                            <p>{isEditMode ? 'Co-ordinator details have been' : 'New Co-ordinator have been'}<br />Successfully {isEditMode ? 'Updated' : 'Added in the Portal'}</p>
+                            <button
+                                className={styles['success-modal-close-btn']}
+                                onClick={handleCloseSuccessModal}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <FileSizeErrorPopup
+                isOpen={isFileSizeErrorOpen}
+                onClose={closeFileSizeErrorPopup}
+                fileSizeKB={fileSizeErrorKB}
+            />
+        </>
+    );
+}
+    */
+const [branches, setBranches] = useState([]);
+
+    useAdminAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const urlSearchParams = useMemo(() => new URLSearchParams(location.search || ''), [location.search]);
@@ -137,160 +927,52 @@ function AdminCoDet() {
         degree: '',
         branch: ''
     });
-    
+
     const [errors, setErrors] = useState({});
     const [profilePhoto, setProfilePhoto] = useState(null);
     const [profilePhotoData, setProfilePhotoData] = useState(null);
     const [photoDetails, setPhotoDetails] = useState({ fileName: null, uploadDate: null });
-    const [isModalOpen, setIsModalOpen] = useState(false); 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [downloadPopupState, setDownloadPopupState] = useState('none');
     const [saveStatus, setSaveStatus] = useState(null);
     const [popupMessage, setPopupMessage] = useState(null);
     const [degrees, setDegrees] = useState([]);
-    const [branches, setBranches] = useState([]);
     const [selectedDegree, setSelectedDegree] = useState('');
     const [lockedBranchMeta, setLockedBranchMeta] = useState(null);
     const [lockedDegreeValue, setLockedDegreeValue] = useState('');
-
     const [isSaving, setIsSaving] = useState(false);
-
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-    const [showSuccessModal, setShowSuccessModal] = useState(false); // Success modal state
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState(null);
+    const [cropImageName, setCropImageName] = useState('');
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState(0);
+    const [showAllErrors, setShowAllErrors] = useState(false);
+    const [highlightedField, setHighlightedField] = useState(null);
+    const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+    const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+        return (
+            window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches ||
+            window.matchMedia("(hover: hover) and (pointer: fine)").matches
+        );
+    });
+
+    const fieldRefs = useRef({});
+    const highlightResetTimerRef = useRef(null);
+    const highlightClearTimerRef = useRef(null);
+    const previousErrorCountRef = useRef(0);
 
     const genderSelectRef = useRef(null);
     const degreeSelectRef = useRef(null);
     const branchSelectRef = useRef(null);
     const previewObjectUrlRef = useRef(null);
-
-    // ... (useEffect for layout remains the same) ...
-    useEffect(() => {
-        const handleResize = () => {
-            const isDesktop = window.innerWidth > 768;
-            setIsSidebarOpen(isDesktop);
-            if (isDesktop) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = isSidebarOpen ? 'hidden' : 'auto';
-            }
-        };
-        handleResize(); 
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            document.body.style.overflow = 'auto';
-        };
-    }, [isSidebarOpen]);
-
-    useEffect(() => {
-        if (window.innerWidth <= 768) {
-            document.body.style.overflow = isSidebarOpen ? 'hidden' : 'auto';
-        }
-    }, [isSidebarOpen]);
-
-    // NEW: Fetch coordinator data when in edit or view mode
-    useEffect(() => {
-        const coordinatorId = editIdParam || viewIdParam;
-        if ((isEditMode || isViewMode) && coordinatorId && degrees.length > 0 && branches.length > 0) {
-            const fetchCoordinatorData = async () => {
-                try {
-                    // Start loading
-                    setLoadingProgress(0);
-                    setIsInitialLoading(true);
-
-                    // Progress animation
-                    const progressInterval = setInterval(() => {
-                        setLoadingProgress(p => {
-                            const next = p + Math.random() * 15;
-                            return next >= 70 ? 70 : next;
-                        });
-                    }, 150);
-
-                    const response = await mongoDBService.getCoordinatorById(coordinatorId);
-                    const coordinator = response?.coordinator;
-                    
-                    clearInterval(progressInterval);
-                    setLoadingProgress(90);
-                    
-                    if (coordinator) {
-                        const dobValue = coordinator.dob ? new Date(coordinator.dob) : null;
-                        
-                        // Find matching degree and branch objects to get abbreviations for dropdowns
-                        const matchingDegree = degrees.find(d => 
-                            normalizeString(d?.degreeFullName) === normalizeString(coordinator.degree) ||
-                            normalizeString(d?.degreeAbbreviation) === normalizeString(coordinator.degree)
-                        );
-                        
-                        const matchingBranch = branches.find(b => 
-                            normalizeString(b?.branchFullName) === normalizeString(coordinator.branch) ||
-                            normalizeString(b?.branchAbbreviation) === normalizeString(coordinator.branch) ||
-                            normalizeString(b?.branchAbbreviation) === normalizeString(coordinator.department)
-                        );
-                        
-                        // Set degree abbreviation for dropdown, fallback to stored value
-                        const degreeValue = matchingDegree 
-                            ? degreeOptionValue(matchingDegree)
-                            : (coordinator.degree || '');
-                            
-                        // Set branch abbreviation for dropdown, fallback to department or stored value
-                        const branchValue = matchingBranch
-                            ? branchSelectValue(matchingBranch)
-                            : (coordinator.department || coordinator.branch || '');
-                        
-                        setSelectedDegree(degreeValue);
-                        
-                        setFormData({
-                            firstName: coordinator.firstName || '',
-                            lastName: coordinator.lastName || '',
-                            dob: dobValue,
-                            gender: coordinator.gender || '',
-                            emailId: coordinator.email || '',
-                            domainMailId: coordinator.domainEmail || '',
-                            phoneNumber: coordinator.phone || '',
-                            coordinatorId: coordinator.coordinatorId || '',
-                            cabin: coordinator.cabin || '',
-                            password: '',
-                            confirmPassword: '',
-                            degree: degreeValue,
-                            branch: branchValue
-                        });
-                        if (coordinator.profilePhoto) {
-                            const photoData = coordinator.profilePhoto.startsWith('data:') 
-                                ? coordinator.profilePhoto 
-                                : `data:image/jpeg;base64,${coordinator.profilePhoto}`;
-                            setProfilePhoto(photoData);
-                            setProfilePhotoData(coordinator.profilePhoto.startsWith('data:') 
-                                ? coordinator.profilePhoto.split(',')[1] 
-                                : coordinator.profilePhoto);
-                            setPhotoDetails({
-                                fileName: coordinator.profilePhotoName || 'Profile Photo',
-                                uploadDate: coordinator.updatedAt 
-                                    ? new Date(coordinator.updatedAt).toLocaleDateString('en-GB') 
-                                    : 'N/A'
-                            });
-                        }
-                    }
-                    
-                    // Complete loading
-                    setLoadingProgress(100);
-                    setTimeout(() => {
-                        setIsInitialLoading(false);
-                    }, 300);
-                } catch (error) {
-                    console.error('Failed to fetch coordinator data:', error);
-                    setIsInitialLoading(false);
-                    alert('Failed to load coordinator data. Please try again.');
-                }
-            };
-            fetchCoordinatorData();
-        }
-    }, [isEditMode, isViewMode, editIdParam, viewIdParam, degrees, branches]);
-
-    const handleBack = () => {
-        navigate(-1); 
-    };
+    const cropObjectUrlRef = useRef(null);
 
     const handleLogout = () => {
         localStorage.removeItem('authToken');
@@ -300,20 +982,31 @@ function AdminCoDet() {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        let { name, value } = e.target;
+        if (name === 'phoneNumber') {
+            value = value.replace(/\D/g, '');
+            value = value.replace(/^0+/, '');
+            if (value.length > 0 && !/^[6789]/.test(value)) {
+                value = '';
+            }
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+        }
+        setFormData((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
+            setErrors((prev) => ({ ...prev, [name]: null }));
         }
     };
-    
+
     const handleDobChange = (date) => {
-        setFormData(prev => ({ ...prev, dob: date }));
+        const nextDate = date instanceof Date ? date : parseCalendarDate(date);
+        setFormData((prev) => ({ ...prev, dob: nextDate }));
         if (errors.dob) {
-            setErrors(prev => ({ ...prev, dob: null }));
+            setErrors((prev) => ({ ...prev, dob: null }));
         }
     };
-    
+
     const handlePhotoUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
@@ -328,37 +1021,110 @@ function AdminCoDet() {
             e.target.value = '';
             return;
         }
+
+        if (cropObjectUrlRef.current) {
+            URL.revokeObjectURL(cropObjectUrlRef.current);
+            cropObjectUrlRef.current = null;
+        }
+
+        const cropUrl = URL.createObjectURL(file);
+        cropObjectUrlRef.current = cropUrl;
+        setCropImageSrc(cropUrl);
+        setCropImageName(file.name);
+        setIsCropModalOpen(true);
+        setPopupMessage(null);
+        e.target.value = '';
+    };
+
+    const handleCropSave = (croppedBlob, outputFileName) => {
+        if (!croppedBlob) return;
+
         if (previewObjectUrlRef.current) {
             URL.revokeObjectURL(previewObjectUrlRef.current);
             previewObjectUrlRef.current = null;
         }
 
-        const objectUrl = URL.createObjectURL(file);
-        previewObjectUrlRef.current = objectUrl;
-        setProfilePhoto(objectUrl);
+        const croppedFile = new File([croppedBlob], outputFileName, { type: 'image/jpeg' });
+        const previewUrl = URL.createObjectURL(croppedFile);
+        previewObjectUrlRef.current = previewUrl;
 
-        // Store the file object for GridFS upload during form submit
-        setProfilePhotoData(file); // Store raw File object instead of Base64
-        setPhotoDetails({
-            fileName: file.name,
-            uploadDate: new Date().toLocaleDateString('en-GB'),
-        });
+        setProfilePhoto(previewUrl);
+        setProfilePhotoData(croppedFile);
+        setPhotoDetails({ fileName: croppedFile.name, uploadDate: new Date().toISOString() });
+        setPopupMessage({ type: 'success', text: 'Image uploaded successfully' });
+        setIsCropModalOpen(false);
 
-        setPopupMessage({ type: 'success', text: 'Photo ready for upload' });
-        if (errors.profilePhoto) {
-            setErrors(prev => ({ ...prev, profilePhoto: null }));
+        if (cropObjectUrlRef.current) {
+            URL.revokeObjectURL(cropObjectUrlRef.current);
+            cropObjectUrlRef.current = null;
         }
+
+        setCropImageSrc(null);
+        setCropImageName('');
+
+        const fileInput = document.getElementById('file-upload');
+        if (fileInput) fileInput.value = '';
     };
 
-    const closeFileSizeErrorPopup = () => {
-        setIsFileSizeErrorOpen(false);
+    const handleCropDiscard = () => {
+        setIsCropModalOpen(false);
+
+        if (cropObjectUrlRef.current) {
+            URL.revokeObjectURL(cropObjectUrlRef.current);
+            cropObjectUrlRef.current = null;
+        }
+
+        setCropImageSrc(null);
+        setCropImageName('');
+        setPopupMessage(null);
+
+        const fileInput = document.getElementById('file-upload');
+        if (fileInput) fileInput.value = '';
     };
 
     const handleImageClick = () => { if (profilePhoto) setIsModalOpen(true); };
-    const handleModalClose = () => setIsModalOpen(false);
+    const handleModalClose = () => {
+        if (downloadPopupState !== 'progress') {
+            setIsModalOpen(false);
+        }
+    };
+    const handleSuccessClose = () => {
+        setDownloadPopupState('none');
+        setIsModalOpen(false);
+    };
+    const handleDownload = async () => {
+        if (!profilePhoto || downloadPopupState === 'progress') return;
+
+        try {
+            setDownloadPopupState('progress');
+            const response = await fetch(profilePhoto);
+            if (!response.ok) throw new Error('Failed to download image');
+
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `coordinator-profile-${Date.now()}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(blobUrl);
+
+            setDownloadPopupState('success');
+        } catch (error) {
+            console.error('Download failed:', error);
+            setDownloadPopupState('error');
+        }
+    };
+    const shouldShowPreviewPopup = downloadPopupState === 'none' || downloadPopupState === 'progress';
+    const closeFileSizeErrorPopup = () => setIsFileSizeErrorOpen(false);
 
     const handleRemovePhoto = (e) => {
         e.preventDefault();
+        if (cropObjectUrlRef.current) {
+            URL.revokeObjectURL(cropObjectUrlRef.current);
+            cropObjectUrlRef.current = null;
+        }
         if (previewObjectUrlRef.current) {
             URL.revokeObjectURL(previewObjectUrlRef.current);
             previewObjectUrlRef.current = null;
@@ -367,6 +1133,9 @@ function AdminCoDet() {
         setProfilePhotoData(null);
         setPhotoDetails({ fileName: null, uploadDate: null });
         setIsModalOpen(false);
+        setIsCropModalOpen(false);
+        setCropImageSrc(null);
+        setCropImageName('');
         const fileInput = document.getElementById('file-upload');
 
         if (fileInput) fileInput.value = '';
@@ -383,26 +1152,19 @@ function AdminCoDet() {
         setProfilePhoto(null);
         setProfilePhotoData(null);
         setPhotoDetails({ fileName: null, uploadDate: null });
-        setIsModalOpen(false); 
+        setIsModalOpen(false);
         setSaveStatus('discarded');
 
         setPopupMessage(null);
         setErrors({});
-        setSelectedDegree(lockedDegreeValue || '');
-        
-        // Navigate back after clearing
         navigate(-1);
     };
 
     const validateForm = () => {
         const newErrors = {};
-        const requiredFields = isEditMode 
-            ? ['firstName', 'lastName', 'dob', 'gender', 'emailId', 
-               'domainMailId', 'phoneNumber', 'coordinatorId',
-               'degree', 'branch']
-            : ['firstName', 'lastName', 'dob', 'gender', 'emailId', 
-               'domainMailId', 'phoneNumber', 'coordinatorId',
-               'degree', 'branch', 'password', 'confirmPassword'];
+        const requiredFields = ['firstName', 'lastName', 'dob', 'gender', 'emailId',
+            'domainMailId', 'phoneNumber', 'coordinatorId',
+            'degree', 'branch'];
 
         requiredFields.forEach(field => {
             if (!formData[field]) {
@@ -410,14 +1172,49 @@ function AdminCoDet() {
             }
         });
 
+        if (formData.phoneNumber && !/^[6789]\d{9}$/.test(formData.phoneNumber)) {
+            newErrors.phoneNumber = 'Phone number must be 10 digits starting with 6, 7, 8, or 9';
+        }
+
+        const passwordHint = formatDobForPassword(formData.dob);
+        const shouldValidatePassword = !isViewMode && (!isEditMode || formData.password || formData.confirmPassword);
+
+        if (shouldValidatePassword) {
+            if (!formData.password) {
+                newErrors.password = 'This field is required';
+            }
+
+            if (!formData.confirmPassword) {
+                newErrors.confirmPassword = 'This field is required';
+            }
+
+            if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+                newErrors.confirmPassword = 'Passwords do not match';
+            }
+
+            if (passwordHint && formData.password && formData.password !== passwordHint) {
+                newErrors.password = `Password should be: ${passwordHint} (based on DOB)`;
+            }
+
+            if (passwordHint && formData.confirmPassword && formData.confirmPassword !== passwordHint) {
+                newErrors.confirmPassword = `Password should be: ${passwordHint} (based on DOB)`;
+            }
+        }
+
         if (!isEditMode && formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
-        
+
         setPopupMessage(null);
 
+        const nextErrorCount = Object.keys(newErrors).length;
+        if (nextErrorCount !== previousErrorCountRef.current) {
+            setShowAllErrors(false);
+        }
+        previousErrorCountRef.current = nextErrorCount;
+
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return nextErrorCount === 0;
     };
 
     // UPDATED: Save function with backend API
@@ -427,17 +1224,17 @@ function AdminCoDet() {
             setSaveStatus('error');
             return;
         }
-        
+
         setIsSaving(true);
         setSaveStatus('saving');
 
         // Find the selected degree and branch objects to get full names
-        const selectedDegreeObj = degrees.find(d => 
+        const selectedDegreeObj = degrees.find(d =>
             normalizeString(d?.degreeAbbreviation) === normalizeString(formData.degree) ||
             normalizeString(d?.degreeFullName) === normalizeString(formData.degree)
         );
-        
-        const selectedBranchObj = branches.find(b => 
+
+        const selectedBranchObj = branches.find(b =>
             normalizeString(b?.branchAbbreviation) === normalizeString(formData.branch) ||
             normalizeString(b?.branchFullName) === normalizeString(formData.branch) ||
             normalizeString(b?.branchCode) === normalizeString(formData.branch)
@@ -469,8 +1266,8 @@ function AdminCoDet() {
             payload.profilePhotoData = result.url; // GridFS URL
         }
 
-        // Only include password fields when creating new coordinator
-        if (!isEditMode) {
+        // Include password fields when creating or when editing credentials
+        if (!isViewMode && formData.password && formData.confirmPassword) {
             payload.password = formData.password;
             payload.confirmPassword = formData.confirmPassword;
         }
@@ -480,6 +1277,13 @@ function AdminCoDet() {
             if (isEditMode) {
                 response = await mongoDBService.updateCoordinator(editIdParam, payload);
                 console.log('Coordinator updated:', response);
+
+                if (formData.password && formData.confirmPassword) {
+                    await mongoDBService.updateCoordinatorCredentials(editIdParam, {
+                        username: formData.coordinatorId,
+                        password: formData.password
+                    });
+                }
             } else {
                 response = await mongoDBService.createCoordinator(payload);
                 console.log('Coordinator created:', response);
@@ -520,6 +1324,48 @@ function AdminCoDet() {
         setIsSidebarOpen(prev => !prev);
     };
 
+    const handleErrorTooltipMove = useCallback((event) => {
+        if (!supportsPointerTooltip) return;
+        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    }, [supportsPointerTooltip]);
+
+    const handleErrorTooltipLeave = useCallback(() => {
+        if (!supportsPointerTooltip) return;
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    }, [supportsPointerTooltip]);
+
+    useEffect(() => {
+        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
+
+        const hybridQuery = window.matchMedia("(any-hover: hover) and (any-pointer: fine)");
+        const primaryQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+        const updatePointerSupport = () => {
+            const isSupported = hybridQuery.matches || primaryQuery.matches;
+            setSupportsPointerTooltip(isSupported);
+            if (!isSupported) {
+                setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+            }
+        };
+
+        updatePointerSupport();
+
+        if (typeof hybridQuery.addEventListener === "function") {
+            hybridQuery.addEventListener("change", updatePointerSupport);
+            primaryQuery.addEventListener("change", updatePointerSupport);
+            return () => {
+                hybridQuery.removeEventListener("change", updatePointerSupport);
+                primaryQuery.removeEventListener("change", updatePointerSupport);
+            };
+        }
+
+        hybridQuery.addListener(updatePointerSupport);
+        primaryQuery.addListener(updatePointerSupport);
+        return () => {
+            hybridQuery.removeListener(updatePointerSupport);
+            primaryQuery.removeListener(updatePointerSupport);
+        };
+    }, []);
+
     const filteredBranches = useMemo(() => {
         if (lockedBranchMeta) {
             return [lockedBranchMeta];
@@ -549,10 +1395,180 @@ function AdminCoDet() {
         return `${baseClass} ${styles['Admin-cood-detail-photo-clickable']} ${styles['Admin-cood-detail-photo-active']}`;
     }, [profilePhoto]);
 
+    const missingRequiredFields = useMemo(() => {
+        const list = [];
+
+        // 1. Check required fields
+        REQUIRED_COORDINATOR_FIELDS.forEach(({ field, label }) => {
+            // Password fields are only required if we should validate password
+            const shouldValidatePassword = !isViewMode && (!isEditMode || formData.password || formData.confirmPassword);
+            if ((field === 'password' || field === 'confirmPassword') && !shouldValidatePassword) {
+                return;
+            }
+            if (!formData[field]) {
+                list.push({ field, label });
+            }
+        });
+
+        // Validate phone number format
+        if (!isViewMode && formData.phoneNumber && !/^[6789]\d{9}$/.test(formData.phoneNumber)) {
+            list.push({
+                field: 'phoneNumber',
+                label: 'Phone Number',
+                customMessage: 'Phone number must be 10 digits starting with 6, 7, 8, or 9'
+            });
+        }
+
+        // 2. Validate password format (must match DOB in DDMMYYYY format) if DOB and password are both present
+        const shouldValidatePassword = !isViewMode && (!isEditMode || formData.password || formData.confirmPassword);
+        if (shouldValidatePassword) {
+            const passwordHint = formatDobForPassword(formData.dob);
+            if (passwordHint) {
+                if (formData.password && formData.password !== passwordHint) {
+                    list.push({
+                        field: 'password',
+                        label: 'Password',
+                        customMessage: `password must be your date of birth in DDMMYYYY format (${passwordHint})`
+                    });
+                }
+                if (formData.confirmPassword && formData.confirmPassword !== passwordHint) {
+                    list.push({
+                        field: 'confirmPassword',
+                        label: 'Confirm Password',
+                        customMessage: `confirm password must be your date of birth in DDMMYYYY format (${passwordHint})`
+                    });
+                }
+            }
+        }
+
+        // 3. Validate passwords matching
+        if (shouldValidatePassword && formData.password && formData.confirmPassword) {
+            if (formData.password !== formData.confirmPassword) {
+                list.push({
+                    field: 'confirmPassword',
+                    label: 'Confirm Password',
+                    customMessage: 'Enter Password and Confirm Password must match'
+                });
+            }
+        }
+
+        return list;
+    }, [formData, isEditMode, isViewMode]);
+
+    const canSaveCoordinator = useMemo(() => {
+        return missingRequiredFields.length === 0 && !isSaving && !isViewMode;
+    }, [missingRequiredFields.length, isSaving, isViewMode]);
+
+    const registerFieldRef = useCallback((field) => (node) => {
+        console.log('[DEBUG] registerFieldRef called for:', field, 'node:', node);
+        fieldRefs.current[field] = node;
+        console.log('[DEBUG] fieldRefs.current after registration:', fieldRefs.current);
+    }, []);
+
+    const clearFieldHighlight = useCallback(() => {
+        if (highlightResetTimerRef.current) {
+            clearTimeout(highlightResetTimerRef.current);
+            highlightResetTimerRef.current = null;
+        }
+
+        if (highlightClearTimerRef.current) {
+            clearTimeout(highlightClearTimerRef.current);
+            highlightClearTimerRef.current = null;
+        }
+
+        setHighlightedField(null);
+    }, []);
+
+    const scrollToFieldAndBlink = useCallback((field) => {
+        console.log('[DEBUG] scrollToFieldAndBlink called with field:', field);
+        console.log('[DEBUG] fieldRefs.current:', fieldRefs.current);
+
+        const target = fieldRefs.current[field];
+        console.log('[DEBUG] target for field:', target);
+
+        if (!target) {
+            console.log('[DEBUG] REF NOT FOUND for field:', field);
+            return false;
+        }
+
+        if (highlightResetTimerRef.current) {
+            clearTimeout(highlightResetTimerRef.current);
+            highlightResetTimerRef.current = null;
+        }
+
+        if (highlightClearTimerRef.current) {
+            clearTimeout(highlightClearTimerRef.current);
+            highlightClearTimerRef.current = null;
+        }
+
+        console.log('[DEBUG] scrolling to field:', field);
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+
+        if (typeof target.focus === 'function') {
+            try {
+                target.focus({ preventScroll: true });
+            } catch {
+                target.focus();
+            }
+        }
+
+        if (target.tagName === 'SELECT') {
+            target.dispatchEvent(new MouseEvent('mousedown', {
+                view: window,
+                bubbles: true,
+                cancelable: true
+            }));
+        } else if (target.dataset?.adCalendarField === 'true' && typeof target.click === 'function') {
+            target.click();
+        }
+
+        clearFieldHighlight();
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                setHighlightedField(field);
+            });
+        });
+
+        highlightClearTimerRef.current = window.setTimeout(() => {
+            setHighlightedField((currentField) => (currentField === field ? null : currentField));
+        }, 3000);
+
+        return true;
+    }, [clearFieldHighlight]);
+
+    const focusCoordinatorField = useCallback((field) => {
+        console.log('[DEBUG] focusCoordinatorField called with:', field);
+        if (!scrollToFieldAndBlink(field)) {
+            console.log('[DEBUG] scrollToFieldAndBlink returned false for:', field);
+            return;
+        }
+        console.log('[DEBUG] scrollToFieldAndBlink succeeded for:', field);
+    }, [scrollToFieldAndBlink]);
+
+    const getCoordinatorFieldClassName = useCallback((field, extraClassName = '') => {
+        return [
+            styles['Admin-cood-detail-form-input'],
+            highlightedField === field ? styles['Admin-cood-detail-field-highlight'] : '',
+            extraClassName
+        ].filter(Boolean).join(' ');
+    }, [highlightedField]);
+
     useEffect(() => () => {
+        if (highlightResetTimerRef.current) {
+            clearTimeout(highlightResetTimerRef.current);
+            highlightResetTimerRef.current = null;
+        }
+        if (highlightClearTimerRef.current) {
+            clearTimeout(highlightClearTimerRef.current);
+            highlightClearTimerRef.current = null;
+        }
         if (previewObjectUrlRef.current) {
             URL.revokeObjectURL(previewObjectUrlRef.current);
             previewObjectUrlRef.current = null;
+        }
+        if (cropObjectUrlRef.current) {
+            URL.revokeObjectURL(cropObjectUrlRef.current);
+            cropObjectUrlRef.current = null;
         }
     }, []);
 
@@ -648,6 +1664,104 @@ function AdminCoDet() {
         };
     }, [preselectedBranchCode]);
 
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadCoordinatorDetails = async () => {
+            const idToFetch = editIdParam || viewIdParam;
+            if (!idToFetch) return;
+
+            setIsInitialLoading(true);
+            setLoadingProgress(20);
+            try {
+                const response = await mongoDBService.getCoordinatorById(idToFetch);
+                if (!isMounted) return;
+                
+                setLoadingProgress(60);
+                const coordinator = response?.coordinator;
+                if (coordinator) {
+                    const dobValue = coordinator.dob ? new Date(coordinator.dob) : null;
+                    
+                    // Find matching branch in branch list using coordinator's department code
+                    const departmentCode = normalizeString(coordinator.department);
+                    const matchingBranch = branches.find(b => 
+                        normalizeForMatch(b?.branchAbbreviation) === normalizeForMatch(departmentCode) ||
+                        normalizeForMatch(b?.branchCode) === normalizeForMatch(departmentCode) ||
+                        normalizeForMatch(b?.id) === normalizeForMatch(departmentCode) ||
+                        normalizeForMatch(b?._id) === normalizeForMatch(departmentCode)
+                    );
+
+                    let degreeValue = '';
+                    let branchValue = '';
+
+                    if (matchingBranch) {
+                        branchValue = branchSelectValue(matchingBranch);
+                        // Find matching degree for this branch
+                        const matchableBranchDegrees = [
+                            normalizeForMatch(matchingBranch.degreeAbbreviation),
+                            normalizeForMatch(matchingBranch.degreeFullName)
+                        ].filter(Boolean);
+
+                        const matchingDegree = degrees.find((degree) => {
+                            const candidateValues = [
+                                normalizeForMatch(degree?.degreeAbbreviation),
+                                normalizeForMatch(degree?.degreeFullName),
+                                normalizeForMatch(degree?.id),
+                                normalizeForMatch(degree?._id)
+                            ].filter(Boolean);
+                            return candidateValues.some((candidate) => matchableBranchDegrees.includes(candidate));
+                        });
+
+                        degreeValue = matchingDegree ? degreeOptionValue(matchingDegree) : '';
+                    } else {
+                        // Fallback to whatever is stored on the coordinator document
+                        degreeValue = coordinator.degree || '';
+                        branchValue = coordinator.branch || '';
+                    }
+
+                    setSelectedDegree(degreeValue);
+
+                    const calculatedPassword = dobValue ? formatDobForPassword(dobValue) : '';
+                    setFormData({
+                        firstName: coordinator.firstName || '',
+                        lastName: coordinator.lastName || '',
+                        dob: dobValue,
+                        gender: coordinator.gender || '',
+                        emailId: coordinator.email || coordinator.emailId || '',
+                        domainMailId: coordinator.domainEmail || coordinator.domainMailId || '',
+                        phoneNumber: coordinator.phone || coordinator.phoneNumber || '',
+                        coordinatorId: coordinator.coordinatorId || '',
+                        cabin: coordinator.cabin || '',
+                        password: calculatedPassword,
+                        confirmPassword: calculatedPassword,
+                        degree: degreeValue,
+                        branch: branchValue
+                    });
+
+                    if (coordinator.profilePhoto) {
+                        const resolvedPhoto = normalizeProfilePhotoUrl(coordinator.profilePhoto, coordinator.profilePhotoName, API_BASE_URL);
+                        setProfilePhoto(resolvedPhoto);
+                        setPhotoDetails({
+                            fileName: coordinator.profilePhotoName || 'profile-photo.jpg',
+                            uploadDate: coordinator.updatedAt ? new Date(coordinator.updatedAt).toLocaleDateString('en-GB') : 'N/A'
+                        });
+                    }
+                }
+                setLoadingProgress(100);
+            } catch (error) {
+                console.error('Failed to load coordinator details:', error);
+            } finally {
+                if (isMounted) {
+                    setIsInitialLoading(false);
+                }
+            }
+        };
+
+        if (degrees.length > 0 && branches.length > 0) {
+            loadCoordinatorDetails();
+        }
+    }, [editIdParam, viewIdParam, degrees, branches]);
+
     return (
         <>
             <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
@@ -656,238 +1770,249 @@ function AdminCoDet() {
 
                 <div className={`${styles['Admin-cood-detail-main-content']} ${isSidebarOpen ? styles['sidebar-open'] : ''}`}>
                     {isInitialLoading && (
-                        <PreviewProgressAlert 
-                            isOpen={true} 
-                            progress={loadingProgress} 
-                            title="Loading..." 
-                            messages={{ 
-                                initial: 'Fetching coordinator details...', 
-                                mid: 'Preparing form...', 
-                                final: 'Opening editor...' 
+                        <PreviewProgressAlert
+                            isOpen={true}
+                            progress={loadingProgress}
+                            title="Loading..."
+                            messages={{
+                                initial: 'Fetching coordinator details...',
+                                mid: 'Preparing form...',
+                                final: 'Opening editor...'
                             }}
                             color="#4EA24E"
                             progressColor="#4EA24E"
                         />
                     )}
                     <div className={styles['Admin-cood-detail-main-card']}>
-                        <div className={styles['Admin-cood-detail-title-bar']}>
-                            <h2 className={styles['Admin-cood-detail-main-title']}>
-                                {isViewMode ? 'View Coordinator Details' : isEditMode ? 'Edit Coordinator Details' : 'Coordinator Details'}
-                            </h2>
-                        </div>
-
-                        <div className={styles['Admin-cood-detail-top-row']}>
-                            <div className={styles['Admin-cood-detail-card-content']}>
-                                <section className={styles['Admin-cood-detail-section']}>
-                                        <div className={styles['Admin-cood-detail-input-grid']}>
-                                            <input
-                                                type="text"
-                                                name="firstName"
-                                                placeholder="First Name"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.firstName ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.firstName}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <input
-                                                type="text"
-                                                name="lastName"
-                                                placeholder="Last Name"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.lastName ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.lastName}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <div className={styles['Admin-cood-detail-datepicker-wrapper']}>
-                                                <DatePicker
-                                                    selected={formData.dob}
-                                                    onChange={handleDobChange}
-                                                    dateFormat="dd/MM/yyyy"
-                                                    placeholderText="DOB"
-                                                    className={`${styles['Admin-cood-detail-datepicker-input']} ${errors.dob ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                    showPopperArrow={false}
-                                                    maxDate={new Date()}
-                                                    disabled={isViewMode}
-                                                />
-                                            </div>
-
-                                            <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                <select
-                                                    ref={genderSelectRef}
-                                                    name="gender"
-                                                    className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                    value={formData.gender}
-                                                    onChange={handleInputChange}
-                                                    disabled={isViewMode}
-                                                >
-                                                    <option value="" disabled>Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                                <div onClick={() => handleDropdownIconClick(genderSelectRef)} style={{ cursor: 'pointer' }}>
-                                                    <DropdownIcon />
-                                                </div>
-                                            </div>
-
-                                            <input
-                                                type="email"
-                                                name="emailId"
-                                                placeholder="Email id"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.emailId ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.emailId}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <input
-                                                type="email"
-                                                name="domainMailId"
-                                                placeholder="Domain Mail id"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.domainMailId ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.domainMailId}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <input
-                                                type="tel"
-                                                name="phoneNumber"
-                                                placeholder="Phone number"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.phoneNumber ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.phoneNumber}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <input
-                                                type="text"
-                                                name="cabin"
-                                                placeholder="Cabin"
-                                                className={styles['Admin-cood-detail-form-input']}
-                                                value={formData.cabin}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-
-                                            <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                <select
-                                                    ref={degreeSelectRef}
-                                                    name="degree"
-                                                    className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                    value={selectedDegree}
-                                                    onChange={(event) => {
-                                                        const degreeValue = event.target.value;
-                                                        setSelectedDegree(degreeValue);
-                                                        handleInputChange({ target: { name: 'degree', value: degreeValue } });
-                                                        if (!lockedBranchMeta) {
-                                                            handleInputChange({ target: { name: 'branch', value: '' } });
-                                                        }
-                                                    }}
-                                                    disabled={Boolean(lockedBranchMeta) || isViewMode}
-                                                >
-                                                    <option value="" disabled>Select Degree</option>
-                                                    {degrees.map((degree) => {
-                                                        const value = degreeOptionValue(degree);
-                                                        const label = degree?.degreeFullName && degree?.degreeAbbreviation
-                                                            ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                                                            : degree?.degreeFullName || degree?.degreeAbbreviation || value;
-                                                        return (
-                                                            <option key={degree.id || degree._id || value} value={value}>
-                                                                {label}
-                                                            </option>
-                                                        );
-                                                    })}
-                                                </select>
-                                                <div onClick={() => handleDropdownIconClick(degreeSelectRef)} style={{ cursor: 'pointer' }}>
-                                                    <DropdownIcon />
-                                                </div>
-                                            </div>
-
-                                            <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                <select
-                                                    ref={branchSelectRef}
-                                                    name="branch"
-                                                    className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                    value={formData.branch}
-                                                    onChange={handleInputChange}
-                                                    disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
-                                                >
-                                                    <option value="" disabled>
-                                                        {filteredBranches.length ? 'Select Branch' : 'No branches available'}
-                                                    </option>
-                                                    {filteredBranches.map((branch) => {
-                                                        const label = branch?.branchFullName && branch?.branchAbbreviation
-                                                            ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                            : branch?.branchFullName || branch?.branchAbbreviation;
-                                                        const value = branchSelectValue(branch);
-                                                        return (
-                                                            <option key={branch.id || branch._id || value} value={value}>
-                                                                {label}
-                                                            </option>
-                                                        );
-                                                    })}
-                                                </select>
-                                                <div onClick={() => handleDropdownIconClick(branchSelectRef)} style={{ cursor: 'pointer' }}>
-                                                    <DropdownIcon />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <h3 className={styles['Admin-cood-detail-section-subtitle']}>Coordinator Login Credentials</h3>
-                                        <div className={styles['Admin-cood-detail-login-fields']}>
-                                            <input
-                                                type="text"
-                                                name="coordinatorId"
-                                                placeholder="Coordinator ID"
-                                                className={`${styles['Admin-cood-detail-form-input']} ${errors.coordinatorId ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                value={formData.coordinatorId}
-                                                onChange={handleInputChange}
-                                                disabled={isViewMode}
-                                            />
-                                            {!isEditMode && !isViewMode && (
-                                                <>
+                        <div className={styles['Admin-cood-detail-credentials-card']}>
+                            <h3 className={styles['Admin-cood-detail-card-title']}>Coordinator Details</h3>
+                            <div className={styles['Admin-cood-detail-details-grid']}>
+                                <div className={styles['Admin-cood-detail-main-column']}>
+                                    <div className={styles['Admin-cood-detail-card-content']}>
+                                        <section className={styles['Admin-cood-detail-section']}>
+                                            <div className={styles['Admin-cood-detail-input-grid']}>
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        First Name <RequiredStar />
+                                                    </span>
                                                     <input
-                                                        type="password"
-                                                        name="password"
-                                                        placeholder="Enter Password"
-                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.password ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                        value={formData.password}
+                                                        ref={registerFieldRef('firstName')}
+                                                        type="text"
+                                                        name="firstName"
+                                                        placeholder="First Name"
+                                                        className={getCoordinatorFieldClassName('firstName', errors.firstName ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.firstName}
                                                         onChange={handleInputChange}
+                                                        disabled={isViewMode}
                                                     />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Last Name <RequiredStar />
+                                                    </span>
                                                     <input
-                                                        type="password"
-                                                        name="confirmPassword"
-                                                        placeholder="Confirm Password"
-                                                        className={`${styles['Admin-cood-detail-form-input']} ${errors.confirmPassword ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                        value={formData.confirmPassword}
+                                                        ref={registerFieldRef('lastName')}
+                                                        type="text"
+                                                        name="lastName"
+                                                        placeholder="Last Name"
+                                                        className={getCoordinatorFieldClassName('lastName', errors.lastName ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.lastName}
                                                         onChange={handleInputChange}
+                                                        disabled={isViewMode}
                                                     />
-                                                </>
-                                            )}
-                                            {!isViewMode && (
-                                                <div className={styles['Admin-cood-detail-login-buttons-desktop']}>
-                                                    <button
-                                                        type="button"
-                                                        className={styles['Admin-cood-detail-discard-btn']}
-                                                        onClick={handleDiscard}
-                                                    >
-                                                        Discard
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={styles['Admin-cood-detail-confirm-save-btn']}
-                                                        onClick={handleConfirmSave}
-                                                        disabled={isSaving}
-                                                    >
-                                                        {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </section>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        DOB <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-calendar-wrapper']}>
+                                                        <Ad_Calendar
+                                                            ref={registerFieldRef('dob')}
+                                                            triggerClassName={highlightedField === 'dob' ? styles['Admin-cood-detail-field-highlight'] : ''}
+                                                            triggerHighlighted={highlightedField === 'dob'}
+                                                            value={formatDobForCalendar(formData.dob)}
+                                                            onChange={handleDobChange}
+                                                            maxDate={new Date()}
+                                                            disabled={isViewMode}
+                                                        />
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Gender <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={(node) => {
+                                                                genderSelectRef.current = node;
+                                                                fieldRefs.current.gender = node;
+                                                            }}
+                                                            name="gender"
+                                                            className={getCoordinatorFieldClassName('gender', `${styles['Admin-cood-detail-form-select']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                            value={formData.gender}
+                                                            onChange={handleInputChange}
+                                                            disabled={isViewMode}
+                                                        >
+                                                            <option value="" disabled>Select Gender</option>
+                                                            <option value="Male">Male</option>
+                                                            <option value="Female">Female</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(genderSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Email ID <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        ref={registerFieldRef('emailId')}
+                                                        type="email"
+                                                        name="emailId"
+                                                        placeholder="Email id"
+                                                        className={getCoordinatorFieldClassName('emailId', errors.emailId ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.emailId}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Domain Mail ID <RequiredStar />
+                                                    </span>
+                                                    <input
+                                                        ref={registerFieldRef('domainMailId')}
+                                                        type="email"
+                                                        name="domainMailId"
+                                                        placeholder="Domain Mail id"
+                                                        className={getCoordinatorFieldClassName('domainMailId', errors.domainMailId ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.domainMailId}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Phone Number <RequiredStar />
+                                                    </span>
+                                                    <div className={`${styles['mobileInputWrapper']} ${errors.phoneNumber ? styles['Admin-cood-detail-input-error'] : ''} ${highlightedField === 'phoneNumber' ? styles['Admin-cood-detail-field-highlight'] : ''}`}>
+                                                        <div className={styles['countryCode']}>+91</div>
+                                                        <input
+                                                            ref={registerFieldRef('phoneNumber')}
+                                                            type="tel"
+                                                            name="phoneNumber"
+                                                            placeholder="Phone number"
+                                                            className={styles['mobileNumberInput']}
+                                                            value={formData.phoneNumber}
+                                                            onChange={handleInputChange}
+                                                            disabled={isViewMode}
+                                                            maxLength={10}
+                                                        />
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    Cabin
+                                                    <input
+                                                        type="text"
+                                                        name="cabin"
+                                                        placeholder="Cabin"
+                                                        className={styles['Admin-cood-detail-form-input']}
+                                                        value={formData.cabin}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Degree <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={(node) => {
+                                                                degreeSelectRef.current = node;
+                                                                fieldRefs.current.degree = node;
+                                                            }}
+                                                            name="degree"
+                                                            className={getCoordinatorFieldClassName('degree', `${styles['Admin-cood-detail-form-select']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                            value={selectedDegree}
+                                                            onChange={(event) => {
+                                                                const degreeValue = event.target.value;
+                                                                setSelectedDegree(degreeValue);
+                                                                handleInputChange({ target: { name: 'degree', value: degreeValue } });
+                                                                if (!lockedBranchMeta) {
+                                                                    handleInputChange({ target: { name: 'branch', value: '' } });
+                                                                }
+                                                            }}
+                                                            disabled={Boolean(lockedBranchMeta) || isViewMode}
+                                                        >
+                                                            <option value="" disabled>Select Degree</option>
+                                                            {degrees.map((degree) => {
+                                                                const value = degreeOptionValue(degree);
+                                                                const label = degree?.degreeFullName && degree?.degreeAbbreviation
+                                                                    ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                                    : degree?.degreeFullName || degree?.degreeAbbreviation || value;
+                                                                return (
+                                                                    <option key={degree.id || degree._id || value} value={value}>
+                                                                        {label}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(degreeSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+
+                                                <label className={styles['Admin-cood-detail-field-label']}>
+                                                    <span className={styles['Admin-cood-detail-label-heading']}>
+                                                        Branch <RequiredStar />
+                                                    </span>
+                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
+                                                        <select
+                                                            ref={(node) => {
+                                                                branchSelectRef.current = node;
+                                                                fieldRefs.current.branch = node;
+                                                            }}
+                                                            name="branch"
+                                                            className={getCoordinatorFieldClassName('branch', `${styles['Admin-cood-detail-form-select']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                            value={formData.branch}
+                                                            onChange={handleInputChange}
+                                                            disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
+                                                        >
+                                                            <option value="" disabled>
+                                                                {filteredBranches.length ? 'Select Branch' : 'No branches available'}
+                                                            </option>
+                                                            {filteredBranches.map((branch) => {
+                                                                const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                                    ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                                    : branch?.branchFullName || branch?.branchAbbreviation;
+                                                                const value = branchSelectValue(branch);
+                                                                return (
+                                                                    <option key={branch.id || branch._id || value} value={value}>
+                                                                        {label}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        <div onClick={() => handleDropdownIconClick(branchSelectRef)} style={{ cursor: 'pointer' }}>
+                                                            <DropdownIcon />
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </section>
+                                    </div>
                                 </div>
 
                                 <div className={`${styles['Admin-cood-detail-photo-wrapper']} ${errors.profilePhoto ? styles['Admin-cood-detail-input-error'] : ''}`}>
@@ -934,7 +2059,6 @@ function AdminCoDet() {
                                                     <input
                                                         id="file-upload"
                                                         type="file"
-
                                                         className={styles['Admin-cood-detail-hidden-input']}
                                                         onChange={handlePhotoUpload}
                                                     />
@@ -954,51 +2078,205 @@ function AdminCoDet() {
                                 </div>
                             </div>
 
-                            {!isViewMode && (
-                                <div className={styles['Admin-cood-detail-mobile-actions']}>
-                                    <button
-                                        type="button"
-                                        className={styles['Admin-cood-detail-discard-btn']}
-                                        onClick={handleDiscard}
-                                    >
-                                        Discard
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles['Admin-cood-detail-confirm-save-btn']}
-                                        onClick={handleConfirmSave}
-                                        disabled={isSaving}
-                                    >
-                                        {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
-                                    </button>
-                                </div>
-                            )}
 
+
+                        </div>
+                        <div className={`${styles['Admin-cood-detail-credentials-card']} ${styles['Admin-cood-detail-login-card']}`}>
+                            <h3 className={styles['Admin-cood-detail-card-title']}>Coordinator Login Credentials</h3>
+                            <div className={styles['Admin-cood-detail-card-content']}>
+                                <div className={styles['Admin-cood-detail-login-fields']}>
+                                    <label className={styles['Admin-cood-detail-field-label']}>
+                                        <span className={styles['Admin-cood-detail-label-heading']}>
+                                            Coordinator ID <RequiredStar />
+                                        </span>
+                                        <input
+                                            ref={registerFieldRef('coordinatorId')}
+                                            type="text"
+                                            name="coordinatorId"
+                                            placeholder="Coordinator ID"
+                                            className={getCoordinatorFieldClassName('coordinatorId', errors.coordinatorId ? styles['Admin-cood-detail-input-error'] : '')}
+                                            value={formData.coordinatorId}
+                                            onChange={handleInputChange}
+                                            disabled={isViewMode}
+                                        />
+                                    </label>
+                                    
+                                        <>
+                                            <label className={styles['Admin-cood-detail-field-label']}>
+                                                <span className={styles['Admin-cood-detail-label-heading']}>
+                                                    Enter Password <RequiredStar />
+                                                </span>
+                                                <div className={styles['Admin-cood-detail-password-wrapper']}>
+                                                    <input
+                                                        ref={registerFieldRef('password')}
+                                                        type={isViewMode ? "text" : (showPassword ? "text" : "password")}
+                                                        name="password"
+                                                        placeholder="Enter Password"
+                                                        className={getCoordinatorFieldClassName('password', errors.password ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.password}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                    {!isViewMode && (
+                                                        <button
+                                                            type="button"
+                                                            className={styles['Admin-cood-detail-password-toggle-btn']}
+                                                            onClick={() => setShowPassword(prev => !prev)}
+                                                        >
+                                                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {!isViewMode && (
+                                                    <div className={styles['Admin-cood-detail-password-hint']}>
+                                                        Password should be: <span>{formatDobForPassword(formData.dob) || 'DDMMYYYY'}</span> (based on DOB)
+                                                    </div>
+                                                )}
+                                            </label>
+
+                                            <label className={styles['Admin-cood-detail-field-label']}>
+                                                <span className={styles['Admin-cood-detail-label-heading']}>
+                                                    Confirm Password <RequiredStar />
+                                                </span>
+                                                <div className={styles['Admin-cood-detail-password-wrapper']}>
+                                                    <input
+                                                        ref={registerFieldRef('confirmPassword')}
+                                                        type={isViewMode ? "text" : (showConfirmPassword ? "text" : "password")}
+                                                        name="confirmPassword"
+                                                        placeholder="Confirm Password"
+                                                        className={getCoordinatorFieldClassName('confirmPassword', errors.confirmPassword ? styles['Admin-cood-detail-input-error'] : '')}
+                                                        value={formData.confirmPassword}
+                                                        onChange={handleInputChange}
+                                                        disabled={isViewMode}
+                                                    />
+                                                    {!isViewMode && (
+                                                        <button
+                                                            type="button"
+                                                            className={styles['Admin-cood-detail-password-toggle-btn']}
+                                                            onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                        >
+                                                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        </>
+                                    
+
+                                </div>
+                            </div>
+                        </div>
+
+                        {missingRequiredFields.length > 0 && (
+                            <MissingFieldsCard
+                                missingFields={missingRequiredFields}
+                                onFieldClick={focusCoordinatorField}
+                                showAllErrors={showAllErrors}
+                                onToggleShowAll={() => setShowAllErrors((prev) => !prev)}
+                                errorTooltip={errorTooltip}
+                                supportsPointerTooltip={supportsPointerTooltip}
+                                onTooltipMove={handleErrorTooltipMove}
+                                onTooltipLeave={handleErrorTooltipLeave}
+                            />
+                        )}
+                        {!isViewMode && (
+                            <div className={styles['Admin-cood-detail-final-actions']}>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cood-detail-discard-btn']}
+                                    onClick={handleDiscard}
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cood-detail-confirm-save-btn']}
+                                    onClick={handleConfirmSave}
+                                    disabled={!canSaveCoordinator}
+                                >
+                                    {isSaving ? 'Saving...' : (isEditMode ? 'Update Coordinator' : 'Confirm & Save')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+
+
+            {isCropModalOpen && cropImageSrc && (
+                <PhotoCropModal
+                    isOpen={isCropModalOpen}
+                    imageSrc={cropImageSrc}
+                    fileName={cropImageName}
+                    onSave={handleCropSave}
+                    onDiscard={handleCropDiscard}
+                    onClose={handleCropDiscard}
+                />
+            )}
+
+            {isModalOpen && profilePhoto && shouldShowPreviewPopup && (
+                <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : handleModalClose}>
+                    <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.imagePreviewHeader}>Preview Image</div>
+                        <div className={styles.imagePreviewBody}>
+                            <img src={profilePhoto} alt="Profile Preview" />
+                        </div>
+                        <div className={styles.imagePreviewFooter}>
+                            <button
+                                onClick={handleModalClose}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={handleDownload}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                            >
+                                {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                            </button>
                         </div>
                     </div>
                 </div>
-
-            {isModalOpen && profilePhoto && (
-                <div className={styles['co-modal-overlay']} onClick={handleModalClose}>
-                    <div className={styles['co-modal-content']} onClick={(e) => e.stopPropagation()}>
-                        <span className={styles['co-modal-close']} onClick={handleModalClose}>&times;</span>
-                        <img src={profilePhoto} alt="Full Profile Preview" className={styles['co-modal-image']} />
-                    </div>
-                </div>
             )}
+
+            <DownloadSuccessAlert
+                isOpen={downloadPopupState === 'success'}
+                onClose={handleSuccessClose}
+                fileLabel="image"
+                title="Downloaded !"
+                description="The image has been successfully downloaded to your device."
+                color="#4ea24e"
+            />
+
+            <DownloadFailedAlert
+                isOpen={downloadPopupState === 'error'}
+                onClose={() => setDownloadPopupState('none')}
+                color="#4ea24e"
+            />
 
             {showSuccessModal && (
                 <div className={styles['success-modal-overlay']}>
                     <div className={styles['success-modal-content']}>
                         <div className={styles['success-modal-header']}>
-                            {isEditMode ? 'Updated!' : 'Added!'}
+                            {isEditMode ? 'Updated !' : 'Added !'}
                         </div>
                         <div className={styles['success-modal-body']}>
-                            <div className={styles['success-modal-icon-wrapper']}>
-                                <img src={ProfileGraduationcap} alt="Success" className={styles['success-modal-icon']} />
+                            <div className={styles['success-modal-icon']}>
+                                <img src={AddCoordinatoricon} alt="Coordinator Success" style={{ width: '40px', height: '40px', filter: 'brightness(0) invert(1)' }} />
                             </div>
-                            <h2>{isEditMode ? 'Co-ordinator Updated ' : 'Co-ordinator Added '}</h2>
-                            <p>{isEditMode ? 'Co-ordinator details have been' : 'New Co-ordinator have been'}<br />Successfully {isEditMode ? 'Updated' : 'Added in the Portal'}</p>
+                            <h2 className={styles['success-modal-title']}>
+                                {isEditMode ? 'Co-ordinator Updated ✓' : 'Co-ordinator Added ✓'}
+                            </h2>
+                            <p className={styles['success-modal-message']}>
+                                {isEditMode 
+                                    ? 'Co-ordinator details have been Successfully Updated in the Portal'
+                                    : 'New Co-ordinator have been Successfully Added in the Portal'}
+                            </p>
+                        </div>
+                        <div className={styles['success-modal-footer']}>
                             <button
                                 className={styles['success-modal-close-btn']}
                                 onClick={handleCloseSuccessModal}
@@ -1013,7 +2291,7 @@ function AdminCoDet() {
             {/* File Size Error Popup */}
             <FileSizeErrorPopup
                 isOpen={isFileSizeErrorOpen}
-                onClose={closeFileSizeErrorPopup}
+                onClose={() => setIsFileSizeErrorOpen(false)}
                 fileSizeKB={fileSizeErrorKB}
             />
         </>

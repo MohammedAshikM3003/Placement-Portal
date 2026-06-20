@@ -21,10 +21,18 @@ const ATS_KEYWORDS = {
     'Responsive Design', 'UI/UX', 'Bootstrap', 'Tailwind CSS', 'Material-UI',
     'Redux', 'REST API', 'GraphQL', 'Webpack', 'Git', 'Agile', 'Cross-browser Compatibility'
   ],
+  'React Developer': [
+    'React', 'Redux', 'JavaScript', 'TypeScript', 'HTML5', 'CSS3', 'Next.js',
+    'Webpack', 'Babel', 'REST API', 'GraphQL', 'Jest', 'React Testing Library', 'Git'
+  ],
   'Backend Developer': [
     'Node.js', 'Python', 'Java', 'Spring Boot', 'Express.js', 'Django', 'Flask',
     'REST API', 'GraphQL', 'MongoDB', 'MySQL', 'PostgreSQL', 'Redis',
     'Microservices', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'Git', 'CI/CD', 'Agile'
+  ],
+  'Node Developer': [
+    'Node.js', 'Express.js', 'JavaScript', 'TypeScript', 'REST API', 'GraphQL',
+    'MongoDB', 'MySQL', 'Redis', 'Docker', 'AWS', 'Microservices', 'Socket.io', 'Jest', 'NPM', 'Git'
   ],
   'Full Stack Developer': [
     'HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'Express.js', 'MongoDB',
@@ -35,6 +43,50 @@ const ATS_KEYWORDS = {
     'Python', 'R', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch',
     'Scikit-learn', 'Pandas', 'NumPy', 'Data Visualization', 'Statistics',
     'SQL', 'Big Data', 'Hadoop', 'Spark', 'NLP', 'Computer Vision', 'A/B Testing', 'Feature Engineering'
+  ],
+  'Machine Learning Engineer': [
+    'Python', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch',
+    'Scikit-learn', 'NLP', 'Computer Vision', 'Keras', 'MLOps', 'Docker', 'Kubernetes', 'AWS', 'SQL'
+  ],
+  'DevOps Engineer': [
+    'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Jenkins',
+    'Terraform', 'Ansible', 'Linux', 'Bash', 'Git', 'Prometheus', 'Grafana', 'Python', 'Shell Scripting'
+  ],
+  'Mobile Developer': [
+    'Swift', 'Kotlin', 'React Native', 'Flutter', 'Java', 'Objective-C',
+    'iOS', 'Android', 'Xcode', 'Android Studio', 'REST API', 'Git', 'App Store Connect', 'Google Play Console'
+  ],
+  'QA Engineer': [
+    'Selenium', 'Cypress', 'Jest', 'JUnit', 'Test Automation', 'Manual Testing',
+    'QA', 'Bug Tracking', 'Jira', 'Postman', 'Regression Testing', 'CI/CD', 'Git'
+  ],
+  'Cloud Engineer': [
+    'AWS', 'Azure', 'GCP', 'Cloud Computing', 'Terraform', 'Docker',
+    'Kubernetes', 'IAM', 'VPC', 'Serverless', 'Lambda', 'Linux', 'CI/CD', 'Git'
+  ],
+  'Cyber Security Engineer': [
+    'Cybersecurity', 'Firewalls', 'SIEM', 'Penetration Testing', 'Vulnerability Assessment',
+    'Network Security', 'Cryptography', 'Linux', 'Wireshark', 'OWASP', 'IAM', 'Security Audits'
+  ],
+  'Data Engineer': [
+    'SQL', 'Python', 'ETL', 'Spark', 'Hadoop', 'Kafka', 'Data Warehousing',
+    'PostgreSQL', 'Redshift', 'Snowflake', 'Airflow', 'NoSQL', 'Big Data'
+  ],
+  'UI/UX Designer': [
+    'Figma', 'Adobe XD', 'Sketch', 'Wireframing', 'Prototyping', 'User Research',
+    'UI/UX Design', 'Interaction Design', 'HTML', 'CSS', 'Information Architecture'
+  ],
+  'Database Administrator': [
+    'SQL', 'MySQL', 'PostgreSQL', 'Oracle', 'SQL Server', 'Database Administration',
+    'Backup & Recovery', 'Performance Tuning', 'NoSQL', 'MongoDB', 'Database Security'
+  ],
+  'Embedded Systems Engineer': [
+    'C', 'C++', 'Microcontrollers', 'Embedded C', 'RTOS', 'Firmware',
+    'IoT', 'Raspberry Pi', 'Arduino', 'PCB Design', 'Debugging', 'Hardware'
+  ],
+  'Product Manager': [
+    'Product Management', 'Agile', 'Scrum', 'Product Roadmap', 'User Stories',
+    'Market Research', 'Jira', 'Confluence', 'Analytics', 'SQL', 'A/B Testing', 'Stakeholder Management'
   ]
 };
 
@@ -106,6 +158,10 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   const [showCreated, setShowCreated] = useState(false);
   const [hasCreatedOnce, setHasCreatedOnce] = useState(false); // Prevent multiple clicks
   const [isPreviewing, setIsPreviewing] = useState(false); // Track preview button state
+  const [versions, setVersions] = useState([]);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [selectedVersionIndex, setSelectedVersionIndex] = useState(0);
+  const [validationError, setValidationError] = useState('');
 
   // ===== USER-SPECIFIC LOCALSTORAGE KEY =====
   // Prevents resume data from leaking between different student sessions
@@ -440,80 +496,27 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   const aiGenerateAllContent = async (resumeData) => {
     if (!resumeSettings.enableAI) return resumeData;
     
-    const jobRole = resumeSettings.jobRole === 'Others' ? resumeSettings.customJobRole : resumeSettings.jobRole;
-    const pageLimit = resumeSettings.pages; // '1', '2', or 'no-limit'
-    const atsKeywords = getATSKeywords(resumeSettings.jobRole, resumeSettings.customJobRole);
-    
-    // Determine word limits based on page count
-    const summaryWordLimit = pageLimit === '1' ? '40-60' : pageLimit === '2' ? '60-90' : '80-120';
-    const expWordLimit = pageLimit === '1' ? '25-40' : pageLimit === '2' ? '40-60' : '50-80';
-    const projWordLimit = pageLimit === '1' ? '20-35' : pageLimit === '2' ? '35-55' : '45-70';
-    
     try {
       const { default: aiService } = await import('../services/aiService.jsx');
       
-      // 1. BATCH AI GENERATION (Replaces individual loops)
-      
-      // Structure the input for batch processing
-      const inputData = {
-        job_role: jobRole || 'Software Developer',
-        student_name: resumeData.personalInfo?.name || 'Student',
-        education: `${resumeData.education?.degree || 'B.E.'} in ${resumeData.education?.branch || 'Engineering'}`,
-        skills: resumeData.skills?.flatMap(c => c.items).slice(0, 15).join(', ') || '',
-        summary_input: resumeData.summary || '',
+      const sections = {
+        summary: resumeData.summary || '',
         experiences: resumeData.experiences?.map((exp) => exp.description || '').filter(d => d.trim().length > 0) || [],
-        projects: resumeData.projects?.map((proj) => ({ title: proj.name, tech: proj.technologies?.join(', '), input: proj.description || '' })).filter(p => p.input.trim().length > 0) || [],
-        certifications: resumeData.certifications?.map((cert) => ({ name: cert.certificateName, input: cert.description || '' })).filter(c => c.input.trim().length > 0) || [],
-        achievements: resumeData.achievements?.map((ach) => ach.details || '').filter(d => d.trim().length > 0) || [],
-        ats_keywords: atsKeywords.slice(0, 10)
+        projects: resumeData.projects?.map((proj) => proj.description || '').filter(d => d.trim().length > 0) || [],
+        certifications: resumeData.certifications?.map((cert) => cert.description || '').filter(d => d.trim().length > 0) || [],
+        achievements: resumeData.achievements?.map((ach) => ach.details || '').filter(d => d.trim().length > 0) || []
       };
 
-      // Only proceed if there is content to generate
-      const hasSummary = !!inputData.summary_input;
-      const hasExperiences = inputData.experiences.length > 0;
-      const hasProjects = inputData.projects.length > 0;
-      const hasCertifications = inputData.certifications.length > 0;
-      const hasAchievements = inputData.achievements.length > 0;
+      const hasSummary = !!sections.summary;
+      const hasExperiences = sections.experiences.length > 0;
+      const hasProjects = sections.projects.length > 0;
+      const hasCertifications = sections.certifications.length > 0;
+      const hasAchievements = sections.achievements.length > 0;
 
       if (hasSummary || hasExperiences || hasProjects || hasCertifications || hasAchievements) {
-        const batchPrompt = `
-You are an expert Technical Recruiter and Resume Writer.
-
-TASK: Rewrite and polish multiple sections of a resume in a SINGLE step.
-Target Role: ${inputData.job_role}
-
-INPUT DATA:
-${JSON.stringify(inputData, null, 2)}
-
-INSTRUCTIONS:
-1. Professional Summary: Rewrite into a strong ${summaryWordLimit} word paragraph (Third person, no "I", no headers).
-2. Experiences: Optimize each description provided in the 'experiences' array (${expWordLimit} words each). Use strong action verbs.
-3. Projects: Optimize each project description provided in the 'projects' array (${projWordLimit} words each). Highlight technical impact.
-4. Certifications: Polish each certification description into exactly ONE short sentence (8-15 words MAX). Keep it concise — do NOT exceed 15 words.
-5. Achievements: Polish each achievement into exactly ONE short sentence (8-15 words MAX). Keep it concise — do NOT exceed 15 words.
-
-OUTPUT FORMAT:
-Return strictly minimal valid JSON with this structure:
-{
-  "summary": "polished summary text",
-  "experiences": ["polished description 1", "polished description 2", ...], 
-  "projects": ["polished description 1", "polished description 2", ...],
-  "certifications": ["polished description 1", "polished description 2", ...],
-  "achievements": ["polished achievement 1", "polished achievement 2", ...]
-}
-
-Rules:
-- The "experiences" array must match the input order exactly.
-- The "projects" array must match the input order exactly.
-- The "certifications" array must match the input order exactly.
-- The "achievements" array must match the input order exactly.
-- Do NOT include any markdown formatting or extra text. Just the raw JSON object.
-`;
-
         try {
-          console.log('🤖 Sending Batch AI Request...');
-          // Call AI Service (Single Request)
-          const resultText = await aiService.generateContent(batchPrompt, 'json');
+          console.log('🤖 Sending Batch AI Request with sections:', sections);
+          const resultText = await aiService.generateContent(sections, 'json');
           
           // Parse Response
           const result = aiService.cleanJson(resultText);
@@ -727,7 +730,7 @@ ${skills.some(c => c.items?.length > 0) ? `<div class="section-title">Skills</di
 
 ${experiences.length > 0 ? `<div class="section-title">Internship</div>
 ${experiences.map(e => {
-  const fmtDate = (d) => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : d; };
+  const fmtDate = (d) => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? (p[0].length === 4 ? p[2]+'-'+p[1]+'-'+p[0] : d) : d; };
   const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
   const titleParts = [];
   if (e.companyName) titleParts.push(e.companyName);
@@ -816,10 +819,142 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
     }
   };
 
+  // ===== LOAD TEST ERROR DATA =====
+  const handleLoadTestErrorData = () => {
+    if (window.confirm('This will overwrite current fields with test error data. Continue?')) {
+      const errorData = {
+        personalInfo: {
+          name: 'john doee',
+          mobile: '12345',
+          email: 'john.doee.email.com',
+          linkedin: 'linkedin.com/in/johndoee',
+          github: 'github.com/johndoee',
+          portfolio: 'johndoee.net'
+        },
+        summary: 'i am a software developer. i got awesome coding skills and i basically built cool things for frontend. i kinda want to get a job because i am really super motivated.',
+        education: {
+          college: 'K.S.R. College of Engineering',
+          degree: 'B.E.',
+          branch: 'Computer Science and Engineering',
+          cgpa: '8.5',
+          graduationYear: '2026',
+          school12: 'Govt Higher Secondary School',
+          percentile12: '85',
+          batch12: '2022',
+          school10: 'Govt High School',
+          percentile10: '90',
+          batch10: '2020'
+        },
+        platforms: [
+          { name: 'Leetcode', url: 'leetcode.com/johndoee' },
+          { name: 'Hacker Rank', url: 'hackerrank.com/johndoee' }
+        ],
+        skills: DEFAULT_SKILL_CATEGORIES.map(c => {
+          if (c.category === 'Languages') {
+            return { ...c, items: ['JavaScript', 'Python', 'Java'] };
+          }
+          if (c.category === 'Frameworks & Libraries') {
+            return { ...c, items: ['React', 'Node.js', 'Express.js'] };
+          }
+          return { ...c, items: [] };
+        }),
+        experiences: [
+          {
+            title: 'web developer intern',
+            companyName: 'cool tech startupp',
+            location: 'chennai',
+            mode: 'in-person',
+            fromDate: '2024-01-01',
+            toDate: '2024-04-01',
+            description: 'i was working on teh frontend stuff. got to write some react code and fixed a lot of bugs. basically helped the team with things.',
+            technologies: ['React', 'JavaScript', 'CSS'],
+            projects: [],
+            label: 'web developer intern'
+          }
+        ],
+        projects: [
+          {
+            name: 'e-comerce website',
+            description: 'i built a cool website for buying stuff online. it had a cart page that was really awesome. i did all the code myself.',
+            technologies: ['React', 'Node.js', 'MongoDB'],
+            githubRepo: 'github.com/johndoee/e-comerce',
+            hostingLink: 'e-comerce.johndoee.net',
+            label: 'e-comerce website'
+          }
+        ],
+        certifications: [
+          {
+            certificateName: 'aws certified developer',
+            description: 'i got certified for deploying apps on aws cloud.'
+          }
+        ],
+        achievements: [
+          {
+            details: 'won first prize in college hackathon for coding.'
+          }
+        ],
+        additionalInfo: [
+          {
+            info: 'fluent in english and local language.'
+          }
+        ],
+        resumeSettings: {
+          jobRole: 'Frontend Developer',
+          customJobRole: '',
+          fontStyle: 'Arial',
+          pages: '1',
+          enableAI: true,
+          linkType: 'HyperLink',
+          profilePhoto: false,
+          photoPosition: 'Left'
+        }
+      };
+
+      setPersonalInfo(errorData.personalInfo);
+      setSummary(errorData.summary);
+      setEducation(errorData.education);
+      setPlatforms(errorData.platforms);
+      setSkills(errorData.skills);
+      setExperiences(errorData.experiences);
+      setProjects(errorData.projects);
+      setCertifications(errorData.certifications);
+      setAchievements(errorData.achievements);
+      setAdditionalInfo(errorData.additionalInfo);
+      setResumeSettings(errorData.resumeSettings);
+
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(errorData));
+      console.log('✅ Loaded test error data into state and localStorage');
+    }
+  };
+
+
   // ===== CREATE RESUME (Save + Generate PDF) =====
   const handleCreate = async () => {
     // Prevent multiple clicks
     if (hasCreatedOnce || isCreating) return;
+    
+    // Reset validation error
+    setValidationError('');
+    
+    // Contact validation checks
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10}$/;
+    
+    if (personalInfo.email && !emailRegex.test(personalInfo.email.trim())) {
+      setValidationError("Invalid Email Format: Please enter a valid email address (e.g. name@domain.com).");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (personalInfo.mobile) {
+      const cleanPhone = personalInfo.mobile.trim().replace(/[\s-()+]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        setValidationError("Invalid Mobile Number: Please enter a valid 10-digit mobile number.");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
     
     setHasCreatedOnce(true); // Disable button after first click
     setIsCreating(true);
@@ -940,6 +1075,21 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         }, 4000);
 
         fullResumeData = await aiGenerateAllContent(fullResumeData);
+        
+        // Phase 3: Compare summary text and record version history
+        if (fullResumeData.summary && fullResumeData.summary !== summary) {
+          const updatedVersions = [...versions, {
+            version: versions.length + 1,
+            timestamp: new Date().toISOString(),
+            originalSummary: summary,
+            enhancedSummary: fullResumeData.summary
+          }];
+          setVersions(updatedVersions);
+          fullResumeData.versions = updatedVersions;
+          setSummary(fullResumeData.summary);
+        } else {
+          fullResumeData.versions = versions;
+        }
         
         clearInterval(aiProgressInterval);
         clearInterval(aiStatusInterval);
@@ -1349,6 +1499,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         if (saved) {
           if (saved.personalInfo) setPersonalInfo(prev => ({ ...prev, ...saved.personalInfo }));
           if (saved.summary) setSummary(saved.summary);
+          if (saved.versions) setVersions(saved.versions);
           if (saved.education) setEducation(prev => ({ ...prev, ...saved.education }));
           if (saved.platforms?.length) setPlatforms(saved.platforms);
           // Important: saved.skills can be [] (empty array) which means user wants no skills
@@ -1388,6 +1539,28 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           // No saved data at all, populate everything from student profile (including skills)
           autoPopulateFromProfile(false);
         }
+
+        // Load existing PDF GridFS url on mount to enable preview/download on refresh
+        if (studentId) {
+          try {
+            const pdfResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              }
+            });
+            if (pdfResponse.ok) {
+              const pdfData = await pdfResponse.json();
+              if (pdfData.success && pdfData.resume && pdfData.resume.gridfsFileUrl) {
+                const fullUrl = joinApiUrl(pdfData.resume.gridfsFileUrl);
+                setResumePdfUrl(fullUrl);
+                console.log('✅ Loaded existing resume PDF from GridFS:', fullUrl);
+              }
+            }
+          } catch (pdfErr) {
+            console.warn('⚠️ Existing resume PDF fetch failed:', pdfErr.message);
+          }
+        }
       } catch (e) {
         console.error('Error loading resume data:', e);
         // On error, try to populate from student profile (including skills since no saved data)
@@ -1405,6 +1578,36 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
   // ===== RENDER =====
   return (
     <div>
+      {validationError && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fca5a5',
+          color: '#991b1b',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          fontSize: '14px',
+          fontWeight: '500',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>⚠️ {validationError}</span>
+          <button
+            onClick={() => setValidationError('')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#991b1b',
+              cursor: 'pointer',
+              fontSize: '18px',
+              marginLeft: 'auto'
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className={styles.headerSection}>
         <p className={styles.headerSubtitle}>Let's Build an ATS-friendly Resume for you easily in minutes.</p>
@@ -1424,9 +1627,22 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             >
               <option value="">Select Job Role</option>
               <option value="Frontend Developer">Frontend Developer</option>
+              <option value="React Developer">React Developer</option>
               <option value="Backend Developer">Backend Developer</option>
+              <option value="Node Developer">Node Developer</option>
               <option value="Full Stack Developer">Full Stack Developer</option>
               <option value="Data Scientist">Data Scientist</option>
+              <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+              <option value="DevOps Engineer">DevOps Engineer</option>
+              <option value="Mobile Developer">Mobile Developer</option>
+              <option value="QA Engineer">QA/Testing Engineer</option>
+              <option value="Cloud Engineer">Cloud Engineer</option>
+              <option value="Cyber Security Engineer">Cyber Security Engineer</option>
+              <option value="Data Engineer">Data Engineer</option>
+              <option value="UI/UX Designer">UI/UX Designer</option>
+              <option value="Database Administrator">Database Administrator</option>
+              <option value="Embedded Systems Engineer">Embedded Systems Engineer</option>
+              <option value="Product Manager">Product Manager</option>
               <option value="Others">Others</option>
             </select>
             {resumeSettings.jobRole === 'Others' && (
@@ -1600,6 +1816,18 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         <div className={styles.textareaActions}>
           {resumeSettings.enableAI && (
             <span style={{ fontSize: '12px', color: '#2085f6', fontStyle: 'italic' }}>✨ AI will auto-generate during Create</span>
+          )}
+          {versions.length > 0 && (
+            <button
+              className={styles.clearBtn}
+              onClick={() => {
+                setSelectedVersionIndex(versions.length - 1);
+                setShowVersionModal(true);
+              }}
+              style={{ marginRight: '10px', color: '#2085f6', borderColor: '#2085f6' }}
+            >
+              Compare AI Versions ({versions.length})
+            </button>
           )}
           <button className={styles.clearBtn} onClick={() => setSummary('')}>Clear</button>
         </div>
@@ -1854,6 +2082,13 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
 
       {/* ===== GLOBAL SAVE / DISCARD ===== */}
       <div className={styles.globalActionBar}>
+        <button 
+          className={styles.globalDiscardBtn} 
+          onClick={handleLoadTestErrorData}
+          style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: '#d97706', marginRight: 'auto' }}
+        >
+          Load Test Error Data
+        </button>
         <button className={styles.globalDiscardBtn} onClick={handleDiscard}>Discard</button>
         <button 
           className={styles.globalCreateBtn} 
@@ -2071,6 +2306,101 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           final: 'Opening ATS Checker...'
         }}
       />
+      {/* ===== VERSION COMPARISON POPUP ===== */}
+      {showVersionModal && versions.length > 0 && (
+        <div className={styles.overlay} onClick={() => setShowVersionModal(false)}>
+          <div className={styles.popupContainer} style={{ maxWidth: '800px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.popupHeader}>Compare AI Polish Versions</div>
+            <div className={styles.popupBody} style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {versions.map((ver, idx) => (
+                  <button
+                    key={idx}
+                    className={selectedVersionIndex === idx ? styles.activeTabBtn : styles.tabBtn}
+                    onClick={() => setSelectedVersionIndex(idx)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: '1px solid #ddd',
+                      background: selectedVersionIndex === idx ? '#2085f6' : '#fff',
+                      color: selectedVersionIndex === idx ? '#fff' : '#333',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Version {ver.version} ({new Date(ver.timestamp).toLocaleDateString()})
+                  </button>
+                ))}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '15px' }}>
+                <div>
+                  <h4 style={{ marginBottom: '8px', color: '#666' }}>Original Draft:</h4>
+                  <div style={{
+                    background: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    minHeight: '150px',
+                    color: '#374151'
+                  }}>
+                    {versions[selectedVersionIndex]?.originalSummary}
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ marginBottom: '8px', color: '#2085f6' }}>✨ AI Polished:</h4>
+                  <div style={{
+                    background: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    minHeight: '150px',
+                    color: '#1e3a8a'
+                  }}>
+                    {versions[selectedVersionIndex]?.enhancedSummary}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.popupFooter}>
+              <button className={styles.popupDiscardBtn} onClick={() => setShowVersionModal(false)}>Close</button>
+              <button
+                className={styles.popupSaveBtn}
+                style={{ background: '#10b981', color: '#fff' }}
+                onClick={() => {
+                  const ver = versions[selectedVersionIndex];
+                  if (ver) {
+                    setSummary(ver.originalSummary);
+                    alert("Draft summary restored! (Click Create to re-generate if desired)");
+                    setShowVersionModal(false);
+                  }
+                }}
+              >
+                Restore Draft
+              </button>
+              <button
+                className={styles.popupSaveBtn}
+                onClick={() => {
+                  const ver = versions[selectedVersionIndex];
+                  if (ver) {
+                    setSummary(ver.enhancedSummary);
+                    alert("AI Polished summary restored!");
+                    setShowVersionModal(false);
+                  }
+                }}
+              >
+                Restore AI Polish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

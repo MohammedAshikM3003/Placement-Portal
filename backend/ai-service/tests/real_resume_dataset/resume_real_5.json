@@ -1,0 +1,81 @@
+{
+  "personalInfo": {
+    "name": "Deepika Menon",
+    "mobile": "9038074233",
+    "email": "deepika.menon5@anonymized.in",
+    "linkedin": "linkedin.com/in/deepikamenon",
+    "github": "github.com/deepikamenon",
+    "portfolio": ""
+  },
+  "summary": "analytical student looking for Data Analyst job. done data visualization.",
+  "education": {
+    "college": "SSN College of Engineering",
+    "degree": "B.Tech",
+    "branch": "Computer Science Engineering",
+    "cgpa": "9.09",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "SQL",
+        "Python",
+        "Excel",
+        "Tableau",
+        "Data Analysis"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Data Analyst Intern",
+      "companyName": "Infosys",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked in Infosys. did write sql queries and formatted tableau reports.",
+      "technologies": [
+        "SQL",
+        "Python"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Sales Dashboard",
+      "description": "made database queries and designed sales dashboard. basically clean up data.",
+      "technologies": [
+        "SQL",
+        "Tableau"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/deepika"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "ML Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

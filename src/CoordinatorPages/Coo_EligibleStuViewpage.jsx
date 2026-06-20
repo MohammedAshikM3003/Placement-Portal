@@ -76,7 +76,8 @@ function CooViewpage({ onLogout, onViewChange }) {
                     onLogout={onLogout}
                     currentView={'eligible-students'} // Show eligible-students when navigated from that page
                     onViewChange={handleViewChange}
-                />
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles['co-sv-StuProfile-dashboard-area']}>
                     {/* The form remains, but all inputs are disabled */}
                     <form onSubmit={handleSave}> 

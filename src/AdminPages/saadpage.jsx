@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../utils/apiConfig';
 import Sanavbar from '../components/Navbar/sanavbar.js';
 import Sasidebar from '../components/Sidebar/sasidebar.js';
@@ -33,11 +34,14 @@ const normalizeAdmin = (admin) => {
     adminLoginID: admin.adminLoginID || '',
     department: admin.department || '',
     isBlocked: Boolean(admin.isBlocked),
+    dob: admin.dob || '',
+    raw: admin
   };
 };
 
 function SaAdPage({ onLogout }) {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -234,75 +238,33 @@ function SaAdPage({ onLogout }) {
                   event.stopPropagation();
                   try {
                     const identifier = admin.adminLoginID || '';
-                    const resp = await fetch(`${API_BASE_URL}/admin/impersonate/admin`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                      },
-                      body: JSON.stringify({ adminLoginID: identifier })
-                    });
+                    const dob = admin.dob || '';
 
-                    if (resp.status === 401 || resp.status === 403) {
-                      // No valid admin session — prompt for server secret to impersonate (if available)
-                      const secret = window.prompt('Admin session missing. Enter impersonation secret to proceed (leave empty to login):');
-                      if (!secret) {
-                        navigate('/mainlogin');
-                        return;
-                      }
-
-                      // Call secret-backed endpoint
-                      const secretResp = await fetch(`${API_BASE_URL}/admin/impersonate/admin-by-secret`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ adminLoginID: identifier, secret })
-                      });
-
-                      if (!secretResp.ok) {
-                        const text = await secretResp.text().catch(() => '');
-                        alert(`Secret impersonation failed: ${text || secretResp.statusText}`);
-                        return;
-                      }
-
-                      const secretBody = await secretResp.json();
-                      if (!secretBody.success) {
-                        alert(secretBody.error || 'Secret impersonation failed');
-                        return;
-                      }
-
-                      const token2 = secretBody.token;
-                      const adm2 = secretBody.admin || {};
-                      localStorage.setItem('authToken', token2);
-                      localStorage.setItem('authRole', 'admin');
-                      localStorage.setItem('adminData', JSON.stringify(adm2));
-                      window.location.assign('/saad-admin-dashboard');
+                    if (!identifier) {
+                      alert('Admin Login ID is missing. Cannot manage.');
                       return;
                     }
 
-                    let body;
-                    const contentType = resp.headers.get('content-type') || '';
-                    if (contentType.includes('application/json')) {
-                      body = await resp.json();
+                    if (!dob) {
+                      const supplied = window.prompt('Admin DOB is required to login as the admin. Please enter DOB (DD-MM-YYYY or DDMMYYYY):', '');
+                      if (!supplied) return;
+                      const loginResult = await auth.login(identifier, supplied);
+                      if (loginResult && loginResult.success) {
+                        navigate('/saad-admin-dashboard');
+                      } else {
+                        alert(loginResult.error || 'Login failed');
+                      }
+                      return;
+                    }
+
+                    const result = await auth.login(identifier, dob);
+                    if (result && result.success) {
+                      navigate('/saad-admin-dashboard');
                     } else {
-                      const text = await resp.text();
-                      body = { success: resp.ok, error: text || resp.statusText };
+                      alert(result.error || 'Login failed');
                     }
-
-                    if (!resp.ok || !body.success) {
-                      alert(body.error || `Impersonation failed (status ${resp.status})`);
-                      return;
-                    }
-
-                    const token = body.token;
-                    const adm = body.admin || {};
-
-                    localStorage.setItem('authToken', token);
-                    localStorage.setItem('authRole', 'admin');
-                    localStorage.setItem('adminData', JSON.stringify(adm));
-
-                    window.location.assign('/saad-admin-dashboard');
                   } catch (err) {
-                    console.error('Admin impersonation failed', err);
+                    console.error('Admin login failed', err);
                     alert('Unable to open admin dashboard: ' + (err?.message || 'Unknown error'));
                   }
                 }}

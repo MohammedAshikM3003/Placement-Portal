@@ -15,7 +15,7 @@
 }
 
 /* --- NEW RESPONSIVE RULES --- */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .sidebar {
     /* Hides the sidebar off-screen by default on mobile */
     transform: translateX(-100%);
@@ -171,5 +171,23 @@
 .sidebar .logout-btn:hover {
   background: #d55a6a;
 }
+
+.overlay {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 65px);
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+  }
+}
+
 :global {
 }

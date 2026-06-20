@@ -561,7 +561,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .main {
         min-height: calc(100vh - 55px);
     }
@@ -807,7 +807,7 @@
 
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .attendanceArea {
         margin-left: 0 !important;
         width: 100% !important;

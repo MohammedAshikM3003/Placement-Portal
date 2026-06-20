@@ -528,6 +528,7 @@ router.post('/resume/upload/gridfs', memoryUpload.single('resume'), async (req, 
 
         if (mongoose.connection.readyState === 1) {
             const Resume = mongoose.model('Resume');
+            const Student = mongoose.model('Student');
 
             const existingResume = await Resume.findOne({ studentId });
 
@@ -548,6 +549,24 @@ router.post('/resume/upload/gridfs', memoryUpload.single('resume'), async (req, 
                 existingResume.fileData = undefined; // Remove old Base64
                 existingResume.uploadedAt = new Date();
                 await existingResume.save();
+
+                // Update Student model with the GridFS URL for compatibility
+                try {
+                    const student = await Student.findOne({ $or: [{ _id: studentId }, { regNo: studentId }] });
+                    if (student) {
+                        student.resumeURL = fileUrl;
+                        student.resumeData = {
+                            url: fileUrl,
+                            gridfsFileUrl: fileUrl,
+                            name: req.file.originalname,
+                            createdAt: new Date()
+                        };
+                        await student.save();
+                        console.log(`✅ Student model updated with GridFS URL in uploadResume (existing): ${fileUrl}`);
+                    }
+                } catch (studentErr) {
+                    console.warn('⚠️ Student model update failed in resume upload (existing):', studentErr.message);
+                }
 
                 res.json({
                     message: 'Resume updated (GridFS)',
@@ -570,6 +589,24 @@ router.post('/resume/upload/gridfs', memoryUpload.single('resume'), async (req, 
                     uploadedAt: new Date()
                 });
                 await newResume.save();
+
+                // Update Student model with the GridFS URL for compatibility
+                try {
+                    const student = await Student.findOne({ $or: [{ _id: studentId }, { regNo: studentId }] });
+                    if (student) {
+                        student.resumeURL = fileUrl;
+                        student.resumeData = {
+                            url: fileUrl,
+                            gridfsFileUrl: fileUrl,
+                            name: req.file.originalname,
+                            createdAt: new Date()
+                        };
+                        await student.save();
+                        console.log(`✅ Student model updated with GridFS URL in uploadResume (new): ${fileUrl}`);
+                    }
+                } catch (studentErr) {
+                    console.warn('⚠️ Student model update failed in resume upload (new):', studentErr.message);
+                }
 
                 res.json({
                     message: 'Resume uploaded (GridFS)',

@@ -35,14 +35,54 @@ function DOBDatePicker({ value, onChange }) {
   const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
   const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
 
-  const selDay   = value ? parseInt(value.split('-')[2]) : null;
-  const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
-  const selYear  = value ? parseInt(value.split('-')[0]) : null;
+  const parsedDate = useMemo(() => {
+    if (!value) return { day: null, month: null, year: null };
+    const parts = value.split('-');
+    if (parts.length !== 3) return { day: null, month: null, year: null };
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      return {
+        year: parseInt(parts[0]),
+        month: parseInt(parts[1]) - 1,
+        day: parseInt(parts[2])
+      };
+    } else {
+      // DD-MM-YYYY
+      return {
+        day: parseInt(parts[0]),
+        month: parseInt(parts[1]) - 1,
+        year: parseInt(parts[2])
+      };
+    }
+  }, [value]);
+
+  const selDay   = parsedDate.day;
+  const selMonth = parsedDate.month;
+  const selYear  = parsedDate.year;
   const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
   const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
 
+  // Sync calendar view with selected date
+  useEffect(() => {
+    if (selYear && selMonth !== null) {
+      setCalYear(selYear);
+      setCalMonth(selMonth);
+    }
+  }, [selYear, selMonth]);
+
   const displayVal = value
-    ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
+    ? (() => {
+        const parts = value.split('-');
+        if (parts.length === 3) {
+          if (parts[0].length === 4) {
+            // YYYY-MM-DD -> DD-MM-YYYY
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+          }
+          // Already DD-MM-YYYY
+          return value;
+        }
+        return value;
+      })()
     : '';
 
   const currentYearForPicker = new Date().getFullYear();

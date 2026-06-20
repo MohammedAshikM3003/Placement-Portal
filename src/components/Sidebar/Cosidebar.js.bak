@@ -1,0 +1,362 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import styles from './Cosidebar.module.css';
+import API_BASE_URL from '../../utils/apiConfig';
+import { resolveProfileUrl } from './profileUtils';
+import mongoDBService from '../../services/mongoDBService.jsx';
+import { getCoordinatorScopedKey } from '../../utils/coordinatorCacheKeys';
+
+// Assets
+import Adminicon from '../../assets/Adminicon.png';
+import CoDashboard from '../../assets/CoDashboard.svg';
+import ManageStudents from "../../assets/ManageStudents.svg";
+import CooTrainingicon from "../../assets/Coo_Trainingicon.svg";
+import AdminCompsnyProfileicon from "../../assets/CompanyProfileicon.svg";
+import AdminCompanydriveicon from "../../assets/CompanyDriveicon.svg";
+import Coordcertificate from "../../assets/CertificateVerrificationicon.svg";
+import CoordEligiblestudent from "../../assets/CoordEligiblestudent.svg";
+import AdminAttendanceicon from "../../assets/AdminAttendanceicon.svg";
+import AdminPlacedStudentsicon from "../../assets/PlacedStudentIcon.svg";
+import AdminResourceAnalysisicon from "../../assets/Reportanalysisicon.svg";
+import AdminProfileicon from "../../assets/AdminProfileicon.svg";
+
+// Module-level cache (prevents flickering)
+let cachedCoordinatorProfile = null;
+let cachedCoordinatorTimestamp = null;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+const sidebarItems = [
+  { icon: CoDashboard, text: 'Dashboard', view: 'dashboard' },
+  { icon: ManageStudents, text: 'Manage Students', view: 'manage-students' },
+  { icon: CooTrainingicon, text: 'Placement Training', view: 'training' },
+  { icon: AdminCompsnyProfileicon, text: 'Company Profile', view: 'company-profile' },
+  { icon: AdminCompanydriveicon, text: 'Company Drive', view: 'company-drive' },
+  { icon: Coordcertificate, text: 'Certificate Verification', view: 'certificate-verification' },
+  { icon: CoordEligiblestudent, text: 'Eligible Students', view: 'eligible-students' },
+  { icon: AdminAttendanceicon, text: 'Attendance', view: 'attendance' },
+  { icon: AdminPlacedStudentsicon, text: 'Placed Students', view: 'placed-students' },
+  { icon: AdminResourceAnalysisicon, text: 'Report Analysis', view: 'report-analysis' },
+];
+
+// Normalize profile photo URL
+const normalizeCoordinatorProfilePhoto = (value) => {
+  if (!value) return null;
+  const resolved = resolveProfileUrl(value, API_BASE_URL);
+  return resolved || null;
+};
+
+const getCoordinatorProfileCacheKeys = (source = null) => ({
+  profileCacheKey: getCoordinatorScopedKey('coordinatorProfileCache', source),
+  profileCacheTimeKey: getCoordinatorScopedKey('coordinatorProfileCacheTime', source),
+  photoCacheKey: getCoordinatorScopedKey('cachedCoordinatorPicUrl', source)
+});
+
+const Cosidebar = ({ isOpen, onLogout, currentView, onViewChange, onClose }) => {
+  const { logout: authLogout } = useAuth();
+  const navigate = useNavigate();
+  const hasFetchedRef = useRef(false); // Prevent duplicate fetches
+
+  // State for coordinator profile data - initialize from MODULE-LEVEL cache first
+  const [coordinatorProfile, setCoordinatorProfile] = useState(() => {
+    // Memory Cache
+    if (cachedCoordinatorProfile && cachedCoordinatorTimestamp && (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)) {
+      console.log('⚡ Coordinator Sidebar: Loaded from memory cache');
+      return cachedCoordinatorProfile;
+    }
+
+    // LocalStorage Cache
+    const cachedProfile = localStorage.getItem(getCoordinatorProfileCacheKeys().profileCacheKey);
+    if (cachedProfile) {
+      try {
+        const data = JSON.parse(cachedProfile);
+        if (data.name) {
+          if (data.profilePhoto) {
+            data.profilePhoto = normalizeCoordinatorProfilePhoto(data.profilePhoto);
+          }
+          cachedCoordinatorProfile = data;
+          cachedCoordinatorTimestamp = Date.now();
+          console.log('⚡ Coordinator Sidebar: Loaded from localStorage');
+          return data;
+        }
+      } catch (error) {
+        console.error('Error parsing cached profile:', error);
+      }
+    }
+
+    return {
+      name: 'Coordinator',
+      profilePhoto: null
+    };
+  });
+
+  // Image handling states
+  const [imageError, setImageError] = useState(false);
+  const [imageKey, setImageKey] = useState(Date.now());
+
+  // Function to fetch coordinator profile data
+  const fetchCoordinatorProfile = async () => {
+    try {
+      const coordinatorId = localStorage.getItem('coordinatorId') || localStorage.getItem('coordinatorUsername');
+      if (!coordinatorId) {
+        console.warn('⚠️ No coordinator ID found');
+        return;
+      }
+
+      const response = await mongoDBService.getCoordinatorById(coordinatorId);
+      const data = response?.coordinator || response;
+
+      if (data) {
+        const fullName = (data.firstName || data.lastName)
+          ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+          : 'Coordinator';
+
+        let profilePhotoUrl = normalizeCoordinatorProfilePhoto(data.profilePhoto || data.profilePicURL);
+
+        const profileData = {
+          name: fullName,
+          profilePhoto: profilePhotoUrl || null
+        };
+        const { profileCacheKey, profileCacheTimeKey, photoCacheKey } = getCoordinatorProfileCacheKeys(data);
+
+        // Update cache and state
+        cachedCoordinatorProfile = profileData;
+        cachedCoordinatorTimestamp = Date.now();
+        setCoordinatorProfile({ ...profileData });
+        setImageError(false);
+
+        // Preload image
+        if (profilePhotoUrl) {
+          const img = new Image();
+          img.onload = () => {
+            setImageKey(Date.now());
+            setImageError(false);
+          };
+          img.onerror = () => {
+            setImageError(true);
+          };
+          img.src = profilePhotoUrl;
+        }
+
+        // Cache to localStorage
+        localStorage.setItem(profileCacheKey, JSON.stringify(profileData));
+        localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+        if (profilePhotoUrl) {
+          localStorage.setItem(photoCacheKey, profilePhotoUrl);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error fetching coordinator profile:', error);
+    }
+  };
+
+  // Fetch coordinator profile on mount
+  useEffect(() => {
+    if (
+      hasFetchedRef.current &&
+      cachedCoordinatorProfile &&
+      cachedCoordinatorTimestamp &&
+      (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)
+    ) {
+      return;
+    }
+
+    if (
+      cachedCoordinatorProfile &&
+      cachedCoordinatorTimestamp &&
+      (Date.now() - cachedCoordinatorTimestamp < CACHE_DURATION)
+    ) {
+      hasFetchedRef.current = true;
+      if (coordinatorProfile.name !== cachedCoordinatorProfile.name || coordinatorProfile.profilePhoto !== cachedCoordinatorProfile.profilePhoto) {
+        setCoordinatorProfile(cachedCoordinatorProfile);
+      }
+      return;
+    }
+
+    if (hasFetchedRef.current) return;
+
+    hasFetchedRef.current = true;
+    fetchCoordinatorProfile();
+  }, []);
+
+  // Listen for profile update events
+  useEffect(() => {
+    const handleProfileUpdate = (event) => {
+      if (event.detail) {
+        const data = event.detail;
+        const fullName = (data.firstName || data.lastName)
+          ? `${data.firstName || ''} ${data.lastName || ''}`.trim()
+          : 'Coordinator';
+
+        let updatedPhoto = normalizeCoordinatorProfilePhoto(data.profilePhoto || data.profilePicURL);
+
+        const profileData = {
+          name: fullName,
+          profilePhoto: updatedPhoto
+        };
+        const { profileCacheKey, profileCacheTimeKey, photoCacheKey } = getCoordinatorProfileCacheKeys(data);
+
+        cachedCoordinatorProfile = profileData;
+        cachedCoordinatorTimestamp = Date.now();
+        setCoordinatorProfile(profileData);
+        setImageError(false);
+        setImageKey(Date.now());
+
+        localStorage.setItem(profileCacheKey, JSON.stringify(profileData));
+        localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+        if (updatedPhoto) {
+          localStorage.setItem(photoCacheKey, updatedPhoto);
+        }
+
+        if (updatedPhoto) {
+          const img = new Image();
+          img.onload = () => {
+            setImageKey(Date.now());
+            setImageError(false);
+          };
+          img.onerror = () => {
+            setImageError(true);
+          };
+          img.src = updatedPhoto;
+        }
+      }
+    };
+
+    window.addEventListener('coordinatorProfileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('coordinatorProfileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
+  const handleOverlayClick = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      window.dispatchEvent(new CustomEvent('closeSidebar'));
+    }
+  };
+
+  const handleViewChange = (view) => {
+    if (onViewChange) {
+      onViewChange(view);
+    }
+    if (window.innerWidth <= 1200) {
+      handleOverlayClick();
+    }
+  };
+
+  return (
+    <>
+      {isOpen && (
+        <div 
+          className={styles.overlay} 
+          onClick={handleOverlayClick} 
+        />
+      )}
+      <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+        <div className={styles['user-info']}>
+          <div className={styles['user-details']}>
+            {coordinatorProfile?.profilePhoto && !imageError ? (
+              <img
+                key={imageKey}
+                src={coordinatorProfile.profilePhoto}
+                alt="Coordinator"
+                onError={() => setImageError(true)}
+                style={{ 
+                  width: '60px', 
+                  height: '60px', 
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1px solid rgb(36 36 36)',
+                  display: 'block'
+                }} 
+              />
+            ) : (
+              <img
+                src={Adminicon}
+                alt="Coordinator"
+                style={{ 
+                  width: '60px',
+                  height: '60px',
+                  filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(340deg) brightness(100%) contrast(100%)",
+                  display: 'block'
+                }} 
+              />
+            )}
+
+            <div className={styles['user-text']}>
+              <span style={{ display: 'block' }}>
+                {coordinatorProfile?.name || 'Coordinator'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <nav className={styles.nav}>
+          <div className={styles['nav-section']}>
+            {sidebarItems.map((item) => (
+              <span
+                key={item.text}
+                className={`${styles['nav-item']} ${item.view === currentView ? styles.selected : ''}`}
+                onClick={() => handleViewChange(item.view)}
+              >
+                <img src={item.icon} alt={item.text} /> {item.text}
+              </span>
+            ))}
+          </div>
+
+          <div className={styles['nav-divider']}></div>
+
+          <span 
+            className={`${styles['nav-item']} ${currentView === 'profile' ? styles.selected : ''}`}
+            onClick={() => handleViewChange('profile')}
+          >
+            <img src={AdminProfileicon} alt="Profile" /> Profile
+          </span>
+
+          <button 
+            type="button" 
+            className={styles['logout-btn']} 
+            onClick={async () => {
+              // Clear all coordinator data
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('authRole');
+              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('coordinatorId');
+              localStorage.removeItem('coordinatorUsername');
+              localStorage.removeItem('isCoordinatorLoggedIn');
+              localStorage.removeItem('coordinatorData');
+              localStorage.removeItem('coordinatorToken');
+              
+              // Clear caches
+              Object.keys(localStorage).forEach((key) => {
+                if (
+                  key === 'coordinatorProfileCache' || 
+                  key.startsWith('coordinatorProfileCache_') || 
+                  key === 'cachedCoordinatorPicUrl' || 
+                  key.startsWith('cachedCoordinatorPicUrl_') || 
+                  key === 'coordinatorProfileCacheTime' || 
+                  key.startsWith('coordinatorProfileCacheTime_')
+                ) {
+                  localStorage.removeItem(key);
+                }
+              });
+
+              cachedCoordinatorProfile = null;
+              cachedCoordinatorTimestamp = null;
+
+              if (authLogout) {
+                await authLogout();
+              }
+              navigate('/');
+            }}
+          >
+            Logout
+          </button>
+        </nav>
+      </div>
+    </>
+  );
+};
+
+export default Cosidebar;

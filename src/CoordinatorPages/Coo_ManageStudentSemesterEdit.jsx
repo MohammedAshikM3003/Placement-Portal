@@ -8,7 +8,7 @@ import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
 import CooCalendar from '../components/Calendar/Coo_Calendar';
-import styles from './Coo_ManageStuEditPage_new.module.css'; // Module Import
+import styles from './Coo_ManageStudentSemesterEdit.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/Adminicon.png';
 import BestAchievement from '../assets/BestAchievementicon.svg';
@@ -2572,7 +2572,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     currentView={'manage-students'}
                     onViewChange={handleViewChange}
                     studentData={studentData}
-                />
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles.dashboardArea}>
                     <form ref={formRef} onSubmit={handleSave}>
                         {/* --- PERSONAL INFO --- */}

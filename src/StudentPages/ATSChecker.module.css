@@ -860,7 +860,7 @@
 }
 
 /* ========== RESPONSIVE ========== */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .overviewGrid {
     grid-template-columns: 1fr;
   }
@@ -942,7 +942,7 @@
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .dashboardArea {
     margin-left: 0 !important;
     width: 100% !important;

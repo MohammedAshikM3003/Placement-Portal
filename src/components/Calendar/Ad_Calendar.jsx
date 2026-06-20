@@ -11,13 +11,14 @@
  * - Admin theme: #4EA24E
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useImperativeHandle, forwardRef } from 'react';
 import ReactDOM from 'react-dom';
 
-function Ad_Calendar({ value, onChange }) {
+const Ad_Calendar = forwardRef(function Ad_Calendar({ value, onChange, disabled = false, maxDate = null, triggerClassName = '', triggerHighlighted = false }, ref) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
   const today = useMemo(() => new Date(), []);
+  const maxDateValue = useMemo(() => (maxDate ? new Date(maxDate) : null), [maxDate]);
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [hovered, setHovered] = useState(false);
@@ -28,6 +29,8 @@ function Ad_Calendar({ value, onChange }) {
   const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
   const triggerRef  = useRef(null);
   const calendarRef = useRef(null);
+
+  useImperativeHandle(ref, () => triggerRef.current);
 
   const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -45,7 +48,7 @@ function Ad_Calendar({ value, onChange }) {
     ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
     : '';
 
-  const currentYearForPicker = new Date().getFullYear();
+  const currentYearForPicker = (maxDateValue || today).getFullYear();
   const years = Array.from({ length: currentYearForPicker - 2000 + 1 }, (_, i) => 2000 + i);
   const yearListRef    = useRef(null);
   const yearThumbRef   = useRef(null);
@@ -101,7 +104,10 @@ function Ad_Calendar({ value, onChange }) {
     document.addEventListener('mouseup', onUp);
   };
 
-  const handleToggle = () => setOpen(o => !o);
+  const handleToggle = () => {
+    if (disabled) return;
+    setOpen(o => !o);
+  };
   const handleClose  = () => setOpen(false);
 
   useEffect(() => {
@@ -185,17 +191,20 @@ function Ad_Calendar({ value, onChange }) {
               {MONTHS.map((m, i) => {
                 const isSel = i === calMonth;
                 const isHov = hoveredMonth === i;
+                const isDisabled = maxDateValue && calYear === maxDateValue.getFullYear() && i > maxDateValue.getMonth();
                 return (
                 <button
                   key={m}
-                  onClick={() => { setCalMonth(i); setViewMode('day'); }}
+                  onClick={() => { if (isDisabled) return; setCalMonth(i); setViewMode('day'); }}
                   onMouseEnter={() => setHoveredMonth(i)}
                   onMouseLeave={() => setHoveredMonth(null)}
+                  disabled={isDisabled}
                   style={{
                     padding: '12px 6px', borderRadius: '8px', border: 'none',
-                    cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.95rem',
                     backgroundColor: isSel ? '#4EA24E' : isHov ? '#e8f5e8' : 'transparent',
-                    color: isSel ? '#fff' : '#333',
+                    color: isSel ? '#fff' : isDisabled ? '#b7b7b7' : '#333',
+                    opacity: isDisabled ? 0.5 : 1,
                     fontFamily: "'Poppins', sans-serif",
                     transition: 'background-color 0.15s'
                   }}
@@ -215,19 +224,21 @@ function Ad_Calendar({ value, onChange }) {
                   {years.map(y => {
                     const isSel = y === calYear;
                     const isHov = hoveredYear === y;
+                    const isDisabled = maxDateValue && y > maxDateValue.getFullYear();
                     return (
                     <div
                       key={y}
                       data-selected={y === calYear}
-                      onClick={() => { setCalYear(y); setViewMode('day'); }}
+                      onClick={() => { if (isDisabled) return; setCalYear(y); setViewMode('day'); }}
                       onMouseEnter={() => setHoveredYear(y)}
                       onMouseLeave={() => setHoveredYear(null)}
                       style={{
-                        padding: '12px 20px', cursor: 'pointer',
+                        padding: '12px 20px', cursor: isDisabled ? 'not-allowed' : 'pointer',
                         fontWeight: 700, fontSize: '1rem', textAlign: 'center',
                         fontFamily: "'Poppins', sans-serif",
                         backgroundColor: isSel ? '#4EA24E' : isHov ? '#e8f5e8' : 'transparent',
-                        color: isSel ? '#fff' : '#333',
+                        color: isSel ? '#fff' : isDisabled ? '#b7b7b7' : '#333',
+                        opacity: isDisabled ? 0.5 : 1,
                         transition: 'background-color 0.15s'
                       }}
                     >{y}</div>
@@ -263,10 +274,13 @@ function Ad_Calendar({ value, onChange }) {
                   const sel = isSelected(day);
                   const tod = isToday(day);
                   const isHov = hoveredDay === day;
+                  const isDisabled = maxDateValue && new Date(calYear, calMonth, day) > maxDateValue;
                   return (
                     <button
                       key={day}
+                      disabled={isDisabled}
                       onClick={() => {
+                        if (isDisabled) return;
                         const mm = String(calMonth + 1).padStart(2, '0');
                         const dd = String(day).padStart(2, '0');
                         onChange(`${calYear}-${mm}-${dd}`);
@@ -277,10 +291,11 @@ function Ad_Calendar({ value, onChange }) {
                       style={{
                         textAlign: 'center', padding: '7px 0', borderRadius: '50%',
                         border: 'none',
-                        cursor: 'pointer', fontSize: '0.95rem',
+                        cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem',
                         fontWeight: sel || tod ? 700 : 500,
                         backgroundColor: sel ? '#4EA24E' : isHov ? '#e8f5e8' : tod ? '#e8f5e8' : 'transparent',
-                        color: sel ? '#fff' : tod ? '#4EA24E' : '#333',
+                        color: sel ? '#fff' : isDisabled ? '#b7b7b7' : tod ? '#4EA24E' : '#333',
+                        opacity: isDisabled ? 0.45 : 1,
                         fontFamily: "'Poppins', sans-serif",
                         transition: 'background-color 0.15s',
                         position: 'relative'
@@ -318,18 +333,21 @@ function Ad_Calendar({ value, onChange }) {
       <div
         ref={triggerRef}
         data-ad-calendar-field="true"
+        className={triggerClassName}
         onClick={handleToggle}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          border: hovered ? '1px solid #4EA24E' : '1px solid #def4dd',
-          boxShadow: hovered ? '0 0 0 3px rgba(78,162,78,0.2)' : 'none',
+          border: triggerHighlighted ? '2px solid #2E7D32' : hovered && !disabled ? '1px solid #4EA24E' : '1px solid #def4dd',
+          boxShadow: triggerHighlighted ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : hovered && !disabled ? '0 0 0 3px rgba(78,162,78,0.2)' : 'none',
           borderRadius: '8px',
-          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#f9fff9',
+          padding: '0.9rem', cursor: 'pointer', backgroundColor: triggerHighlighted ? '#f4fff4' : '#f9fff9',
           fontSize: '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
-          transition: 'border-color 0.3s, box-shadow 0.3s'
+          opacity: disabled ? 0.78 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          transition: 'border-color 0.3s, box-shadow 0.3s, background-color 0.3s'
         }}
       >
         <span style={{ flex: 1, fontWeight: 600, color: displayVal ? '#1a1a1a' : '#9aa7c2' }}>{displayVal || 'DD-MM-YYYY'}</span>
@@ -343,6 +361,6 @@ function Ad_Calendar({ value, onChange }) {
       {calendarPortal}
     </div>
   );
-}
+});
 
 export default Ad_Calendar;

@@ -114,26 +114,23 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   };
 
   useEffect(() => {
+    if (studentData) {
+      console.log('📥 Sidebar: Using studentData from parent prop');
+      setCurrentStudentData(studentData);
+      cachedStudentData = studentData;
+      cacheTimestamp = Date.now();
+      hasFetchedRef.current = true;
+      setImageError(false);
+      if (studentData.profilePicURL) {
+        preloadAndCacheImage(studentData.profilePicURL);
+      }
+      return;
+    }
+
     const fetchStudentData = async () => {
       // Guard: Already fetched successfully with valid cache - DON'T preload again (prevents flickering)
       if (hasFetchedRef.current && cachedStudentData && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
         console.log('✅ Sidebar: Already has valid cache, skipping ALL processing');
-        return; // Don't call preloadAndCacheImage again!
-      }
-
-      // Use fresh studentData if available from parent (only on initial mount)
-      if (studentData && !hasFetchedRef.current) {
-        console.log('📥 Sidebar: Using studentData from parent');
-        setCurrentStudentData(studentData);
-        cachedStudentData = studentData;
-        cacheTimestamp = Date.now();
-        hasFetchedRef.current = true;
-        setImageError(false);
-        
-        // Preload image only on first mount
-        if (studentData.profilePicURL) {
-          preloadAndCacheImage(studentData.profilePicURL);
-        }
         return;
       }
 
@@ -171,7 +168,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     };
     
     fetchStudentData();
-  }, [studentData]); // Only trigger on parent studentData change
+  }, [studentData]);
 
   useEffect(() => {
     const handleProfileUpdate = (event) => {
@@ -242,9 +239,30 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     };
   }, []);
 
+  const handleOverlayClick = () => {
+    const hamburger = 
+      document.querySelector('button[class*="hamburger-menu"]') || 
+      document.querySelector('button[class*="hamburgerMenu"]') || 
+      document.querySelector('button[class*="ad-hamburger-menu"]') ||
+      document.querySelector('button[class*="hamburger"]') ||
+      document.querySelector('[aria-label*="navigation"]') ||
+      document.querySelector('[class*="hamburgerIcon"]')?.closest('button');
+    if (hamburger) {
+      hamburger.click();
+    } else {
+      window.dispatchEvent(new CustomEvent('closeSidebar'));
+    }
+  };
+
   return (
-    // FIX: Use template literal for combined classes and styles object
-    <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+    <>
+      {isOpen && (
+        <div 
+          className={styles.overlay} 
+          onClick={handleOverlayClick} 
+        />
+      )}
+      <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
       <div className={styles['user-info']}>
         <div className={styles['user-details']}>
           {profilePicUrl && !imageError ? (
@@ -294,11 +312,13 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           )}
           <div className={styles['user-text']}>
             <span style={{ display: 'block' }}>
-              {currentStudentData?.firstName && currentStudentData?.lastName 
-                ? `${currentStudentData.firstName} ${currentStudentData.lastName}`.toUpperCase()
-                : currentStudentData?.regNo 
-                  ? currentStudentData.regNo
-                  : isLoading ? 'Loading...' : 'Student'}
+              {currentStudentData?.name 
+                ? currentStudentData.name.toUpperCase()
+                : (currentStudentData?.firstName || currentStudentData?.lastName)
+                  ? `${currentStudentData.firstName || ''} ${currentStudentData.lastName || ''}`.trim().toUpperCase()
+                  : (currentStudentData?.regNo || currentStudentData?.registerNumber)
+                    ? String(currentStudentData.regNo || currentStudentData.registerNumber)
+                    : isLoading ? 'Loading...' : 'Student'}
             </span>
           </div>
         </div>
@@ -349,6 +369,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         </button>
       </nav>
     </div>
+    </>
   );
 };
 

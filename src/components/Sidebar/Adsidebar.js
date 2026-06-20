@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -78,11 +78,13 @@ const normalizeSidebarProfilePhoto = (value) => {
 
 
 
-const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
+const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
   const { logout: authLogout } = useAuth();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const hasFetchedRef = useRef(false); // Prevent duplicate fetches
 
@@ -609,64 +611,64 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
   // Check if current path is admin profile (student view)
 
-  const isAdminProfilePage = window.location.pathname.startsWith('/admin-profile/');
+  const isAdminProfilePage = currentPath.startsWith('/admin-profile/');
 
   // Check if current path is certificate view page
 
-  const isCertificateViewPage = window.location.pathname.startsWith('/admin-student-certificates/');
+  const isCertificateViewPage = currentPath.startsWith('/admin-student-certificates/');
 
   // Check if current path is admin student profile view/edit and marksheet view pages
 
-  const isAdminStudentViewPage = window.location.pathname.startsWith('/admin-student-view/');
+  const isAdminStudentViewPage = currentPath.startsWith('/admin-student-view/');
 
-  const isAdminStudentEditPage = window.location.pathname.startsWith('/admin-student-edit/');
+  const isAdminStudentEditPage = currentPath.startsWith('/admin-student-edit/');
 
-  const isAdminSemesterMarksheetViewPage = window.location.pathname.startsWith('/admin-semester-marksheet-view/');
+  const isAdminSemesterMarksheetViewPage = currentPath.startsWith('/admin-semester-marksheet-view/');
 
   // Check if current path is active zip page (student database zip view)
 
-  const isActiveZipPage = window.location.pathname.startsWith('/admin/active-zip/') || window.location.pathname.startsWith('/admin/zipped-batch') || window.location.pathname === '/admin/zipped-batches';
+  const isActiveZipPage = currentPath.startsWith('/admin/active-zip/') || currentPath.startsWith('/admin/zipped-batch') || currentPath === '/admin/zipped-batches';
 
   // Check if current path is add branch pages (both main and form)
 
-  const isAddBranchPage = window.location.pathname === '/admin-add-branch' ||
+  const isAddBranchPage = currentPath === '/admin-add-branch' ||
 
-                          window.location.pathname === '/admin-add-branch-main';
+                          currentPath === '/admin-add-branch-main';
 
   // Check if current path is coordinator detail page
 
-  const isCoordinatorDetailPage = window.location.pathname === '/admin-coordinator-detail';
+  const isCoordinatorDetailPage = currentPath === '/admin-coordinator-detail';
 
   // Check if current path is manage coordinators page
 
-  const isManageCoordinatorsPage = window.location.pathname.startsWith('/admin-manage-coordinators/');
+  const isManageCoordinatorsPage = currentPath.startsWith('/admin-manage-coordinators/');
 
   // Check if current path is company drive related pages
 
-  const isCompanyDrivePage = window.location.pathname === '/admin-company-drive' ||
-    window.location.pathname.startsWith('/admin/company-drive/');
+  const isCompanyDrivePage = currentPath === '/admin-company-drive' ||
+    currentPath.startsWith('/admin/company-drive/');
 
   // Check if current path is eligible students page (list view)
 
-  const isEligibleStudentsPage = window.location.pathname === '/admin-eligible-students';
+  const isEligibleStudentsPage = currentPath === '/admin-eligible-students';
 
   // Check if current path is any report analysis page
 
-  const isReportAnalysisPage = window.location.pathname.startsWith('/admin-report-analysis-');
+  const isReportAnalysisPage = currentPath.startsWith('/admin-report-analysis-');
 
   // Check if current path is any training-related page
-  const isTrainingPage = window.location.pathname === '/admin-training' ||
-                         window.location.pathname === '/admin-trainings-archive' ||
-                         window.location.pathname === '/admin-add-training' ||
-                         window.location.pathname === '/admin-schedule-training' ||
-                         window.location.pathname === '/admin-preferred-training-students' ||
-                         window.location.pathname === '/admin-schedule-training-batch' ||
-                         window.location.pathname === '/admin-attendance-stdinfo' ||
-                         window.location.pathname === '/admin-train-attendance-stuinfo' ||
-                         window.location.pathname === '/admin-training-history' ||
-                         window.location.pathname === '/admin-training-company' ||
-                         window.location.pathname.startsWith('/admin-training-history/') ||
-                         window.location.pathname.startsWith('/admin-training-company/');
+  const isTrainingPage = currentPath === '/admin-training' ||
+                         currentPath === '/admin-trainings-archive' ||
+                         currentPath === '/admin-add-training' ||
+                         currentPath === '/admin-schedule-training' ||
+                         currentPath === '/admin-preferred-training-students' ||
+                         currentPath === '/admin-schedule-training-batch' ||
+                         currentPath === '/admin-attendance-stdinfo' ||
+                         currentPath === '/admin-train-attendance-stuinfo' ||
+                         currentPath === '/admin-training-history' ||
+                         currentPath === '/admin-training-company' ||
+                         currentPath.startsWith('/admin-training-history/') ||
+                         currentPath.startsWith('/admin-training-company/');
 
 
 
@@ -741,11 +743,33 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
   };
 
-  
+  const handleOverlayClick = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('closeSidebar'));
+    const hamburger = 
+      document.querySelector('button[class*="hamburger-menu"]') || 
+      document.querySelector('button[class*="hamburgerMenu"]') || 
+      document.querySelector('button[class*="ad-hamburger-menu"]') ||
+      document.querySelector('button[class*="hamburger"]') ||
+      document.querySelector('[aria-label*="navigation"]') ||
+      document.querySelector('[class*="hamburgerIcon"]')?.closest('button');
+    if (hamburger) {
+      hamburger.click();
+    }
+  };
 
   return (
-
-    <div className={`${styles.adsidebar} ${isOpen ? styles.open : ''}`}>
+    <>
+      {isOpen && (
+        <div 
+          className={styles.overlay} 
+          onClick={handleOverlayClick} 
+        />
+      )}
+      <div className={`${styles.adsidebar} ${isOpen ? styles.open : ''}`}>
 
       <div className={styles['ad-user-info']}>
 
@@ -817,7 +841,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
                 if (item.view === 'admin-add-branch-main') {
 
-                  const shouldHighlight = isActive || isAddBranchPage || isManageCoordinatorsPage;
+                  const shouldHighlight = isActive || isAddBranchPage || isManageCoordinatorsPage || isCoordinatorDetailPage;
 
                   return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
 
@@ -827,7 +851,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
 
                 if (item.view === 'admin-student-application') {
 
-                  const shouldHighlight = isActive || isEligibleStudentsPage || window.location.pathname === '/admin-student-application';
+                  const shouldHighlight = isActive || isEligibleStudentsPage || currentPath === '/admin-student-application';
 
                   return `${styles['ad-nav-item']} ${shouldHighlight ? styles.selected : ''}`;
 
@@ -869,11 +893,8 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
                 }
 
                 // Auto-close sidebar on mobile after navigation
-
-                if (window.innerWidth <= 992 && isOpen) {
-
-                  window.dispatchEvent(new CustomEvent('closeSidebar'));
-
+                if (window.innerWidth <= 1200) {
+                  handleOverlayClick();
                 }
 
               }}
@@ -908,10 +929,8 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
               onViewChange('admin-profile-main');
             }
 
-            if (window.innerWidth <= 992 && isOpen) {
-
-              window.dispatchEvent(new CustomEvent('closeSidebar'));
-
+            if (window.innerWidth <= 1200) {
+              handleOverlayClick();
             }
 
           }}
@@ -935,7 +954,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange }) => {
       </nav>
 
     </div>
-
+    </>
   );
 
 };

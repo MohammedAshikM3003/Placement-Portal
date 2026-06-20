@@ -509,6 +509,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
           onLogout={onLogout}
           currentView="report-analysis"
           onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles["co-main-content"]}>
           <div className={styles["co-rat-filter-box"]}>

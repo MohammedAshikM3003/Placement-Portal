@@ -1,18 +1,18 @@
 .adsidebar {
   background: #fff;
   width: 290px;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 65px);
   box-shadow: 2px 0 12px #e1e6ef3a;
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
-  top: 64px;
+  top: 65px;
   /* Allow scrolling when sidebar content is taller than viewport so Logout
      and lower items are always reachable. */
   overflow-y: auto;
   overflow-x: hidden;
-  z-index: 1000; /* Below popup overlay */
+  z-index: 1002;
   transition: transform 0.3s ease-in-out;
   font-family: 'Poppins', sans-serif;
   margin-top: 1px;
@@ -37,9 +37,10 @@
 }
 
 /* Responsive rules for mobile view */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .adsidebar {
     transform: translateX(-100%);
+    width: 280px;
   }
   .adsidebar.open {
     transform: translateX(0);
@@ -231,4 +232,21 @@ filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-
 
 .adsidebar .ad-logout-btn:hover {
   background: #d55a6a;
+}
+
+.overlay {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 65px);
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+  }
 }

@@ -1,0 +1,83 @@
+{
+  "personalInfo": {
+    "name": "Deepika Pillai",
+    "mobile": "9642559792",
+    "email": "deepika.pillai35@anonymized.in",
+    "linkedin": "linkedin.com/in/deepikapillai",
+    "github": "github.com/deepikapillai",
+    "portfolio": ""
+  },
+  "summary": "aspiring Data Scientist. got first prize in coding contest. know Python.",
+  "education": {
+    "college": "Vellore Institute of Technology",
+    "degree": "B.Tech",
+    "branch": "Computer Science Engineering",
+    "cgpa": "7.71",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "Python",
+        "Pandas",
+        "NumPy",
+        "SQL",
+        "Statistics",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "companyName": "TCS",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "done model development and data cleanups in python.",
+      "technologies": [
+        "Python",
+        "Pandas"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Customer Segmentation",
+      "description": "done clustering algorithms on customer datasets. analyzed metrics and data.",
+      "technologies": [
+        "Python",
+        "Pandas",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/deepika"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "AI Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

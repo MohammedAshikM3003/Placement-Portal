@@ -152,7 +152,9 @@ export default function CooCompanyDriveView({ onLogout, onViewChange }) {
     <>
       <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} onLogout={onLogout} />
       <div className={styles['co-cdv-layout']}>
-        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-drive" onViewChange={onViewChange} />
+        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-drive" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
         <div className={styles['co-cdv-main-content']}>
           <div className={styles['co-cdv-container']}>
             <div className={styles['co-cdv-left-section']}>

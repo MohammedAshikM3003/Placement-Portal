@@ -419,7 +419,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     <>
 
       <Navbar onToggleSidebar={toggleSidebar} />                  
-      <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange} />
+      <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
       <div className={styles['co-ps-portal-container']}>
     
        

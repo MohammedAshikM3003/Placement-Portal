@@ -2604,7 +2604,7 @@ select:disabled {
   max-height: 100% !important;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
         .dashboardArea {
                 margin-left: 0 !important;
                 width: 100% !important;

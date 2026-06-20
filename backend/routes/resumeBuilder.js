@@ -658,7 +658,7 @@ async function buildResumeHTML(data, req = null) {
 
   ${experiences.length ? `<div class="section"><div class="section-title">Internship</div>
     ${experiences.map(e => {
-      const formatDate = (d) => { if (!d) return ''; const parts = d.split('-'); return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : d; };
+      const formatDate = (d) => { if (!d) return ''; const parts = d.split('-'); return parts.length === 3 ? (parts[0].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : d) : d; };
       const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
       const titleParts = [];
       if (e.companyName) titleParts.push(escapeHtml(e.companyName));
@@ -918,8 +918,93 @@ router.post('/ats-check', optionalAuth, async (req, res) => {
     }
 
     const analysis = performATSAnalysis(resumeData);
-
     analysis.aiEnhanced = false;
+
+    // Call Python AI model for real ATS checking
+    try {
+      const plainText = buildPlainText(resumeData);
+      
+      // Map job role to keywords for job description
+      const jobRole = resumeData.resumeSettings?.jobRole || '';
+      const customJobRole = resumeData.resumeSettings?.customJobRole || '';
+      const targetRole = jobRole === 'Others' ? customJobRole : jobRole;
+      
+      const roleKeywords = {
+        'Frontend Developer': 'Frontend Developer, HTML, CSS, JavaScript, React, Vue, Angular, TypeScript, Responsive Design, UI/UX, Bootstrap, Tailwind CSS, Material-UI, Redux, REST API, GraphQL, Webpack, Git, Agile, Cross-browser Compatibility',
+        'React Developer': 'React Developer, React, Redux, JavaScript, TypeScript, HTML5, CSS3, Next.js, Webpack, Babel, REST API, GraphQL, Jest, React Testing Library, Git',
+        'Backend Developer': 'Backend Developer, Node.js, Python, Java, Spring Boot, Express.js, Django, Flask, REST API, GraphQL, MongoDB, MySQL, PostgreSQL, Redis, Microservices, Docker, Kubernetes, AWS, Azure, Git, CI/CD, Agile',
+        'Node Developer': 'Node Developer, Node.js, Express.js, JavaScript, TypeScript, REST API, GraphQL, MongoDB, MySQL, Redis, Docker, AWS, Microservices, Socket.io, Jest, NPM, Git',
+        'Full Stack Developer': 'Full Stack Developer, HTML, CSS, JavaScript, React, Node.js, Express.js, MongoDB, MySQL, REST API, Git, Docker, AWS, TypeScript, Redux, Agile, Microservices, CI/CD, Responsive Design, Authentication, Security',
+        'Data Scientist': 'Data Scientist, Python, R, Machine Learning, Deep Learning, TensorFlow, PyTorch, Scikit-learn, Pandas, NumPy, Data Visualization, Statistics, SQL, Big Data, Hadoop, Spark, NLP, Computer Vision, A/B Testing, Feature Engineering',
+        'Machine Learning Engineer': 'Machine Learning Engineer, Python, Machine Learning, Deep Learning, TensorFlow, PyTorch, Scikit-learn, NLP, Computer Vision, Keras, MLOps, Docker, Kubernetes, AWS, SQL',
+        'DevOps Engineer': 'DevOps Engineer, Docker, Kubernetes, AWS, Azure, GCP, CI/CD, Jenkins, Terraform, Ansible, Linux, Bash, Git, Prometheus, Grafana, Python, Shell Scripting',
+        'Mobile Developer': 'Mobile Developer, Swift, Kotlin, React Native, Flutter, Java, Objective-C, iOS, Android, Xcode, Android Studio, REST API, Git, App Store Connect, Google Play Console',
+        'QA Engineer': 'QA Engineer, Selenium, Cypress, Jest, JUnit, Test Automation, Manual Testing, QA, Bug Tracking, Jira, Postman, Regression Testing, CI/CD, Git',
+        'Cloud Engineer': 'Cloud Engineer, AWS, Azure, GCP, Cloud Computing, Terraform, Docker, Kubernetes, IAM, VPC, Serverless, Lambda, Linux, CI/CD, Git',
+        'Cyber Security Engineer': 'Cyber Security Engineer, Cybersecurity, Firewalls, SIEM, Penetration Testing, Vulnerability Assessment, Network Security, Cryptography, Linux, Wireshark, OWASP, IAM, Security Audits',
+        'Data Engineer': 'Data Engineer, SQL, Python, ETL, Spark, Hadoop, Kafka, Data Warehousing, PostgreSQL, Redshift, Snowflake, Airflow, NoSQL, Big Data',
+        'UI/UX Designer': 'UI/UX Designer, Figma, Adobe XD, Sketch, Wireframing, Prototyping, User Research, UI/UX Design, Interaction Design, HTML, CSS, Information Architecture',
+        'Database Administrator': 'Database Administrator, SQL, MySQL, PostgreSQL, Oracle, SQL Server, Database Administration, Backup & Recovery, Performance Tuning, NoSQL, MongoDB, Database Security',
+        'Embedded Systems Engineer': 'Embedded Systems Engineer, C, C++, Microcontrollers, Embedded C, RTOS, Firmware, IoT, Raspberry Pi, Arduino, PCB Design, Debugging, Hardware',
+        'Product Manager': 'Product Manager, Product Management, Agile, Scrum, Product Roadmap, User Stories, Market Research, Jira, Confluence, Analytics, SQL, A/B Testing, Stakeholder Management'
+      };
+      
+      const jobDesc = roleKeywords[jobRole] || targetRole || 'Software Engineer, Programming, Software Development, Technology';
+      
+      console.log(`📡 Calling Python AI model for ATS check. Job description size: ${jobDesc.length}`);
+      const aiService = require('../services/aiService');
+      const aiResult = await aiService.checkATS(plainText, jobDesc);
+      
+      if (aiResult && (typeof aiResult.overallScore === 'number' || typeof aiResult.score === 'number')) {
+        const pyScore = aiResult.overallScore !== undefined ? aiResult.overallScore : aiResult.score;
+        console.log(`✅ Python AI model returned score: ${pyScore}, suggestions: ${aiResult.suggestions?.length || 0}`);
+        
+        analysis.overallScore = pyScore;
+        analysis.aiEnhanced = true;
+        
+        // 2. Overwrite / merge suggestions
+        const mergedSuggestions = [];
+        
+        // Add critical missing skills suggestion
+        if (aiResult.missingSkills && aiResult.missingSkills.length > 0) {
+          mergedSuggestions.push(`💡 Missing ATS Keywords (Add to resume): ${aiResult.missingSkills.join(', ')}`);
+        }
+        
+        // Add matched skills recommendation
+        if (aiResult.matchedSkills && aiResult.matchedSkills.length > 0) {
+          mergedSuggestions.push(`✅ Matched ATS Keywords (Emphasize): ${aiResult.matchedSkills.join(', ')}`);
+        }
+        
+        // Add other AI model suggestions
+        if (aiResult.suggestions) {
+          aiResult.suggestions.forEach(s => {
+            if (!mergedSuggestions.includes(s)) {
+              mergedSuggestions.push(s);
+            }
+          });
+        }
+        
+        analysis.suggestions = mergedSuggestions;
+        
+        // Populate critical fixes and categories from V2
+        if (aiResult.criticalFixes) {
+          analysis.criticalFixes = aiResult.criticalFixes;
+        }
+        if (aiResult.categories) {
+          analysis.categories = aiResult.categories;
+        }
+        if (aiResult.keywordStuffing !== undefined) {
+          analysis.keywordStuffing = aiResult.keywordStuffing;
+        }
+        if (aiResult.penaltyApplied !== undefined) {
+          analysis.penaltyApplied = aiResult.penaltyApplied;
+        }
+        
+        analysis.totalIssues = analysis.suggestions.length;
+      }
+    } catch (aiErr) {
+      console.warn('⚠️ Python AI model ATS check failed, relying on JS rules:', aiErr.message);
+    }
 
     res.json({ success: true, analysis });
 

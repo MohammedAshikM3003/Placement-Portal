@@ -10,10 +10,10 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import gridfsService from '../services/gridfsService';
 import { saveProfileObjectCache } from '../hooks/useProfileCache';
 import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
+import mongoDBService from '../services/mongoDBService.jsx';
 // Assuming these paths are correct for your existing files
 import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
-
 // FIXED: Import CSS as a Module
 import styles from './AdminmainProfile.module.css';
 
@@ -23,8 +23,101 @@ import ProfileGraduationcap from "../assets/AdminProfileGraduationcap.svg"
 // GridFS replaces base64 compression
 // import { fileToBase64WithCompression, getBase64SizeKB } from '../utils/imageCompression';
 
+// --- Required Fields Config ---
+const REQUIRED_ADMIN_FIELDS = [
+    { field: 'firstName', label: 'First Name' },
+    { field: 'lastName', label: 'Last Name' },
+    { field: 'dob', label: 'DOB' },
+    { field: 'gender', label: 'Gender' },
+    { field: 'emailId', label: 'Email ID' },
+    { field: 'domainMailId', label: 'Domain Mail ID' },
+    { field: 'phoneNumber', label: 'Phone Number' },
+    { field: 'department', label: 'Branch' },
+];
+
+const RequiredStar = () => <span className={styles['Admin-profile-required-star']}>*</span>;
+
+const DropdownIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="292.4" height="292.4" viewBox="0 0 292.4 292.4" className={styles['Admin-profile-dropdown-icon']}>
+        <path fill="#999" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
+    </svg>
+);
+
+const MissingFieldsCard = ({ missingFields, onFieldClick, showAllErrors, onToggleShowAll, errorTooltip, supportsPointerTooltip, onTooltipMove, onTooltipLeave }) => {
+    if (!missingFields.length) return null;
+    const visibleFields = showAllErrors ? missingFields : missingFields.slice(0, 10);
+    return (
+        <div className={styles['Admin-profile-validation-box']}>
+            <h4 className={styles['Admin-profile-validation-heading']}>
+                <span className={styles['Admin-profile-validation-icon']} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                        <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                    </svg>
+                </span>
+                Required Fields Missing:
+            </h4>
+            <ul className={styles['Admin-profile-validation-list']}>
+                {visibleFields.map((error, index) => (
+                    <li
+                        key={`${error.field}-${index}`}
+                        className={styles['Admin-profile-validation-item']}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Click to navigate"
+                        onClick={() => onFieldClick(error.field)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick(error.field); } }}
+                        onMouseEnter={supportsPointerTooltip ? onTooltipMove : undefined}
+                        onMouseMove={supportsPointerTooltip ? onTooltipMove : undefined}
+                        onMouseLeave={supportsPointerTooltip ? onTooltipLeave : undefined}
+                    >
+                        {error.customMessage || `${error.label} is required`}
+                    </li>
+                ))}
+            </ul>
+            {supportsPointerTooltip && errorTooltip.visible && (
+                <div
+                    className={styles['Admin-profile-validation-pointer-tooltip']}
+                    style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+                >
+                    Click to navigate
+                </div>
+            )}
+            {missingFields.length > 10 && (
+                <div className={styles['Admin-profile-validation-toggle']}>
+                    <button type="button" onClick={onToggleShowAll} className={styles['Admin-profile-show-more-btn']}>
+                        <span>{showAllErrors ? 'Show Less' : `Show More (${missingFields.length - 10} more)`}</span>
+                        <span className={styles['Admin-profile-show-more-caret']} aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="14" height="14" focusable="false">
+                                {showAllErrors ? (
+                                    <path d="M7 14l5-5 5 5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                ) : (
+                                    <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                )}
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Helper functions for date handling
 // Icons (Classes updated to modular format where needed)
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+    </svg>
+);
+
 const MdUpload = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"></path></svg>
 );
@@ -742,6 +835,31 @@ const normalizeValue = (value) => {
     return String(value).trim();
 };
 
+const formatDobForPassword = (value) => {
+    if (!value) return '';
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        // If it's in YYYY-MM-DD format, convert to DDMMYYYY
+        if (trimmed.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = trimmed.split('-');
+            return `${day}${month}${year}`;
+        }
+        // If it's already in DDMMYYYY format or other format, return as-is
+        return trimmed;
+    }
+
+    const dateValue = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(dateValue.getTime())) {
+        return normalizeValue(value);
+    }
+
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const year = String(dateValue.getFullYear());
+    return `${day}${month}${year}`;
+};
+
 // Sanitize cached URLs: if they point to localhost/loopback, strip host so
 // `resolveProfileUrl(..., API_BASE_URL)` can rebuild a proper production URL.
 const sanitizeCachedUrl = (value) => {
@@ -927,6 +1045,12 @@ function Admainprofile() {
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
     const [showLoginDetails, setShowLoginDetails] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isCurrentPasswordVerified, setIsCurrentPasswordVerified] = useState(false);
+    const [currentPasswordVerifyError, setCurrentPasswordVerifyError] = useState('');
+    const [isVerifyingCurrentPassword, setIsVerifyingCurrentPassword] = useState(false);
     // Initialize college images from cache to prevent "No Banner" flash
     const [collegeBanner, setCollegeBanner] = useState(() => {
         try {
@@ -1092,6 +1216,22 @@ function Admainprofile() {
     const [collegeImageToCrop, setCollegeImageToCrop] = useState(null);
     const [pendingCollegeFileName, setPendingCollegeFileName] = useState('college-image.jpg');
 
+    // --- Validation / MissingFieldsCard state ---
+    const [branches, setBranches] = useState([]);
+    const [showAllErrors, setShowAllErrors] = useState(false);
+    const [highlightedField, setHighlightedField] = useState(null);
+    const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+    const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+        return (
+            window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches ||
+            window.matchMedia('(hover: hover) and (pointer: fine)').matches
+        );
+    });
+    const fieldRefs = useRef({});
+    const highlightResetTimerRef = useRef(null);
+    const highlightClearTimerRef = useRef(null);
+
     // HYPER-FAST: Initialize loading states based on cache availability
     // If cache exists with valid data, start with isLoading=false to prevent flash
     const [isLoading, setIsLoading] = useState(() => {
@@ -1153,6 +1293,231 @@ function Admainprofile() {
     }, [formData, profilePhoto, collegeBanner, naacCertificate, nbaCertificate, collegeLogo, loginData]);
 
     const changedFields = useMemo(() => getChangedFields(), [getChangedFields]);
+    const shouldShowLoginPasswordFields = isCurrentPasswordVerified;
+    const normalizedNewLoginId = normalizeValue(loginData.newLoginId);
+    const normalizedConfirmLoginId = normalizeValue(loginData.confirmLoginId);
+    const isLoginIdMatch = Boolean(normalizedNewLoginId && normalizedConfirmLoginId && normalizedNewLoginId === normalizedConfirmLoginId);
+    const loginIdMismatchError = normalizedNewLoginId && normalizedConfirmLoginId && !isLoginIdMatch
+        ? 'New Login ID and Confirm Login ID must match.'
+        : '';
+    const shouldShowCurrentPasswordField = isLoginIdMatch;
+    // Hint text derived from DOB (format: DDMMYYYY) used as password suggestion in other profile areas
+    const dobPasswordHint = formatDobForPassword(formData.dob);
+
+    // --- Fetch branches for Branch dropdown ---
+    useEffect(() => {
+        let isMounted = true;
+        const fetchBranches = async () => {
+            try {
+                const branchResponse = await mongoDBService.getBranches();
+                if (!isMounted) return;
+                const branchList = Array.isArray(branchResponse)
+                    ? branchResponse.filter((b) => b?.isActive !== false)
+                    : [];
+                setBranches(branchList);
+            } catch (err) {
+                console.warn('Failed to load branches:', err);
+            }
+        };
+        fetchBranches();
+        return () => { isMounted = false; };
+    }, []);
+
+    // --- Pointer tooltip support detection ---
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+        const hybridQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+        const primaryQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const updatePointerSupport = () => {
+            const isSupported = hybridQuery.matches || primaryQuery.matches;
+            setSupportsPointerTooltip(isSupported);
+            if (!isSupported) {
+                setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+            }
+        };
+        updatePointerSupport();
+        if (typeof hybridQuery.addEventListener === 'function') {
+            hybridQuery.addEventListener('change', updatePointerSupport);
+            primaryQuery.addEventListener('change', updatePointerSupport);
+            return () => {
+                hybridQuery.removeEventListener('change', updatePointerSupport);
+                primaryQuery.removeEventListener('change', updatePointerSupport);
+            };
+        }
+        hybridQuery.addListener(updatePointerSupport);
+        primaryQuery.addListener(updatePointerSupport);
+        return () => {
+            hybridQuery.removeListener(updatePointerSupport);
+            primaryQuery.removeListener(updatePointerSupport);
+        };
+    }, []);
+
+    // --- Cleanup highlight timers on unmount ---
+    useEffect(() => () => {
+        if (highlightResetTimerRef.current) clearTimeout(highlightResetTimerRef.current);
+        if (highlightClearTimerRef.current) clearTimeout(highlightClearTimerRef.current);
+    }, []);
+
+    // --- Missing required fields (drives MissingFieldsCard + Save button disabled) ---
+    const missingRequiredFields = useMemo(() => {
+        const list = [];
+
+        // 1. Standard required fields
+        REQUIRED_ADMIN_FIELDS.forEach(({ field, label }) => {
+            if (!normalizeValue(formData[field])) {
+                list.push({ field, label });
+            }
+        });
+
+        // 2. Phone number format
+        if (formData.phoneNumber && !/^[6789]\d{9}$/.test(formData.phoneNumber)) {
+            list.push({
+                field: 'phoneNumber',
+                label: 'Phone Number',
+                customMessage: 'Phone number must be 10 digits starting with 6, 7, 8, or 9'
+            });
+        }
+
+        // 3. New password and confirm password presence validation if visible
+        let newPasswordMissing = false;
+        let confirmPasswordMissing = false;
+        if (shouldShowLoginPasswordFields) {
+            if (!normalizeValue(loginData.newPassword)) {
+                list.push({
+                    field: 'newPassword',
+                    label: 'New Password'
+                });
+                newPasswordMissing = true;
+            }
+            if (!normalizeValue(loginData.confirmPassword)) {
+                list.push({
+                    field: 'confirmPassword',
+                    label: 'Confirm Password'
+                });
+                confirmPasswordMissing = true;
+            }
+        }
+
+        // 4. Special: If DOB is changed — validate password matches new DOB
+        const isDobChanged = normalizeValue(formData.dob) !== normalizeValue(savedDataRef.current?.dob);
+        if (isDobChanged && dobPasswordHint) {
+            const enteredNew = normalizeValue(loginData.newPassword);
+            const enteredConfirm = normalizeValue(loginData.confirmPassword);
+            if (!newPasswordMissing && enteredNew !== dobPasswordHint) {
+                list.push({
+                    field: 'newPassword',
+                    label: 'New Password',
+                    customMessage: `DOB changed — New Password must be updated to match the new DOB (${dobPasswordHint})`
+                });
+            }
+            if (!confirmPasswordMissing && enteredConfirm !== dobPasswordHint) {
+                list.push({
+                    field: 'confirmPassword',
+                    label: 'Confirm Password',
+                    customMessage: `DOB changed — Confirm Password must match new DOB (${dobPasswordHint})`
+                });
+            }
+        } else if (dobPasswordHint) {
+            const enteredNew = normalizeValue(loginData.newPassword);
+            const enteredConfirm = normalizeValue(loginData.confirmPassword);
+            if (!newPasswordMissing && enteredNew && enteredNew !== dobPasswordHint) {
+                list.push({
+                    field: 'newPassword',
+                    label: 'New Password',
+                    customMessage: `New Password must match DOB (${dobPasswordHint})`
+                });
+            }
+            if (!confirmPasswordMissing && enteredConfirm && enteredConfirm !== dobPasswordHint) {
+                list.push({
+                    field: 'confirmPassword',
+                    label: 'Confirm Password',
+                    customMessage: `Confirm Password must match DOB (${dobPasswordHint})`
+                });
+            }
+        }
+
+        // 5. Password not matching
+        if (showLoginDetails && !newPasswordMissing && !confirmPasswordMissing &&
+            loginData.newPassword && loginData.confirmPassword &&
+            loginData.newPassword !== loginData.confirmPassword) {
+            list.push({
+                field: 'confirmPassword',
+                label: 'Confirm Password',
+                customMessage: 'New Password and Confirm Password must match'
+            });
+        }
+
+        return list;
+    }, [formData, loginData, showLoginDetails, dobPasswordHint, shouldShowLoginPasswordFields]);
+
+    const canSave = useMemo(() => {
+        return missingRequiredFields.length === 0 && !isSaving && changedFields.length > 0;
+    }, [missingRequiredFields.length, isSaving, changedFields.length]);
+
+    // --- Field registration / scroll-to-field-and-blink ---
+    const registerFieldRef = useCallback((field) => (node) => {
+        fieldRefs.current[field] = node;
+    }, []);
+
+    const clearFieldHighlight = useCallback(() => {
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+        setHighlightedField(null);
+    }, []);
+
+    const scrollToFieldAndBlink = useCallback((field) => {
+        const target = fieldRefs.current[field];
+        if (!target) return false;
+
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        if (typeof target.focus === 'function') {
+            try { target.focus({ preventScroll: true }); } catch { target.focus(); }
+        }
+
+        clearFieldHighlight();
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => { setHighlightedField(field); });
+        });
+
+        highlightClearTimerRef.current = window.setTimeout(() => {
+            setHighlightedField((cur) => (cur === field ? null : cur));
+        }, 3000);
+
+        return true;
+    }, [clearFieldHighlight]);
+
+    const focusAdminField = useCallback((field) => {
+        const loginFields = ['currentLoginId', 'newLoginId', 'confirmLoginId', 'currentPassword', 'newPassword', 'confirmPassword'];
+        if (loginFields.includes(field) && !showLoginDetails) {
+            setShowLoginDetails(true);
+            setTimeout(() => {
+                scrollToFieldAndBlink(field);
+            }, 100);
+        } else {
+            scrollToFieldAndBlink(field);
+        }
+    }, [scrollToFieldAndBlink, showLoginDetails]);
+
+    const getAdminFieldClassName = useCallback((field, extraClass = '') => {
+        return [
+            styles['Admin-main-profile-form-input'],
+            highlightedField === field ? styles['Admin-profile-field-highlight'] : '',
+            extraClass
+        ].filter(Boolean).join(' ');
+    }, [highlightedField]);
+
+    const handleErrorTooltipMove = useCallback((event) => {
+        if (!supportsPointerTooltip) return;
+        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    }, [supportsPointerTooltip]);
+
+    const handleErrorTooltipLeave = useCallback(() => {
+        if (!supportsPointerTooltip) return;
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    }, [supportsPointerTooltip]);
 
     useEffect(() => {
         if (changedFields.length === 0) return undefined;
@@ -1215,7 +1580,9 @@ function Admainprofile() {
 
                             setLoginData(prev => ({
                                 ...prev,
-                                currentLoginId: profileData.adminLoginID || adminLoginID
+                                currentLoginId: profileData.adminLoginID || adminLoginID,
+                                newPassword: '',
+                                confirmPassword: '',
                             }));
 
                             // Load profile photo from cache (resolve GridFS URLs for display)
@@ -1327,7 +1694,9 @@ function Admainprofile() {
                     // Load login ID
                     setLoginData(prev => ({
                         ...prev,
-                        currentLoginId: data.adminLoginID || ''
+                        currentLoginId: data.adminLoginID || '',
+                        newPassword: '',
+                        confirmPassword: '',
                     }));
 
                     // ðŸ–¼ï¸ Load profile photo from cache first, then from server
@@ -1509,11 +1878,77 @@ function Admainprofile() {
             ...prevState,
             dob: dateValue || ''
         }));
+
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+    };
+
+    const verifyCurrentPassword = async () => {
+        const currentLoginId = normalizeValue(loginData.currentLoginId || getAdminLoginID());
+        const currentPassword = normalizeValue(loginData.currentPassword);
+
+        if (!currentPassword) {
+            setIsCurrentPasswordVerified(false);
+            setCurrentPasswordVerifyError('');
+            setShowNewPassword(false);
+            setShowConfirmPassword(false);
+            return;
+        }
+
+        setIsVerifyingCurrentPassword(true);
+        setCurrentPasswordVerifyError('');
+
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/admin/login-credentials`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({
+                    currentLoginId,
+                    currentPassword,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                setIsCurrentPasswordVerified(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
+                setCurrentPasswordVerifyError(result.message || 'Current password is incorrect.');
+                return;
+            }
+
+            setIsCurrentPasswordVerified(true);
+        } catch (error) {
+            console.error('Failed to verify current password:', error);
+            setIsCurrentPasswordVerified(false);
+            setShowNewPassword(false);
+            setShowConfirmPassword(false);
+            setCurrentPasswordVerifyError('Unable to verify current password. Please try again.');
+        } finally {
+            setIsVerifyingCurrentPassword(false);
+        }
     };
 
     const handleLoginInputChange = (e) => {
         const { name, value } = e.target;
-        setLoginData(prev => ({ ...prev, [name]: value }));
+        setLoginData(prev => {
+            const next = { ...prev, [name]: value };
+
+            return next;
+        });
+
+        if (name === 'currentPassword' || name === 'currentLoginId' || name === 'newLoginId' || name === 'confirmLoginId') {
+            setIsCurrentPasswordVerified(false);
+            setCurrentPasswordVerifyError('');
+            setShowNewPassword(false);
+            setShowConfirmPassword(false);
+        }
     };
 
     const handlePhotoUpload = async (e) => {
@@ -1732,6 +2167,9 @@ function Admainprofile() {
                     currentLoginId: '', newLoginId: '', confirmLoginId: '',
                     currentPassword: '', newPassword: '', confirmPassword: '',
                 });
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
                 setProfilePhoto(null);
                 setProfilePhotoBase64('');
                 setCollegeBanner(null);
@@ -1786,7 +2224,96 @@ function Admainprofile() {
             setSaveStatus(null);
 
             // Upload any new files to GridFS first
-            const adminLoginID = loginData.currentLoginId || getAdminLoginID();
+            const storedAdminLoginID = normalizeValue(getAdminLoginID());
+            const currentLoginId = normalizeValue(loginData.currentLoginId);
+            const newLoginId = normalizeValue(loginData.newLoginId);
+            const confirmLoginId = normalizeValue(loginData.confirmLoginId);
+            const currentPassword = normalizeValue(loginData.currentPassword);
+            const enteredNewPassword = normalizeValue(loginData.newPassword);
+            const enteredConfirmPassword = normalizeValue(loginData.confirmPassword);
+            const loginIdChangeRequested = Boolean(newLoginId || confirmLoginId);
+            const passwordChangeRequested = Boolean(enteredNewPassword || enteredConfirmPassword || shouldShowLoginPasswordFields);
+            const loginDetailsChangeRequested = loginIdChangeRequested || passwordChangeRequested;
+
+            if (loginDetailsChangeRequested) {
+                if (!currentLoginId) {
+                    alert('Current Login ID is required to update login details.');
+                    setIsSaving(false);
+                    return;
+                }
+
+                if (storedAdminLoginID && currentLoginId !== storedAdminLoginID) {
+                    alert('Current Login ID does not match your signed-in account.');
+                    setIsSaving(false);
+                    return;
+                }
+
+                if (!currentPassword) {
+                    alert('Current Password is required to update login details.');
+                    setIsSaving(false);
+                    return;
+                }
+
+                if (loginIdChangeRequested) {
+                    if (!newLoginId) {
+                        alert('New Login ID is required.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (!confirmLoginId) {
+                        alert('Confirm Login ID is required.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (newLoginId !== confirmLoginId) {
+                        alert('New Login ID and Confirm Login ID must match.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (newLoginId === currentLoginId) {
+                        alert('New Login ID must be different from the Current Login ID.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (!isLoginIdMatch) {
+                        alert('New Login ID and Confirm Login ID must match.');
+                        setIsSaving(false);
+                        return;
+                    }
+                }
+
+                if (passwordChangeRequested) {
+                    if (!enteredNewPassword || !enteredConfirmPassword) {
+                        alert('New Password and Confirm Password are required.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (enteredNewPassword !== enteredConfirmPassword) {
+                        alert('New Password and Confirm Password must match.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (!dobPasswordHint) {
+                        alert('DOB is required to validate the password.');
+                        setIsSaving(false);
+                        return;
+                    }
+
+                    if (enteredNewPassword !== dobPasswordHint) {
+                        alert(`Password should be: ${dobPasswordHint} (based on DOB)`);
+                        setIsSaving(false);
+                        return;
+                    }
+                }
+            }
+
+            const adminLoginID = currentLoginId || storedAdminLoginID;
 
             // Upload profile photo if a new file was selected
             let profilePhotoUrl = profilePhotoBase64; // keep existing URL/value
@@ -1859,19 +2386,6 @@ function Admainprofile() {
                 collegeLogoName: collegeLogoUrl ? (collegeLogoName || 'logo.jpg') : null,
             };
 
-            // Add login credentials if provided
-            if (loginData.newLoginId && loginData.confirmLoginId) {
-                dataToSave.newLoginId = loginData.newLoginId;
-                dataToSave.confirmLoginId = loginData.confirmLoginId;
-            }
-            if (loginData.currentPassword) {
-                dataToSave.currentPassword = loginData.currentPassword;
-            }
-            if (loginData.newPassword && loginData.confirmPassword) {
-                dataToSave.newPassword = loginData.newPassword;
-                dataToSave.confirmPassword = loginData.confirmPassword;
-            }
-
             // Log cleared images for debugging
             const clearedImages = [];
             if (dataToSave.collegeBanner === null) clearedImages.push('collegeBanner');
@@ -1895,13 +2409,51 @@ function Admainprofile() {
             const result = await response.json();
 
             if (result.success) {
+                let savedLoginId = currentLoginId || storedAdminLoginID;
+
+                if (loginDetailsChangeRequested) {
+                    const loginUpdatePayload = {
+                        currentLoginId: currentLoginId || storedAdminLoginID,
+                        currentPassword,
+                    };
+
+                    if (loginIdChangeRequested) {
+                        loginUpdatePayload.newLoginId = newLoginId;
+                        loginUpdatePayload.confirmLoginId = confirmLoginId;
+                    }
+
+                    if (passwordChangeRequested) {
+                        loginUpdatePayload.newPassword = enteredNewPassword;
+                        loginUpdatePayload.confirmPassword = enteredConfirmPassword;
+                    }
+
+                    const loginResponse = await fetch(`${API_BASE_URL}/admin/login-credentials`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                        body: JSON.stringify(loginUpdatePayload),
+                    });
+
+                    const loginResult = await loginResponse.json();
+
+                    if (!loginResponse.ok || !loginResult.success) {
+                        setSaveStatus('error');
+                        alert(loginResult.message || 'Failed to update login credentials. Please try again.');
+                        return false;
+                    }
+
+                    savedLoginId = loginResult.data?.adminLoginID || newLoginId || currentLoginId || storedAdminLoginID;
+                }
+
                 setSaveStatus('saved');
 
                 // ï¿½ INSTANT SYNC: Dispatch sidebar event FIRST (before any async cache ops)
                 // This ensures the sidebar updates immediately with zero delay
                 const updatedAdminData = {
                     _id: result.data?._id,
-                    adminLoginID: adminLoginID,
+                    adminLoginID: savedLoginId,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     profilePhoto: profilePhotoUrl,
@@ -1945,7 +2497,7 @@ function Admainprofile() {
                     domainMailId: formData.domainMailId || '',
                     phoneNumber: formData.phoneNumber || '',
                     department: formData.department || '',
-                    currentLoginId: loginData.newLoginId || loginData.currentLoginId || '',
+                    currentLoginId: savedLoginId || '',
                     profilePhoto: profilePhotoUrl || '',
                     collegeBanner: collegeBannerUrl || '',
                     naacCertificate: naacCertificateUrl || '',
@@ -1970,7 +2522,7 @@ function Admainprofile() {
                 if (profilePhotoUrl) {
                     try {
                         const { default: adminImageCacheService } = await import('../services/adminImageCacheService.jsx');
-                        await adminImageCacheService.cacheAdminProfilePhoto(adminLoginID, profilePhotoUrl);
+                        await adminImageCacheService.cacheAdminProfilePhoto(savedLoginId || adminLoginID, profilePhotoUrl);
                         console.log('âœ… Admin profile photo cache updated after save');
                     } catch (cacheError) {
                         console.warn('âš ï¸ Failed to update admin profile photo cache after save:', cacheError);
@@ -2006,12 +2558,12 @@ function Admainprofile() {
                 console.log('ðŸ”” College images update dispatched (same-tab + cross-tab)');
 
                 // Update login ID in localStorage if changed
-                if (loginData.newLoginId) {
-                    localStorage.setItem('adminLoginID', loginData.newLoginId);
+                if (savedLoginId) {
+                    localStorage.setItem('adminLoginID', savedLoginId);
                 }
                 // Clear login fields
                 setLoginData({
-                    currentLoginId: loginData.newLoginId || loginData.currentLoginId,
+                    currentLoginId: savedLoginId,
                     newLoginId: '',
                     confirmLoginId: '',
                     currentPassword: '',
@@ -2237,53 +2789,159 @@ function Admainprofile() {
                                     <h3 className={styles['Admin-main-profile-section-header']}>Personal Information</h3>
                                     <div className={styles['Admin-main-profile-input-grid']}>
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="firstName">First Name</label>
-                                            <input id="firstName" type="text" name="firstName" placeholder="First Name" className={styles['Admin-main-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="firstName">
+                                                <span className={styles['Admin-profile-label-heading']}>First Name <RequiredStar /></span>
+                                            </label>
+                                            <input
+                                                id="firstName"
+                                                type="text"
+                                                name="firstName"
+                                                placeholder="First Name"
+                                                className={getAdminFieldClassName('firstName')}
+                                                value={formData.firstName}
+                                                onChange={handleInputChange}
+                                                disabled={isSaving}
+                                                ref={registerFieldRef('firstName')}
+                                            />
                                         </div>
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="lastName">Last Name</label>
-                                            <input id="lastName" type="text" name="lastName" placeholder="Last Name" className={styles['Admin-main-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="lastName">
+                                                <span className={styles['Admin-profile-label-heading']}>Last Name <RequiredStar /></span>
+                                            </label>
+                                            <input
+                                                id="lastName"
+                                                type="text"
+                                                name="lastName"
+                                                placeholder="Last Name"
+                                                className={getAdminFieldClassName('lastName')}
+                                                value={formData.lastName}
+                                                onChange={handleInputChange}
+                                                disabled={isSaving}
+                                                ref={registerFieldRef('lastName')}
+                                            />
                                         </div>
 
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="dob">Date Of Birth</label>
-                                            <div id="dob" className={styles['Admin-main-profile-date-wrapper']}>
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="dob">
+                                                <span className={styles['Admin-profile-label-heading']}>DOB <RequiredStar /></span>
+                                            </label>
+                                            <div
+                                                id="dob"
+                                                className={`${styles['Admin-main-profile-date-wrapper']} ${highlightedField === 'dob' ? styles['Admin-profile-field-highlight'] : ''}`}
+                                                ref={registerFieldRef('dob')}
+                                            >
                                                 <AdCalendar value={formData.dob} onChange={handleDobChange} />
                                             </div>
                                         </div>
 
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="gender">Gender</label>
-                                            <select id="gender" name="gender" className={`${styles['Admin-main-profile-form-input']} ${styles['Admin-main-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
-                                                <option value="" disabled hidden>Gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="gender">
+                                                <span className={styles['Admin-profile-label-heading']}>Gender <RequiredStar /></span>
+                                            </label>
+                                            <div className={styles['Admin-profile-select-wrapper']}>
+                                                <select
+                                                    id="gender"
+                                                    name="gender"
+                                                    className={`${getAdminFieldClassName('gender')} ${styles['Admin-main-profile-form-select']}`}
+                                                    value={formData.gender}
+                                                    onChange={handleInputChange}
+                                                    disabled={isSaving}
+                                                    ref={registerFieldRef('gender')}
+                                                >
+                                                    <option value="" disabled hidden>Gender</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                                <DropdownIcon />
+                                            </div>
                                         </div>
 
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="emailId">Email ID</label>
-                                            <input id="emailId" type="email" name="emailId" placeholder="Email id" className={styles['Admin-main-profile-form-input']} value={formData.emailId} onChange={handleInputChange} disabled={isSaving} />
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="emailId">
+                                                <span className={styles['Admin-profile-label-heading']}>Email ID <RequiredStar /></span>
+                                            </label>
+                                            <input
+                                                id="emailId"
+                                                type="email"
+                                                name="emailId"
+                                                placeholder="Email id"
+                                                className={getAdminFieldClassName('emailId')}
+                                                value={formData.emailId}
+                                                onChange={handleInputChange}
+                                                disabled={isSaving}
+                                                ref={registerFieldRef('emailId')}
+                                            />
                                         </div>
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="domainMailId">Domain Mail ID</label>
-                                            <input id="domainMailId" type="email" name="domainMailId" placeholder="Domain Mail id" className={styles['Admin-main-profile-form-input']} value={formData.domainMailId} onChange={handleInputChange} disabled={isSaving} />
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="domainMailId">
+                                                <span className={styles['Admin-profile-label-heading']}>Domain Mail ID <RequiredStar /></span>
+                                            </label>
+                                            <input
+                                                id="domainMailId"
+                                                type="email"
+                                                name="domainMailId"
+                                                placeholder="Domain Mail id"
+                                                className={getAdminFieldClassName('domainMailId')}
+                                                value={formData.domainMailId}
+                                                onChange={handleInputChange}
+                                                disabled={isSaving}
+                                                ref={registerFieldRef('domainMailId')}
+                                            />
                                         </div>
 
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="phoneNumber">Phone Number</label>
-                                            <div className={styles['mobileInputWrapper']}>
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="phoneNumber">
+                                                <span className={styles['Admin-profile-label-heading']}>Phone Number <RequiredStar /></span>
+                                            </label>
+                                            <div
+                                                className={`${styles['mobileInputWrapper']} ${highlightedField === 'phoneNumber' ? styles['Admin-profile-field-highlight-wrapper'] : ''}`}
+                                                ref={registerFieldRef('phoneNumber')}
+                                            >
                                                 <div className={styles['countryCode']}>+91</div>
-                                                <input id="phoneNumber" type="tel" name="phoneNumber" placeholder="Phone number" className={styles['mobileNumberInput']} value={formData.phoneNumber} onChange={handleMobileChange} disabled={isSaving} />
+                                                <input
+                                                    id="phoneNumber"
+                                                    type="tel"
+                                                    name="phoneNumber"
+                                                    placeholder="Phone number"
+                                                    className={styles['mobileNumberInput']}
+                                                    value={formData.phoneNumber}
+                                                    onChange={handleMobileChange}
+                                                    disabled={isSaving}
+                                                />
                                             </div>
                                         </div>
                                         <div className={styles['Admin-main-profile-field']}>
-                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="department">Department</label>
-                                            <input id="department" type="text" name="department" placeholder="Department" className={styles['Admin-main-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="department">
+                                                <span className={styles['Admin-profile-label-heading']}>Branch <RequiredStar /></span>
+                                            </label>
+                                            <div className={styles['Admin-profile-select-wrapper']}>
+                                                <select
+                                                    id="department"
+                                                    name="department"
+                                                    className={`${getAdminFieldClassName('department')} ${styles['Admin-main-profile-form-select']}`}
+                                                    value={formData.department}
+                                                    onChange={handleInputChange}
+                                                    disabled={isSaving}
+                                                    ref={registerFieldRef('department')}
+                                                >
+                                                    <option value="" disabled hidden>Select Branch</option>
+                                                    {branches.map((branch) => {
+                                                        const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                            ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                            : branch?.branchFullName || branch?.branchAbbreviation || '';
+                                                        const value = branch?.branchAbbreviation || branch?.branchFullName || branch?._id || '';
+                                                        return (
+                                                            <option key={branch._id || value} value={value}>{label}</option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <DropdownIcon />
+                                            </div>
                                         </div>
                                     </div>
                                 </section>
+
 
                                 {/* College Details Section */}
 
@@ -2390,18 +3048,98 @@ function Admainprofile() {
                                 </div>
                             </div>
                             <div className={styles['Admin-main-profile-input-grid-three-col']}>
-                                <div className={styles['Admin-main-profile-field']}>
-                                    <label className={styles['Admin-main-profile-field-label']} htmlFor="currentPassword">Current Password</label>
-                                    <input id="currentPassword" type="password" name="currentPassword" placeholder="Current Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentPassword} onChange={handleLoginInputChange} disabled={isSaving} />
-                                </div>
-                                <div className={styles['Admin-main-profile-field']}>
-                                    <label className={styles['Admin-main-profile-field-label']} htmlFor="newPassword">New Password</label>
-                                    <input id="newPassword" type="password" name="newPassword" placeholder="New Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.newPassword} onChange={handleLoginInputChange} disabled={isSaving} />
-                                </div>
-                                <div className={styles['Admin-main-profile-field']}>
-                                    <label className={styles['Admin-main-profile-field-label']} htmlFor="confirmPassword">Confirm Password</label>
-                                    <input id="confirmPassword" type="password" name="confirmPassword" placeholder="Confirm Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.confirmPassword} onChange={handleLoginInputChange} disabled={isSaving} />
-                                </div>
+                                {shouldShowCurrentPasswordField && (
+                                    <div className={styles['Admin-main-profile-field']}>
+                                        <label className={styles['Admin-main-profile-field-label']} htmlFor="currentPassword">Current Password</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} name="currentPassword" placeholder="Current Password" className={styles['Admin-main-profile-form-input-login']} value={loginData.currentPassword} onChange={handleLoginInputChange} onBlur={verifyCurrentPassword} disabled={isSaving} style={{ paddingRight: '40px' }} />
+                                            <button
+                                                type="button"
+                                                className={styles['Admin-main-profile-password-toggle']}
+                                                onClick={() => setShowCurrentPassword((prev) => !prev)}
+                                                tabIndex={-1}
+                                            >
+                                                {showCurrentPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                            </button>
+                                        </div>
+                                        {!isCurrentPasswordVerified && loginData.currentPassword && (
+                                            <p style={{ marginTop: '8px', marginBottom: 0, color: '#c62828', fontSize: '13px', fontWeight: 600 }}>
+                                                Enter a correct current password to unlock the new password fields.
+                                            </p>
+                                        )}
+                                        {currentPasswordVerifyError && (
+                                            <p style={{ marginTop: '8px', marginBottom: 0, color: '#c62828', fontSize: '13px', fontWeight: 600 }}>
+                                                {currentPasswordVerifyError}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                {!shouldShowCurrentPasswordField && loginData.newLoginId && loginData.confirmLoginId && (
+                                    <p style={{ gridColumn: '1 / -1', marginTop: '-4px', marginBottom: '6px', color: '#c62828', fontSize: '13px', fontWeight: 600 }}>
+                                        {loginIdMismatchError}
+                                    </p>
+                                )}
+                                {shouldShowLoginPasswordFields && (
+                                    <>
+                                        <div className={styles['Admin-main-profile-field']}>
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="newPassword">
+                                                <span className={styles['Admin-profile-label-heading']}>New Password <RequiredStar /></span>
+                                            </label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    id="newPassword"
+                                                    type={showNewPassword ? 'text' : 'password'}
+                                                    name="newPassword"
+                                                    placeholder="New Password"
+                                                    className={getAdminFieldClassName('newPassword', styles['Admin-main-profile-form-input-login'])}
+                                                    value={loginData.newPassword}
+                                                    onChange={handleLoginInputChange}
+                                                    disabled={isSaving}
+                                                    style={{ paddingRight: '40px' }}
+                                                    ref={registerFieldRef('newPassword')}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className={styles['Admin-main-profile-password-toggle']}
+                                                    onClick={() => setShowNewPassword((prev) => !prev)}
+                                                    tabIndex={-1}
+                                                >
+                                                    {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                                </button>
+                                            </div>
+                                            <p style={{ marginTop: '-10px', marginBottom: 0, color: '#2e7d32', fontSize: '13px', fontWeight: 600 }}>
+                                                Password should be: <span style={{ fontWeight: 800 }}>{dobPasswordHint || 'DDMMYYYY'}</span>{dobPasswordHint ? ' (based on DOB)' : ' (based on DOB)'}
+                                            </p>
+                                        </div>
+                                        <div className={styles['Admin-main-profile-field']}>
+                                            <label className={styles['Admin-main-profile-field-label']} htmlFor="confirmPassword">
+                                                <span className={styles['Admin-profile-label-heading']}>Confirm Password <RequiredStar /></span>
+                                            </label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    id="confirmPassword"
+                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    name="confirmPassword"
+                                                    placeholder="Confirm Password"
+                                                    className={getAdminFieldClassName('confirmPassword', styles['Admin-main-profile-form-input-login'])}
+                                                    value={loginData.confirmPassword}
+                                                    onChange={handleLoginInputChange}
+                                                    disabled={isSaving}
+                                                    style={{ paddingRight: '40px' }}
+                                                    ref={registerFieldRef('confirmPassword')}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className={styles['Admin-main-profile-password-toggle']}
+                                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                                    tabIndex={-1}
+                                                >
+                                                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </section>
                         )}
@@ -2566,11 +3304,23 @@ function Admainprofile() {
                             type="button"
                             className={styles['Admin-main-profile-save-btn']}
                             onClick={handleSave}
-                            disabled={isSaving || changedFields.length === 0}
+                            disabled={!canSave}
                         >
                             {isSaving ? 'Saving...' : 'Save'}
                         </button>
                     </div>
+
+                    {/* Missing Fields Validation Card */}
+                    <MissingFieldsCard
+                        missingFields={missingRequiredFields}
+                        onFieldClick={focusAdminField}
+                        showAllErrors={showAllErrors}
+                        onToggleShowAll={() => setShowAllErrors((prev) => !prev)}
+                        errorTooltip={errorTooltip}
+                        supportsPointerTooltip={supportsPointerTooltip}
+                        onTooltipMove={handleErrorTooltipMove}
+                        onTooltipLeave={handleErrorTooltipLeave}
+                    />
                     </>
                     )}
                 </div>

@@ -1653,7 +1653,7 @@ input:disabled {
 }
 
 /* Red scrollbar on mobile */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .co-profile-content::-webkit-scrollbar,
   body::-webkit-scrollbar,
   html::-webkit-scrollbar {

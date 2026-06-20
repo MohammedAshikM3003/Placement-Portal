@@ -1,0 +1,83 @@
+{
+  "personalInfo": {
+    "name": "Arjun Menon",
+    "mobile": "7742041817",
+    "email": "arjun.menon41@anonymized.in",
+    "linkedin": "linkedin.com/in/arjunmenon",
+    "github": "github.com/arjunmenon",
+    "portfolio": ""
+  },
+  "summary": "aspiring Data Scientist. got first prize in coding contest. know Python.",
+  "education": {
+    "college": "SSN College of Engineering",
+    "degree": "B.Tech",
+    "branch": "Computer Science Engineering",
+    "cgpa": "8.49",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "Python",
+        "Pandas",
+        "NumPy",
+        "SQL",
+        "Statistics",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "companyName": "TCS",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "done model development and data cleanups in python.",
+      "technologies": [
+        "Python",
+        "Pandas"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Customer Segmentation",
+      "description": "done clustering algorithms on customer datasets. analyzed metrics and data.",
+      "technologies": [
+        "Python",
+        "Pandas",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/arjun"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Data Scientist",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -366,6 +366,7 @@ function CoordinatorDashboard({ onLogout, onViewChange }) {
           onLogout={onLogout}
           currentView="dashboard"
           onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles["co-db-dashboard-area"]}>
       {/* College header */}

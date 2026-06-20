@@ -336,6 +336,7 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
           onLogout={onLogout}
           currentView="training"
           onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles['coordinator-content-area']}>
           <div className={styles['coo-training-container']}>

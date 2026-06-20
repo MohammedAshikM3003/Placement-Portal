@@ -832,7 +832,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         <>
             <Navbar   onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
             <div className={styles["co-ms-layout"]}>
-                <Sidebar  isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange} />
+                <Sidebar  isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles["co-ms-main-content"]}>
                     
                     {/* TOP CARD: Filter and Actions */}

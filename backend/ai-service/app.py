@@ -6,12 +6,18 @@ from pydantic import BaseModel
 from ats import check_ats
 from grammar import fixGrammar
 from resume import enhance_resume_text, generate_project_description
+from feedback_engine.engine import make_concise
+from student_filter_engine.engine import filter_students
 
 app = FastAPI(title="Placement Portal Rule-Based AI Service")
 
 
 class TextRequest(BaseModel):
     text: str
+
+
+class StudentFilterRequest(BaseModel):
+    prompt: str
 
 
 class ResumeEnhanceRequest(BaseModel):
@@ -58,3 +64,21 @@ async def resume_generate(payload: ResumeGenerateRequest):
 @app.post("/ats/check")
 async def ats_check(payload: AtsCheckRequest):
     return check_ats(payload.resumeText, payload.jobDescription or "")
+
+
+@app.post("/feedback/concise")
+async def feedback_concise(payload: TextRequest):
+    if not payload.text:
+        return {"original": "", "concise": ""}
+    return {"original": payload.text, "concise": make_concise(payload.text)}
+
+
+@app.post("/students/ai-filter")
+async def students_ai_filter(payload: StudentFilterRequest):
+    if not payload.prompt:
+        raise HTTPException(status_code=400, detail="prompt is required")
+    try:
+        return filter_students(payload.prompt)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

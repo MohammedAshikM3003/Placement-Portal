@@ -1,82 +1,56 @@
 import re
 from typing import Dict, List
 
-from concise import makeConcise
-from grammar import fixGrammar
-from utils.text_utils import normalize_whitespace, sentence_case, title_case
-
-PRO_REPLACEMENTS = [
-    (r"\bworked on\b", "Developed"),
-    (r"\bmade\b", "Engineered"),
-    (r"\bcreated\b", "Designed"),
-    (r"\bused\b", "Implemented"),
-    (r"\bhelped\b", "Collaborated on"),
-    (r"\bfixed\b", "Resolved"),
-    (r"\bdid\b", "Executed"),
-    (r"\bgood at\b", "Proficient in"),
-    (r"\bknow\b", "Experienced in"),
-]
-
-PROJECT_PURPOSES = {
-    "placement portal": "streamline student recruitment and placement workflows",
-    "attendance": "simplify attendance tracking and reporting",
-    "resume": "improve resume creation and ATS readiness",
-    "portal": "centralize student services and workflows",
-    "dashboard": "surface metrics and progress insights",
-}
-
-
-def professionalizeText(text: str) -> str:
-    updated = text
-    for pattern, replacement in PRO_REPLACEMENTS:
-        updated = re.sub(pattern, replacement, updated, flags=re.IGNORECASE)
-    return updated
-
-
-def _apply_project_template(text: str) -> str:
-    match = re.search(r"\bworked on\b\s+(?P<name>.+?)(?:\bproject\b|$)", text, flags=re.IGNORECASE)
-    if not match:
-        return text
-    name = normalize_whitespace(match.group("name"))
-    if not name:
-        return text
-    lower_name = name.lower()
-    purpose = None
-    for key, value in PROJECT_PURPOSES.items():
-        if key in lower_name:
-            purpose = value
-            break
-    if not purpose:
-        purpose = "improve operational efficiency and user experience"
-    project_name = title_case(name)
-    return f"Developed a {project_name} application to {purpose}."
-
-
-def _ensure_sentence(text: str) -> str:
-    cleaned = normalize_whitespace(text)
-    if not cleaned:
-        return ""
-    if cleaned[-1] not in ".!?":
-        cleaned = cleaned + "."
-    return sentence_case(cleaned)
-
+from resume_engine.engine import enhance_text
+from resume_engine.project_generator import generate_project_desc
+from resume_engine.summary_generator import generate_summary
+from resume_engine.internship_generator import generate_internship_desc
+from resume_engine.achievement_generator import generate_achievement
 
 def enhance_resume_text(text: str) -> str:
+    """
+    Polishes generic resume text professionally using the local AI engine.
+    Uses basic keyword-matching heuristics to classify and route the paragraph
+    to the most appropriate specialized template generator.
+    """
     base = (text or "").strip()
     if not base:
         return ""
-    grammar = fixGrammar(base).get("corrected", base)
-    concise = makeConcise(grammar)
-    professional = professionalizeText(concise)
-    templated = _apply_project_template(professional)
-    return _ensure_sentence(templated)
-
+        
+    lower_text = base.lower()
+    
+    # Heuristic 1: Achievements
+    if any(k in lower_text for k in ["prize", "won", "award", "rank", "compition", "competition", "hackathon", "first place"]):
+        return generate_achievement(base)
+        
+    # Heuristic 2: Internships/Experiences
+    if any(k in lower_text for k in ["worked", "intern", "company", "role", "responsibility", "position"]):
+        # Try to extract company name if present (e.g. "worked at XYZ")
+        company = ""
+        match = re.search(r"at\s+([A-Za-z0-9_]+(\s+[A-Za-z0-9_]+){0,2})", base, flags=re.IGNORECASE)
+        if match:
+            company = match.group(1)
+        return generate_internship_desc(company, base)
+        
+    # Heuristic 3: Projects
+    if any(k in lower_text for k in ["built", "builded", "project", "app", "website", "system", "portal"]):
+        # Try to extract project name
+        proj_name = ""
+        match = re.search(r"build(ed)?\s+([A-Za-z0-9_]+(\s+[A-Za-z0-9_]+){0,2})", base, flags=re.IGNORECASE)
+        if match:
+            proj_name = match.group(2)
+        return generate_project_desc(proj_name, [], base)
+        
+    # Heuristic 4: Summary
+    if any(k in lower_text for k in ["i am", "learner", "seeking", "looking for", "passionate"]):
+        return generate_summary(base)
+        
+    # Fallback to general professional enhancement
+    return enhance_text(base)
 
 def generate_project_description(project_name: str, technologies: List[str], description: str) -> Dict[str, str]:
-    name = title_case(project_name or "Project")
-    tech_list = ", ".join([t for t in (technologies or []) if t])
-    base = description or f"Developed {name} to improve reliability and user experience."
-    base = enhance_resume_text(base)
-    if tech_list:
-        base = base.rstrip(".") + f" using {tech_list}."
-    return {"text": base}
+    """
+    Called by the project generation API endpoint.
+    """
+    desc = generate_project_desc(project_name or "Project", technologies or [], description or "")
+    return {"text": desc}

@@ -64,6 +64,7 @@ const AdminStuProfileEdit = lazy(() =>
   }))
 );
 const AdminSemesterMarksheetView = lazy(() => import("./AdminPages/AdminSemesterMarksheetView.jsx"));
+const AdminSemesterMarksheetEdit = lazy(() => import("./AdminPages/AdminSemesterMarksheetEdit.jsx"));
 const AdminEsstudapp = lazy(() => import("./AdminPages/AdminEsstudapp.jsx"));
 const AdminCoDet = lazy(() => import("./AdminPages/AdAddCoordinatorform.jsx"));
 const AdExistingCoordinator = lazy(() => import("./AdminPages/AdExistingCoordinator.jsx"));
@@ -96,7 +97,7 @@ const CoordinatorManageStudentsSemester = lazy(() => import("./CoordinatorPages/
 const CoordinatorProfile = lazy(() => import("./CoordinatorPages/Coo_Profile.jsx"));
 const CoordinatorManageStudentViewSemester = lazy(() => import("./CoordinatorPages/Coo_ManageStudentSemesterMarksheetView.jsx"));
 const CoordinatorSemesterDetail = lazy(() => import("./CoordinatorPages/Coo_MS_SemesterDetail.jsx"));
-const CoordinatorManageStudentEdit = lazy(() => import("./CoordinatorPages/Coo_ManageStuEditPage_new.jsx"));
+const CoordinatorManageStudentEdit = lazy(() => import("./CoordinatorPages/Coo_ManageStudentSemesterEdit.jsx"));
 const CoordinatorManageStudentViewMain = lazy(() => import("./CoordinatorPages/Coo_ManageStudentView.jsx"));
 const CoordinatorMsEditPage = lazy(() => import("./CoordinatorPages/Coo_MS_Editpage.jsx"));
 const CoordinatorEligibleStudentView = lazy(() => import("./CoordinatorPages/Coo_EligibleStuViewpage.jsx"));
@@ -114,7 +115,7 @@ const Training = lazy(() => import("./StudentPages/Training.jsx"));
 const Achievements = lazy(() => import("./StudentPages/achievements.jsx"));
 const Company = lazy(() => import("./StudentPages/company.jsx"));
 const StuProfile = lazy(() => import("./StudentPages/StuProfile.jsx"));
-const SemesterMarksheetUpload = lazy(() => import("./StudentPages/SemesterMarksheetUpload.jsx"));
+const StudentSemesterMarksheetView = lazy(() => import("./StudentPages/StudentSemesterMarksheetView.jsx"));
 
 function AppContent() {
   const [userEmail, setUserEmail] = useState("");
@@ -179,6 +180,42 @@ function AppContent() {
       }
     }
   }, [authLoading, isAuthenticated, authRole, location.pathname]);
+
+  // Centralized role-based HTML theme class management (e.g. for custom scrollbars)
+  useEffect(() => {
+    const path = location.pathname;
+    const isAdminRoute = path.includes('admin') || 
+                         path.includes('saad') || 
+                         path.includes('sacoo') || 
+                         path.includes('sastu') || 
+                         authRole === 'admin';
+    const isCooRoute = path.includes('coo') || 
+                       authRole === 'coordinator';
+    const isStuRoute = path === '/dashboard' || 
+                       path === '/resume' || 
+                       path === '/resume-builder' || 
+                       path === '/resume-preview' || 
+                       path === '/ats-checker' || 
+                       path === '/training' || 
+                       path === '/achievements' || 
+                       path === '/company' || 
+                       path === '/profile' || 
+                       path === '/semester-marksheet-upload' || 
+                       authRole === 'student';
+                         
+    if (isAdminRoute) {
+      document.documentElement.classList.add('admin-theme');
+      document.documentElement.classList.remove('coo-theme', 'stu-theme');
+    } else if (isCooRoute) {
+      document.documentElement.classList.add('coo-theme');
+      document.documentElement.classList.remove('admin-theme', 'stu-theme');
+    } else if (isStuRoute) {
+      document.documentElement.classList.add('stu-theme');
+      document.documentElement.classList.remove('admin-theme', 'coo-theme');
+    } else {
+      document.documentElement.classList.remove('admin-theme', 'coo-theme', 'stu-theme');
+    }
+  }, [authRole, location.pathname]);
 
   const handleStudentLogin = () => {
     if (authUser) {
@@ -275,7 +312,7 @@ function AppContent() {
       <Route path="/achievements" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Achievements..." showAnimatedDots={true} />}><Achievements onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/company" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Company..." showAnimatedDots={true} />}><Company onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/profile" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Profile..." showAnimatedDots={true} />}><StuProfile onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/semester-marksheet-upload" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><SemesterMarksheetUpload onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/student-semester-view" element={<RoleGuard allowedRoles={['student']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><StudentSemesterMarksheetView onLogout={handleStudentLogout} onViewChange={(v) => navigate(`/${v}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
 
       {/* COORDINATOR AUTHENTICATED ROUTES - Wrapped in Error Boundary */}
       <Route path="/coo-dashboard" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><CoordinatorDashboard onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
@@ -353,6 +390,7 @@ function AppContent() {
       <Route path="/admin-student-view/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminStuProfileView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-student-edit/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminStuProfileEdit onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-semester-marksheet-view/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminSemesterMarksheetView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-semester-edit/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminSemesterMarksheetEdit onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
 
       {/* FALLBACK */}
       <Route path="*" element={<LandingPage />} />

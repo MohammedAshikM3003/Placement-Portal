@@ -19,12 +19,13 @@
 
 .co-ms-main-content {
     flex-grow: 1;
-    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
     overflow: hidden;
     padding: 19px 10px 0px 16px;
+    height: calc(100vh - 65px);
+    margin-top: 65px;
 }
 
 /* Desktop scrollbar - red styling to match theme */
@@ -52,10 +53,10 @@
     align-items: stretch;
     flex-wrap: nowrap;
     margin-left: 285px;
-    margin-top: 55px;
+    margin-top: 0px;
     margin-right: 20px;
     flex-shrink: 0;
-    height: 267px;
+    height: 200px;
 }
   .co-ms-table-container::-webkit-scrollbar {
     height:12px;
@@ -75,12 +76,13 @@
 .co-ms-filter-section {
     flex: 0 0 424px;
     background-color: #e8e8e8;
-    padding: 20px;
+    padding: 15px 20px;
     border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
     margin-left: 0px;
+    height: 200px;
 }
 
 .co-ms-filter-header-container {
@@ -95,12 +97,10 @@
     background-color: #dc3545;
     color: white;
     padding: 6px 0px 9px 0px;
-    margin: 0 auto;
+    margin: -10px auto 10px auto;
     border-radius: 30px;
     display: block;
     width: 180px;
-    position: relative;
-    bottom:14px;
 }
 
 .co-ms-filter-icon-container {
@@ -118,7 +118,7 @@
     gap: 12px;
     flex-grow: 1;
     align-items: start;
-    margin-top: -25px;
+    margin-top: 0px;
 }
 
 /* Explicit ordering so buttons stay below all fields */
@@ -603,7 +603,7 @@
     align-items: center;
     justify-content: space-between;
     text-align: center;
-    padding: 20px 15px;
+    padding: 12px 10px;
     background-color: #ffffff;
     border-radius: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -611,20 +611,20 @@
 }
 
 .co-ms-action-header {
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     font-weight: 720;
-    margin-bottom: -20px;
-    margin-top: -10px;
+    margin-bottom: 5px;
+    margin-top: 0px;
     color: #dc3545;
 }
 
 .co-ms-action-description {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     color: #666;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     padding: 0 5px;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.3;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -632,7 +632,7 @@
 }
 
 .co-ms-action-btn {
-    padding: 10px 25px;
+    padding: 8px 20px;
     border: none;
     border-radius: 30px;
     font-weight: 700;
@@ -640,7 +640,7 @@
     width: 100%;
     max-width: 140px;
     transition: opacity 0.2s;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .co-ms-action-btn:disabled {
@@ -666,7 +666,9 @@
     border: 2px solid #808080;
     display: flex;
     flex-direction: column;
-    height: 360px;
+    flex-grow: 1;
+    margin-bottom: 24px;
+    min-height: 300px;
 }
 
 .co-ms-table-header-row {
@@ -745,14 +747,11 @@
 }
 
 .co-ms-table-container {
-    --co-ms-row-height: 72px;
-    --co-ms-header-height: 64px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: auto;
     margin-bottom: 0;
     flex-grow: 1;
     padding-right: 0;
-    max-height: calc((var(--co-ms-row-height) * 3) + var(--co-ms-header-height));
-    min-height: calc((var(--co-ms-row-height) * 3) + var(--co-ms-header-height));
 }
 
 .co-ms-students-table {
@@ -762,9 +761,7 @@
     font-size: 0.95rem;
     display: flex;
     flex-direction: column;
-    max-height: calc((var(--co-ms-row-height, 72px) * 3) + var(--co-ms-header-height, 64px));
-    min-height: calc((var(--co-ms-row-height, 72px) * 3) + var(--co-ms-header-height, 64px));
-    overflow-y: hidden;
+    min-height: 100%;
 }
 /* ============================================================
    Horizontal Scrollbar Styling (Grey theme)
@@ -811,8 +808,7 @@
 
 /* Table Body for Vertical Scroll */
 .co-ms-students-table tbody {
-    max-height: calc(var(--co-ms-row-height, 72px) * 3);
-    min-height: calc(var(--co-ms-row-height, 72px) * 3);
+    flex-grow: 1;
     display: block;
     width: 100%;
     box-sizing: border-box;
@@ -1493,13 +1489,13 @@ overflow: hidden  ;
 
 
 
-@media (max-width: 1024px) {
-    .co-ms-top-card, .co-ms-bottom-card { margin-left: 20px; }
-    .co-ms-top-card { flex-wrap: wrap; margin-top: 40px; }
-    .co-ms-filter-section { flex: 1 1 100%; }
+@media (max-width: 1200px) {
+    .co-ms-top-card, .co-ms-bottom-card { margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; max-width: 100% !important; }
+    .co-ms-top-card { flex-wrap: nowrap; margin-top: 0px; }
+    .co-ms-filter-section { flex: 0 0 424px; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .co-ms-main-content {
         padding: 15px;
         padding-top: 90px;

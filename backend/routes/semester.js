@@ -49,7 +49,7 @@ const findSemesterRecords = async (query = {}) => {
 
   for (const variant of variants) {
     const records = await SemesterRecord.find(variant)
-      .sort({ extractedAt: -1, uploadedAt: -1 })
+      .sort({ semester: 1, uploadedAt: -1 })
       .lean();
 
     if (records.length) {

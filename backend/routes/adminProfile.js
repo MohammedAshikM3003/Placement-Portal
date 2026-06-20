@@ -18,6 +18,22 @@ const requireMongoConnection = (req, res, next) => {
 
 router.use(requireMongoConnection);
 
+const verifyStoredPassword = async (enteredPassword, storedPassword) => {
+  const candidate = typeof enteredPassword === 'string' ? enteredPassword : '';
+  const stored = typeof storedPassword === 'string' ? storedPassword : '';
+
+  if (!candidate || !stored) {
+    return false;
+  }
+
+  const looksHashed = stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$');
+  if (looksHashed) {
+    return bcrypt.compare(candidate, stored);
+  }
+
+  return candidate === stored;
+};
+
 // PUBLIC ENDPOINT - GET college images only (no authentication required)
 // This allows the landing page to display college images without login
 router.get('/college-images/:adminLoginID', async (req, res) => {
@@ -235,7 +251,7 @@ router.post('/profile', async (req, res) => {
       
       if (admin && currentPassword) {
         // Verify current password
-        const isMatch = await bcrypt.compare(currentPassword, admin.adminPassword);
+        const isMatch = await verifyStoredPassword(currentPassword, admin.adminPassword);
         if (!isMatch) {
           return res.status(400).json({ 
             success: false, 
@@ -348,7 +364,7 @@ router.put('/login-credentials', async (req, res) => {
 
     // Verify current password if provided
     if (currentPassword) {
-      const isMatch = await bcrypt.compare(currentPassword, admin.adminPassword);
+      const isMatch = await verifyStoredPassword(currentPassword, admin.adminPassword);
       if (!isMatch) {
         return res.status(400).json({ 
           success: false, 

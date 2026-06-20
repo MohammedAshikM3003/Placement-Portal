@@ -1,0 +1,13 @@
+﻿..\..\.venv\Scripts\uvicorn.exe : INFO:     Started server process [1736]
+At line:1 char:1
++ ..\..\.venv\Scripts\uvicorn.exe app:app --host 0.0.0.0 --port 7860 >  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO:     Started server process [1736]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 7860): [winerror 10048] only one usage 
+of each socket address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.

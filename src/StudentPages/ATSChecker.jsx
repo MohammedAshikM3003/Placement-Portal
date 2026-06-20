@@ -515,7 +515,7 @@ function ATSCheckerContent({ onViewChange }) {
   if (!analysis) return null;
 
   const grade = getGrade(analysis.overallScore);
-  const atsParseRate = analysis.categories?.content?.checks?.[0]?.score || 0;
+  const atsParseRate = analysis.categories?.content?.checks?.[0]?.score || analysis.categories?.contactCompleteness?.score || analysis.categories?.resumeStructure?.score || analysis.overallScore || 0;
 
   return (
     <div className={styles.atsCheckerContent}>
@@ -554,7 +554,7 @@ function ATSCheckerContent({ onViewChange }) {
 
             {/* Category Breakdown */}
             <div className={styles.categoryList}>
-              {Object.entries(analysis.categories).map(([key, cat]) => (
+              {Object.entries(analysis.categories || {}).map(([key, cat]) => (
                 <CategoryBar
                   key={key}
                   name={cat.name}
@@ -575,21 +575,36 @@ function ATSCheckerContent({ onViewChange }) {
               <ATSParseRateBar rate={atsParseRate} />
             </div>
 
-            {/* Content Checks */}
-            {analysis.categories.content?.checks && (
-              <div className={styles.detailCard}>
-                <h3 className={styles.detailCardTitle}>
-                  <span className={styles.detailDot} style={{ background: '#2DBE7F' }} />
-                  CONTENT
-                  <span className={styles.issuesBadge}>{analysis.categories.content.checks.filter(c => c.status !== 'pass').length} ISSUES FOUND</span>
-                </h3>
-                <div className={styles.checksList}>
-                  {analysis.categories.content.checks.map((check, i) => (
-                    <CheckItem key={i} check={check} />
-                  ))}
+            {/* Detailed Category Issues & Checks */}
+            {Object.entries(analysis.categories || {}).map(([key, cat]) => (
+              (cat.checks?.length > 0 || cat.issues?.length > 0) ? (
+                <div className={styles.detailCard} key={key}>
+                  <h3 className={styles.detailCardTitle}>
+                    <span className={styles.detailDot} style={{ background: cat.color || '#2DBE7F' }} />
+                    {cat.name}
+                    {cat.checks && (
+                      <span className={styles.issuesBadge}>
+                        {cat.checks.filter(c => c.status !== 'pass').length} ISSUES FOUND
+                      </span>
+                    )}
+                  </h3>
+                  {cat.checks && cat.checks.length > 0 && (
+                    <div className={styles.checksList}>
+                      {cat.checks.map((check, i) => (
+                        <CheckItem key={i} check={check} />
+                      ))}
+                    </div>
+                  )}
+                  {cat.issues && cat.issues.length > 0 && (
+                    <ul className={styles.tipsList} style={{ marginTop: '10px', paddingLeft: '20px', listStyleType: 'disc' }}>
+                      {cat.issues.map((issue, i) => (
+                        <li key={i} style={{ color: '#E67E22', fontSize: '13.5px', marginBottom: '4px', fontStyle: 'italic' }}>{issue}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </div>
-            )}
+              ) : null
+            ))}
 
             {/* Strengths */}
             {analysis.strengths?.length > 0 && (

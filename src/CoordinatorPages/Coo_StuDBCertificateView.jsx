@@ -529,7 +529,9 @@ function CooStuDBCertificateView() {
         <>
             <Conavbar Coordinatoricon={Coordinatoricon} onToggleSidebar={toggleSidebar} />
             <div className={styles['certificate-layout']}>
-                <Cosidebar isOpen={isSidebarOpen} onLogout={handleLogout} currentView={'manage-students'} onViewChange={handleViewChange} />
+                <Cosidebar isOpen={isSidebarOpen} onLogout={handleLogout} currentView={'manage-students'} onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles['certificate-main-content']}>
                     
                     <div className={styles['certificate-stats-container']}>

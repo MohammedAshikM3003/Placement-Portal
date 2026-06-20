@@ -374,7 +374,8 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
         onLogout={onLogout}
         currentView="attendance"
         onViewChange={onViewChange}
-      />
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
       <div className={styles["co-at-layout-main"]}>
         {/* Sidebar JSX */}

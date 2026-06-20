@@ -563,7 +563,9 @@ export default function App({ onLogout, currentView, onViewChange }) {
       {/* --- BODY LAYOUT --- */}
       <div className={styles['co-cd-layout']}>
         {/* --- SIDEBAR --- */}
-        <Sidebar  isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-drive" onViewChange={onViewChange} />
+        <Sidebar  isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-drive" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
           
         
         {/* --- MAIN CONTENT --- */}

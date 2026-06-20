@@ -109,7 +109,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
             <div className={styles.container}>
                 <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
                 <div className={styles.main}>
-                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
+                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                     <div className={styles.dashboardArea}>
                         <div className={styles.initialLoaderOverlay}>
                             <div className={styles.initialLoaderCard}>
@@ -131,7 +133,9 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
         <div className={styles.container}>
             <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
             <div className={styles.main}>
-                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange} />
+                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
                 
                 <div className={styles.dashboardArea}>

@@ -761,7 +761,9 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [studentData, setStudentData] = useState(null);
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(false); // Loading handled by popup, no need for page loading
+    const [isInitialLoading, setIsInitialLoading] = useState(() => {
+        return !!(location.state?.fromMarksheetView);
+    });
     const [loadingProgress, setLoadingProgress] = useState(15);
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
@@ -784,6 +786,13 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
     const [studentTrainingPhaseMetaMap, setStudentTrainingPhaseMetaMap] = useState({});
     const savedDataRef = useRef(null);
+    const loadStartedAtRef = useRef(Date.now());
+    const isInitialLoadingRef = useRef(isInitialLoading);
+    useEffect(() => {
+        isInitialLoadingRef.current = isInitialLoading;
+    }, [isInitialLoading]);
+    const prevStudentIdRef = useRef(null);
+    const MIN_LOADING_DURATION_MS = 900;
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
@@ -792,6 +801,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [isResumeDownloading, setIsResumeDownloading] = useState(false);
     const [resumeActionType, setResumeActionType] = useState('');
     const [isResumeDownloadSuccessOpen, setIsResumeDownloadSuccessOpen] = useState(false);
+    const [availableSemesters, setAvailableSemesters] = useState([]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 600);
@@ -800,7 +810,10 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     }, []);
 
     useEffect(() => {
-        if (!isInitialLoading) return undefined;
+        if (!isInitialLoading) {
+            setLoadingProgress(100);
+            return;
+        }
 
         setLoadingProgress(15);
         const timer = window.setInterval(() => {
@@ -1347,7 +1360,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         return allFields;
     };
 
-    const populateFormFields = (data) => {
+    const populateFormFields = (data, shouldSetLoaded = true) => {
         const normalized = {
             section: data.section || data.Section || data.sec || data.sectionName || '',
             residentialStatus: data.residentialStatus || data.ResidentialStatus || data.residentialstatus || '',
@@ -1386,7 +1399,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         }
 
         // Handle profile image loading with debugging
-        console.log('ðŸ” Profile Image Debug (View):', {
+        console.log('🔍 Profile Image Debug (View):', {
             hasProfilePicURL: !!merged.profilePicURL,
             profilePicURL: merged.profilePicURL,
             profileUploadDate: merged.profileUploadDate
@@ -1395,7 +1408,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
-            console.log('âœ… Profile Image Resolved (View):', resolvedUrl);
+            console.log('✅ Profile Image Resolved (View):', resolvedUrl);
             setProfileImage(resolvedUrl);
             setUploadInfo({
                 name: 'profile.jpg',
@@ -1403,22 +1416,30 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             });
         } else {
             // Clear profile image if no profilePicURL is present
-            console.log('âš ï¸ No profilePicURL found (View), clearing profile image');
+            console.log('⚠️ No profilePicURL found (View), clearing profile image');
             setProfileImage(null);
             setUploadInfo({ name: '', date: '' });
         }
-
-        setIsInitialLoading(false);
+        if (shouldSetLoaded) {
+            setIsInitialLoading(false);
+        }
     };
+
+    const finishLoading = useCallback(async () => {
+        if (!isInitialLoadingRef.current) return;
+        const elapsed = Date.now() - loadStartedAtRef.current;
+        if (elapsed < MIN_LOADING_DURATION_MS) {
+            await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_DURATION_MS - elapsed));
+        }
+        setIsInitialLoading(false);
+    }, []);
 
     const loadStudentData = useCallback(async () => {
         if (!studentId) return;
 
-        let didPopulate = false;
-
         try {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
-            console.log('ðŸ” API Response - completeData (View):', {
+            console.log('🔍 API Response - completeData (View):', {
                 exists: !!completeData,
                 hasStudent: !!completeData?.student,
                 hasProfilePicURL: !!completeData?.student?.profilePicURL,
@@ -1426,50 +1447,84 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             });
 
             if (completeData && completeData.student) {
-                didPopulate = true;
-                populateFormFields(completeData.student);
+                populateFormFields(completeData.student, false);
+
+                // Fetch available semesters from SemesterRecord
+                const regNo = completeData.student.regNo || completeData.student.registerNumber || '';
+                if (regNo) {
+                    try {
+                        const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const resp = await fetch(`${API_BASE_URL}/semester/list?regNo=${encodeURIComponent(String(regNo).trim())}`, {
+                            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+                        });
+                        if (resp.ok) {
+                            const body = await resp.json();
+                            const records = Array.isArray(body.records) ? body.records : [];
+                            const semSet = new Set();
+                            records.forEach(r => {
+                                const hasSubjects = Array.isArray(r.subjects) && r.subjects.length > 0;
+                                const extractionFailed = r.extractionStatus === 'failed';
+                                if (!hasSubjects || extractionFailed) return;
+                                const sem = (r.semester !== undefined && r.semester !== null) ? String(r.semester).trim() : '';
+                                if (sem !== '') semSet.add(Number.isNaN(Number(sem)) ? sem : Number(sem));
+                            });
+                            const sems = Array.from(semSet).sort((a, b) => {
+                                const na = Number(a);
+                                const nb = Number(b);
+                                if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+                                return String(a).localeCompare(String(b));
+                            });
+                            setAvailableSemesters(sems);
+                        }
+                    } catch (err) {
+                        console.warn('Failed to load available semesters:', err);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading student data:', error);
         } finally {
-            if (!didPopulate) {
-                setIsInitialLoading(false);
-            }
+            await finishLoading();
         }
-    }, [studentId]);
+    }, [studentId, finishLoading]);
 
     useEffect(() => {
         // ADMIN VIEW FIX: When admin is viewing a student's profile, we should ONLY
         // load data from the API using the studentId from URL params, NOT from localStorage.
         // localStorage.studentData contains the logged-in admin's data, not the viewed student's data.
 
-        setIsInitialLoading(true);
+        loadStartedAtRef.current = Date.now();
 
-        // CLEAR OLD DATA FIRST - prevents showing previous student's data when switching
-        setStudentData(null);
-        setProfileImage(null);
-        setDob(null);
-        setCurrentYear('');
-        setCurrentSemester('');
-        setSelectedSection('');
-        setSkills([]);
-        setUploadInfo({ name: '', date: '' });
-        setStudyCategory('12th');
+        // Clear and fetch student data only if studentId has actually changed to prevent flickering loops
+        if (prevStudentIdRef.current !== studentId) {
+            prevStudentIdRef.current = studentId;
+            setStudentData(null);
+            setProfileImage(null);
+            setDob(null);
+            setCurrentYear('');
+            setCurrentSemester('');
+            setSelectedSection('');
+            setSkills([]);
+            setAvailableSemesters([]);
+            setUploadInfo({ name: '', date: '' });
+            setStudyCategory('12th');
+        }
 
         if (studentId) {
-            console.log('ðŸ” Admin viewing student (View):', studentId, '- Loading fresh data from API');
+            console.log('🔍 Admin viewing student (View):', studentId, '- Loading fresh data from API');
             loadStudentData();
         } else {
             // Fallback to localStorage (shouldn't happen in admin view, but keeping for safety)
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-            console.log('âš ï¸ No studentId in URL (View) - falling back to localStorage:', {
+            console.log('⚠️ No studentId in URL (View) - falling back to localStorage:', {
                 exists: !!storedStudentData,
                 hasId: !!storedStudentData?._id,
                 hasProfilePicURL: !!storedStudentData?.profilePicURL
             });
 
             if (storedStudentData && storedStudentData._id) {
-                populateFormFields(storedStudentData);
+                populateFormFields(storedStudentData, false);
+                loadStudentData();
             } else {
                 setIsInitialLoading(false);
             }
@@ -2075,7 +2130,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                     onViewChange={handleViewChange}
                     studentData={studentData}
                 />
-                <div className={styles.dashboardArea}>
+                <div className={styles.dashboardArea} style={{ pointerEvents: isInitialLoading ? 'none' : 'auto' }}>
                     <form ref={formRef} onSubmit={handleSave}>
                         {/* --- PERSONAL INFO --- */}
                         <div className={styles.profileSectionContainer}>
@@ -2487,32 +2542,55 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Semester</h3>
+                            <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
                             <div className={styles.marksheetGrid}>
-                                {/* Show semesters 1 to current semester only */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
-                                    return semestersToShow.map((semesterNumber) => (
+                                {availableSemesters.length === 0 ? (
+                                    <div style={{ padding: '10px 0', color: '#666', gridColumn: '1 / -1' }}>
+                                        No semester records uploaded yet.
+                                    </div>
+                                ) : (
+                                    availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button type="button" className={styles.viewMarksheetBtn}>
+                                            <button 
+                                                type="button" 
+                                                className={styles.viewMarksheetBtn}
+                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { 
+                                                    state: { 
+                                                        student: {
+                                                            ...studentData,
+                                                            currentSemester: semesterNumber
+                                                        },
+                                                        returnPath: location.pathname
+                                                    } 
+                                                })}
+                                            >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
                                         </div>
-                                    ));
-                                })()}
+                                    ))
+                                )}
 
-                                {/* Upload button for current semester */}
+                                {/* View button for current semester */}
                                 {(() => {
                                     const currentSem = parseInt(currentSemester) || 1;
+                                    const exists = availableSemesters.includes(currentSem);
+                                    if (!exists) return null;
                                     return (
                                         <button
                                             type="button"
                                             className={styles.uploadMarksheetBtnFull}
-                                            onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { state: { student: studentData } })}
+                                            onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { 
+                                                state: { 
+                                                    student: {
+                                                        ...studentData,
+                                                        currentSemester: currentSem
+                                                    },
+                                                    returnPath: location.pathname
+                                                } 
+                                            })}
                                         >
-                                            <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
+                                            <img src={StuUploadMarksheetIcon} alt="View" className={styles.uploadIcon} />
                                             <span>View Sem {currentSem} Marksheet</span>
                                         </button>
                                     );

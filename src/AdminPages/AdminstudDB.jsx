@@ -201,6 +201,42 @@ const AI_EXTRA_COLUMNS = {
         label: 'Eligible Drives',
         value: (student) => Number(student.eligibleDriveCount || 0),
     },
+    firstGraduate: {
+        label: 'First Graduate',
+        value: (student) => student.firstGraduate || '-',
+    },
+    willingToSignBond: {
+        label: 'Willing to Bond',
+        value: (student) => student.willingToSignBond || '-',
+    },
+    residentialStatus: {
+        label: 'Residential Status',
+        value: (student) => student.residentialStatus || '-',
+    },
+    quota: {
+        label: 'Quota',
+        value: (student) => student.quota || '-',
+    },
+    preferredModeOfDrive: {
+        label: 'Pref. Mode',
+        value: (student) => student.preferredModeOfDrive || '-',
+    },
+    hasProfilePic: {
+        label: 'Photo Uploaded',
+        value: (student) => student.profilePicURL ? 'Yes' : 'No',
+        render: (student) => (
+            <span style={{
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                backgroundColor: student.profilePicURL ? '#d4edda' : '#f8d7da',
+                color: student.profilePicURL ? '#155724' : '#721c24',
+            }}>
+                {student.profilePicURL ? 'Yes' : 'No'}
+            </span>
+        ),
+    },
 };
 
 // Clear mock data
@@ -308,6 +344,11 @@ function AdminstudDB() {
             twelfthPercentage: student.twelfthPercentage || '',
             gender: student.gender || '',
             city: student.city || '',
+            firstGraduate: student.firstGraduate || '',
+            willingToSignBond: student.willingToSignBond || '',
+            residentialStatus: student.residentialStatus || '',
+            quota: student.quota || '',
+            preferredModeOfDrive: student.preferredModeOfDrive || '',
             // Placement data
             isPlaced: Boolean(student.isPlaced),
             placedCompany: student.placedCompany || '',
@@ -1202,7 +1243,7 @@ function AdminstudDB() {
                         <div className={styles['Admin-DB-table-header-row']}>
                             <div className={styles['Admin-DB-table-title-wrap']}>
                                 <h3 className={styles['Admin-DB-table-title']}>
-                                    {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${totalStudents}`}
+                                    {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${aiFilterActive ? visibleStudents.length : totalStudents}`}
                                 </h3>
                                 {!isInitialLoading && !aiFilterActive && (
                                     <div className={styles['Admin-DB-table-subtitle']}>

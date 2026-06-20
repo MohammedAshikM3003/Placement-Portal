@@ -142,17 +142,15 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     const targetRegNo = options.regNo
       || location.state?.regNo
       || studentData?.regNo
-      || studentData?.registerNumber
-      || student.regNo;
+      || studentData?.registerNumber;
     const targetSemester = options.semester
       || location.state?.semester
-      || currentSemester
-      || studentData?.semester
-      || student.semester;
+      || studentData?.currentSemester
+      || studentData?.semester;
     const targetYear = options.year
       || location.state?.year
+      || studentData?.currentYear
       || studentData?.year
-      || student.year
       || '';
 
     if (!targetRegNo || !targetSemester) {
@@ -201,7 +199,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         setIsLoading(false);
       }
     }
-  }, [location.state?.regNo, location.state?.semester, location.state?.year, studentData, student.regNo, student.year, currentSemester, student.semester]);
+  }, [location.state, studentData]);
 
   useEffect(() => {
     if (location.state?.refresh || location.state?.discard) {
@@ -252,7 +250,11 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
       try {
         loadStartedAtRef.current = Date.now();
         setIsLoading(true);
-        if (!currentSemester) {
+        const reg = studentData?.regNo || studentData?.registerNumber || '';
+        const sem = studentData?.currentSemester || studentData?.semester || '';
+        const yr = studentData?.currentYear || studentData?.year || '';
+
+        if (!sem) {
           if (Array.isArray(initialSubjects) && initialSubjects.length > 0) {
             setStudents(initialSubjects);
           }
@@ -261,9 +263,8 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         }
 
         console.log('📚 Loading semester data for:', {
-          studentId,
-          regNo: student.regNo,
-          semester: currentSemester
+          regNo: reg,
+          semester: sem
         });
 
         const fallbackSubjects = Array.isArray(initialSubjects) ? initialSubjects : [];
@@ -275,7 +276,6 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           console.log('✅ Unsaved extracted data detected. Loading preview data.', {
             isPreview: studentData?.isPreview,
             subjectsCount: previewSubjects.length,
-            studentId,
             regNo: studentData?.regNo
           });
           setSemesterRecord(studentData);
@@ -285,9 +285,9 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
           return;
         }
         const fetchedRecord = await fetchLatestStudentMarksheet({
-          regNo: student.regNo,
-          semester: currentSemester,
-          year: student.year || '',
+          regNo: reg,
+          semester: sem,
+          year: yr,
           setLoading: false
         });
 
@@ -305,7 +305,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     };
 
     loadSemesterData();
-  }, [studentData, student.regNo, student.year, currentSemester, studentId, location.key, fetchLatestStudentMarksheet, finishLoading]);
+  }, [location.key, fetchLatestStudentMarksheet, finishLoading]);
 
   const handleViewChange = (view) => {
     console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
@@ -465,7 +465,8 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         onLogout={onLogout}
         currentView={'manage-students'}
         onViewChange={handleViewChange}
-      />
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
@@ -502,7 +503,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
 
       <div
         className={styles['view-content']}
-        style={{ opacity: isLoading ? 0.22 : 1, pointerEvents: isLoading ? 'none' : 'auto' }}
+        style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
       >
         <div className={styles['view-content-wrapper']}>
           {/* Left Column - Student Card */}

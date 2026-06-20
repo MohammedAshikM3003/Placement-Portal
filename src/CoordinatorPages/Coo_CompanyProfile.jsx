@@ -443,7 +443,9 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
     <>
       <Navbar onToggleSidebar={toggleSidebar} />
       <div className={styles['co-cp-layout']}>
-        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-profile" onViewChange={onViewChange} />
+        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="company-profile" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
         <div className={styles['co-cp-main-content']}>
           {/* Top Cards Row */}
           <div className={styles['co-cp-top-cards-row']} style={{marginTop:"-20px"}}>

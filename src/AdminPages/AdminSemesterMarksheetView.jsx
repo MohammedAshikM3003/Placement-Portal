@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar/Adnavbar";
 import Sidebar from "../components/Sidebar/Adsidebar";
@@ -6,6 +8,8 @@ import styles from './AdminSemesterMarksheetView.module.css';
 import Download from "../assets/Downloadsemesterviewicon.svg";
 import Previewicon from "../assets/Adminpreviewmarksheeticon.svg";
 import Adminicons from "../assets/AdmingreenCapicon.svg";
+import mongoDBService from '../services/mongoDBService.jsx';
+import { CertificateDownloadProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 
 const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
   const location = useLocation();
@@ -15,6 +19,83 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('PDF');
+
+  const [semesterRecord, setSemesterRecord] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(18);
+
+  const loadStartedAtRef = useRef(Date.now());
+  const MIN_LOADING_DURATION_MS = 900;
+
+  const targetRegNo = studentData?.regNo || studentData?.registerNumber || '';
+  const targetSemester = studentData?.currentSemester || studentData?.semester || '';
+  const targetYear = studentData?.year || '';
+
+  const finishLoading = useCallback(async () => {
+    const elapsed = Date.now() - loadStartedAtRef.current;
+    if (elapsed < MIN_LOADING_DURATION_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_DURATION_MS - elapsed));
+    }
+    setIsInitialLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!targetRegNo || !targetSemester) {
+        setIsLoading(false);
+        await finishLoading();
+        return;
+      }
+      try {
+        loadStartedAtRef.current = Date.now();
+        setIsInitialLoading(true);
+        setIsLoading(true);
+        const response = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, targetYear);
+        let record = response?.marksheet
+          || response?.record
+          || (Array.isArray(response?.records) ? response.records[0] : null);
+        
+        if (!record) {
+          const fallback = await mongoDBService.getSemesterMarksheetByRegNo(targetRegNo, targetSemester, '');
+          record = fallback?.marksheet
+            || fallback?.record
+            || (Array.isArray(fallback?.records) ? fallback.records[0] : null);
+        }
+
+        if (record) {
+          setSemesterRecord(record);
+          setCourses(Array.isArray(record.subjects) ? record.subjects : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch semester marksheet:", error);
+      } finally {
+        setIsLoading(false);
+        await finishLoading();
+      }
+    };
+    loadData();
+  }, [targetRegNo, targetSemester, targetYear, finishLoading]);
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      setLoadingProgress(100);
+      return;
+    }
+
+    setLoadingProgress(18);
+    const intervalId = setInterval(() => {
+      setLoadingProgress((currentProgress) => {
+        if (currentProgress >= 92) return currentProgress;
+        if (currentProgress >= 70) return Math.min(currentProgress + 2, 92);
+        if (currentProgress >= 35) return Math.min(currentProgress + 4, 70);
+        return Math.min(currentProgress + 6, 35);
+      });
+    }, 140);
+
+    return () => clearInterval(intervalId);
+  }, [isInitialLoading]);
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -41,30 +122,35 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
     console.log('🔹 Sidebar closed');
   };
 
-  const courses = [
-    { sno: 1, semester: 5, courseCode: '20CS511', courseName: 'Principles of Compiler Design', grade: 'B+', result: 'P' },
-    { sno: 2, semester: 5, courseCode: '20CS512', courseName: 'Web Programming', grade: 'B+', result: 'P' },
-    { sno: 3, semester: 5, courseCode: '20CS513', courseName: 'Object Oriented Analysis and Design', grade: 'A+', result: 'P' },
-    { sno: 4, semester: 5, courseCode: '20CS514', courseName: 'Computer Networks', grade: 'B+', result: 'P' },
-    { sno: 5, semester: 5, courseCode: '20CS515', courseName: 'Entrepreneurship Development', grade: 'U', result: 'F' },
-    { sno: 6, semester: 5, courseCode: '20CS564', courseName: 'Open Source Technologies', grade: 'A+', result: 'P' },
-    { sno: 7, semester: 5, courseCode: '20CS516', courseName: 'Database Management Systems', grade: 'A', result: 'P' },
-    { sno: 8, semester: 5, courseCode: '20CS517', courseName: 'Software Engineering', grade: 'B', result: 'P' },
-    { sno: 9, semester: 5, courseCode: '20CS518', courseName: 'Machine Learning', grade: 'A+', result: 'P' },
-    { sno: 10, semester: 5, courseCode: '20CS519', courseName: 'Cloud Computing', grade: 'B+', result: 'P' },
-  ];
-
-  // Use provided student data; avoid using mock defaults
-  const student = studentData || {
-    name: '', regNo: '', dob: '', year: '', semester: '', programme: '', examDate: '',
-    currentSgpa: '', overallCgpa: '', published: '', attempted: '', cleared: '', pending: ''
+  const studentSource = semesterRecord || studentData || {};
+  const student = {
+    id: studentSource.id || studentSource._id || '',
+    _id: studentSource._id || studentSource.id || '',
+    name: studentSource.studentName || studentSource.name || '',
+    regNo: studentSource.regNo || studentSource.registerNumber || '',
+    dob: studentSource.dob || '',
+    year: studentSource.academicYear || studentSource.year || '',
+    semester: studentSource.semester || targetSemester || '',
+    programme: studentSource.programme || studentSource.department || '',
+    examDate: studentSource.examMonthYear || studentSource.examDate || '',
+    currentSgpa: studentSource.sgpa || '',
+    overallCgpa: studentSource.cgpa || '',
+    published: studentSource.published || studentSource.examDate || '',
+    attempted: Array.isArray(courses) ? courses.length : 0,
+    cleared: Array.isArray(courses) ? courses.filter(s => s.grade !== 'U' && s.grade !== 'RA' && s.grade !== 'SA').length : 0,
+    pending: Array.isArray(courses) ? courses.filter(s => s.grade === 'U' || s.grade === 'RA' || s.grade === 'SA').length : 0
   };
 
   const handleDiscard = () => {
+    const returnPath = location.state?.returnPath;
+    if (returnPath) {
+      navigate(returnPath, { state: { fromMarksheetView: true } });
+      return;
+    }
     // Navigate back to student profile view
     if (studentData?.id || studentData?._id) {
       const studentId = studentData._id || studentData.id;
-      navigate(`/admin-student-view/${studentId}`);
+      navigate(`/admin-student-view/${studentId}`, { state: { fromMarksheetView: true } });
     } else {
       navigate(-1); // Fallback to browser back
     }
@@ -76,35 +162,14 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
   };
 
   const handlePreviewMarksheet = () => {
-    console.log('Preview marksheet');
-    // Show loading popup
-    setExportType('Previewing');
-    setExportPopupState('progress');
-    setExportProgress(0);
-    
-    // Slower, smoother progress updates
-    const progressInterval = setInterval(() => {
-      setExportProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10; // Smaller increments for smoother animation
-      });
-    }, 300); // Slower interval for smoother updates
-    
-    // Complete loading and close popup
-    setTimeout(() => {
-      setExportProgress(100);
-      clearInterval(progressInterval);
-      
-      // Close popup after completion
-      setTimeout(() => {
-        setExportPopupState('none');
-        setExportProgress(0);
-        // Add your preview logic here
-      }, 500); // Longer delay for smooth completion
-    }, 2000); // Longer duration for smoother experience
+    const studentId = studentData?.id || studentData?._id || semesterRecord?.studentId || '';
+    navigate(`/admin-semester-edit/${studentId}`, {
+      state: {
+        student: student,
+        subjects: courses,
+        semesterRecord: semesterRecord
+      }
+    });
   };
 
   const handleDownloadMarksheet = () => {
@@ -300,7 +365,7 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
       )}
 
       <div className={styles['view-content']}>
-        <div className={styles['view-content-wrapper']}>
+        <div className={styles['view-content-wrapper']} style={{ pointerEvents: isInitialLoading ? 'none' : 'auto' }}>
           {/* Left Column - Green Student Card */}
           <div className={styles['view-left-column']}>
             <div className={styles['view-student-card']}>
@@ -412,79 +477,106 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
             </div>
 
             {/* Courses Table */}
-            <div className={styles['view-table-container']}>
-              {/* Desktop Table - Header */}
-              <table className={styles['view-courses-table-header']}>
-                <thead>
-                  <tr>
-                    <th>S.NO</th>
-                    <th>Semester</th>
-                    <th>Course Code</th>
-                    <th>Course Name</th>
-                    <th>Grade</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-              </table>
-              {/* Desktop Table - Body with Scroll */}
-              <div className={styles['view-table-scroll']}>
-                <table className={styles['view-courses-table-body']}>
-                  <tbody>
-                    {courses.map((course) => (
-                      <tr key={course.sno}>
-                        <td>{course.sno}</td>
-                        <td>{course.semester}</td>
-                        <td>{course.courseCode}</td>
-                        <td>{course.courseName}</td>
-                        <td>{course.grade}</td>
-                        <td className={course.result === 'P' ? styles['result-pass'] : styles['result-fail']}>
-                          {course.result}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className={styles['view-table-container']} style={{ padding: '2rem', paddingTop: '0', marginTop: '5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '2px solid #4EA24E' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>
+                  Semester {student.semester || targetSemester || ''} - Subjects ({student.attempted})
+                </h2>
+                <button 
+                  type="button" 
+                  onClick={handleDiscard}
+                  style={{ 
+                    backgroundColor: '#808080', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '8px 24px', 
+                    borderRadius: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '0.9rem', 
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#707070'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#808080'}
+                >
+                  Back
+                </button>
               </div>
-              {/* Mobile Table - Unified */}
-              <table className={styles['view-course-table-mobile']}>
-                <thead>
-                  <tr>
-                    <th>S.NO</th>
-                    <th>Semester</th>
-                    <th>Course Code</th>
-                    <th>Course Name</th>
-                    <th>Grade</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courses.map((course) => (
-                    <tr key={course.sno}>
-                      <td>{course.sno}</td>
-                      <td>{course.semester}</td>
-                      <td>{course.courseCode}</td>
-                      <td>{course.courseName}</td>
-                      <td>{course.grade}</td>
-                      <td className={course.result === 'P' ? styles['result-pass'] : styles['result-fail']}>
-                        {course.result}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              
+              {courses.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#666', fontSize: '16px' }}>
+                  {isLoading ? 'Loading semester marksheet data...' : 'No marksheet subjects found for this semester record.'}
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '14px',
+                    fontFamily: 'Poppins, sans-serif'
+                  }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#4EA24E', borderBottom: '2px solid #3d8a3d' }}>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#fff', fontSize: '12px', width: '50px' }}>S.NO</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#fff', fontSize: '12px', width: '60px' }}>SEM</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600', color: '#fff', fontSize: '12px', width: '120px' }}>COURSE CODE</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600', color: '#fff', fontSize: '12px' }}>COURSE NAME</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#fff', fontSize: '12px', width: '80px' }}>CREDITS</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#fff', fontSize: '12px', width: '80px' }}>GRADE</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#fff', fontSize: '12px', width: '80px' }}>RESULT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {courses.map((course, index) => {
+                        const courseCode = course.courseCode || course.subjectCode || '--';
+                        const courseName = course.courseName || course.subjectName || '--';
+                        const rawResult = (course.result || course.status || '').toString().trim().toUpperCase();
+                        const resultValue = rawResult === 'PASS' || rawResult === 'CLEARED' ? 'P' : rawResult === 'FAIL' || rawResult === 'ARREAR' ? 'F' : rawResult;
+                        const isFail = resultValue === 'F' || (course.grade === 'U' || course.grade === 'RA');
+                        const semesterValue = course.semester || course.sem || student.semester || '--';
 
-            {/* Action Buttons */}
-            <div className={styles['view-action-buttons']}>
-              <button className={styles['view-discard-btn']} onClick={handleDiscard}>
-                Back
-              </button>
+                        return (
+                          <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
+                            <td style={{ padding: '12px 8px', textAlign: 'center' }}>{index + 1}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'center' }}>{semesterValue}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'left' }}>{courseCode}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'left' }}>{courseName}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.credits || '0'}</td>
+                            <td style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600' }}>{course.grade || '--'}</td>
+                            <td style={{ 
+                              padding: '12px 8px', 
+                              textAlign: 'center', 
+                              color: isFail ? '#C53030' : '#4EA24E', 
+                              fontWeight: '500' 
+                            }}>
+                              {resultValue || (isFail ? 'F' : 'P')}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
       
       {/* Export Popups */}
+      <CertificateDownloadProgressAlert
+        isOpen={isInitialLoading}
+        progress={loadingProgress}
+        fileLabel="student semester marksheet"
+        title="Loading..."
+        color="#4EA24E"
+        progressColor="#4EA24E"
+        messages={{
+            initial: 'Fetching student semester marksheet...',
+            mid: 'Loading latest marksheet record...',
+            final: 'Preparing page...'
+        }}
+      />
       <PreviewProgressPopup />
       <DownloadProgressPopup />
       <ExportSuccessPopup />

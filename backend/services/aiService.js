@@ -34,6 +34,14 @@ async function checkATS(resumeText, jobDescription) {
   return post('/ats/check', { resumeText, jobDescription });
 }
 
+async function conciseFeedback(text) {
+  return post('/feedback/concise', { text });
+}
+
+async function parseAiFilter(prompt) {
+  return post('/students/ai-filter', { prompt });
+}
+
 async function health() {
   return get('/health');
 }
@@ -43,5 +51,8 @@ module.exports = {
   enhanceResume,
   generateResume,
   checkATS,
+  conciseFeedback,
+  parseAiFilter,
   health,
 };
+

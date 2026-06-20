@@ -9,6 +9,51 @@ const extractExamYear = (value) => {
   return match ? match[1] : '';
 };
 
+const semesterToAcademicYear = (sem) => {
+  const s = parseInt(sem, 10);
+  if (s === 1 || s === 2) return 'I';
+  if (s === 3 || s === 4) return 'II';
+  if (s === 5 || s === 6) return 'III';
+  if (s === 7 || s === 8) return 'IV';
+  return '';
+};
+
+const parseExamMonthYear = (value) => {
+  if (!value) return { month: '', year: '' };
+  const text = String(value).trim().toUpperCase();
+  
+  // Find year
+  const yearMatch = text.match(/(\d{4})/);
+  const year = yearMatch ? yearMatch[1] : '';
+  
+  // Find month
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  let month = '';
+  const monthMap = {
+    'JANUARY': 'JAN', 'FEB': 'FEB', 'FEBRUARY': 'FEB', 'MARCH': 'MAR', 'APRIL': 'APR', 'MAY': 'MAY', 
+    'JUNE': 'JUN', 'JULY': 'JUL', 'AUGUST': 'AUG', 'SEPTEMBER': 'SEP', 'OCTOBER': 'OCT', 'NOVEMBER': 'NOV', 'DECEMBER': 'DEC'
+  };
+  
+  for (const m of months) {
+    if (text.includes(m)) {
+      month = m;
+      break;
+    }
+  }
+  
+  if (!month) {
+    for (const key of Object.keys(monthMap)) {
+      if (text.includes(key)) {
+        month = monthMap[key];
+        break;
+      }
+    }
+  }
+  
+  return { month, year };
+};
+
+
 const normalizeStatus = (grade) => (FAIL_GRADES.has(String(grade || '').toUpperCase()) ? 'Arrear' : 'Cleared');
 
 const buildRecordKey = (regNo, semester, year) => {
@@ -42,7 +87,14 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
     const studentNameRaw = (marksheet.studentName || marksheet.name || '').toString().trim();
     const studentName = studentNameRaw || 'Unknown';
     const resolvedSemester = resolveSemester(marksheet.semester, semester);
-    const year = extractExamYear(marksheet.examDate || marksheet.exam_month_year || marksheet.examYear || marksheet.year);
+    const academicYear = semesterToAcademicYear(resolvedSemester);
+    const examDateVal = marksheet.examDate || marksheet.exam_month_year || marksheet.examYear || marksheet.year || '';
+    const parsedExam = parseExamMonthYear(examDateVal);
+    const examMonth = parsedExam.month || (marksheet.examMonth ? parseExamMonthYear(marksheet.examMonth).month : '');
+    const examYear = parsedExam.year || extractExamYear(marksheet.examDate || marksheet.exam_month_year || marksheet.examYear || marksheet.year);
+    const examMonthYear = (examMonth && examYear) ? `${examMonth} ${examYear}` : (examMonth || examYear || '');
+    const year = examYear;
+
     const subjects = Array.isArray(marksheet.subjects) ? marksheet.subjects : [];
     const matchedStatus = marksheet.matched;
     const sgpaValue = marksheet.sgpa ?? '0.0';
@@ -122,6 +174,10 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       studentName,
       department: marksheet.department || marksheet.programme || '',
       year,
+      academicYear,
+      examMonth,
+      examYear,
+      examMonthYear,
       semester: resolvedSemester,
       section: marksheet.section || '',
       sgpa: (marksheet.sgpa ?? '0.0').toString(),

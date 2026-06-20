@@ -627,7 +627,7 @@ Please compress your PDF or choose a smaller file.`);
       year: formData.year,
       semester: formData.semester,
       section: formData.section,
-      date: formattedDate,
+      date: formData.date,
       comp: formData.comp,
       prize: formData.prize,
       status: initialData?.status || "pending",

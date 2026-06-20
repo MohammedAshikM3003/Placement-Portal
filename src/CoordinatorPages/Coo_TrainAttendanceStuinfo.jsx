@@ -522,7 +522,9 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
     <div className={`${styles["coordinator-main-wrapper"]} ${styles["train-attendance-page"]}`}>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className={styles["coordinator-main-layout"]}>
-        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="training" onViewChange={onViewChange} />
+        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="training" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         <div className={styles["coordinator-content-area"]}>
           <div className={styles["train-attendance-container"]}>

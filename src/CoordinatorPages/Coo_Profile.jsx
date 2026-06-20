@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import DatePicker from 'react-datepicker';
@@ -124,13 +124,13 @@ const getScopedCoordinatorPhotoCache = (data = null) => {
     try {
         const directPhoto = localStorage.getItem(photoKey);
         if (directPhoto) return directPhoto;
-    } catch (_error) {}
+    } catch (_error) { }
 
     try {
         const cachedProfile = JSON.parse(localStorage.getItem(profileKey) || 'null');
         const cachedUrl = cachedProfile?.profilePhoto || cachedProfile?.profilePicURL;
         if (cachedUrl) return cachedUrl;
-    } catch (_error) {}
+    } catch (_error) { }
 
     return null;
 };
@@ -175,9 +175,9 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                         margin: '0 auto 20px'
                     }}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="15" y1="9" x2="9" y2="15"/>
-                            <line x1="9" y1="9" x2="15" y2="15"/>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
                         </svg>
                     </div>
                     <h2 style={{ color: '#d32f2f' }}>Image Size Exceeded âœ—</h2>
@@ -207,8 +207,8 @@ const SuccessPopup = ({ isOpen, onClose }) => {
                 <div className={styles['CoProfile-popup-header']}>Saved !</div>
                 <div className={styles['CoProfile-popup-body']}>
                     <svg className={styles['CoProfile-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className={styles['CoProfile-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                        <path className={styles['CoProfile-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        <circle className={styles['CoProfile-success-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+                        <path className={styles['CoProfile-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                     </svg>
                     <h2>Details Saved âœ“</h2>
                     <p>Your Details have been</p>
@@ -233,7 +233,7 @@ const CalendarIcon = () => (
 
 const UploadIconSVG = () => (
     <svg className={styles['co-profile-upload-svg']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 16h2V9h4l-5-5-5 5h4v7zm-5 4h12v-2H6v2z" fill="currentColor"/>
+        <path d="M11 16h2V9h4l-5-5-5 5h4v7zm-5 4h12v-2H6v2z" fill="currentColor" />
     </svg>
 );
 
@@ -565,8 +565,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             domainMailId: 'Domain Mail ID',
             phoneNumber: 'Phone Number',
             degree: 'Degree',
-            branch: 'Branch',
-            department: 'Department',
+            branch: 'Branch Full Name',
+            department: 'Branch Abbreviation',
             staffId: 'Staff ID',
             cabin: 'Cabin'
         };
@@ -655,8 +655,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 domainMailId: data.domainEmail || data.domainMailId || '',
                                 phoneNumber: data.phone || data.phoneNumber || '',
                                 degree: data.degree || '',
-                                branch: data.branch || '',
-                                department: data.department || '',
+                                branch: data.branchFullName || data.branch || '',
+                                department: data.branchAbbreviation || data.department || '',
                                 staffId: data.coordinatorId || data.username || data.staffId || '',
                                 cabin: data.cabin || '',
                             });
@@ -670,8 +670,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 domainMailId: data.domainEmail || data.domainMailId || '',
                                 phoneNumber: data.phone || data.phoneNumber || '',
                                 degree: data.degree || '',
-                                branch: data.branch || '',
-                                department: data.department || '',
+                                branch: data.branchFullName || data.branch || '',
+                                department: data.branchAbbreviation || data.department || '',
                                 staffId: data.coordinatorId || data.username || data.staffId || '',
                                 cabin: data.cabin || '',
                             };
@@ -1136,12 +1136,12 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
     // Resolve and cache profile photo URL for reliable rendering
     const resolvedProfilePhotoSrc = useMemo(() => {
         if (!profilePhoto) return null;
-        
+
         // If already a blob URL or data URL, use as-is
         if (profilePhoto.startsWith('blob:') || profilePhoto.startsWith('data:')) {
             return profilePhoto;
         }
-        
+
         // Otherwise normalize it
         return normalizeProfilePhotoUrl({ profilePhoto });
     }, [profilePhoto]);
@@ -1155,7 +1155,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             <>
                 <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
                 <div className={styles['co-profile-layout']}>
-                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange} />
+                    <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                     <div className={styles['co-profile-main-content']}>
                         <div style={{
                             display: 'flex',
@@ -1178,7 +1180,9 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
             {isSaving && <div className={styles['co-profile-saving-overlay']} />}
             <div className={`${styles['co-profile-layout']} ${isSaving ? styles['co-profile-saving'] : ''}`}>
-                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange} />
+                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
                 <div className={styles['co-profile-main-content']}>
 
                     <div className={styles['co-profile-card']}>
@@ -1188,11 +1192,11 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                             <div className={styles['co-profile-input-grid']}>
                                 <div className={styles['co-profile-field-group']}>
                                     <label className={styles['co-profile-field-label']} htmlFor="co-profile-firstName">First Name</label>
-                                    <input id="co-profile-firstName" type="text" name="firstName" placeholder="Enter First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={isSaving} />
+                                    <input id="co-profile-firstName" type="text" name="firstName" placeholder="Enter First Name" className={styles['co-profile-form-input']} value={formData.firstName} onChange={handleInputChange} disabled={true} />
                                 </div>
                                 <div className={styles['co-profile-field-group']}>
                                     <label className={styles['co-profile-field-label']} htmlFor="co-profile-lastName">Last Name</label>
-                                    <input id="co-profile-lastName" type="text" name="lastName" placeholder="Enter Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={isSaving} />
+                                    <input id="co-profile-lastName" type="text" name="lastName" placeholder="Enter Last Name" className={styles['co-profile-form-input']} value={formData.lastName} onChange={handleInputChange} disabled={true} />
                                 </div>
 
                                 <div className={styles['co-profile-field-group']}>
@@ -1217,13 +1221,13 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                             yearDropdownItemNumber={7}
                                             scrollableYearDropdown
                                             popperClassName={styles['co-profile-date-popper']}
-                                            disabled={isSaving}
+                                            disabled={true}
                                         />
                                     </div>
                                 </div>
                                 <div className={styles['co-profile-field-group']}>
                                     <label className={styles['co-profile-field-label']} htmlFor="co-profile-gender">Gender</label>
-                                    <select id="co-profile-gender" name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={isSaving}>
+                                    <select id="co-profile-gender" name="gender" className={`${styles['co-profile-form-input']} ${styles['co-profile-form-select']}`} value={formData.gender} onChange={handleInputChange} disabled={true}>
                                         <option value="" disabled hidden>Enter Gender</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
@@ -1246,16 +1250,16 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                 </div>
                                 <div className={styles['co-profile-field-group']}>
                                     <label className={styles['co-profile-field-label']} htmlFor="co-profile-degree">Degree</label>
-                                    <input id="co-profile-degree" type="text" name="degree" placeholder="Enter Degree" className={styles['co-profile-form-input']} value={formData.degree} onChange={handleInputChange} disabled={isSaving} />
+                                    <input id="co-profile-degree" type="text" name="degree" placeholder="Enter Degree" className={styles['co-profile-form-input']} value={formData.degree} onChange={handleInputChange} disabled={true} />
                                 </div>
 
                                 <div className={styles['co-profile-field-group']}>
-                                    <label className={styles['co-profile-field-label']} htmlFor="co-profile-branch">Branch</label>
-                                    <input id="co-profile-branch" type="text" name="branch" placeholder="Enter Branch" className={styles['co-profile-form-input']} value={formData.branch} onChange={handleInputChange} disabled={isSaving} />
+                                    <label className={styles['co-profile-field-label']} htmlFor="co-profile-branch">Branch Full Name</label>
+                                    <input id="co-profile-branch" type="text" name="branch" placeholder="Enter Branch Full Name" className={styles['co-profile-form-input']} value={formData.branch} onChange={handleInputChange} disabled={true} />
                                 </div>
                                 <div className={styles['co-profile-field-group']}>
-                                    <label className={styles['co-profile-field-label']} htmlFor="co-profile-department">Department</label>
-                                    <input id="co-profile-department" type="text" name="department" placeholder="Enter Department" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={isSaving} />
+                                    <label className={styles['co-profile-field-label']} htmlFor="co-profile-department">Branch Abbreviation</label>
+                                    <input id="co-profile-department" type="text" name="department" placeholder="Enter Branch Abbreviation" className={styles['co-profile-form-input']} value={formData.department} onChange={handleInputChange} disabled={true} />
                                 </div>
                             </div>
 
@@ -1271,7 +1275,7 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                                 onClick={handleImageClick}
                                             />
                                         ) : (
-                                            <img src={ProfileGraduationcap} alt="Graduation Cap" style={{ width: '100px', height: '90px'}}/>
+                                            <img src={ProfileGraduationcap} alt="Graduation Cap" style={{ width: '100px', height: '90px' }} />
                                         )}
                                     </div>
                                 </div>

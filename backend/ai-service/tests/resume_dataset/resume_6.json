@@ -1,0 +1,63 @@
+{
+  "personalInfo": {
+    "name": "Anjali Mehta",
+    "mobile": "6606471750",
+    "email": "anjali.mehta@email.com",
+    "linkedin": "linkedin.com/in/anjalimehta",
+    "github": "github.com/anjalimehta",
+    "portfolio": ""
+  },
+  "summary": "really good team player got first prize in coding compition.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "HTML",
+        "CSS",
+        "JS",
+        "React",
+        "bootstrap"
+      ]
+    }
+  ],
+  "experiences": [],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "made a chat app for messaging. used socket stuff.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "participted in coding contest."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/anjali"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Frontend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

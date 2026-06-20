@@ -63,7 +63,7 @@
   height: 28px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .ad-navbar .ad-menu {
     display: none;
   }

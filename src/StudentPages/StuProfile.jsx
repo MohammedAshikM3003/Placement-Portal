@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -21,10 +21,7 @@ import fastDataService from '../services/fastDataService.jsx';
 import gridfsService from '../services/gridfsService';
 import FieldUpdateBanner from '../components/alerts/FieldUpdateBanner';
 import UnsavedChangesAlert from '../components/alerts/UnsavedChangesAlert';
-import {
-    DownloadSuccessAlert,
-    DownloadFailedAlert
-} from '../components/alerts/DownloadPreviewAlerts';
+import { CertificateDownloadProgressAlert } from '../components/alerts';
 
 const COMPANY_TYPE_OPTIONS = [
     "CORE",
@@ -708,6 +705,8 @@ function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
 }
 
 function StuProfile({ onLogout, onViewChange }) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [studyCategory, setStudyCategory] = useState('12th');
     const [isPopupOpen, setPopupOpen] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
@@ -730,7 +729,11 @@ function StuProfile({ onLogout, onViewChange }) {
     });
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [showUpdateNotification, setShowUpdateNotification] = useState(false);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isInitialLoading, setIsInitialLoading] = useState(() => {
+        // Only show progress overlay popup if navigated back from marksheet view
+        return !!(location.state?.fromMarksheetView);
+    });
+    const [loadingProgress, setLoadingProgress] = useState(18);
     const [currentYear, setCurrentYear] = useState('');
     const [currentSemester, setCurrentSemester] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
@@ -746,6 +749,8 @@ function StuProfile({ onLogout, onViewChange }) {
     const [selectedRound, setSelectedRound] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 600);
     const savedDataRef = useRef(null);
+    const loadStartedAtRef = useRef(Date.now());
+    const MIN_LOADING_DURATION_MS = 900;
     const afterSaveNavRef = useRef(null);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const [pendingNavView, setPendingNavView] = useState(null);
@@ -755,6 +760,39 @@ function StuProfile({ onLogout, onViewChange }) {
     const [studentTrainingAssignment, setStudentTrainingAssignment] = useState(null);
     const [studentTrainingAttendanceRecords, setStudentTrainingAttendanceRecords] = useState([]);
     const [studentTrainingPhaseMetaMap, setStudentTrainingPhaseMetaMap] = useState({});
+    const [availableSemesters, setAvailableSemesters] = useState([]);
+
+    const fetchAvailableSemesters = useCallback(async (regNo) => {
+        if (!regNo) return;
+        try {
+            const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const resp = await fetch(`${API_BASE_URL}/semester/list?regNo=${encodeURIComponent(String(regNo).trim())}`, {
+                headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+            });
+            if (resp.ok) {
+                const body = await resp.json();
+                const records = Array.isArray(body.records) ? body.records : [];
+                const semSet = new Set();
+                records.forEach(r => {
+                    const hasSubjects = Array.isArray(r.subjects) && r.subjects.length > 0;
+                    const extractionFailed = r.extractionStatus === 'failed';
+                    if (!hasSubjects || extractionFailed) return;
+                    const sem = (r.semester !== undefined && r.semester !== null) ? String(r.semester).trim() : '';
+                    if (sem !== '') semSet.add(Number.isNaN(Number(sem)) ? sem : Number(sem));
+                });
+                const sems = Array.from(semSet).sort((a, b) => {
+                    const na = Number(a);
+                    const nb = Number(b);
+                    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+                    return String(a).localeCompare(String(b));
+                });
+                setAvailableSemesters(sems);
+            }
+        } catch (err) {
+            console.warn('Failed to load available semesters:', err);
+        }
+    }, []);
+
     const companyAutoSaveTimerRef = useRef(null);
     const companyAutoSaveInFlightRef = useRef(false);
     const companyAutoSaveKeyRef = useRef('');
@@ -1833,7 +1871,7 @@ function StuProfile({ onLogout, onViewChange }) {
         return allFields;
     };
 
-    const populateFormFields = (data) => {
+    const populateFormFields = (data, shouldSetLoaded = true) => {
         const normalized = {
             section: data.section || data.Section || data.sec || data.sectionName || '',
             residentialStatus: data.residentialStatus || data.ResidentialStatus || data.residentialstatus || '',
@@ -1886,8 +1924,19 @@ function StuProfile({ onLogout, onViewChange }) {
             });
         }
 
-        setIsInitialLoading(false);
+        if (shouldSetLoaded) {
+            setIsInitialLoading(false);
+        }
     };
+
+    const finishLoading = useCallback(async () => {
+        if (!isInitialLoading) return;
+        const elapsed = Date.now() - loadStartedAtRef.current;
+        if (elapsed < MIN_LOADING_DURATION_MS) {
+            await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_DURATION_MS - elapsed));
+        }
+        setIsInitialLoading(false);
+    }, [isInitialLoading]);
 
     const loadStudentData = useCallback(async () => {
         try {
@@ -1898,29 +1947,54 @@ function StuProfile({ onLogout, onViewChange }) {
             const completeData = await fastDataService.getCompleteStudentData(studentId);
             
             if (completeData && completeData.student) {
-                populateFormFields(completeData.student);
+                populateFormFields(completeData.student, false);
                 if (completeData.resume) localStorage.setItem('resumeData', JSON.stringify(completeData.resume));
                 if (completeData.certificates) localStorage.setItem('certificatesData', JSON.stringify(completeData.certificates));
+                
+                const regNo = completeData.student.regNo || completeData.student.registerNumber || '';
+                if (regNo) {
+                    fetchAvailableSemesters(regNo);
+                }
             } else {
                 const storedRegNo = localStorage.getItem('regNo');
                 const storedDob = localStorage.getItem('dob');
                 if (storedRegNo && storedDob) {
                     const fallbackData = await mongoDBService.getStudentByRegNoAndDob(storedRegNo, storedDob);
-                    if (fallbackData) populateFormFields(fallbackData);
+                    if (fallbackData) {
+                        populateFormFields(fallbackData, false);
+                        if (fallbackData.regNo) {
+                            fetchAvailableSemesters(fallbackData.regNo);
+                        }
+                    }
                 }
             }
         } catch (error) {
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
-            if (storedStudentData) populateFormFields(storedStudentData);
+            if (storedStudentData) {
+                populateFormFields(storedStudentData, false);
+                if (storedStudentData.regNo) {
+                    fetchAvailableSemesters(storedStudentData.regNo);
+                }
+            }
+        } finally {
+            await finishLoading();
         }
-    }, []);
+    }, [fetchAvailableSemesters, finishLoading]);
 
     useEffect(() => {
+        loadStartedAtRef.current = Date.now();
         const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
         if (storedStudentData && storedStudentData._id) {
-            populateFormFields(storedStudentData);
+            populateFormFields(storedStudentData, false);
             const instantData = fastDataService.getInstantData(storedStudentData._id);
-            if (instantData && instantData.student) populateFormFields(instantData.student);
+            if (instantData && instantData.student) {
+                populateFormFields(instantData.student, false);
+                if (instantData.student.regNo) {
+                    fetchAvailableSemesters(instantData.student.regNo);
+                }
+            } else if (storedStudentData.regNo) {
+                fetchAvailableSemesters(storedStudentData.regNo);
+            }
             
             if (storedStudentData.profilePicURL) {
                 window.dispatchEvent(new CustomEvent('profileUpdated', { 
@@ -1936,7 +2010,26 @@ function StuProfile({ onLogout, onViewChange }) {
         return () => {
             // Cleanup handled globally in AuthContext
         };
-    }, [loadStudentData]);
+    }, [loadStudentData, fetchAvailableSemesters]);
+
+    useEffect(() => {
+        if (!isInitialLoading) {
+            setLoadingProgress(100);
+            return;
+        }
+
+        setLoadingProgress(18);
+        const intervalId = setInterval(() => {
+            setLoadingProgress((currentProgress) => {
+                if (currentProgress >= 92) return currentProgress;
+                if (currentProgress >= 70) return Math.min(currentProgress + 2, 92);
+                if (currentProgress >= 35) return Math.min(currentProgress + 4, 70);
+                return Math.min(currentProgress + 6, 35);
+            });
+        }, 140);
+
+        return () => clearInterval(intervalId);
+    }, [isInitialLoading]);
 
     // Auto-sync mechanism: Check for profile updates every 30 seconds
     useEffect(() => {
@@ -2442,34 +2535,22 @@ function StuProfile({ onLogout, onViewChange }) {
     const actionableChangedFields = getChangedFields();
     const hasActionableChanges = actionableChangedFields.length > 0;
 
-    if (isInitialLoading) {
-        return (
-            <div className={styles.container}>
-                <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-                <div className={styles.main}>
-                    <Sidebar
-                        isOpen={isSidebarOpen}
-                        onLogout={onLogout}
-                        currentView={'profile'}
-                        onViewChange={handleViewChange}
-                        studentData={studentData}
-                    />
-                    <div className={styles.dashboardArea}>
-                        <div className={styles.initialLoaderOverlay}>
-                            <div className={styles.initialLoaderCard}>
-                                <div className={styles.loadingSpinner}></div>
-                                <p>Loading your profile...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={`${styles.container} ${isSaving ? styles['stu-profile-saving'] : ''}`}>
             {isSaving && <div className={styles['stu-profile-saving-overlay']} />}
+            <CertificateDownloadProgressAlert
+                isOpen={isInitialLoading}
+                progress={loadingProgress}
+                fileLabel="profile data"
+                title="Loading..."
+                color="#197AFF"
+                progressColor="#197AFF"
+                messages={{
+                    initial: 'Loading your profile...',
+                    mid: 'Synchronizing database records...',
+                    final: 'Preparing dashboard...'
+                }}
+            />
             {/* Profile Update Notification */}
             {showUpdateNotification && (
                 <div style={{
@@ -2542,7 +2623,7 @@ function StuProfile({ onLogout, onViewChange }) {
                     onViewChange={handleViewChange}
                     studentData={studentData}
                 />
-                <div className={styles.dashboardArea}>
+                <div className={styles.dashboardArea} style={{ pointerEvents: isInitialLoading ? 'none' : 'auto' }}>
                     <form ref={formRef} onSubmit={handleSave}>
                         {/* --- PERSONAL INFO --- */}
                         <div className={styles.profileSectionContainer}>
@@ -2952,36 +3033,31 @@ function StuProfile({ onLogout, onViewChange }) {
                         
                             {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Semester</h3>
+                            <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
                             <div className={styles.marksheetGrid}>
-                                {/* Show semesters 1 to current semester only */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    const semestersToShow = Array.from({ length: currentSem }, (_, i) => i + 1);
-                                    return semestersToShow.map((semesterNumber) => (
+                                {availableSemesters.length === 0 ? (
+                                    <div style={{ padding: '10px 0', color: '#666', gridColumn: '1 / -1' }}>
+                                        No semester records uploaded yet.
+                                    </div>
+                                ) : (
+                                    availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button type="button" className={styles.viewMarksheetBtn}>
+                                            <button 
+                                                type="button" 
+                                                className={styles.viewMarksheetBtn}
+                                                onClick={() => navigate('/student-semester-view', { 
+                                                    state: { 
+                                                        semester: semesterNumber,
+                                                        returnPath: location.pathname
+                                                    } 
+                                                })}
+                                            >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
                                         </div>
-                                    ));
-                                })()}
-                                
-                                {/* Upload button for current semester */}
-                                {(() => {
-                                    const currentSem = parseInt(currentSemester) || 1;
-                                    return (
-                                        <button 
-                                            type="button" 
-                                            className={styles.uploadMarksheetBtnFull}
-                                            onClick={() => onViewChange('semester-marksheet-upload')}
-                                        >
-                                            <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />
-                                            <span>Upload Sem {currentSem} Marksheet</span>
-                                        </button>
-                                    );
-                                })()}
+                                    ))
+                                )}
                             </div>
                             
                             {/* Separator line */}

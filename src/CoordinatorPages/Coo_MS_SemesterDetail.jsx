@@ -99,6 +99,7 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   const [submitError, setSubmitError] = useState('');
   const [semesterRecords, setSemesterRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const effectivePdfName = extractedPdfName || fileName;
 
@@ -442,9 +443,11 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
 
   return (
     <>
-      <Navbar onToggleSidebar={() => {}} Adminicon={Adminicon} />
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} Adminicon={Adminicon} />
       <div className={styles['co-semester-layout']}>
-        <Sidebar isOpen={false} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange} />
+        <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         <main className={styles['semester-content']}>
           <section className={styles['top-grid']}>

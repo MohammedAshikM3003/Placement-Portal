@@ -1,0 +1,85 @@
+{
+  "personalInfo": {
+    "name": "Aisha Subramanian",
+    "mobile": "7743685386",
+    "email": "aisha.subramanian22@anonymized.in",
+    "linkedin": "linkedin.com/in/aishasubramanian",
+    "github": "github.com/aishasubramanian",
+    "portfolio": ""
+  },
+  "summary": "Creative frontend web developer. Know HTML CSS and React. Looking for junior developer role.",
+  "education": {
+    "college": "Vellore Institute of Technology",
+    "degree": "B.Tech",
+    "branch": "Computer Science Engineering",
+    "cgpa": "7.62",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React",
+        "Tailwind CSS",
+        "Bootstrap",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Frontend Developer Intern",
+      "companyName": "TCS",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked in Freshworks. did make responsive ui pages and fixed css errors.",
+      "technologies": [
+        "HTML",
+        "CSS"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Personal Portfolio",
+      "description": "made personal portfolio webiste with responsive pages and animations. fixed css bugs.",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aisha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Cyber Security Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -467,7 +467,8 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           isOpen={isSidebarOpen} 
           onLogout={onLogout} 
           currentView="manage-students" 
-          onViewChange={onViewChange} 
+          onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles['semester-main-content']}>
           <div className={styles['semester-controls']}>

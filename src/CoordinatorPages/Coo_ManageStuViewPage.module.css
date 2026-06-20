@@ -946,7 +946,7 @@ select:disabled {
 
 
 /* --- MOBILE RESPONSIVE --- */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .container { position: fixed !important; width: 100% !important; height: 100% !important; }
     .main { overflow-x: hidden !important; height: calc(100vh - 60px) !important; margin-top: 60px !important; }
 
@@ -2498,7 +2498,7 @@ select:disabled {
   max-height: 100% !important;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
         .dashboardArea {
                 margin-left: 0 !important;
                 width: 100% !important;
@@ -2507,7 +2507,7 @@ select:disabled {
 }
 
 /* Desktop media query to ensure proper sidebar spacing */
-@media (min-width: 993px) {
+@media (min-width: 1201px) {
     .dashboardArea {
         margin-left: 290px !important;
         width: calc(100% - 290px) !important;

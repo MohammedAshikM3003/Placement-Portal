@@ -46,7 +46,6 @@ function SaCooPage({ onLogout }) {
   const navigate = useNavigate();
   const auth = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [impersonateTarget, setImpersonateTarget] = useState(null);
   const [coordinators, setCoordinators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -235,86 +234,46 @@ function SaCooPage({ onLogout }) {
                   <button
                     type="button"
                     className={styles.loginButton}
-                    onClick={() => setImpersonateTarget(coordinator)}
+                    onClick={async () => {
+                      try {
+                        const identifier = coordinator.coordinatorId || coordinator.username || '';
+                        const raw = coordinator.raw || {};
+                        const dob = raw.dob || raw.DOB || raw.dateOfBirth || '';
+
+                        if (!identifier) {
+                          alert('Coordinator ID is missing. Cannot open profile.');
+                          return;
+                        }
+
+                        if (!dob) {
+                          const supplied = window.prompt('Coordinator DOB is required to login as the coordinator. Please enter DOB (YYYY-MM-DD or DDMMYYYY):', '');
+                          if (!supplied) return;
+                          const loginResult = await auth.login(identifier, supplied);
+                          if (loginResult && loginResult.success) {
+                            navigate('/coo-dashboard');
+                          } else {
+                            alert(loginResult.error || 'Login failed');
+                          }
+                          return;
+                        }
+
+                        const result = await auth.login(identifier, dob);
+                        if (result && result.success) {
+                          navigate('/coo-dashboard');
+                        } else {
+                          alert(result.error || 'Login failed');
+                        }
+                      } catch (err) {
+                        console.error('Coordinator login failed', err);
+                        alert('Unable to open coordinator dashboard: ' + (err?.message || 'Unknown error'));
+                      }
+                    }}
                   >
                     Open Profile
                   </button>
                 </div>
 
               </div> {/* close studentMeta */}
-
-              {/* Confirmation modal for impersonation */}
-              {impersonateTarget ? (
-                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-                  <div className={styles.modalCard}>
-                    <h3>Confirm impersonation</h3>
-                    <p>Open coordinator dashboard for <strong>{impersonateTarget.name}</strong>?</p>
-                    <div className={styles.modalActions}>
-                      <button
-                        type="button"
-                        className={styles.primaryAction}
-                        onClick={async () => {
-                          // perform impersonation
-                          try {
-                            const identifier = impersonateTarget.coordinatorId || impersonateTarget.username || '';
-                            const resp = await fetch(`${API_BASE_URL}/admin/impersonate/coordinator`, {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                              },
-                              body: JSON.stringify({ coordinatorId: identifier })
-                            });
-
-                            if (resp.status === 401 || resp.status === 403) {
-                              // Admin not authenticated/authorized — redirect to admin login
-                              alert('Session expired or unauthorized. Please log in as admin again.');
-                              setImpersonateTarget(null);
-                              navigate('/mainlogin');
-                              return;
-                            }
-
-                            let body;
-                            const contentType = resp.headers.get('content-type') || '';
-                            if (contentType.includes('application/json')) {
-                              body = await resp.json();
-                            } else {
-                              const text = await resp.text();
-                              body = { success: resp.ok, error: text || resp.statusText };
-                            }
-
-                            if (!resp.ok || !body.success) {
-                              alert(body.error || `Impersonation failed (status ${resp.status})`);
-                              setImpersonateTarget(null);
-                              return;
-                            }
-
-                            const token = body.token;
-                            const coord = body.coordinator || {};
-
-                            localStorage.setItem('authToken', token);
-                            localStorage.setItem('authRole', 'coordinator');
-                            localStorage.setItem('isCoordinatorLoggedIn', 'true');
-                            const coordIdVal = coord.coordinatorId || identifier;
-                            const usernameVal = coord.username || coordIdVal;
-                            localStorage.setItem('coordinatorId', coordIdVal);
-                            localStorage.setItem('coordinatorUsername', usernameVal);
-                            localStorage.setItem('coordinatorData', JSON.stringify({ ...coord, coordinatorId: coordIdVal, username: usernameVal }));
-
-                            // navigate
-                            window.location.assign('/coo-dashboard');
-                          } catch (err) {
-                            console.error('Impersonation failed', err);
-                            alert('Impersonation failed: ' + (err?.message || 'Unknown error'));
-                            setImpersonateTarget(null);
-                          }
-                        }}
-                      >Confirm</button>
-                      <button type="button" className={styles.secondaryAction} onClick={() => setImpersonateTarget(null)}>Cancel</button>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
             </article>
           ))}
         </section>

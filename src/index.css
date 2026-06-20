@@ -203,3 +203,322 @@ body::-webkit-scrollbar-button:horizontal:end:increment {
     overflow-x: hidden;
   }
 }
+
+/* --- ADMIN THEME CUSTOM SCROLLBARS & VIEWPORT CONSTRAINTS --- */
+
+/* Prevent the root window/body from scrolling on admin pages */
+html.admin-theme,
+html.admin-theme body {
+  height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Style the scrollbar for root html/body when on admin pages */
+html.admin-theme::-webkit-scrollbar,
+html.admin-theme body::-webkit-scrollbar,
+.admin-theme::-webkit-scrollbar,
+.admin-theme ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+
+html.admin-theme::-webkit-scrollbar-track,
+html.admin-theme body::-webkit-scrollbar-track,
+.admin-theme::-webkit-scrollbar-track,
+.admin-theme ::-webkit-scrollbar-track {
+  background: #f0f2f5 !important;
+}
+
+html.admin-theme::-webkit-scrollbar-thumb,
+html.admin-theme body::-webkit-scrollbar-thumb,
+.admin-theme::-webkit-scrollbar-thumb,
+.admin-theme ::-webkit-scrollbar-thumb {
+  background-color: #4EA24E !important;
+  border-radius: 20px !important;
+  border: 3px solid #f0f2f5 !important;
+}
+
+html.admin-theme::-webkit-scrollbar-thumb:hover,
+html.admin-theme body::-webkit-scrollbar-thumb:hover,
+.admin-theme::-webkit-scrollbar-thumb:hover,
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: #3d8a3d !important;
+}
+
+/* Force the top-level active page container (direct child of #root) to fill the viewport exactly */
+html.admin-theme #root > div {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Force all admin main content areas to scroll internally, keeping the scrollbar below the header */
+html.admin-theme [class*="main-content"],
+html.admin-theme [class*="dashboard-area"],
+html.admin-theme [class*="dashboardArea"],
+html.admin-theme main {
+  height: calc(100vh - 65px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Adjust positioning and spacing on desktop to avoid extra empty scroll space (footer size) and reach the bottom */
+@media (min-width: 901px) {
+  html.admin-theme [class*="main-content"],
+  html.admin-theme [class*="dashboard-area"],
+  html.admin-theme [class*="dashboardArea"],
+  html.admin-theme main {
+    padding-bottom: 24px !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Ensure no elements hide the scrollbar under the admin theme */
+.admin-theme * {
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+}
+
+/* Reset layout margins for all admin pages at 1200px breakpoint */
+@media (max-width: 1200px) {
+  /* Collapse sidebar for admin theme */
+  .admin-theme .adsidebar,
+  .admin-theme .sasidebar {
+    transform: translateX(-100%) !important;
+  }
+  .admin-theme .adsidebar.open,
+  .admin-theme .sasidebar.open {
+    transform: translateX(0) !important;
+  }
+  .admin-theme .ad-hamburger-menu,
+  .admin-theme .sa-hamburger-menu {
+    display: flex !important;
+  }
+
+  /* Reset layout margins for all admin pages */
+  html.admin-theme [class*="main-content"],
+  html.admin-theme [class*="dashboard-area"],
+  html.admin-theme [class*="dashboardArea"],
+  html.admin-theme [class*="top-card"],
+  html.admin-theme [class*="bottom-card"],
+  html.admin-theme main {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* --- COORDINATOR THEME CUSTOM SCROLLBARS (RED) & VIEWPORT CONSTRAINTS --- */
+
+/* Prevent the root window/body from scrolling on coordinator pages */
+html.coo-theme,
+html.coo-theme body {
+  height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Style the scrollbar for root html/body when on coordinator pages */
+html.coo-theme::-webkit-scrollbar,
+html.coo-theme body::-webkit-scrollbar,
+.coo-theme::-webkit-scrollbar,
+.coo-theme ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+
+html.coo-theme::-webkit-scrollbar-track,
+html.coo-theme body::-webkit-scrollbar-track,
+.coo-theme::-webkit-scrollbar-track,
+.coo-theme ::-webkit-scrollbar-track {
+  background: #f0f2f5 !important;
+}
+
+html.coo-theme::-webkit-scrollbar-thumb,
+html.coo-theme body::-webkit-scrollbar-thumb,
+.coo-theme::-webkit-scrollbar-thumb,
+.coo-theme ::-webkit-scrollbar-thumb {
+  background-color: #D23B42 !important; /* Coordinator Red scrollbar color */
+  border-radius: 20px !important;
+  border: 3px solid #f0f2f5 !important;
+}
+
+html.coo-theme::-webkit-scrollbar-thumb:hover,
+html.coo-theme body::-webkit-scrollbar-thumb:hover,
+.coo-theme::-webkit-scrollbar-thumb:hover,
+.coo-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34 !important;
+}
+
+/* Force the top-level active page container (direct child of #root) to fill the viewport exactly */
+html.coo-theme #root > div {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Force all coordinator main content areas to scroll internally, keeping the scrollbar below the header */
+html.coo-theme [class*="main-content"],
+html.coo-theme [class*="dashboard-area"],
+html.coo-theme [class*="dashboardArea"],
+html.coo-theme main {
+  height: calc(100vh - 65px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Adjust positioning and spacing on desktop to avoid extra empty scroll space and reach the bottom */
+@media (min-width: 901px) {
+  html.coo-theme [class*="main-content"],
+  html.coo-theme [class*="dashboard-area"],
+  html.coo-theme [class*="dashboardArea"],
+  html.coo-theme main {
+    padding-bottom: 24px !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Ensure no elements hide the scrollbar under the coordinator theme */
+.coo-theme * {
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+}
+
+/* Reset layout margins for all coordinator pages at 1200px breakpoint */
+@media (max-width: 1200px) {
+  /* Collapse sidebar for coordinator theme */
+  .coo-theme .coo-sidebar-container {
+    transform: translateX(-100%) !important;
+  }
+  .coo-theme .coo-sidebar-container.open,
+  .coo-theme [class*="sidebarOpen"] {
+    transform: translateX(0) !important;
+  }
+
+  /* Reset layout margins for all coordinator pages */
+  html.coo-theme [class*="main-content"],
+  html.coo-theme [class*="dashboard-area"],
+  html.coo-theme [class*="dashboardArea"],
+  html.coo-theme [class*="top-card"],
+  html.coo-theme [class*="bottom-card"],
+  html.coo-theme main {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* --- STUDENT THEME CUSTOM SCROLLBARS & VIEWPORT CONSTRAINTS --- */
+
+/* Prevent the root window/body from scrolling on student pages */
+html.stu-theme,
+html.stu-theme body {
+  height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Style the scrollbar for root html/body when on student pages */
+html.stu-theme::-webkit-scrollbar,
+html.stu-theme body::-webkit-scrollbar,
+.stu-theme::-webkit-scrollbar,
+.stu-theme ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+
+html.stu-theme::-webkit-scrollbar-track,
+html.stu-theme body::-webkit-scrollbar-track,
+.stu-theme::-webkit-scrollbar-track,
+.stu-theme ::-webkit-scrollbar-track {
+  background: #f0f2f5 !important;
+}
+
+html.stu-theme::-webkit-scrollbar-thumb,
+html.stu-theme body::-webkit-scrollbar-thumb,
+.stu-theme::-webkit-scrollbar-thumb,
+.stu-theme ::-webkit-scrollbar-thumb {
+  background-color: #2085f6 !important; /* Student Blue scrollbar color */
+  border-radius: 20px !important;
+  border: 3px solid #f0f2f5 !important;
+}
+
+html.stu-theme::-webkit-scrollbar-thumb:hover,
+html.stu-theme body::-webkit-scrollbar-thumb:hover,
+.stu-theme::-webkit-scrollbar-thumb:hover,
+.stu-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: #4338CA !important;
+}
+
+/* Force the top-level active page container (direct child of #root) to fill the viewport exactly */
+html.stu-theme #root > div {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Force all student main content areas to scroll internally, keeping the scrollbar below the header */
+html.stu-theme [class*="main-content"],
+html.stu-theme [class*="dashboard-area"],
+html.stu-theme [class*="dashboardArea"],
+html.stu-theme main {
+  height: calc(100vh - 65px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Adjust positioning and spacing on desktop to avoid extra empty scroll space and reach the bottom */
+@media (min-width: 901px) {
+  html.stu-theme [class*="main-content"],
+  html.stu-theme [class*="dashboard-area"],
+  html.stu-theme [class*="dashboardArea"],
+  html.stu-theme main {
+    padding-bottom: 24px !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Ensure no elements hide the scrollbar under the student theme */
+.stu-theme * {
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+}
+
+/* Reset layout margins for all student pages at 1200px breakpoint */
+@media (max-width: 1200px) {
+  /* Collapse sidebar for student theme */
+  .stu-theme .sidebar {
+    transform: translateX(-100%) !important;
+  }
+  .stu-theme .sidebar.open {
+    transform: translateX(0) !important;
+  }
+  .stu-theme .hamburger-menu {
+    display: flex !important;
+  }
+
+  /* Reset layout margins for all student pages */
+  html.stu-theme [class*="dashboard-area"],
+  html.stu-theme [class*="dashboardArea"],
+  html.stu-theme [class*="main-content"],
+  html.stu-theme [class*="mainContent"],
+  html.stu-theme [class*="view-content"],
+  html.stu-theme [class*="viewContent"],
+  html.stu-theme [class*="uploadSection"],
+  html.stu-theme [class*="upload-section"],
+  html.stu-theme [class*="container-right"],
+  html.stu-theme [class*="content-area"],
+  html.stu-theme [class*="contentArea"],
+  html.stu-theme main {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

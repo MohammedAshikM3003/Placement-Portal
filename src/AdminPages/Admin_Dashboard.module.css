@@ -24,9 +24,12 @@
   margin-left: 290px;
   flex: 1;
   background: #fff;
-  padding: 65px 25px 17px 25px;
+  padding: 20px 25px 17px 25px;
   background: #fff;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 65px);
+  margin-top: 65px;
   transition: margin-left 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -93,6 +96,7 @@
   position: relative;
   /* --- FIX 2: Changed 'top' to 'margin-top' --- */
   margin-top: 13px;
+  margin-bottom: 50px;
 }
 
 .admin-dashboard-page .ad-db-card {
@@ -371,6 +375,20 @@
     border-radius: 8px;
     background-color: #f9fff9;
     box-sizing: border-box;
+}
+/* ============================================================
+   SQUARE SHAPE MONITOR & MEDIUM DESKTOP RESPONSIVENESS
+   ============================================================ */
+@media screen and (max-width: 1280px) and (min-width: 901px) {
+  .admin-dashboard-page .ad-db-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: auto !important;
+    gap: 20px !important;
+  }
+  .admin-dashboard-page .ad-db-card-certificates,
+  .admin-dashboard-page .ad-db-attendance-card {
+    grid-column: span 2 !important;
+  }
 }
 
 /* --- RESPONSIVE & MOBILE OVERRIDES --- */

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './ResumeBuilder.module.css';
+import DOBDatePicker from '../components/Calendar/DOBDatePicker.jsx';
+
 
 /**
  * Professional Experience / Internship Popup
@@ -127,19 +129,21 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
           {/* Date */}
           <div className={styles.popupFieldGroup}>
             <p className={styles.popupLabel}>Date:</p>
-            <div className={styles.popupRow}>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={formData.fromDate}
-                onChange={e => handleChange('fromDate', e.target.value)}
-              />
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={formData.toDate}
-                onChange={e => handleChange('toDate', e.target.value)}
-              />
+            <div className={styles.popupRow} style={{ gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '11px', color: '#666', marginBottom: '4px', fontWeight: 600 }}>Start Date</p>
+                <DOBDatePicker
+                  value={formData.fromDate}
+                  onChange={val => handleChange('fromDate', val)}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '11px', color: '#666', marginBottom: '4px', fontWeight: 600 }}>End Date</p>
+                <DOBDatePicker
+                  value={formData.toDate}
+                  onChange={val => handleChange('toDate', val)}
+                />
+              </div>
             </div>
           </div>
 
