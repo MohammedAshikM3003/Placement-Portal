@@ -1121,13 +1121,13 @@
 }
 
 /* Ensure the blink works for all input types */
-:global(.field-blink) {
+.mr-page-wrapper :global(.field-blink) {
     animation: field-blink 1.5s ease-in-out 2 !important;
 }
 
 /* Blink for checkbox groups and containers */
 .mr-checkbox-group.field-blink,
-:global(.mr-checkbox-group.field-blink) {
+.mr-page-wrapper :global(.mr-checkbox-group.field-blink) {
     animation: field-blink 1.5s ease-in-out 2 !important;
     border-radius: 8px;
     padding: 10px;
@@ -1181,10 +1181,10 @@
 }
 
 /* React Datepicker Global Overrides */
-:global(.StuProfile-datepicker-wrapper) { width: 100%; }
-:global(.StuProfile-datepicker-wrapper .react-datepicker-wrapper) { width: 100%; }
-:global(.StuProfile-datepicker-wrapper .react-datepicker__input-container) { width: 100%; }
-:global(.StuProfile-datepicker-wrapper .react-datepicker__input-container input) {
+.mr-page-wrapper :global(.StuProfile-datepicker-wrapper) { width: 100%; }
+.mr-page-wrapper :global(.StuProfile-datepicker-wrapper .react-datepicker-wrapper) { width: 100%; }
+.mr-page-wrapper :global(.StuProfile-datepicker-wrapper .react-datepicker__input-container) { width: 100%; }
+.mr-page-wrapper :global(.StuProfile-datepicker-wrapper .react-datepicker__input-container input) {
     width: 100%;
     padding: 0.9rem;
     border: 1px solid #dde6f4;
@@ -1194,15 +1194,15 @@
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
 }
-:global(.StuProfile-datepicker-wrapper .react-datepicker__input-container input:focus) {
+.mr-page-wrapper :global(.StuProfile-datepicker-wrapper .react-datepicker__input-container input:focus) {
     outline: none;
     border-color: #2085f6;
     box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
 }
-:global(.StuProfile-datepicker-input) { width: 100%; padding: 0.9rem; border: 1px solid #dde6f4; border-radius: 8px; background-color: #f9fbff; font-size: 0.95rem; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-:global(.StuProfile-datepicker-input:focus) { outline: none; border-color: #2085f6; box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2); }
-:global(.react-datepicker__header) { background-color: #f9fbff; border-bottom: 1px solid #dde6f4; }
-:global(.react-datepicker__day--selected) { background-color: #2085f6 !important; color: white !important; }
+.mr-page-wrapper :global(.StuProfile-datepicker-input) { width: 100%; padding: 0.9rem; border: 1px solid #dde6f4; border-radius: 8px; background-color: #f9fbff; font-size: 0.95rem; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+.mr-page-wrapper :global(.StuProfile-datepicker-input:focus) { outline: none; border-color: #2085f6; box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2); }
+.mr-page-wrapper :global(.react-datepicker__header) { background-color: #f9fbff; border-bottom: 1px solid #dde6f4; }
+.mr-page-wrapper :global(.react-datepicker__day--selected) { background-color: #2085f6 !important; color: white !important; }
 
 .mr-multiselect {
     position: relative;
@@ -1299,7 +1299,7 @@
     .mr-dashboard-area { 
         --mobile-side-gap: 10px;
         margin-left: 0; 
-        padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap); 
+        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap); 
         height: calc(100vh - 50px);
         overflow-y: auto;
         overflow-x: hidden;

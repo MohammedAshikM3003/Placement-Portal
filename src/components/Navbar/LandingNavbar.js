@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashLink } from 'react-router-hash-link';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Adminicon from "../../assets/Adminicon.png";
 import Home from "../../assets/landingHomeicon.svg";
 import About from "../../assets/landingabouticon.svg";
@@ -12,6 +12,13 @@ import styles from './LandingNavbar.module.css';
 const Navbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const location = useLocation();
+
+  const isLoginPage = location.pathname === '/mainlogin' || location.pathname === '/login';
+  const isSignupPage = location.pathname === '/signup';
+
+  const loginClass = `${styles['sidebar-login-btn']} ${isLoginPage ? styles['btn-filled'] : styles['btn-outline']}`;
+  const signupClass = `${styles['sidebar-signup-btn']} ${isSignupPage ? styles['btn-filled'] : styles['btn-outline']}`;
 
   const closeSidebar = () => {
     setSidebarOpen(false);
@@ -23,6 +30,10 @@ const Navbar = () => {
   };
 
   const updateActiveSection = () => {
+    if (location.pathname !== '/' && location.pathname !== '') {
+      setActiveSection('');
+      return;
+    }
     const hash = window.location.hash.replace('#', '').split('?')[0];
     if (hash === 'about') {
       setActiveSection('about');
@@ -44,7 +55,7 @@ const Navbar = () => {
     window.addEventListener('hashchange', handleHashChange);
     updateActiveSection(); // Call on mount
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [location.pathname, location.hash]);
 
   return (
     // 2. Use styles['main-header']
@@ -149,8 +160,8 @@ const Navbar = () => {
             <span>Contact</span>
           </HashLink>
         </nav>
-        <Link to="/mainlogin" onClick={closeSidebar} className={styles['sidebar-login-btn']}>Login</Link>
-        <Link to="/signup" onClick={closeSidebar} className={styles['sidebar-signup-btn']}>Sign Up</Link>
+        <Link to="/mainlogin" onClick={closeSidebar} className={loginClass}>Login</Link>
+        <Link to="/signup" onClick={closeSidebar} className={signupClass}>Sign Up</Link>
       </div>
 
       {/* Sidebar Overlay */}
