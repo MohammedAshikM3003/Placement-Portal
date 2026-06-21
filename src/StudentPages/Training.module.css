@@ -569,7 +569,8 @@
     .attendanceArea {
         --mobile-side-gap: 10px;
         margin-left: 0;
-        padding: 12px var(--mobile-side-gap);
+        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
         height: calc(100vh - 55px);
         -webkit-overflow-scrolling: touch;
         scrollbar-gutter: stable both-edges;
@@ -734,8 +735,8 @@
 @media (max-width: 480px) {
     .attendanceArea {
         --mobile-side-gap: 10px;
-        padding: 10px var(--mobile-side-gap);
-        padding-bottom: 25px;
+        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
         scrollbar-gutter: stable both-edges;
     }
 

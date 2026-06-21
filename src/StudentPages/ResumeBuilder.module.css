@@ -1133,7 +1133,8 @@
     margin-left: 0;
     width: 100%;
     height: calc(100vh - 55px);
-    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable both-edges;
   }

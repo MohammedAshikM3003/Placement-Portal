@@ -373,7 +373,8 @@
   /* CRITICAL: Enable scrolling on mobile */
   .stu-db-dashboard-area {
     --mobile-side-gap: 10px;
-    padding: 10px var(--mobile-side-gap) calc(env(safe-area-inset-bottom, 0px) + 90px) var(--mobile-side-gap);
+    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
     overflow-y: scroll; /* Keep blue scrollbar visible like other pages */
     overflow-x: hidden;
     height: 100%;
@@ -474,7 +475,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
   }
 }
 
@@ -516,7 +517,7 @@
   }
 
   .stu-db-dashboard-area {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
   }
 
   .stu-db-firework-btn {

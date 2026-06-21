@@ -1964,7 +1964,7 @@ export default function PopUpPending({ app, onBack }) {
           .popup-main-container { scrollbar-width: none; -ms-overflow-style: none; }
           .popup-main-container::-webkit-scrollbar { display: none; width: 0; height: 0; }
         `}</style>
-        <div onClick={(e) => e.stopPropagation()} className="popup-main-container" style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'auto' : 0, height: 'auto', maxHeight: isMobile ? 'calc(100vh - 40px)' : 'none', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden' }}>
+        <div onClick={(e) => e.stopPropagation()} className="popup-main-container" style={{ background: "#fff", padding: isMobile ? '12px 18px 18px' : '14px 28px 28px', borderRadius: isMobile ? 12 : 16, boxShadow: "0 4px 24px #e9e6ef", flexGrow: isMobile ? 0 : 1, flexShrink: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 'auto' : 0, height: 'auto', maxHeight: 'none', overflowY: 'hidden', overflowX: 'hidden' }}>
             {/* Company Info Section */}
             <div style={{ marginBottom: isMobile ? 16 : 20, padding: isMobile ? '14px' : '16px', background: "#f6f7fa", borderRadius: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: isMobile ? '10px' : '12px', fontSize: isMobile ? '1rem' : '0.95rem' }}>
@@ -2025,7 +2025,7 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
                 {isMobile && (
                   <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: '9px 15px', fontWeight: 600, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    <span style={{ fontSize: 16, marginRight: 6 }}>Back</span><span style={{ fontSize: 18 }}>â†©</span>
+                    <span style={{ fontSize: 16, marginRight: 6 }}>Back</span><span style={{ fontSize: 18 }}>↩</span>
                   </button>
                 )}
               </div>
@@ -2058,12 +2058,12 @@ export default function PopUpPending({ app, onBack }) {
                 )}
                 {!isMobile && (
                   <button onClick={onBack} style={{ background: "#D23B42", color: "#fff", border: "none", borderRadius: 12, padding: "8px 32px", fontWeight: 600, fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center', width: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>â†©</span>
+                    <span style={{ fontSize: 18, marginRight: 6 }}>Back</span><span style={{ fontSize: 22 }}>↩</span>
                   </button>
                 )}
               </div>
             </div>
-            <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: isMobile ? 0 : 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
+            <div style={{ marginTop: isMobile ? 16 : 20, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0, rowGap: isMobile ? 0 : 0 }}>
               {isMobile ? (
                 <>
                   {!isFirstRoundAbsent && overallStatus !== "Pending" && feedbackSelector}
@@ -2076,42 +2076,8 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
               )}
               {isMobile ? (
-                <div style={{ marginTop: 0, flex: '0 0 auto', minHeight: 0, maxHeight: '42vh', position: 'relative', overflow: 'hidden', borderRadius: 12, display: 'flex', flexDirection: 'column', paddingTop: 0, paddingBottom: 8 }}>
-                  <div
-                    ref={roundsListRef}
-                    onScroll={updateRoundsThumb}
-                    style={{
-                      flex: 1,
-                      minHeight: 0,
-                      overflowY: 'auto',
-                      overflowX: 'hidden',
-                      paddingTop: 0,
-                      paddingBottom: 12,
-                      paddingRight: 12,
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                    className={scrollStyles['scroll-rounds']}
-                  >
-                    {roundsContent}
-                  </div>
-                  {showRoundsBar && (
-                    <div style={{ width: '6px', backgroundColor: '#d7e9ff', borderRadius: '20px', position: 'absolute', top: 2, right: 0, bottom: 2 }}>
-                      <div
-                        onMouseDown={onRoundsThumbMouseDown}
-                        onTouchStart={onRoundsThumbMouseDown}
-                        style={{
-                          position: 'absolute', left: 0, width: '100%',
-                          height: `${roundsThumb.height}px`, top: `${roundsThumb.top}px`,
-                          backgroundColor: '#2085f6', borderRadius: '20px', cursor: 'grab',
-                          transition: 'background-color 0.2s ease',
-                          touchAction: 'none'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#1667e8'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = '#2085f6'}
-                      />
-                    </div>
-                  )}
+                <div style={{ marginTop: 0, display: 'flex', flexDirection: 'column', paddingTop: 0, paddingBottom: 8 }}>
+                  {roundsContent}
                 </div>
               ) : (
                 <div style={{ marginTop: 28, flexGrow: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>

@@ -223,7 +223,7 @@
         overflow-x: hidden !important;
         height: calc(100vh - 55px);
         max-height: calc(100vh - 55px);
-        padding: 15px var(--mobile-side-gap);
+        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
         -webkit-overflow-scrolling: touch;
         width: 100%;
         scrollbar-gutter: stable both-edges;
