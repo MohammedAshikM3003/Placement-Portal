@@ -22,8 +22,8 @@ async function checkGrammar(text) {
   return post('/grammar/check', { text });
 }
 
-async function enhanceResume(text) {
-  return post('/resume/enhance', { text });
+async function enhanceResume(text, category) {
+  return post('/resume/enhance', { text, category });
 }
 
 async function generateResume(payload) {

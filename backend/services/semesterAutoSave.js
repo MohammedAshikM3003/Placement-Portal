@@ -70,7 +70,7 @@ const resolveSemester = (...values) => {
   return '';
 };
 
-const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, uploadedBy, semester }) => {
+const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, uploadedBy, semester, uploadId }) => {
   const marksheets = Array.isArray(extractedMarksheets) ? extractedMarksheets : [];
   if (!marksheets.length) {
     return { saved: 0, records: [] };
@@ -127,8 +127,9 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       continue;
     }
 
-    if (matchedStatus === false) {
-      console.warn('⚠️ STUDENT MATCH FAILED: continuing insert');
+    if (matchedStatus === false || !marksheet.studentId || marksheet.studentId === regNo) {
+      console.warn(`No matching student found: ${regNo}`);
+      continue;
     }
 
     if (!studentNameRaw) {
@@ -191,7 +192,8 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       submitted: false,
       submittedAt: null,
       extractionStatus: marksheet.extractionStatus || 'success',
-      uploadedBy: uploadedBy || 'Coordinator'
+      uploadedBy: uploadedBy || 'Coordinator',
+      uploadId: uploadId || null
     };
 
     recordsToInsert.push(payload);

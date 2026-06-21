@@ -33,6 +33,8 @@ CASUAL_MAP = [
     (r"\bgot experience\b", "acquired valuable hands-on experience"),
     (r"\bmake database\b", "design and implement database schemas"),
     (r"\bmake frontend\b", "develop responsive user interfaces"),
+    (r"\bmake\b", "design and develop"),
+    (r"\bmaking\b", "designing and developing"),
     
     # Fillers
     (r"\bbasically\b", ""),

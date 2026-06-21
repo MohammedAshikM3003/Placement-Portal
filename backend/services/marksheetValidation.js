@@ -1,4 +1,4 @@
-const VALID_GRADES = new Set(['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'RA', 'SA', 'W']);
+const VALID_GRADES = new Set(['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'RA', 'SA', 'W', 'WD']);
 const VALID_RESULTS = new Set(['P', 'F', 'AB', 'W', '']);
 const COURSE_CODE_RE = /^(?:\d{2}[A-Z]{2,4}\d{2,4}|[A-Z]{2,4}\d{3,5})$/;
 
@@ -21,7 +21,8 @@ const GRADE_POINTS = {
   'RA': 0,
   'AB': 0,
   'SA': 0,
-  'W': 0
+  'W': 0,
+  'WD': 0
 };
 
 function normalizeGrade(grade) {

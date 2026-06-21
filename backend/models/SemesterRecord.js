@@ -52,6 +52,7 @@ const semesterRecordSchema = new mongoose.Schema({
   submitted: { type: Boolean, default: false },
   submittedAt: { type: Date },
   extractionStatus: { type: String, trim: true },
+  uploadId: { type: String, default: null, index: true },
   students: [semesterStudentSchema],
   uploadedBy: { type: String, trim: true },
   uploadedAt: { type: Date, default: Date.now }

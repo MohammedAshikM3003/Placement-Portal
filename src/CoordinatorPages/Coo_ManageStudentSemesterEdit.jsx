@@ -3075,7 +3075,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                             student: {
                                                                 ...studentData,
                                                                 currentSemester: semesterNumber
-                                                            }
+                                                            },
+                                                            returnPath: window.location.pathname
                                                         }
                                                     })}
                                             >
@@ -3088,7 +3089,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         type="button"
                                         className={styles.uploadMarksheetBtnFull}
                                         onClick={() => navigate('/coo-manage-students-semester/sem', {
-                                            state: { student: studentData }
+                                            state: { 
+                                                student: studentData,
+                                                returnPath: window.location.pathname
+                                            }
                                         })}
                                     >
                                         <img src={StuUploadMarksheetIcon} alt="Upload" className={styles.uploadIcon} />

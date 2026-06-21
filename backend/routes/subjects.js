@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { subjects } = req.body;
+    const { subjects, uploadId } = req.body;
 
     if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
       return res.status(400).json({
@@ -74,7 +74,8 @@ router.post('/', async (req, res) => {
               courseName: courseName || '',
               credits: parseInt(credits, 10) || 0,
               semester: semesterNumber,
-              year: yearNumber
+              year: yearNumber,
+              uploadId: uploadId || null
             }
           },
           { upsert: true, new: true }

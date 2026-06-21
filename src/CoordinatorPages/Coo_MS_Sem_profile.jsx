@@ -32,7 +32,7 @@ const emptyStudent = {
 const SEMESTER_CACHE_KEY = 'cooSemesterMarksheetState';
 const MIN_LOADING_DURATION_MS = 900;
 
-const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
+const CoordinatorManageStudentViewProfile = ({ onLogout, onViewChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const loadStartedAtRef = useRef(Date.now());
@@ -308,7 +308,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   }, [location.key, fetchLatestStudentMarksheet, finishLoading]);
 
   const handleViewChange = (view) => {
-    console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
+    console.log('🔹 CoordinatorManageStudentViewProfile handleViewChange called with view:', view);
     console.log('🔹 onViewChange prop exists:', !!onViewChange);
     console.log('🔹 onViewChange type:', typeof onViewChange);
 
@@ -335,7 +335,12 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
       navigate(returnPath);
       return;
     }
-    navigate('/coo-ms-semester-detail');
+
+    if (studentId) {
+      navigate(`/coo-manage-students/view/${studentId}`);
+    } else {
+      navigate('/coo-manage-students');
+    }
   };
 
   const extractPdfPage = async () => {
@@ -696,4 +701,4 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   );
 };
 
-export default CoordinatorManageStudentView;
+export default CoordinatorManageStudentViewProfile;

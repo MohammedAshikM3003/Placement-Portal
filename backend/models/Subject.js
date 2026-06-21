@@ -14,6 +14,10 @@ const subjectSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  uploadId: {
+    type: String,
+    default: null
+  },
   
   // Subject Details
   credits: {

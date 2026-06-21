@@ -9,10 +9,10 @@ from column_segment import (
 )
 
 STRICT_COURSE_CODE_RE = re.compile(r"\b([0-9]{2}\s*[A-Z]{2,3}\s*[0-9]{3})\b")
-GRADE_RE = re.compile(r"(?<![A-Za-z0-9])(O|A\+|A\-|A|B\+|B\-|B|C|U|S|AB|RA|SA|W)(?![A-Za-z0-9])")
+GRADE_RE = re.compile(r"(?<![A-Za-z0-9])(O|A\+|A\-|A|B\+|B\-|B|C|U|S|AB|RA|SA|W|WD)(?![A-Za-z0-9])")
 RESULT_RE = re.compile(r"\b(PASS|FAIL|P|F|AB|W)\b", re.IGNORECASE)
 
-GRADE_VALUES = {"O", "A+", "A", "B+", "B", "C", "RA", "SA", "W", "AB"}
+GRADE_VALUES = {"O", "A+", "A", "B+", "B", "C", "U", "RA", "SA", "W", "WD", "AB"}
 
 SEMESTER_PATTERNS = [
     re.compile(r"SEMESTER\s*[-:]?\s*([IVX0-9]+)", re.IGNORECASE),
@@ -440,6 +440,27 @@ def split_trailing_grade(text):
     return text, ""
 
 
+def extract_trailing_grade(subject_name, grade):
+    if not subject_name:
+        return subject_name, grade
+    valid_grades = {"O", "A+", "A", "B+", "B", "C", "U", "RA", "SA", "W", "WD", "AB"}
+    if not grade or not str(grade).strip():
+        tokens = [t.strip() for t in subject_name.strip().split() if t.strip()]
+        if tokens:
+            last_token = tokens[-1]
+            last_token_upper = last_token.upper()
+            if last_token_upper in valid_grades:
+                before_name = subject_name
+                new_subject_name = " ".join(tokens[:-1]).strip()
+                new_grade = normalize_grade(last_token_upper)
+                
+                _debug(f"Before:\n{before_name}")
+                _debug(f"After:\ncourseName={new_subject_name}\ngrade={new_grade}")
+                
+                return new_subject_name, new_grade
+    return subject_name, grade
+
+
 def _strip_trailing_markers(tokens):
     grade = ""
     result = ""
@@ -698,6 +719,12 @@ def parse_subjects(lines, row_cluster_mult=0.6):
                 "result": result,
                 "credits": credit,
             }
+
+            # Inspect the last token of courseName and move if empty grade
+            updated_name, updated_grade = extract_trailing_grade(subject["courseName"], subject["grade"])
+            if updated_grade != subject["grade"]:
+                subject["courseName"] = updated_name.title()
+                subject["grade"] = updated_grade
 
             _debug("Extracted subject successfully")
 

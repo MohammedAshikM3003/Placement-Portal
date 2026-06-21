@@ -91,7 +91,10 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
     selectedDepartment = '',
     selectedSemester = '',
     selectedYear = '',
-    extractedData = null
+    extractedData = null,
+    uploadId = '',
+    year = '',
+    semester = ''
   } = hydratedState || {};
   const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState(previewUrl || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,12 +114,13 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
     setIsLoadingRecords(true);
     try {
       const authToken = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${API_BASE_URL}/semester/list?extractedPdfName=${encodeURIComponent(effectivePdfName)}`,
-        {
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
-        }
-      );
+      let url = `${API_BASE_URL}/semester/list?extractedPdfName=${encodeURIComponent(effectivePdfName)}`;
+      if (uploadId) {
+        url += `&uploadId=${encodeURIComponent(uploadId)}`;
+      }
+      const response = await fetch(url, {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      });
 
       if (!response.ok) {
         throw new Error('Failed to load semester records');
@@ -258,9 +262,12 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
       previewUrl,
       fileType,
       extractedStudents,
-      extractedPdfName: effectivePdfName
+      extractedPdfName: effectivePdfName,
+      uploadId,
+      year,
+      semester
     });
-  }, [extractedStudents, fileName, fileType, previewUrl, subjects, effectivePdfName]);
+  }, [extractedStudents, fileName, fileType, previewUrl, subjects, effectivePdfName, uploadId, year, semester]);
 
   useEffect(() => {
     fetchSemesterRecords();
@@ -424,7 +431,12 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
           'Content-Type': 'application/json',
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
         },
-        body: JSON.stringify({ extractedPdfName: effectivePdfName })
+        body: JSON.stringify({ 
+          extractedPdfName: effectivePdfName,
+          uploadId,
+          year,
+          semester
+        })
       });
 
       const data = await response.json().catch(() => null);

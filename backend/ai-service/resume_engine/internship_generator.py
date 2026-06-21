@@ -1,55 +1,52 @@
 import re
 from resume_engine.spell_checker import correct_spelling
 from resume_engine.grammar_checker import correct_grammar
-from resume_engine.professional_rewriter import professionalize_text
-
-# Common casual-to-professional mappings for internships
-INTERN_TASK_MAPPINGS = [
-    (r"\bfix(ed|ing)? bugs?\b", "resolved software defects and improved code stability"),
-    (r"\bmake(s|d)?( (ui|frontend|web))? pages?\b", "implemented user interface components and built responsive layouts"),
-    (r"\bmade backend\b", "engineered secure server-side logic and database schemas"),
-    (r"\bwrite(s|d)? code|writing code|authored code\b", "authored clean, maintainable, and efficient source code"),
-    (r"\bteam work|teamwork\b", "collaborated with cross-functional development teams"),
-    (r"\btest(ed|ing)?\b", "performed thorough unit and integration testing to ensure quality assurance"),
-]
 
 def generate_internship_desc(company: str, raw_desc: str) -> str:
     """
-    Polishes raw internship descriptions to use action-oriented professional engineering terminology.
+    Generates a compact, single-bullet internship description.
     """
-    comp_name = company.strip() if company else "Company"
-    
-    clean_desc = re.sub(r"\s+", " ", raw_desc.strip().lower()).replace(".", "") if raw_desc else ""
-    
-    # 1. Check for structural action pairs
-    has_frontend = any(k in clean_desc for k in ["ui", "make pages", "frontend", "web pages", "pages"])
-    has_maintenance = any(k in clean_desc for k in ["fix bugs", "errors", "defects", "bugs", "fixing"])
-    if has_frontend and has_maintenance:
-        return f"Contributed to frontend development activities at {comp_name}, where I implemented user interface components, resolved software defects, and collaborated with development teams to improve application performance."
-
-    if not raw_desc or len(raw_desc.strip()) < 5:
-        # High quality default internship bullet points if empty
-        return (
-            f"Assisted the software development team at {comp_name} in building and maintaining "
-            f"web applications. Implemented frontend interfaces, assisted in backend integration, "
-            f"and resolved code defects to improve system stability."
-        )
-        
-    # 1. Core cleanups (spelling, grammar, rewriter)
-    spelled = correct_spelling(raw_desc)
+    # 1. Clean spelling and basic grammar
+    base = (raw_desc or "").strip()
+    base = re.sub(r"^[•\-\*]\s*", "", base)
+    base = base.replace("•", "").replace("- ", "").replace("* ", "").strip()
+    spelled = correct_spelling(base)
     grammed = correct_grammar(spelled)
+    lower_g = grammed.lower()
+
+    # Extract present skills (anti-hallucination whitelist)
+    from ats import _extract_skills
+    present_skills = _extract_skills(grammed)
     
-    # 2. Match and replace common casual tasks
-    text = grammed
-    for pattern, replacement in INTERN_TASK_MAPPINGS:
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-        
-    # 3. Professionalize the language
-    final_desc = professionalize_text(text)
+    tech_str = ""
+    if present_skills:
+        techs = sorted(list(set(present_skills)))
+        if len(techs) > 1:
+            tech_str = f" using {techs[0]} and {techs[1]}"
+        else:
+            tech_str = f" using {techs[0]}"
+
+    # Identify task type
+    is_frontend = any(k in lower_g for k in ["ui", "frontend", "web page", "page", "css", "html", "react", "view"])
+    is_backend = any(k in lower_g for k in ["backend", "api", "server", "express", "node", "python", "endpoint"])
     
-    # Verify final formatting
-    final_desc = re.sub(r"\s+", " ", final_desc).strip()
-    if final_desc and final_desc[-1] != ".":
-        final_desc += "."
-        
-    return final_desc
+    methodology = f"{company.strip()} methodology" if (company and company.strip()) else "Agile methodology"
+
+    if is_frontend:
+        bullet = f"• Developed responsive frontend components{tech_str} and resolved UI issues using {methodology}."
+    elif is_backend:
+        bullet = f"• Built scalable backend API endpoints{tech_str} and resolved database performance issues using {methodology}."
+    else:
+        bullet = f"• Developed key application features{tech_str} and improved overall system performance using {methodology}."
+
+    # Enforce 25 words limit for the single bullet
+    def limit_words(bullet, max_w=25):
+        words = bullet.split()
+        if len(words) > max_w:
+            res = " ".join(words[:max_w-1])
+            if not res.endswith("."):
+                res += "."
+            return res
+        return bullet
+
+    return limit_words(bullet, 25)

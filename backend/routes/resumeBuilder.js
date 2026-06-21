@@ -153,7 +153,7 @@ router.post('/generate', optionalAuth, async (req, res) => {
     let pdfBuffer;
     try {
       const browser = await puppeteer.launch({
-        headless: 'new',
+        headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -383,7 +383,7 @@ router.post('/generate-latex', optionalAuth, async (req, res) => {
 
     // Fallback to Puppeteer HTML
     const html = await buildResumeHTML(resumeData);
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
     const pdfBuffer = await page.pdf({ format: 'A4', margin: { top: '0.4in', right: '0.3in', bottom: '0.4in', left: '0.3in' }, printBackground: true });
@@ -468,8 +468,26 @@ router.post('/ai-generate', optionalAuth, async (req, res) => {
 // HELPER FUNCTIONS
 // ========================================
 
+function parseBullets(text) {
+  if (!text) return [];
+  return text.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => line.replace(/^[•\-\*]\s*/, ''));
+}
+
 async function buildResumeHTML(data, req = null) {
   const { personalInfo = {}, summary = '', education = {}, platforms = [], skills = [], experiences = [], projects = [], certifications = [], achievements = [], additionalInfo = [], resumeSettings = {} } = data;
+  
+  const cleanBranch = (b) => {
+    if (!b) return '';
+    const s = String(b).trim();
+    if (/^computer\s+science\s+(and|&)\s+engineering$/i.test(s)) return 'CSE';
+    if (/^information\s+technology$/i.test(s)) return 'IT';
+    if (/^electronics\s+(and|&)\s+communication\s+engineering$/i.test(s)) return 'ECE';
+    if (/^electrical\s+(and|&)\s+electronics\s+engineering$/i.test(s)) return 'EEE';
+    return s;
+  };
   
   // Get font style from settings, default to Arial
   const fontFamily = resumeSettings.fontStyle || 'Arial';
@@ -609,33 +627,34 @@ async function buildResumeHTML(data, req = null) {
 <link href="https://fonts.googleapis.com/css2?family=${googleFontImport}&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: ${fontStack} !important; }
-  html, body { width: 100%; margin: 0; padding: 0; }
-  body { font-family: ${fontStack} !important; font-size: 10.5pt; line-height: 1.45; color: #2d2d2d; background: #fff; }
-  .resume { width: 100%; margin: 0; padding: 0 0.3in; overflow: visible; }
-  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 10px; }
+  body { font-family: ${fontStack} !important; font-size: 11px; line-height: 1.2; color: #333; background: #fff; }
+  .resume { width: 100%; margin: 0; padding: 0.25in 0.4in; max-width: 8.5in; overflow: visible; }
+  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 6px; }
   .header-container.photo-left { flex-direction: row; }
   .header-container.photo-right { flex-direction: row-reverse; }
   .header-container.no-photo .header-text { text-align: center; width: 100%; }
   .header-text { flex: 1; text-align: center; }
-  .profile-photo { width: 100px; aspect-ratio: 1 / 1; object-fit: cover; flex-shrink: 0; display: block; }
-  h1 { font-family: ${fontStack} !important; font-size: 22pt; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .profile-photo { width: 80px; height: 80px; border-radius: 50%; border: 1px solid #ccc; object-fit: cover; flex-shrink: 0; display: block; }
+  h1 { font-family: ${fontStack} !important; font-size: 24px; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 2px; letter-spacing: 0.5px; }
   h2, h3, h4, h5, h6, p, span, div, a, li, td, th { font-family: ${fontStack} !important; }
-  .contact { text-align: center; font-size: 9pt; color: #555; margin-bottom: 14px; line-height: 1.6; }
-  .contact a { color: #1565c0; text-decoration: none; }
-  .section { margin-bottom: 10px; }
-  .section-title { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; border-bottom: 2px solid #333; padding-bottom: 3px; margin-bottom: 8px; font-family: ${fontStack} !important; }
-  .entry { margin-bottom: 8px; page-break-inside: avoid; }
-  .entry-header { display: flex; justify-content: space-between; align-items: baseline; gap: 15px; width: 100%; }
-  .entry-title { font-weight: 700; font-size: 10.5pt; color: #1a1a1a; font-family: ${fontStack} !important; min-width: 0; }
-  .entry-date { font-size: 9.5pt; color: #666; font-style: italic; white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
-  .entry-sub { font-size: 9.5pt; color: #555; font-style: italic; margin-bottom: 3px; }
-  .entry-desc { font-size: 10pt; color: #444; margin: 3px 0 3px 12px; }
-  .tech-line { font-size: 9.5pt; color: #666; margin-left: 12px; }
-  ul { margin-left: 20px; }
-  li { font-size: 10pt; margin-bottom: 3px; color: #444; }
-  .skills-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-  .skill-tag { background: #f0f4f8; padding: 3px 10px; border-radius: 3px; font-size: 9.5pt; color: #333; border: 1px solid #d0d7de; font-family: ${fontStack} !important; }
-  .summary-text { font-size: 10pt; color: #444; line-height: 1.5; font-family: ${fontStack} !important; }
+  .contact { text-align: center; font-size: 10px; color: #555; margin-bottom: 6px; line-height: 1.4; }
+  .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
+  .contact a:hover { text-decoration: underline; }
+  .section { margin-bottom: 6px; }
+  .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 1px; margin: 6px 0 3px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
+  .entry { margin-bottom: 3px; page-break-inside: avoid; }
+  .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 11px; gap: 15px; width: 100%; }
+  .entry-header > span:last-child { white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
+  .entry-sub { font-style: italic; font-size: 10px; color: #555; margin-bottom: 1px; }
+  .entry-desc { font-size: 10px; margin-left: 12px; white-space: pre-line; }
+  .summary-text { font-size: 11px; line-height: 1.2; white-space: pre-line; color: #333; font-family: ${fontStack} !important; }
+  .entry-bullets { margin-left: 15px; margin-top: 1px; margin-bottom: 1px; list-style-type: disc; }
+  .entry-bullets li { font-size: 10px; line-height: 1.2; color: #333; margin-bottom: 1px; }
+  ul { margin-left: 16px; }
+  li { font-size: 10px; margin-bottom: 1px; }
+  .skills-list { font-size: 10px; margin-left: 16px; }
+  .skills-list li { margin-bottom: 1px; }
+  .skills-list li strong { font-weight: bold; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .resume { padding: 0; } }
 </style>
 </head>
@@ -651,11 +670,21 @@ async function buildResumeHTML(data, req = null) {
   </div>` : `
   <h1>${escapeHtml(personalInfo.name || 'Your Name')}</h1>
   <div class="contact">${contactItems.join(' &nbsp;|&nbsp; ')}${codingProfileItems.length ? '<br/>' + codingProfileItems.join(' &nbsp;|&nbsp; ') : ''}</div>`}
-
+ 
   ${summary ? `<div class="section"><div class="section-title">Professional Summary</div><p class="summary-text">${escapeHtml(summary)}</p></div>` : ''}
-
-  ${(Array.isArray(skills) && skills.length && ((typeof skills[0] === 'object' && skills[0].category) ? skills.some(c => c.items?.length > 0) : true)) ? `<div class="section"><div class="section-title">Skills</div>${(typeof skills[0] === 'object' && skills[0].category) ? `<ul style="margin-left:16px;font-size:10pt;">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${escapeHtml(c.category)}:</strong> ${c.items.map(i => escapeHtml(i)).join(', ')}</li>`).join('')}</ul>` : `<div class="skills-grid">${skills.map(s => `<span class="skill-tag">${escapeHtml(String(s))}</span>`).join('')}</div>`}</div>` : ''}
-
+ 
+  ${(Array.isArray(skills) && skills.length && ((typeof skills[0] === 'object' && skills[0].category) ? skills.some(c => c.items?.length > 0) : true)) ? `
+  <div class="section">
+    <div class="section-title">Skills</div>
+    ${(typeof skills[0] === 'object' && skills[0].category) ? `
+      <ul class="skills-list">
+        ${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${escapeHtml(c.category)}:</strong> ${c.items.map(i => escapeHtml(i)).join(', ')}</li>`).join('')}
+      </ul>` : `
+      <div class="skills-grid">
+        ${skills.map(s => `<span class="skill-tag">${escapeHtml(String(s))}</span>`).join('')}
+      </div>`}
+  </div>` : ''}
+ 
   ${experiences.length ? `<div class="section"><div class="section-title">Internship</div>
     ${experiences.map(e => {
       const formatDate = (d) => { if (!d) return ''; const parts = d.split('-'); return parts.length === 3 ? (parts[0].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : d) : d; };
@@ -664,41 +693,66 @@ async function buildResumeHTML(data, req = null) {
       if (e.companyName) titleParts.push(escapeHtml(e.companyName));
       if (e.location) titleParts.push(escapeHtml(e.location));
       const titleStr = titleParts.join(', ') + (modeLabel ? ' (' + modeLabel + ')' : '');
+      const descText = typeof e.description === 'string' ? e.description : (e.description?.input || e.description?.text || e.description?.description || '');
+      const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(descText).map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('') + `</ul>`;
       return `<div class="entry">
-      <div class="entry-header"><span class="entry-title">${titleStr}</span><span class="entry-date">${formatDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${formatDate(e.toDate) || 'Present'}</span></div>
-      ${e.description ? `<div class="entry-desc">${escapeHtml(typeof e.description === 'string' ? e.description.trim() : (e.description?.input || e.description?.text || e.description?.description || '').trim())}</div>` : ''}
-      ${e.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${e.technologies.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
+      <div class="entry-header"><span>${titleStr}</span><span>${formatDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${formatDate(e.toDate) || 'Present'}</span></div>
+      ${bulletsHtml}
+      ${e.technologies?.length ? `<div class="entry-desc" style="margin-top:2px;"><strong>Tech:</strong> ${e.technologies.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
     </div>`;
     }).join('')}
   </div>` : ''}
-
+ 
   ${projects.length ? `<div class="section"><div class="section-title">Projects</div>
-    ${projects.map(p => typeof p === 'string' ? `<div class="entry"><div class="entry-header"><span class="entry-title">${escapeHtml(p)}</span></div></div>` : `<div class="entry">
-      <div class="entry-header"><span class="entry-title">${escapeHtml(p.name || '')}</span><span class="entry-date">${p.githubRepo ? `<a href="${escapeHtml(p.githubRepo)}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${p.githubRepo && p.hostingLink ? ' | ' : ''}${p.hostingLink ? `<a href="${escapeHtml(p.hostingLink)}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
-      ${p.description ? `<div class="entry-desc">${escapeHtml(typeof p.description === 'string' ? p.description : (p.description?.input || p.description?.text || p.description?.description || ''))}</div>` : ''}
-      ${p.technologies?.length ? `<div class="tech-line"><strong>Technologies:</strong> ${p.technologies.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
-    </div>`).join('')}
+    ${projects.map(p => {
+      const name = typeof p === 'string' ? p : (p.name || p.label || '');
+      const desc = typeof p === 'string' ? '' : (p.description || '');
+      const tech = typeof p === 'string' ? [] : (p.technologies || []);
+      const github = typeof p === 'string' ? '' : (p.githubRepo || '');
+      const hosting = typeof p === 'string' ? '' : (p.hostingLink || '');
+      const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(desc).map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('') + `</ul>`;
+      return `<div class="entry">
+        <div class="entry-header"><span>${escapeHtml(name)}</span><span style="font-size:9.5pt;">${github ? `<a href="${escapeHtml(github)}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${github && hosting ? ' | ' : ''}${hosting ? `<a href="${escapeHtml(hosting)}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
+        ${bulletsHtml}
+        ${tech.length ? `<div class="entry-desc"><strong>Tech:</strong> ${tech.map(t => escapeHtml(typeof t === 'string' ? t : (t?.name || String(t)))).join(', ')}</div>` : ''}
+      </div>`;
+    }).join('')}
   </div>` : ''}
-
+ 
   ${certifications.length ? `<div class="section"><div class="section-title">Certifications</div>
-    ${certifications.map(c => `<div class="entry" style="margin-bottom:4px;">
-      <div class="entry-header"><span class="entry-title">${escapeHtml(c.certificateName || '')}</span></div>
-      ${c.description ? `<div class="entry-desc">${escapeHtml(typeof c.description === 'string' ? c.description : (c.description?.input || c.description?.text || c.description?.description || ''))}</div>` : ''}
-    </div>`).join('')}
+    <div style="margin-left: 12px; margin-top: 2px;">
+      ${certifications.map(c => {
+        const name = typeof c === 'string' ? c : (c.certificateName || '');
+        const desc = typeof c === 'string' ? '' : (c.description || '');
+        let displayText = name && desc ? `${escapeHtml(name)} – ${escapeHtml(desc)}` : escapeHtml(name || desc || '');
+        displayText = displayText.replace(/\s*\+\s*/g, ' – ');
+        return `<div style="font-size: 10px; line-height: 1.2; margin-bottom: 2px; color: #333;">${displayText}</div>`;
+      }).join('')}
+    </div>
   </div>` : ''}
-
-  ${achievements.length ? `<div class="section"><div class="section-title">Achievements</div><ul>
-    ${achievements.map(a => `<li>${escapeHtml(a.details || '')}</li>`).join('')}
-  </ul></div>` : ''}
-
-  ${additionalInfo.length ? `<div class="section"><div class="section-title">Additional Information</div><ul>
-    ${additionalInfo.map(a => `<li>${escapeHtml(a.info || '')}</li>`).join('')}
-  </ul></div>` : ''}
-
+ 
+  ${achievements.length ? `<div class="section"><div class="section-title">Achievements</div>
+    <ul class="entry-bullets">
+      ${achievements.map(a => {
+        const details = typeof a === 'string' ? a : (a.details || '');
+        return parseBullets(details).map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('');
+      }).join('')}
+    </ul>
+  </div>` : ''}
+ 
+  ${additionalInfo.length ? `<div class="section"><div class="section-title">Additional Information</div>
+    <ul class="entry-bullets">
+      ${additionalInfo.map(a => {
+        const info = typeof a === 'string' ? a : (a.info || '');
+        return parseBullets(info).map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('');
+      }).join('')}
+    </ul>
+  </div>` : ''}
+ 
   ${(education.college || education.school12 || education.school10) ? `<div class="section"><div class="section-title">Education</div>
-    ${education.college ? `<div class="entry"><div class="entry-header"><span class="entry-title">${escapeHtml(education.degree || 'B.E.')} in ${escapeHtml(education.branch || 'Engineering')} - ${escapeHtml(education.college)}</span><span class="entry-date">${escapeHtml(education.graduationYear || '')}</span></div><div class="entry-sub">CGPA: ${escapeHtml(education.cgpa || 'N/A')}</div></div>` : ''}
-    ${education.school12 ? `<div class="entry"><div class="entry-header"><span class="entry-title">12th Standard - ${escapeHtml(education.school12)}</span><span class="entry-date">${escapeHtml(education.batch12 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile12 || 'N/A')}</div></div>` : ''}
-    ${education.school10 ? `<div class="entry"><div class="entry-header"><span class="entry-title">10th Standard - ${escapeHtml(education.school10)}</span><span class="entry-date">${escapeHtml(education.batch10 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile10 || 'N/A')}</div></div>` : ''}
+    ${education.college ? `<div class="entry"><div class="entry-header"><span>${escapeHtml(education.degree || 'B.E.')} ${escapeHtml(cleanBranch(education.branch))} | ${escapeHtml(education.college)} | ${escapeHtml(education.graduationYear || '')}</span></div><div class="entry-sub">CGPA: ${escapeHtml(education.cgpa || 'N/A')}</div></div>` : ''}
+    ${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th | ${escapeHtml(education.school12)} | ${escapeHtml(education.batch12 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile12 || 'N/A')}</div></div>` : ''}
+    ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th | ${escapeHtml(education.school10)} | ${escapeHtml(education.batch10 || '')}</span></div><div class="entry-sub">Percentile: ${escapeHtml(education.percentile10 || 'N/A')}</div></div>` : ''}
   </div>` : ''}
 </div>
 </body></html>`;
@@ -739,32 +793,46 @@ ${skills.filter(c => c.items?.length > 0).map(c => `\\item \\textbf{${escLatex(c
 \\end{itemize}` : skills.map(s => escLatex(String(s))).join(' $\\cdot$ ')}` : ''}
 
 ${experiences.length ? `\\section*{Internship}
-${experiences.map(e => `\\textbf{${escLatex(e.title || '')}} \\hfill ${escLatex(e.fromDate || '')} -- ${escLatex(e.toDate || 'Present')}
+${experiences.map(e => {
+  const descText = typeof e.description === 'string' ? e.description : (e.description?.input || e.description?.text || e.description?.description || '');
+  const bullets = parseBullets(descText).map(b => `  \\item ${escLatex(b)}`).join('\n');
+  return `\\textbf{${escLatex(e.title || '')}} \\hfill ${escLatex(e.fromDate || '')} -- ${escLatex(e.toDate || 'Present')}
 ${e.companyName ? `\\\\ \\textit{${escLatex(e.companyName)}${e.location ? ', ' + escLatex(e.location) : ''}}` : ''}
-${e.description ? `\\\\ ${escLatex(e.description)}` : ''}
+${bullets ? `\\\\ \\begin{itemize}[leftmargin=*,nosep]\n${bullets}\n\\end{itemize}` : ''}
 ${e.technologies?.length ? `\\\\ \\textit{Technologies: ${e.technologies.map(t => escLatex(t)).join(', ')}}` : ''}
-\\\\[4pt]`).join('\n')}` : ''}
+\\\\[4pt]`;
+}).join('\n')}` : ''}
 
 ${projects.length ? `\\section*{Projects}
-${projects.map(p => `\\textbf{${escLatex(p.name || '')}}
-${p.description ? `\\\\ ${escLatex(p.description)}` : ''}
+${projects.map(p => {
+  const descText = typeof p.description === 'string' ? p.description : (p.description?.input || p.description?.text || p.description?.description || '');
+  const bullets = parseBullets(descText).map(b => `  \\item ${escLatex(b)}`).join('\n');
+  return `\\textbf{${escLatex(p.name || '')}}
+${bullets ? `\\\\ \\begin{itemize}[leftmargin=*,nosep]\n${bullets}\n\\end{itemize}` : ''}
 ${p.technologies?.length ? `\\\\ \\textit{Technologies: ${p.technologies.map(t => escLatex(t)).join(', ')}}` : ''}
 ${p.githubRepo ? `\\\\ \\href{${p.githubRepo}}{GitHub}` : ''}
-\\\\[4pt]`).join('\n')}` : ''}
+\\\\[4pt]`;
+}).join('\n')}` : ''}
 
 ${certifications.length ? `\\section*{Certifications}
 \\begin{itemize}[leftmargin=*,nosep]
-${certifications.map(c => `\\item ${escLatex(c.certificateName || '')}${c.issuedBy ? ' -- ' + escLatex(c.issuedBy) : ''}`).join('\n')}
+${certifications.map(c => `  \\item ${escLatex(typeof c === 'string' ? c : (c.certificateName || ''))}`).join('\n')}
 \\end{itemize}` : ''}
 
 ${achievements.length ? `\\section*{Achievements}
 \\begin{itemize}[leftmargin=*,nosep]
-${achievements.map(a => `\\item ${escLatex(a.details || '')}`).join('\n')}
+${achievements.map(a => {
+  const detailsText = typeof a === 'string' ? a : (a.details || '');
+  return parseBullets(detailsText).map(b => `  \\item ${escLatex(b)}`).join('\n');
+}).join('\n')}
 \\end{itemize}` : ''}
 
 ${additionalInfo.length ? `\\section*{Additional Information}
 \\begin{itemize}[leftmargin=*,nosep]
-${additionalInfo.map(a => `\\item ${escLatex(a.info || '')}`).join('\n')}
+${additionalInfo.map(a => {
+  const infoText = typeof a === 'string' ? a : (a.info || '');
+  return parseBullets(infoText).map(b => `  \\item ${escLatex(b)}`).join('\n');
+}).join('\n')}
 \\end{itemize}` : ''}
 
 \\end{document}`;

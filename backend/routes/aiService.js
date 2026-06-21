@@ -4,11 +4,11 @@ const aiService = require('../services/aiService');
 
 const router = express.Router();
 
-async function enhanceText(text) {
+async function enhanceText(text, category) {
   if (!text || !String(text).trim()) {
     return '';
   }
-  const result = await aiService.enhanceResume(String(text));
+  const result = await aiService.enhanceResume(String(text), category);
   return result.enhanced || result.corrected || String(text).trim();
 }
 
@@ -36,11 +36,11 @@ router.post('/grammar/check', async (req, res) => {
 
 router.post('/resume/enhance', async (req, res) => {
   try {
-    const { text } = req.body || {};
+    const { text, category } = req.body || {};
     if (!text) {
       return res.status(400).json({ error: 'text is required' });
     }
-    const result = await aiService.enhanceResume(String(text));
+    const result = await aiService.enhanceResume(String(text), category);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Resume enhancement failed', details: error.message });
@@ -48,24 +48,26 @@ router.post('/resume/enhance', async (req, res) => {
 });
 
 router.post('/resume/enhance-batch', async (req, res) => {
+  console.log('enhance-batch request received');
+  console.log(req.body);
   try {
     const { sections } = req.body || {};
     if (!sections || typeof sections !== 'object') {
       return res.status(400).json({ error: 'sections is required' });
     }
 
-    const summary = await enhanceText(sections.summary || '');
+    const summary = await enhanceText(sections.summary || '', 'summary');
     const experiences = Array.isArray(sections.experiences)
-      ? await Promise.all(sections.experiences.map(enhanceText))
+      ? await Promise.all(sections.experiences.map(val => enhanceText(val, 'experience')))
       : [];
     const projects = Array.isArray(sections.projects)
-      ? await Promise.all(sections.projects.map(enhanceText))
+      ? await Promise.all(sections.projects.map(val => enhanceText(val, 'project')))
       : [];
     const certifications = Array.isArray(sections.certifications)
-      ? await Promise.all(sections.certifications.map(enhanceText))
+      ? await Promise.all(sections.certifications.map(val => enhanceText(val, 'certification')))
       : [];
     const achievements = Array.isArray(sections.achievements)
-      ? await Promise.all(sections.achievements.map(enhanceText))
+      ? await Promise.all(sections.achievements.map(val => enhanceText(val, 'achievement')))
       : [];
 
     res.json({
@@ -76,6 +78,7 @@ router.post('/resume/enhance-batch', async (req, res) => {
       achievements,
     });
   } catch (error) {
+    console.error('❌ Batch resume enhancement failed:', error);
     res.status(500).json({ error: 'Batch resume enhancement failed', details: error.message });
   }
 });

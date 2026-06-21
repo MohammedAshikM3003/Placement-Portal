@@ -47,13 +47,13 @@
 
 .overlay {
   position: fixed;
-  top: 55px;
+  top: 0;
   left: 0;
-  width: 100%;
-  height: calc(100% - 55px);
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.2);
-  z-index: 999;
-  cursor: pointer;
+  z-index: 99999;
+  cursor: default;
   display: flex;
   align-items: center;
   justify-content: center;

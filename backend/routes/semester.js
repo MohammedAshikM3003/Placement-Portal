@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const SemesterRecord = require('../models/SemesterRecord');
+const SemesterUploadHistory = require('../models/SemesterUploadHistory');
+const Notification = require('../models/Notification');
+const Subject = require('../models/Subject');
 const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 
 const normalizeLookupValue = (value) => String(value || '').trim();
@@ -13,11 +16,13 @@ const buildSemesterSearchVariants = (query = {}) => {
   const studentId = normalizeLookupValue(query.studentId);
   const semester = normalizeLookupValue(query.semester);
   const year = normalizeLookupValue(query.year);
+  const uploadId = normalizeLookupValue(query.uploadId);
   const submitted = query.submitted !== undefined ? String(query.submitted) === 'true' : undefined;
 
   const baseQuery = {};
   if (extractedPdfName) baseQuery.extractedPdfName = extractedPdfName;
   if (semester) baseQuery.semester = semester;
+  if (uploadId) baseQuery.uploadId = uploadId;
   if (submitted !== undefined) baseQuery.submitted = submitted;
 
   const identifierValues = [...new Set([regNo, registerNumber, studentId].filter(Boolean))];
@@ -221,6 +226,10 @@ router.post('/auto-save', async (req, res) => {
 router.put('/submit', async (req, res) => {
   try {
     const extractedPdfName = (req.body?.extractedPdfName || '').toString().trim();
+    const uploadId = (req.body?.uploadId || '').toString().trim();
+    const year = (req.body?.year || '').toString().trim();
+    const semester = req.body?.semester ? parseInt(req.body.semester, 10) : null;
+
     if (!extractedPdfName) {
       return res.status(400).json({
         success: false,
@@ -228,16 +237,91 @@ router.put('/submit', async (req, res) => {
       });
     }
 
+    if (!uploadId) {
+      return res.status(400).json({
+        success: false,
+        error: 'uploadId is required'
+      });
+    }
+
     const now = new Date();
+
+    // 1. Fetch matching semester records to collect student details and subject counts
+    const query = { extractedPdfName };
+    if (uploadId) {
+      query.uploadId = uploadId;
+    }
+    const records = await SemesterRecord.find(query).lean();
+
+    const uploadedStudentCount = records.length;
+    const uniqueCourseCodes = new Set();
+    const extractedStudents = [];
+
+    for (const record of records) {
+      if (record.studentId && record.regNo) {
+        extractedStudents.push({
+          regNo: record.regNo,
+          studentId: record.studentId
+        });
+      }
+      if (Array.isArray(record.subjects)) {
+        for (const sub of record.subjects) {
+          if (sub.courseCode) {
+            uniqueCourseCodes.add(sub.courseCode);
+          }
+        }
+      }
+    }
+
+    const uploadedSubjectCount = uniqueCourseCodes.size;
+
+    // 2. Update SemesterRecord documents to submitted
     const result = await SemesterRecord.updateMany(
-      { extractedPdfName },
+      query,
       { $set: { submitted: true, submittedAt: now, reviewed: true } }
     );
+
+    // 3. Create the upload history record
+    const coordinatorId = req.user?.userId || req.user?._id || null;
+    const history = await SemesterUploadHistory.create({
+      uploadId,
+      coordinatorId,
+      fileName: extractedPdfName,
+      filePath: '',
+      year: year || 'I',
+      semester: semester || 1,
+      uploadedAt: now,
+      uploadedStudentCount,
+      uploadedSubjectCount,
+      extractedStudents,
+      status: "ACTIVE"
+    });
+
+    // 4. Generate student notifications
+    const notifications = extractedStudents.map(student => ({
+      studentId: student.studentId,
+      registerNumber: student.regNo,
+      uploadId,
+      sourceType: "SEMESTER_UPLOAD",
+      semester: semester || 1,
+      year: year || 'I',
+      message: 'Result Published',
+      subtitle: `${year || 'I'} - ${semester || 1}`,
+      notificationRead: false,
+      createdAt: now
+    }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+      console.log(`Generated ${notifications.length} semester upload notifications.`);
+    }
 
     return res.status(200).json({
       success: true,
       matched: result.matchedCount ?? result.n,
-      modified: result.modifiedCount ?? result.nModified
+      modified: result.modifiedCount ?? result.nModified,
+      uploadId,
+      historyId: history._id
     });
   } catch (error) {
     console.error('[Semester] Submit failed:', error);

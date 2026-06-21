@@ -18,6 +18,7 @@ const StudentMarksheet = require('../models/StudentMarksheet');
 const Subject = require('../models/Subject');
 const MarksheetReview = require('../models/MarksheetReview');
 const MarksheetAuditLog = require('../models/MarksheetAuditLog');
+const SemesterUploadHistory = require('../models/SemesterUploadHistory');
 const { marksheetQueue } = require('../queues/marksheetQueue');
 const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 
@@ -469,6 +470,35 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
 
     const extractedPdfName = req.file?.originalname || '';
 
+    // Generate unique uploadId format SEM_UPLOAD_YYYYMMDD_XXX
+    let uploadId;
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const prefix = `SEM_UPLOAD_${year}${month}${day}_`;
+      
+      const latestHistory = await SemesterUploadHistory.findOne({
+        uploadId: new RegExp('^' + prefix)
+      }).sort({ uploadId: -1 }).lean();
+      
+      let nextNum = 1;
+      if (latestHistory && latestHistory.uploadId) {
+        const parts = latestHistory.uploadId.split('_');
+        const lastPart = parts[parts.length - 1];
+        const parsedNum = parseInt(lastPart, 10);
+        if (!isNaN(parsedNum)) {
+          nextNum = parsedNum + 1;
+        }
+      }
+      uploadId = `${prefix}${String(nextNum).padStart(3, '0')}`;
+      console.log(`Generated uploadId: ${uploadId}`);
+    } catch (idErr) {
+      console.error('Failed to generate uploadId, using timestamp fallback:', idErr);
+      uploadId = `SEM_UPLOAD_${Date.now()}`;
+    }
+
     extractedMarksheets.forEach((marksheet) => {
       if (marksheet.submitted === undefined) {
         marksheet.submitted = false;
@@ -485,7 +515,8 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         extractedMarksheets,
         extractedPdfName,
         uploadedBy: req.user?.fullName || req.user?.username || 'Coordinator',
-        semester: req.body?.semester
+        semester: req.body?.semester,
+        uploadId
       });
       console.log(`✅ Semester records saved: ${autoSaveResult.saved}`);
     } catch (autoSaveError) {
@@ -499,6 +530,7 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
 
     res.status(200).json({
       success: true,
+      uploadId,
       extractedMarksheets,
       extractedPdfName,
       savedCount: autoSaveResult.saved,
@@ -615,7 +647,11 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
       'B': 6,
       'C': 5,
       'U': 0,
-      'RA': 0
+      'RA': 0,
+      'AB': 0,
+      'SA': 0,
+      'W': 0,
+      'WD': 0
     };
 
     const session = await mongoose.startSession();

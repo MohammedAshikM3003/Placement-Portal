@@ -23,6 +23,7 @@ class StudentFilterRequest(BaseModel):
 class ResumeEnhanceRequest(BaseModel):
     text: Optional[str] = None
     items: Optional[List[str]] = None
+    category: Optional[str] = None
 
 
 class ResumeGenerateRequest(BaseModel):
@@ -49,11 +50,11 @@ async def grammar_check(payload: TextRequest):
 @app.post("/resume/enhance")
 async def resume_enhance(payload: ResumeEnhanceRequest):
     if payload.items:
-        enhanced = [enhance_resume_text(item) for item in payload.items]
+        enhanced = [enhance_resume_text(item, payload.category) for item in payload.items]
         return {"items": enhanced}
     if payload.text is None:
         raise HTTPException(status_code=400, detail="text is required")
-    return {"original": payload.text, "enhanced": enhance_resume_text(payload.text)}
+    return {"original": payload.text, "enhanced": enhance_resume_text(payload.text, payload.category)}
 
 
 @app.post("/resume/generate")

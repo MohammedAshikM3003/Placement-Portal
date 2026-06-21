@@ -470,50 +470,57 @@ function StudentFeedbackPopup({
     };
   }, [driveContext?.driveId, driveContext?.company, driveContext?.jobRole, driveContext?.startDate, parsedRoundNumber, getStudentInfoFromStorage]);
 
-  const handleGenerateText = async (textType) => {
+  const handleGenerateFeedbackOnly = async () => {
     if (viewOnly || !aiEnabled) return;
-    if (textType === 'feedback' ? isGeneratingFeedback : isGeneratingSuggestion) return;
 
-    setGenerateError('');
-    if (textType === 'feedback') {
-      setIsGeneratingFeedback(true);
-    } else {
-      setIsGeneratingSuggestion(true);
+    if (feedback.trim().length < 5) {
+      setGenerateError('Please enter meaningful feedback before generating.');
+      return;
     }
 
+    setGenerateError('');
+    setIsGeneratingFeedback(true);
+
     try {
-      const response = await mongoDBService.generateStudentFeedback({
-        roundNumber: parsedRoundNumber,
-        roundName,
-        roundStatus,
-        companyName: driveContext?.company || '',
-        jobRole: driveContext?.jobRole || '',
-        difficulty,
-        textType,
-        baseText: textType === 'feedback' ? feedback : suggestion
-      });
+      const response = await mongoDBService.analyzeFeedback(feedback);
 
-      const generatedText = (response?.text || '').toString().trim();
-      if (!generatedText) {
-        setGenerateError('No text was generated. Please try again.');
-        return;
-      }
-
-      if (textType === 'feedback') {
-        setFeedback(generatedText);
+      if (response && response.success && response.feedback) {
+        setFeedback(response.feedback);
         setAiGeneratedFeedback(true);
       } else {
-        setSuggestion(generatedText);
-        setAiGeneratedSuggestion(true);
+        setGenerateError('No text was generated. Please try again.');
       }
     } catch (error) {
-      setGenerateError(error?.message || 'Failed to generate text.');
+      setGenerateError(error?.message || 'Failed to generate feedback.');
     } finally {
-      if (textType === 'feedback') {
-        setIsGeneratingFeedback(false);
+      setIsGeneratingFeedback(false);
+    }
+  };
+
+  const handleGenerateSuggestionOnly = async () => {
+    if (viewOnly || !aiEnabled) return;
+
+    if (suggestion.trim().length < 5) {
+      setGenerateError('Please enter meaningful suggestion before generating.');
+      return;
+    }
+
+    setGenerateError('');
+    setIsGeneratingSuggestion(true);
+
+    try {
+      const response = await mongoDBService.analyzeFeedback(suggestion);
+
+      if (response && response.success && response.feedback) {
+        setSuggestion(response.feedback);
+        setAiGeneratedSuggestion(true);
       } else {
-        setIsGeneratingSuggestion(false);
+        setGenerateError('No suggestion was generated. Please try again.');
       }
+    } catch (error) {
+      setGenerateError(error?.message || 'Failed to generate suggestion.');
+    } finally {
+      setIsGeneratingSuggestion(false);
     }
   };
 
@@ -872,16 +879,26 @@ function StudentFeedbackPopup({
                   <SFPScrollTextarea
                     value={feedback}
                     onChange={e => setFeedback(e.target.value)}
-                    readOnly={viewOnly}
+                    readOnly={viewOnly || isGeneratingFeedback}
                     height={130}
                   />
+                  {isGeneratingFeedback && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(25, 122, 255, 0.2)', borderTop: '2px solid #197AFF', borderRadius: '50%', animation: 'sfpSpin 0.85s linear infinite' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
+                      <style>{`@keyframes sfpSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                  )}
                   {aiEnabled && !viewOnly && (
                     <div style={{
                       position: 'absolute', bottom: '8px', right: '18px',
                       display: 'flex', gap: '6px', zIndex: 1
                     }}>
                       <button onClick={() => { setFeedback(''); setAiGeneratedFeedback(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
-                      <button onClick={() => handleGenerateText('feedback')} disabled={isGeneratingFeedback || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingFeedback || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingFeedback ? 'Generating...' : 'Generate'}</button>
+                      <button onClick={handleGenerateFeedbackOnly} disabled={isGeneratingFeedback || isGeneratingSuggestion || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingFeedback ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
@@ -895,16 +912,26 @@ function StudentFeedbackPopup({
                   <SFPScrollTextarea
                     value={suggestion}
                     onChange={e => setSuggestion(e.target.value)}
-                    readOnly={viewOnly}
+                    readOnly={viewOnly || isGeneratingSuggestion}
                     height={130}
                   />
+                  {isGeneratingSuggestion && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(25, 122, 255, 0.2)', borderTop: '2px solid #197AFF', borderRadius: '50%', animation: 'sfpSpin 0.85s linear infinite' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
+                      <style>{`@keyframes sfpSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                  )}
                   {aiEnabled && !viewOnly && (
                     <div style={{
                       position: 'absolute', bottom: '8px', right: '18px',
                       display: 'flex', gap: '6px', zIndex: 1
                     }}>
                       <button onClick={() => { setSuggestion(''); setAiGeneratedSuggestion(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)', transition: 'background 0.2s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#dc2626'} onMouseLeave={e => e.target.style.backgroundColor = '#ef4444'}>Clear</button>
-                      <button onClick={() => handleGenerateText('suggestion')} disabled={isGeneratingSuggestion || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingSuggestion || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingSuggestion ? 'Generating...' : 'Generate'}</button>
+                      <button onClick={handleGenerateSuggestionOnly} disabled={isGeneratingFeedback || isGeneratingSuggestion || isSaving} style={{ backgroundColor: '#197AFF', opacity: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 0.75 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(25,122,255,0.35)' }}>{isGeneratingSuggestion ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
@@ -919,9 +946,19 @@ function StudentFeedbackPopup({
                 <SFPScrollTextarea
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
-                  readOnly={viewOnly}
+                  readOnly={viewOnly || isGeneratingFeedback}
                   height={140}
                 />
+                {isGeneratingFeedback && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div style={{ width: '16px', height: '16px', border: '2px solid rgba(25, 122, 255, 0.2)', borderTop: '2px solid #197AFF', borderRadius: '50%', animation: 'sfpSpin 0.85s linear infinite' }} />
+                      <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
+                    <style>{`@keyframes sfpSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                  </div>
+                )}
                 {aiEnabled && !viewOnly && (
                   <div style={{
                     position: 'absolute', bottom: '8px', right: '18px',
@@ -943,15 +980,15 @@ function StudentFeedbackPopup({
                       Clear
                     </button>
                     <button
-                      onClick={() => handleGenerateText('feedback')}
-                      disabled={isGeneratingFeedback || isSaving}
+                      onClick={handleGenerateFeedbackOnly}
+                      disabled={isGeneratingFeedback || isGeneratingSuggestion || isSaving}
                       style={{
                         backgroundColor: '#197AFF', color: '#fff', border: 'none',
                         borderRadius: '6px', padding: '4px 12px',
-                        fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isSaving) ? 'not-allowed' : 'pointer',
+                        fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer',
                         fontFamily: "'Poppins', sans-serif",
                         boxShadow: '0 2px 6px rgba(25,122,255,0.35)',
-                        opacity: (isGeneratingFeedback || isSaving) ? 0.75 : 1
+                        opacity: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 0.75 : 1
                       }}
                     >
                       {isGeneratingFeedback ? 'Generating...' : 'Generate'}
@@ -967,9 +1004,19 @@ function StudentFeedbackPopup({
                   <SFPScrollTextarea
                     value={suggestion}
                     onChange={e => setSuggestion(e.target.value)}
-                    readOnly={viewOnly}
+                    readOnly={viewOnly || isGeneratingSuggestion}
                     height={140}
                   />
+                  {isGeneratingSuggestion && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(25, 122, 255, 0.2)', borderTop: '2px solid #197AFF', borderRadius: '50%', animation: 'sfpSpin 0.85s linear infinite' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
+                      <style>{`@keyframes sfpSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                  )}
                   {aiEnabled && !viewOnly && (
                     <div style={{
                       position: 'absolute', bottom: '8px', right: '18px',
@@ -991,15 +1038,15 @@ function StudentFeedbackPopup({
                         Clear
                       </button>
                       <button
-                        onClick={() => handleGenerateText('suggestion')}
-                        disabled={isGeneratingSuggestion || isSaving}
+                        onClick={handleGenerateSuggestionOnly}
+                        disabled={isGeneratingFeedback || isGeneratingSuggestion || isSaving}
                         style={{
                           backgroundColor: '#197AFF', color: '#fff', border: 'none',
                           borderRadius: '6px', padding: '4px 12px',
-                          fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer',
+                          fontSize: '0.78rem', fontWeight: 600, cursor: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 'not-allowed' : 'pointer',
                           fontFamily: "'Poppins', sans-serif",
                           boxShadow: '0 2px 6px rgba(25,122,255,0.35)',
-                          opacity: (isGeneratingSuggestion || isSaving) ? 0.75 : 1
+                          opacity: (isGeneratingFeedback || isGeneratingSuggestion || isSaving) ? 0.75 : 1
                         }}
                       >
                         {isGeneratingSuggestion ? 'Generating...' : 'Generate'}

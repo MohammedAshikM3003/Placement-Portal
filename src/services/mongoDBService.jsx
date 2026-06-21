@@ -1054,6 +1054,13 @@ class MongoDBService {
     });
   }
 
+  async analyzeFeedback(feedback) {
+    return await this.apiCall('/feedback/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ feedback })
+    });
+  }
+
   async saveStudentFeedback(payload) {
     return await this.apiCall('/student-feedback/save', {
       method: 'POST',

@@ -643,6 +643,24 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   };
 
   const buildResumeHtml = () => {
+    const parseBullets = (text) => {
+      if (!text) return [];
+      return text.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => line.replace(/^[•\-\*]\s*/, ''));
+    };
+
+    const cleanBranch = (b) => {
+      if (!b) return '';
+      const s = String(b).trim();
+      if (/^computer\s+science\s+(and|&)\s+engineering$/i.test(s)) return 'CSE';
+      if (/^information\s+technology$/i.test(s)) return 'IT';
+      if (/^electronics\s+(and|&)\s+communication\s+engineering$/i.test(s)) return 'ECE';
+      if (/^electrical\s+(and|&)\s+electronics\s+engineering$/i.test(s)) return 'EEE';
+      return s;
+    };
+
     // Google Fonts mapping for client-side fallback (no font installation needed)
     const googleFontsMap = {
       'Arial': { import: 'Arimo:wght@400;700', stack: "'Arimo', 'Arial', 'Helvetica', sans-serif" },
@@ -666,28 +684,32 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
 <link href="https://fonts.googleapis.com/css2?family=${googleFontImport}&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: ${fontStack} !important; }
-  body { font-family: ${fontStack} !important; font-size: 11pt; line-height: 1.4; color: #333; padding: 0.5in 0.7in; max-width: 8.5in; }
-  h1 { font-family: ${fontStack} !important; font-size: 20pt; color: #1a1a1a; text-align: center; margin-bottom: 4px; }
-  .contact { text-align: center; font-size: 9.5pt; color: #555; margin-bottom: 12px; }
+  body { font-family: ${fontStack} !important; font-size: 11px; line-height: 1.2; color: #333; padding: 0.25in 0.4in; max-width: 8.5in; }
+  h1 { font-family: ${fontStack} !important; font-size: 24px; color: #1a1a1a; text-align: center; margin-bottom: 2px; }
+  .contact { text-align: center; font-size: 10px; color: #555; margin-bottom: 6px; }
   .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
   .contact a:hover { text-decoration: underline; }
-  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 10px; }
+  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 6px; }
   .header-container.photo-left { flex-direction: row; }
   .header-container.photo-right { flex-direction: row-reverse; }
   .header-text { flex: 1; text-align: center; }
-  .profile-photo { width: 100px; aspect-ratio: 1 / 1; object-fit: cover; flex-shrink: 0; display: block; }
-  .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 2px; margin: 14px 0 6px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
-  .entry { margin-bottom: 8px; }
-  .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 10.5pt; gap: 15px; width: 100%; }
+  .profile-photo { width: 80px; height: 80px; border-radius: 50%; border: 1px solid #ccc; object-fit: cover; flex-shrink: 0; display: block; }
+  .section { margin-bottom: 6px; }
+  .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 1px; margin: 6px 0 3px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
+  .entry { margin-bottom: 3px; }
+  .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 11px; gap: 15px; width: 100%; }
   .entry-header > span:last-child { white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
-  .entry-sub { font-style: italic; font-size: 10pt; color: #555; margin-bottom: 2px; }
-  .entry-desc { font-size: 10pt; margin-left: 12px; }
+  .entry-sub { font-style: italic; font-size: 10px; color: #555; margin-bottom: 1px; }
+  .entry-desc { font-size: 10px; margin-left: 12px; white-space: pre-line; }
+  .summary-text { font-size: 11px; line-height: 1.2; white-space: pre-line; color: #333; }
+  .entry-bullets { margin-left: 15px; margin-top: 1px; margin-bottom: 1px; list-style-type: disc; }
+  .entry-bullets li { font-size: 10px; line-height: 1.2; color: #333; margin-bottom: 1px; }
   ul { margin-left: 16px; }
-  li { font-size: 10pt; margin-bottom: 2px; }
-  .skills-list { font-size: 10pt; margin-left: 16px; }
-  .skills-list li { margin-bottom: 2px; }
+  li { font-size: 10px; margin-bottom: 1px; }
+  .skills-list { font-size: 10px; margin-left: 16px; }
+  .skills-list li { margin-bottom: 1px; }
   .skills-list li strong { font-weight: bold; }
-  @media print { body { padding: 0.4in 0.5in; } }
+  @media print { body { padding: 0.25in 0.4in; } }
 </style></head><body>
 ${(() => {
   const showPhoto = resumeSettings.profilePhoto === true;
@@ -724,11 +746,11 @@ ${(() => {
 </div>`;
 })()}
 
-${summary ? `<div class="section-title">Professional Summary</div><p style="font-size:10pt;">${summary}</p>` : ''}
+${summary ? `<div class="section"><div class="section-title">Professional Summary</div><p class="summary-text">${summary}</p></div>` : ''}
 
-${skills.some(c => c.items?.length > 0) ? `<div class="section-title">Skills</div><ul class="skills-list">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${c.category}:</strong> ${c.items.join(', ')}</li>`).join('')}</ul>` : ''}
+${skills.some(c => c.items?.length > 0) ? `<div class="section"><div class="section-title">Skills</div><ul class="skills-list">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${c.category}:</strong> ${c.items.join(', ')}</li>`).join('')}</ul></div>` : ''}
 
-${experiences.length > 0 ? `<div class="section-title">Internship</div>
+${experiences.length > 0 ? `<div class="section"><div class="section-title">Internship</div>
 ${experiences.map(e => {
   const fmtDate = (d) => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? (p[0].length === 4 ? p[2]+'-'+p[1]+'-'+p[0] : d) : d; };
   const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
@@ -736,44 +758,62 @@ ${experiences.map(e => {
   if (e.companyName) titleParts.push(e.companyName);
   if (e.location) titleParts.push(e.location);
   const titleStr = titleParts.join(', ') + (modeLabel ? ' (' + modeLabel + ')' : '');
+  const descText = typeof e.description === 'string' ? e.description : (e.description?.input || e.description?.text || e.description?.description || '');
+  const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(descText).map(bullet => `<li>${bullet}</li>`).join('') + `</ul>`;
   return `<div class="entry">
   <div class="entry-header"><span>${titleStr}</span><span>${fmtDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${fmtDate(e.toDate) || 'Present'}</span></div>
-  ${e.description ? `<div class="entry-desc">${(typeof e.description === 'string' ? e.description : e.description).trim()}</div>` : ''}
+  ${bulletsHtml}
   ${e.technologies?.length ? `<div class="entry-desc" style="margin-top:2px;"><strong>Tech:</strong> ${e.technologies.join(', ')}</div>` : ''}
 </div>`;
-}).join('')}` : ''}
+}).join('')}</div>` : ''}
 
-${projects.length > 0 ? `<div class="section-title">Projects</div>
+${projects.length > 0 ? `<div class="section"><div class="section-title">Projects</div>
 ${projects.map(p => {
   const name = typeof p === 'string' ? p : (p.name || p.label);
   const desc = typeof p === 'string' ? '' : p.description;
   const tech = typeof p === 'string' ? [] : (p.technologies || []);
   const github = typeof p === 'string' ? '' : p.githubRepo;
   const hosting = typeof p === 'string' ? '' : (p.hostingLink || '');
+  const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(desc).map(bullet => `<li>${bullet}</li>`).join('') + `</ul>`;
   return `<div class="entry">
     <div class="entry-header"><span>${name}</span><span style="font-size:9.5pt;">${github ? `<a href="${github}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${github && hosting ? ' | ' : ''}${hosting ? `<a href="${hosting}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
-    ${desc ? `<div class="entry-desc">${desc}</div>` : ''}
+    ${bulletsHtml}
     ${tech.length ? `<div class="entry-desc"><strong>Tech:</strong> ${tech.join(', ')}</div>` : ''}
   </div>`;
-}).join('')}` : ''}
+}).join('')}</div>` : ''}
 
-${certifications.length > 0 ? `<div class="section-title">Certifications</div>
-${certifications.map(c => {
-  const name = typeof c === 'string' ? c : c.certificateName;
-  const desc = typeof c === 'string' ? '' : (c.description || '');
-  return `<div style="margin-bottom:6px;"><strong>${name}</strong>${desc ? `<br/><span style="font-size:10pt;color:#444;">${desc}</span>` : ''}</div>`;
-}).join('')}` : ''}
+${certifications.length > 0 ? `<div class="section"><div class="section-title">Certifications</div>
+<div style="margin-left: 12px; margin-top: 2px;">
+  ${certifications.map(c => {
+    const name = typeof c === 'string' ? c : c.certificateName;
+    const desc = typeof c === 'string' ? '' : c.description;
+    let displayText = name && desc ? `${name} – ${desc}` : (name || desc || '');
+    displayText = displayText.replace(/\s*\+\s*/g, ' – ');
+    return `<div style="font-size: 10px; line-height: 1.2; margin-bottom: 2px; color: #333;">${displayText}</div>`;
+  }).join('')}
+</div></div>` : ''}
 
-${achievements.length > 0 ? `<div class="section-title">Achievements</div><ul>
-${achievements.map(a => `<li>${typeof a === 'string' ? a : a.details}</li>`).join('')}</ul>` : ''}
+${achievements.length > 0 ? `<div class="section"><div class="section-title">Achievements</div>
+<ul class="entry-bullets">
+  ${achievements.map(a => {
+    const details = typeof a === 'string' ? a : a.details;
+    return parseBullets(details).map(bullet => `<li>${bullet}</li>`).join('');
+  }).join('')}
+</ul></div>` : ''}
 
-${additionalInfo.length > 0 ? `<div class="section-title">Additional Information</div><ul>
-${additionalInfo.map(a => `<li>${typeof a === 'string' ? a : a.info}</li>`).join('')}</ul>` : ''}
+${additionalInfo.length > 0 ? `<div class="section"><div class="section-title">Additional Information</div>
+<ul class="entry-bullets">
+  ${additionalInfo.map(a => {
+    const info = typeof a === 'string' ? a : a.info;
+    return parseBullets(info).map(bullet => `<li>${bullet}</li>`).join('');
+  }).join('')}
+</ul></div>` : ''}
 
-${education.college || education.school12 || education.school10 ? `<div class="section-title">Education</div>
-${education.college ? `<div class="entry"><div class="entry-header"><span>${education.degree || 'B.E.'} in ${education.branch || 'Engineering'} - ${education.college}</span><span>${education.graduationYear || ''}</span></div><div class="entry-sub">CGPA: ${education.cgpa || 'N/A'}</div></div>` : ''}
-${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th - ${education.school12}</span><span>${education.batch12 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile12 || 'N/A'}</div></div>` : ''}
-${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th - ${education.school10}</span><span>${education.batch10 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile10 || 'N/A'}</div></div>` : ''}` : ''}
+${education.college || education.school12 || education.school10 ? `<div class="section"><div class="section-title">Education</div>
+${education.college ? `<div class="entry"><div class="entry-header"><span>${education.degree || 'B.E.'} ${cleanBranch(education.branch)} | ${education.college} | ${education.graduationYear || ''}</span></div><div class="entry-sub">CGPA: ${education.cgpa || 'N/A'}</div></div>` : ''}
+${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th | ${education.school12} | ${education.batch12 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile12 || 'N/A'}</div></div>` : ''}
+${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th | ${education.school10} | ${education.batch10 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile10 || 'N/A'}</div></div>` : ''}
+</div>` : ''}
 
 </body></html>`;
   };
@@ -2074,6 +2114,23 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           <button className={styles.addChipBtn} onClick={() => openAchievementPopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Achievement
+          </button>
+        </div>
+      </div>
+
+      {/* ===== ADDITIONAL INFORMATION ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Additional Information</h3>
+        <div className={styles.chipsContainer}>
+          {additionalInfo.map((info, i) => (
+            <span key={i} className={styles.chip} onClick={() => openAdditionalInfoPopup(i)} style={{ cursor: 'pointer' }}>
+              {info.label || info.info || info}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(additionalInfo, setAdditionalInfo, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openAdditionalInfoPopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Info
           </button>
         </div>
       </div>

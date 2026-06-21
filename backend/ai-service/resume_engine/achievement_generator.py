@@ -1,56 +1,77 @@
 import re
 from resume_engine.spell_checker import correct_spelling
 from resume_engine.grammar_checker import correct_grammar
-from resume_engine.professional_rewriter import professionalize_text
-
-# Common achievement phrases to professionalize
-ACHIEVEMENT_REWRITES = [
-    (r"\bgot first (prize|place)\b", "Secured First Place"),
-    (r"\bwon first (prize|place)\b", "Awarded First Place"),
-    (r"\bgot second (prize|place)\b", "Secured Second Place"),
-    (r"\bgot third (prize|place)\b", "Secured Third Place"),
-    (r"\bgot (a )?prize\b", "Recognized as a prize winner"),
-    (r"\bparticipted\b", "Competed in"),
-    (r"\bparticipated in (a )?hack(a)?thon\b", "Actively competed in a regional Hackathon, developing prototypes under strict time constraints"),
-    (r"\bcoding compition\b", "Coding Competition"),
-    (r"\bcoding competition\b", "Coding Competition"),
-]
 
 def generate_achievement(details: str) -> str:
     """
-    Translates basic achievement notes into formal, accomplishments.
+    Polishes the achievement details faithfully.
+    Only enhances existing information without fabricating awards, ranks, or competitions.
     """
-    if not details or len(details.strip()) < 3:
-        return "Recognized for academic excellence and active participation in co-curricular activities."
-        
+    base = (details or "").strip()
+    base = re.sub(r"^[•\-\*]\s*", "", base)
+    base = base.replace("•", "").replace("- ", "").replace("* ", "").strip()
+    if not base:
+        return ""
+
     # Clean spelling and grammar
-    spelled = correct_spelling(details)
+    spelled = correct_spelling(base)
     grammed = correct_grammar(spelled)
-    
-    text = grammed
-    for pattern, replacement in ACHIEVEMENT_REWRITES:
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-        
-    # Standardize remaining phrasing
-    final_details = professionalize_text(text)
-    
-    # Capitalize key competitions (Coding Competition, Hackathon, etc.)
-    final_details = final_details.replace("coding competition", "Coding Competition")
-    final_details = final_details.replace("hackathon", "Hackathon")
-    
-    # Dynamic skill qualifier for coding/hackathons
-    lower_details = final_details.lower()
-    if any(k in lower_details for k in ["coding", "hackathon", "programming", "algorithmic", "dsa"]):
-        if not any(k in lower_details for k in ["demonstrating", "problem-solving", "skills"]):
-            if final_details.endswith("."):
-                final_details = final_details[:-1]
-            final_details += " by demonstrating strong problem-solving and algorithmic skills"
+    lower_g = grammed.lower()
+
+    # Rule 1: NCC candidate
+    if "ncc" in lower_g:
+        return "• Active NCC candidate with leadership and teamwork experience."
+
+    # Rule 2: Volunteer
+    if "volunteer" in lower_g:
+        return "• Participated in volunteer activities and community engagement initiatives."
+
+    # Rule 3: Hackathon
+    if "hackathon" in lower_g or "hackthon" in lower_g:
+        # Determine prize/award
+        place = ""
+        if "first" in lower_g or "1st" in lower_g:
+            place = "first prize"
+        elif "second" in lower_g or "2nd" in lower_g:
+            place = "second prize"
+        elif "third" in lower_g or "3rd" in lower_g:
+            place = "third prize"
+        elif "won" in lower_g:
+            place = "a prize"
             
-    # Ensure starts capitalized and ends with a period
-    final_details = re.sub(r"\s+", " ", final_details).strip()
-    if final_details:
-        final_details = final_details[0].upper() + final_details[1:]
-    if final_details and final_details[-1] != ".":
-        final_details += "."
+        if place:
+            return f"• Won {place} in a hackathon, demonstrating strong technical and problem-solving abilities."
+        else:
+            return "• Participated in a hackathon, collaborating on technical solution development."
+
+    # Rule 4: Coding / Technical Competition
+    if "competition" in lower_g or "compition" in lower_g or "contest" in lower_g:
+        place = ""
+        if "first" in lower_g or "1st" in lower_g:
+            place = "first prize"
+        elif "second" in lower_g or "2nd" in lower_g:
+            place = "second prize"
+        elif "third" in lower_g or "3rd" in lower_g:
+            place = "third prize"
+            
+        comp_type = "coding competition" if "coding" in lower_g else "technical competition"
+        if place:
+            return f"• Won {place} in a {comp_type}, demonstrating strong technical skills."
+        else:
+            return f"• Participated in a {comp_type}, demonstrating competitive technical skills."
+
+    # Rule 5: Generic Fallback (Polish and grammar correct the user's input, do not hallucinate)
+    # Capitalize the first letter and ensure it starts with a bullet point
+    bullet = grammed
+    if not bullet.startswith("•"):
+        # Strip any existing leading bullet indicators
+        bullet = re.sub(r"^[•\-\*]\s*", "", bullet)
+        # Capitalize first letter
+        if bullet:
+            bullet = bullet[0].upper() + bullet[1:]
+        bullet = f"• {bullet}"
         
-    return final_details
+    if not bullet.endswith("."):
+        bullet += "."
+        
+    return bullet

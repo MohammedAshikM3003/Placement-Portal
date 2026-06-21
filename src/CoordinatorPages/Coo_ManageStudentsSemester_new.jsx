@@ -13,7 +13,13 @@ import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
 const INITIAL_SUBJECTS = [];
 
 const GRADE_OPTIONS = ['Select Credit', '4 Credits', '3 Credits', '2 Credits', '1 Credit','0 Credit'];
-const SEMESTER_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+const YEAR_OPTIONS = ['I', 'II', 'III', 'IV'];
+const YEAR_SEMESTER_MAP = {
+  'I': ['1', '2'],
+  'II': ['3', '4'],
+  'III': ['5', '6'],
+  'IV': ['7', '8']
+};
 const NO_FILE_SELECTED = 'No file selected';
 
 const BinIcon = () => (
@@ -61,7 +67,16 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [extractedStudents, setExtractedStudents] = useState([]);
   const [extractedPdfName, setExtractedPdfName] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
+  const [uploadId, setUploadId] = useState('');
+
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+    setSelectedSemester('');
+  };
+
+  const availableSemesters = selectedYear ? YEAR_SEMESTER_MAP[selectedYear] : [];
 
   useEffect(() => {
     return () => {
@@ -229,7 +244,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         const response = await fetch(API_BASE_URL + '/subjects', {
           method: 'POST',
           headers: fetchHeaders,
-          body: JSON.stringify({ subjects: subjectsToSave })
+          body: JSON.stringify({ subjects: subjectsToSave, uploadId: uploadId })
         });
 
         if (!response.ok) {
@@ -248,7 +263,10 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
               subjects: subjects,
               selectedFile: selectedFile,
               extractedStudents: extractedStudents,
-              extractedPdfName: extractedPdfName
+              extractedPdfName: extractedPdfName,
+              uploadId: uploadId,
+              year: selectedYear,
+              semester: selectedSemester
             }
           });
         }, 2000);
@@ -337,6 +355,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
 
         const body = await resp.json();
         console.log('✅ Upload response:', body);
+        setUploadId(body.uploadId || '');
         if (fakeProgress) {
           clearInterval(fakeProgress);
           fakeProgress = null;
@@ -471,26 +490,69 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles['semester-main-content']}>
-          <div className={styles['semester-controls']}>
-            <label htmlFor="semester-select" className={styles['semester-label']}>Semester</label>
-            <select
-              id="semester-select"
-              className={styles['semester-select']}
-              value={selectedSemester}
-              onChange={(event) => setSelectedSemester(event.target.value)}
+          <div className={styles['semester-controls']} style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="year-select" className={styles['semester-label']}>Year</label>
+              <select
+                id="year-select"
+                className={styles['semester-select']}
+                value={selectedYear}
+                onChange={handleYearChange}
+              >
+                <option value="">Select Year</option>
+                {YEAR_OPTIONS.map((option) => (
+                  <option key={`year-${option}`} value={option}>
+                    Year {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="semester-select" className={styles['semester-label']}>Semester</label>
+              <select
+                id="semester-select"
+                className={styles['semester-select']}
+                value={selectedSemester}
+                onChange={(event) => setSelectedSemester(event.target.value)}
+                disabled={!selectedYear}
+              >
+                <option value="">Select semester</option>
+                {availableSemesters.map((option) => (
+                  <option key={`semester-${option}`} value={option}>
+                    Semester {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className={styles['history-btn']}
+              onClick={() => navigate('/coo-semester-history')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                backgroundColor: '#1E293B',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                marginLeft: 'auto',
+                transition: 'background-color 0.2s'
+              }}
             >
-              <option value="">Select semester</option>
-              {SEMESTER_OPTIONS.map((option) => (
-                <option key={`semester-${option}`} value={option}>
-                  Semester {option}
-                </option>
-              ))}
-            </select>
+              🕒 History
+            </button>
           </div>
           <section
             className={styles['upload-panel']}
             role="button"
             tabIndex={0}
+            style={{ position: 'relative' }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -499,11 +561,30 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
             }}
             aria-label="Upload semester file"
           >
+            {(!selectedYear || !selectedSemester) && (
+              <div 
+                className={styles['upload-overlay']} 
+                onClick={() => {
+                  setErrorMessage("Please select Year and Semester first.");
+                  setShowErrorPopup(true);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 10,
+                  cursor: 'pointer'
+                }}
+              />
+            )}
             <input
               ref={uploadInputRef}
               type="file"
               className={styles['upload-input']}
               onChange={handleFileSelected}
+              disabled={!selectedYear || !selectedSemester}
             />
             <div className={styles['upload-icons']}>
               <button type="button" className={styles['icon-action']} onClick={(event) => { event.stopPropagation(); handleRemoveFile(); }} aria-label="Remove uploaded file">
@@ -567,9 +648,13 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           {showErrorPopup && (
             <div className={styles['ms-popup-overlay']}>
               <div className={styles['ms-popup-container']}>
-                <div className={styles['ms-popup-header']} style={{ backgroundColor: '#F44336' }}>Error</div>
+                <div className={styles['ms-popup-header']} style={{ backgroundColor: '#F44336' }}>
+                  {errorMessage.includes('select Year and Semester') ? 'Validation Error' : 'Error'}
+                </div>
                 <div className={styles['ms-popup-body']}>
-                  <h2 className={styles['ms-status-title']}>Failed to Save Subjects</h2>
+                  <h2 className={styles['ms-status-title']}>
+                    {errorMessage.includes('select Year and Semester') ? 'Validation Alert' : 'Failed to Save Subjects'}
+                  </h2>
                   <p className={styles['ms-status-text']}>{errorMessage}</p>
                 </div>
                 <div className={styles['ms-popup-footer']}>

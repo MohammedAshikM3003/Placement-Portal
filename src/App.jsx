@@ -13,6 +13,7 @@ import GlobalDriveScheduledChecker from "./components/CertificateNotification/Gl
 import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
 import GlobalOfferLetterNotificationChecker from "./components/CertificateNotification/GlobalOfferLetterNotificationChecker.jsx";
 import GlobalCoordinatorCertificateUploadChecker from "./components/CertificateNotification/GlobalCoordinatorCertificateUploadChecker.jsx";
+import GlobalSemesterNotificationChecker from "./components/CertificateNotification/GlobalSemesterNotificationChecker.jsx";
 import { runCacheMigration } from './utils/cacheMigration';
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
@@ -89,6 +90,9 @@ const CoordinatorCertificateVerification = lazy(() => import("./CoordinatorPages
 const CoordinatorEligibleStudents = lazy(() => import("./CoordinatorPages/Coo_Eligiblestudents.jsx"));
 const CoordinatorAttendance = lazy(() => import("./CoordinatorPages/Coo_Attendance.jsx"));
 const CoordinatorPlacedStudents = lazy(() => import("./CoordinatorPages/Coo_PlacedStudents.jsx"));
+const CoordinatorSemesterEditor = lazy(() => import("./CoordinatorPages/Coo_MS_Sem.jsx"));
+const CoordinatorSemesterEditorProfile = lazy(() => import("./CoordinatorPages/Coo_MS_Sem_profile.jsx"));
+const CoordinatorSemesterHistory = lazy(() => import("./CoordinatorPages/CooSemesterHistory.jsx"));
 const CoordinatorCompanyDriveView = lazy(() => import("./CoordinatorPages/Coo_CompanyDriveView.jsx"));
 const CoordinatorReportAnalysisCW = lazy(() => import("./CoordinatorPages/Coo_ReportAnalysisCW.jsx"));
 const CoordinatorReportAnalysisRW = lazy(() => import("./CoordinatorPages/Coo_ReportAnalysisRW.jsx"));
@@ -103,7 +107,6 @@ const CoordinatorMsEditPage = lazy(() => import("./CoordinatorPages/Coo_MS_Editp
 const CoordinatorEligibleStudentView = lazy(() => import("./CoordinatorPages/Coo_EligibleStuViewpage.jsx"));
 const CoordinatorStuDBCertificateView = lazy(() => import("./CoordinatorPages/Coo_StuDBCertificateView.jsx"));
 const CoordinatorSemesterMarksheetView = lazy(() => import("./CoordinatorPages/Coo_ManageStudentSemesterMarksheetView.jsx"));
-const CoordinatorSemesterEditor = lazy(() => import("./CoordinatorPages/Coo_MS_Sem.jsx"));
 
 // --- LAZY LOAD STUDENT COMPONENTS ---
 const PlacementPortalDashboard = lazy(() => import("./StudentPages/dashboard.jsx"));
@@ -280,6 +283,7 @@ function AppContent() {
           <GlobalPlacementBannerChecker />
           <GlobalDriveScheduledChecker />
           <GlobalOfferLetterNotificationChecker />
+          <GlobalSemesterNotificationChecker />
         </>
       )}
 
@@ -331,7 +335,8 @@ function AppContent() {
       <Route path="/coo-report-analysis-rw" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisRW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/coo-report-analysis-sw" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorReportAnalysisSW onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/coo-manage-students-semester" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentsSemester onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/coo-manage-students-semester/sem" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorSemesterEditor onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/coo-manage-students-semester/sem" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorSemesterEditorProfile onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/coo-semester-history" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorSemesterHistory onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/coo-ms-semester-detail" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorSemesterDetail onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/coo-manage-students-semester/view" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorManageStudentViewMain onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/coo-manage-students-semester/edit" element={<RoleGuard allowedRoles={['coordinator']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><CoordinatorMsEditPage onLogout={handleStudentLogout} onViewChange={(view) => navigate(`/coo-${view}`)} /></Suspense></RouteErrorBoundary></RoleGuard>} />

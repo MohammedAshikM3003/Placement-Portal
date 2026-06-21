@@ -192,43 +192,37 @@ export const AdminFailedPopup = ({
   const renderFailedCountField = () => (
     <div
       style={{
-        height: FIELD_HEIGHT,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         border: '1px solid #dadada',
-        borderRadius: '12px',
+        borderRadius: '8px',
+        height: FIELD_HEIGHT,
+        padding: '0 0 0 0.9rem',
         backgroundColor: '#f9f9f9',
-        display: 'grid',
-        gridTemplateColumns: '1fr 96px',
+        userSelect: 'none',
+        boxSizing: 'border-box',
+        width: '100%',
         overflow: 'hidden'
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 12px',
-          color: '#7b8492',
-          fontSize: isPopupMobile ? '0.68rem' : '0.74rem',
-          fontWeight: 600,
-          letterSpacing: '0.01em',
-          whiteSpace: 'nowrap'
-        }}
-      >
-        Failed Students
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1', fontSize: isPopupMobile ? '0.78rem' : '0.82rem', color: '#1a1a1a', fontWeight: 700 }}>
+        <span>Failed</span>
+        <span>Students</span>
       </div>
       <div
         style={{
-          backgroundColor: '#797979',
+          backgroundColor: color.primary,
+          color: '#fff',
+          height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#ffffff',
-          WebkitTextFillColor: '#ffffff',
-          fontWeight: 900,
-          fontSize: isPopupMobile ? '1.55rem' : '1.5rem',
-          fontVariantNumeric: 'tabular-nums',
-          textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-          borderLeft: '1px solid rgba(255,255,255,0.38)',
-          lineHeight: 1
+          padding: '0 1.2rem',
+          fontWeight: 700,
+          fontSize: '1rem',
+          minWidth: '50px',
+          boxSizing: 'border-box'
         }}
       >
         {visibleIneligibleCount}
@@ -248,23 +242,19 @@ export const AdminFailedPopup = ({
   const handleGenerateFeedback = async () => {
     if (!aiEnabled || isGenerating) return;
 
+    if (feedback.trim().length < 5) {
+      setGenerateError('Please enter meaningful feedback before generating.');
+      return;
+    }
+
     setGenerateError('');
     setIsGenerating(true);
 
     try {
-      const response = await mongoDBService.generateAdminFeedback({
-        feedbackType: 'failed',
-        roundNumber: Number(roundNumber) || null,
-        roundName: normalizedRoundName,
-        companyName: roundContext.companyName || '',
-        jobRole: roundContext.jobRole || '',
-        studentCount: Number(visibleIneligibleCount) || 0,
-        baseText: feedback
-      });
+      const response = await mongoDBService.analyzeFeedback(feedback);
 
-      const generatedText = (response?.feedback || '').toString().trim();
-      if (generatedText) {
-        setFeedback(generatedText);
+      if (response && response.success && response.feedback) {
+        setFeedback(response.feedback);
         setAiGenerated(true);
       } else {
         setGenerateError('No text was generated. Please try again.');
@@ -355,9 +345,9 @@ export const AdminFailedPopup = ({
                     gap: '0.35rem',
                     alignItems: 'center',
                     padding: '0.32rem',
-                    backgroundColor: '#f9fbff',
+                    backgroundColor: 'rgb(249, 249, 249)',
                     borderRadius: '8px',
-                    border: '1px solid #dde6f4',
+                    border: '1px solid rgb(218, 218, 218)',
                     height: '53.6px',
                     boxSizing: 'border-box',
                     minWidth: 0
@@ -390,10 +380,10 @@ export const AdminFailedPopup = ({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
-                    border: '1px solid #def4dd',
+                    border: '1px solid rgb(218, 218, 218)',
                     borderRadius: '8px',
                     height: FIELD_HEIGHT,
-                    padding: '0.9rem', backgroundColor: '#f9fff9',
+                    padding: '0.9rem', backgroundColor: 'rgb(249, 249, 249)',
                     fontSize: '0.84rem',
                     lineHeight: 1.2,
                     userSelect: 'none', boxSizing: 'border-box', width: '100%',
@@ -424,7 +414,7 @@ export const AdminFailedPopup = ({
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', padding: '0.4rem', backgroundColor: '#f9fbff', borderRadius: '8px', border: '1px solid #dde6f4', height: '53.6px', boxSizing: 'border-box', minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', padding: '0.4rem', backgroundColor: 'rgb(249, 249, 249)', borderRadius: '8px', border: '1px solid rgb(218, 218, 218)', height: '53.6px', boxSizing: 'border-box', minWidth: 0 }}>
                     <input type="radio" id="afp-failed-ai-enable" name="afp-failed-ai" checked={aiEnabled} onChange={() => setAiEnabled(true)} style={{ display: 'none' }} />
                     <label htmlFor="afp-failed-ai-enable" style={{ flex: 1, textAlign: 'center', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s ease-in-out', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? color.primary : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? `0 2px 8px ${color.primaryShadow}` : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
                     <input type="radio" id="afp-failed-ai-disable" name="afp-failed-ai" checked={!aiEnabled} onChange={() => setAiEnabled(false)} style={{ display: 'none' }} />
@@ -439,10 +429,10 @@ export const AdminFailedPopup = ({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: '8px',
-                      border: '1px solid #def4dd',
+                      border: '1px solid rgb(218, 218, 218)',
                       borderRadius: '8px',
                       height: FIELD_HEIGHT,
-                      padding: '0.9rem', backgroundColor: '#f9fff9',
+                      padding: '0.9rem', backgroundColor: 'rgb(249, 249, 249)',
                       fontSize: '0.84rem',
                       lineHeight: 1.2,
                       userSelect: 'none', boxSizing: 'border-box', width: '100%',
@@ -491,16 +481,19 @@ export const AdminFailedPopup = ({
                 <div style={{ position: 'relative' }}>
                   <SFPScrollTextarea value={feedback} onChange={(e) => { setFeedback(e.target.value); setAiGenerated(false); }} readOnly={isGenerating} height={112} placeholder="Write your feedback here..." />
                   {isGenerating && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.78)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
-                      <div style={{ width: '22px', height: '22px', border: `3px solid ${color.focusRing}`, borderTop: `3px solid ${color.primary}`, borderRadius: '50%', animation: 'afpFailedSpin 0.85s linear infinite' }} />
-                      <div style={{ marginTop: '8px', fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Generating feedback...</div>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '16px', height: '16px', border: `2px solid ${color.focusRing || 'rgba(0,0,0,0.1)'}`, borderTop: `2px solid ${color.primary}`, borderRadius: '50%', animation: 'afpFailedSpin 0.85s linear infinite' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
                       <style>{`@keyframes afpFailedSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
                     </div>
                   )}
                   {aiEnabled && (
                     <div style={{ position: 'absolute', bottom: '8px', right: '18px', display: 'flex', gap: '6px', zIndex: 1 }}>
                       <button onClick={() => { setFeedback(''); setGenerateError(''); setAiGenerated(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)' }}>Clear</button>
-                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>Generate</button>
+                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>{isGenerating ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
@@ -514,16 +507,19 @@ export const AdminFailedPopup = ({
                 <div style={{ position: 'relative' }}>
                   <SFPScrollTextarea value={feedback} onChange={(e) => { setFeedback(e.target.value); setAiGenerated(false); }} readOnly={isGenerating} height={158} placeholder="Write your feedback here..." />
                   {isGenerating && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.78)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
-                      <div style={{ width: '24px', height: '24px', border: `3px solid ${color.focusRing}`, borderTop: `3px solid ${color.primary}`, borderRadius: '50%', animation: 'afpFailedSpin 0.85s linear infinite' }} />
-                      <div style={{ marginTop: '9px', fontSize: '0.82rem', fontWeight: 600, color: '#555' }}>Generating feedback...</div>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '16px', height: '16px', border: `2px solid ${color.focusRing || 'rgba(0,0,0,0.1)'}`, borderTop: `2px solid ${color.primary}`, borderRadius: '50%', animation: 'afpFailedSpin 0.85s linear infinite' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
                       <style>{`@keyframes afpFailedSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
                     </div>
                   )}
                   {aiEnabled && (
                     <div style={{ position: 'absolute', bottom: '8px', right: '18px', display: 'flex', gap: '6px', zIndex: 1 }}>
                       <button onClick={() => { setFeedback(''); setGenerateError(''); setAiGenerated(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)' }}>Clear</button>
-                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>Generate</button>
+                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>{isGenerating ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>

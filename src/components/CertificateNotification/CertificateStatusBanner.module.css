@@ -56,6 +56,11 @@
   background-color: #D23B42;
 }
 
+/* Semester status - Orange */
+.banner.semesterResult {
+  background-color: #F99245;
+}
+
 .iconWrapper {
   display: flex;
   align-items: center;

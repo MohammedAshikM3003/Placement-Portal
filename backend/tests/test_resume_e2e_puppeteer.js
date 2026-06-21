@@ -247,10 +247,25 @@ async function runE2EValidation() {
     // Fetch and check active saved resume record from MongoDB directly
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
+      let detectedFamily = undefined;
+      try {
+        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/placement-portal';
+        const match = uri.match(/@([^:\/\?]+)/);
+        if (match && match[1]) {
+          const firstHost = match[1].split(',')[0];
+          const dns = require('dns').promises;
+          const lookup = await dns.lookup(firstHost);
+          detectedFamily = lookup.family;
+          console.log(`[Phase 6] Network auto-detected: forcing family ${detectedFamily} for host ${firstHost}`);
+        }
+      } catch (dnsError) {
+        console.warn('[Phase 6] Network auto-detection failed:', dnsError.message);
+      }
+
       await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/placement-portal', {
-        family: 6,
-        serverSelectionTimeoutMS: 15000,
-        connectTimeoutMS: 15000
+        family: detectedFamily,
+        serverSelectionTimeoutMS: 20000,
+        connectTimeoutMS: 20000
       });
     }
 
