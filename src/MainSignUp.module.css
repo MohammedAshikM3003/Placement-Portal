@@ -74,7 +74,6 @@
   border-top-left-radius: 16px;
   border-bottom-left-radius: 16px;
   position: relative;
-  top: 50px;
 }
 
 .leftSection {
@@ -287,28 +286,28 @@
     top: 20px;
     bottom: 20px;
   }
-  
+
   .leftSide {
     width: 50%;
     padding: 30px 40px;
   }
-  
+
   .signupFormArea {
     padding: 20px 30px 0;
   }
-  
+
   .signupTitle {
     font-size: 40px;
   }
-  
+
   .rightTitle {
     font-size: 22px;
   }
-  
+
   .rightSubtitle {
     font-size: 28px;
   }
-  
+
   .dripDecoration {
     width: 700px;
     left: -80px;
@@ -320,13 +319,13 @@
   .pageContainer::before {
     display: none;
   }
-  
+
   .mainLayout {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
+
   .shadowFrame {
     position: relative;
     flex-direction: column;
@@ -338,45 +337,45 @@
     max-width: 500px;
     margin: 0 auto;
   }
-  
+
   .rightSide {
     display: none;
   }
-  
+
   .leftSide {
     width: 100%;
     padding: 30px 24px;
     top: 0;
   }
-  
+
   .signupFormArea {
     padding: 20px 30px 0;
   }
-  
+
   .signupTitle {
     font-size: 36px;
     margin-bottom: 24px;
   }
-  
+
   .buttonField {
     margin-bottom: 18px;
   }
-  
+
   .ugButton,
   .pgButton {
     height: 48px;
     font-size: 15px;
   }
-  
+
   .footerText {
     font-size: 15px;
     margin-top: 28px;
   }
-  
+
   .link {
     font-size: 15px;
   }
-  
+
   /* Drips show from left, same size as login page */
   .dripDecoration {
     width: 360px;
@@ -391,20 +390,22 @@
 /* Mobile devices */
 @media (max-width: 480px) {
   .pageContainer {
-    height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    height: 100dvh;
+    /* Dynamic viewport height for mobile browsers */
   }
-  
+
   .pageContainer::before {
-    display: none; /* Hide decorative pill on small screens */
+    display: none;
+    /* Hide decorative pill on small screens */
   }
-  
+
   .mainLayout {
     height: calc(100dvh - 70px);
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
+
   .shadowFrame {
     position: relative;
     left: auto;
@@ -416,30 +417,30 @@
     margin: 0 auto;
     border-radius: 12px;
   }
-  
+
   .leftSide {
     padding: 20px 20px;
     border-radius: 12px;
   }
-  
+
   .signupFormArea {
     padding: 20px 20px 0;
   }
-  
+
   .signupTitle {
     font-size: 32px;
     margin-bottom: 20px;
   }
-  
+
   .buttonField {
     margin-bottom: 16px;
   }
-  
+
   .buttonFieldLabel {
     font-size: 13px;
     margin-bottom: 6px;
   }
-  
+
   .ugButton,
   .pgButton {
     height: 46px;
@@ -447,22 +448,22 @@
     gap: 10px;
     border-radius: 8px;
   }
-  
+
   .ugButton svg,
   .pgButton svg {
     width: 18px;
     height: 14px;
   }
-  
+
   .footerText {
     margin-top: 24px;
     font-size: 14px;
   }
-  
+
   .link {
     font-size: 14px;
   }
-  
+
   /* Drips smaller on mobile */
   .dripDecoration {
     width: 278px;
@@ -483,46 +484,46 @@
     width: calc(100% - 16px);
     margin: 0 auto;
   }
-  
+
   .leftSide {
     padding: 16px 16px;
   }
-  
+
   .signupFormArea {
     padding: 16px 16px 0;
   }
-  
+
   .signupTitle {
     font-size: 28px;
     margin-bottom: 18px;
   }
-  
+
   .buttonField {
     margin-bottom: 14px;
   }
-  
+
   .ugButton,
   .pgButton {
     height: 44px;
     font-size: 13px;
     gap: 8px;
   }
-  
+
   .ugButton svg,
   .pgButton svg {
     width: 16px;
     height: 12px;
   }
-  
+
   .footerText {
     margin-top: 20px;
     font-size: 13px;
   }
-  
+
   .link {
     font-size: 13px;
   }
-  
+
   .dripDecoration {
     width: 250px;
     left: -10px;
@@ -534,7 +535,7 @@
   .mainLayout {
     overflow-y: auto;
   }
-  
+
   .shadowFrame {
     position: relative;
     top: 0;
@@ -544,32 +545,32 @@
     left: 0;
     right: 0;
   }
-  
+
   .leftSide {
     padding: 16px 20px;
     justify-content: flex-start;
     overflow-y: auto;
   }
-  
+
   .signupFormArea {
     padding: 16px 20px 16px;
   }
-  
+
   .signupTitle {
     font-size: 24px;
     margin-bottom: 16px;
   }
-  
+
   .buttonField {
     margin-bottom: 12px;
   }
-  
+
   .ugButton,
   .pgButton {
     height: 40px;
     font-size: 14px;
   }
-  
+
   .footerText {
     margin-top: 16px;
     margin-bottom: 16px;
@@ -582,12 +583,12 @@
     padding-top: 20px;
     padding-bottom: 20px;
   }
-  
+
   .signupTitle {
     font-size: 40px;
     margin-bottom: 20px;
   }
-  
+
   .buttonField {
     margin-bottom: 18px;
   }
@@ -600,7 +601,7 @@
     padding-top: 15px;
     overflow-y: auto;
   }
-  
+
   .signupTitle {
     font-size: 32px;
     margin-bottom: 20px;
@@ -609,13 +610,14 @@
 
 /* Touch device improvements */
 @media (hover: none) and (pointer: coarse) {
+
   .ugButton,
   .pgButton,
   .link {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  
+
   .ugButton:active,
   .pgButton:active {
     transform: translateY(0);

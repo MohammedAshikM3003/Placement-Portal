@@ -48,6 +48,107 @@ const normalizeSemRoman = (value) => {
     return raw;
 };
 
+const AI_EXTRA_COLUMNS = {
+    driveCount: {
+        label: 'Drives Attended',
+        value: (student) => Number(student.driveCount || 0),
+    },
+    lastDriveDate: {
+        label: 'Last Drive',
+        value: (student) => (student.lastDriveDate ? new Date(student.lastDriveDate).toLocaleDateString() : '-'),
+    },
+    blocked: {
+        label: 'Blocked',
+        value: (student) => (student.blocked ? 'Yes' : 'No'),
+    },
+    cgpa: {
+        label: 'CGPA',
+        value: (student) => student.cgpa || '-',
+    },
+    skills: {
+        label: 'Skills',
+        value: (student) => {
+            const skills = student.skills || '';
+            return skills.length > 30 ? skills.substring(0, 30) + '...' : (skills || '-');
+        },
+    },
+    backlogs: {
+        label: 'Backlogs',
+        value: (student) => student.backlogs || '0',
+    },
+    tenthPercentage: {
+        label: '10th %',
+        value: (student) => student.tenthPercentage || '-',
+    },
+    twelfthPercentage: {
+        label: '12th %',
+        value: (student) => student.twelfthPercentage || '-',
+    },
+    placementStatus: {
+        label: 'Placement',
+        value: (student) => student.isPlaced ? 'Placed' : 'Not Placed',
+        render: (student) => (
+            <span style={{
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                backgroundColor: student.isPlaced ? '#d4edda' : '#fff3cd',
+                color: student.isPlaced ? '#155724' : '#856404',
+            }}>
+                {student.isPlaced ? 'Placed' : 'Not Placed'}
+            </span>
+        ),
+    },
+    placedCompany: {
+        label: 'Company',
+        value: (student) => student.placedCompany || '-',
+    },
+    package: {
+        label: 'Package',
+        value: (student) => student.package || '-',
+    },
+    eligibleDrives: {
+        label: 'Eligible Drives',
+        value: (student) => Number(student.eligibleDriveCount || 0),
+    },
+    firstGraduate: {
+        label: 'First Graduate',
+        value: (student) => student.firstGraduate || '-',
+    },
+    willingToSignBond: {
+        label: 'Willing to Bond',
+        value: (student) => student.willingToSignBond || '-',
+    },
+    residentialStatus: {
+        label: 'Residential Status',
+        value: (student) => student.residentialStatus || '-',
+    },
+    quota: {
+        label: 'Quota',
+        value: (student) => student.quota || '-',
+    },
+    preferredModeOfDrive: {
+        label: 'Pref. Mode',
+        value: (student) => student.preferredModeOfDrive || '-',
+    },
+    hasProfilePic: {
+        label: 'Photo Uploaded',
+        value: (student) => student.profilePicURL ? 'Yes' : 'No',
+        render: (student) => (
+            <span style={{
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                backgroundColor: student.profilePicURL ? '#d4edda' : '#f8d7da',
+                color: student.profilePicURL ? '#155724' : '#721c24',
+            }}>
+                {student.profilePicURL ? 'Yes' : 'No'}
+            </span>
+        ),
+    },
+};
 
 const readStoredCoordinatorData = () => {
     if (typeof window === 'undefined') return null;
@@ -366,6 +467,16 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     const [viewBlocklist, setViewBlocklist] = useState(false);
     const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
 
+    // AI Filter state variables
+    const [isAIFilterMode, setIsAIFilterMode] = useState(false);
+    const [aiFilterText, setAiFilterText] = useState('');
+    const [aiFilteredStudents, setAiFilteredStudents] = useState([]);
+    const [aiFilterColumns, setAiFilterColumns] = useState([]);
+    const [aiFilterActive, setAiFilterActive] = useState(false);
+    const [aiFilterLoading, setAiFilterLoading] = useState(false);
+    const [aiFilterReason, setAiFilterReason] = useState('');
+    const [aiTooltip, setAiTooltip] = useState({ visible: false, x: 0, y: 0 });
+
     const mapStudentRecord = useCallback(
         (student) => {
             if (!student) return null;
@@ -411,6 +522,33 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 resume: Boolean(resume),
                 placement,
                 blocked: Boolean(blockedValue),
+                // Attendance data
+                driveCount: Number(student.driveCount || 0),
+                lastDriveDate: student.lastDriveDate || '',
+                attendedCompanies: student.attendedCompanies || [],
+                attendedRoles: student.attendedRoles || [],
+                // Academic data
+                cgpa: student.cgpa || student.overallCGPA || '',
+                skills: student.skills || student.skillSet || '',
+                backlogs: student.backlogs || student.currentBacklogs || '0',
+                tenthPercentage: student.tenthPercentage || '',
+                twelfthPercentage: student.twelfthPercentage || '',
+                gender: student.gender || '',
+                city: student.city || '',
+                firstGraduate: student.firstGraduate || '',
+                willingToSignBond: student.willingToSignBond || '',
+                residentialStatus: student.residentialStatus || '',
+                quota: student.quota || '',
+                preferredModeOfDrive: student.preferredModeOfDrive || '',
+                // Placement data
+                isPlaced: Boolean(student.isPlaced),
+                placedCompany: student.placedCompany || '',
+                placedRole: student.placedRole || '',
+                package: student.package || '',
+                placedDate: student.placedDate || '',
+                // Eligibility data
+                eligibleDriveCount: Number(student.eligibleDriveCount || 0),
+                eligibleCompanies: student.eligibleCompanies || [],
             };
         },
         [coordinatorDepartment]
@@ -469,9 +607,68 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         setFilterSection(selectedSection);
         
         setFilterSearch(selectedSearch.trim());
-        
+        setAiFilterActive(false);
 
         setViewBlocklist(false);
+    };
+
+    const handleToggleFilterMode = () => {
+        setViewBlocklist(false);
+        setIsAIFilterMode(prev => !prev);
+    };
+
+    const handleApplyAIFilter = () => {
+        const prompt = aiFilterText.trim();
+        if (!prompt) {
+            return;
+        }
+
+        setViewBlocklist(false);
+        setAiFilterLoading(true);
+        setAiFilterReason('');
+
+        mongoDBService.aiFilterStudents(prompt)
+            .then((response) => {
+                const mappedStudents = (Array.isArray(response?.students) ? response.students : [])
+                    .map((student) => mapStudentRecord(student))
+                    .filter(Boolean);
+                setAiFilteredStudents(mappedStudents);
+                setAiFilterColumns(Array.isArray(response?.columns) ? response.columns.filter((column) => AI_EXTRA_COLUMNS[column]) : []);
+                setAiFilterActive(true);
+                setAiFilterReason(response?.reason || '');
+            })
+            .catch((error) => {
+                console.error('AI filter failed:', error);
+                alert(error.message || 'AI filter failed. Please make sure the local AI service is running and try again.');
+                setAiFilteredStudents([]);
+                setAiFilterColumns([]);
+                setAiFilterActive(false);
+                setAiFilterReason('');
+            })
+            .finally(() => {
+                setAiFilterLoading(false);
+            });
+    };
+
+    const handleDiscardAIFilter = () => {
+        setAiFilterText('');
+        setAiFilteredStudents([]);
+        setAiFilterColumns([]);
+        setAiFilterActive(false);
+        setAiFilterReason('');
+    };
+
+    const handleAiTooltipMove = (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setAiTooltip({
+            visible: true,
+            x: rect.left + (rect.width / 2),
+            y: rect.bottom + 10,
+        });
+    };
+
+    const handleAiTooltipLeave = () => {
+        setAiTooltip(prev => (prev.visible ? { ...prev, visible: false } : prev));
     };
 
     const handleStudentSelect = (id) => {
@@ -485,12 +682,14 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             return newIds;
         });
     };
+
+    const activeStudentSource = aiFilterActive ? aiFilteredStudents : students;
     
     const selectedStudents = useMemo(() => {
         if (!selectedStudentIds.size) return [];
         const selectedIds = new Set(selectedStudentIds);
-        return students.filter(student => selectedIds.has(student.id));
-    }, [students, selectedStudentIds]);
+        return activeStudentSource.filter(student => selectedIds.has(student.id));
+    }, [activeStudentSource, selectedStudentIds]);
 
     const hasBlockedSelection = selectedStudents.some(student => student.blocked);
     const hasUnblockedSelection = selectedStudents.some(student => !student.blocked);
@@ -523,8 +722,11 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 blockedReason: 'Your account has been blocked by the placement coordinator. Please contact the placement office for more information.'
             })));
 
-            await publishBlockNotifications('blocked', ids.map(id => students.find(student => student.id === id)).filter(Boolean));
+            await publishBlockNotifications('blocked', ids.map(id => activeStudentSource.find(student => student.id === id)).filter(Boolean));
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: true } : student));
+            if (aiFilterActive) {
+                setAiFilteredStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: true } : student));
+            }
             setSelectedStudentIds(new Set());
             setIsBlockedPopupOpen(true);
         } catch (error) {
@@ -559,9 +761,12 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 // Non-critical error, continue
             }
 
-            await publishBlockNotifications('unblocked', ids.map(id => students.find(student => student.id === id)).filter(Boolean));
+            await publishBlockNotifications('unblocked', ids.map(id => activeStudentSource.find(student => student.id === id)).filter(Boolean));
             
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: false } : student));
+            if (aiFilterActive) {
+                setAiFilteredStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: false } : student));
+            }
             setSelectedStudentIds(new Set());
             setIsUnblockedPopupOpen(true);
         } catch (error) {
@@ -591,6 +796,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         try {
             await Promise.all(ids.map(id => mongoDBService.deleteStudent(id)));
             setStudents(prev => prev.filter(student => !ids.includes(student.id)));
+            if (aiFilterActive) {
+                setAiFilteredStudents(prev => prev.filter(student => !ids.includes(student.id)));
+            }
             setSelectedStudentIds(new Set());
             setDeleteWarningOpen(false);
             setStudentDeletedPopupOpen(true);
@@ -680,20 +888,21 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
 
 
     // Derived State (This is the active filtering logic)
-    const normalizedStudents = students;
-
     const sectionOptions = useMemo(() => {
         const set = new Set();
-        for (const s of normalizedStudents) {
+        for (const s of students) {
             const sec = (s?.section ?? '').toString().trim();
             if (sec) set.add(sec);
         }
         return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [normalizedStudents]);
+    }, [students]);
 
     const filteredStudents = useMemo(() => {
+        if (aiFilterActive) {
+            return aiFilteredStudents;
+        }
         const normalizedDeptFilter = (filterDept || '').toString().toUpperCase();
-        return normalizedStudents.filter(student => {
+        return students.filter(student => {
             const studentDept = (student.department || '').toString().toUpperCase();
             const deptMatches = normalizedDeptFilter === '' || studentDept === normalizedDeptFilter;
             const batchMatches = filterBatch === '' || student.batch === filterBatch;
@@ -711,11 +920,14 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             const searchMatches = q === '' || nameMatches || regNoMatches;
             return deptMatches && batchMatches && yearMatches && semMatches && sectionMatches && searchMatches;
         });
-    }, [normalizedStudents, filterDept, filterBatch, filterYear, filterSem, filterSection, filterSearch]);
+    }, [aiFilterActive, aiFilteredStudents, students, filterDept, filterBatch, filterYear, filterSem, filterSection, filterSearch]);
       
-    
     const blockedStudents = useMemo(() => filteredStudents.filter(s => s.blocked), [filteredStudents]);
     const visibleStudents = viewBlocklist ? blockedStudents : filteredStudents;
+
+    const aiColumns = aiFilterActive ? aiFilterColumns.filter((column) => AI_EXTRA_COLUMNS[column]) : [];
+    const tableColumnCount = 9 + aiColumns.length;
+    const isTableLoading = isLoading || aiFilterLoading;
     
     // Function to simulate progress and handle export
     const simulateExport = async (operation, exportFunction) => {
@@ -755,18 +967,40 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         }
     };
 
+    const getExportColumns = () => {
+        const baseColumns = [
+            { key: 'regNo', label: 'Reg No' },
+            { key: 'name', label: 'Name' },
+            { key: 'batch', label: 'Batch' },
+            { key: 'section', label: 'Section' },
+            { key: 'phone', label: 'Phone' },
+            { key: 'status', label: 'Status' }
+        ];
+
+        const extraColumns = aiColumns.map((columnKey) => ({
+            key: columnKey,
+            label: AI_EXTRA_COLUMNS[columnKey].label,
+        }));
+
+        return [...baseColumns, ...extraColumns];
+    };
+
+    const getExportValue = (student, columnKey) => {
+        if (columnKey === 'status') {
+            return student.blocked ? "Blocked" : "Active";
+        }
+        if (AI_EXTRA_COLUMNS[columnKey]) {
+            return AI_EXTRA_COLUMNS[columnKey].value(student);
+        }
+        return student[columnKey] ?? '';
+    };
+
     // 4. Implement exportToExcel
     const exportToExcel = () => {
         try {
-            const data = visibleStudents.map(student => [
-                student.regNo,
-                student.name,
-                student.batch,
-                student.section,
-                student.phone,
-                student.blocked ? "Blocked" : "Active"
-            ]);
-            const header = ["Reg No", "Name", "Batch", "Section", "Phone", "Status"];
+            const exportColumns = getExportColumns();
+            const header = exportColumns.map(col => col.label);
+            const data = visibleStudents.map(student => exportColumns.map(col => getExportValue(student, col.key)));
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Students");
@@ -786,19 +1020,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     const exportToPDF = () => {
         try {
             const doc = new jsPDF("landscape");
-            const columns = [
-              "Reg No", "Name", "Batch", "Section",
-              "Phone", "Status"
-            ];
-          
-            const rows = visibleStudents.map(student => [
-              student.regNo,
-              student.name,
-              student.batch,
-              student.section,
-              student.phone,
-              student.blocked ? "Blocked" : "Active",
-            ]);
+            const exportColumns = getExportColumns();
+            const columns = exportColumns.map(col => col.label);
+            const rows = visibleStudents.map(student => exportColumns.map(col => getExportValue(student, col.key)));
           
             doc.text("Students Report", 14, 15);
           
@@ -841,145 +1065,207 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                     <div className={styles["co-ms-top-card"]}>
                         
                         {/* Filter Section */}
-                        <div className={styles["co-ms-filter-section"]}>
+                        <div className={cx(styles["co-ms-filter-section"], isAIFilterMode && styles["co-ms-filter-section-ai-mode"])}>
                             <div className={styles["co-ms-filter-header-container"]}>
-                                <div className={styles["co-ms-filter-header"]}>Filter & Sort</div>
-                                
-                            </div>
-                            <div className={styles["co-ms-filter-content"]}>
-                            <div className={styles["co-ms-floating-input-container"]}>
-                                <input
-                                    className={styles["co-ms-floating-input"]}
-                                    placeholder="Name/RegNo"
-                                    value={selectedSearch}
-                                    onChange={(e) => setSelectedSearch(e.target.value)}
-                                />
-                                <label className={styles["co-ms-floating-label"]}>Name/Reg No</label>
-                            </div>
-
-                            {/* MODIFICATION: Swapped position with Batch Dropdown */}
-                            <div className={styles["co-ms-batch-range"]}>
-                                <div className={styles["co-ms-batch-range-label"]}>
-                                    Batch <span className={styles["co-ms-batch-range-required"]}>*</span>
+                                <div className={styles["co-ms-filter-header"]}>
+                                    {isAIFilterMode ? 'AI-Filter' : 'Filter & Sort'}
                                 </div>
-                                <div className={styles["co-ms-batch-range-inputs"]}>
-                                    <div className={styles["co-ms-batch-range-field"]}>
-                                        <input
-                                            className={styles["co-ms-batch-range-input"]}
-                                            placeholder="Start"
-                                            inputMode="numeric"
-                                            value={selectedBatchStart}
-                                            onChange={(e) => {
-                                                const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
-                                                setSelectedBatchStart(start);
-
-                                                if (!start) {
-                                                    setSelectedBatchEnd('');
-                                                    setSelectedBatch('');
-                                                    return;
-                                                }
-
-                                                const startNum = Number.parseInt(start, 10);
-                                                const endNum = Number.isFinite(startNum) ? startNum + 4 : '';
-                                                const endStr = endNum ? `${endNum}` : '';
-                                                setSelectedBatchEnd(endStr);
-                                                setSelectedBatch(endStr ? `${start}-${endStr}` : start);
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className={styles["co-ms-batch-range-sep"]}>-</div>
-
-                                    <div className={styles["co-ms-batch-range-field"]}>
-                                        <input
-                                            className={styles["co-ms-batch-range-input"]}
-                                            placeholder="End"
-                                            value={selectedBatchEnd}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles["co-ms-section-filter"]}>
-                                <div className={styles["co-ms-section-filter-label"]}>Section</div>
-                                <select
-                                    className={styles["co-ms-section-filter-select"]}
-                                    value={selectedSection}
-                                    onChange={(e) => setSelectedSection(e.target.value)}
+                                <button
+                                    type="button"
+                                    className={styles["co-ms-ai-toggle-btn"]}
+                                    onClick={handleToggleFilterMode}
+                                    aria-label="AI Filter"
+                                    onMouseEnter={handleAiTooltipMove}
+                                    onMouseMove={handleAiTooltipMove}
+                                    onMouseLeave={handleAiTooltipLeave}
                                 >
-                                    <option value="">Section</option>
-                                    {sectionOptions.map((sec) => (
-                                        <option key={sec} value={sec}>
-                                            {sec}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            
-                            <div className={styles["co-ms-yearsem-range"]}>
-                                <div className={styles["co-ms-yearsem-range-label"]}>Year-Sem</div>
-                                <div className={styles["co-ms-yearsem-range-inputs"]}>
-                                    <div className={styles["co-ms-yearsem-range-field"]}>
-                                        <select
-                                            className={styles["co-ms-yearsem-range-select"]}
-                                            value={selectedYear}
-                                            onChange={(e) => {
-                                                const year = (e.target.value || '').toString();
-                                                setSelectedYear(year);
-                                                setSelectedSem('');
-                                            }}
-                                        >
-                                            <option value="">Year</option>
-                                            {YEAR_OPTIONS.map((y) => (
-                                                <option key={y} value={y}>
-                                                    {y}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className={styles["co-ms-yearsem-range-sep"]}>-</div>
-
-                                    <div className={styles["co-ms-yearsem-range-field"]}>
-                                        <select
-                                            className={styles["co-ms-yearsem-range-select"]}
-                                            value={selectedSem}
-                                            disabled={!selectedYear}
-                                            onChange={(e) => setSelectedSem(e.target.value)}
-                                        >
-                                            <option value="">Sem</option>
-                                            {(SEM_OPTIONS_BY_YEAR[selectedYear] || []).map((s) => (
-                                                <option key={s} value={s}>
-                                                    {s}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                                <div className={styles["co-ms-button-group"]}>
-                                    <button 
-                                        className={cx(styles["co-ms-button"], styles["co-ms-view-students-btn"])} 
-                                        // NEW: Call applyFilters to set the state and filter the table
-                                        onClick={applyFilters}
+                                    {isAIFilterMode ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="1.5" d="M21.25 12H8.895m-4.361 0H2.75m18.5 6.607h-5.748m-4.361 0H2.75m18.5-13.214h-3.105m-4.361 0H2.75m13.214 2.18a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm-9.25 6.607a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm6.607 6.608a2.18 2.18 0 1 0 0-4.361a2.18 2.18 0 0 0 0 4.36Z"/>
+                                        </svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <g fill="none">
+                                                <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/>
+                                                <path fill="currentColor" d="M9.107 5.448c.598-1.75 3.016-1.803 3.725-.159l.06.16l.807 2.36a4 4 0 0 0 2.276 2.411l.217.081l2.36.806c1.75.598 1.803 3.016.16 3.725l-.16.06l-2.36.807a4 4 0 0 0-2.412 2.276l-.081.216l-.806 2.361c-.598 1.75-3.016 1.803-3.724.16l-.062-.16l-.806-2.36a4 4 0 0 0-2.276-2.412l-.216-.081l-2.36-.806c-1.751-.598-1.804-3.016-.16-3.724l.16-.062l2.36-.806A4 4 0 0 0 8.22 8.025l.081-.216zM11 6.094l-.806 2.36a6 6 0 0 1-3.49 3.649l-.25.091l-2.36.806l2.36.806a6 6 0 0 1 3.649 3.49l.091.25l.806 2.36l.806-2.36a6 6 0 0 1 3.49-3.649l.25-.09l2.36-.807l-2.36-.806a6 6 0 0 1-3.649-3.49l-.09-.25zM19 2a1 1 0 0 1 .898.56l.048.117l.35 1.026l1.027.35a1 1 0 0 1 .118 1.845l-.118.048l-1.026.35l-.35 1.027a1 1 0 0 1-1.845.117l-.048-.117l-.35-1.026l-1.027-.35a1 1 0 0 1-.118-1.845l.118-.048l1.026-.35l.35-1.027A1 1 0 0 1 19 2"/>
+                                            </g>
+                                        </svg>
+                                    )}
+                                </button>
+                                {aiTooltip.visible && (
+                                    <div
+                                        className={styles["co-ms-ai-pointer-tooltip"]}
+                                        style={{ left: `${aiTooltip.x}px`, top: `${aiTooltip.y}px`, transform: 'translateX(-50%)' }}
                                     >
-                                        View Students
-                                    </button>
-                                    <button className={cx(styles["co-ms-button"], styles["co-ms-blocklist-btn"])} 
-                                        onClick={() => {
-                                            // The department filter is already aligned with the coordinator's department
-                                            setFilterBatch(selectedBatch);
-                                            setFilterYear(selectedYear);
-                                            setFilterSem(selectedSem);
-                                            setFilterSection(selectedSection);
-                                            setViewBlocklist(true);
-                                        }}
-                                    > Blocklist</button>
-                                </div>
+                                        {isAIFilterMode ? 'Filter & Sort' : 'AI Filter'}
+                                    </div>
+                                )}
                             </div>
+                            {!isAIFilterMode ? (
+                                <div className={styles["co-ms-filter-content"]}>
+                                    <div className={styles["co-ms-floating-input-container"]}>
+                                        <input
+                                            className={styles["co-ms-floating-input"]}
+                                            placeholder="Name/RegNo"
+                                            value={selectedSearch}
+                                            onChange={(e) => setSelectedSearch(e.target.value)}
+                                        />
+                                        <label className={styles["co-ms-floating-label"]}>Name/Reg No</label>
+                                    </div>
+
+                                    {/* MODIFICATION: Swapped position with Batch Dropdown */}
+                                    <div className={styles["co-ms-batch-range"]}>
+                                        <div className={styles["co-ms-batch-range-label"]}>
+                                            Batch <span className={styles["co-ms-batch-range-required"]}>*</span>
+                                        </div>
+                                        <div className={styles["co-ms-batch-range-inputs"]}>
+                                            <div className={styles["co-ms-batch-range-field"]}>
+                                                <input
+                                                    className={styles["co-ms-batch-range-input"]}
+                                                    placeholder="Start"
+                                                    inputMode="numeric"
+                                                    value={selectedBatchStart}
+                                                    onChange={(e) => {
+                                                        const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
+                                                        setSelectedBatchStart(start);
+
+                                                        if (!start) {
+                                                            setSelectedBatchEnd('');
+                                                            setSelectedBatch('');
+                                                            return;
+                                                        }
+
+                                                        const startNum = Number.parseInt(start, 10);
+                                                        const endNum = Number.isFinite(startNum) ? startNum + 4 : '';
+                                                        const endStr = endNum ? `${endNum}` : '';
+                                                        setSelectedBatchEnd(endStr);
+                                                        setSelectedBatch(endStr ? `${start}-${endStr}` : start);
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className={styles["co-ms-batch-range-sep"]}>-</div>
+
+                                            <div className={styles["co-ms-batch-range-field"]}>
+                                                <input
+                                                    className={styles["co-ms-batch-range-input"]}
+                                                    placeholder="End"
+                                                    value={selectedBatchEnd}
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles["co-ms-section-filter"]}>
+                                        <div className={styles["co-ms-section-filter-label"]}>Section</div>
+                                        <select
+                                            className={styles["co-ms-section-filter-select"]}
+                                            value={selectedSection}
+                                            onChange={(e) => setSelectedSection(e.target.value)}
+                                        >
+                                            <option value="">Section</option>
+                                            {sectionOptions.map((sec) => (
+                                                <option key={sec} value={sec}>
+                                                    {sec}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
+                                    <div className={styles["co-ms-yearsem-range"]}>
+                                        <div className={styles["co-ms-yearsem-range-label"]}>Year-Sem</div>
+                                        <div className={styles["co-ms-yearsem-range-inputs"]}>
+                                            <div className={styles["co-ms-yearsem-range-field"]}>
+                                                <select
+                                                    className={styles["co-ms-yearsem-range-select"]}
+                                                    value={selectedYear}
+                                                    onChange={(e) => {
+                                                        const year = (e.target.value || '').toString();
+                                                        setSelectedYear(year);
+                                                        setSelectedSem('');
+                                                    }}
+                                                >
+                                                    <option value="">Year</option>
+                                                    {YEAR_OPTIONS.map((y) => (
+                                                        <option key={y} value={y}>
+                                                            {y}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className={styles["co-ms-yearsem-range-sep"]}>-</div>
+
+                                            <div className={styles["co-ms-yearsem-range-field"]}>
+                                                <select
+                                                    className={styles["co-ms-yearsem-range-select"]}
+                                                    value={selectedSem}
+                                                    disabled={!selectedYear}
+                                                    onChange={(e) => setSelectedSem(e.target.value)}
+                                                >
+                                                    <option value="">Sem</option>
+                                                    {(SEM_OPTIONS_BY_YEAR[selectedYear] || []).map((s) => (
+                                                        <option key={s} value={s}>
+                                                            {s}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles["co-ms-button-group"]}>
+                                        <button 
+                                            className={cx(styles["co-ms-button"], styles["co-ms-view-students-btn"])} 
+                                            onClick={applyFilters}
+                                        >
+                                            View Students
+                                        </button>
+                                        <button className={cx(styles["co-ms-button"], styles["co-ms-blocklist-btn"])} 
+                                            onClick={() => {
+                                                setFilterBatch(selectedBatch);
+                                                setFilterYear(selectedYear);
+                                                setFilterSem(selectedSem);
+                                                setFilterSection(selectedSection);
+                                                setViewBlocklist(true);
+                                            }}
+                                        > Blocklist</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className={styles["co-ms-ai-filter-content"]}>
+                                    <textarea
+                                        className={styles["co-ms-ai-filter-input"]}
+                                        placeholder="Try: 'show me placed students from TCS', 'CSE students with CGPA above 8', 'unplaced final year students', 'students who attended Infosys drive', 'students who know Python'"
+                                        value={aiFilterText}
+                                        onChange={(e) => setAiFilterText(e.target.value)}
+                                    />
+                                    <div className={styles["co-ms-ai-button-group"]}>
+                                        <button
+                                            type="button"
+                                            className={cx(styles["co-ms-button"], styles["co-ms-ai-apply-btn"])}
+                                            onClick={handleApplyAIFilter}
+                                            disabled={aiFilterLoading}
+                                        >
+                                            {aiFilterLoading ? 'Searching...' : 'Search'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={cx(styles["co-ms-button"], styles["co-ms-ai-discard-btn"])}
+                                            onClick={handleDiscardAIFilter}
+                                        >
+                                            Discard
+                                        </button>
+                                    </div>
+                                    {aiFilterActive && aiFilterReason && (
+                                        <div className={styles["co-ms-ai-reason"]}>
+                                            <span className={styles["co-ms-ai-reason-icon"]}>✨</span>
+                                            <span className={styles["co-ms-ai-reason-text"]}>{aiFilterReason}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Action Cards Section - No change */}
@@ -1067,7 +1353,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                     <div className={styles["co-ms-bottom-card"]}>
                         <div className={styles["co-ms-table-header-row"]}>
                             {/* Update table title to use filterDept */}
-                            <h3 className={styles["co-ms-table-title"]}>{(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE</h3>
+                            <h3 className={styles["co-ms-table-title"]}>
+                                {isTableLoading ? 'STUDENTS' : `${(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE (${visibleStudents.length})`}
+                            </h3>
                             <div className={styles["co-ms-table-actions"]}>
                                 {/* 3. Add the Print button with click handler to toggle the export menu */}
                                 <div className={styles["co-ms-print-button-container"]}>
@@ -1099,29 +1387,36 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                         <th className={cx(styles["co-ms-th"], styles["co-ms-year-sec"])}>Year-Sec</th>
                                         <th className={cx(styles["co-ms-th"], styles["co-ms-sem"])}>Sem</th>
                                         <th className={cx(styles["co-ms-th"], styles["co-ms-batch"])}>Batch</th>
+                                        {aiColumns.map((columnKey) => (
+                                            <th key={columnKey} className={cx(styles["co-ms-th"], styles["co-ms-ai-column"])}>
+                                                {AI_EXTRA_COLUMNS[columnKey].label}
+                                            </th>
+                                        ))}
                                         <th className={cx(styles["co-ms-th"], styles["co-ms-phone"])}>Phone</th>
                                         <th className={cx(styles["co-ms-th"], styles["co-ms-profile"])}>Profile</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {isLoading ? (
+                                    {isTableLoading ? (
                                         <tr className={styles["co-ms-loading-row"]}>
-                                            <td colSpan="9" className={styles["co-ms-loading-cell"]}>
+                                            <td colSpan={tableColumnCount} className={styles["co-ms-loading-cell"]}>
                                                 <div className={styles["co-ms-loading-wrapper"]}>
                                                     <div className={styles['co-ms-spinner']}></div>
-                                                    <span style={{ color: '#1f2937', fontWeight: 600, fontSize: '0.95rem' }}>Loading students…</span>
+                                                    <span style={{ color: '#1f2937', fontWeight: 600, fontSize: '0.95rem' }}>
+                                                        {aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                                                    </span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : loadError ? (
                                         <tr>
-                                            <td colSpan="9" style={{ textAlign: "center", color: "#d23b42", fontSize: "1.1rem", fontFamily: "Arial, sans-serif" }}>
+                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#d23b42", fontSize: "1.1rem", fontFamily: "Arial, sans-serif" }}>
                                                 {loadError}
                                             </td>
                                         </tr>
                                     ) : visibleStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="9" style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", fontFamily: "Arial, sans-serif" }}>
+                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", fontFamily: "Arial, sans-serif" }}>
                                                 {viewBlocklist ? "No blocked students available" : "No data available"}
                                             </td>
                                         </tr>
@@ -1153,6 +1448,13 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                                 </td>
                                                 <td className={cx(styles["co-ms-td"], styles["co-ms-sem"])}>{student.currentSemester || '--'}</td>
                                                 <td className={cx(styles["co-ms-td"], styles["co-ms-batch"])}>{student.batch}</td>
+                                                {aiColumns.map((columnKey) => (
+                                                    <td key={`${student.id}-${columnKey}`} className={cx(styles["co-ms-td"], styles["co-ms-ai-column"])}>
+                                                        {AI_EXTRA_COLUMNS[columnKey].render
+                                                            ? AI_EXTRA_COLUMNS[columnKey].render(student)
+                                                            : AI_EXTRA_COLUMNS[columnKey].value(student)}
+                                                    </td>
+                                                ))}
                                                 <td className={cx(styles["co-ms-td"], styles["co-ms-phone"])}>{student.phone}</td>
                                                 <td
                                                     className={cx(styles["co-ms-td"], styles["co-ms-profile"])}

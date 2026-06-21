@@ -187,6 +187,19 @@ function AppContent() {
   // Centralized role-based HTML theme class management (e.g. for custom scrollbars)
   useEffect(() => {
     const path = location.pathname;
+    
+    // Explicitly isolate public pages from role themes to prevent cross-tab contamination
+    const isPublicRoute = path === '/' || 
+                          path === '/mainlogin' || 
+                          path === '/signup' || 
+                          path === '/registration' || 
+                          path === '/registration-debug';
+                          
+    if (isPublicRoute) {
+      document.documentElement.classList.remove('admin-theme', 'coo-theme', 'stu-theme');
+      return;
+    }
+
     const isAdminRoute = path.includes('admin') || 
                          path.includes('saad') || 
                          path.includes('sacoo') || 

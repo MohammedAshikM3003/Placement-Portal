@@ -395,7 +395,6 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
       onClose();
       return;
     }
-    window.dispatchEvent(new CustomEvent('closeSidebar'));
     const hamburger = 
       document.querySelector('button[class*="hamburger-menu"]') || 
       document.querySelector('button[class*="hamburgerMenu"]') || 
@@ -405,6 +404,8 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
       document.querySelector('[class*="hamburgerIcon"]')?.closest('button');
     if (hamburger) {
       hamburger.click();
+    } else {
+      window.dispatchEvent(new CustomEvent('closeSidebar'));
     }
   };
 

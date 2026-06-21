@@ -9,7 +9,6 @@ import { API_BASE_URL } from '../utils/apiConfig';
 
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
-import MarksheetDisplay from '../components/MarksheetDisplay/MarksheetDisplay';
 import styles from './StuProfile.module.css'; // Module Import
 import achievementStyles from './Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/BlueAdminicon.png';
@@ -3816,17 +3815,6 @@ function StuProfile({ onLogout, onViewChange }) {
                             </button>
                         </div>
                     </form>
-
-                    {/* Marksheet Display Section */}
-                    <div className={styles.marksheetSection}>
-                        <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
-                        {studentData?._id && (
-                            <MarksheetDisplay 
-                                studentId={studentData._id}
-                                showAllSemesters={true}
-                            />
-                        )}
-                    </div>
                 </div>
             </div>
             {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}

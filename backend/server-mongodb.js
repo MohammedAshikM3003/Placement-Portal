@@ -8939,7 +8939,7 @@ app.get('/api/students', async (req, res) => {
     }
 });
 
-app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'), async (req, res) => {
+app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin', 'coordinator'), async (req, res) => {
     req.setTimeout(120000);
     res.setTimeout(120000);
 
@@ -9013,6 +9013,23 @@ app.post('/api/admin/students/ai-filter', authenticateToken, checkRole('admin'),
             sortOrder: 'asc',
             ...(parsed.filters || {}),
         };
+
+        // If the user is a coordinator, enforce their department filter
+        if (req.user && req.user.role === 'coordinator') {
+            const Coordinator = require('./models/Coordinator');
+            const coordinatorDoc = await Coordinator.findOne({
+                $or: [
+                    { _id: req.user.userId },
+                    { coordinatorId: req.user.coordinatorId }
+                ]
+            }).lean();
+            if (coordinatorDoc) {
+                const coordinatorDept = coordinatorDoc.department || coordinatorDoc.branch || coordinatorDoc.coordinatorDepartment || coordinatorDoc.assignedDepartment;
+                if (coordinatorDept) {
+                    filters.department = coordinatorDept.toString();
+                }
+            }
+        }
 
         // Apply fallback values only if AI didn't provide them
         Object.keys(fallbackFilters).forEach(key => {

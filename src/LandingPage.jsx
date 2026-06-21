@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
-import navbarStyles from './components/Navbar/LandingNavbar.module.css';
 import { fetchAllLandingData, clearCollegeImagesCache, clearCompanyDrivesCache, fetchCollegeImagesPublic, fetchCompanyDrives, getCachedLandingData } from './services/landingPageCacheService';
 import { PlacedStudentsSkeleton, DrivesSkeleton, BannerSkeleton, FooterBannerSkeleton } from './components/SkeletonLoader/SkeletonLoader';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
@@ -36,131 +35,9 @@ import TwitterHover from './assets/Twittericon-hover.svg';
 
 // --- College images are now loaded from the database (GridFS) ---
 
+import Navbar from './components/Navbar/LandingNavbar.js';
+
 const BANNER_CLICK_THRESHOLD = 11;
-
-// Navbar Component (integrated from LandingNavbar.js)
-const Navbar = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('home');
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
-  const openSidebar = () => {
-    setSidebarOpen(true);
-    updateActiveSection(); // Update active section when opening sidebar
-  };
-
-  const updateActiveSection = () => {
-    const hash = window.location.hash.replace('#', '').split('?')[0];
-    if (hash === 'about') {
-      setActiveSection('about');
-    } else if (hash === 'drive') {
-      setActiveSection('drive');
-    } else if (hash === 'contact') {
-      setActiveSection('contact');
-    } else {
-      setActiveSection('home'); // Default to home
-    }
-  };
-
-  useEffect(() => {
-    // Track current hash location
-    const handleHashChange = () => {
-      updateActiveSection();
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    updateActiveSection(); // Call on mount
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  return (
-    <header className={navbarStyles['main-header']}>
-      <div className={navbarStyles['header-logo']}>
-        <img src={Adminicon} alt="Placement Portal Icon" className={navbarStyles['header-logo-img']} />
-        <span>Placement Portal</span>
-      </div>
-      
-      <nav className={navbarStyles['header-nav']}>
-        {/* HashLinks for smooth scrolling */}
-        <HashLink smooth to="/#home">Home</HashLink>
-        <HashLink smooth to="/#about">About</HashLink>
-        <HashLink smooth to="/#drive">Drives</HashLink>
-        <HashLink smooth to="/#contact">Contact</HashLink>
-      </nav>
-      
-      {/* Mobile Hamburger Menu */}
-      <button 
-        className={navbarStyles['hamburger-menu']}
-        onClick={() => {
-          if (!sidebarOpen) {
-            openSidebar();
-          } else {
-            closeSidebar();
-          }
-        }}
-        aria-label="Toggle menu"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      {/* Mobile Sidebar */}
-      <div className={`${navbarStyles['mobile-sidebar']} ${sidebarOpen ? navbarStyles['sidebar-open'] : ''}`}>
-        <nav className={navbarStyles['sidebar-nav']}>
-          <HashLink 
-            smooth 
-            to="/#home" 
-            onClick={closeSidebar} 
-            className={`${navbarStyles['sidebar-link']} ${activeSection === 'home' ? navbarStyles['sidebar-link-active'] : ''}`}
-          >
-            <img src={Home} alt="Home" className={navbarStyles['sidebar-icon']} />
-            <span>Home</span>
-          </HashLink>
-          <HashLink 
-            smooth 
-            to="/#about" 
-            onClick={closeSidebar} 
-            className={`${navbarStyles['sidebar-link']} ${activeSection === 'about' ? navbarStyles['sidebar-link-active'] : ''}`}
-          >
-            <img src={About} alt="About" className={navbarStyles['sidebar-icon']} />
-            <span>About</span>
-          </HashLink>
-          <HashLink 
-            smooth 
-            to="/#drive" 
-            onClick={closeSidebar} 
-            className={`${navbarStyles['sidebar-link']} ${activeSection === 'drive' ? navbarStyles['sidebar-link-active'] : ''}`}
-          >
-            <img src={Drives} alt="Drives" className={navbarStyles['sidebar-icon']} />
-            <span>Drives</span>
-          </HashLink>
-          <HashLink 
-            smooth 
-            to="/#contact" 
-            onClick={closeSidebar} 
-            className={`${navbarStyles['sidebar-link']} ${activeSection === 'contact' ? navbarStyles['sidebar-link-active'] : ''}`}
-          >
-            <img src={Contact} alt="Contact" className={navbarStyles['sidebar-icon']} />
-            <span>Contact</span>
-          </HashLink>
-        </nav>
-        <Link to="/mainlogin" onClick={closeSidebar} className={navbarStyles['sidebar-login-btn']}>Login</Link>
-      </div>
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className={navbarStyles['sidebar-overlay']}
-          onClick={closeSidebar}
-        ></div>
-      )}
-    </header>
-  );
-};
 
 const HeroSection = ({ collegeImages, imagesLoading, onTopBannerClick }) => {
   // College images loaded from database (GridFS) - no static fallbacks
@@ -304,10 +181,31 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
     return { students: [], stats: { highestPackage: '0 LPA', averagePackage: '0 LPA' }, isLoading: false };
   }, [placedStudentsData]);
 
-  // On mobile, animate when there is more than one card (one-card view layout).
-  // On desktop, keep existing threshold to avoid unnecessary movement for short lists.
-  const shouldAnimate = isMobile ? students.length > 1 : students.length > 4;
-  const scrollingStudents = shouldAnimate ? [...students, ...students] : students;
+  // On mobile, animate when there is more than one card.
+  // On desktop, do not animate if students fit within 5 cards.
+  const shouldAnimate = isMobile ? students.length > 1 : students.length > 5;
+
+  const rowRef = useRef(null);
+  const [rowWidth, setRowWidth] = useState(0);
+
+  useEffect(() => {
+    const element = rowRef.current;
+    if (!shouldAnimate || !element) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setRowWidth(entry.contentRect.width || entry.target.offsetWidth);
+      }
+    });
+    observer.observe(element);
+    return () => {
+      observer.unobserve(element);
+      observer.disconnect();
+    };
+  }, [shouldAnimate, students]);
+
+  const speed = isMobile ? 60 : 80;
+  const duration = rowWidth > 0 ? rowWidth / speed : 15;
+  const animationStyle = shouldAnimate ? { animationDuration: `${duration}s` } : {};
 
   return (
     <div className={styles['placement-container-wrapper']} id="about">
@@ -343,18 +241,42 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
             </div>
           ) : (
             <div className={styles['students-scroll-wrapper']}>
-              <div className={`${styles['students-grid']} ${shouldAnimate ? styles['animate-scroll'] : styles['static-grid']}`}>
-                {scrollingStudents.map((student, index) => (
-                  <StudentCard
-                    key={index}
-                    name={student.name}
-                    branch={student.branch}
-                    company={student.company}
-                    pkg={student.pkg}
-                    role={student.role}
-                    profilePhoto={student.profilePhoto}
-                  />
-                ))}
+              <div
+                className={`${styles['students-grid']} ${shouldAnimate ? styles['animate-scroll'] : styles['static-grid']}`}
+                style={animationStyle}
+              >
+                <div
+                  ref={rowRef}
+                  className={styles['students-row']}
+                  style={!shouldAnimate ? { paddingRight: 0 } : {}}
+                >
+                  {students.map((student, index) => (
+                    <StudentCard
+                      key={`student-${index}`}
+                      name={student.name}
+                      branch={student.branch}
+                      company={student.company}
+                      pkg={student.pkg}
+                      role={student.role}
+                      profilePhoto={student.profilePhoto}
+                    />
+                  ))}
+                </div>
+                {shouldAnimate && (
+                  <div className={styles['students-row']} aria-hidden="true">
+                    {students.map((student, index) => (
+                      <StudentCard
+                        key={`student-duplicate-${index}`}
+                        name={student.name}
+                        branch={student.branch}
+                        company={student.company}
+                        pkg={student.pkg}
+                        role={student.role}
+                        profilePhoto={student.profilePhoto}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -445,6 +367,28 @@ const PlacementSection = ({ companyDrivesData, isMobile }) => {
 
   const shouldAnimateDrives = isMobile ? driveData.length > 1 : driveData.length > 5;
 
+  const rowRef = useRef(null);
+  const [rowWidth, setRowWidth] = useState(0);
+
+  useEffect(() => {
+    const element = rowRef.current;
+    if (!shouldAnimateDrives || !element) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setRowWidth(entry.contentRect.width || entry.target.offsetWidth);
+      }
+    });
+    observer.observe(element);
+    return () => {
+      observer.unobserve(element);
+      observer.disconnect();
+    };
+  }, [shouldAnimateDrives, driveData]);
+
+  const speed = isMobile ? 60 : 80;
+  const duration = rowWidth > 0 ? rowWidth / speed : 15;
+  const animationStyle = shouldAnimateDrives ? { animationDuration: `${duration}s` } : {};
+
   return (
     <div className={styles['placement-section-container']}>
       <section className={styles['industries-section']}>
@@ -468,24 +412,37 @@ const PlacementSection = ({ companyDrivesData, isMobile }) => {
           </div>
         ) : (
           <div className={styles['marquee-container']}>
-            <div className={`${styles['drive-cards-container']} ${shouldAnimateDrives ? styles['animate-marquee'] : ''}`}>
-              {driveData.map((drive, index) => (
-                <div className={styles['drive-card']} key={`drive-${index}`}>
-                  <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
-                  <h3>{drive.name}</h3>
-                  <p>Date : {drive.date}</p>
-                  <p>Package : {drive.package}</p>
-                </div>
-              ))}
+            <div
+              className={`${styles['drive-cards-container']} ${shouldAnimateDrives ? styles['animate-marquee'] : styles['static-marquee']}`}
+              style={animationStyle}
+            >
+              <div
+                ref={rowRef}
+                className={styles['drives-row']}
+                style={!shouldAnimateDrives ? { paddingRight: 0 } : {}}
+              >
+                {driveData.map((drive, index) => (
+                  <div className={styles['drive-card']} key={`drive-${index}`}>
+                    <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
+                    <h3>{drive.name}</h3>
+                    <p>Date : {drive.date}</p>
+                    <p>Package : {drive.package}</p>
+                  </div>
+                ))}
+              </div>
               {/* Duplicate cards only when marquee animation is enabled for smooth looping. */}
-              {shouldAnimateDrives && driveData.map((drive, index) => (
-                <div className={styles['drive-card']} key={`drive-duplicate-${index}`}>
-                  <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
-                  <h3>{drive.name}</h3>
-                  <p>Date : {drive.date}</p>
-                  <p>Package : {drive.package}</p>
+              {shouldAnimateDrives && (
+                <div className={styles['drives-row']} aria-hidden="true">
+                  {driveData.map((drive, index) => (
+                    <div className={styles['drive-card']} key={`drive-duplicate-${index}`}>
+                      <div className={`${styles['company-initial-circle']} ${styles[drive.gradient]}`}>{drive.initial}</div>
+                      <h3>{drive.name}</h3>
+                      <p>Date : {drive.date}</p>
+                      <p>Package : {drive.package}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -565,10 +522,11 @@ const GmailIcon = () => (
   </svg>
 );
 
-const TeamSection = () => {
+const TeamSection = ({ isMobile }) => {
   const marqueeContainerRef = useRef(null);
   const singleRowRef = useRef(null);
   const [shouldAnimateTeam, setShouldAnimateTeam] = useState(false);
+  const [rowWidth, setRowWidth] = useState(0);
 
   const renderTeamCard = (member, keyPrefix) => (
     <article className={styles['team-card']} key={`${keyPrefix}-${member.name}`} style={{ '--member-color': member.color }}>
@@ -642,24 +600,45 @@ const TeamSection = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const element = singleRowRef.current;
+    if (!shouldAnimateTeam || !element) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setRowWidth(entry.contentRect.width || entry.target.offsetWidth);
+      }
+    });
+    observer.observe(element);
+    return () => {
+      observer.unobserve(element);
+      observer.disconnect();
+    };
+  }, [shouldAnimateTeam]);
+
+  const speed = isMobile ? 60 : 80;
+  const duration = rowWidth > 0 ? rowWidth / speed : 18;
+  const animationStyle = shouldAnimateTeam ? { animationDuration: `${duration}s` } : {};
+
   return (
     <section className={styles['team-section']} aria-labelledby="team-section-title">
       <h2 className={styles['team-section-title']} id="team-section-title">MEET OUR TEAM</h2>
 
       <div className={styles['team-marquee-container']} ref={marqueeContainerRef}>
-        <div className={`${styles['team-grid']} ${shouldAnimateTeam ? styles['animate-team-marquee'] : ''}`}>
-          <div ref={singleRowRef} className={styles['team-row']}>
+        <div
+          className={`${styles['team-grid']} ${shouldAnimateTeam ? styles['animate-team-marquee'] : ''}`}
+          style={animationStyle}
+        >
+          <div
+            ref={singleRowRef}
+            className={styles['team-row']}
+            style={!shouldAnimateTeam ? { paddingRight: 0 } : {}}
+          >
             {teamMembers.map((member) => renderTeamCard(member, 'team-a'))}
           </div>
           {shouldAnimateTeam && (
-            <>
-              <div className={styles['team-row']} aria-hidden="true">
-                {teamMembers.map((member) => renderTeamCard(member, 'team-b'))}
-              </div>
-              <div className={styles['team-row']} aria-hidden="true">
-                {teamMembers.map((member) => renderTeamCard(member, 'team-c'))}
-              </div>
-            </>
+            <div className={styles['team-row']} aria-hidden="true">
+              {teamMembers.map((member) => renderTeamCard(member, 'team-b'))}
+            </div>
           )}
         </div>
       </div>
@@ -769,7 +748,7 @@ const KSRSection = ({ collegeImages, imagesLoading, onFooterBannerClick }) => {
               href="https://www.instagram.com/ksrce_official?igsh=NGFsbXJvdVdzaEMTQW"
               target="_blank"
               rel="noopener noreferrer"
-              className={styles['social-link']}
+              className={`${styles['social-link']} ${styles['instagram-link']}`}
             >
               <img src={Instagram} alt="Instagram" className={`${styles['social-icon-img']} ${styles['instagram-icon']} ${styles['icon-default']}`} />
               <img src={InstagramHover} alt="Instagram" className={`${styles['social-icon-img']} ${styles['instagram-icon']} ${styles['icon-hover']}`} />
@@ -778,7 +757,7 @@ const KSRSection = ({ collegeImages, imagesLoading, onFooterBannerClick }) => {
               href="https://www.linkedin.com/school/ksrce-official/"
               target="_blank"
               rel="noopener noreferrer"
-              className={styles['social-link']}
+              className={`${styles['social-link']} ${styles['linkedin-link']}`}
             >
               <img src={LinkedIn} alt="LinkedIn" className={`${styles['social-icon-img']} ${styles['linkedin-icon']} ${styles['icon-default']}`} />
               <img src={LinkedInHover} alt="LinkedIn" className={`${styles['social-icon-img']} ${styles['linkedin-icon']} ${styles['icon-hover']}`} />
@@ -787,7 +766,7 @@ const KSRSection = ({ collegeImages, imagesLoading, onFooterBannerClick }) => {
               href="https://x.com/ksrceofficial?t=xeX8YvmxJSOZBMQILjGSuQ&s=09"
               target="_blank"
               rel="noopener noreferrer"
-              className={styles['social-link']}
+              className={`${styles['social-link']} ${styles['twitter-link']}`}
             >
               <img src={Twitter} alt="Twitter" className={`${styles['social-icon-img']} ${styles['twitter-icon']} ${styles['icon-default']}`} />
               <img src={TwitterHover} alt="Twitter" className={`${styles['social-icon-img']} ${styles['twitter-icon']} ${styles['icon-hover']}`} />
@@ -1012,7 +991,7 @@ const LandingPageContent = () => {
         />
         <PlacementPage placedStudentsData={placedStudentsData} isMobile={isMobile} />
         <PlacementSection companyDrivesData={companyDrivesData} isMobile={isMobile} />
-        <TeamSection />
+        <TeamSection isMobile={isMobile} />
         <KSRSection
           collegeImages={collegeImages}
           imagesLoading={imagesLoading}

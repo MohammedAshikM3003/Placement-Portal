@@ -16,7 +16,8 @@
   transition: transform 0.3s ease-in-out;
   font-family: 'Poppins', sans-serif;
   margin-top: 1px;
-  will-change: transform; /* Improve animation smoothness */
+  will-change: transform;
+  /* Improve animation smoothness */
 }
 
 .sidebar::-webkit-scrollbar {
@@ -138,7 +139,7 @@
   display: flex;
   align-items: center;
   font-size: 1.2rem;
-  padding: 7px 25px;
+  padding: 7px 13px;
   color: #222;
   text-decoration: none;
   cursor: pointer;
@@ -157,7 +158,8 @@
   background: #fef5f6;
   border-left: 4px solid #D23B42;
   color: #D23B42;
-  font-weight: 600; /* Bold text for selected item */
+  font-weight: 600;
+  /* Bold text for selected item */
 }
 
 .sidebar .nav-item.selected img {

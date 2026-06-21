@@ -22,7 +22,7 @@ const { canonicalStorePath } = profileUtils;
 // Internal Popup Component using Module Styles
 const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
   if (!isOpen) return null;
-  
+
   return (
     <div className={styles.popupOverlay}>
       <div className={styles.popupContainer}>
@@ -30,14 +30,14 @@ const UserNotFoundPopup = ({ isOpen, onClose, onSignUp }) => {
         <div className={styles.popupHeader}>
           Error !
         </div>
-        
+
         {/* Body */}
         <div className={styles.popupBody}>
           <div className={styles.popup404}>404</div>
           <h2 className={styles.popupTitle}>User Not Found...!</h2>
           <p className={styles.popupDesc}>The User is not Found in the Portal,</p>
           <p className={styles.popupDesc}>Please SignUp to continue.</p>
-          
+
           {/* Buttons */}
           <div className={styles.popupButtons}>
             <button onClick={onClose} className={styles.popupBtnClose}>
@@ -129,7 +129,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
     try {
       const trimmedRegister = registerNumber.trim();
       const trimmedPassword = password.trim();
-      
+
       // Detect login type based on input format
       const isAdminAttempt = trimmedRegister.toLowerCase().startsWith('admin');
       const isCoordinatorAttempt = !isAdminAttempt && /[a-zA-Z]/.test(trimmedRegister);
@@ -161,31 +161,31 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
       }
 
       const loginResult = await login(trimmedRegister, trimmedPassword);
-      
+
       if (loginResult.success) {
         console.log('✅ Login successful, role:', loginResult.role);
-        
+
         if (onLogin) {
           onLogin(trimmedRegister, trimmedPassword);
         }
-        
+
         // Route based on role
-        const targetPath = loginResult.role === 'admin' ? '/admin-dashboard' : 
-                          loginResult.role === 'coordinator' ? '/coo-dashboard' : '/dashboard';
-        
+        const targetPath = loginResult.role === 'admin' ? '/admin-dashboard' :
+          loginResult.role === 'coordinator' ? '/coo-dashboard' : '/dashboard';
+
         // For admin, preload profile data during authentication
         if (loginResult.role === 'admin') {
           console.log('⏳ Fetching admin profile from database...');
-          
+
           // Dispatch progress events immediately (no delays)
           window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
             detail: { message: 'Loading admin profile...', progress: 50, completed: false }
           }));
-          
+
           try {
             const adminLoginID = localStorage.getItem('adminLoginID') || trimmedRegister;
             const authToken = localStorage.getItem('authToken');
-            
+
             // Always fetch from MongoDB, don't check cache
             console.log('🔍 Fetching profile for:', adminLoginID);
             const response = await fetch(`${API_BASE_URL}/admin/profile/${adminLoginID}`, {
@@ -194,11 +194,11 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 'Content-Type': 'application/json'
               }
             });
-            
+
             if (response.ok) {
               const result = await response.json();
               console.log('💾 MongoDB response:', result.success ? 'Success' : 'Failed');
-              
+
               if (result.success && result.data) {
                 const data = result.data;
                 console.log('✅ Admin profile loaded from MongoDB:', {
@@ -210,7 +210,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                   hasNbaCert: !!data.nbaCertificate,
                   hasCollegeLogo: !!data.collegeLogo
                 });
-                
+
                 // Cache complete profile data with all images
                 const profileCacheData = {
                   ...data,
@@ -243,7 +243,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                 } catch (imgCacheErr) {
                   console.warn('⚠️ Failed to pre-cache college images:', imgCacheErr);
                 }
-                
+
                 // Step 4: Admin profile ready (100%)
                 window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
                   detail: { message: 'Admin profile ready', progress: 100, completed: true }
@@ -251,18 +251,18 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
               }
             } else if (response.status === 404) {
               console.log('⚠️ Admin profile not found in MongoDB - first time setup');
-              localStorage.setItem('adminProfileCache', JSON.stringify({ 
-                isFirstTimeSetup: true, 
-                timestamp: Date.now() 
+              localStorage.setItem('adminProfileCache', JSON.stringify({
+                isFirstTimeSetup: true,
+                timestamp: Date.now()
               }));
-              
+
               // Mark as complete even if first time
               window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
                 detail: { message: 'Admin profile ready', progress: 100, completed: true }
               }));
             } else {
               console.error('❌ Failed to fetch admin profile, status:', response.status);
-              
+
               // Mark as complete on error too
               window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
                 detail: { message: 'Admin profile ready', progress: 100, completed: true }
@@ -270,57 +270,57 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
             }
           } catch (error) {
             console.error('❌ Error preloading admin profile:', error);
-            
+
             // Mark as complete on error
             window.dispatchEvent(new CustomEvent('loginPreloadProgress', {
               detail: { message: 'Admin profile ready', progress: 100, completed: true }
             }));
           }
         }
-        
+
         // For students, navigate immediately - data loads in background
         if (loginResult.role === 'student') {
           // Pre-fetch college images in background for student dashboard
-          fetchCollegeImages().catch(() => {});
+          fetchCollegeImages().catch(() => { });
           console.log('⭐ Waiting for essential student data...');
-          
+
           // Wait for the 'studentDataReady' event (max 8 seconds then navigate anyway)
           const dataReadyPromise = new Promise((resolve) => {
             const timeout = setTimeout(() => {
               console.log('⚠️ Timeout waiting for data, navigating anyway');
               resolve();
             }, 8000); // 8 second timeout to allow profile pic + resume status to load
-            
+
             const handler = () => {
               clearTimeout(timeout);
               console.log('✅ Student data ready, navigating to dashboard');
               window.removeEventListener('studentDataReady', handler);
               resolve();
             };
-            
+
             window.addEventListener('studentDataReady', handler);
           });
-          
+
           await dataReadyPromise;
         }
-        
+
         // For coordinator, pre-fetch college images in background
         if (loginResult.role === 'coordinator') {
-          fetchCollegeImages().catch(() => {});
+          fetchCollegeImages().catch(() => { });
         }
-        
+
         // Navigate to target page
         navigate(targetPath, { replace: true });
-        
+
         // NOTE: isLoading stays true until this component unmounts.
       } else if (loginResult.isBlocked) {
         console.log('🚫 Student is blocked');
-        
+
         setIsLoading(false);
         setShowUserNotFoundPopup(false);
         setError('');
         setPassword('');
-        
+
         const coordinatorDetails = {
           blockedBy: loginResult?.coordinator?.blockedBy || loginResult?.coordinator?.name || 'Placement Office',
           name: loginResult?.coordinator?.name || loginResult?.coordinator?.blockedBy || 'Placement Office',
@@ -336,9 +336,9 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
 
         setBlockedInfo(coordinatorDetails);
-          setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
+        setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
         setIsBlockedPopupOpen(true);
-        
+
         return;
       } else {
         console.error('❌ Login failed:', loginResult.error);
@@ -370,12 +370,12 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
         }
 
         setBlockedInfo(coordinatorDetails);
-          setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
+        setBlockedPopupVariant(coordinatorDetails.blockedUserRole === 'coordinator' ? 'coordinator' : 'student');
         setIsBlockedPopupOpen(true);
         setError('');
         setShowUserNotFoundPopup(false);
-      } else if (errorMsg.includes('Network error') || errorMsg.includes('Connection failed') || 
-          errorMsg.includes('Failed to fetch') || errorMsg.includes('Request timeout')) {
+      } else if (errorMsg.includes('Network error') || errorMsg.includes('Connection failed') ||
+        errorMsg.includes('Failed to fetch') || errorMsg.includes('Request timeout')) {
         setError(errorMsg);
         setForceRender(prev => prev + 1);
       } else {
@@ -388,15 +388,15 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
   return (
     <>
       {isLoading && (
-        <LoadingSpinner 
-          message="Authenticating..." 
+        <LoadingSpinner
+          message="Authenticating..."
           subMessage="Please wait while we verify your credentials."
           showProgress={true}
           showAnimatedDots={true}
         />
       )}
-      
-      <UserNotFoundPopup 
+
+      <UserNotFoundPopup
         isOpen={showUserNotFoundPopup}
         onClose={() => setShowUserNotFoundPopup(false)}
         onSignUp={() => {
@@ -412,23 +412,22 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
           onClose={handleBlockedPopupClose}
         />
       )}
-      
+
       <div className={styles.pageContainer}>
         <Navbar />
-        
+
         <div className={styles.mainLayout} ref={mainLayoutRef}>
-          <img src={loginDripsImg} alt="" className={styles.dripDecoration} />
           {/* Large shadow frame rectangle */}
           <div className={styles.shadowFrame}>
             {/* Left side - Interactive Animation */}
             <div className={styles.leftSide}>
               <InteractiveBackground />
             </div>
-            
+
             {/* Right side - Login Form */}
             <div className={styles.rightSide}>
               <h1 className={styles.loginTitle}>LOGIN</h1>
-              
+
               <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>Register Number</label>
@@ -455,7 +454,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                     />
                   </div>
                 </div>
-                
+
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>Password</label>
                   <div className={styles.inputWrapper}>
@@ -492,7 +491,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                     </button>
                   </div>
                 </div>
-                
+
                 {error && (
                   <div key={`error-${forceRender}`} role="alert" className={styles.errorMessage}>
                     <span style={{ wordBreak: "break-word" }}>
@@ -505,10 +504,10 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                     </span>
                   </div>
                 )}
-                
+
                 <div className={styles.loginButtonContainer}>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className={`${styles.loginButton} ${isLoading ? styles.loginButtonDisabled : ''}`}
                     disabled={isLoading}
                   >
@@ -516,7 +515,7 @@ const PlacementPortalLogin = ({ onLogin, onNavigateToSignUp }) => {
                   </button>
                 </div>
               </form>
-              
+
               <p className={styles.signupText}>
                 <span>Don't have an Account ?</span>{" "}
                 <span> </span>

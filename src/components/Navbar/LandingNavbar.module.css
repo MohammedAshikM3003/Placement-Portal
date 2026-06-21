@@ -78,12 +78,12 @@
   position: fixed;
   top: 65px;
   left: 0;
-  width: 230px;
-  height: calc(100dvh - 65px);
+  width: 270px;
+  height: calc(100vh - 65px);
   background-color: #ffffff;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
   transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 999;
   padding-top: 20px;
   display: flex;
@@ -91,52 +91,118 @@
   overflow-y: auto;
 }
 
+/* Sidebar Scrollbar */
+.mobile-sidebar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+
+.mobile-sidebar::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.mobile-sidebar::-webkit-scrollbar-thumb {
+  background-color: #4F46E5;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.mobile-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #3b37c8;
+}
+
 .mobile-sidebar.sidebar-open {
   transform: translateX(0);
+}
+
+/* User Info Section (Profile pic & Name) */
+.sidebar-user-info {
+  padding: 0px 20px 15px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  border-bottom: 1px dotted #ccc;
+  margin-bottom: 15px;
+}
+
+.sidebar-user-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  width: 100%;
+}
+
+.sidebar-placeholder-circle {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-cap-svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+  transform: scaleX(-1);
+}
+
+.sidebar-user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+}
+
+.sidebar-user-text span {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   padding: 0;
 }
 
 .sidebar-link {
-  color: #333333;
+  color: #475569;
   text-decoration: none;
-  padding: 14px 16px 14px 12px;
+  padding: 12px 20px;
   font-weight: 500;
-  font-size: 0.95rem;
-  transition: all 0.3s;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
   border-left: 4px solid transparent;
-  position: relative;
+  margin: 3px 0;
 }
 
+/* Hover state style */
 .sidebar-link:hover {
-  background-color: #ede9fe;
-  border-left-color: #5932EA;
-  color: #5932EA;
+  background-color: #f0efff;
+  border-left-color: #4F46E5;
+  color: #4F46E5;
 }
 
-.sidebar-link:hover .sidebar-icon {
-  filter: brightness(0) saturate(100%) invert(25%) sepia(65%) saturate(1500%) hue-rotate(246deg) brightness(102%);
-}
-
+/* Selected/Active state style */
 .sidebar-link-active {
-  border-left-color: #5932EA;
-  color: #5932EA;
-}
-
-.sidebar-link-active:hover {
-  background-color: transparent;
-}
-
-.sidebar-link-active .sidebar-icon {
-  filter: brightness(0) saturate(100%) invert(25%) sepia(65%) saturate(1500%) hue-rotate(246deg) brightness(102%);
+  background-color: #F8F8F8;
+  border-left-color: #4F46E5;
+  color: #4F46E5;
+  font-weight: 600;
 }
 
 .sidebar-icon {
@@ -146,7 +212,7 @@
 }
 
 .sidebar-login-btn {
-  background-color: #5932EA;
+  background-color: #4F46E5;
   color: white;
   text-decoration: none;
   padding: 12px 20px;
@@ -154,7 +220,7 @@
   font-size: 0.95rem;
   border-radius: 8px;
   text-align: center;
-  margin: 16px 16px 24px 16px;
+  margin: 16px 16px 8px 16px;
   transition: all 0.3s ease;
   display: block;
   cursor: pointer;
@@ -162,9 +228,31 @@
 }
 
 .sidebar-login-btn:hover {
-  background-color: #4620c9;
+  background-color: #3b37c8;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(89, 50, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.sidebar-signup-btn {
+  background-color: transparent;
+  color: #4F46E5;
+  border: 2px solid #4F46E5;
+  text-decoration: none;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  text-align: center;
+  margin: 0px 16px 24px 16px;
+  transition: all 0.3s ease;
+  display: block;
+  cursor: pointer;
+}
+
+.sidebar-signup-btn:hover {
+  background-color: #f0efff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
 }
 
 /* Sidebar Overlay */
@@ -174,7 +262,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 998;
 }
 

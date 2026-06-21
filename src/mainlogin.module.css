@@ -45,7 +45,8 @@
 .mainLayout {
     flex: 1;
     position: relative;
-    height: calc(100vh - 80px); /* Adjust based on Navbar height */
+    height: calc(100vh - 80px);
+    /* Adjust based on Navbar height */
     overflow: hidden;
 }
 
@@ -56,7 +57,7 @@
     left: 38px;
     right: 38px;
     bottom: 40px;
-    background: transparent; 
+    background: transparent;
     border-radius: 16px;
     box-shadow: 0px 0px 50px 10px rgba(0, 0, 0, 0.15);
     display: flex;
@@ -94,11 +95,10 @@
     align-items: center;
     justify-content: center;
     padding: 40px 60px;
-    background: transparent; 
+    background: transparent;
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
     position: relative;
-    top: 50px;
 }
 
 /* --- Form Section --- */
@@ -201,8 +201,8 @@
 
 /* Hide default password icons */
 .inputField[type="password"]::-ms-reveal,
-.inputField[type="password"]::-webkit-credentials-auto-fill-button { 
-    display: none !important; 
+.inputField[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
 }
 
 .eyeButton {
@@ -307,14 +307,24 @@
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- Popup Styles --- */
 .popupOverlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
@@ -391,7 +401,9 @@
     min-width: 100px;
 }
 
-.popupBtnClose:hover { background-color: rgb(92, 101, 110); }
+.popupBtnClose:hover {
+    background-color: rgb(92, 101, 110);
+}
 
 .popupBtnSignup {
     background-color: rgb(89, 50, 234);
@@ -406,11 +418,20 @@
     min-width: 100px;
 }
 
-.popupBtnSignup:hover { background-color: rgb(70, 40, 200); }
+.popupBtnSignup:hover {
+    background-color: rgb(70, 40, 200);
+}
 
 @keyframes popupSlideIn {
-    from { opacity: 0; transform: scale(0.8) translateY(-20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* --- Responsive --- */
@@ -423,10 +444,12 @@
         top: 20px;
         bottom: 20px;
     }
+
     .rightSide {
         width: 50%;
         padding: 30px 40px;
     }
+
     .dripDecoration {
         width: 700px;
         right: -80px;
@@ -438,12 +461,12 @@
     .pageContainer::before {
         display: none;
     }
-    
+
     .pageContainer {
         overflow: hidden;
         height: 100dvh;
     }
-    
+
     .mainLayout {
         display: flex;
         flex-direction: column;
@@ -451,7 +474,7 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     .shadowFrame {
         position: relative;
         flex-direction: column;
@@ -465,49 +488,49 @@
         flex-shrink: 0;
         z-index: 3;
     }
-    
+
     .leftSide {
         display: none;
     }
-    
+
     .rightSide {
         width: 100%;
         padding: 30px 24px;
         top: 0;
     }
-    
+
     .loginTitle {
         font-size: 36px;
         margin-bottom: 24px;
     }
-    
+
     .form {
         max-width: 100%;
     }
-    
+
     .inputWrapper {
         height: 48px;
     }
-    
+
     .inputField {
         font-size: 15px;
         line-height: 48px;
     }
-    
+
     .loginButton {
         height: 48px;
         font-size: 17px;
         line-height: 48px;
     }
-    
+
     .signupText {
         font-size: 15px;
     }
-    
+
     .link {
         font-size: 15px;
     }
-    
+
     /* Drips show from right up to "Portal" text area */
     .dripDecoration {
         width: 380px;
@@ -525,11 +548,11 @@
         height: 100dvh;
         overflow: hidden;
     }
-    
+
     .pageContainer::before {
         display: none;
     }
-    
+
     .mainLayout {
         height: calc(100dvh - 70px);
         display: flex;
@@ -539,7 +562,7 @@
         -webkit-overflow-scrolling: touch;
         padding: 16px 0;
     }
-    
+
     .shadowFrame {
         position: relative;
         left: auto;
@@ -553,72 +576,72 @@
         z-index: 3;
         flex-shrink: 0;
     }
-    
+
     .rightSide {
         padding: 20px 20px;
         border-radius: 12px;
     }
-    
+
     .loginTitle {
         font-size: 32px;
         margin-bottom: 20px;
     }
-    
+
     .field {
         margin-bottom: 16px;
     }
-    
+
     .fieldLabel {
         font-size: 13px;
         margin-bottom: 6px;
     }
-    
+
     .inputWrapper {
         height: 46px;
         border-radius: 8px;
     }
-    
+
     .inputField {
         font-size: 14px;
         line-height: 46px;
         padding: 0 10px;
     }
-    
+
     .inputIconWrap {
         padding-left: 12px;
         width: 20px;
     }
-    
+
     .eyeButton {
         padding: 0 12px;
     }
-    
+
     .loginButtonContainer {
         margin-top: 24px;
     }
-    
+
     .loginButton {
         height: 46px;
         font-size: 16px;
         line-height: 46px;
         border-radius: 8px;
     }
-    
+
     .signupText {
         margin-top: 24px;
         font-size: 14px;
     }
-    
+
     .link {
         font-size: 14px;
     }
-    
+
     .errorMessage {
         font-size: 13px;
         padding: 12px;
         margin-bottom: 12px;
     }
-    
+
     /* Drips smaller on mobile */
     .dripDecoration {
         width: 300px;
@@ -627,39 +650,39 @@
         height: 140px;
         z-index: 1;
     }
-    
+
     /* Popup adjustments for mobile */
     .popupContainer {
         width: 340px;
     }
-    
+
     .popupHeader {
         font-size: 20px;
         padding: 16px;
     }
-    
+
     .popupBody {
         padding: 30px 20px;
     }
-    
+
     .popup404 {
         font-size: 100px;
         margin-bottom: 16px;
     }
-    
+
     .popupTitle {
         font-size: 24px;
     }
-    
+
     .popupDesc {
         font-size: 15px;
     }
-    
+
     .popupButtons {
         gap: 30px;
         margin-top: 30px;
     }
-    
+
     .popupBtnClose,
     .popupBtnSignup {
         padding: 10px 24px;
@@ -679,72 +702,72 @@
         width: calc(100% - 16px);
         margin: 0 auto;
     }
-    
+
     .rightSide {
         padding: 16px 16px;
     }
-    
+
     .loginTitle {
         font-size: 28px;
         margin-bottom: 18px;
     }
-    
+
     .field {
         margin-bottom: 14px;
     }
-    
+
     .inputWrapper {
         height: 44px;
     }
-    
+
     .inputField {
         font-size: 13px;
         line-height: 44px;
         padding: 0 8px;
     }
-    
+
     .loginButton {
         height: 44px;
         font-size: 15px;
         line-height: 44px;
     }
-    
+
     .signupText {
         font-size: 13px;
         margin-top: 20px;
     }
-    
+
     .link {
         font-size: 13px;
     }
-    
+
     .dripDecoration {
         width: 250px;
         right: -10px;
     }
-    
+
     .popupContainer {
         width: 300px;
     }
-    
+
     .popup404 {
         font-size: 80px;
     }
-    
+
     .popupTitle {
         font-size: 20px;
     }
-    
+
     .popupDesc {
         font-size: 14px;
     }
-    
+
     .popupButtons {
         gap: 20px;
         flex-direction: column;
         width: 100%;
     }
-    
+
     .popupBtnClose,
     .popupBtnSignup {
         width: 100%;
@@ -757,7 +780,7 @@
     .mainLayout {
         overflow-y: auto;
     }
-    
+
     .shadowFrame {
         position: relative;
         top: 0;
@@ -767,39 +790,39 @@
         left: 0;
         right: 0;
     }
-    
+
     .rightSide {
         padding: 16px 20px;
         justify-content: flex-start;
         overflow-y: auto;
     }
-    
+
     .loginTitle {
         font-size: 24px;
         margin-bottom: 16px;
     }
-    
+
     .field {
         margin-bottom: 12px;
     }
-    
+
     .inputWrapper {
         height: 40px;
     }
-    
+
     .inputField {
         line-height: 40px;
     }
-    
+
     .loginButtonContainer {
         margin-top: 16px;
     }
-    
+
     .loginButton {
         height: 42px;
         line-height: 42px;
     }
-    
+
     .signupText {
         margin-top: 16px;
         margin-bottom: 16px;
@@ -812,12 +835,12 @@
         padding-top: 20px;
         padding-bottom: 20px;
     }
-    
+
     .loginTitle {
         font-size: 40px;
         margin-bottom: 20px;
     }
-    
+
     .field {
         margin-bottom: 16px;
     }
@@ -830,7 +853,7 @@
         padding-top: 15px;
         overflow-y: auto;
     }
-    
+
     .loginTitle {
         font-size: 32px;
         margin-bottom: 20px;
@@ -839,6 +862,7 @@
 
 /* Touch device improvements */
 @media (hover: none) and (pointer: coarse) {
+
     .loginButton,
     .eyeButton,
     .link,
@@ -847,11 +871,12 @@
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
-    
+
     .inputField {
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
+        /* Prevents zoom on iOS */
     }
-    
+
     .loginButton:active {
         transform: translateY(0);
         opacity: 0.9;

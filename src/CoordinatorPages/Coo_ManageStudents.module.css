@@ -2032,3 +2032,197 @@ overflow: hidden  ;
 .co-ms-export-popup-close-btn:active {
     transform: scale(0.98);
 }
+
+/* AI Filter styles for Coordinator (Red Theme) */
+.co-ms-filter-section-ai-mode {
+    min-height: auto !important;
+    height: auto !important;
+}
+
+.co-ms-ai-toggle-btn {
+    position: absolute;
+    top: -12px;
+    right: 8px;
+    border: 2px solid #d23b42;
+    background: transparent;
+    color: #d23b42;
+    border-radius: 14px;
+    width: 48px;
+    height: 42px;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.18s ease;
+}
+
+.co-ms-ai-toggle-btn:hover {
+    background: #d23b42;
+    color: #ffffff;
+}
+
+.co-ms-ai-toggle-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+.co-ms-ai-toggle-btn:focus-visible {
+    outline: 3px solid rgba(210, 59, 66, 0.4);
+    outline-offset: 2px;
+}
+
+.co-ms-ai-pointer-tooltip {
+    position: fixed;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+.co-ms-ai-filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.co-ms-ai-filter-input {
+    width: 100%;
+    min-height: 110px;
+    border: 2px solid #d23b42;
+    border-radius: 14px;
+    background: #ffffff;
+    resize: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px;
+    font-size: 1.2rem;
+    color: #4a4a4a;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+}
+
+.co-ms-ai-filter-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+.co-ms-ai-filter-input::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.co-ms-ai-filter-input::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 999px;
+}
+
+.co-ms-ai-filter-input::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.co-ms-ai-filter-input::placeholder {
+    color: #5a5a5a;
+    font-size: 1.2rem;
+}
+
+.co-ms-ai-button-group {
+    display: flex;
+    gap: 22px;
+    width: 100%;
+}
+
+.co-ms-ai-apply-btn {
+    background-color: #d23b42;
+    color: #ffffff;
+}
+
+.co-ms-ai-apply-btn:hover {
+    color: #ffffff;
+    background-color: #b32d34;
+}
+
+.co-ms-ai-discard-btn {
+    background-color: #555555;
+    color: #ffffff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+}
+
+.co-ms-ai-discard-btn:hover {
+    background-color: #333333;
+}
+
+/* AI Reason/Explanation Display */
+.co-ms-ai-reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffebeb 100%);
+    border-radius: 10px;
+    border-left: 3px solid #d23b42;
+}
+
+.co-ms-ai-reason-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.co-ms-ai-reason-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.co-ms-ai-column {
+    width: 130px;
+    min-width: 100px;
+    max-width: 180px;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .co-ms-filter-section-ai-mode {
+        min-height: auto !important;
+        height: auto !important;
+        align-self: flex-start;
+    }
+
+    .co-ms-ai-filter-content {
+        flex-grow: 0;
+    }
+
+    .co-ms-ai-toggle-btn {
+        right: 0;
+        top: -10px;
+        width: 44px;
+        height: 40px;
+    }
+
+    .co-ms-ai-filter-input {
+        min-height: 110px;
+        font-size: 1.25rem;
+    }
+
+    .co-ms-ai-filter-input::placeholder {
+        font-size: 1rem;
+    }
+
+    .co-ms-ai-button-group {
+        gap: 10px;
+        flex-direction: row !important;
+    }
+}

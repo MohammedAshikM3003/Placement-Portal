@@ -10,7 +10,6 @@ import useAdminAuth from '../utils/useAdminAuth';
 
 import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
-import MarksheetDisplay from '../components/MarksheetDisplay/MarksheetDisplay';
 import styles from './AdminStuProfileEdit.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/AdmingreenCapicon.svg';
@@ -4211,17 +4210,6 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                             </div>
                         )}
                     </form>
-
-                    {/* Marksheet Display Section */}
-                    <div className={styles.marksheetSection}>
-                        <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
-                        {studentId && (
-                            <MarksheetDisplay 
-                                studentId={studentId}
-                                showAllSemesters={true}
-                            />
-                        )}
-                    </div>
                 </div>
             </div>
             {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}

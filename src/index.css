@@ -180,6 +180,60 @@ body::-webkit-scrollbar-button:horizontal:end:increment {
   height: 0 !important;
 }
 
+/* --- DEFAULT THEME CUSTOM SCROLLBARS --- */
+/* Default custom scrollbars with #4F46E5 color for landing, login, signup, and shared areas */
+html::-webkit-scrollbar,
+html body::-webkit-scrollbar,
+body::-webkit-scrollbar,
+[class*="pageContainer"]::-webkit-scrollbar,
+[class*="mainLayout"]::-webkit-scrollbar,
+[class*="rightSide"]::-webkit-scrollbar,
+[class*="leftSide"]::-webkit-scrollbar,
+[class*="main-content"]::-webkit-scrollbar,
+[class*="mainContent"]::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+
+html::-webkit-scrollbar-track,
+html body::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+[class*="pageContainer"]::-webkit-scrollbar-track,
+[class*="mainLayout"]::-webkit-scrollbar-track,
+[class*="rightSide"]::-webkit-scrollbar-track,
+[class*="leftSide"]::-webkit-scrollbar-track,
+[class*="main-content"]::-webkit-scrollbar-track,
+[class*="mainContent"]::-webkit-scrollbar-track {
+  background: #f0f2f5 !important;
+}
+
+html::-webkit-scrollbar-thumb,
+html body::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+[class*="pageContainer"]::-webkit-scrollbar-thumb,
+[class*="mainLayout"]::-webkit-scrollbar-thumb,
+[class*="rightSide"]::-webkit-scrollbar-thumb,
+[class*="leftSide"]::-webkit-scrollbar-thumb,
+[class*="main-content"]::-webkit-scrollbar-thumb,
+[class*="mainContent"]::-webkit-scrollbar-thumb {
+  background-color: #4F46E5 !important; /* Default Purple scrollbar color */
+  border-radius: 20px !important;
+  border: 3px solid #f0f2f5 !important;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+html body::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+[class*="pageContainer"]::-webkit-scrollbar-thumb:hover,
+[class*="mainLayout"]::-webkit-scrollbar-thumb:hover,
+[class*="rightSide"]::-webkit-scrollbar-thumb:hover,
+[class*="leftSide"]::-webkit-scrollbar-thumb:hover,
+[class*="main-content"]::-webkit-scrollbar-thumb:hover,
+[class*="mainContent"]::-webkit-scrollbar-thumb:hover {
+  background-color: #3b37c8 !important;
+}
+
 /* Mobile Fix: Proper scrolling without fixed positioning */
 @media (max-width: 900px) {
   html {
