@@ -1166,6 +1166,8 @@ Only pending records can be edited.`);
             // Use Render backend URL for production
             API_BASE = 'https://placement-portal-zxo2.onrender.com';
             console.log('🌐 Production mode detected, using Render backend');
+          } else if (window.location.hostname.includes('devtunnels.ms')) {
+            API_BASE = `https://${window.location.hostname.replace('-3000', '-5000')}`;
           } else {
             API_BASE = 'http://localhost:5000';
           }
@@ -1629,6 +1631,8 @@ Only pending records can be edited.`);
             // Use Render backend URL for production
             API_BASE = 'https://placement-portal-zxo2.onrender.com';
             console.log('🌐 Production mode detected, using Render backend');
+          } else if (window.location.hostname.includes('devtunnels.ms')) {
+            API_BASE = `https://${window.location.hostname.replace('-3000', '-5000')}`;
           } else {
             API_BASE = 'http://localhost:5000';
           }

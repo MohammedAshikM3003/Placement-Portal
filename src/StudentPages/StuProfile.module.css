@@ -1009,13 +1009,13 @@ select:disabled {
 
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 900px) {
-    .container { position: fixed !important; width: 100% !important; height: 100% !important; height: 100dvh !important; }
+    .container { position: fixed !important; width: 100% !important; height: 100% !important; height: 100dvh !important; overflow: hidden !important; }
     .main { overflow-x: hidden !important; height: calc(100vh - 65px) !important; height: calc(100dvh - 65px) !important; margin-top: 65px !important; }
 
     .dashboardArea {
         --mobile-side-gap: 10px;
         margin-left: 0 !important;
-        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+        padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         overflow-y: auto !important;
         height: calc(100vh - 65px) !important;

@@ -359,8 +359,11 @@
 
 @media (max-width: 768px) {
   .stu-db-container {
-    min-height: 100dvh;
-    overflow: hidden;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
   }
 
   .stu-db-main {
@@ -370,12 +373,13 @@
     min-height: calc(100vh - 65px) !important;
     min-height: calc(100dvh - 65px) !important;
     overflow: hidden !important;
+    flex-direction: column !important;
   }
 
   /* CRITICAL: Enable scrolling on mobile */
   .stu-db-dashboard-area {
     --mobile-side-gap: 10px;
-    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     overflow-y: scroll !important; /* Keep blue scrollbar visible like other pages */
     overflow-x: hidden !important;

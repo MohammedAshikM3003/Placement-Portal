@@ -1131,20 +1131,31 @@
 
 /* ========== MOBILE RESPONSIVE ========== */
 @media (max-width: 900px) {
+  .container,
+  .resumeBuilderWrapper {
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
   .main {
     margin-top: 65px !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
   }
 
   .dashboardArea {
     --mobile-side-gap: 10px;
-    margin-left: 0;
-    width: 100%;
+    margin-left: 0 !important;
+    width: 100% !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
-    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+    padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable both-edges;
   }

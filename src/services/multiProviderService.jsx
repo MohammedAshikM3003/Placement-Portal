@@ -3,7 +3,12 @@
 
 class MultiProviderAnalysisService {
   constructor() {
-    this.apiBase = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    if (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms')) {
+      const backendHost = window.location.hostname.replace('-3000', '-5000');
+      this.apiBase = `https://${backendHost}`;
+    } else {
+      this.apiBase = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    }
     console.log('✅ Resume Analysis Service initialized (local AI via backend)');
   }
 

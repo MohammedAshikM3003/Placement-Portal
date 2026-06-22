@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './MarksheetDisplay.module.css';
-
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
+import { joinApiUrl } from '../../utils/apiConfig';
 
 /**
  * Marksheet Display Component
@@ -33,8 +32,8 @@ const MarksheetDisplay = ({ studentId, semester = null, showAllSemesters = true 
 
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const endpoint = semester
-        ? `${API_BASE}/marksheets/semester/${studentId}/${semester}`
-        : `${API_BASE}/marksheets/student/${studentId}`;
+        ? joinApiUrl(`/marksheets/semester/${studentId}/${semester}`)
+        : joinApiUrl(`/marksheets/student/${studentId}`);
 
       const response = await fetch(endpoint, {
         headers: {

@@ -8,6 +8,7 @@ import Adminicon from "../assets/Adminicon.png";
 import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
 import BranchIcon from "../assets/adaddbranchicon.svg";
 import mongoDBService from '../services/mongoDBService';
+import { joinApiUrl } from '../utils/apiConfig';
 
 const RequiredStar = () => <span className={styles['Admin-add-branch-required-star']}>*</span>;
 
@@ -278,7 +279,7 @@ function AdminABN() {
         branchAbbreviation: formData.branchAbbreviation
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/branches`, {
+      const response = await fetch(joinApiUrl('/branches'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

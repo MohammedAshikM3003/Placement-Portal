@@ -3,8 +3,7 @@ import styles from './Coo_MarksheetUpload.module.css';
 import Navbar from "../components/Navbar/Conavbar";
 import Sidebar from "../components/Sidebar/Cosidebar";
 import { CertificatePreviewProgressAlert } from '../components/alerts';
-
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
+import { joinApiUrl } from '../utils/apiConfig';
 
 /**
  * Coordinator Marksheet Upload Component
@@ -84,7 +83,7 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
 
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       
-      const response = await fetch(`${API_BASE}/marksheets/upload`, {
+      const response = await fetch(joinApiUrl('/marksheets/upload'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -175,7 +174,7 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
     try {
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
-      const response = await fetch(`${API_BASE}/marksheets/confirm`, {
+      const response = await fetch(joinApiUrl('/marksheets/confirm'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

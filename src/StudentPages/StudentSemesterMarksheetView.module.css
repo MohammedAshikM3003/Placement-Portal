@@ -732,11 +732,27 @@
 }
 
 @media (max-width: 900px) {
+    .container {
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
+    .main {
+        flex-direction: column !important;
+        margin-top: 65px !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
+        overflow: hidden !important;
+    }
+
     .dashboardArea {
         --mobile-side-gap: 10px;
-        margin-left: 0;
-        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+        margin-left: 0 !important;
+        padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         scrollbar-gutter: stable both-edges;
     }
 
@@ -934,13 +950,15 @@
         margin-top: 65px !important;
         height: calc(100vh - 65px) !important;
         height: calc(100dvh - 65px) !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
     }
 
     .dashboardArea {
         --mobile-side-gap: 10px;
-        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
-        overflow-y: auto;
+        padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
+        overflow-y: auto !important;
         height: calc(100vh - 65px) !important;
         height: calc(100dvh - 65px) !important;
         scrollbar-gutter: stable both-edges;

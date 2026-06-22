@@ -221,16 +221,16 @@
 
     .dashboard-area {
         --mobile-side-gap: 10px;
-        margin-left: 0; 
+        margin-left: 0 !important; 
         overflow-y: auto !important; 
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
         height: calc(100dvh - 65px) !important;
         max-height: calc(100vh - 65px) !important;
         max-height: calc(100dvh - 65px) !important;
-        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
+        padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
         -webkit-overflow-scrolling: touch;
-        width: 100%;
+        width: 100% !important;
         scrollbar-gutter: stable both-edges;
     }
 
@@ -239,16 +239,22 @@
     }
 
     .main {
-        overflow: hidden;
+        overflow: hidden !important;
         margin-top: 65px !important;
         min-height: calc(100vh - 65px) !important;
         min-height: calc(100dvh - 65px) !important;
         height: calc(100vh - 65px) !important;
         height: calc(100dvh - 65px) !important;
+        flex-direction: column !important;
     }
 
-    .container {
-        overflow: hidden;
+    .container,
+    .resume-page-wrapper {
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
     }
 }
 

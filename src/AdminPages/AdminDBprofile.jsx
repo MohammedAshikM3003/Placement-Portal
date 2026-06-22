@@ -930,7 +930,11 @@ function AdminAdProfile({ onLogout, onViewChange }) {
             // Check for GridFS URL first (new system)
             const gridfsUrl = resumeData.gridfsFileUrl || resumeData.url || '';
             if (gridfsUrl.startsWith('/api/file/') || gridfsUrl.includes('/api/file/')) {
-                const fullUrl = gridfsUrl.startsWith('http') ? gridfsUrl : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}${gridfsUrl}`;
+                const API_BASE = process.env.REACT_APP_BACKEND_URL || 
+                    (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms') 
+                        ? `https://${window.location.hostname.replace('-3000', '-5000')}` 
+                        : 'http://localhost:5000');
+                const fullUrl = gridfsUrl.startsWith('http') ? gridfsUrl : `${API_BASE}${gridfsUrl}`;
                 dataUrl = fullUrl;
             } else if (resumeData.isBuilderResume && resumeData.url) {
                 // Resume-builder generated PDF - convert data URL to Blob URL

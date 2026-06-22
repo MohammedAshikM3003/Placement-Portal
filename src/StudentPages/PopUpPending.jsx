@@ -1372,6 +1372,8 @@ export default function PopUpPending({ app, onBack }) {
     if (!backendOrigin || backendOrigin.includes('localhost')) {
       if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
         backendOrigin = 'https://placement-portal-zxo2.onrender.com';
+      } else if (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms')) {
+        backendOrigin = `https://${window.location.hostname.replace('-3000', '-5000')}`;
       } else {
         backendOrigin = 'http://localhost:5000';
       }

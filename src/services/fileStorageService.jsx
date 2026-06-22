@@ -1,6 +1,14 @@
 // File storage service - GridFS-backed (replaces Base64 encoding)
 // Files are now stored via GridFS; this service handles upload/download/preview via URLs
 
+const getApiBase = () => {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms')) {
+    const backendHost = window.location.hostname.replace('-3000', '-5000');
+    return `https://${backendHost}`;
+  }
+  return process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+};
+
 class FileStorageService {
   // Helper: detect if a value is a GridFS URL
   isGridFSUrl(value) {
@@ -40,7 +48,7 @@ class FileStorageService {
       let downloadUrl;
       if (this.isGridFSUrl(fileUrlOrBase64)) {
         // GridFS URL - use directly
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        const API_BASE = getApiBase();
         downloadUrl = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
       } else if (fileUrlOrBase64.startsWith('data:')) {
         // Legacy base64 data URL
@@ -67,7 +75,7 @@ class FileStorageService {
     try {
       if (this.isGridFSUrl(fileUrlOrBase64)) {
         // GridFS URL - open directly
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        const API_BASE = getApiBase();
         const fullUrl = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
         window.open(fullUrl, '_blank');
         return;
@@ -116,7 +124,7 @@ class FileStorageService {
       
       let src = fileUrlOrBase64;
       if (this.isGridFSUrl(fileUrlOrBase64)) {
-        const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+        const API_BASE = getApiBase();
         src = fileUrlOrBase64.startsWith('http') ? fileUrlOrBase64 : `${API_BASE}${fileUrlOrBase64}`;
       }
       
@@ -140,7 +148,7 @@ class FileStorageService {
     const newWindow = window.open('', '_blank', 'width=800,height=600');
     let href = fileUrl;
     if (this.isGridFSUrl(fileUrl)) {
-      const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const API_BASE = getApiBase();
       href = fileUrl.startsWith('http') ? fileUrl : `${API_BASE}${fileUrl}`;
     }
     newWindow.document.write(`

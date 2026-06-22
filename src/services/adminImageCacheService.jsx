@@ -157,7 +157,10 @@ class AdminImageCacheService {
             // For GridFS URLs, resolve to full URL
             let imgSrc = result.data.profilePhoto;
             if (imgSrc.startsWith('/api/file/')) {
-              const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+              const API_BASE = process.env.REACT_APP_BACKEND_URL || 
+                (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms') 
+                  ? `https://${window.location.hostname.replace('-3000', '-5000')}` 
+                  : 'http://localhost:5000');
               imgSrc = `${API_BASE}${imgSrc}`;
             }
             img.src = imgSrc;
