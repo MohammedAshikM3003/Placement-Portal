@@ -65,6 +65,17 @@ export default function Company({ onLogout, onViewChange }) {
   const [scrollThumb, setScrollThumb] = useState({ height: 34, top: 0 });
   const [showScrollBar, setShowScrollBar] = useState(false);
 
+  // Search state and filtered drives
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredDrives = useMemo(() => {
+    return eligibleDrives.filter((drive) => {
+      const companyName = (drive.companyName || "").toLowerCase();
+      const jobRole = (drive.jobs || drive.jobRole || "").toLowerCase();
+      const query = searchQuery.toLowerCase();
+      return companyName.includes(query) || jobRole.includes(query);
+    });
+  }, [eligibleDrives, searchQuery]);
+
   const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
   const getStudentLookupIds = (student) => ({
     studentId: String(student?._id || student?.id || student?.studentId || '').trim(),
@@ -385,7 +396,7 @@ export default function Company({ onLogout, onViewChange }) {
 
   useEffect(() => {
     updateScrollThumb();
-  }, [eligibleDrives.length, isLoading, updateScrollThumb]);
+  }, [filteredDrives.length, isLoading, updateScrollThumb]);
 
   useEffect(() => {
     eligibleDrivesRef.current = eligibleDrives;
@@ -963,7 +974,28 @@ export default function Company({ onLogout, onViewChange }) {
 
           {/* My Application History Section */}
           <div className={styles.applicationHistoryContainer} style={{ position: 'relative' }}>
-            <div className={styles.applicationHistoryTitle}>My Application History</div>
+            <div className={styles.applicationHistoryHeader}>
+              <div className={styles.applicationHistoryTitle}>My Application History</div>
+              {!isLoading && eligibleDrives.length > 0 && (
+                <div className={styles.searchContainer}>
+                  <input
+                    type="text"
+                    placeholder="Search applications..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (appListRef.current) {
+                        appListRef.current.scrollTop = 0;
+                      }
+                    }}
+                    className={styles.searchInput}
+                  />
+                  <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
+            </div>
 
             {isLoading ? (
               <div className={styles.loadingWrapper}>
@@ -990,95 +1022,104 @@ export default function Company({ onLogout, onViewChange }) {
               </div>
             ) : (
               <>
-                <div
-                  ref={appListRef}
-                  onScroll={updateScrollThumb}
-                  className={styles.appList}
-                >
-                {eligibleDrives.map((drive, idx) => {
-                  // Find matching application to get round data
-                  const application = findApplicationForDrive(drive);
-                  const attendanceAbsent = isAttendanceAbsentForDrive(drive);
+                {filteredDrives.length === 0 ? (
+                  <div className={styles.applicationHistoryPlaceholder}>
+                    <div className={styles.placeholderTitle}>No Applications Found</div>
+                    <div className={styles.placeholderText}>
+                      No applications match &quot;{searchQuery}&quot;
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    ref={appListRef}
+                    onScroll={updateScrollThumb}
+                    className={styles.appList}
+                  >
+                    {filteredDrives.map((drive, idx) => {
+                      // Find matching application to get round data
+                      const application = findApplicationForDrive(drive);
+                      const attendanceAbsent = isAttendanceAbsentForDrive(drive);
 
-                  // Get overall status based on rounds
-                  const overallStatus = getOverallStatus(application, drive, attendanceAbsent);
+                      // Get overall status based on rounds
+                      const overallStatus = getOverallStatus(application, drive, attendanceAbsent);
 
-                  return (
-                    <div 
-                      key={drive._id || idx} 
-                      className={styles.appItem}
-                      role="button" 
-                      tabIndex="0"
-                      onClick={() => {
-                        const selectedApp = {
-                          company: drive.companyName,
-                          jobRole: drive.jobs || drive.jobRole || 'Job Role',
-                          mode: drive.mode || drive.driveMode || '',
-                          package: drive.package || drive.ctc || drive.salaryPackage || '',
-                          bondPeriod: drive.bondPeriod || drive.bond || '',
-                          startDate: drive.driveStartDate || drive.companyDriveDate,
-                          endDate: drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate,
-                          driveId: drive.driveId || drive._id,
-                          roundDetails: drive.roundDetails || [],
-                          totalRounds: drive.totalRounds || drive.roundDetails?.length || 0,
-                          rounds: application?.rounds || [],
-                          status: attendanceAbsent ? 'Absent' : (application?.status || 'Pending')
-                        };
-                        setSelectedApplication(selectedApp);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className={styles.appLogo}>{drive.companyName?.charAt(0).toUpperCase() || 'C'}</div>
-                      <div className={styles.appDetails}>
-                        <div className={styles.appCompany}>
-                          {drive.companyName} : {drive.jobs || drive.jobRole || 'Job Role'}
-                        </div>
-                        <div className={styles.appPosition}>
-                          {formatDate(drive.driveStartDate || drive.companyDriveDate)} to {formatDate(drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate)}
-                        </div>
-                      </div>
-                      <div className={styles.appStatusContainer}>
-                        <div className={`${styles.appStatus} ${overallStatus.colorClass}`}>
-                          <div className={`${styles.appStatusText} ${overallStatus.textClass}`}>
-                            {overallStatus.status}
+                      return (
+                        <div 
+                          key={drive._id || idx} 
+                          className={styles.appItem}
+                          role="button" 
+                          tabIndex="0"
+                          onClick={() => {
+                            const selectedApp = {
+                              company: drive.companyName,
+                              jobRole: drive.jobs || drive.jobRole || 'Job Role',
+                              mode: drive.mode || drive.driveMode || '',
+                              package: drive.package || drive.ctc || drive.salaryPackage || '',
+                              bondPeriod: drive.bondPeriod || drive.bond || '',
+                              startDate: drive.driveStartDate || drive.companyDriveDate,
+                              endDate: drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate,
+                              driveId: drive.driveId || drive._id,
+                              roundDetails: drive.roundDetails || [],
+                              totalRounds: drive.totalRounds || drive.roundDetails?.length || 0,
+                              rounds: application?.rounds || [],
+                              status: attendanceAbsent ? 'Absent' : (application?.status || 'Pending')
+                            };
+                            setSelectedApplication(selectedApp);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className={styles.appLogo}>{drive.companyName?.charAt(0).toUpperCase() || 'C'}</div>
+                          <div className={styles.appDetails}>
+                            <div className={styles.appCompany}>
+                              {drive.companyName} : {drive.jobs || drive.jobRole || 'Job Role'}
+                            </div>
+                            <div className={styles.appPosition}>
+                              {formatDate(drive.driveStartDate || drive.companyDriveDate)} to {formatDate(drive.driveEndDate || drive.driveStartDate || drive.companyDriveDate)}
+                            </div>
+                          </div>
+                          <div className={styles.appStatusContainer}>
+                            <div className={`${styles.appStatus} ${overallStatus.colorClass}`}>
+                              <div className={`${styles.appStatusText} ${overallStatus.textClass}`}>
+                                {overallStatus.status}
+                              </div>
+                            </div>
+                            <div className={styles.appArrow}>›</div>
                           </div>
                         </div>
-                        <div className={styles.appArrow}>›</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {showScrollBar && (
-                <div style={{
-                  position: 'absolute',
-                  right: isMobile ? '8px' : '10px',
-                  top: isMobile ? '50px' : '85px',
-                  bottom: isMobile ? '12px' : '24px',
-                  width: isMobile ? '6px' : '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  borderRadius: '20px',
-                  zIndex: 5
-                }}>
-                  <div
-                    onMouseDown={onScrollThumbMouseDown}
-                    onTouchStart={onScrollThumbMouseDown}
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      width: '100%',
-                      height: `${scrollThumb.height}px`,
-                      top: `${scrollThumb.top}px`,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '20px',
-                      cursor: 'grab',
-                      touchAction: 'none'
-                    }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#ffffff'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-                  />
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
+                {showScrollBar && filteredDrives.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    right: isMobile ? '8px' : '10px',
+                    top: isMobile ? '110px' : '95px',
+                    bottom: isMobile ? '12px' : '24px',
+                    width: isMobile ? '6px' : '8px',
+                    backgroundColor: 'transparent',
+                    borderRadius: '20px',
+                    zIndex: 5
+                  }}>
+                    <div
+                      onMouseDown={onScrollThumbMouseDown}
+                      onTouchStart={onScrollThumbMouseDown}
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        width: '100%',
+                        height: `${scrollThumb.height}px`,
+                        top: `${scrollThumb.top}px`,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '20px',
+                        cursor: 'grab',
+                        touchAction: 'none'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#ffffff'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>

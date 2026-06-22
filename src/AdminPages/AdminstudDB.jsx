@@ -66,8 +66,8 @@ const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting
         <div className={styles['Admin-popup-header']}>{title}</div>
         <div className={styles['Admin-popup-body']}>
             <svg className={styles['Admin-warning-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle className={styles['Admin-warning-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none"/>
+                <circle className={styles['Admin-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+                <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
             </svg>
             <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
             <p style={{ margin: 0, color: '#888', fontSize: 16 }}>{confirmText} {selectedCount} selected student{selectedCount > 1 ? 's' : ''}?</p>
@@ -84,9 +84,9 @@ const DeleteSuccessPopup = ({ onClose }) => (
         <div className={styles['Admin-popup-header']}>Deleted !</div>
         <div className={styles['Admin-popup-body']}>
             <svg className={styles['Admin-delete-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle className={styles['Admin-delete-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+                <circle className={styles['Admin-delete-icon--circle']} cx="26" cy="26" r="25" fill="none" />
                 <g className={styles['Admin-delete-icon--bin']} fill="none" strokeWidth="2">
-                    <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8"/>
+                    <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8" />
                 </g>
             </svg>
             <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Student Deleted ✓</h2>
@@ -242,16 +242,42 @@ const AI_EXTRA_COLUMNS = {
 // Clear mock data
 const initialStudents = [];
 
+const YEAR_OPTIONS = ['I', 'II', 'III', 'IV'];
+const SEM_OPTIONS_BY_YEAR = {
+    I: ['1', '2'],
+    II: ['3', '4'],
+    III: ['5', '6'],
+    IV: ['7', '8'],
+};
+
+const normalizeYearRoman = (value) => {
+    const raw = (value ?? '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    if (YEAR_OPTIONS.includes(raw)) return raw;
+    const asNum = Number.parseInt(raw, 10);
+    if (asNum === 1) return 'I';
+    if (asNum === 2) return 'II';
+    if (asNum === 3) return 'III';
+    if (asNum === 4) return 'IV';
+    return raw;
+};
+
+const normalizeSemRoman = (value) => {
+    const raw = (value ?? '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+    if (roman.includes(raw)) return raw;
+    const asNum = Number.parseInt(raw, 10);
+    if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 8) return roman[asNum - 1];
+    return raw;
+};
+
 function AdminstudDB() {
     const navigate = useNavigate();
     useAdminAuth(); // JWT authentication verification
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activePopup, setActivePopup] = useState(null);
 
-    const [tempFilterName, setTempFilterName] = useState('');
-    const [tempFilterDept, setTempFilterDept] = useState('');
-    const [tempFilterRegno, setTempFilterRegno] = useState('');
-    const [tempFilterBatch, setTempFilterBatch] = useState('');
     const [isAIFilterMode, setIsAIFilterMode] = useState(false);
     const [aiFilterText, setAiFilterText] = useState('');
     const [aiFilteredStudents, setAiFilteredStudents] = useState([]);
@@ -261,15 +287,20 @@ function AdminstudDB() {
     const [aiFilterReason, setAiFilterReason] = useState('');
     const [aiTooltip, setAiTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [nameFocused, setNameFocused] = useState(false);
-    const [regnoFocused, setRegnoFocused] = useState(false);
-    const [filterName, setFilterName] = useState('');
+
+    // New Filter States
+    const [filterSearch, setFilterSearch] = useState('');
     const [filterDept, setFilterDept] = useState('');
-    const [filterRegno, setFilterRegno] = useState('');
+    const [filterBatchStart, setFilterBatchStart] = useState('');
+    const [filterBatchEnd, setFilterBatchEnd] = useState('');
     const [filterBatch, setFilterBatch] = useState('');
+    const [filterYear, setFilterYear] = useState('');
+    const [filterSem, setFilterSem] = useState('');
+    const [filterSection, setFilterSection] = useState('');
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [branches, setBranches] = useState([]);
     const [batches, setBatches] = useState([]);
-    
+
     const [students, setStudents] = useState([]);
     const [viewBlocklist, setViewBlocklist] = useState(false);
     const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
@@ -302,10 +333,10 @@ function AdminstudDB() {
         const currentYear = new Date().getFullYear();
         const batchMatch = batch.match(/(\d{4})-(\d{4})/);
         if (!batchMatch) return '';
-        
+
         const startYear = parseInt(batchMatch[1]);
         const yearDiff = currentYear - startYear;
-        
+
         if (yearDiff < 1) return 'I';
         if (yearDiff === 1) return 'II';
         if (yearDiff === 2) return 'III';
@@ -494,51 +525,51 @@ function AdminstudDB() {
                 // Fetch branches from MongoDB
                 const branchData = await mongoDBService.getBranches();
                 setBranches(branchData || []);
-                
+
                 // Generate batch options (5-year range logic from MainRegistration)
                 const currentYearValue = new Date().getFullYear();
                 const startYear = currentYearValue - 5;
                 const endYear = currentYearValue + 5;
                 const batchOptions = [];
-                
+
                 for (let year = startYear; year <= endYear; year += 1) {
                     const batchEnd = year + 4;
                     batchOptions.push(`${year}-${batchEnd}`);
                 }
-                
+
                 setBatches(batchOptions);
             } catch (error) {
                 console.error('Error fetching branches or generating batches:', error);
             }
         };
-        
+
         fetchBranchesAndBatches();
     }, []);
 
     // --- Listen for single update from profile page (No Change) ---
     useEffect(() => {
         const updateData = sessionStorage.getItem('studentUpdate');
-        
+
         if (updateData) {
             try {
                 const { id: updatedStudentId, blocked: newBlockedStatus } = JSON.parse(updateData);
-                
+
                 setStudents(prevStudents =>
                     prevStudents.map(student =>
-                        student.id.toString() === updatedStudentId 
-                            ? { ...student, blocked: newBlockedStatus } 
+                        student.id.toString() === updatedStudentId
+                            ? { ...student, blocked: newBlockedStatus }
                             : student
                     )
                 );
-                
+
                 sessionStorage.removeItem('studentUpdate');
-                
+
             } catch (error) {
                 console.error("Error parsing student update from sessionStorage:", error);
                 sessionStorage.removeItem('studentUpdate');
             }
         }
-    }, []); 
+    }, []);
 
 
     // Toggle Sidebar Function (No Change)
@@ -565,15 +596,19 @@ function AdminstudDB() {
     };
 
     // ... (Filter, View Profile, Select, Action handlers - No logic change) ...
-    const handleViewStudents = () => {
-        setViewBlocklist(false); // Reset blocklist view when viewing all students
-        setAiFilteredStudents([]);
-        setAiFilterColumns([]);
+    const handleClearFilters = () => {
+        setFilterSearch('');
+        setFilterDept('');
+        setFilterBatchStart('');
+        setFilterBatchEnd('');
+        setFilterBatch('');
+        setFilterYear('');
+        setFilterSem('');
+        setFilterSection('');
+        setViewBlocklist(false);
         setAiFilterActive(false);
-        setFilterName(tempFilterName);
-        setFilterDept(tempFilterDept);
-        setFilterRegno(tempFilterRegno);
-        setFilterBatch(tempFilterBatch);
+        setAiFilterText('');
+        setAiFilteredStudents([]);
     };
 
     const handleToggleFilterMode = () => {
@@ -652,7 +687,7 @@ function AdminstudDB() {
             return newIds;
         });
     };
-    
+
     const handleEdit = () => {
         if (selectedStudentIds.size === 1) {
             const studentId = Array.from(selectedStudentIds)[0];
@@ -758,7 +793,7 @@ function AdminstudDB() {
             const ids = Array.from(selectedStudentIds);
             const normalizedSelectedIds = new Set(ids.map(normalizeId));
             await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false })));
-            
+
             // 🔄 FIXED: Clear fastDataService cache for unblocked students
             // This ensures they get fresh data when they login
             try {
@@ -780,7 +815,7 @@ function AdminstudDB() {
             if (studentsToNotify.length > 0 || ids.length > 0) {
                 await publishBlockNotifications('unblocked', studentsToNotify, ids);
             }
-            
+
             setStudents(prev => prev.map(s => {
                 const sid = normalizeId(s.id || s._id);
                 return normalizedSelectedIds.has(sid) ? { ...s, blocked: false, isBlocked: false } : s;
@@ -822,7 +857,7 @@ function AdminstudDB() {
                 });
                 await Promise.all(deletePromises);
 
-                setStudents(currentStudents => 
+                setStudents(currentStudents =>
                     currentStudents.filter(s => !idsToDelete.includes(s.id))
                 );
                 setSelectedStudentIds(new Set());
@@ -841,24 +876,24 @@ function AdminstudDB() {
 
     useEffect(() => {
         let isMounted = true;
-        
+
         const fetchPaginatedStudents = async () => {
             try {
                 console.log('🔄 Fetching students page:', currentPage);
-                
+
                 // EMERGENCY: No images due to slow 4.26 Mbps connection from India to AWS US
                 // FIXED: Include archived students to show all 31 instead of just active 20
-                const response = await mongoDBService.getStudentsPaginated({ 
-                    page: currentPage, 
-                    limit: studentsPerPage, 
+                const response = await mongoDBService.getStudentsPaginated({
+                    page: currentPage,
+                    limit: studentsPerPage,
                     includeImages: false, // Disabled for slow connection
                     includeArchived: 'true' // Include archived students in admin view
                 });
-                
+
                 console.log('✅ Students response:', response);
-                
+
                 if (!isMounted) return;
-                
+
                 const data = response.students || [];
                 console.log('📊 Student data count:', data.length);
                 const mapped = (Array.isArray(data) ? data : []).map(s => {
@@ -880,23 +915,23 @@ function AdminstudDB() {
                         blocked: !!(s.isBlocked || s.blocked)
                     };
                 });
-                
+
                 setStudents(mapped);
                 setTotalPages(response.totalPages || 1);
                 setTotalStudents(response.total || 0);
                 setIsInitialLoading(false);
-                
+
             } catch (e) {
                 console.error('❌ Error fetching students:', e);
                 console.error('Error details:', { message: e.message, stack: e.stack });
-                
+
                 if (!isMounted) return;
                 setIsInitialLoading(false);
             }
         };
-        
+
         fetchPaginatedStudents();
-        
+
         return () => {
             isMounted = false;
         };
@@ -909,22 +944,47 @@ function AdminstudDB() {
     const activeStudentSource = aiFilterActive ? aiFilteredStudents : students;
     const isTableLoading = isInitialLoading || aiFilterLoading;
 
+    // Derived section options dynamically from students on the current page
+    const sectionOptions = React.useMemo(() => {
+        const set = new Set();
+        for (const s of students) {
+            const sec = (s?.section ?? '').toString().trim();
+            if (sec) set.add(sec);
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [students]);
+
+    const hasActiveFilters = Boolean(
+        filterSearch.trim() ||
+        filterDept ||
+        filterBatchStart ||
+        filterSection ||
+        filterYear ||
+        filterSem
+    );
+
     const filteredStudents = aiFilterActive
         ? activeStudentSource
         : activeStudentSource.filter(student => {
-            const nameMatch = filterName === '' || student.name.toLowerCase().includes(filterName.toLowerCase());
-            const branchMatch = filterDept === '' || (student.department && student.department.toUpperCase() === filterDept.toUpperCase());
-            const regnoMatch = filterRegno === '' || student.regNo.toLowerCase().includes(filterRegno.toLowerCase());
-            const batchMatch = filterBatch === '' || student.batch === filterBatch;
+            const nameOrRegno = filterSearch.toLowerCase().trim();
+            const searchMatch = nameOrRegno === '' ||
+                student.name.toLowerCase().includes(nameOrRegno) ||
+                student.regNo.toLowerCase().includes(nameOrRegno);
 
-            return nameMatch && branchMatch && regnoMatch && batchMatch;
+            const branchMatch = filterDept === '' || (student.department && student.department.toUpperCase() === filterDept.toUpperCase());
+            const batchMatch = filterBatch === '' || student.batch === filterBatch;
+            const yearMatch = filterYear === '' || normalizeYearRoman(student.currentYear) === normalizeYearRoman(filterYear);
+            const semMatch = filterSem === '' || normalizeSemRoman(student.currentSemester) === normalizeSemRoman(filterSem);
+            const sectionMatch = filterSection === '' || student.section === filterSection;
+
+            return searchMatch && branchMatch && batchMatch && yearMatch && semMatch && sectionMatch;
         }).sort((a, b) => {
-        // Sort by register number in ascending order
-        const regNoA = a.regNo || '';
-        const regNoB = b.regNo || '';
-        return regNoA.localeCompare(regNoB, undefined, { numeric: true });
-    });
-    
+            // Sort by register number in ascending order
+            const regNoA = a.regNo || '';
+            const regNoB = b.regNo || '';
+            return regNoA.localeCompare(regNoB, undefined, { numeric: true });
+        });
+
     const blockedStudents = filteredStudents.filter(s => s.blocked);
     const visibleStudents = viewBlocklist ? blockedStudents : filteredStudents;
     const aiColumns = aiFilterActive ? aiFilterColumns.filter((column) => AI_EXTRA_COLUMNS[column]) : [];
@@ -972,12 +1032,17 @@ function AdminstudDB() {
 
         return student[columnKey] ?? '';
     };
-    
+
     // Check if all selected students are already blocked or unblocked
     const selectedStudents = students.filter(s => selectedStudentIds.has(s.id));
     const allSelectedAreBlocked = selectedStudents.length > 0 && selectedStudents.every(s => s.blocked);
     const allSelectedAreUnblocked = selectedStudents.length > 0 && selectedStudents.every(s => !s.blocked);
-    
+
+    const isEditActive = selectedStudentIds.size === 1 && !blockInProgress && !unblockInProgress && !deleteInProgress;
+    const isBlockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !allSelectedAreBlocked;
+    const isUnblockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !allSelectedAreUnblocked;
+    const isDeleteActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress;
+
     // ... (Export functions - No logic change) ...
     const exportToExcel = async () => {
         try {
@@ -985,7 +1050,7 @@ function AdminstudDB() {
             setExportPopupState('progress');
             setExportProgress(0);
             setShowExportMenu(false);
-            
+
             // Simulate progress
             const progressInterval = setInterval(() => {
                 setExportProgress(prev => {
@@ -996,7 +1061,7 @@ function AdminstudDB() {
                     return prev + 15;
                 });
             }, 100);
-            
+
             // Generate Excel
             await new Promise(resolve => setTimeout(resolve, 300));
             const exportColumns = getExportColumns();
@@ -1005,13 +1070,13 @@ function AdminstudDB() {
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Students");
-            
+
             setExportProgress(100);
             clearInterval(progressInterval);
-            
+
             // Download file
             XLSX.writeFile(wb, "Students_Report.xlsx");
-            
+
             // Show success
             setTimeout(() => {
                 setExportPopupState('success');
@@ -1030,7 +1095,7 @@ function AdminstudDB() {
             setExportPopupState('progress');
             setExportProgress(0);
             setShowExportMenu(false);
-            
+
             // Simulate progress
             const progressInterval = setInterval(() => {
                 setExportProgress(prev => {
@@ -1041,7 +1106,7 @@ function AdminstudDB() {
                     return prev + 15;
                 });
             }, 100);
-            
+
             // Generate PDF
             await new Promise(resolve => setTimeout(resolve, 300));
             const doc = new jsPDF('landscape');
@@ -1050,20 +1115,20 @@ function AdminstudDB() {
             const rows = visibleStudents.map((student) => exportColumns.map((column) => getExportValue(student, column.key)));
 
             doc.text("Students Report", 14, 15);
-            
-            autoTable(doc, { 
-                head: [columns], 
-                body: rows, 
-                startY: 20, 
-                styles: { fontSize: 8 } 
+
+            autoTable(doc, {
+                head: [columns],
+                body: rows,
+                startY: 20,
+                styles: { fontSize: 8 }
             });
-            
+
             setExportProgress(100);
             clearInterval(progressInterval);
-            
+
             // Download file
             doc.save("Students_Report.pdf");
-            
+
             // Show success
             setTimeout(() => {
                 setExportPopupState('success');
@@ -1101,13 +1166,13 @@ function AdminstudDB() {
                                 >
                                     {isAIFilterMode ? (
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="1.5" d="M21.25 12H8.895m-4.361 0H2.75m18.5 6.607h-5.748m-4.361 0H2.75m18.5-13.214h-3.105m-4.361 0H2.75m13.214 2.18a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm-9.25 6.607a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm6.607 6.608a2.18 2.18 0 1 0 0-4.361a2.18 2.18 0 0 0 0 4.36Z"/>
+                                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="1.5" d="M21.25 12H8.895m-4.361 0H2.75m18.5 6.607h-5.748m-4.361 0H2.75m18.5-13.214h-3.105m-4.361 0H2.75m13.214 2.18a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm-9.25 6.607a2.18 2.18 0 1 0 0-4.36a2.18 2.18 0 0 0 0 4.36Zm6.607 6.608a2.18 2.18 0 1 0 0-4.361a2.18 2.18 0 0 0 0 4.36Z" />
                                         </svg>
                                     ) : (
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                             <g fill="none">
-                                                <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/>
-                                                <path fill="currentColor" d="M9.107 5.448c.598-1.75 3.016-1.803 3.725-.159l.06.16l.807 2.36a4 4 0 0 0 2.276 2.411l.217.081l2.36.806c1.75.598 1.803 3.016.16 3.725l-.16.06l-2.36.807a4 4 0 0 0-2.412 2.276l-.081.216l-.806 2.361c-.598 1.75-3.016 1.803-3.724.16l-.062-.16l-.806-2.36a4 4 0 0 0-2.276-2.412l-.216-.081l-2.36-.806c-1.751-.598-1.804-3.016-.16-3.724l.16-.062l2.36-.806A4 4 0 0 0 8.22 8.025l.081-.216zM11 6.094l-.806 2.36a6 6 0 0 1-3.49 3.649l-.25.091l-2.36.806l2.36.806a6 6 0 0 1 3.649 3.49l.091.25l.806 2.36l.806-2.36a6 6 0 0 1 3.49-3.649l.25-.09l2.36-.807l-2.36-.806a6 6 0 0 1-3.649-3.49l-.09-.25zM19 2a1 1 0 0 1 .898.56l.048.117l.35 1.026l1.027.35a1 1 0 0 1 .118 1.845l-.118.048l-1.026.35l-.35 1.027a1 1 0 0 1-1.845.117l-.048-.117l-.35-1.026l-1.027-.35a1 1 0 0 1-.118-1.845l.118-.048l1.026-.35l.35-1.027A1 1 0 0 1 19 2"/>
+                                                <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z" />
+                                                <path fill="currentColor" d="M9.107 5.448c.598-1.75 3.016-1.803 3.725-.159l.06.16l.807 2.36a4 4 0 0 0 2.276 2.411l.217.081l2.36.806c1.75.598 1.803 3.016.16 3.725l-.16.06l-2.36.807a4 4 0 0 0-2.412 2.276l-.081.216l-.806 2.361c-.598 1.75-3.016 1.803-3.724.16l-.062-.16l-.806-2.36a4 4 0 0 0-2.276-2.412l-.216-.081l-2.36-.806c-1.751-.598-1.804-3.016-.16-3.724l.16-.062l2.36-.806A4 4 0 0 0 8.22 8.025l.081-.216zM11 6.094l-.806 2.36a6 6 0 0 1-3.49 3.649l-.25.091l-2.36.806l2.36.806a6 6 0 0 1 3.649 3.49l.091.25l.806 2.36l.806-2.36a6 6 0 0 1 3.49-3.649l.25-.09l2.36-.807l-2.36-.806a6 6 0 0 1-3.649-3.49l-.09-.25zM19 2a1 1 0 0 1 .898.56l.048.117l.35 1.026l1.027.35a1 1 0 0 1 .118 1.845l-.118.048l-1.026.35l-.35 1.027a1 1 0 0 1-1.845.117l-.048-.117l-.35-1.026l-1.027-.35a1 1 0 0 1-.118-1.845l.118-.048l1.026-.35l.35-1.027A1 1 0 0 1 19 2" />
                                             </g>
                                         </svg>
                                     )}
@@ -1122,114 +1187,203 @@ function AdminstudDB() {
                                 )}
                             </div>
                             {!isAIFilterMode ? (
-                            <div className={styles['Admin-DB-filter-content']}>
-                                <div className={styles['Admin-DB-input-wrapper']}>
-                                    <label className={styles['Admin-DB-static-label']}>Name</label>
-                                    <div className={`${styles['Admin-DB-text-container']} ${nameFocused ? styles['is-focused'] : ''}`}>
-                                        <input type="text" className={styles['Admin-DB-text']} placeholder="Enter the Name" value={tempFilterName} onChange={(e) => setTempFilterName(e.target.value)} onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)} />
+                                <div className={styles['Admin-DB-filter-content']}>
+                                    {/* Row 1 Column 1: Search Input */}
+                                    <div className={styles['Admin-DB-input-wrapper']}>
+                                        <label className={styles['Admin-DB-static-label']}>Enter Name / Registration Number</label>
+                                        <div className={`${styles['Admin-DB-text-container']} ${nameFocused ? styles['is-focused'] : ''}`}>
+                                            <input
+                                                type="text"
+                                                className={styles['Admin-DB-text']}
+                                                placeholder="Enter Name / Reg No"
+                                                value={filterSearch}
+                                                onChange={(e) => setFilterSearch(e.target.value)}
+                                                onFocus={() => setNameFocused(true)}
+                                                onBlur={() => setNameFocused(false)}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                {/* Regno Input with Static Label */}
-                                <div className={styles['Admin-DB-input-wrapper']}>
-                                    <label className={styles['Admin-DB-static-label']}>Regno</label>
-                                    <div className={`${styles['Admin-DB-text-container']} ${regnoFocused ? styles['is-focused'] : ''}`}>
-                                        <input type="text" className={styles['Admin-DB-text']} placeholder="Enter the Regno" value={tempFilterRegno} onChange={(e) => setTempFilterRegno(e.target.value)} onFocus={() => setRegnoFocused(true)} onBlur={() => setRegnoFocused(false)} />
+
+                                    {/* Row 1 Column 2: Branch Select */}
+                                    <div className={styles['Admin-DB-input-wrapper']}>
+                                        <label className={styles['Admin-DB-static-label']}>Branch</label>
+                                        <div className={styles['Admin-DB-dropdown-container']}>
+                                            <select className={styles['Admin-DB-dropdown']} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+                                                <option value="">Select Branch</option>
+                                                {branches.map((branch, index) => (
+                                                    <option key={branch._id || branch.id || index} value={branch.branchAbbreviation}>
+                                                        {branch.branchAbbreviation}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                {/* Branch Dropdown with Static Label */}
-                                <div className={styles['Admin-DB-input-wrapper']}>
-                                   
-                                    <div className={styles['Admin-DB-dropdown-container']}>
-                                        <select className={styles['Admin-DB-dropdown']} value={tempFilterDept} onChange={(e) => setTempFilterDept(e.target.value)}>
-                                            <option value="">Select Branch</option>
-                                            {branches.map((branch, index) => (
-                                                <option key={branch._id || branch.id || index} value={branch.branchAbbreviation}>
-                                                    {branch.branchAbbreviation}
-                                                </option>
-                                            ))}
-                                        </select>
+
+                                    {/* Row 2 Column 1: Batch Range */}
+                                    <div className={styles['Admin-DB-input-wrapper']}>
+                                        <label className={styles['Admin-DB-static-label']}>Batch</label>
+                                        <div className={styles['Admin-DB-batch-range-inputs']}>
+                                            <div className={styles['Admin-DB-text-container']}>
+                                                <input
+                                                    type="text"
+                                                    className={styles['Admin-DB-text']}
+                                                    placeholder="Start"
+                                                    inputMode="numeric"
+                                                    value={filterBatchStart}
+                                                    onChange={(e) => {
+                                                        const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
+                                                        setFilterBatchStart(start);
+                                                        if (!start) {
+                                                            setFilterBatchEnd('');
+                                                            setFilterBatch('');
+                                                            return;
+                                                        }
+                                                        const startNum = Number.parseInt(start, 10);
+                                                        const endNum = Number.isFinite(startNum) ? startNum + 4 : '';
+                                                        const endStr = endNum ? `${endNum}` : '';
+                                                        setFilterBatchEnd(endStr);
+                                                        setFilterBatch(endStr ? `${start}-${endStr}` : start);
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className={styles['Admin-DB-batch-range-sep']}>-</div>
+                                            <div className={styles['Admin-DB-text-container']}>
+                                                <input
+                                                    type="text"
+                                                    className={styles['Admin-DB-text']}
+                                                    placeholder="End"
+                                                    value={filterBatchEnd}
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                {/* Batch Dropdown with Static Label */}
-                                <div className={styles['Admin-DB-input-wrapper']}>
-                                    <div className={styles['Admin-DB-dropdown-container']}>
-                                        <select className={styles['Admin-DB-dropdown']} value={tempFilterBatch} onChange={(e) => setTempFilterBatch(e.target.value)}>
-                                            <option value="">Select Batch</option>
-                                            {batches.map((batch) => (
-                                                <option key={batch} value={batch}>
-                                                    {batch}
-                                                </option>
-                                            ))}
-                                        </select>
+
+                                    {/* Row 2 Column 2: Section Dropdown */}
+                                    <div className={styles['Admin-DB-input-wrapper']}>
+                                        <label className={styles['Admin-DB-static-label']}>Section</label>
+                                        <div className={styles['Admin-DB-dropdown-container']}>
+                                            <select className={styles['Admin-DB-dropdown']} value={filterSection} onChange={(e) => setFilterSection(e.target.value)}>
+                                                <option value="">Select Section</option>
+                                                {sectionOptions.map((sec) => (
+                                                    <option key={sec} value={sec}>
+                                                        {sec}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
+
+                                    {/* Row 3 Column 1: Year-Sem */}
+                                    <div className={styles['Admin-DB-input-wrapper']}>
+                                        <label className={styles['Admin-DB-static-label']}>Year-Sem</label>
+                                        <div className={styles['Admin-DB-yearsem-range-inputs']}>
+                                            <div className={styles['Admin-DB-dropdown-container']}>
+                                                <select
+                                                    className={styles['Admin-DB-dropdown']}
+                                                    value={filterYear}
+                                                    onChange={(e) => {
+                                                        const year = (e.target.value || '').toString();
+                                                        setFilterYear(year);
+                                                        setFilterSem('');
+                                                    }}
+                                                >
+                                                    <option value="">Year</option>
+                                                    {YEAR_OPTIONS.map((y) => (
+                                                        <option key={y} value={y}>
+                                                            {y}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className={styles['Admin-DB-yearsem-range-sep']}>-</div>
+                                            <div className={styles['Admin-DB-dropdown-container']}>
+                                                <select
+                                                    className={styles['Admin-DB-dropdown']}
+                                                    value={filterSem}
+                                                    disabled={!filterYear}
+                                                    onChange={(e) => setFilterSem(e.target.value)}
+                                                >
+                                                    <option value="">Sem</option>
+                                                    {(SEM_OPTIONS_BY_YEAR[filterYear] || []).map((s) => (
+                                                        <option key={s} value={s}>
+                                                            {s}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Row 3 Column 2: Clear Filters Button */}
+                                    {hasActiveFilters && (
+                                        <button type="button" className={styles['Admin-DB-clear-btn']} onClick={handleClearFilters}>
+                                            Clear Filters
+                                        </button>
+                                    )}
                                 </div>
-                                <div className={styles['Admin-DB-button-group']}>
-                                    <button className={`${styles['Admin-DB-button']} ${styles['Admin-DB-view-students-btn']}`} onClick={handleViewStudents}>View Students</button>
-                                    <button className={`${styles['Admin-DB-button']} ${styles['Admin-DB-blocklist-btn']}`} onClick={() => setViewBlocklist(true)}>Blocklist</button>
-                                </div>
-                            </div>
                             ) : (
-                            <div className={styles['Admin-DB-ai-filter-content']}>
-                                <textarea
-                                    className={styles['Admin-DB-ai-filter-input']}
-                                    placeholder="Try: 'show me placed students from TCS', 'CSE students with CGPA above 8', 'unplaced final year students', 'students who attended Infosys drive', 'students who know Python'"
-                                    value={aiFilterText}
-                                    onChange={(e) => setAiFilterText(e.target.value)}
-                                />
-                                <div className={styles['Admin-DB-ai-button-group']}>
-                                    <button
-                                        type="button"
-                                        className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-apply-btn']}`}
-                                        onClick={handleApplyAIFilter}
-                                        disabled={aiFilterLoading}
-                                    >
-                                        {aiFilterLoading ? 'Searching...' : 'Search'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-discard-btn']}`}
-                                        onClick={handleDiscardAIFilter}
-                                    >
-                                        Discard
-                                    </button>
-                                </div>
-                                {aiFilterActive && aiFilterReason && (
-                                    <div className={styles['Admin-DB-ai-reason']}>
-                                        <span className={styles['Admin-DB-ai-reason-icon']}>✨</span>
-                                        <span className={styles['Admin-DB-ai-reason-text']}>{aiFilterReason}</span>
+                                <div className={styles['Admin-DB-ai-filter-content']}>
+                                    <textarea
+                                        className={styles['Admin-DB-ai-filter-input']}
+                                        placeholder="Try: 'show me placed students from TCS', 'CSE students with CGPA above 8', 'unplaced final year students', 'students who attended Infosys drive', 'students who know Python'"
+                                        value={aiFilterText}
+                                        onChange={(e) => setAiFilterText(e.target.value)}
+                                    />
+                                    <div className={styles['Admin-DB-ai-button-group']}>
+                                        <button
+                                            type="button"
+                                            className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-apply-btn']}`}
+                                            onClick={handleApplyAIFilter}
+                                            disabled={aiFilterLoading}
+                                        >
+                                            {aiFilterLoading ? 'Searching...' : 'Search'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`${styles['Admin-DB-button']} ${styles['Admin-DB-ai-discard-btn']}`}
+                                            onClick={handleDiscardAIFilter}
+                                        >
+                                            Discard
+                                        </button>
                                     </div>
-                                )}
-                            </div>
+                                    {aiFilterActive && aiFilterReason && (
+                                        <div className={styles['Admin-DB-ai-reason']}>
+                                            <span className={styles['Admin-DB-ai-reason-icon']}>✨</span>
+                                            <span className={styles['Admin-DB-ai-reason-text']}>{aiFilterReason}</span>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
 
                         {/* Action Cards */}
                         <div className={styles['Admin-DB-action-cards-section']}>
-                            <div className={styles['Admin-DB-action-card']}>
-                                <h4 className={styles['Admin-DB-action-header']}>Editing</h4>
-                                <p className={styles['Admin-DB-action-description']}>Select <br/>Student <br/>Record <br/> Before <br/> Editing</p>
+                            <div className={`${styles['Admin-DB-action-card']} ${isEditActive ? styles['card-edit-active'] : ''}`}>
+                                <h4 className={styles[isEditActive ? 'Admin-DB-header-edit-active' : 'Admin-DB-header-disabled']}>Editing</h4>
+                                <p className={styles['Admin-DB-action-description']}>Select Student Record Before Editing</p>
                                 <button className={`${styles['Admin-DB-action-btn']} ${styles['Admin-DB-edit-btn']}`} onClick={handleEdit} disabled={selectedStudentIds.size !== 1 || blockInProgress || unblockInProgress || deleteInProgress}>Edit</button>
 
                             </div>
-                            <div className={styles['Admin-DB-action-card']}>
-                                <h4 className={styles['Admin-DB-action-header']}>Blocking</h4>
-                                <p className={styles['Admin-DB-action-description']}>Select <br/>Student<br/> Record <br/>Before<br/> Blocking</p>
+                            <div className={`${styles['Admin-DB-action-card']} ${isBlockActive ? styles['card-block-active'] : ''}`}>
+                                <h4 className={styles[isBlockActive ? 'Admin-DB-header-block-active' : 'Admin-DB-header-disabled']}>Blocking</h4>
+                                <p className={styles['Admin-DB-action-description']}>Select Student Record Before Blocking</p>
                                 <button className={`${styles['Admin-DB-action-btn']} ${styles['Admin-DB-block-btn']}`} onClick={handleBlock} disabled={selectedStudentIds.size < 1 || blockInProgress || unblockInProgress || deleteInProgress || allSelectedAreBlocked}>
                                     {blockInProgress ? 'Blocking...' : 'Block'}
                                 </button>
 
                             </div>
-                            <div className={styles['Admin-DB-action-card']}>
-                                <h4 className={styles['Admin-DB-action-header']}>Unblocking</h4>
-                                <p className={styles['Admin-DB-action-description']}>Select <br/>Student<br/>Record<br/> Before<br/> Unblocking</p>
+                            <div className={`${styles['Admin-DB-action-card']} ${isUnblockActive ? styles['card-unblock-active'] : ''}`}>
+                                <h4 className={styles[isUnblockActive ? 'Admin-DB-header-unblock-active' : 'Admin-DB-header-disabled']}>Unblocking</h4>
+                                <p className={styles['Admin-DB-action-description']}>Select Student Record Before Unblocking</p>
                                 <button className={`${styles['Admin-DB-action-btn']} ${styles['Admin-DB-unblock-btn']}`} onClick={handleUnblock} disabled={selectedStudentIds.size < 1 || blockInProgress || unblockInProgress || deleteInProgress || allSelectedAreUnblocked}>
                                     {unblockInProgress ? 'Unblock..' : 'Unblock'}
                                 </button>
 
                             </div>
-                            <div className={styles['Admin-DB-action-card']}>
-                                <h4 className={styles['Admin-DB-action-header']}>Deleting</h4>
-                                <p className={styles['Admin-DB-action-description']}>Select <br/> Student <br/> Record <br/> Before <br/>Deleting</p>
+                            <div className={`${styles['Admin-DB-action-card']} ${isDeleteActive ? styles['card-delete-active'] : ''}`}>
+                                <h4 className={styles[isDeleteActive ? 'Admin-DB-header-delete-active' : 'Admin-DB-header-disabled']}>Deleting</h4>
+                                <p className={styles['Admin-DB-action-description']}>Select Student Record Before Deleting</p>
                                 <button className={`${styles['Admin-DB-action-btn']} ${styles['Admin-DB-delete-btn']}`} onClick={handleDeleteClick} disabled={selectedStudentIds.size < 1 || blockInProgress || unblockInProgress || deleteInProgress}>
                                     {deleteInProgress ? 'Deleting...' : 'Delete'}
                                 </button>
@@ -1276,6 +1430,12 @@ function AdminstudDB() {
                                     </div>
                                 )}
                                 <button
+                                    className={viewBlocklist ? styles['Admin-DB-blocks-active-btn'] : styles['Admin-DB-blocks-btn']}
+                                    onClick={() => setViewBlocklist(!viewBlocklist)}
+                                >
+                                    {viewBlocklist ? 'Back' : 'Blocked'}
+                                </button>
+                                <button
                                     className={styles['Admin-DB-zip-btn']}
                                     onClick={() => navigate('/admin/active-zip/student-database', { state: { driveData: null, source: 'student-database' } })}
                                 >
@@ -1297,7 +1457,7 @@ function AdminstudDB() {
                             <table className={styles['Admin-DB-students-table']}>
                                 <thead>
                                     <tr className={styles['Admin-DB-table-head-row']}>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-select']}`}>Select</th> 
+                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-select']}`}>Select</th>
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-sno']}`}>S.No</th>
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-register-number']}`}>Register Number</th>
                                         <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-name']}`}>Name</th>
@@ -1386,10 +1546,10 @@ function AdminstudDB() {
                             background: 'rgba(0, 0, 0, 0.2)',
                             zIndex: 10000,
                         }}>
-                            <DeleteConfirmationPopup 
-                                onClose={closePopup} 
-                                onConfirm={confirmDelete} 
-                                selectedCount={selectedStudentIds.size} 
+                            <DeleteConfirmationPopup
+                                onClose={closePopup}
+                                onConfirm={confirmDelete}
+                                selectedCount={selectedStudentIds.size}
                                 isDeleting={deleteInProgress}
                             />
 
@@ -1433,22 +1593,22 @@ function AdminstudDB() {
                 </div>
                 {isSidebarOpen && <div className={styles['Admin-DB-overlay']} onClick={() => setIsSidebarOpen(false)}></div>}
             </div>
-            
+
             {/* Export Alerts */}
-            <ExportProgressAlert 
-                isOpen={exportPopupState === 'progress'} 
+            <ExportProgressAlert
+                isOpen={exportPopupState === 'progress'}
                 progress={exportProgress}
                 exportType={exportType}
             />
-            
-            <ExportSuccessAlert 
-                isOpen={exportPopupState === 'success'} 
+
+            <ExportSuccessAlert
+                isOpen={exportPopupState === 'success'}
                 onClose={() => setExportPopupState('none')}
                 exportType={exportType}
             />
-            
-            <ExportFailedAlert 
-                isOpen={exportPopupState === 'failed'} 
+
+            <ExportFailedAlert
+                isOpen={exportPopupState === 'failed'}
                 onClose={() => setExportPopupState('none')}
                 exportType={exportType}
             />

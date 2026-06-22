@@ -341,107 +341,108 @@ function AdminDashboard({ onLogout, currentView, onViewChange }) {
   };
 
   return (
-    // Use bracket notation for classes with hyphens: styles['class-name']
-    <div className={styles['admin-dashboard-page']}>
+    <div className={styles['ad-db-wrapper']}>
        <AdNavbar onToggleSidebar={toggleSidebar} />
-       <AdSidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+       <div className={styles['ad-db-main-layout']}>
+         <AdSidebar isOpen={isSidebarOpen} onLogout={onLogout} />
 
-      <div className={styles['ad-db-dashboard-area']} >
+        <div className={styles['ad-db-dashboard-area']} >
       
-      {/* HEADER */}
-      <div className={styles['ad-db-college-header']}>
-        <img src={collegeLogoUrl} alt="KSR College Logo" className={styles['ad-db-college-logo']} />
-        <div className={styles['ad-db-college-name']}>
-          K S R COLLEGE OF ENGINEERING (<span>Autonomous</span>) - 637215
+        {/* HEADER */}
+        <div className={styles['ad-db-college-header']}>
+          <img src={collegeLogoUrl} alt="KSR College Logo" className={styles['ad-db-college-logo']} />
+          <div className={styles['ad-db-college-name']}>
+            K S R COLLEGE OF ENGINEERING (<span>Autonomous</span>) - 637215
+          </div>
         </div>
-      </div>
       
-      {/* DASHBOARD GRID */}
-      <div className={styles['ad-db-dashboard-grid']}>
-        
-        {/* ROW 1 */}
-        {/* Card 1: Browse Students */}
-        <div 
-          className={`${styles['ad-db-card']} ${styles['ad-db-card-browse']}`}
-          onClick={handleBrowseStudents}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className={styles['ad-db-card-icon']}>
-            <img src={Adminbrowsestudents} alt="Browse Students" />
+        {/* DASHBOARD GRID */}
+        <div className={styles['ad-db-dashboard-grid']}>
+          
+          {/* ROW 1 */}
+          {/* Card 1: Browse Students */}
+          <div 
+            className={`${styles['ad-db-card']} ${styles['ad-db-card-browse']}`}
+            onClick={handleBrowseStudents}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles['ad-db-card-icon']}>
+              <img src={Adminbrowsestudents} alt="Browse Students" />
+            </div>
+            <h3 className={styles['ad-db-card-title']}>Browse Students</h3>
+            <p className={styles['ad-db-card-sub']}>Filter, sort and manage<br />Student records</p>
           </div>
-          <h3 className={styles['ad-db-card-title']}>Browse Students</h3>
-          <p className={styles['ad-db-card-sub']}>Filter, sort and manage<br />Student records</p>
-        </div>
 
-        {/* Card 2: Add New Company */}
-        <div 
-          className={`${styles['ad-db-card']} ${styles['ad-db-card-drive']}`}
-          onClick={handleAddCompany}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className={styles['ad-db-card-icon']}>
-            <img src={Adminaddnewcompany} alt="Upcoming Drive" />
+          {/* Card 2: Add New Company */}
+          <div 
+            className={`${styles['ad-db-card']} ${styles['ad-db-card-drive']}`}
+            onClick={handleAddCompany}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles['ad-db-card-icon']}>
+              <img src={Adminaddnewcompany} alt="Upcoming Drive" />
+            </div>
+            <h3 className={styles['ad-db-card-title']}>Add New Company</h3>
+            <div className={styles['ad-db-drive-details']}>
+              <p className={styles['ad-db-new-drive-details']}>Register new companies for <br />placement drives</p>
+            </div>
           </div>
-          <h3 className={styles['ad-db-card-title']}>Add New Company</h3>
-          <div className={styles['ad-db-drive-details']}>
-            <p className={styles['ad-db-new-drive-details']}>Register new companies for <br />placement drives</p>
-          </div>
-        </div>
 
-        {/* Card 3: Attendance Chart */}
-        <div 
-          className={`${styles['ad-db-card']} ${styles['ad-db-attendance-card']}`}
-          onClick={handleAttendance}
-          style={{ cursor: 'pointer' }}
-        >
-          <h2 className={styles['ad-db-new-attendance-title']}>Attendance</h2>
-          <ModernAttendanceChart 
-            present={attendanceStats.present} 
-            absent={attendanceStats.absent} 
-            isLoading={isLoadingAttendance}
-          />
-        </div>
-
-        {/* ROW 2 */}
-        {/* Card 4: Schedule Drive */}
-        <div 
-          className={`${styles['ad-db-card']} ${styles['ad-db-card-certificates']}`}
-          onClick={handleScheduleDrive}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className={styles['ad-db-card-icon']}>
-            <img src={Adminschedulenewdrive} alt="Upload Certificate"/>
+          {/* Card 3: Attendance Chart */}
+          <div 
+            className={`${styles['ad-db-card']} ${styles['ad-db-attendance-card']}`}
+            onClick={handleAttendance}
+            style={{ cursor: 'pointer' }}
+          >
+            <h2 className={styles['ad-db-new-attendance-title']}>Attendance</h2>
+            <ModernAttendanceChart 
+              present={attendanceStats.present} 
+              absent={attendanceStats.absent} 
+              isLoading={isLoadingAttendance}
+            />
           </div>
-          <div className={styles['ad-db-card-content']}>
-            <h3 className={styles['ad-db-card-title']}>Schedule New Drive</h3>
-            <p className={styles['ad-db-card-sub']}>organies and manage upcoming companies</p>
-          </div>
-        </div>
-        
-        {/* Card 5: Add Branch */}
-        <div 
-          className={styles['ad-db-card']}
-          onClick={handleAddBranch}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className={styles['ad-db-card-icon']}>
-            <img src={AdminAddBranch} alt="Semester Icon" />
-          </div>
-          <h3 className={styles['ad-db-card-title']}> Add Branch</h3>
-          <p className={styles['ad-db-card-sub']}>Create New Branch</p>
-        </div>
 
-        {/* Card 6: My Account */}
-        <div 
-          className={`${styles['ad-db-card']} ${styles['ad-db-account-card']}`}
-          onClick={handleMyAccount}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className={styles['ad-db-card-icon']}><img src={Adminmyacc} alt="My Account" /></div>
-          <h3 className={styles['ad-db-card-title']}>My Account</h3>
-          <p className={styles['ad-db-card-sub']}>Settings</p>
-        </div>
+          {/* ROW 2 */}
+          {/* Card 4: Schedule Drive */}
+          <div 
+            className={`${styles['ad-db-card']} ${styles['ad-db-card-certificates']}`}
+            onClick={handleScheduleDrive}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles['ad-db-card-icon']}>
+              <img src={Adminschedulenewdrive} alt="Upload Certificate"/>
+            </div>
+            <div className={styles['ad-db-card-content']}>
+              <h3 className={styles['ad-db-card-title']}>Schedule New Drive</h3>
+              <p className={styles['ad-db-card-sub']}>organies and manage upcoming companies</p>
+            </div>
+          </div>
+          
+          {/* Card 5: Add Branch */}
+          <div 
+            className={styles['ad-db-card']}
+            onClick={handleAddBranch}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles['ad-db-card-icon']}>
+              <img src={AdminAddBranch} alt="Semester Icon" />
+            </div>
+            <h3 className={styles['ad-db-card-title']}> Add Branch</h3>
+            <p className={styles['ad-db-card-sub']}>Create New Branch</p>
+          </div>
 
+          {/* Card 6: My Account */}
+          <div 
+            className={`${styles['ad-db-card']} ${styles['ad-db-account-card']}`}
+            onClick={handleMyAccount}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles['ad-db-card-icon']}><img src={Adminmyacc} alt="My Account" /></div>
+            <h3 className={styles['ad-db-card-title']}>My Account</h3>
+            <p className={styles['ad-db-card-sub']}>Settings</p>
+          </div>
+
+        </div>
       </div>
     </div>
     </div>
