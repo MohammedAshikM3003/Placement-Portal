@@ -565,8 +565,11 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
     .main {
-        min-height: calc(100vh - 55px);
-        min-height: calc(100dvh - 55px);
+        margin-top: 65px !important;
+        min-height: calc(100vh - 65px) !important;
+        min-height: calc(100dvh - 65px) !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
     }
 
     .attendanceArea {
@@ -574,8 +577,8 @@
         margin-left: 0;
         padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
-        height: calc(100vh - 55px);
-        height: calc(100dvh - 55px);
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
         -webkit-overflow-scrolling: touch;
         scrollbar-gutter: stable both-edges;
     }

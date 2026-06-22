@@ -1010,7 +1010,7 @@ select:disabled {
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 900px) {
     .container { position: fixed !important; width: 100% !important; height: 100% !important; height: 100dvh !important; }
-    .main { overflow-x: hidden !important; height: calc(100vh - 60px) !important; height: calc(100dvh - 60px) !important; margin-top: 60px !important; }
+    .main { overflow-x: hidden !important; height: calc(100vh - 65px) !important; height: calc(100dvh - 65px) !important; margin-top: 65px !important; }
 
     .dashboardArea {
         --mobile-side-gap: 10px;
@@ -1018,11 +1018,11 @@ select:disabled {
         padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         overflow-y: auto !important;
-        height: calc(100vh - 60px) !important;
-        height: calc(100dvh - 60px) !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
         scrollbar-gutter: stable both-edges;
     }
-    .main { flex-direction: column !important; margin-top: 60px !important; height: calc(100vh - 60px) !important; height: calc(100dvh - 60px) !important; }
+    .main { flex-direction: column !important; margin-top: 65px !important; height: calc(100vh - 65px) !important; height: calc(100dvh - 65px) !important; }
     
     .formGrid { display: block; gap: 0; }
     .personalInfoFields { grid-column: auto; display: block; }

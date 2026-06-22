@@ -900,8 +900,9 @@
 
     .main {
         overflow: hidden;
-        height: calc(100vh - 55px);
-        height: calc(100dvh - 55px);
+        margin-top: 65px !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
     }
 
     .achievements-area {
@@ -912,7 +913,8 @@
         overflow-y: auto !important;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        height: 100%;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
         scrollbar-gutter: stable both-edges;
     }
 

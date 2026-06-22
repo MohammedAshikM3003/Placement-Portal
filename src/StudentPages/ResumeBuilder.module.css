@@ -1131,12 +1131,18 @@
 
 /* ========== MOBILE RESPONSIVE ========== */
 @media (max-width: 900px) {
+  .main {
+    margin-top: 65px !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+  }
+
   .dashboardArea {
     --mobile-side-gap: 10px;
     margin-left: 0;
     width: 100%;
-    height: calc(100vh - 55px);
-    height: calc(100dvh - 55px);
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
     padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
     -webkit-overflow-scrolling: touch;

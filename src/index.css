@@ -546,6 +546,18 @@ html.stu-theme main {
 
 /* Reset layout margins for all student pages at 1200px breakpoint */
 @media (max-width: 1200px) {
+  /* Support dvh for mobile viewports to prevent cutoff and white bar issues */
+  html.stu-theme,
+  html.stu-theme body {
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+  
+  html.stu-theme #root > div {
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+
   /* Collapse sidebar for student theme */
   .stu-theme .sidebar {
     transform: translateX(-100%) !important;
@@ -574,5 +586,7 @@ html.stu-theme main {
     margin-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
   }
 }

@@ -364,26 +364,30 @@
   }
 
   .stu-db-main {
-    margin-top: 65px;
-    height: calc(100dvh - 65px);
-    min-height: calc(100dvh - 65px);
-    overflow: hidden;
+    margin-top: 65px !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+    min-height: calc(100vh - 65px) !important;
+    min-height: calc(100dvh - 65px) !important;
+    overflow: hidden !important;
   }
 
   /* CRITICAL: Enable scrolling on mobile */
   .stu-db-dashboard-area {
     --mobile-side-gap: 10px;
-    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
-    overflow-y: scroll; /* Keep blue scrollbar visible like other pages */
-    overflow-x: hidden;
-    height: 100%;
-    max-height: calc(100dvh - 65px);
-    margin-left: 0; /* Remove sidebar margin */
-    justify-content: flex-start; /* Reset alignment for scrolling */
-    min-height: 0;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-gutter: stable both-edges;
+    padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
+    overflow-y: scroll !important; /* Keep blue scrollbar visible like other pages */
+    overflow-x: hidden !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    max-height: calc(100dvh - 65px) !important;
+    margin-left: 0 !important; /* Remove sidebar margin */
+    justify-content: flex-start !important; /* Reset alignment for scrolling */
+    min-height: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-gutter: stable both-edges !important;
   }
 
   /* Mobile Scrollbar Styling */

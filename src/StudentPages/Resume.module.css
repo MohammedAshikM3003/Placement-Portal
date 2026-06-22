@@ -224,10 +224,10 @@
         margin-left: 0; 
         overflow-y: auto !important; 
         overflow-x: hidden !important;
-        height: calc(100vh - 55px);
-        height: calc(100dvh - 55px);
-        max-height: calc(100vh - 55px);
-        max-height: calc(100dvh - 55px);
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
+        max-height: calc(100vh - 65px) !important;
+        max-height: calc(100dvh - 65px) !important;
         padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap);
         -webkit-overflow-scrolling: touch;
         width: 100%;
@@ -240,8 +240,11 @@
 
     .main {
         overflow: hidden;
-        min-height: calc(100vh - 55px);
-        min-height: calc(100dvh - 55px);
+        margin-top: 65px !important;
+        min-height: calc(100vh - 65px) !important;
+        min-height: calc(100dvh - 65px) !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
     }
 
     .container {
