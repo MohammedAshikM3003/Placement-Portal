@@ -859,116 +859,6 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
     }
   };
 
-  // ===== LOAD TEST ERROR DATA =====
-  const handleLoadTestErrorData = () => {
-    if (window.confirm('This will overwrite current fields with test error data. Continue?')) {
-      const errorData = {
-        personalInfo: {
-          name: 'john doee',
-          mobile: '12345',
-          email: 'john.doee.email.com',
-          linkedin: 'linkedin.com/in/johndoee',
-          github: 'github.com/johndoee',
-          portfolio: 'johndoee.net'
-        },
-        summary: 'i am a software developer. i got awesome coding skills and i basically built cool things for frontend. i kinda want to get a job because i am really super motivated.',
-        education: {
-          college: 'K.S.R. College of Engineering',
-          degree: 'B.E.',
-          branch: 'Computer Science and Engineering',
-          cgpa: '8.5',
-          graduationYear: '2026',
-          school12: 'Govt Higher Secondary School',
-          percentile12: '85',
-          batch12: '2022',
-          school10: 'Govt High School',
-          percentile10: '90',
-          batch10: '2020'
-        },
-        platforms: [
-          { name: 'Leetcode', url: 'leetcode.com/johndoee' },
-          { name: 'Hacker Rank', url: 'hackerrank.com/johndoee' }
-        ],
-        skills: DEFAULT_SKILL_CATEGORIES.map(c => {
-          if (c.category === 'Languages') {
-            return { ...c, items: ['JavaScript', 'Python', 'Java'] };
-          }
-          if (c.category === 'Frameworks & Libraries') {
-            return { ...c, items: ['React', 'Node.js', 'Express.js'] };
-          }
-          return { ...c, items: [] };
-        }),
-        experiences: [
-          {
-            title: 'web developer intern',
-            companyName: 'cool tech startupp',
-            location: 'chennai',
-            mode: 'in-person',
-            fromDate: '2024-01-01',
-            toDate: '2024-04-01',
-            description: 'i was working on teh frontend stuff. got to write some react code and fixed a lot of bugs. basically helped the team with things.',
-            technologies: ['React', 'JavaScript', 'CSS'],
-            projects: [],
-            label: 'web developer intern'
-          }
-        ],
-        projects: [
-          {
-            name: 'e-comerce website',
-            description: 'i built a cool website for buying stuff online. it had a cart page that was really awesome. i did all the code myself.',
-            technologies: ['React', 'Node.js', 'MongoDB'],
-            githubRepo: 'github.com/johndoee/e-comerce',
-            hostingLink: 'e-comerce.johndoee.net',
-            label: 'e-comerce website'
-          }
-        ],
-        certifications: [
-          {
-            certificateName: 'aws certified developer',
-            description: 'i got certified for deploying apps on aws cloud.'
-          }
-        ],
-        achievements: [
-          {
-            details: 'won first prize in college hackathon for coding.'
-          }
-        ],
-        additionalInfo: [
-          {
-            info: 'fluent in english and local language.'
-          }
-        ],
-        resumeSettings: {
-          jobRole: 'Frontend Developer',
-          customJobRole: '',
-          fontStyle: 'Arial',
-          pages: '1',
-          enableAI: true,
-          linkType: 'HyperLink',
-          profilePhoto: false,
-          photoPosition: 'Left'
-        }
-      };
-
-      setPersonalInfo(errorData.personalInfo);
-      setSummary(errorData.summary);
-      setEducation(errorData.education);
-      setPlatforms(errorData.platforms);
-      setSkills(errorData.skills);
-      setExperiences(errorData.experiences);
-      setProjects(errorData.projects);
-      setCertifications(errorData.certifications);
-      setAchievements(errorData.achievements);
-      setAdditionalInfo(errorData.additionalInfo);
-      setResumeSettings(errorData.resumeSettings);
-
-      const storageKey = getStorageKey();
-      localStorage.setItem(storageKey, JSON.stringify(errorData));
-      console.log('✅ Loaded test error data into state and localStorage');
-    }
-  };
-
-
   // ===== CREATE RESUME (Save + Generate PDF) =====
   const handleCreate = async () => {
     // Prevent multiple clicks
@@ -2139,13 +2029,6 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
 
       {/* ===== GLOBAL SAVE / DISCARD ===== */}
       <div className={styles.globalActionBar}>
-        <button 
-          className={styles.globalDiscardBtn} 
-          onClick={handleLoadTestErrorData}
-          style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: '#d97706', marginRight: 'auto' }}
-        >
-          Load Test Error Data
-        </button>
         <button className={styles.globalDiscardBtn} onClick={handleDiscard}>Discard</button>
         <button 
           className={styles.globalCreateBtn} 

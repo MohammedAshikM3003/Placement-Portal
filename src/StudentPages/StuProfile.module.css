@@ -6,15 +6,18 @@
     font-family: 'Poppins', Arial, sans-serif;
     background: #f8f8fb;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
     position: fixed;
     width: 100%;
     height: 100%;
+    height: 100dvh;
 }
 
 .main {
     display: flex;
     height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
     overflow: hidden;
     margin-top: 60px;
 }
@@ -37,6 +40,7 @@
     overflow-x: hidden;
     position: relative;
     height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
     box-sizing: border-box;
 }
 
@@ -1005,8 +1009,8 @@ select:disabled {
 
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 900px) {
-    .container { position: fixed !important; width: 100% !important; height: 100% !important; }
-    .main { overflow-x: hidden !important; height: calc(100vh - 60px) !important; margin-top: 60px !important; }
+    .container { position: fixed !important; width: 100% !important; height: 100% !important; height: 100dvh !important; }
+    .main { overflow-x: hidden !important; height: calc(100vh - 60px) !important; height: calc(100dvh - 60px) !important; margin-top: 60px !important; }
 
     .dashboardArea {
         --mobile-side-gap: 10px;
@@ -1015,9 +1019,10 @@ select:disabled {
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         overflow-y: auto !important;
         height: calc(100vh - 60px) !important;
+        height: calc(100dvh - 60px) !important;
         scrollbar-gutter: stable both-edges;
     }
-    .main { flex-direction: column !important; margin-top: 60px !important; height: calc(100vh - 60px) !important; }
+    .main { flex-direction: column !important; margin-top: 60px !important; height: calc(100vh - 60px) !important; height: calc(100dvh - 60px) !important; }
     
     .formGrid { display: block; gap: 0; }
     .personalInfoFields { grid-column: auto; display: block; }

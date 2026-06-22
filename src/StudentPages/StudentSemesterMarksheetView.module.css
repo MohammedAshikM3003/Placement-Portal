@@ -4,6 +4,7 @@
     font-family: 'Poppins', Arial, sans-serif;
     background: #f8f8fb;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
 }
 
@@ -11,6 +12,7 @@
     display: flex;
     margin-top: 55px;
     height: calc(100vh - 55px);
+    height: calc(100dvh - 55px);
 }
 
 .dashboardArea {
@@ -934,6 +936,7 @@
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
         overflow-y: auto;
         height: calc(100vh - 55px);
+        height: calc(100dvh - 55px);
         scrollbar-gutter: stable both-edges;
     }
 

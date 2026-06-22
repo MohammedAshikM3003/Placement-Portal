@@ -159,6 +159,7 @@
     font-family: 'Poppins', Arial, sans-serif;
     background: #f8f8fb;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
 }
 
@@ -166,6 +167,7 @@
     display: flex;
     margin-top: 55px;
     height: calc(100vh - 55px);
+    height: calc(100dvh - 55px);
     overflow: hidden;
 }
 
@@ -189,6 +191,7 @@
     transition: margin-left 0.3s ease-in-out;
     box-sizing: border-box;
     height: calc(100vh - 65px);
+    height: calc(100dvh - 65px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -892,11 +895,13 @@
     .container {
         overflow: hidden;
         min-height: 100vh;
+        min-height: 100dvh;
     }
 
     .main {
         overflow: hidden;
         height: calc(100vh - 55px);
+        height: calc(100dvh - 55px);
     }
 
     .achievements-area {
