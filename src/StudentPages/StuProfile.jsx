@@ -3817,7 +3817,6 @@ function StuProfile({ onLogout, onViewChange }) {
                     </form>
                 </div>
             </div>
-            {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
             <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
             <FileSizeErrorPopup 
                 isOpen={isFileSizeErrorOpen} 

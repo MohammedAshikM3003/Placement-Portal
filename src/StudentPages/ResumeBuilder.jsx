@@ -2391,7 +2391,6 @@ export default function ResumeBuilder({ onLogout, onViewChange }) {
           <BuilderContent onViewChange={onViewChange} studentData={studentData} />
         </div>
       </div>
-      {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
     </div>
   );
 }

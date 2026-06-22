@@ -419,7 +419,6 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
           </div>
         </div>
       </div>
-      {isSidebarOpen && <div className={styles['stu-db-overlay']} onClick={() => setIsSidebarOpen(false)}></div>}
     </div>
   );
 }

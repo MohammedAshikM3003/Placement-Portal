@@ -1656,8 +1656,6 @@ function Resume({ onLogout, onViewChange }) {
           <MainContent onViewChange={onViewChange} />
         </div>
       </div>
-      
-      {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
     </div>
   );
 }

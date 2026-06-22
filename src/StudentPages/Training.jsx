@@ -1035,7 +1035,6 @@ function Training({ onLogout, onViewChange }) {
                     </div>
                 </div>
             </div>
-            {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
             <TrainingCourseEnrolledAlert
                 isOpen={isCourseEnrolledPopupOpen}
                 onClose={() => setIsCourseEnrolledPopupOpen(false)}

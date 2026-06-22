@@ -857,7 +857,6 @@ export default function ATSChecker({ onLogout, onViewChange }) {
           <ATSCheckerContent onViewChange={onViewChange} />
         </div>
       </div>
-      {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
     </div>
   );
 }

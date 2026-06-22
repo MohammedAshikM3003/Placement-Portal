@@ -196,8 +196,6 @@ export default function Achievements({ onLogout, onViewChange }) { // Removed cu
           <AchievementsContent />
         </div>
       </div>
-      {/* FIX: Converted className to styles.className */}
-      {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
     </div>
   );
 }

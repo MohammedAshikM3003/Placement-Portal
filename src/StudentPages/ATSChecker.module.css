@@ -890,7 +890,7 @@
 
   .dashboardArea {
     --mobile-side-gap: 10px;
-    padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     margin-left: 0 !important;
     scrollbar-gutter: stable both-edges;
@@ -902,7 +902,7 @@
 @media (max-width: 768px) {
   .dashboardArea {
     --mobile-side-gap: 10px;
-    padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     margin-left: 0 !important;
     scrollbar-gutter: stable both-edges;

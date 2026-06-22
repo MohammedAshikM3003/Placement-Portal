@@ -228,7 +228,7 @@
         height: calc(100dvh - 65px) !important;
         max-height: calc(100vh - 65px) !important;
         max-height: calc(100dvh - 65px) !important;
-        padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+        padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
         -webkit-overflow-scrolling: touch;
         width: 100% !important;
         scrollbar-gutter: stable both-edges;

@@ -862,7 +862,6 @@ export default function Company({ onLogout, onViewChange }) {
             />
           </div>
         </div>
-        {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
       </div>
     );
   }
@@ -1085,7 +1084,6 @@ export default function Company({ onLogout, onViewChange }) {
           </div>
         </div>
       </div>
-      {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
       {offerResponsePopupElement}
       <DownloadProgressAlert
         isOpen={offerDownloadPopupState === 'progress'}

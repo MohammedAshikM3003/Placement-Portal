@@ -244,7 +244,6 @@ function StudentSemesterMarksheetView({ onLogout, onViewChange }) {
             <Navbar onToggleSidebar={handleToggleSidebar} />
             <div className={styles.main}>
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange} studentData={studentData} />
-                {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />}
                 
                 <div className={styles.dashboardArea}>
                     <div className={styles.contentWrapper} style={{ pointerEvents: isInitialLoading ? 'none' : 'auto' }}>

@@ -1154,7 +1154,7 @@
     width: 100% !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
-    padding: 30px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable both-edges;
@@ -1235,6 +1235,30 @@
 
   .platformRow {
     grid-template-columns: 1fr;
+  }
+
+  .skillCategoryRow {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    border-bottom: 1px dashed #dde6f4;
+    padding-bottom: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .skillCategoryField {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .skillCategoryInput {
+    width: 100% !important;
+    flex: 1 !important;
+  }
+
+  .chipsContainer {
+    width: 100% !important;
+    margin-top: 6px !important;
   }
 }
 
