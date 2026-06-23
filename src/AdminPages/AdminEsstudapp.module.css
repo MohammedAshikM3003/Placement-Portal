@@ -1062,7 +1062,6 @@
 
     gap: 15px;
 
-    margin-top: 30px;
 
 }
 
@@ -1517,10 +1516,14 @@
 }
 
 @keyframes Admin-es-apk-field-blink {
-    0%, 100% {
+
+    0%,
+    100% {
         border-color: #def4dd;
     }
-    25%, 75% {
+
+    25%,
+    75% {
         border-color: #ffc107;
         box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
     }

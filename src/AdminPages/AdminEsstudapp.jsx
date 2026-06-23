@@ -16,6 +16,8 @@ import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 // FIXED: Import CSS as a Module
 import styles from './AdminEsstudapp.module.css';
 
+import { CertificateDownloadProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
+
 
 
 // Constants from MainRegistration.jsx
@@ -124,6 +126,7 @@ function AdminEsstudapp() {
   const [endDateFocused, setEndDateFocused] = useState(false);
   const [highlightedField, setHighlightedField] = useState('');
   const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+  const [searchProgress, setSearchProgress] = useState(15);
   const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
     return (
@@ -725,220 +728,132 @@ function AdminEsstudapp() {
 
 
 
-  const handleSearch = () => {
-
-    (async () => {
-
-      try {
-
-        // Validate that a drive has been selected
-
-        if (!selectedDrive || !selectedDrive._id) {
-
-          alert('Please select a company and drive start date first.');
-
-          return;
-
-        }
-
-
-
-        setIsSearching(true);
-
-
-
-        // Use selectedDrive._id directly instead of relying on filterData state update
-
-        const driveId = selectedDrive._id;
-
-        console.log('Using drive ID from selectedDrive:', driveId);
-
-
-
-        // Preload students so next page can render immediately
-
-        const allStudents = await mongoDBService.getStudents();
-
-
-
-        // Apply same filtering logic as AdminEligiblestudents to compute filtered list
-
-        const filters = filterData;
-
-        const filtered = (allStudents || []).filter(student => {
-
-          if (filters.tenthPercentage && parseFloat(student.tenthPercentage) < parseFloat(filters.tenthPercentage)) {
-
-            return false;
-
-          }
-
-          if (filters.twelfthPercentage && parseFloat(student.twelfthPercentage) < parseFloat(filters.twelfthPercentage)) {
-
-            return false;
-
-          }
-
-          if (filters.diplomaPercentage && student.diplomaPercentage && parseFloat(student.diplomaPercentage) < parseFloat(filters.diplomaPercentage)) {
-
-            return false;
-
-          }
-
-          if (filters.ugCgpa && parseFloat(student.overallCGPA) < parseFloat(filters.ugCgpa)) {
-
-            return false;
-
-          }
-
-          if (filters.backlogs && parseInt(student.currentBacklogs || 0) > parseInt(filters.backlogs)) {
-
-            return false;
-
-          }
-
-          if (filters.department && !filters.department.split(',').map(d => d.trim()).includes(student.branch)) {
-
-            return false;
-
-          }
-
-          if (filters.arrearStatus && student.arrearStatus !== filters.arrearStatus) {
-
-            return false;
-
-          }
-
-          if (filters.bondWillingness && student.willingToSignBond !== filters.bondWillingness) {
-
-            return false;
-
-          }
-
-          if (filters.driveMode && student.preferredModeOfDrive !== filters.driveMode) {
-
-            return false;
-
-          }
-
-          if (filters.companyType) {
-
-            const studentCompanyTypes = (student.companyTypes || '').split(',').map(ct => ct.trim());
-
-            if (!studentCompanyTypes.includes(filters.companyType)) {
-
-              return false;
-
-            }
-
-          }
-
-          return true;
-
-        });
-
-
-
-        // Use driveId from selectedDrive state (most reliable source)
-
+  const finalizeSearch = (allStudents, error) => {
+    try {
+      if (error || !allStudents) {
+        // Fallback navigation with filterData only
         const filterDataWithDriveId = {
-
           ...filterData,
-
           _id: selectedDrive._id,
-
           driveId: selectedDrive._id,
-
           companyName: selectedDrive.companyName,
-
           jobRole: selectedDrive.jobRole
-
         };
-
-
-
-        console.log('Navigating with filterData:', filterDataWithDriveId);
-
-
-
-        // Navigate with pre-fetched data so eligible students page can render immediately
-
         navigate('/admin-eligible-students', {
-
           state: {
-
             filterData: filterDataWithDriveId,
-
-            preFetchedStudents: allStudents,
-
-            preFilteredStudents: filtered,
-
-            selectedDrive: selectedDrive // Also pass the drive object
-
-          }
-
-        });
-
-      } catch (error) {
-
-        console.error('Preloading students failed:', error);
-
-
-
-        // Validate that a drive has been selected
-
-        if (!selectedDrive || !selectedDrive._id) {
-
-          alert('Please select a company and drive start date first.');
-
-          setIsSearching(false);
-
-          return;
-
-        }
-
-
-
-        // Use driveId from selectedDrive state
-
-        const filterDataWithDriveId = {
-
-          ...filterData,
-
-          _id: selectedDrive._id,
-
-          driveId: selectedDrive._id,
-
-          companyName: selectedDrive.companyName,
-
-          jobRole: selectedDrive.jobRole
-
-        };
-
-
-
-        // fallback: navigate with filterData only
-
-        navigate('/admin-eligible-students', {
-
-          state: {
-
-            filterData: filterDataWithDriveId,
-
             selectedDrive: selectedDrive
-
           }
-
         });
-
-      } finally {
-
-        setIsSearching(false);
-
+        return;
       }
 
-    })();
+      const filters = filterData;
+      const filtered = (allStudents || []).filter(student => {
+        if (filters.tenthPercentage && parseFloat(student.tenthPercentage) < parseFloat(filters.tenthPercentage)) {
+          return false;
+        }
+        if (filters.twelfthPercentage && parseFloat(student.twelfthPercentage) < parseFloat(filters.twelfthPercentage)) {
+          return false;
+        }
+        if (filters.diplomaPercentage && student.diplomaPercentage && parseFloat(student.diplomaPercentage) < parseFloat(filters.diplomaPercentage)) {
+          return false;
+        }
+        if (filters.ugCgpa && parseFloat(student.overallCGPA) < parseFloat(filters.ugCgpa)) {
+          return false;
+        }
+        if (filters.backlogs && parseInt(student.currentBacklogs || 0) > parseInt(filters.backlogs)) {
+          return false;
+        }
+        if (filters.department && !filters.department.split(',').map(d => d.trim()).includes(student.branch)) {
+          return false;
+        }
+        if (filters.arrearStatus && student.arrearStatus !== filters.arrearStatus) {
+          return false;
+        }
+        if (filters.bondWillingness && student.willingToSignBond !== filters.bondWillingness) {
+          return false;
+        }
+        if (filters.driveMode && student.preferredModeOfDrive !== filters.driveMode) {
+          return false;
+        }
+        if (filters.companyType) {
+          const studentCompanyTypes = (student.companyTypes || '').split(',').map(ct => ct.trim());
+          if (!studentCompanyTypes.includes(filters.companyType)) {
+            return false;
+          }
+        }
+        return true;
+      });
 
+      const filterDataWithDriveId = {
+        ...filterData,
+        _id: selectedDrive._id,
+        driveId: selectedDrive._id,
+        companyName: selectedDrive.companyName,
+        jobRole: selectedDrive.jobRole
+      };
+
+      console.log('Navigating with filterData:', filterDataWithDriveId);
+
+      navigate('/admin-eligible-students', {
+        state: {
+          filterData: filterDataWithDriveId,
+          preFetchedStudents: allStudents,
+          preFilteredStudents: filtered,
+          selectedDrive: selectedDrive
+        }
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (!selectedDrive || !selectedDrive._id) {
+      alert('Please select a company and drive start date first.');
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchProgress(15);
+
+    let allStudentsData = null;
+    let fetchError = null;
+    let fetchDone = false;
+
+    // Start fetching database records immediately in the background
+    mongoDBService.getStudents()
+      .then(students => {
+        allStudentsData = students;
+        fetchDone = true;
+      })
+      .catch(err => {
+        console.error('Preloading students failed:', err);
+        fetchError = err;
+        fetchDone = true;
+      });
+
+    const interval = window.setInterval(() => {
+      setSearchProgress(prev => {
+        // If progress is near 100 but fetch is not done, hold at 95%
+        if (prev >= 95 && !fetchDone) {
+          return 95;
+        }
+        
+        let nextProgress = prev;
+        if (prev < 50) nextProgress = prev + 12;
+        else if (prev < 80) nextProgress = prev + 8;
+        else if (prev < 99) nextProgress = prev + 4;
+        else nextProgress = 100;
+
+        if (nextProgress >= 100) {
+          window.clearInterval(interval);
+          finalizeSearch(allStudentsData, fetchError);
+        }
+        return nextProgress;
+      });
+    }, 180);
   };
 
 
@@ -1568,12 +1483,26 @@ function AdminEsstudapp() {
             onClick={handleSearch}
             disabled={isSearchDisabled || isSearching}
           >
-            {isSearching ? 'Searching...' : 'Search'}
+            Search
           </button>
 
         </div>
 
       </div>
+
+      <CertificateDownloadProgressAlert
+        isOpen={isSearching}
+        progress={searchProgress}
+        fileLabel="student database"
+        title="Searching..."
+        color="#4EA24E"
+        progressColor="#4EA24E"
+        messages={{
+          initial: 'Fetching eligible students...',
+          mid: 'Filtering student database...',
+          final: 'Finalizing search results...'
+        }}
+      />
 
       {isSidebarOpen && (
 

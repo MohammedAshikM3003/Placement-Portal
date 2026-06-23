@@ -44,16 +44,91 @@ function AdminEsstudapp () {
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
   
+  const YEAR_OPTIONS = ['I', 'II', 'III', 'IV'];
+  const SEM_OPTIONS_BY_YEAR = {
+      I: ['1', '2'],
+      II: ['3', '4'],
+      III: ['5', '6'],
+      IV: ['7', '8'],
+  };
+
+  const calculateCurrentYear = (batch) => {
+      if (!batch) return '';
+      const currentYear = new Date().getFullYear();
+      const batchMatch = batch.match(/(\d{4})-(\d{4})/);
+      if (!batchMatch) return '';
+
+      const startYear = parseInt(batchMatch[1]);
+      const yearDiff = currentYear - startYear;
+
+      if (yearDiff < 1) return 'I';
+      if (yearDiff === 1) return 'II';
+      if (yearDiff === 2) return 'III';
+      if (yearDiff >= 3) return 'IV';
+      return 'I';
+  };
+
+  const normalizeYearRoman = (value) => {
+      const raw = (value ?? '').toString().trim().toUpperCase();
+      if (!raw) return '';
+      if (YEAR_OPTIONS.includes(raw)) return raw;
+      const asNum = Number.parseInt(raw, 10);
+      if (asNum === 1) return 'I';
+      if (asNum === 2) return 'II';
+      if (asNum === 3) return 'III';
+      if (asNum === 4) return 'IV';
+      return raw;
+  };
+
+  const normalizeSemRoman = (value) => {
+      const raw = (value ?? '').toString().trim().toUpperCase();
+      if (!raw) return '';
+      const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+      if (roman.includes(raw)) return raw;
+      const asNum = Number.parseInt(raw, 10);
+      if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 8) return roman[asNum - 1];
+      return raw;
+  };
+
   // Local filter state for the filter card
   const [localFilter, setLocalFilter] = useState({
-    branch: '',
-    name: '',
-    registerNo: '',
-    cgpa: ''
+    searchQuery: '',
+    batchStart: '',
+    batchEnd: '',
+    year: '',
+    sem: '',
+    branch: ''
   });
 
   const handleLocalFilterChange = (field, value) => {
     setLocalFilter(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBatchStartChange = (value) => {
+    const startVal = value.trim();
+    if (!startVal) {
+      setLocalFilter(prev => ({
+        ...prev,
+        batchStart: '',
+        batchEnd: ''
+      }));
+      return;
+    }
+    const startNum = parseInt(startVal, 10);
+    const endVal = Number.isFinite(startNum) ? (startNum + 4).toString() : '';
+    setLocalFilter(prev => ({
+      ...prev,
+      batchStart: startVal,
+      batchEnd: endVal
+    }));
+  };
+
+  const handleYearChange = (yearValue) => {
+    setLocalFilter(prev => ({
+      ...prev,
+      year: yearValue,
+      sem: ''
+    }));
   };
 
   const toggleSidebar = () => {
@@ -74,24 +149,25 @@ function AdminEsstudapp () {
   // Auto-apply filters when localFilter changes
   useEffect(() => {
     const applyLocalFilter = () => {
-      // If only branch is selected, show all students from that branch
-      if (localFilter.branch && !localFilter.name && !localFilter.registerNo && !localFilter.cgpa) {
-        const branchFiltered = students.filter(student => student.branch === localFilter.branch);
-        setFilteredStudents(branchFiltered);
-        return;
-      }
-      
-      // Apply local filters to the already filtered students
-      const baseStudents = students.length > 0 ? students : filteredStudents;
+      // Apply local filters to the database students list
+      const baseStudents = students || [];
       const locallyFiltered = baseStudents.filter(student => {
         const branchMatch = !localFilter.branch || student.branch === localFilter.branch;
-        const nameMatch = !localFilter.name || 
-          `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase().includes(localFilter.name.toLowerCase());
-        const regMatch = !localFilter.registerNo || 
-          (student.regNo || '').includes(localFilter.registerNo);
-        const cgpaMatch = !localFilter.cgpa || 
-          parseFloat(student.overallCGPA || 0) >= parseFloat(localFilter.cgpa);
-        return branchMatch && nameMatch && regMatch && cgpaMatch;
+        
+        const queryMatch = !localFilter.searchQuery ||
+          `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase().includes(localFilter.searchQuery.toLowerCase()) ||
+          (student.regNo || '').includes(localFilter.searchQuery);
+
+        const batchString = localFilter.batchStart && localFilter.batchEnd ? `${localFilter.batchStart}-${localFilter.batchEnd}` : '';
+        const batchMatch = !batchString || (student.batch || '').trim() === batchString;
+
+        const studentYear = student.currentYear || student.year || calculateCurrentYear(student.batch);
+        const yearMatch = !localFilter.year || normalizeYearRoman(studentYear) === normalizeYearRoman(localFilter.year);
+
+        const studentSem = student.currentSemester || student.semester || student.sem || '';
+        const semMatch = !localFilter.sem || normalizeSemRoman(studentSem) === normalizeSemRoman(localFilter.sem);
+
+        return branchMatch && queryMatch && batchMatch && yearMatch && semMatch;
       });
       setFilteredStudents(locallyFiltered);
     };
@@ -121,6 +197,14 @@ function AdminEsstudapp () {
 
   const handleClearSelection = () => {
     setSelectedStudents([]);
+    setLocalFilter({
+      searchQuery: '',
+      batchStart: '',
+      batchEnd: '',
+      year: '',
+      sem: '',
+      branch: ''
+    });
   };
 
   const handleConfirmSelection = async () => {
@@ -474,61 +558,95 @@ function AdminEsstudapp () {
                   Eligible Students
                 </div>
                 <div className={styles['Admin-es-search-inputs']}>
-                  {/* Branch Dropdown - No Label */}
+                  {/* Enter Name / Reg No - Row 1 Column 1 */}
                   <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Enter Name / Reg No</label>
+                    <div className={styles['Admin-es-search-input']}>
+                      <input
+                        type="text"
+                        placeholder="Enter Name / Reg No"
+                        value={localFilter.searchQuery}
+                        onChange={(e) => handleLocalFilterChange('searchQuery', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Batch - Row 1 Column 2 */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Batch</label>
+                    <div className={styles['Admin-es-batch-range-inputs']}>
+                      <div className={styles['Admin-es-search-input']}>
+                        <input
+                          type="text"
+                          placeholder="Start"
+                          inputMode="numeric"
+                          value={localFilter.batchStart}
+                          onChange={(e) => {
+                            const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
+                            handleBatchStartChange(start);
+                          }}
+                        />
+                      </div>
+                      <div className={styles['Admin-es-batch-range-sep']}>-</div>
+                      <div className={styles['Admin-es-search-input']}>
+                        <input
+                          type="text"
+                          placeholder="End"
+                          value={localFilter.batchEnd}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Year-Sem - Row 2 Column 1 */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Year-Sem</label>
+                    <div className={styles['Admin-es-yearsem-range-inputs']}>
+                      <div className={styles['Admin-es-search-input']}>
+                        <select
+                          value={localFilter.year}
+                          onChange={(e) => handleYearChange(e.target.value)}
+                        >
+                          <option value="">Year</option>
+                          {YEAR_OPTIONS.map((y) => (
+                            <option key={y} value={y}>
+                              {y}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className={styles['Admin-es-yearsem-range-sep']}>-</div>
+                      <div className={styles['Admin-es-search-input']}>
+                        <select
+                          value={localFilter.sem}
+                          disabled={!localFilter.year}
+                          onChange={(e) => handleLocalFilterChange('sem', e.target.value)}
+                        >
+                          <option value="">Sem</option>
+                          {(SEM_OPTIONS_BY_YEAR[localFilter.year] || []).map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Branch Dropdown - Row 2 Column 2 */}
+                  <div className={styles['Admin-es-input-group']}>
+                    <label className={styles['Admin-es-input-label']}>Branch</label>
                     <div className={styles['Admin-es-search-input']}>
                       <select 
                         value={localFilter.branch} 
                         onChange={(e) => handleLocalFilterChange('branch', e.target.value)}
-                        className={styles['Admin-es-select']}
                       >
-                        <option value="">Branches</option>
+                        <option value="">Select Branch</option>
                         {filterCriteria?.department && filterCriteria.department.split(',').map((branch, index) => (
                           <option key={index} value={branch.trim()}>{branch.trim()}</option>
                         ))}
                       </select>
-                    </div>
-                  </div>
-                  
-                  {/* Name Input - With Label */}
-                  <div className={styles['Admin-es-input-group']}>
-                    <label className={styles['Admin-es-input-label']}>Name</label>
-                    <div className={styles['Admin-es-search-input']}>
-                      <input
-                        type="text"
-                        placeholder="Name"
-                        value={localFilter.name}
-                        onChange={(e) => handleLocalFilterChange('name', e.target.value)}
-                        className={styles['Admin-es-input']}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Register No Input - With Label */}
-                  <div className={styles['Admin-es-input-group']}>
-                    <label className={styles['Admin-es-input-label']}>Regno</label>
-                    <div className={styles['Admin-es-search-input']}>
-                      <input
-                        type="text"
-                        placeholder="Register No."
-                        value={localFilter.registerNo}
-                        onChange={(e) => handleLocalFilterChange('registerNo', e.target.value)}
-                        className={styles['Admin-es-input']}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* CGPA Input - With Label */}
-                  <div className={styles['Admin-es-input-group']}>
-                    <label className={styles['Admin-es-input-label']}>CGPA</label>
-                    <div className={styles['Admin-es-search-input']}>
-                      <input
-                        type="text"
-                        placeholder="CGPA"
-                        value={localFilter.cgpa}
-                        onChange={(e) => handleLocalFilterChange('cgpa', e.target.value)}
-                        className={styles['Admin-es-input']}
-                      />
                     </div>
                   </div>
                 </div>

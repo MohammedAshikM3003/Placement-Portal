@@ -229,7 +229,11 @@ export const DownloadProgressAlert = ({ isOpen, progress = 25, fileLabel = 'resu
   if (!isOpen) return null;
 
   const { lower: labelLower } = normalizeFileLabel(fileLabel);
-  const progressVerb = /^loading/i.test((title || '').trim()) ? 'Loading' : 'Downloading';
+  const progressVerb = /^loading/i.test((title || '').trim()) 
+    ? 'Loading' 
+    : /^searching/i.test((title || '').trim()) 
+      ? 'Searching' 
+      : 'Downloading';
   const combinedMessages = {
     initial: `Preparing ${labelLower} for download...`,
     mid: 'Finalizing download...',

@@ -381,9 +381,30 @@ body {
   border: none;
   cursor: pointer;
   color: #999;
-  font-size: 14px;
 }
-          
+/* Batch Range and Year-Sem Sub-fields */
+.Admin-es-batch-range-inputs,
+.Admin-es-yearsem-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.Admin-es-batch-range-inputs .Admin-es-search-input,
+.Admin-es-yearsem-range-inputs .Admin-es-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.Admin-es-batch-range-sep,
+.Admin-es-yearsem-range-sep {
+  font-weight: 700;
+  color: #666;
+  flex-shrink: 0;
+}
+
 .Admin-es-search-btn-filter{
   background: #4EA24E;
   color: white;

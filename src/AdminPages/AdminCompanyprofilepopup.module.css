@@ -585,6 +585,8 @@
 }
 
 .Admin-profile-validation-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
     padding: 4px 8px;
     margin: 2px 0;
     border-radius: 4px;
@@ -593,6 +595,14 @@
     line-height: 1.35;
     font-weight: 500;
     font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Admin-profile-validation-item:hover {
+    background-color: #ffeaa7;
+    color: #664d03;
+    font-weight: 600;
+    transform: translateX(5px);
 }
 
 .Admin-profile-validation-pointer-tooltip {
@@ -608,6 +618,7 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
     pointer-events: none;
     z-index: 2147483646;
+    font-family: 'Poppins', sans-serif;
 }
 
 /* Blink animation for missing fields */

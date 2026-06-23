@@ -98,13 +98,46 @@ function AdminCompanyprofilePopup({ onLogout }) {
         }, 3000);
     }, [clearFieldHighlight]);
 
-    const handleTooltipMove = useCallback((event) => {
-        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+        return (
+            window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches ||
+            window.matchMedia('(hover: hover) and (pointer: fine)').matches
+        );
+    });
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+        const hybridQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+        const primaryQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const updatePointerSupport = () => {
+            const isSupported = hybridQuery.matches || primaryQuery.matches;
+            setSupportsPointerTooltip(isSupported);
+            if (!isSupported) {
+                setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+            }
+        };
+        updatePointerSupport();
+        if (typeof hybridQuery.addEventListener === 'function') {
+            hybridQuery.addEventListener('change', updatePointerSupport);
+            primaryQuery.addEventListener('change', updatePointerSupport);
+            return () => {
+                hybridQuery.removeEventListener('change', updatePointerSupport);
+                primaryQuery.removeEventListener('change', updatePointerSupport);
+            };
+        }
+        return undefined;
     }, []);
 
+    const handleTooltipMove = useCallback((event) => {
+        if (!supportsPointerTooltip) return;
+        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    }, [supportsPointerTooltip]);
+
     const handleTooltipLeave = useCallback(() => {
+        if (!supportsPointerTooltip) return;
         setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
-    }, []);
+    }, [supportsPointerTooltip]);
 
     useEffect(() => () => {
         if (highlightResetTimerRef.current) clearTimeout(highlightResetTimerRef.current);
@@ -459,9 +492,9 @@ function AdminCompanyprofilePopup({ onLogout }) {
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => focusField(error.field)}
-                                    onMouseEnter={handleTooltipMove}
-                                    onMouseMove={handleTooltipMove}
-                                    onMouseLeave={handleTooltipLeave}
+                                    onMouseEnter={supportsPointerTooltip ? handleTooltipMove : undefined}
+                                    onMouseMove={supportsPointerTooltip ? handleTooltipMove : undefined}
+                                    onMouseLeave={supportsPointerTooltip ? handleTooltipLeave : undefined}
                                     style={{ cursor: 'pointer' }}
                                 >
                                     {error.label} is required
@@ -471,7 +504,7 @@ function AdminCompanyprofilePopup({ onLogout }) {
                     </div>
                 )}
 
-                {errorTooltip.visible && (
+                {supportsPointerTooltip && errorTooltip.visible && (
                     <div
                         className={styles['Admin-profile-validation-pointer-tooltip']}
                         style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
