@@ -69,6 +69,50 @@ const toDmy = (dateStr) => {
   return dateStr;
 };
 
+const RequiredStar = () => <span className={styles['Admin-profile-required-star']}>*</span>;
+
+const MissingFieldsCard = ({ missingFields, onFieldClick, errorTooltip, supportsPointerTooltip, onTooltipMove, onTooltipLeave }) => {
+  if (!missingFields.length) return null;
+  return (
+    <div className={styles['Admin-profile-validation-box']}>
+      <h4 className={styles['Admin-profile-validation-heading']}>
+        <span className={styles['Admin-profile-validation-icon']} aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+            <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+          </svg>
+        </span>
+        Required Fields Missing:
+      </h4>
+      <ul className={styles['Admin-profile-validation-list']}>
+        {missingFields.map((error, index) => (
+          <li
+            key={`${error.field}-${index}`}
+            className={styles['Admin-profile-validation-item']}
+            role="button"
+            tabIndex={0}
+            aria-label="Click to navigate"
+            onClick={() => onFieldClick(error.field)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick(error.field); } }}
+            onMouseEnter={supportsPointerTooltip ? onTooltipMove : undefined}
+            onMouseMove={supportsPointerTooltip ? onTooltipMove : undefined}
+            onMouseLeave={supportsPointerTooltip ? onTooltipLeave : undefined}
+          >
+            {error.label} is required
+          </li>
+        ))}
+      </ul>
+      {supportsPointerTooltip && errorTooltip.visible && (
+        <div
+          className={styles['Admin-profile-validation-pointer-tooltip']}
+          style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+        >
+          Click to navigate
+        </div>
+      )}
+    </div>
+  );
+};
+
 function AdminEsstudapp() {
   useAdminAuth(); // JWT authentication verification
   const navigate = useNavigate();
@@ -78,6 +122,16 @@ function AdminEsstudapp() {
   const [dateSelectionMode, setDateSelectionMode] = useState('none');
   const [startDateFocused, setStartDateFocused] = useState(false);
   const [endDateFocused, setEndDateFocused] = useState(false);
+  const [highlightedField, setHighlightedField] = useState('');
+  const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+  const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return (
+      window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches ||
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    );
+  });
+
 
 
 
@@ -956,6 +1010,18 @@ function AdminEsstudapp() {
     console.log("Clear top filters action triggered.");
   };
 
+  const handleFieldClick = (field) => {
+    setHighlightedField(field);
+    const element = document.getElementById(field);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    setTimeout(() => {
+      setHighlightedField('');
+    }, 3000);
+  };
+
+
 
 
   // ADDED: Navigation function to go back to Eligible Students page
@@ -996,7 +1062,59 @@ function AdminEsstudapp() {
 
   }, []);
 
+  // --- Pointer tooltip support detection ---
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const hybridQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const primaryQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const updatePointerSupport = () => {
+      const isSupported = hybridQuery.matches || primaryQuery.matches;
+      setSupportsPointerTooltip(isSupported);
+      if (!isSupported) {
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      }
+    };
+    updatePointerSupport();
+    if (typeof hybridQuery.addEventListener === 'function') {
+      hybridQuery.addEventListener('change', updatePointerSupport);
+      primaryQuery.addEventListener('change', updatePointerSupport);
+      return () => {
+        hybridQuery.removeEventListener('change', updatePointerSupport);
+        primaryQuery.removeEventListener('change', updatePointerSupport);
+      };
+    }
+    return undefined;
+  }, []);
 
+  const handleErrorTooltipMove = (event) => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+  };
+
+  const handleErrorTooltipLeave = () => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+  };
+
+  const getMissingFields = () => {
+    const missing = [];
+    if (!filterData.companyName) {
+      missing.push({ field: 'companyName', label: 'Company Name' });
+    }
+    if (!filterData.driveStartDate || !filterData.driveEndDate) {
+      missing.push({ field: 'admin-search-dates', label: 'Dates' });
+    }
+    if (!filterData.jobs) {
+      missing.push({ field: 'jobs', label: 'Job Role' });
+    }
+    if (!filterData.totalRound) {
+      missing.push({ field: 'totalRound', label: 'Total Round' });
+    }
+    return missing;
+  };
+
+  const missingFieldsList = getMissingFields();
+  const isSearchDisabled = missingFieldsList.length > 0;
 
   return (
 
@@ -1060,8 +1178,10 @@ function AdminEsstudapp() {
 
               {/* Company Name with Static Label */}
               <div className={styles['Admin-es-apk-input-wrapper']}>
-                <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">Company Name</label>
-                <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">
+                  Company Name <RequiredStar />
+                </label>
+                <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'companyName' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   <select
                     id="companyName"
                     value={filterData.companyName}
@@ -1080,9 +1200,9 @@ function AdminEsstudapp() {
               {/* Dates Filter with Static Label and Start/End subfields */}
               <div className={styles['Admin-es-apk-input-wrapper']}>
                 <label className={styles['Admin-es-apk-static-label']} htmlFor="admin-search-dates">
-                  Dates
+                  Dates <RequiredStar />
                 </label>
-                <div className={styles['Admin-es-apk-date-range-inputs']}>
+                <div id="admin-search-dates" className={`${styles['Admin-es-apk-date-range-inputs']} ${highlightedField === 'admin-search-dates' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   {Boolean(filterData.driveEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
                     <div className={`${styles['Admin-es-apk-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
                       <select
@@ -1153,9 +1273,11 @@ function AdminEsstudapp() {
 
               {/* Job Role with Static Label */}
               <div className={styles['Admin-es-apk-input-wrapper']}>
-                <label className={styles['Admin-es-apk-static-label']} htmlFor="jobs">Job Role</label>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="jobs">
+                  Job Role <RequiredStar />
+                </label>
                 {uniqueJobRolesForDates.length > 1 ? (
-                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                     <select
                       id="jobs"
                       value={filterData.jobs}
@@ -1169,7 +1291,7 @@ function AdminEsstudapp() {
                     </select>
                   </div>
                 ) : (
-                  <div className={styles['Admin-es-apk-search-input']}>
+                  <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                     <input
                       type="text"
                       id="jobs"
@@ -1183,8 +1305,10 @@ function AdminEsstudapp() {
 
               {/* Total Round with Static Label */}
               <div className={styles['Admin-es-apk-input-wrapper']}>
-                <label className={styles['Admin-es-apk-static-label']} htmlFor="totalRound">Total Round</label>
-                <div className={styles['Admin-es-apk-search-input']}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="totalRound">
+                  Total Round <RequiredStar />
+                </label>
+                <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'totalRound' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   <input
                     type="text"
                     id="totalRound"
@@ -1422,17 +1546,30 @@ function AdminEsstudapp() {
 
 
 
-          <div className={styles['Admin-es-apk-bottom-button-container']}>
+        </div>
 
-            <button className={styles['Admin-es-apk-clear-bottom-btn']} onClick={handleClear} disabled={isSearching}>Clear</button>
+        {missingFieldsList.length > 0 && (
+          <MissingFieldsCard
+            missingFields={missingFieldsList}
+            onFieldClick={handleFieldClick}
+            errorTooltip={errorTooltip}
+            supportsPointerTooltip={supportsPointerTooltip}
+            onTooltipMove={handleErrorTooltipMove}
+            onTooltipLeave={handleErrorTooltipLeave}
+          />
+        )}
 
-            <button className={styles['Admin-es-apk-search-bottom-btn']} onClick={handleSearch} disabled={isSearching}>
+        <div className={styles['Admin-es-apk-bottom-button-container']}>
 
-              {isSearching ? 'Searching...' : 'Search'}
+          <button className={styles['Admin-es-apk-clear-bottom-btn']} onClick={handleClear} disabled={isSearching}>Clear</button>
 
-            </button>
-
-          </div>
+          <button
+            className={styles['Admin-es-apk-search-bottom-btn']}
+            onClick={handleSearch}
+            disabled={isSearchDisabled || isSearching}
+          >
+            {isSearching ? 'Searching...' : 'Search'}
+          </button>
 
         </div>
 
