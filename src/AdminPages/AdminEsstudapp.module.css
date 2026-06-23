@@ -263,15 +263,19 @@
 
     color: #fff;
 
-    border-radius: 80px;
+    border-radius: 30px;
 
-    padding: 8px 28px;
+    font-size: 1rem;
 
-    font-size: 1.05em;
+    font-weight: 500;
 
-    font-weight: 600;
+    height: 35px;
 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    line-height: 35px;
+
+    width: 228px;
+
+    text-align: center;
 
     z-index: 2;
 
@@ -1141,6 +1145,8 @@
 
         gap: 15px;
 
+        align-items: center;
+
     }
 
     /* Eligible Students / Placed Students Card */
@@ -1229,7 +1235,7 @@
 
     .Admin-es-apk-main-content {
 
-        margin: 65px 0px 0 26px;
+        margin: 65px 15px 0 15px;
 
         padding: 5px;
 

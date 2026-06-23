@@ -32,12 +32,14 @@ body {
 /* Main Content */
 .Admin-es-main-content {
   flex-grow: 1;
-  padding: 10px;
-  margin: 65px 2px 0px 286px;
+  padding: 20px;
+  margin: 65px 0px 0px 280px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow-x: hidden;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
 }
 
 .Admin-es-main-content::-webkit-scrollbar {
@@ -64,118 +66,132 @@ body {
   gap: 20px;
   align-items: stretch;
   flex-wrap: nowrap;
-  margin-left: 15px;
+  margin-left: 0;
+  margin-right: 0;
   height: 245px;
+  flex-shrink: 0;
 }
 .Admin-es-summary-cards > .Admin-es-company-profile-search {
   flex: 1;
-  max-width: 750px;
+  max-width: 600px;
 }
 .Admin-es-summary-card {
   background: #fff;
-  border-radius: 15px;
-  padding: 12px 15px;
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border: 2px solid #808080;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid grey;
+  box-sizing: border-box;
 }
 
 .Admin-es-summary-card:hover {
-  border: 2px solid #4EA24E;
-  box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
+  border: 2px solid rgb(2, 171, 41);
 }
 .Admin-es-summary-card-icon {
-  margin-bottom: 10px;
-  margin-top: 10px;
+  width: 90px;
+  height: 50px;
+  margin: 0 auto 15px auto;
+  background: #f8f9fa;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 4px;
 }
 .Admin-es-summary-card-icon img {
-  width: 50px;
-  height: 50px;
+  width: 75px;
+  height: 75px;
+  margin-top: 20px;
 }
 .Admin-es-summary-card-title-1 {
-  font-size: 1.9rem;
-  font-weight: 720;
-  margin-bottom: 10px;
-  color: #0f0e0e;
-  margin: auto;
-  letter-spacing: 1.5px;
-  line-height: 30px;
+  font-weight: 700;
+  font-size: 1.7em;
+  margin-top: 28px;
+  color: #333;
 }
 
 .Admin-es-summary-card-title-2 {
-  font-size: 1.9rem;
-  font-weight: 720;
-  margin-bottom: 10px;
-  color: #0f0e0e;
-  margin: auto;
-  letter-spacing: 1.5px;
-  line-height: 30px;
+  font-weight: 700;
+  font-size: 1.7em;
+  margin-top: 28px;
+  color: #333;
 }
 
 .Admin-es-summary-card-desc-1 {
-  font-size: 1.2rem;
+  font-size: 0.9em;
   color: #666;
-  margin-top: 8px;
-  font-weight: 500;
   line-height: 1.3;
 }
 
 .Admin-es-summary-card-desc-1-margin {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .Admin-es-summary-card-desc-2 {
-  font-size: 1.2rem;
+  font-size: 0.9em;
   color: #666;
-  margin-top: 8px;
-  font-weight: 500;
   line-height: 1.3;
 }
 
 .Admin-es-summary-card-desc-2-margin {
-  margin-top: 8px;
-}
-
-/* Company Drive Card Specific Styles */
-.Admin-es-company-drive-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  text-align: center;
-  padding: 12px 15px;
-  background-color: #ffffff;
-  border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 2px solid #808080;
-  width:200px;
-}
-
-.Admin-es-company-drive-card-sized {
-  flex: 0 0 140px;
-}
-
-.Admin-es-company-drive-card .Admin-es-summary-card-icon {
-  margin-bottom: 10px;
   margin-top: 10px;
 }
 
-.Admin-es-icon-bg-white {
-  background: #ffffff;
+/* Company Drive Card Specific Styles */
+.Admin-es-action-addcard {
+  text-align: center;
+  width: 300px;
+  flex-shrink: 0;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid grey;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
 }
 
-.Admin-es-company-drive-card .Admin-es-summary-card-title {
-  font-weight: 600;
-  font-size: 1.1em;
-  margin-bottom: 8px;
+.Admin-es-add-card {
+  cursor: pointer;
+  transition: border 0.2s, transform 0.2s, box-shadow 0.2s;
+  border-color: #808080;
+}
+
+.Admin-es-add-card:hover {
+  border: 2px solid rgb(2, 171, 41);
+  transform: translateY(-2px);
+}
+
+.Admin-es-add-icon {
+  width: 75px;
+  height: 75px;
+  margin-top: 20px;
+}
+
+.Admin-es-add-header {
+  font-weight: 700;
+  font-size: 1.7em;
   color: #333;
+  margin-top: 28px;
+  letter-spacing: normal;
+  line-height: normal;
+  margin-bottom: 10px;
+}
+
+.Admin-es-add-description {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.3;
+  margin-top: 10px;
 }
 
 /* Filtered Students Card - Green */
@@ -183,7 +199,7 @@ body {
   background: #4EA24E;
   border-radius: 12px;
   padding: 20px;
-  width: 200px;
+  width: 300px;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   text-align: center;
@@ -194,6 +210,7 @@ body {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+  height: 100%;
 }
 
 .Admin-es-filtered-students-card:hover {
@@ -203,7 +220,7 @@ body {
 
 .Admin-es-filtered-title {
   font-weight: 700;
-  font-size: 1.5em;
+  font-size: 1.7em;
   color: #fff;
   line-height: 1.2;
   margin-top: -4px;
@@ -211,13 +228,13 @@ body {
 
 .Admin-es-filtered-count {
   font-weight: 900;
-  font-size: 3.5em;
+  font-size: 4.5em;
   color: #fff;
-  margin: 10px 0;
+  margin: 0;
 }
 
 .Admin-es-filtered-desc {
-  font-size: 0.75em;
+  font-size: 0.9em;
   color: #fff;
   line-height: 1.3;
 }
@@ -231,73 +248,107 @@ body {
 .Admin-es-search-filters {
   flex: 1;
   background: #e8e8e8;
-  padding: 20px;
+  padding: 20px 25px 23px 25px;
   border-radius: 18px;
   position: relative;
   display: flex;
   flex-direction: column;
-  max-width: 750px;
+  max-width: 600px;
+  box-sizing: border-box;
 }
 .Admin-es-search-tab {
   text-align: center;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 500;
   background-color: #4EA24E;
   color: white;
-  padding: 6px 0px 9px 0px;
-  margin: 0 auto 15px auto;
+  height: 35px;
+  line-height: 35px;
+  margin: 0 auto;
   border-radius: 30px;
   display: block;
-  width: 240px;
+  width: 228px;
+}
+.Admin-es-filter-header-container {
+  position: relative;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+.Admin-es-clear-btn-header {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 35px;
+  line-height: 35px;
+  border: none;
+  border-radius: 30px;
+  background-color: #dcdcdc;
+  color: #333;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.Admin-es-clear-btn-header:hover {
+  background-color: #c0c0c0;
 }
 .Admin-es-search-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px 18px;
   flex-grow: 1;
-  margin-bottom: 15px;
+  margin-bottom: 0;
   align-items: start;
-  padding-top: 25px;
+  margin-top: 0;
 }
 
 /* Single wrapper for each grid cell - contains both label and input */
 .Admin-es-input-group {
-  position: relative;
-  height: 45px;
   display: flex;
   flex-direction: column;
+  gap: 0;
+  position: relative;
+  height: 100%;
+  align-items: stretch;
+  padding-top: 25px;
 }
 
-/* Label positioned absolutely above the input - outside grid flow */
+/* Label positioned absolutely above the input */
 .Admin-es-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-left: 5px;
+  display: block;
   position: absolute;
-  top: -25px;
+  top: 0;
   left: 0;
   right: 0;
   height: 20px;
   line-height: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #666;
-  margin: 7px;
-  display: block;
 }
 
 .Admin-es-search-input {
   position: relative;
-  border: 3px solid #ccc;
+  border: 1.5px solid #d1d5db;
   border-radius: 8px;
   overflow: visible;
-  height: 100%;
+  height: 45px;
   background-color: #ffffff;
-  transition: border-color 0.2s ease, border-width 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 .Admin-es-search-input:hover{
   border-color: #4EA24E;
 }
+.Admin-es-search-input:focus-within {
+  border-color: #4EA24E;
+}
 .Admin-es-search-input input,
 .Admin-es-search-input select {
-  width: 89%;
+  width: 100%;
   height: 100%;
   padding: 0px 15px;
   border: none;
@@ -360,10 +411,6 @@ body {
   outline: none;
 }
 
-.Admin-es-search-input input:focus ~ .Admin-es-search-input {
-  border-color: #4EA24E;
-}
-
 .Admin-es-search-input .Admin-es-search-icon {
   position: absolute;
   left: 8px;
@@ -388,7 +435,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 100%;
+  height: 45px;
 }
 
 .Admin-es-batch-range-inputs .Admin-es-search-input,
@@ -491,31 +538,33 @@ body {
 .Admin-es-bottom-card {
   background-color: #ffffff;
   border-radius: 15px;
-  padding: 30px 20px 20px 20px;
-  margin-left: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 12px 20px;
+  margin-left: 0;
+  margin-right: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .Admin-es-profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: relative;
-  z-index: 15;
-  margin-bottom: -5px;
-  top: 0px;
+  flex-shrink: 0;
 }
 .Admin-es-profile-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #333;
 }
 .Admin-es-print-btn-container {
   position: relative;
-  display: inline-block;
-  z-index: 15;
 }
 .Admin-es-print-btn {
-  background: #4EA24E;
+  background-color: #4EA24E;
   color: white;
   border: none;
   padding: 8px 30px;
@@ -525,16 +574,13 @@ body {
   font-size: 1rem;
 }
 .Admin-es-print-btn:hover {
-  background: #3d8a3d;
-}
-.Admin-es-print-btn::after {
-  margin-left: 8px;
-  font-size: 0.8em;
+  background-color: #3d8a3d;
 }
 .Admin-es-dropdown-menu {
   position: absolute;
-  top: 40px;
+  top: 100%;
   right: 0;
+  margin-top: 5px;
   z-index: 2000;
   background: white;
   border: 1px solid #ddd;
@@ -555,73 +601,43 @@ body {
   color: #333;
   transition: background-color 0.2s;
 }
-.Admin-es-dropdown-item:last-child {
-  border-bottom: none;
-}
 .Admin-es-dropdown-item:hover {
-  background: #f0f0f0;
-}
-.Admin-es-dropdown-item:first-child {
-  border-radius: 8px 8px 0 0;
-}
-.Admin-es-dropdown-item:last-child {
-  border-radius: 0 0 8px 8px;
+  background-color: #f0f0f0;
 }
 .Admin-es-table-container {
-  height: 300px;
-  /* overflow-y: scroll; */
-  overflow-x: auto;
+  flex-grow: 1;
+  width: 100%;
+  overflow: auto;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
+  max-height: 100%;
+  padding-bottom: 25px;
 }
 
-/* Green Scrollbars */
+/* --- Table Scrollbars (Desktop) --- */
 .Admin-es-table-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .Admin-es-table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
+  background: transparent;
 }
 
 .Admin-es-table-container::-webkit-scrollbar-thumb {
-  background: #4EA24E;
-  border-radius: 4px;
+  background: #4ea24e;
+  border-radius: 8px;
 }
 
 .Admin-es-table-container::-webkit-scrollbar-thumb:hover {
-  background: #3d8a3d;
-}
-
-/* Scroll wrapper inside component (used for flex layout) */
-.Admin-es-table-scroll {
-  overflow-y: auto;
-}
-
-.Admin-es-table-scroll::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.Admin-es-table-scroll::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-
-.Admin-es-table-scroll::-webkit-scrollbar-thumb {
-  background: #4EA24E;
-  border-radius: 4px;
-}
-
-.Admin-es-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: #3d8a3d;
+  background: #4ea24e;
 }
 
 .Admin-es-profile-table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9rem;
   white-space: nowrap;
 }
@@ -629,7 +645,6 @@ body {
   position: sticky;
   top: 0;
   background-color: #ffffff;
-  border-bottom: none;
   z-index: 11;
 }
 
@@ -637,31 +652,36 @@ body {
   padding: 8px 10px;
   text-align: center;
   font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  background-color: #ffffff;
-  border-bottom: none;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.9rem;
 }
 
 .Admin-es-profile-table tbody tr {
   cursor: pointer;
-  transition: background-color 0.1s;
-  border-bottom: 1px solid #eee;
-  height: 47px;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f5f5f5;
+  height: auto;
 }
 
 .Admin-es-profile-table tbody tr:hover {
-  background-color: #f6f6f6;
+  background-color: #fafafa;
+}
+
+.Admin-es-selected-row {
+  background-color: #f7fff5 !important;
 }
 
 .Admin-es-profile-table td {
   padding: 10px 10px;
   text-align: center;
-  color: #2e2e2e;
-  font-weight: 450;
-  white-space: nowrap;
+  color: #333;
+  vertical-align: middle;
   font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 /* Table Footer Buttons */
@@ -672,6 +692,9 @@ body {
   padding: 15px 20px;
   background-color: #ffffff;
   border-top: 1px solid #eee;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
 }
 
 .Admin-es-clear-btn {
@@ -679,7 +702,7 @@ body {
   color: white;
   border: none;
   padding: 8px 35px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -695,7 +718,7 @@ body {
   color: white;
   border: none;
   padding: 8px 35px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -898,38 +921,7 @@ body {
   .Admin-es-companies-table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
     background: #666;
   }
-  .Admin-es-summary-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 20px;
-    padding: 0;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
-    height: auto;
-    box-sizing: border-box;
-  }
 
-  .Admin-es-summary-cards > .Admin-es-company-profile-search {
-    justify-self: center;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-summary-card {
-    width: 100%;
-    height: auto;
-    padding: 20px 15px;
-    margin: 0;
-    border: 2px solid grey;
-    border-radius: 12px;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-summary-card:hover {
-    border: 2px solid rgb(2, 171, 41);
-  }
 
   .Admin-es-summary-card-icon {
     width: 70px;
@@ -1103,7 +1095,7 @@ body {
   }
 
   /* Company Drive Card and Placed Students Card */
-  .Admin-es-company-drive-card,
+  .Admin-es-action-addcard,
   .Admin-es-placed-students-card {
     background: #fff;
     border-radius: 12px;
@@ -1118,12 +1110,12 @@ body {
     box-sizing: border-box;
   }
 
-  .Admin-es-company-drive-card:hover,
+  .Admin-es-action-addcard:hover,
   .Admin-es-placed-students-card:hover {
     border: 2px solid rgb(2, 171, 41);
   }
 
-  .Admin-es-company-drive-card-sized,
+  .Admin-es-action-addcard,
   .Admin-es-placed-students-card-sized {
     width: 100%;
     height: auto;
@@ -1133,7 +1125,7 @@ body {
     box-sizing: border-box;
   }
 
-  .Admin-es-company-drive-card .Admin-es-summary-card-icon {
+  .Admin-es-action-addcard .Admin-es-add-icon {
     width: 50px;
     height: 50px;
     margin: 15px auto;
@@ -1144,7 +1136,7 @@ body {
     justify-content: center;
   }
 
-  .Admin-es-company-drive-card .Admin-es-summary-card-title,
+  .Admin-es-action-addcard .Admin-es-add-header,
   .Admin-es-placed-students-card .Admin-es-summary-card-title-1 {
     font-weight: 600;
     font-size: 1.2em;
@@ -1152,7 +1144,7 @@ body {
     color: #333;
   }
 
-  .Admin-es-company-drive-card .Admin-es-summary-card-desc,
+  .Admin-es-action-addcard .Admin-es-add-description,
   .Admin-es-placed-students-card .Admin-es-summary-card-desc {
     font-size: 0.85em;
     color: #666;
@@ -1395,7 +1387,7 @@ body {
   }
 
   /* Drive and Application Cards */
-  .Admin-es-company-drive-card,
+  .Admin-es-action-addcard,
   .Admin-es-placed-students-card {
     padding: 15px 12px;
     width: 100%;
@@ -1403,16 +1395,16 @@ body {
     box-sizing: border-box;
   }
   
-  .Admin-es-company-drive-card {
+  .Admin-es-action-addcard {
     margin-top: 32px;
   }
 
-  .Admin-es-company-drive-card .Admin-es-summary-card-title,
+  .Admin-es-action-addcard .Admin-es-add-header,
   .Admin-es-placed-students-card .Admin-es-summary-card-title {
     font-size: 1.1em;
   }
 
-  .Admin-es-company-drive-card .Admin-es-summary-card-desc,
+  .Admin-es-action-addcard .Admin-es-add-description,
   .Admin-es-placed-students-card .Admin-es-summary-card-desc {
     font-size: 0.8em;
   }
@@ -1619,4 +1611,94 @@ body {
 .Admin-es-success-close-btn:hover {
   background-color: #b53138;
   box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Responsive Layout Adjustments                                          */
+/* ---------------------------------------------------------------------- */
+
+/* Tablet and below: remove fixed left margin, allow vertical scrolling */
+@media (max-width: 1200px) {
+    .Admin-es-layout {
+        flex-direction: column;
+    }
+
+    .Admin-es-main-content {
+        margin: 65px 15px 16px 15px;
+    }
+
+    .Admin-es-summary-cards {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        height: auto;
+        margin-left: 0;
+    }
+
+    .Admin-es-action-addcard,
+    .Admin-es-filtered-students-card {
+        width: 438px;
+        max-width: 100%;
+        height: 236.5px;
+    }
+
+    .Admin-es-search-filters {
+        width: 438px;
+        max-width: 100%;
+        height: auto;
+        border-radius: 18px;
+    }
+
+    .Admin-es-search-inputs {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile: stack cards, constrain table height, enable sidebar overlay */
+@media (max-width: 768px) {
+    .Admin-es-main-content {
+        margin: 80px 15px 16px 15px;
+    }
+
+    .Admin-es-summary-cards {
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        margin-left: 0;
+        align-items: center;
+    }
+
+    .Admin-es-summary-card,
+    .Admin-es-action-addcard,
+    .Admin-es-filtered-students-card {
+        width: 438px !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        height: 236.5px !important;
+    }
+
+    .Admin-es-search-filters {
+        width: 438px !important;
+        max-width: 100% !important;
+        height: auto !important;
+        border-radius: 25px;
+    }
+
+    .Admin-es-search-inputs {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .Admin-es-bottom-card {
+        padding: 12px 12px 16px 12px;
+    }
+
+    .Admin-es-table-container {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+
+    .Admin-es-overlay {
+        display: block;
+    }
 }

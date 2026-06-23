@@ -529,7 +529,9 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
                   onViewChange(item.view);
                 }
                 if (window.innerWidth <= 992 && isOpen) {
-                  window.dispatchEvent(new CustomEvent('closeSidebar'));
+                  setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('closeSidebar'));
+                  }, 150);
                 }
               }}
             >

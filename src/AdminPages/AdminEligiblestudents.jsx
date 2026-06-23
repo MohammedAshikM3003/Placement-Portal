@@ -207,6 +207,26 @@ function AdminEsstudapp () {
     });
   };
 
+  const hasActiveFilters = Boolean(
+    localFilter.searchQuery ||
+    localFilter.batchStart ||
+    localFilter.batchEnd ||
+    localFilter.year ||
+    localFilter.sem ||
+    localFilter.branch
+  );
+
+  const handleClearFilters = () => {
+    setLocalFilter({
+      searchQuery: '',
+      batchStart: '',
+      batchEnd: '',
+      year: '',
+      sem: '',
+      branch: ''
+    });
+  };
+
   const handleConfirmSelection = async () => {
     if (selectedStudents.length === 0) {
       alert('Please select at least one student');
@@ -542,20 +562,35 @@ function AdminEsstudapp () {
       <div className={styles['Admin-es-main-content']}>
             <div className={styles['Admin-es-summary-cards']}>
               <div 
-                className={`${styles['Admin-es-summary-card']} ${styles['Admin-es-company-drive-card']} ${styles['Admin-es-company-drive-card-sized']}`}
+                className={`${styles['Admin-es-action-addcard']} ${styles['Admin-es-add-card']}`}
                 onClick={() => navigate('/admin-student-application')}
-                style={{ cursor: 'pointer' }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => event.key === 'Enter' && navigate('/admin-student-application')}
               >
-                <div className={`${styles['Admin-es-summary-card-icon']} ${styles['Admin-es-icon-bg-white']}`}>
-                  <img src={PlacedStudentsCap} alt="Eligible Students" className={styles['Admin-es-placed-cap-icon']}/>
+                <div className={styles['Admin-es-summary-card-icon']}>
+                  <img className={styles['Admin-es-add-icon']} src={PlacedStudentsCap} alt="Eligible Students" />
                 </div>
-                <div className={styles['Admin-es-summary-card-title-1']}>Eligible<br/>Students</div>
-                <div className={`${styles['Admin-es-summary-card-desc-1']} ${styles['Admin-es-summary-card-desc-1-margin']}`}>View eligible students <br/>for this Drive</div>
+                <h4 className={styles['Admin-es-add-header']}>Eligible <br /> Students</h4>
+                <p className={styles['Admin-es-add-description']}>
+                  View eligible students for this Drive
+                </p>
               </div>
               
               <div className={`${styles['Admin-es-search-filters']} ${styles['Admin-es-company-profile-search']}`}>
-                <div className={styles['Admin-es-search-tab']}>
-                  Eligible Students
+                <div className={styles['Admin-es-filter-header-container']}>
+                  <div className={styles['Admin-es-search-tab']}>
+                    Eligible Students
+                  </div>
+                  {hasActiveFilters && (
+                    <button 
+                      type="button" 
+                      className={styles['Admin-es-clear-btn-header']} 
+                      onClick={handleClearFilters}
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
                 <div className={styles['Admin-es-search-inputs']}>
                   {/* Enter Name / Reg No - Row 1 Column 1 */}
@@ -675,7 +710,7 @@ function AdminEsstudapp () {
                 </div>
               </div>
               
-              <div className={styles['Admin-es-table-container']} style={{ display: 'flex', flexDirection: 'column', maxHeight: '60vh' }}>
+              <div className={styles['Admin-es-table-container']}>
                 {isLoading ? (
                   <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                     Loading students...
@@ -686,68 +721,70 @@ function AdminEsstudapp () {
                   </div>
                 ) : (
                   <>
-                    <div className={styles['Admin-es-table-scroll']} style={{ flex: 1 }}>
-                      <table className={styles['Admin-es-profile-table']} ref={tableRef}>
-                      <thead>
-                        <tr>
-                          <th>
+                    <table className={styles['Admin-es-profile-table']} ref={tableRef}>
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            className={styles['Admin-es-checkbox']}
+                            onChange={handleSelectAll}
+                            checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
+                          />
+                        </th>
+                        <th>S.No</th>
+                        <th>Student Name</th>
+                        <th>Register Number</th>
+                        {getVisibleColumns().batch && <th>Batch</th>}
+                        {getVisibleColumns().department && <th>Branch</th>}
+                        {getVisibleColumns().ugCgpa && <th>CGPA</th>}
+                        {getVisibleColumns().tenthPercentage && <th>10th %</th>}
+                        {getVisibleColumns().twelfthPercentage && <th>12th %</th>}
+                        {getVisibleColumns().diplomaPercentage && <th>Diploma %</th>}
+                        {getVisibleColumns().backlogs && <th>Backlogs</th>}
+                        <th>View</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredStudents.map((student, index) => (
+                        <tr 
+                          key={student._id || student.id} 
+                          onClick={() => handleSelectStudent(student._id || student.id)}
+                          className={selectedStudents.includes(student._id || student.id) ? styles['Admin-es-selected-row'] : ''}
+                        >
+                          <td>
                             <input
                               type="checkbox"
                               className={styles['Admin-es-checkbox']}
-                              onChange={handleSelectAll}
-                              checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
+                              checked={selectedStudents.includes(student._id || student.id)}
+                              onChange={() => handleSelectStudent(student._id || student.id)}
+                              onClick={(e) => e.stopPropagation()}
                             />
-                          </th>
-                          <th>S.No</th>
-                          <th>Student Name</th>
-                          <th>Register Number</th>
-                          {getVisibleColumns().batch && <th>Batch</th>}
-                          {getVisibleColumns().department && <th>Branch</th>}
-                          {getVisibleColumns().ugCgpa && <th>CGPA</th>}
-                          {getVisibleColumns().tenthPercentage && <th>10th %</th>}
-                          {getVisibleColumns().twelfthPercentage && <th>12th %</th>}
-                          {getVisibleColumns().diplomaPercentage && <th>Diploma %</th>}
-                          {getVisibleColumns().backlogs && <th>Backlogs</th>}
-                          <th>View</th>
+                          </td>
+                          <td>{index + 1}</td>
+                          <td>{`${student.firstName || ''} ${student.lastName || ''}`.trim()}</td>
+                          <td>{student.regNo || 'N/A'}</td>
+                          {getVisibleColumns().batch && <td>{student.batch || 'N/A'}</td>}
+                          {getVisibleColumns().department && <td>{student.branch || 'N/A'}</td>}
+                          {getVisibleColumns().ugCgpa && <td>{student.overallCGPA || 'N/A'}</td>}
+                          {getVisibleColumns().tenthPercentage && <td>{student.tenthPercentage || 'N/A'}</td>}
+                          {getVisibleColumns().twelfthPercentage && <td>{student.twelfthPercentage || 'N/A'}</td>}
+                          {getVisibleColumns().diplomaPercentage && <td>{student.diplomaPercentage || 'N/A'}</td>}
+                          {getVisibleColumns().backlogs && <td>{student.currentBacklogs || '0'}</td>}
+                          <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={(e) => {
+                            e.stopPropagation();
+                            const studentId = student._id || student.id;
+                            if (studentId) {
+                              handleViewProfile(studentId, student);
+                            }
+                          }}>
+                            <EyeIcon />
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {filteredStudents.map((student, index) => (
-                          <tr key={student._id || student.id} onClick={() => handleSelectStudent(student._id || student.id)}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className={styles['Admin-es-checkbox']}
-                                checked={selectedStudents.includes(student._id || student.id)}
-                                onChange={() => handleSelectStudent(student._id || student.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </td>
-                            <td>{index + 1}</td>
-                            <td>{`${student.firstName || ''} ${student.lastName || ''}`.trim()}</td>
-                            <td>{student.regNo || 'N/A'}</td>
-                            {getVisibleColumns().batch && <td>{student.batch || 'N/A'}</td>}
-                            {getVisibleColumns().department && <td>{student.branch || 'N/A'}</td>}
-                            {getVisibleColumns().ugCgpa && <td>{student.overallCGPA || 'N/A'}</td>}
-                            {getVisibleColumns().tenthPercentage && <td>{student.tenthPercentage || 'N/A'}</td>}
-                            {getVisibleColumns().twelfthPercentage && <td>{student.twelfthPercentage || 'N/A'}</td>}
-                            {getVisibleColumns().diplomaPercentage && <td>{student.diplomaPercentage || 'N/A'}</td>}
-                            {getVisibleColumns().backlogs && <td>{student.currentBacklogs || '0'}</td>}
-                            <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={(e) => {
-                              e.stopPropagation();
-                              const studentId = student._id || student.id;
-                              if (studentId) {
-                                handleViewProfile(studentId, student);
-                              }
-                            }}>
-                              <EyeIcon />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      </table>
-                    </div>
-                    <div className={styles['Admin-es-table-footer']} style={{ position: 'sticky', bottom: 0, background: 'white', paddingTop: '12px', zIndex: 5 }}>
+                      ))}
+                    </tbody>
+                    </table>
+                    <div className={styles['Admin-es-table-footer']}>
                       <button 
                         className={styles['Admin-es-clear-btn']} 
                         onClick={handleClearSelection}

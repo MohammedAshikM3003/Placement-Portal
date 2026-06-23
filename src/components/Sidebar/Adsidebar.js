@@ -895,7 +895,9 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
                 // Auto-close sidebar on mobile after navigation
                 if (window.innerWidth <= 1200) {
-                  handleOverlayClick();
+                  setTimeout(() => {
+                    handleOverlayClick();
+                  }, 150);
                 }
 
               }}
@@ -931,7 +933,9 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
             }
 
             if (window.innerWidth <= 1200) {
-              handleOverlayClick();
+              setTimeout(() => {
+                handleOverlayClick();
+              }, 150);
             }
 
           }}

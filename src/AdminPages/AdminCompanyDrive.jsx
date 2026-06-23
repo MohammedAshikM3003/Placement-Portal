@@ -834,16 +834,10 @@ function AdminCompanyDrive({ onLogout }) {
             {activePopup === 'deleteSuccess' && (
                 <DeleteSuccessPopup onClose={closePopup} />
             )}
-            {isSidebarOpen && (
-                <div
-                    className={styles['Admin-cd-mobile-overlay']}
-                    onClick={() => setIsSidebarOpen(false)}
-                ></div>
-            )}
-            <Conavbar Adminicon={Adminicon} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
+             <Conavbar Adminicon={Adminicon} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
             <div className={styles['Admin-cd-layout']}>
                 <div className={`${styles['Admin-cd-sidebar-wrapper']} ${isSidebarOpen ? 'open' : ''}`}>
-                    <Cosidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+                    <Cosidebar isOpen={isSidebarOpen} onLogout={onLogout} onClose={() => setIsSidebarOpen(false)} />
                 </div>
                 <div className={styles['Admin-cd-main-content']}>
                     <div className={styles['Admin-cd-top-card']}>

@@ -840,7 +840,7 @@ function AdminEsstudapp() {
         if (prev >= 95 && !fetchDone) {
           return 95;
         }
-        
+
         let nextProgress = prev;
         if (prev < 50) nextProgress = prev + 12;
         else if (prev < 80) nextProgress = prev + 8;
