@@ -13,6 +13,7 @@ import GlobalDriveScheduledChecker from "./components/CertificateNotification/Gl
 import GlobalBlockNotificationChecker from "./components/CertificateNotification/GlobalBlockNotificationChecker.jsx";
 import GlobalOfferLetterNotificationChecker from "./components/CertificateNotification/GlobalOfferLetterNotificationChecker.jsx";
 import GlobalCoordinatorCertificateUploadChecker from "./components/CertificateNotification/GlobalCoordinatorCertificateUploadChecker.jsx";
+import GlobalCoordinatorDriveScheduledChecker from "./components/CertificateNotification/GlobalCoordinatorDriveScheduledChecker.jsx";
 import GlobalSemesterNotificationChecker from "./components/CertificateNotification/GlobalSemesterNotificationChecker.jsx";
 import { runCacheMigration } from './utils/cacheMigration';
 
@@ -305,7 +306,10 @@ function AppContent() {
       )}
 
       {isCoordinatorLoggedIn && !['/', '/mainlogin', '/signup', '/registration', '/registration-debug'].includes(location.pathname) && (
-        <GlobalCoordinatorCertificateUploadChecker />
+        <>
+          <GlobalCoordinatorCertificateUploadChecker />
+          <GlobalCoordinatorDriveScheduledChecker />
+        </>
       )}
 
     <Routes>
