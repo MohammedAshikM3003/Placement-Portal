@@ -333,7 +333,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
         <div className={styles['Ad-zbds-layout']}>
             {/* Navbar */}
             <Adnavbar
-                onMenuClick={toggleSidebar}
+                onToggleSidebar={toggleSidebar}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

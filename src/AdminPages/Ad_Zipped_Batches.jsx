@@ -362,7 +362,7 @@ const Ad_Zipped_Batches = () => {
         <div className={styles['Ad-zb-layout']}>
             {/* Navbar */}
             <Adnavbar
-                onMenuClick={toggleSidebar}
+                onToggleSidebar={toggleSidebar}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

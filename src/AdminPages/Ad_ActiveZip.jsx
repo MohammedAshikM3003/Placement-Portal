@@ -345,7 +345,7 @@ const Ad_ActiveZip = () => {
         <div className={styles['Ad-az-layout']}>
             {/* Navbar */}
             <Adnavbar
-                onMenuClick={toggleSidebar}
+                onToggleSidebar={toggleSidebar}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

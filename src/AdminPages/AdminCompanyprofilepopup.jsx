@@ -213,7 +213,7 @@ function AdminCompanyprofilePopup({ onLogout }) {
     return (
         <div className={styles['Admin-cp-page-layout']}>
             <Adnavbar
-                onMenuClick={() => setIsSidebarOpen((prev) => !prev)}
+                onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

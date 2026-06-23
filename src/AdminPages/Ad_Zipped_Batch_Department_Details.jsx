@@ -282,7 +282,7 @@ const Ad_Zipped_Batch_Department_Details = () => {
         <div className={styles['Ad-zbdd-layout']}>
             {/* Navbar */}
             <Adnavbar
-                onMenuClick={toggleSidebar}
+                onToggleSidebar={toggleSidebar}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

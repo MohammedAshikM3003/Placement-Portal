@@ -98,6 +98,8 @@ function Admincdd() {
   const [originalAttendanceStudents, setOriginalAttendanceStudents] = useState([]); // Store Round 1 students
   const [allRoundResults, setAllRoundResults] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(false); // Read-only mode when viewing completed drive results
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const [showAdminFeedback, setShowAdminFeedback] = useState(false);
   const [adminFeedbackIsPassed, setAdminFeedbackIsPassed] = useState(false);
   const [eligibleStudentsCount, setEligibleStudentsCount] = useState(0);
@@ -1098,9 +1100,15 @@ function Admincdd() {
   return (
     <>
       <div className={styles['Admin-cdd-main-wrapper']}>
-        <Navbar />
+        {isSidebarOpen && (
+          <div
+            className={styles['Admin-cdd-overlay']}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        <Navbar onToggleSidebar={toggleSidebar} />
         <div className={styles['Admin-cdd-layout-wrapper']}>
-          <Sidebar />
+          <Sidebar isOpen={isSidebarOpen} />
           <div className={`${styles['Admin-cdd-container']} ${styles['Admin-cdd-content-wrapper']}`}>
             <div className={styles['Admin-cdd-dashboard-area']}>
 

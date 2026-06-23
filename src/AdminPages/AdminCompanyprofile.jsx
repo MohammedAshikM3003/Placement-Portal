@@ -4,6 +4,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 
 import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 import styles from './AdminCompanyprofile.module.css';
 
 import * as XLSX from 'xlsx';
@@ -407,11 +408,20 @@ function Admincompanyprofile({ onLogout }) {
     }, [filteredCompanies]);
 
     const closeDeleteSuccess = useCallback(() => setShowDeleteSuccess(false), []);
-    const handleFilterVisitDateChange = useCallback((event) => {
+    const handleFilterVisitDateChange = useCallback((value) => {
         setFilters((prev) => ({
             ...prev,
-            visitDate: event.target.value
+            visitDate: value || ''
         }));
+    }, []);
+
+    const handleClearFilters = useCallback(() => {
+        setFilters({
+            company: '',
+            hrName: '',
+            mode: '',
+            visitDate: ''
+        });
     }, []);
 
     useEffect(() => {
@@ -431,6 +441,13 @@ function Admincompanyprofile({ onLogout }) {
             return prev;
         });
     }, [matchedCompanyVisitDate, visitDateOptions]);
+
+    const hasActiveFilters = Boolean(
+        filters.company.trim() ||
+        filters.hrName.trim() ||
+        filters.mode ||
+        filters.visitDate
+    );
 
     return (
         <div className={styles['Admin-cp-layout']}>
@@ -477,7 +494,15 @@ function Admincompanyprofile({ onLogout }) {
                     <div className={styles['Admin-cp-filter-section']}>
                         <div className={styles['Admin-cp-filter-header-container']}>
                             <div className={styles['Admin-cp-filter-header']}>Company Profile</div>
-                            {/* <span className={styles['Admin-cp-filter-icon-container']}>☰</span> */}
+                            {hasActiveFilters && (
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cp-clear-btn-header']}
+                                    onClick={handleClearFilters}
+                                >
+                                    Clear
+                                </button>
+                            )}
                         </div>
                         <div className={styles['Admin-cp-filter-content']}>
                             {/* Company / Job Role Input with Static Label */}
@@ -522,7 +547,9 @@ function Admincompanyprofile({ onLogout }) {
 
                             {/* Mode Dropdown with Static Label */}
                             <div className={styles['Admin-cp-input-wrapper']}>
-                                
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-mode">
+                                    Search Mode
+                                </label>
                                 <div className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
                                     <select
                                         id="admin-search-mode"
@@ -541,56 +568,53 @@ function Admincompanyprofile({ onLogout }) {
                                 </div>
                             </div>
 
-                            {/* Visit Date Dropdown with Static Label */}
+                            {/* Visit Date Calendar with Static Label */}
                             <div className={styles['Admin-cp-input-wrapper']}>
-                                
-                                <div className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${visitDateFocused ? styles['is-focused'] : ''}`}>
-                                    <select
-                                        id="admin-search-visit-date"
-                                        className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
-                                        value={filters.visitDate}
-                                        onChange={handleFilterVisitDateChange}
-                                        onFocus={() => setVisitDateFocused(true)}
-                                        onBlur={() => setVisitDateFocused(false)}
-                                        aria-label="Visit Date"
-                                    >
-                                        <option value="">Select Visit Date</option>
-                                        {visitDateOptions.map((visitDate) => (
-                                            <option key={visitDate} value={visitDate}>
-                                                {formatDisplayDate(visitDate)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-visit-date">
+                                    Visit Date
+                                </label>
+                                <AdCalendar
+                                    id="admin-search-visit-date"
+                                    value={filters.visitDate}
+                                    onChange={handleFilterVisitDateChange}
+                                    variant="filter"
+                                    enabledDates={visitDateOptions}
+                                />
                             </div>
+
+
                         </div>
                     </div>
 
                     <div className={styles['Admin-cp-action-cards-section']}>
+                        {/* Card 1: Editing */}
                         <div className={styles['Admin-cp-action-card']}>
-                            <h4 className={styles['Admin-cp-action-header']}>Editing</h4>
+                            <h4 className={selectedCompanyIds.size === 1 ? styles['Admin-cp-header-edit-active'] : styles['Admin-cp-header-disabled']}>Editing</h4>
                             <p className={styles['Admin-cp-action-description']}>
-                                Select the company record before editing.
+                                {selectedCompanyIds.size === 1
+                                    ? `Selected company: ${companies.find(c => String(c.id || c._id) === String(Array.from(selectedCompanyIds)[0]))?.company || ''}`
+                                    : 'Select the company record before editing.'
+                                }
                             </p>
-                            <button
-                                className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-edit-btn']}`}
-                                onClick={openEditPopup}
-                                disabled={selectedCompanyIds.size !== 1}
-                            >
+                            <button className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-edit-btn']}`}
+                                    onClick={openEditPopup}
+                                    disabled={selectedCompanyIds.size !== 1}>
                                 Edit
                             </button>
                         </div>
 
+                        {/* Card 2: Deleting */}
                         <div className={styles['Admin-cp-action-card']}>
-                            <h4 className={styles['Admin-cp-action-header']}>Deleting</h4>
+                            <h4 className={selectedCompanyIds.size >= 1 ? styles['Admin-cp-header-delete-active'] : styles['Admin-cp-header-disabled']}>Deleting</h4>
                             <p className={styles['Admin-cp-action-description']}>
-                                Select the company records before deleting.
+                                {selectedCompanyIds.size >= 1
+                                    ? `Delete ${selectedCompanyIds.size} selected company record${selectedCompanyIds.size > 1 ? 's' : ''}`
+                                    : 'Select the company records before deleting.'
+                                }
                             </p>
-                            <button
-                                className={`${styles['Admin-cp-delete-btn']}`}
-                                onClick={handleDeleteClick}
-                                disabled={!selectedCompanyIds.size}
-                            >
+                            <button className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-delete-btn']}`}
+                                    onClick={handleDeleteClick}
+                                    disabled={!selectedCompanyIds.size}>
                                 Delete
                             </button>
                         </div>

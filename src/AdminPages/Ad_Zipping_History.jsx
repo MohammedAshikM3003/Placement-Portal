@@ -238,7 +238,7 @@ const Ad_Zipping_History = () => {
         <div className={styles['Ad-zh-layout']}>
             {/* Navbar */}
             <Adnavbar
-                onMenuClick={toggleSidebar}
+                onToggleSidebar={toggleSidebar}
                 adminName="Admin"
                 adminImage={Adminicon}
             />

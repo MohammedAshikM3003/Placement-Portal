@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
@@ -6,13 +6,14 @@ import Conavbar from '../components/Navbar/Adnavbar';
 import Cosidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminCompanyDrive.module.css';
 import Adminicon from '../assets/Adminicon.png';
-import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
+import AdminAddcompany from '../assets/Adminschedulenewdrive.svg';
 import EligibleStudentsIcon from '../assets/ad_cd_eligiblestu.svg';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 
 const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
     <div className={styles['Admin-cd-popup-overlay']}>
@@ -89,6 +90,22 @@ const BuildingIcon = () => (
     </svg>
 );
 
+const toYmd = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+};
+
+const toDmy = (ymdStr) => {
+    if (!ymdStr) return '';
+    const [y, m, d] = ymdStr.split('-');
+    if (!y || !m || !d) return ymdStr;
+    return `${d}-${m}-${y}`;
+};
 
 function AdminCompanyDrive({ onLogout }) {
     const navigate = useNavigate();
@@ -98,24 +115,26 @@ function AdminCompanyDrive({ onLogout }) {
     // Temporary filter states
     const [tempFilterCompany, setTempFilterCompany] = useState('');
     const [tempFilterDepartment, setTempFilterDepartment] = useState('');
-    const [tempFilterDomain, setTempFilterDomain] = useState('');
+    const [tempFilterStartDate, setTempFilterStartDate] = useState('');
+    const [tempFilterEndDate, setTempFilterEndDate] = useState('');
     const [tempFilterMode, setTempFilterMode] = useState('');
-    
+
     // Focus states for floating labels
     const [companyFocused, setCompanyFocused] = useState(false);
     const [departmentFocused, setDepartmentFocused] = useState(false);
-    const [domainFocused, setDomainFocused] = useState(false);
+    const [startDateFocused, setStartDateFocused] = useState(false);
+    const [endDateFocused, setEndDateFocused] = useState(false);
     const [modeFocused, setModeFocused] = useState(false);
-    
+
     // Applied filter states
     const [filterCompany, setFilterCompany] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('');
-    const [filterDomain, setFilterDomain] = useState('');
+    const [filterStartDate, setFilterStartDate] = useState('');
+    const [filterEndDate, setFilterEndDate] = useState('');
     const [filterMode, setFilterMode] = useState('');
     // Dropdown option lists derived from table content
     const [departmentOptions, setDepartmentOptions] = useState([]);
-    const [dateRangeOptions, setDateRangeOptions] = useState([]);
-    
+
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [activePopup, setActivePopup] = useState(null);
     const [deleteInProgress, setDeleteInProgress] = useState(false);
@@ -125,13 +144,168 @@ function AdminCompanyDrive({ onLogout }) {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [navPopupState, setNavPopupState] = useState('none');
     const [navProgress, setNavProgress] = useState(0);
-    
+
     // Company drives data
     const [companies, setCompanies] = useState([]);
+
+    // Date selection first clicked tracker ('none', 'start-first', 'end-first')
+    const [dateSelectionMode, setDateSelectionMode] = useState('none');
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
     };
+
+    // List of drives matching current non-date filters (with normalized YYYY-MM-DD dates)
+    const drivesList = useMemo(() => {
+        const q = (tempFilterCompany || '').trim().toLowerCase();
+        const deptFilter = (tempFilterDepartment || '').trim();
+        const modeFilter = tempFilterMode;
+
+        return companies.map(c => ({
+            ...c,
+            startYmd: toYmd(c.startingDate),
+            endYmd: toYmd(c.endingDate)
+        })).filter(c => {
+            if (!c.startYmd || !c.endYmd) return false;
+            
+            // Match Company / Job Role
+            if (q) {
+                const companyName = c.companyName || '';
+                const jobRole = c.jobRole || '';
+                if (!companyName.toLowerCase().includes(q) && !jobRole.toLowerCase().includes(q)) return false;
+            }
+
+            // Match Department / Branch
+            if (deptFilter) {
+                const dept = (c.department || '').trim();
+                const branches = Array.isArray(c.eligibleBranches) ? c.eligibleBranches.map(b => (b || '').trim()) : [];
+                if (dept.toLowerCase() !== deptFilter.toLowerCase() && !branches.some(b => b.toLowerCase() === deptFilter.toLowerCase())) return false;
+            }
+
+            // Match Mode
+            if (modeFilter && c.mode !== modeFilter) return false;
+
+            return true;
+        });
+    }, [companies, tempFilterCompany, tempFilterDepartment, tempFilterMode]);
+
+    // Unique start dates for calendar when no dates are selected
+    const uniqueStartDates = useMemo(() => {
+        const dates = drivesList.map(d => d.startYmd);
+        return Array.from(new Set(dates)).sort();
+    }, [drivesList]);
+
+    // Unique end dates for calendar when no dates are selected
+    const uniqueEndDates = useMemo(() => {
+        const dates = drivesList.map(d => d.endYmd);
+        return Array.from(new Set(dates)).sort();
+    }, [drivesList]);
+
+    // Matching start dates for the selected End Date
+    const matchingStartDates = useMemo(() => {
+        if (!tempFilterEndDate) return [];
+        const dates = drivesList
+            .filter(d => d.endYmd === tempFilterEndDate)
+            .map(d => d.startYmd);
+        return Array.from(new Set(dates)).sort();
+    }, [drivesList, tempFilterEndDate]);
+
+    // Matching end dates for the selected Start Date
+    const matchingEndDates = useMemo(() => {
+        if (!tempFilterStartDate) return [];
+        const dates = drivesList
+            .filter(d => d.startYmd === tempFilterStartDate)
+            .map(d => d.endYmd);
+        return Array.from(new Set(dates)).sort();
+    }, [drivesList, tempFilterStartDate]);
+
+    // Auto-fetch logic when Start Date is selected
+    useEffect(() => {
+        if (tempFilterStartDate && dateSelectionMode === 'start-first') {
+            if (matchingEndDates.length === 1) {
+                const autoEnd = matchingEndDates[0];
+                if (tempFilterEndDate !== autoEnd) {
+                    setTempFilterEndDate(autoEnd);
+                }
+            } else if (matchingEndDates.length > 1) {
+                if (tempFilterEndDate && !matchingEndDates.includes(tempFilterEndDate)) {
+                    setTempFilterEndDate('');
+                }
+            } else {
+                setTempFilterEndDate('');
+            }
+        }
+    }, [tempFilterStartDate, matchingEndDates, tempFilterEndDate, dateSelectionMode]);
+
+    // Auto-fetch logic when End Date is selected
+    useEffect(() => {
+        if (tempFilterEndDate && dateSelectionMode === 'end-first') {
+            if (matchingStartDates.length === 1) {
+                const autoStart = matchingStartDates[0];
+                if (tempFilterStartDate !== autoStart) {
+                    setTempFilterStartDate(autoStart);
+                }
+            } else if (matchingStartDates.length > 1) {
+                if (tempFilterStartDate && !matchingStartDates.includes(tempFilterStartDate)) {
+                    setTempFilterStartDate('');
+                }
+            } else {
+                setTempFilterStartDate('');
+            }
+        }
+    }, [tempFilterEndDate, matchingStartDates, tempFilterStartDate, dateSelectionMode]);
+
+    // Reset dateSelectionMode to 'none' if both fields are empty
+    useEffect(() => {
+        if (!tempFilterStartDate && !tempFilterEndDate) {
+            setDateSelectionMode('none');
+        }
+    }, [tempFilterStartDate, tempFilterEndDate]);
+
+    const handleStartDateChange = useCallback((val) => {
+        setTempFilterStartDate(val || '');
+        if (val) {
+            if (!tempFilterEndDate) {
+                setDateSelectionMode('start-first');
+            }
+        } else {
+            if (dateSelectionMode === 'start-first') {
+                setTempFilterEndDate('');
+                setDateSelectionMode('none');
+            }
+        }
+    }, [tempFilterEndDate, dateSelectionMode]);
+
+    const handleEndDateChange = useCallback((val) => {
+        setTempFilterEndDate(val || '');
+        if (val) {
+            if (!tempFilterStartDate) {
+                setDateSelectionMode('end-first');
+            }
+        } else {
+            if (dateSelectionMode === 'end-first') {
+                setTempFilterStartDate('');
+                setDateSelectionMode('none');
+            }
+        }
+    }, [tempFilterStartDate, dateSelectionMode]);
+
+    const hasActiveFilters = Boolean(
+        tempFilterCompany.trim() ||
+        tempFilterDepartment ||
+        tempFilterStartDate ||
+        tempFilterEndDate ||
+        tempFilterMode
+    );
+
+    const handleClearFilters = useCallback(() => {
+        setTempFilterCompany('');
+        setTempFilterDepartment('');
+        setTempFilterStartDate('');
+        setTempFilterEndDate('');
+        setTempFilterMode('');
+        setDateSelectionMode('none');
+    }, []);
 
     // Listen for sidebar close event from navigation links (mobile auto-close)
     useEffect(() => {
@@ -147,7 +321,7 @@ function AdminCompanyDrive({ onLogout }) {
     const fetchDrives = useCallback(async () => {
         try {
             const drives = await mongoDBService.getCompanyDrives();
-            
+
             // Fetch all attendance records and ensure it's an array
             let attendanceRecords = [];
             try {
@@ -156,7 +330,7 @@ function AdminCompanyDrive({ onLogout }) {
                 console.log('📊 response.success:', response?.success);
                 console.log('📊 response.data type:', Array.isArray(response?.data) ? 'Array' : typeof response?.data);
                 console.log('📊 response.data length:', response?.data?.length);
-                
+
                 // Handle different response formats
                 if (Array.isArray(response)) {
                     attendanceRecords = response;
@@ -165,7 +339,7 @@ function AdminCompanyDrive({ onLogout }) {
                 } else if (response && Array.isArray(response.attendances)) {
                     attendanceRecords = response.attendances;
                 }
-                
+
                 console.log('📊 Extracted Attendance Records Count:', attendanceRecords.length);
                 if (attendanceRecords.length > 0) {
                     console.log('📊 Sample Attendance Record:', attendanceRecords[0]);
@@ -183,7 +357,7 @@ function AdminCompanyDrive({ onLogout }) {
                 console.error('❌ Failed to fetch attendance records:', attendanceError);
                 // Continue with empty array
             }
-            
+
             // Fetch eligible-students records to know whether students were selected for a drive
             let eligibleRecords = [];
             try {
@@ -230,28 +404,28 @@ function AdminCompanyDrive({ onLogout }) {
                     // Convert both IDs to strings for comparison (in case one is ObjectId)
                     const attendanceDriveIdStr = attendance.driveId ? String(attendance.driveId) : null;
                     const driveIdStr = driveId ? String(driveId) : null;
-                    
+
                     console.log(`  📋 Comparing: "${attendanceDriveIdStr}" === "${driveIdStr}"`);
-                    
+
                     // First try to match by driveId
                     if (attendanceDriveIdStr && driveIdStr && attendanceDriveIdStr === driveIdStr) {
                         console.log(`  ✅ MATCH FOUND by driveId!`);
                         return true;
                     }
-                    
+
                     // Fallback: match by company, jobRole, and date if driveId is not available
                     const companyMatch = attendance.companyName === drive.companyName;
                     const jobRoleMatch = attendance.jobRole === drive.jobRole;
-                    
+
                     // More flexible date matching - check if attendance date is within the drive date range
                     const attendanceDateNorm = normalizeDate(attendance.startDate);
-                    const driveDateMatch = attendanceDateNorm === driveStart || 
-                                          attendanceDateNorm === driveEnd ||
-                                          (attendanceDateNorm && driveStart && driveEnd && 
-                                           attendanceDateNorm >= driveStart && attendanceDateNorm <= driveEnd);
-                    
+                    const driveDateMatch = attendanceDateNorm === driveStart ||
+                        attendanceDateNorm === driveEnd ||
+                        (attendanceDateNorm && driveStart && driveEnd &&
+                            attendanceDateNorm >= driveStart && attendanceDateNorm <= driveEnd);
+
                     const match = companyMatch && jobRoleMatch && driveDateMatch;
-                    
+
                     if (attendance.companyName === drive.companyName && attendance.jobRole === drive.jobRole) {
                         console.log(`🔍 Checking attendance for ${drive.companyName}-${drive.jobRole}:`, {
                             attendanceDriveId: attendance.driveId,
@@ -315,15 +489,15 @@ function AdminCompanyDrive({ onLogout }) {
                         const totalRounds = drive.rounds || drive.numberOfRounds || 1;
 
                         if (roundResults && roundResults.data && roundResults.data.rounds) {
-                            const completedRounds = roundResults.data.rounds.filter(round => 
-                                round.roundNumber && 
-                                Array.isArray(round.passedStudents) && 
+                            const completedRounds = roundResults.data.rounds.filter(round =>
+                                round.roundNumber &&
+                                Array.isArray(round.passedStudents) &&
                                 Array.isArray(round.failedStudents)
                             );
 
                             // All rounds are completed if we have results for all expected rounds
                             allRoundsCompleted = completedRounds.length === totalRounds && totalRounds > 0;
-                            
+
                             console.log(`✏️ Drive: ${drive.companyName} - Total rounds: ${totalRounds}, Completed rounds: ${completedRounds.length}, All completed: ${allRoundsCompleted}`);
                         }
 
@@ -340,7 +514,6 @@ function AdminCompanyDrive({ onLogout }) {
 
             // Compute unique departments / eligible branches
             const deptSet = new Set();
-            const dateRangeSet = new Set();
 
             drivesWithRoundStatus.forEach(d => {
                 if (d.department && String(d.department).trim()) {
@@ -351,31 +524,10 @@ function AdminCompanyDrive({ onLogout }) {
                         if (b && String(b).trim()) deptSet.add(String(b).trim());
                     });
                 }
-
-                const formatDate = (date) => {
-                    if (!date) return null;
-                    const dt = new Date(date);
-                    if (isNaN(dt.getTime())) return null;
-                    const day = String(dt.getDate()).padStart(2, '0');
-                    const month = String(dt.getMonth() + 1).padStart(2, '0');
-                    const year = dt.getFullYear();
-                    return `${day}-${month}-${year}`;
-                };
-
-                const start = formatDate(d.startingDate);
-                const end = formatDate(d.endingDate);
-                if (start && end) {
-                    dateRangeSet.add(`${start} - ${end}`);
-                } else if (start && !end) {
-                    dateRangeSet.add(`${start} - N/A`);
-                } else if (!start && end) {
-                    dateRangeSet.add(`N/A - ${end}`);
-                }
             });
 
             setCompanies(drivesWithRoundStatus);
             setDepartmentOptions(['', ...Array.from(deptSet).sort()]);
-            setDateRangeOptions(['', ...Array.from(dateRangeSet).sort()]);
         } catch (error) {
             console.error("Failed to fetch company drives:", error);
             setCompanies([]); // Set empty array on error to prevent crash
@@ -406,7 +558,7 @@ function AdminCompanyDrive({ onLogout }) {
                 fetchDrives();
             }
         };
-        
+
         const handleFocus = () => {
             console.log('Window focused, refreshing drives...');
             fetchDrives();
@@ -414,23 +566,24 @@ function AdminCompanyDrive({ onLogout }) {
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('focus', handleFocus);
-        
+
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('focus', handleFocus);
         };
     }, [fetchDrives]);
-    
+
     // Selected company IDs
     const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
-    
+
     useEffect(() => {
         setFilterCompany(tempFilterCompany);
         setFilterDepartment(tempFilterDepartment);
-        setFilterDomain(tempFilterDomain);
+        setFilterStartDate(tempFilterStartDate);
+        setFilterEndDate(tempFilterEndDate);
         setFilterMode(tempFilterMode);
-    }, [tempFilterCompany, tempFilterDepartment, tempFilterDomain, tempFilterMode]);
-    
+    }, [tempFilterCompany, tempFilterDepartment, tempFilterStartDate, tempFilterEndDate, tempFilterMode]);
+
     const handleCompanySelect = (id) => {
         setSelectedCompanyIds(prevIds => {
             const newIds = new Set(prevIds);
@@ -442,7 +595,7 @@ function AdminCompanyDrive({ onLogout }) {
             return newIds;
         });
     };
-    
+
     const isCompanySelected = selectedCompanyIds.size > 0;
     const isSingleCompanySelected = selectedCompanyIds.size === 1;
 
@@ -535,25 +688,19 @@ function AdminCompanyDrive({ onLogout }) {
         const companyMatch = q === '' || companyName.toLowerCase().includes(q) || jobRole.toLowerCase().includes(q);
 
         const dept = (company.department || '').trim();
-        const branches = Array.isArray(company.eligibleBranches) ? company.eligibleBranches.map(b => (b||'').trim()) : [];
+        const branches = Array.isArray(company.eligibleBranches) ? company.eligibleBranches.map(b => (b || '').trim()) : [];
         const deptFilter = (filterDepartment || '').trim();
         const departmentMatch = deptFilter === '' || dept.toLowerCase() === deptFilter.toLowerCase() || branches.some(b => b.toLowerCase() === deptFilter.toLowerCase());
 
-        const formatDate = (date) => {
-            if (!date) return null;
-            const d = new Date(date);
-            if (isNaN(d.getTime())) return null;
-            return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
-        };
-        const start = formatDate(company.startingDate);
-        const end = formatDate(company.endingDate);
-        const companyDateRange = start && end ? `${start} - ${end}` : start && !end ? `${start} - N/A` : !start && end ? `N/A - ${end}` : '';
-        const domainFilter = (filterDomain || '').trim();
-        const domainMatch = domainFilter === '' || (companyDateRange && companyDateRange === domainFilter);
+        const driveStartDateYmd = toYmd(company.startingDate);
+        const driveEndDateYmd = toYmd(company.endingDate);
+
+        const startDateMatch = !filterStartDate || driveStartDateYmd === filterStartDate;
+        const endDateMatch = !filterEndDate || driveEndDateYmd === filterEndDate;
 
         const modeMatch = filterMode === '' || company.mode === filterMode;
 
-        return companyMatch && departmentMatch && domainMatch && modeMatch;
+        return companyMatch && departmentMatch && startDateMatch && endDateMatch && modeMatch;
     });
 
     const exportToExcel = async () => {
@@ -689,42 +836,53 @@ function AdminCompanyDrive({ onLogout }) {
             )}
             {isSidebarOpen && (
                 <div
-                    className={styles['Admin-cd-overlay']}
+                    className={styles['Admin-cd-mobile-overlay']}
                     onClick={() => setIsSidebarOpen(false)}
-                />
+                ></div>
             )}
             <Conavbar Adminicon={Adminicon} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
             <div className={styles['Admin-cd-layout']}>
-                <Cosidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+                <div className={`${styles['Admin-cd-sidebar-wrapper']} ${isSidebarOpen ? 'open' : ''}`}>
+                    <Cosidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+                </div>
                 <div className={styles['Admin-cd-main-content']}>
                     <div className={styles['Admin-cd-top-card']}>
-                        
-                           {/* Add Drive Card */}
-                           <div className={`${styles['Admin-cd-action-addcard']} ${styles['Admin-cd-add-card']}`} onClick={handleAddCompany}>
-                                <div className={styles['Admin-cd-add-icon']}>
-                                    <img src={AdminAddcompany} alt="Add Drive" />
-                                </div>
-                                <h4 className={styles['Admin-cd-add-header']}>Add <br/> Drive</h4>
-                                <p className={styles['Admin-cd-add-description']}>
-                                    Schedule new Drive <br/>for Students
-                                </p>
-                            </div>
-                        
+
+                        {/* Add Drive Card */}
+                        <div className={`${styles['Admin-cd-action-addcard']} ${styles['Admin-cd-add-card']}`} onClick={handleAddCompany} role="button" tabIndex={0} onKeyDown={(event) => event.key === 'Enter' && handleAddCompany()}>
+                            <img className={styles['Admin-cd-add-icon']} src={AdminAddcompany} alt="Add Drive" />
+                            <h4 className={styles['Admin-cd-add-header']}>Add <br /> Drive</h4>
+                            <p className={styles['Admin-cd-add-description']}>
+                                Schedule a new drive for the students.
+                            </p>
+                        </div>
+
                         {/* Filter Section */}
                         <div className={styles['Admin-cd-filter-section']}>
                             <div className={styles['Admin-cd-filter-header-container']}>
                                 <div className={styles['Admin-cd-filter-header']}>Company Drive</div>
-                                {/* <span className={styles['Admin-cd-filter-icon-container']}>☰</span> */}
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cd-clear-btn-header']}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
                             </div>
                             <div className={styles['Admin-cd-filter-content']}>
                                 {/* Company Name Filter with Static Label */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <label className={styles['Admin-cd-static-label']}>Search Company/Job Role</label>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-company">
+                                        Company / Job Role
+                                    </label>
                                     <div className={`${styles['Admin-cd-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
                                         <input
+                                            id="admin-search-company"
                                             type="text"
                                             className={styles['Admin-cd-text']}
-                                            placeholder="Search Company/Job Role"
+                                            placeholder="Search Company / Job Role"
                                             value={tempFilterCompany}
                                             onChange={(e) => setTempFilterCompany(e.target.value)}
                                             onFocus={() => setCompanyFocused(true)}
@@ -735,9 +893,13 @@ function AdminCompanyDrive({ onLogout }) {
 
                                 {/* Department Filter with Static Label */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <div className={`${styles['Admin-cd-text-container']} ${departmentFocused ? styles['is-focused'] : ''}`}>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-department">
+                                        Department
+                                    </label>
+                                    <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${departmentFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-cd-text']}
+                                            id="admin-search-department"
+                                            className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
                                             value={tempFilterDepartment}
                                             onChange={(e) => setTempFilterDepartment(e.target.value)}
                                             onFocus={() => setDepartmentFocused(true)}
@@ -754,32 +916,85 @@ function AdminCompanyDrive({ onLogout }) {
                                     </div>
                                 </div>
 
-                                {/* Domain Filter with Static Label */}
+                                {/* Dates Filter with Static Label and Start/End subfields */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <div className={`${styles['Admin-cd-text-container']} ${domainFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            className={styles['Admin-cd-text']}
-                                            value={tempFilterDomain}
-                                            onChange={(e) => setTempFilterDomain(e.target.value)}
-                                            onFocus={() => setDomainFocused(true)}
-                                            onBlur={() => setDomainFocused(false)}
-                                        >
-                                            {dateRangeOptions && dateRangeOptions.length > 0 ? (
-                                                dateRangeOptions.map((opt, idx) => (
-                                                    <option key={idx} value={opt}>{opt === '' ? 'Start Date-End Date' : opt}</option>
-                                                ))
-                                            ) : (
-                                                <option value="">All Dates</option>
-                                            )}
-                                        </select>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-dates">
+                                        Dates
+                                    </label>
+                                    <div className={styles['Admin-cd-date-range-inputs']}>
+                                        {Boolean(tempFilterEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
+                                            <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
+                                                <select
+                                                    id="admin-search-start-date"
+                                                    className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
+                                                    value={tempFilterStartDate}
+                                                    onChange={(e) => handleStartDateChange(e.target.value)}
+                                                    onFocus={() => setStartDateFocused(true)}
+                                                    onBlur={() => setStartDateFocused(false)}
+                                                    style={{ padding: '8px 6px 0', fontSize: '0.8rem' }}
+                                                >
+                                                    <option value="">Start</option>
+                                                    {matchingStartDates.map((ymd) => (
+                                                        <option key={ymd} value={ymd}>
+                                                            {toDmy(ymd)}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <AdCalendar
+                                                id="admin-search-start-date"
+                                                value={tempFilterStartDate}
+                                                onChange={handleStartDateChange}
+                                                variant="filter"
+                                                enabledDates={tempFilterEndDate ? matchingStartDates : uniqueStartDates}
+                                                style={{ padding: '0px 6px', fontSize: '0.8rem', gap: '4px' }}
+                                            />
+                                        )}
+
+                                        <div className={styles['Admin-cd-date-range-sep']}>-</div>
+
+                                        {Boolean(tempFilterStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
+                                            <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
+                                                <select
+                                                    id="admin-search-end-date"
+                                                    className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
+                                                    value={tempFilterEndDate}
+                                                    onChange={(e) => handleEndDateChange(e.target.value)}
+                                                    onFocus={() => setEndDateFocused(true)}
+                                                    onBlur={() => setEndDateFocused(false)}
+                                                    style={{ padding: '8px 6px 0', fontSize: '0.8rem' }}
+                                                >
+                                                    <option value="">End</option>
+                                                    {matchingEndDates.map((ymd) => (
+                                                        <option key={ymd} value={ymd}>
+                                                            {toDmy(ymd)}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <AdCalendar
+                                                id="admin-search-end-date"
+                                                value={tempFilterEndDate}
+                                                onChange={handleEndDateChange}
+                                                variant="filter"
+                                                enabledDates={tempFilterStartDate ? matchingEndDates : uniqueEndDates}
+                                                style={{ padding: '0px 6px', fontSize: '0.8rem', gap: '4px' }}
+                                            />
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Mode Filter with Static Label */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <div className={`${styles['Admin-cd-text-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-mode">
+                                        Search Mode
+                                    </label>
+                                    <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-cd-text']}
+                                            id="admin-search-mode"
+                                            className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
                                             value={tempFilterMode}
                                             onChange={(e) => setTempFilterMode(e.target.value)}
                                             onFocus={() => setModeFocused(true)}
@@ -797,32 +1012,34 @@ function AdminCompanyDrive({ onLogout }) {
 
                         {/* Action Cards Section */}
                         <div className={styles['Admin-cd-action-cards-section']}>
-                            {/* Edit Card */}
+                            {/* Card 1: Editing */}
                             <div className={styles['Admin-cd-action-card']}>
-                                <h4 className={styles['Admin-cd-action-header']}>Editing</h4>
+                                <h4 className={selectedCompanyIds.size === 1 ? styles['Admin-cd-header-edit-active'] : styles['Admin-cd-header-disabled']}>Editing</h4>
                                 <p className={styles['Admin-cd-action-description']}>
-                                    Select The<br/>Drive<br/>Before<br/>Editing
+                                    {selectedCompanyIds.size === 1
+                                        ? `Selected drive: ${companies.find(c => String(c._id) === String(Array.from(selectedCompanyIds)[0]))?.companyName || ''}`
+                                        : 'Select the drive record before editing.'
+                                    }
                                 </p>
-                                <button
-                                    className={`${styles['Admin-cd-action-btn']} ${styles['Admin-cd-edit-btn']}`}
+                                <button className={`${styles['Admin-cd-action-btn']} ${styles['Admin-cd-edit-btn']}`}
                                     onClick={handleEdit}
-                                    disabled={!isSingleCompanySelected}
-                                >
+                                    disabled={selectedCompanyIds.size !== 1}>
                                     Edit
                                 </button>
                             </div>
 
-                            {/* Delete Card */}
+                            {/* Card 2: Deleting */}
                             <div className={styles['Admin-cd-action-card']}>
-                                <h4 className={styles['Admin-cd-action-header']}>Deleting</h4>
+                                <h4 className={selectedCompanyIds.size >= 1 ? styles['Admin-cd-header-delete-active'] : styles['Admin-cd-header-disabled']}>Deleting</h4>
                                 <p className={styles['Admin-cd-action-description']}>
-                                    Select The<br/>Drive<br/>Before<br/>Deleting
+                                    {selectedCompanyIds.size >= 1
+                                        ? `Delete ${selectedCompanyIds.size} selected drive record${selectedCompanyIds.size > 1 ? 's' : ''}`
+                                        : 'Select the drive records before deleting.'
+                                    }
                                 </p>
-                                <button
-                                    className={`${styles['Admin-cd-action-btn']} ${styles['Admin-cd-delete-btn']}`}
+                                <button className={`${styles['Admin-cd-action-btn']} ${styles['Admin-cd-delete-btn']}`}
                                     onClick={handleDeleteClick}
-                                    disabled={!isCompanySelected}
-                                >
+                                    disabled={!selectedCompanyIds.size}>
                                     Delete
                                 </button>
                             </div>
@@ -835,7 +1052,7 @@ function AdminCompanyDrive({ onLogout }) {
                             <h3 className={styles['Admin-cd-table-title']}>COMPANY DRIVE</h3>
                             <div className={styles['Admin-cd-table-actions']}>
                                 <div className={styles['Admin-cd-print-button-container']}>
-                                    <button 
+                                    <button
                                         className={styles['Admin-cd-print-btn']}
                                         onClick={() => setShowExportMenu(!showExportMenu)}
                                     >
@@ -850,7 +1067,7 @@ function AdminCompanyDrive({ onLogout }) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className={styles['Admin-cd-table-container']}>
                             <table className={styles['Admin-cd-students-table']}>
                                 <thead>
@@ -952,20 +1169,20 @@ function AdminCompanyDrive({ onLogout }) {
                                                     })()}
                                                 </td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-view']}`}>
-                                                    <svg 
-                                                        width="24" 
-                                                        height="24" 
-                                                        viewBox="0 0 24 24" 
-                                                        fill="none" 
-                                                        xmlns="http://www.w3.org/2000/svg" 
+                                                    <svg
+                                                        width="24"
+                                                        height="24"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        xmlns="http://www.w3.org/2000/svg"
                                                         style={{ cursor: 'pointer', margin: '0 auto', display: 'block' }}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleViewDrive(company);
                                                         }}
                                                     >
-                                                        <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3"/>
-                                                        <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E"/>
+                                                        <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3" />
+                                                        <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E" />
                                                     </svg>
                                                 </td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-action']}`}>
@@ -975,7 +1192,7 @@ function AdminCompanyDrive({ onLogout }) {
                                                             const attendanceTaken = company.attendanceTaken || false;
                                                             const eligibleCreated = company.eligibleCreated || false;
                                                             const allRoundsCompleted = company.allRoundsCompleted || false;
-                                                            
+
                                                             // Show clickable tick icon if all rounds are completed
                                                             if (allRoundsCompleted) {
                                                                 return (
@@ -992,21 +1209,21 @@ function AdminCompanyDrive({ onLogout }) {
                                                                             });
                                                                         });
                                                                     }} title="View Drive Results">
-                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E"/>
-                                                                        <path d="M7 12L10 15L17 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E" />
+                                                                        <path d="M7 12L10 15L17 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                     </svg>
                                                                 );
                                                             }
-                                                            
+
                                                             if (status === 'completed') {
                                                                 return (
                                                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'default' }} title="Drive Completed">
-                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E"/>
-                                                                        <path d="M7 12L10 15L17 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E" />
+                                                                        <path d="M7 12L10 15L17 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                     </svg>
                                                                 );
                                                             }
-                                                            
+
                                                             if (attendanceTaken) {
                                                                 // Show Play button if attendance is taken
                                                                 return (
@@ -1025,8 +1242,8 @@ function AdminCompanyDrive({ onLogout }) {
                                                                             });
                                                                         });
                                                                     }} title="Start Drive">
-                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E"/>
-                                                                        <path d="M10 8L16 12L10 16V8Z" fill="white"/>
+                                                                        <circle cx="12" cy="12" r="10" fill="#4EA24E" />
+                                                                        <path d="M10 8L16 12L10 16V8Z" fill="white" />
                                                                     </svg>
                                                                 );
                                                             }
@@ -1076,12 +1293,12 @@ function AdminCompanyDrive({ onLogout }) {
                                                                     e.stopPropagation();
                                                                     navigate('/admin-attendance', { state: { companyData: company } });
                                                                 }} title="Take Attendance">
-                                                                    <rect x="3" y="4" width="18" height="18" rx="2" fill="#4EA24E"/>
-                                                                    <path d="M8 2V6M16 2V6" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round"/>
-                                                                    <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
-                                                                    <circle cx="8" cy="15" r="1.5" fill="white"/>
-                                                                    <circle cx="12" cy="15" r="1.5" fill="white"/>
-                                                                    <circle cx="16" cy="15" r="1.5" fill="white"/>
+                                                                    <rect x="3" y="4" width="18" height="18" rx="2" fill="#4EA24E" />
+                                                                    <path d="M8 2V6M16 2V6" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" />
+                                                                    <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2" />
+                                                                    <circle cx="8" cy="15" r="1.5" fill="white" />
+                                                                    <circle cx="12" cy="15" r="1.5" fill="white" />
+                                                                    <circle cx="16" cy="15" r="1.5" fill="white" />
                                                                 </svg>
                                                             );
                                                         })()}
@@ -1096,29 +1313,29 @@ function AdminCompanyDrive({ onLogout }) {
                     </div>
                 </div>
             </div>
-            
-            <ExportProgressAlert 
-                isOpen={exportPopupState === 'progress'} 
-                onClose={() => {}} 
+
+            <ExportProgressAlert
+                isOpen={exportPopupState === 'progress'}
+                onClose={() => { }}
                 progress={exportProgress}
                 exportType={exportType}
             />
-            
-            <ExportSuccessAlert 
-                isOpen={exportPopupState === 'success'} 
+
+            <ExportSuccessAlert
+                isOpen={exportPopupState === 'success'}
                 onClose={() => setExportPopupState('none')}
                 exportType={exportType}
             />
-            
-            <ExportFailedAlert 
-                isOpen={exportPopupState === 'failed'} 
+
+            <ExportFailedAlert
+                isOpen={exportPopupState === 'failed'}
                 onClose={() => setExportPopupState('none')}
                 exportType={exportType}
             />
-            
+
             <ExportProgressAlert
                 isOpen={navPopupState === 'progress'}
-                onClose={() => {}}
+                onClose={() => { }}
                 progress={navProgress}
                 exportType="Loading"
             />

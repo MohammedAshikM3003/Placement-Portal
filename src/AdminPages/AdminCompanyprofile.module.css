@@ -23,16 +23,18 @@
 /* Main Content */
 .Admin-cp-main-content {
     flex-grow: 1;
-    padding: 10px;
-    margin: 65px 2px 0px 286px;
+    padding: 20px;
+    margin: 65px 0px 0px 280px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    overflow-x: hidden;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
 }
 
 /* Sidebar overlay for mobile when sidebar is open */
-.Admin-cp-overlay {
+.Admin-cp-mobile-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -60,10 +62,11 @@
     display: flex;
     gap: 20px;
     align-items: stretch;
-    flex-wrap: wrap;
-    margin-left: 15px;
+    flex-wrap: nowrap;
+    margin-left: 0;
+    margin-right: 0;
     height: auto;
-    min-height: 245px;
+    flex-shrink: 0;
 }
 
 /* Filter Section */
@@ -81,6 +84,8 @@
 .Admin-cp-filter-header-container {
     position: relative;
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
 }
 
 .Admin-cp-filter-header {
@@ -89,11 +94,34 @@
     font-weight: 500;
     background-color: #4EA24E;
     color: white;
-    padding: 6px 0px 9px 0px;
+    height: 35px;
+    line-height: 35px;
     margin: 0 auto; 
     border-radius: 30px;
     display: block;
     width: 228px;
+}
+
+.Admin-cp-clear-btn-header {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-cp-clear-btn-header:hover {
+    background-color: #c0c0c0;
 }
 
 .Admin-cp-filter-icon-container {
@@ -368,26 +396,29 @@ position: relative;
 
 .Admin-cp-search-btn:hover { background-color: #3d8a3d; }
 
+
+
 /* Action Cards Section */
 .Admin-cp-action-cards-section {
     display: flex;
-    flex: 0 0 auto;
-    gap: 12px;
-    flex-wrap: nowrap;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
 }
 
 .Admin-cp-action-card {
-    flex: 0 0 140px;
+    flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    text-align: center;
-    padding: 12px 15px;
+    padding: 10px 20px;
     background-color: #ffffff;
     border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #808080;
+    box-shadow: none;
+    border: 2px solid #4EA24E;
+    transition: border-color 0.2s ease;
 }
 
 .Admin-cp-action-addcard {
@@ -436,77 +467,137 @@ position: relative;
 }
 
 /* Edit/Delete Card Styling */
-.Admin-cp-action-card:nth-child(2), .Admin-cp-action-card:nth-child(3) { border: 2px solid #808080; }
-.Admin-cp-action-header { font-size: 1.4rem; font-weight: 500; margin-bottom: 5px; margin-top: 0; color: #4EA24E; }
+.Admin-cp-action-header {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.Admin-cp-header-disabled {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-cp-header-edit-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #5932EA !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-cp-header-delete-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ff0000 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
 .Admin-cp-action-description {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     color: #666;
-    margin-bottom: 15px;
-    margin-top: -2px;
-    padding: 0 5px;
+    margin: 0 15px;
+    padding: 0;
     font-weight: 500;
     line-height: 1.3;
     flex-grow: 1;
-    display: flex;
-    align-items: center;
-    text-align: center;
-    justify-content: center;
-    min-height: 70px;
+    display: block;
+    text-align: left;
 }
 
 .Admin-cp-action-btn {
-    background-color: #4EA24E;
-    color: white;
+    padding: 8px 16px;
     border: none;
-    padding: 8px 30px;
-    border-radius: 0px;
+    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem; 
+    width: 100px;
+    flex-shrink: 0;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+    font-size: 0.9rem;
 }
-.Admin-cp-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.Admin-cp-edit-btn { background-color: #5932EA; color: white; border-radius: 8px; }
-.Admin-cp-delete-btn { background-color: #ff0000; color: white; border-radius: 20px; }
-.Admin-cp-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.Admin-cp-action-btn:disabled {
+    background-color: #e0e0e0 !important;
+    color: #888888 !important;
+    cursor: not-allowed;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+.Admin-cp-edit-btn {
+    background-color: #5932EA;
+    color: white;
+}
+
+.Admin-cp-delete-btn {
+    background-color: #ff0000;
+    color: white;
+    border-radius: 8px;
+}
 
 /* ---------------------------------------------------------------------- */
 /* Bottom Card (Company Table) */
 .Admin-cp-bottom-card {
     background-color: #ffffff;
     border-radius: 15px;
-    padding: 10px 25px;
-    /* FIXED: Removed desktop margin and fixed width */
+    padding: 12px 20px;
     margin-left: 0;
-    width: 100%;
+    margin-right: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .Admin-cp-table-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eee;
-    position: relative;
-    z-index: 15;
-    margin-bottom: -20px;
-    top: -17px;
+    flex-shrink: 0;
 }
 
-.Admin-cp-table-title { font-size: 1.5rem; font-weight: 700; color: #333; }
+.Admin-cp-table-title { font-size: 1.3rem; font-weight: 700; color: #333; }
 .Admin-cp-table-actions { display: flex; align-items: center; gap: 12px; }
-.Admin-cp-print-button-container { position: relative; display: inline-block; z-index: 15; }
+.Admin-cp-print-button-container { position: relative; }
 .Admin-cp-print-btn { background-color: #4EA24E; color: white; border: none; padding: 8px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; }
 .Admin-cp-print-btn:hover { background-color: #3d8a3d; }
 
 .Admin-cp-export-menu {
-    position: absolute; top: 40px; right: 0; z-index: 2000; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); min-width: 180px; display: flex; flex-direction: column; overflow: hidden;
+    position: absolute; top: 100%; right: 0; margin-top: 5px; z-index: 2000; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); min-width: 180px; display: flex; flex-direction: column; overflow: hidden;
 }
 .Admin-cp-export-menu button { padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer; font-size: 0.95rem; color: #333; transition: background-color 0.2s; }
 .Admin-cp-export-menu button:hover { background-color: #f0f0f0; }
 
 /* Table Styles */
-.Admin-cp-table-container { height: 300px; overflow-y: scroll; overflow-x: auto; border: none; border-radius: 0; }
+.Admin-cp-table-container {
+    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
+    border: none;
+    border-radius: 8px;
+    max-height: 100%;
+    padding-bottom: 25px;
+}
 
 /* --- Table Scrollbars (Desktop) --- */
 .Admin-cp-table-container::-webkit-scrollbar {
@@ -526,13 +617,33 @@ position: relative;
     background: #4ea24e;
 }
 
-.Admin-cp-students-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 0.9rem; white-space: nowrap; }
-.Admin-cp-table-head-row { position: sticky; top: 0; background-color: #ffffff; border-bottom: none; z-index: 11; }
-.Admin-cp-th { padding: 8px 10px; text-align: center; font-weight: 600; color: #666; text-transform: uppercase; font-size: 0.85rem; background-color: #ffffff; border-bottom: none; }
-.Admin-cp-table-row { cursor: pointer; transition: background-color 0.1s; border-bottom: 1px solid #eee; height: 47px; }
-.Admin-cp-table-row:hover { background-color: #f6f6f6; }
-.Admin-cp-selected-row { background-color: #e0ffe0 !important; }
-.Admin-cp-td { padding: 8px 10px; text-align: left; color: #2e2e2e; font-weight: 450px; white-space: nowrap; }
+.Admin-cp-students-table { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; white-space: nowrap; }
+.Admin-cp-table-head-row { position: sticky; top: 0; background-color: #ffffff; z-index: 11; }
+.Admin-cp-th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+    background-color: white;
+    border-bottom: 2px solid #e0e0e0;
+}
+.Admin-cp-table-row {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.Admin-cp-table-row:hover { background-color: #fafafa; }
+.Admin-cp-selected-row { background-color: #f7fff5 !important; }
+.Admin-cp-td {
+    padding: 10px 10px;
+    text-align: center;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f5f5f5;
+}
 
 /* Column widths */
 .Admin-cp-checkbox { width: 50px; text-align: center; }
@@ -770,22 +881,40 @@ position: relative;
     }
 }
 
-@media screen and (max-width: 768px) {
-    /* --- FIX: Main Content Area --- */
-    .Admin-cp-main-content {
-        padding: 15px;
-        padding-top: 70px;
-        padding-bottom: 30px;
-        height: auto;
-        max-height: calc(109vh - 70px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        box-sizing: border-box;
-        gap: 15px;
-        margin-top: 0px;
+@media (max-width: 900px) {
+    .Admin-cp-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
     }
 
-    /* --- FIX: Green Scrollbar for Main Content --- */
+    .Admin-cp-mobile-overlay {
+        display: block !important;
+    }
+
+    .Admin-cp-main-content {
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 15px !important;
+        min-height: calc(100vh - 65px) !important;
+        margin-left: 0 !important;
+    }
+
+    /* Scrollbar for Main Content */
     .Admin-cp-main-content::-webkit-scrollbar {
         width: 10px;
     }
@@ -804,77 +933,105 @@ position: relative;
 
     /* Top Card Layout: Stack vertically */
     .Admin-cp-top-card {
-        flex-direction: column;
-        height: auto;
-        gap: 15px;
-        margin-top: 0px;
-        position: relative;
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
     /* Filter Section Adjustments */
     .Admin-cp-filter-section {
-        min-width: unset;
-        width: 100%;
-        box-sizing: border-box;
-        border-radius: 20px;
+        border-radius: 25px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
     
     .Admin-cp-filter-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
 
     /* Add Card Adjustments */
     .Admin-cp-action-addcard {
-        width: 100%;
-        height: 236.5px;
-        padding: 20px;
-        box-sizing: border-box;
+        width: 100% !important;
+        height: auto !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
     }
 
     /* Edit/Delete Cards Container */
     .Admin-cp-action-cards-section {
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 15px;
-        height: 236.19px;
-        padding-bottom: 0;
-        justify-content: flex-start;
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        width: 100% !important;
     }
     
     .Admin-cp-action-card {
-        flex: 1 1 calc(50% - 10px);
-        min-width: 140px;
-        /* height: 235.5px; */
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 55px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
     }
 
     /* Table Section Adjustments */
     .Admin-cp-bottom-card {
-        padding: 10px;
-        margin-top: 20px; /* Reduced margin from 600px */
-        position: relative;
-        box-sizing: border-box;
+        margin-left: 0 !important;
+        padding: 15px 15px 35px 15px !important;
+        flex: none !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
     }
     
     .Admin-cp-table-header-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 5px;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
     }
 
     .Admin-cp-table-actions {
-        width: 100%;
-        justify-content: flex-end;
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
     }
 
     .Admin-cp-table-container {
-        max-height: 60vh; 
-        overflow: auto; 
-        height: 275px;
-       
+        height: 290px !important;
+        max-height: 290px !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 1 !important;
+        padding-bottom: 25px !important; /* Leave space for horizontal scrollbar on mobile */
     }
 
-    /* Explicit Green scrollbar for Mobile Table */
+    /* Align popup to top for scrolling */
+    .Admin-cp-popup-overlay {
+        align-items: flex-start !important;
+        padding: 90px 10px !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-cp-popup-container.is-form,
+    .Admin-cp-popup-container.is-success {
+        max-width: 95vw !important;
+        margin-top: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Table scrollbar on mobile */
     .Admin-cp-table-container::-webkit-scrollbar {
         width: 8px;
         background: transparent;
@@ -904,20 +1061,6 @@ position: relative;
     .Admin-cp-table-container::-webkit-scrollbar-thumb:horizontal {
         background: #afadad;
         border-radius: 8px;
-    }
-
-    /* Align popup to top for scrolling */
-    .Admin-cp-popup-overlay {
-        align-items: flex-start;
-        padding: 90px 10px;
-        overflow-y: auto;
-        box-sizing: border-box;
-    }
-
-    .Admin-cp-popup-container.is-form,
-    .Admin-cp-popup-container.is-success {
-        max-width: 95vw;
-        margin-top: 0;
     }
 }
 

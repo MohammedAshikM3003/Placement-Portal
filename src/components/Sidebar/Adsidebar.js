@@ -627,7 +627,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
   // Check if current path is active zip page (student database zip view)
 
-  const isActiveZipPage = currentPath.startsWith('/admin/active-zip/') || currentPath.startsWith('/admin/zipped-batch') || currentPath === '/admin/zipped-batches';
+  const isActiveZipPage = currentPath.startsWith('/admin/active-zip/') || currentPath.startsWith('/admin/zipped-batch') || currentPath === '/admin/zipped-batches' || currentPath === '/admin/zipping-history';
 
   // Check if current path is add branch pages (both main and form)
 

@@ -14,7 +14,17 @@
 import React, { useState, useRef, useEffect, useMemo, useImperativeHandle, forwardRef } from 'react';
 import ReactDOM from 'react-dom';
 
-const Ad_Calendar = forwardRef(function Ad_Calendar({ value, onChange, disabled = false, maxDate = null, triggerClassName = '', triggerHighlighted = false }, ref) {
+const Ad_Calendar = forwardRef(function Ad_Calendar({
+  value,
+  onChange,
+  disabled = false,
+  maxDate = null,
+  enabledDates = null,
+  triggerClassName = '',
+  triggerHighlighted = false,
+  variant = 'default',
+  style = {}
+}, ref) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
   const today = useMemo(() => new Date(), []);
@@ -274,7 +284,16 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({ value, onChange, disabled 
                   const sel = isSelected(day);
                   const tod = isToday(day);
                   const isHov = hoveredDay === day;
-                  const isDisabled = maxDateValue && new Date(calYear, calMonth, day) > maxDateValue;
+                  const dateObj = new Date(calYear, calMonth, day);
+                  const yearStr = calYear;
+                  const monthStr = String(calMonth + 1).padStart(2, '0');
+                  const dayStr = String(day).padStart(2, '0');
+                  const ymdStr = `${yearStr}-${monthStr}-${dayStr}`;
+                  
+                  let isDisabled = maxDateValue && dateObj > maxDateValue;
+                  if (!isDisabled && enabledDates) {
+                    isDisabled = !enabledDates.includes(ymdStr);
+                  }
                   return (
                     <button
                       key={day}
@@ -327,6 +346,8 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({ value, onChange, disabled 
     document.body
   ) : null;
 
+  const isFilterVariant = variant === 'filter';
+
   return (
     <div style={{ position: 'relative' }}>
       {/* Trigger field - Admin Green Theme */}
@@ -339,18 +360,31 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({ value, onChange, disabled 
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          border: triggerHighlighted ? '2px solid #2E7D32' : hovered && !disabled ? '1px solid #4EA24E' : '1px solid #def4dd',
-          boxShadow: triggerHighlighted ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : hovered && !disabled ? '0 0 0 3px rgba(78,162,78,0.2)' : 'none',
+          border: isFilterVariant 
+            ? (open || (hovered && !disabled) ? '3px solid #4EA24E' : '3px solid #ccc')
+            : (triggerHighlighted ? '2px solid #2E7D32' : hovered && !disabled ? '1px solid #4EA24E' : '1px solid #def4dd'),
+          boxShadow: isFilterVariant
+            ? 'none'
+            : (triggerHighlighted ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : hovered && !disabled ? '0 0 0 3px rgba(78,162,78,0.2)' : 'none'),
           borderRadius: '8px',
-          padding: '0.9rem', cursor: 'pointer', backgroundColor: triggerHighlighted ? '#f4fff4' : '#f9fff9',
+          padding: isFilterVariant ? '0px 15px' : '0.9rem',
+          height: isFilterVariant ? '45px' : 'auto',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          backgroundColor: '#ffffff',
           fontSize: '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
           opacity: disabled ? 0.78 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'border-color 0.3s, box-shadow 0.3s, background-color 0.3s'
+          transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s',
+          ...style
         }}
       >
-        <span style={{ flex: 1, fontWeight: 600, color: displayVal ? '#1a1a1a' : '#9aa7c2' }}>{displayVal || 'DD-MM-YYYY'}</span>
+        <span style={{
+          flex: 1,
+          fontWeight: isFilterVariant ? 450 : 600,
+          color: displayVal ? '#333' : '#999'
+        }}>
+          {displayVal || 'DD-MM-YYYY'}
+        </span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="4" width="18" height="18" rx="2" />
           <line x1="16" y1="2" x2="16" y2="6" />
