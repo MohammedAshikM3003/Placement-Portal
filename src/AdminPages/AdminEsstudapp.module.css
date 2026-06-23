@@ -15,23 +15,24 @@
     overflow: hidden;
 
 }
+
 .Admin-es-apk-main-content::-webkit-scrollbar {
-        width: 10px;
-    }
+    width: 10px;
+}
 
-    .Admin-es-apk-main-content::-webkit-scrollbar-track {
-        background: #f0f2f5;
-    }
+.Admin-es-apk-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
 
-    .Admin-es-apk-main-content::-webkit-scrollbar-thumb {
-        background-color: #4EA24E;
-        border-radius: 20px;
-        border: 3px solid #f0f2f5;
-    }
+.Admin-es-apk-main-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
 
-    .Admin-es-apk-main-content::-webkit-scrollbar-thumb:hover {
-        background-color: #3d8a3d;
-    }
+.Admin-es-apk-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+}
 
 
 /* Full-screen overlay for mobile sidebar (click to close) */
@@ -115,7 +116,7 @@
 
     flex-shrink: 0;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     text-align: center;
 
@@ -176,7 +177,7 @@
     width: 75px;
 
     height: 75px;
-    margin-top:20px;
+    margin-top: 20px;
 
 }
 
@@ -222,7 +223,7 @@
 
     flex: 1;
 
-    background: #E0E0E0;
+    background: #e8e8e8;
 
     border-radius: 18px;
 
@@ -236,7 +237,7 @@
 
     position: relative;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 
     justify-content: center;
 
@@ -270,7 +271,7 @@
 
     font-weight: 600;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 
     z-index: 2;
 
@@ -583,7 +584,7 @@
 
     flex-shrink: 0;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     text-align: center;
 
@@ -607,7 +608,7 @@
 
 .Admin-es-apk-filtered-students-card:hover {
 
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 
     transform: translateY(-2px);
 
@@ -679,7 +680,7 @@
 
     text-align: center;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
     border: 2px solid #808080;
 
@@ -751,17 +752,36 @@
 
 .Admin-es-apk-bottom-filters {
     background: #fff;
-    border-radius: 12px;
-    padding: 35px 40px;
+    border-radius: 16px;
+    padding: 2.5rem;
     margin-left: 0;
     margin-right: 0;
     width: 100%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-top: 0px;
     box-sizing: border-box;
 }
 
+.Admin-es-apk-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
 
+.Admin-es-apk-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
+}
 
 .Admin-es-apk-filter-row {
 
@@ -775,7 +795,20 @@
 
 }
 
+.Admin-es-apk-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
 
+.Admin-es-apk-field-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #4b4b4b;
+    letter-spacing: 0.02em;
+    text-align: left;
+}
 
 .Admin-es-apk-filter-input {
 
@@ -785,27 +818,25 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input input,
 
 .Admin-es-apk-filter-input select {
 
     width: 100%;
 
-    height: 50px;
+    height: 53.6px;
 
-    padding: 10px 15px;
+    padding: 12px 15px;
 
-    border: 1.5px solid #d1d5db;
+    border: 1px solid #def4dd;
 
-    border-radius: 8px;
+    border-radius: 6px;
 
     font-size: 1em;
 
-    background: #fff;
+    background: #f9fff9;
 
-    transition: border 0.2s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 
     box-sizing: border-box;
 
@@ -817,8 +848,6 @@
 
 }
 
-
-
 /* Select dropdown styling */
 
 .Admin-es-apk-select-input {
@@ -826,8 +855,6 @@
     position: relative;
 
 }
-
-
 
 .Admin-es-apk-select {
 
@@ -841,8 +868,6 @@
 
 }
 
-
-
 .Admin-es-apk-select:disabled {
 
     cursor: not-allowed;
@@ -852,8 +877,6 @@
     color: #999;
 
 }
-
-
 
 /* Custom dropdown arrow */
 
@@ -879,15 +902,11 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input select option {
 
     padding: 10px;
 
 }
-
-
 
 .Admin-es-apk-filter-input input[list] {
 
@@ -901,15 +920,11 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input input::-webkit-calendar-picker-indicator {
 
     display: none !important;
 
 }
-
-
 
 .Admin-es-apk-filter-input input::-webkit-list-button {
 
@@ -917,19 +932,19 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input input:focus,
 
 .Admin-es-apk-filter-input select:focus {
 
     outline: none;
 
-    border: 2px solid #4EA24E;
+    border-color: #4EA24E;
+
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+
+    background-color: #f9fff9;
 
 }
-
-
 
 .Admin-es-apk-filter-input input::placeholder {
 
@@ -939,8 +954,6 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input input:focus::placeholder,
 
 .Admin-es-apk-filter-input select:focus::placeholder {
@@ -949,23 +962,17 @@
 
 }
 
-
-
 .Admin-es-apk-filter-input select {
 
     color: #333;
 
 }
 
-
-
 .Admin-es-apk-filter-input select option:first-child {
 
     color: #999;
 
 }
-
-
 
 /* Checkbox Group Styling */
 
@@ -985,8 +992,6 @@
 
 }
 
-
-
 .Admin-es-apk-checkbox-label {
 
     font-size: 14px;
@@ -1001,8 +1006,6 @@
 
 }
 
-
-
 .Admin-es-apk-checkbox-options {
 
     display: flex;
@@ -1012,8 +1015,6 @@
     gap: 8px;
 
 }
-
-
 
 .Admin-es-apk-checkbox-option {
 
@@ -1033,8 +1034,6 @@
 
 }
 
-
-
 .Admin-es-apk-checkbox-option input[type="checkbox"] {
 
     width: 18px;
@@ -1047,15 +1046,11 @@
 
 }
 
-
-
 .Admin-es-apk-checkbox-option span {
 
     flex: 1;
 
 }
-
-
 
 /* Buttons */
 
@@ -1063,15 +1058,13 @@
 
     display: flex;
 
-    justify-content: flex-end;
+    justify-content: center;
 
     gap: 15px;
 
     margin-top: 30px;
 
 }
-
-
 
 .Admin-es-apk-clear-bottom-btn,
 
@@ -1093,31 +1086,21 @@
 
 }
 
-
-
 .Admin-es-apk-clear-bottom-btn {
 
-    background: #fff;
+    background-color: #e8e8e8;
 
-    color: #f0f0f0;
+    color: #666;
 
-    border: 2px solid #d1d5db;
-
-    background-color: #949292;
+    border: none;
 
 }
-
-
 
 .Admin-es-apk-clear-bottom-btn:hover {
 
-    background: #787878;
-
-   
+    background-color: #d4d4d4;
 
 }
-
-
 
 .Admin-es-apk-search-bottom-btn {
 
@@ -1126,8 +1109,6 @@
     color: #fff;
 
 }
-
-
 
 .Admin-es-apk-search-bottom-btn:hover {
 
@@ -1163,53 +1144,53 @@
 
     }
 
-/* Eligible Students / Placed Students Card */
+    /* Eligible Students / Placed Students Card */
 
-.Admin-es-apk-placed-students-card {
+    .Admin-es-apk-placed-students-card {
 
-    background: #fff;
+        background: #fff;
 
-    border-radius: 12px;
+        border-radius: 12px;
 
-    padding: 12px 15px;
+        padding: 12px 15px;
 
-    width: 438px;
+        width: 438px;
 
-    height:236.5px;
+        height: 236.5px;
 
-    flex-shrink: 0;
+        flex-shrink: 0;
 
-    display: flex;
+        display: flex;
 
-    flex-direction: column;
+        flex-direction: column;
 
-    align-items: center;
+        align-items: center;
 
-    justify-content: space-between;
+        justify-content: space-between;
 
-    text-align: center;
+        text-align: center;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-    border: 2px solid #808080;
+        border: 2px solid #808080;
 
-    transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
+        transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
 
-    box-sizing: border-box;
+        box-sizing: border-box;
 
-}
+    }
 
 
 
-.Admin-es-apk-placed-students-card:hover {
+    .Admin-es-apk-placed-students-card:hover {
 
-    border: 2px solid #4EA24E;
+        border: 2px solid #4EA24E;
 
-    box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
+        box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
 
-    transform: translateY(-2px);
+        transform: translateY(-2px);
 
-}
+    }
 
     .Admin-es-apk-eligible-student-card,
 
@@ -1326,7 +1307,7 @@
     width: 100%;
 }
 
-.Admin-es-apk-date-range-inputs > div:not(.Admin-es-apk-date-range-sep) {
+.Admin-es-apk-date-range-inputs>div:not(.Admin-es-apk-date-range-sep) {
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -1359,3 +1340,31 @@
     z-index: 1;
 }
 
+.Admin-es-apk-clear-btn-header {
+    position: absolute;
+    right: 20px;
+    top: 25px;
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    z-index: 3;
+}
+
+.Admin-es-apk-clear-btn-header:hover {
+    background-color: #c0c0c0;
+}
+
+.Admin-es-apk-select:disabled {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}

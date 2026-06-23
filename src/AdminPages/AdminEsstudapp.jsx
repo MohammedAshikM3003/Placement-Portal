@@ -79,7 +79,7 @@ function AdminEsstudapp() {
   const [startDateFocused, setStartDateFocused] = useState(false);
   const [endDateFocused, setEndDateFocused] = useState(false);
 
-  
+
 
   const [filterData, setFilterData] = useState({
 
@@ -285,48 +285,143 @@ function AdminEsstudapp() {
     }
   }, [filterData.driveStartDate, filterData.driveEndDate]);
 
-  // Auto-populate other fields when a unique drive is matched by both start and end date
+  // Helper to get drives matching current start and end dates
+  const matchedDrivesForDates = useMemo(() => {
+    if (!filterData.driveStartDate || !filterData.driveEndDate) return [];
+    return drivesList.filter(
+      d => d.startYmd === filterData.driveStartDate && d.endYmd === filterData.driveEndDate
+    );
+  }, [filterData.driveStartDate, filterData.driveEndDate, drivesList]);
+
+  // Unique job roles matching current start and end dates
+  const uniqueJobRolesForDates = useMemo(() => {
+    const roles = matchedDrivesForDates.map(d => d.jobRole || '').filter(Boolean);
+    return Array.from(new Set(roles));
+  }, [matchedDrivesForDates]);
+
+  // Auto-populate other fields when a unique drive is matched by start date, end date, and job role
   useEffect(() => {
     if (filterData.driveStartDate && filterData.driveEndDate) {
-      const foundDrive = drivesList.find(d => d.startYmd === filterData.driveStartDate && d.endYmd === filterData.driveEndDate);
-      if (foundDrive) {
+      if (uniqueJobRolesForDates.length === 1) {
+        // Only one job role: auto-fetch it
+        const foundDrive = matchedDrivesForDates[0];
         setSelectedDrive(foundDrive);
         const rounds = foundDrive.rounds || foundDrive.round || '';
         const departments = foundDrive.eligibleBranches || foundDrive.department || [];
         const departmentStr = Array.isArray(departments) ? departments.join(', ') : departments;
         const jobRole = foundDrive.jobRole || '';
 
-        setFilterData(prev => ({
-          ...prev,
-          _id: foundDrive._id,
-          driveId: foundDrive._id,
-          totalRound: rounds.toString(),
-          department: departmentStr,
-          jobs: jobRole
-        }));
+        setFilterData(prev => {
+          if (
+            prev._id === foundDrive._id &&
+            prev.totalRound === rounds.toString() &&
+            prev.department === departmentStr &&
+            prev.jobs === jobRole
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            _id: foundDrive._id,
+            driveId: foundDrive._id,
+            totalRound: rounds.toString(),
+            department: departmentStr,
+            jobs: jobRole
+          };
+        });
+      } else if (uniqueJobRolesForDates.length > 1) {
+        // Multiple job roles on the same date: check if the selected job role matches one of them
+        const matchedDrive = matchedDrivesForDates.find(d => d.jobRole === filterData.jobs);
+        if (matchedDrive) {
+          setSelectedDrive(matchedDrive);
+          const rounds = matchedDrive.rounds || matchedDrive.round || '';
+          const departments = matchedDrive.eligibleBranches || matchedDrive.department || [];
+          const departmentStr = Array.isArray(departments) ? departments.join(', ') : departments;
+
+          setFilterData(prev => {
+            if (
+              prev._id === matchedDrive._id &&
+              prev.totalRound === rounds.toString() &&
+              prev.department === departmentStr
+            ) {
+              return prev;
+            }
+            return {
+              ...prev,
+              _id: matchedDrive._id,
+              driveId: matchedDrive._id,
+              totalRound: rounds.toString(),
+              department: departmentStr
+            };
+          });
+        } else {
+          // Job role not selected yet or invalid selection
+          setSelectedDrive(null);
+          setFilterData(prev => {
+            const nextJobs = uniqueJobRolesForDates.includes(prev.jobs) ? prev.jobs : '';
+            if (
+              prev._id === '' &&
+              prev.totalRound === '' &&
+              prev.department === '' &&
+              prev.jobs === nextJobs
+            ) {
+              return prev;
+            }
+            return {
+              ...prev,
+              totalRound: '',
+              department: '',
+              jobs: nextJobs,
+              _id: '',
+              driveId: ''
+            };
+          });
+        }
       } else {
+        // No job roles found
         setSelectedDrive(null);
-        setFilterData(prev => ({
+        setFilterData(prev => {
+          if (
+            prev._id === '' &&
+            prev.totalRound === '' &&
+            prev.department === '' &&
+            prev.jobs === ''
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            totalRound: '',
+            department: '',
+            jobs: '',
+            _id: '',
+            driveId: ''
+          };
+        });
+      }
+    } else {
+      // Dates not fully selected
+      setSelectedDrive(null);
+      setFilterData(prev => {
+        if (
+          prev._id === '' &&
+          prev.totalRound === '' &&
+          prev.department === '' &&
+          prev.jobs === ''
+        ) {
+          return prev;
+        }
+        return {
           ...prev,
           totalRound: '',
           department: '',
           jobs: '',
           _id: '',
           driveId: ''
-        }));
-      }
-    } else {
-      setSelectedDrive(null);
-      setFilterData(prev => ({
-        ...prev,
-        totalRound: '',
-        department: '',
-        jobs: '',
-        _id: '',
-        driveId: ''
-      }));
+        };
+      });
     }
-  }, [filterData.driveStartDate, filterData.driveEndDate, drivesList]);
+  }, [filterData.driveStartDate, filterData.driveEndDate, filterData.jobs, uniqueJobRolesForDates, matchedDrivesForDates]);
 
   // Fetch company drives on mount
 
@@ -348,7 +443,7 @@ function AdminEsstudapp() {
 
       console.log('Auto-filling from navigation state:', incomingData);
 
-      
+
 
       // First, populate availableDrives for the selected company
 
@@ -362,7 +457,7 @@ function AdminEsstudapp() {
 
         setAvailableDrives(drivesForCompany);
 
-        
+
 
         // Find and set the selected drive based on start date or drive ID
 
@@ -390,7 +485,7 @@ function AdminEsstudapp() {
 
           });
 
-          
+
 
           if (matchedDrive) {
 
@@ -404,7 +499,7 @@ function AdminEsstudapp() {
 
       }
 
-      
+
 
       // Then set the filter data
 
@@ -446,7 +541,7 @@ function AdminEsstudapp() {
 
       setAllDrives(drives || []);
 
-      
+
 
       // Extract unique company names
 
@@ -496,7 +591,7 @@ function AdminEsstudapp() {
 
         );
 
-        
+
 
         console.log('All Drives for Company:', value);
 
@@ -516,11 +611,11 @@ function AdminEsstudapp() {
 
         });
 
-        
+
 
         setAvailableDrives(drivesForCompany);
 
-        
+
 
         // Reset dependent fields
 
@@ -596,7 +691,7 @@ function AdminEsstudapp() {
 
         setIsSearching(true);
 
-        
+
 
         // Use selectedDrive._id directly instead of relying on filterData state update
 
@@ -604,7 +699,7 @@ function AdminEsstudapp() {
 
         console.log('Using drive ID from selectedDrive:', driveId);
 
-        
+
 
         // Preload students so next page can render immediately
 
@@ -714,19 +809,19 @@ function AdminEsstudapp() {
 
         // Navigate with pre-fetched data so eligible students page can render immediately
 
-        navigate('/admin-eligible-students', { 
+        navigate('/admin-eligible-students', {
 
-          state: { 
+          state: {
 
-            filterData: filterDataWithDriveId, 
+            filterData: filterDataWithDriveId,
 
-            preFetchedStudents: allStudents, 
+            preFetchedStudents: allStudents,
 
             preFilteredStudents: filtered,
 
             selectedDrive: selectedDrive // Also pass the drive object
 
-          } 
+          }
 
         });
 
@@ -734,7 +829,7 @@ function AdminEsstudapp() {
 
         console.error('Preloading students failed:', error);
 
-        
+
 
         // Validate that a drive has been selected
 
@@ -748,7 +843,7 @@ function AdminEsstudapp() {
 
         }
 
-        
+
 
         // Use driveId from selectedDrive state
 
@@ -766,19 +861,19 @@ function AdminEsstudapp() {
 
         };
 
-        
+
 
         // fallback: navigate with filterData only
 
-        navigate('/admin-eligible-students', { 
+        navigate('/admin-eligible-students', {
 
-          state: { 
+          state: {
 
             filterData: filterDataWithDriveId,
 
-            selectedDrive: selectedDrive 
+            selectedDrive: selectedDrive
 
-          } 
+          }
 
         });
 
@@ -792,7 +887,7 @@ function AdminEsstudapp() {
 
   };
 
-  
+
 
   const handleClear = () => {
 
@@ -834,6 +929,31 @@ function AdminEsstudapp() {
 
     console.log("Clear filter action triggered.");
 
+  };
+
+  const hasActiveTopFilters = Boolean(
+    filterData.companyName ||
+    filterData.driveStartDate ||
+    filterData.driveEndDate ||
+    filterData.jobs ||
+    filterData.totalRound
+  );
+
+  const handleClearTopFilters = () => {
+    setFilterData(prev => ({
+      ...prev,
+      companyName: '',
+      driveStartDate: '',
+      driveEndDate: '',
+      totalRound: '',
+      department: '',
+      jobs: '',
+      _id: '',
+      driveId: ''
+    }));
+    setSelectedDrive(null);
+    setDateSelectionMode('none');
+    console.log("Clear top filters action triggered.");
   };
 
 
@@ -894,464 +1014,425 @@ function AdminEsstudapp() {
 
         <div className={styles['Admin-es-apk-top-card']}>
 
-              {/* Student Database Card */}
+          {/* Student Database Card */}
 
-              <div 
+          <div
 
-                className={`${styles['Admin-es-apk-summary-card']} ${styles['Admin-es-apk-eligible-student-card']}`}
+            className={`${styles['Admin-es-apk-summary-card']} ${styles['Admin-es-apk-eligible-student-card']}`}
 
-                onClick={() => navigate('/admin-student-database')}
+            onClick={() => navigate('/admin-student-database')}
 
-                style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer' }}
 
+          >
+
+            <div className={`${styles['Admin-es-apk-summary-card-icon']} ${styles['Admin-es-apk-icon-bg-white']}`}>
+
+              <img src={AdminBrowseStudenticon} alt="Student Database" />
+
+            </div>
+
+            <div className={styles['Admin-es-apk-summary-card-title-1']}>Student<br />Database</div>
+
+            <div className={`${styles['Admin-es-apk-summary-card-desc-1']} ${styles['Admin-es-apk-summary-card-desc-1-margin']}`}>Filter, sort and manage <br />Student records</div>
+
+          </div>
+
+
+
+          {/* Eligible Students Filter Card */}
+
+          <div className={`${styles['Admin-es-apk-search-filters']} ${styles['Admin-es-apk-eligible-students-search']}`}>
+
+            <div className={styles['Admin-es-apk-search-tab']}>Eligible Students</div>
+
+            {hasActiveTopFilters && (
+              <button
+                type="button"
+                className={styles['Admin-es-apk-clear-btn-header']}
+                onClick={handleClearTopFilters}
               >
+                Clear
+              </button>
+            )}
 
-                <div className={`${styles['Admin-es-apk-summary-card-icon']} ${styles['Admin-es-apk-icon-bg-white']}`}>
+            <div className={`${styles['Admin-es-apk-search-inputs']} ${styles['Admin-es-apk-eligible-inputs']}`}>
 
-                  <img src={AdminBrowseStudenticon} alt="Student Database" />
-
+              {/* Company Name with Static Label */}
+              <div className={styles['Admin-es-apk-input-wrapper']}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">Company Name</label>
+                <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                  <select
+                    id="companyName"
+                    value={filterData.companyName}
+                    onChange={(e) => handleFilterChange('companyName', e.target.value)}
+                    className={styles['Admin-es-apk-select']}
+                    disabled={isLoading}
+                  >
+                    <option value="">Select Company Name</option>
+                    {companyNames.map((name, idx) => (
+                      <option key={idx} value={name}>{name}</option>
+                    ))}
+                  </select>
                 </div>
-
-                <div className={styles['Admin-es-apk-summary-card-title-1']}>Student<br/>Database</div>
-
-                <div className={`${styles['Admin-es-apk-summary-card-desc-1']} ${styles['Admin-es-apk-summary-card-desc-1-margin']}`}>Filter, sort and manage <br/>Student records</div>
-
               </div>
 
-              
-
-              {/* Eligible Students Filter Card */}
-
-              <div className={`${styles['Admin-es-apk-search-filters']} ${styles['Admin-es-apk-eligible-students-search']}`}>
-
-                <div className={styles['Admin-es-apk-search-tab']}>Eligible Students</div>
-
-                <div className={`${styles['Admin-es-apk-search-inputs']} ${styles['Admin-es-apk-eligible-inputs']}`}>
-
-                  {/* Company Name with Static Label */}
-                  <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">Company Name</label>
-                    <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+              {/* Dates Filter with Static Label and Start/End subfields */}
+              <div className={styles['Admin-es-apk-input-wrapper']}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="admin-search-dates">
+                  Dates
+                </label>
+                <div className={styles['Admin-es-apk-date-range-inputs']}>
+                  {Boolean(filterData.driveEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
+                    <div className={`${styles['Admin-es-apk-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
                       <select
-                        id="companyName"
-                        value={filterData.companyName}
-                        onChange={(e) => handleFilterChange('companyName', e.target.value)}
+                        id="admin-search-start-date"
                         className={styles['Admin-es-apk-select']}
-                        disabled={isLoading}
+                        value={filterData.driveStartDate}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
+                        onFocus={() => setStartDateFocused(true)}
+                        onBlur={() => setStartDateFocused(false)}
+                        style={{ padding: '10px 12px', fontSize: '0.9rem' }}
+                        disabled={!filterData.companyName}
                       >
-                        <option value="">Select Company Name</option>
-                        {companyNames.map((name, idx) => (
-                          <option key={idx} value={name}>{name}</option>
+                        <option value="">Start</option>
+                        {matchingStartDates.map((ymd) => (
+                          <option key={ymd} value={ymd}>
+                            {toDmy(ymd)}
+                          </option>
                         ))}
                       </select>
                     </div>
-                  </div>
+                  ) : (
+                    <AdCalendar
+                      id="admin-search-start-date"
+                      value={filterData.driveStartDate}
+                      onChange={handleStartDateChange}
+                      variant="filter"
+                      enabledDates={filterData.driveEndDate ? matchingStartDates : uniqueStartDates}
+                      style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
+                      disabled={!filterData.companyName}
+                    />
+                  )}
 
-                  {/* Job Role with Static Label */}
-                  <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <label className={styles['Admin-es-apk-static-label']} htmlFor="jobs">Job Role</label>
-                    <div className={styles['Admin-es-apk-search-input']}>
-                      <input
-                        type="text"
-                        id="jobs"
-                        value={filterData.jobs}
-                        readOnly
-                        placeholder="Job Role"
-                      />
+                  <span className={styles['Admin-es-apk-date-range-sep']}>-</span>
+
+                  {Boolean(filterData.driveStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
+                    <div className={`${styles['Admin-es-apk-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
+                      <select
+                        id="admin-search-end-date"
+                        className={styles['Admin-es-apk-select']}
+                        value={filterData.driveEndDate}
+                        onChange={(e) => handleEndDateChange(e.target.value)}
+                        onFocus={() => setEndDateFocused(true)}
+                        onBlur={() => setEndDateFocused(false)}
+                        style={{ padding: '10px 12px', fontSize: '0.9rem' }}
+                        disabled={!filterData.companyName}
+                      >
+                        <option value="">End</option>
+                        {matchingEndDates.map((ymd) => (
+                          <option key={ymd} value={ymd}>
+                            {toDmy(ymd)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  </div>
-
-                  {/* Dates Filter with Static Label and Start/End subfields */}
-                  <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <label className={styles['Admin-es-apk-static-label']} htmlFor="admin-search-dates">
-                      Dates
-                    </label>
-                    <div className={styles['Admin-es-apk-date-range-inputs']}>
-                      {Boolean(filterData.driveEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
-                        <div className={`${styles['Admin-es-apk-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
-                          <select
-                            id="admin-search-start-date"
-                            className={styles['Admin-es-apk-select']}
-                            value={filterData.driveStartDate}
-                            onChange={(e) => handleStartDateChange(e.target.value)}
-                            onFocus={() => setStartDateFocused(true)}
-                            onBlur={() => setStartDateFocused(false)}
-                            style={{ padding: '10px 12px', fontSize: '0.9rem' }}
-                          >
-                            <option value="">Start</option>
-                            {matchingStartDates.map((ymd) => (
-                              <option key={ymd} value={ymd}>
-                                {toDmy(ymd)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <AdCalendar
-                          id="admin-search-start-date"
-                          value={filterData.driveStartDate}
-                          onChange={handleStartDateChange}
-                          variant="filter"
-                          enabledDates={filterData.driveEndDate ? matchingStartDates : uniqueStartDates}
-                          style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
-                        />
-                      )}
-
-                      <span className={styles['Admin-es-apk-date-range-sep']}>-</span>
-
-                      {Boolean(filterData.driveStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
-                        <div className={`${styles['Admin-es-apk-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
-                          <select
-                            id="admin-search-end-date"
-                            className={styles['Admin-es-apk-select']}
-                            value={filterData.driveEndDate}
-                            onChange={(e) => handleEndDateChange(e.target.value)}
-                            onFocus={() => setEndDateFocused(true)}
-                            onBlur={() => setEndDateFocused(false)}
-                            style={{ padding: '10px 12px', fontSize: '0.9rem' }}
-                          >
-                            <option value="">End</option>
-                            {matchingEndDates.map((ymd) => (
-                              <option key={ymd} value={ymd}>
-                                {toDmy(ymd)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <AdCalendar
-                          id="admin-search-end-date"
-                          value={filterData.driveEndDate}
-                          onChange={handleEndDateChange}
-                          variant="filter"
-                          enabledDates={filterData.driveStartDate ? matchingEndDates : uniqueEndDates}
-                          style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Total Round with Static Label */}
-                  <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <label className={styles['Admin-es-apk-static-label']} htmlFor="totalRound">Total Round</label>
-                    <div className={styles['Admin-es-apk-search-input']}>
-                      <input
-                        type="text"
-                        id="totalRound"
-                        value={filterData.totalRound}
-                        readOnly
-                        placeholder="Total Round"
-                      />
-                    </div>
-                  </div>
-
+                  ) : (
+                    <AdCalendar
+                      id="admin-search-end-date"
+                      value={filterData.driveEndDate}
+                      onChange={handleEndDateChange}
+                      variant="filter"
+                      enabledDates={filterData.driveStartDate ? matchingEndDates : uniqueEndDates}
+                      style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
+                      disabled={!filterData.companyName}
+                    />
+                  )}
                 </div>
-
               </div>
 
-              
-
-              {/* Company Drive Card */}
-
-              <div 
-
-                className={`${styles['Admin-es-apk-summary-card']} ${styles['Admin-es-apk-placed-students-card']}`}
-
-                onClick={() => navigate('/admin-company-drive')}
-
-                style={{ cursor: 'pointer' }}
-
-              >
-
-                <div className={`${styles['Admin-es-apk-summary-card-icon']} ${styles['Admin-es-apk-icon-bg-white']}`}>
-
-                  <img src={AdminCompanyDriveIcon} alt="Company Drive" className={styles['Admin-es-apk-placed-cap-icon']}/>
-
-                </div>
-
-                <div className={styles['Admin-es-apk-summary-card-title-2']}>Company<br/>Drive</div>
-
-                <div className={`${styles['Admin-es-apk-summary-card-desc-2']} ${styles['Admin-es-apk-summary-card-desc-2-margin']}`}>View and manage<br/>company drives</div>
-
+              {/* Job Role with Static Label */}
+              <div className={styles['Admin-es-apk-input-wrapper']}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="jobs">Job Role</label>
+                {uniqueJobRolesForDates.length > 1 ? (
+                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
+                    <select
+                      id="jobs"
+                      value={filterData.jobs}
+                      onChange={(e) => handleFilterChange('jobs', e.target.value)}
+                      className={styles['Admin-es-apk-select']}
+                    >
+                      <option value="">Select Job Role</option>
+                      {uniqueJobRolesForDates.map((role, idx) => (
+                        <option key={idx} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className={styles['Admin-es-apk-search-input']}>
+                    <input
+                      type="text"
+                      id="jobs"
+                      value={filterData.jobs}
+                      readOnly
+                      placeholder="Job Role"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Total Round with Static Label */}
+              <div className={styles['Admin-es-apk-input-wrapper']}>
+                <label className={styles['Admin-es-apk-static-label']} htmlFor="totalRound">Total Round</label>
+                <div className={styles['Admin-es-apk-search-input']}>
+                  <input
+                    type="text"
+                    id="totalRound"
+                    value={filterData.totalRound}
+                    readOnly
+                    placeholder="Total Round"
+                  />
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          {/* Company Drive Card */}
+
+          <div
+
+            className={`${styles['Admin-es-apk-summary-card']} ${styles['Admin-es-apk-placed-students-card']}`}
+
+            onClick={() => navigate('/admin-company-drive')}
+
+            style={{ cursor: 'pointer' }}
+
+          >
+
+            <div className={`${styles['Admin-es-apk-summary-card-icon']} ${styles['Admin-es-apk-icon-bg-white']}`}>
+
+              <img src={AdminCompanyDriveIcon} alt="Company Drive" className={styles['Admin-es-apk-placed-cap-icon']} />
+
+            </div>
+
+            <div className={styles['Admin-es-apk-summary-card-title-2']}>Company<br />Drive</div>
+
+            <div className={`${styles['Admin-es-apk-summary-card-desc-2']} ${styles['Admin-es-apk-summary-card-desc-2-margin']}`}>View and manage<br />company drives</div>
+
+          </div>
 
         </div>
 
-            
+
 
         {/* Bottom Filter Section */}
 
         <div className={styles['Admin-es-apk-bottom-filters']}>
 
-              <div className={styles['Admin-es-apk-filter-row']}>
+          <h3 className={styles['Admin-es-apk-section-header']}>Application Card</h3>
 
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.tenthPercentage ? styles['filled'] : ''}`}>
+          <div className={styles['Admin-es-apk-filter-row']}>
 
-                  <input 
-
-                    type="text" 
-
-                    id="tenthPercentage" 
-
-                    value={filterData.tenthPercentage} 
-
-                    onChange={(e) => handleFilterChange('tenthPercentage', e.target.value)}
-
-                    placeholder="10th Percentage"
-
-                  />
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.twelfthPercentage ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="twelfthPercentage" 
-
-                    value={filterData.twelfthPercentage} 
-
-                    onChange={(e) => handleFilterChange('twelfthPercentage', e.target.value)}
-
-                    placeholder="12th Percentage"
-
-                  />
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.diplomaPercentage ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="diplomaPercentage" 
-
-                    value={filterData.diplomaPercentage} 
-
-                    onChange={(e) => handleFilterChange('diplomaPercentage', e.target.value)}
-
-                    placeholder="Diploma Percentage"
-
-                  />
-
-                </div>
-
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="tenthPercentage">10th Percentage</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.tenthPercentage ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="tenthPercentage"
+                  value={filterData.tenthPercentage}
+                  onChange={(e) => handleFilterChange('tenthPercentage', e.target.value)}
+                  placeholder="10th Percentage"
+                />
               </div>
+            </div>
 
-
-
-              <div className={styles['Admin-es-apk-filter-row']}>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.ugCgpa ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="ugCgpa" 
-
-                    value={filterData.ugCgpa} 
-
-                    onChange={(e) => handleFilterChange('ugCgpa', e.target.value)}
-
-                    placeholder="UG CGPA"
-
-                  />
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.pgCgpa ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="pgCgpa" 
-
-                    value={filterData.pgCgpa} 
-
-                    onChange={(e) => handleFilterChange('pgCgpa', e.target.value)}
-
-                    placeholder="PG CGPA"
-
-                  />
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.backlogs ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="backlogs" 
-
-                    value={filterData.backlogs} 
-
-                    onChange={(e) => handleFilterChange('backlogs', e.target.value)}
-
-                    placeholder="No. of Backlogs"
-
-                  />
-
-                </div>
-
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="twelfthPercentage">12th Percentage</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.twelfthPercentage ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="twelfthPercentage"
+                  value={filterData.twelfthPercentage}
+                  onChange={(e) => handleFilterChange('twelfthPercentage', e.target.value)}
+                  placeholder="12th Percentage"
+                />
               </div>
+            </div>
 
-
-
-              <div className={styles['Admin-es-apk-filter-row']}>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.department ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="department" 
-
-                    value={filterData.department} 
-
-                    readOnly
-
-                    placeholder="Department"
-
-                  />
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.arrearStatus ? styles['filled'] : ''}`}>
-
-                  <select 
-
-                    id="arrearStatus" 
-
-                    value={filterData.arrearStatus} 
-
-                    onChange={(e) => handleFilterChange('arrearStatus', e.target.value)}
-
-                    className={styles['Admin-es-apk-select']}
-
-                  >
-
-                    <option value="">Select Arrear Status</option>
-
-                    {ARREAR_STATUS_OPTIONS.map(option => (
-
-                      <option key={option} value={option}>{option}</option>
-
-                    ))}
-
-                  </select>
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.bondWillingness ? styles['filled'] : ''}`}>
-
-                  <select 
-
-                    id="bondWillingness" 
-
-                    value={filterData.bondWillingness} 
-
-                    onChange={(e) => handleFilterChange('bondWillingness', e.target.value)}
-
-                    className={styles['Admin-es-apk-select']}
-
-                  >
-
-                    <option value="">Select Bond Willingness</option>
-
-                    {YES_NO_OPTIONS.map(option => (
-
-                      <option key={option} value={option}>{option}</option>
-
-                    ))}
-
-                  </select>
-
-                </div>
-
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="diplomaPercentage">Diploma Percentage</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.diplomaPercentage ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="diplomaPercentage"
+                  value={filterData.diplomaPercentage}
+                  onChange={(e) => handleFilterChange('diplomaPercentage', e.target.value)}
+                  placeholder="Diploma Percentage"
+                />
               </div>
+            </div>
+
+          </div>
 
 
 
-              <div className={styles['Admin-es-apk-filter-row']}>
+          <div className={styles['Admin-es-apk-filter-row']}>
 
-                <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.driveMode ? styles['filled'] : ''}`}>
-
-                  <select 
-
-                    id="driveMode" 
-
-                    value={filterData.driveMode} 
-
-                    onChange={(e) => handleFilterChange('driveMode', e.target.value)}
-
-                    className={styles['Admin-es-apk-select']}
-
-                  >
-
-                    <option value="">Select Mode of Drive</option>
-
-                    {MODE_OF_DRIVE_OPTIONS.map(option => (
-
-                      <option key={option} value={option}>{option}</option>
-
-                    ))}
-
-                  </select>
-
-                </div>
-
-                <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.companyType ? styles['filled'] : ''}`}>
-
-                  <select 
-
-                    id="companyType" 
-
-                    value={filterData.companyType} 
-
-                    onChange={(e) => handleFilterChange('companyType', e.target.value)}
-
-                    className={styles['Admin-es-apk-select']}
-
-                  >
-
-                    <option value="">Select Company Type</option>
-
-                    {COMPANY_TYPE_OPTIONS.map(option => (
-
-                      <option key={option} value={option}>{option}</option>
-
-                    ))}
-
-                  </select>
-
-                </div>
-
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="ugCgpa">UG CGPA</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.ugCgpa ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="ugCgpa"
+                  value={filterData.ugCgpa}
+                  onChange={(e) => handleFilterChange('ugCgpa', e.target.value)}
+                  placeholder="UG CGPA"
+                />
               </div>
+            </div>
 
-
-
-
-
-
-
-              <div className={styles['Admin-es-apk-bottom-button-container']}>
-
-                <button className={styles['Admin-es-apk-clear-bottom-btn']} onClick={handleClear} disabled={isSearching}>Clear</button>
-
-                <button className={styles['Admin-es-apk-search-bottom-btn']} onClick={handleSearch} disabled={isSearching}>
-
-                  {isSearching ? 'Searching...' : 'Search'}
-
-                </button>
-
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="pgCgpa">PG CGPA</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.pgCgpa ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="pgCgpa"
+                  value={filterData.pgCgpa}
+                  onChange={(e) => handleFilterChange('pgCgpa', e.target.value)}
+                  placeholder="PG CGPA"
+                />
               </div>
+            </div>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="backlogs">No. of Backlogs</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.backlogs ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="backlogs"
+                  value={filterData.backlogs}
+                  onChange={(e) => handleFilterChange('backlogs', e.target.value)}
+                  placeholder="No. of Backlogs"
+                />
+              </div>
+            </div>
+
+          </div>
+
+
+
+          <div className={styles['Admin-es-apk-filter-row']}>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="department">Department</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.department ? styles['filled'] : ''}`}>
+                <input
+                  type="text"
+                  id="department"
+                  value={filterData.department}
+                  readOnly
+                  placeholder="Department"
+                />
+              </div>
+            </div>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="arrearStatus">Arrear Status</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.arrearStatus ? styles['filled'] : ''}`}>
+                <select
+                  id="arrearStatus"
+                  value={filterData.arrearStatus}
+                  onChange={(e) => handleFilterChange('arrearStatus', e.target.value)}
+                  className={styles['Admin-es-apk-select']}
+                >
+                  <option value="">Select Arrear Status</option>
+                  {ARREAR_STATUS_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="bondWillingness">Bond Willingness</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.bondWillingness ? styles['filled'] : ''}`}>
+                <select
+                  id="bondWillingness"
+                  value={filterData.bondWillingness}
+                  onChange={(e) => handleFilterChange('bondWillingness', e.target.value)}
+                  className={styles['Admin-es-apk-select']}
+                >
+                  <option value="">Select Bond Willingness</option>
+                  {YES_NO_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+
+
+          <div className={styles['Admin-es-apk-filter-row']}>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="driveMode">Mode of Drive</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.driveMode ? styles['filled'] : ''}`}>
+                <select
+                  id="driveMode"
+                  value={filterData.driveMode}
+                  onChange={(e) => handleFilterChange('driveMode', e.target.value)}
+                  className={styles['Admin-es-apk-select']}
+                >
+                  <option value="">Select Mode of Drive</option>
+                  {MODE_OF_DRIVE_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles['Admin-es-apk-field-group']}>
+              <label className={styles['Admin-es-apk-field-label']} htmlFor="companyType">Company Type</label>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.companyType ? styles['filled'] : ''}`}>
+                <select
+                  id="companyType"
+                  value={filterData.companyType}
+                  onChange={(e) => handleFilterChange('companyType', e.target.value)}
+                  className={styles['Admin-es-apk-select']}
+                >
+                  <option value="">Select Company Type</option>
+                  {COMPANY_TYPE_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+
+
+
+
+
+
+          <div className={styles['Admin-es-apk-bottom-button-container']}>
+
+            <button className={styles['Admin-es-apk-clear-bottom-btn']} onClick={handleClear} disabled={isSearching}>Clear</button>
+
+            <button className={styles['Admin-es-apk-search-bottom-btn']} onClick={handleSearch} disabled={isSearching}>
+
+              {isSearching ? 'Searching...' : 'Search'}
+
+            </button>
+
+          </div>
 
         </div>
 

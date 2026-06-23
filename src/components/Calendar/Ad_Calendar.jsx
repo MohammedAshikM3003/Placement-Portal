@@ -370,7 +370,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
           padding: isFilterVariant ? '0px 15px' : '0.9rem',
           height: isFilterVariant ? '45px' : 'auto',
           cursor: disabled ? 'not-allowed' : 'pointer',
-          backgroundColor: '#ffffff',
+          backgroundColor: disabled ? '#f5f5f5' : '#ffffff',
           fontSize: '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
           opacity: disabled ? 0.78 : 1,
