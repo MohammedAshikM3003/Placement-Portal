@@ -9,13 +9,11 @@ import AdminBrowseStudenticon from "../assets/AdEsapkicon.svg";
 import AdminCompanyDriveIcon from "../assets/adcompanydriveicon.svg";
 
 import AdNavbar from "../components/Navbar/Adnavbar.js";
-
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
-
 import mongoDBService from '../services/mongoDBService';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 
 // FIXED: Import CSS as a Module
-
 import styles from './AdminEsstudapp.module.css';
 
 
@@ -62,17 +60,24 @@ const YES_NO_OPTIONS = ["Yes", "No"];
 
 const ARREAR_STATUS_OPTIONS = ["NHA", "NSA", "SA"];
 
-
+const toDmy = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return dateStr;
+};
 
 function AdminEsstudapp() {
-
   useAdminAuth(); // JWT authentication verification
-
   const navigate = useNavigate();
-
   const location = useLocation();
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [dateSelectionMode, setDateSelectionMode] = useState('none');
+  const [startDateFocused, setStartDateFocused] = useState(false);
+  const [endDateFocused, setEndDateFocused] = useState(false);
 
   
 
@@ -125,10 +130,203 @@ function AdminEsstudapp() {
   const [selectedDrive, setSelectedDrive] = useState(null); // Store the selected drive object
 
   const [isLoading, setIsLoading] = useState(true);
-
   const [isSearching, setIsSearching] = useState(false);
 
+  const drivesList = useMemo(() => {
+    return availableDrives.map(drive => {
+      const start = drive.startingDate ? drive.startingDate.split('T')[0] : '';
+      const end = drive.endingDate ? drive.endingDate.split('T')[0] : '';
+      return {
+        ...drive,
+        startYmd: start,
+        endYmd: end
+      };
+    });
+  }, [availableDrives]);
 
+  const uniqueStartDates = useMemo(() => {
+    const dates = drivesList.map(d => d.startYmd).filter(Boolean);
+    return Array.from(new Set(dates)).sort();
+  }, [drivesList]);
+
+  const uniqueEndDates = useMemo(() => {
+    const dates = drivesList.map(d => d.endYmd).filter(Boolean);
+    return Array.from(new Set(dates)).sort();
+  }, [drivesList]);
+
+  const matchingStartDates = useMemo(() => {
+    if (!filterData.driveEndDate) return [];
+    const dates = drivesList
+      .filter(d => d.endYmd === filterData.driveEndDate)
+      .map(d => d.startYmd)
+      .filter(Boolean);
+    return Array.from(new Set(dates)).sort();
+  }, [drivesList, filterData.driveEndDate]);
+
+  const matchingEndDates = useMemo(() => {
+    if (!filterData.driveStartDate) return [];
+    const dates = drivesList
+      .filter(d => d.startYmd === filterData.driveStartDate)
+      .map(d => d.endYmd)
+      .filter(Boolean);
+    return Array.from(new Set(dates)).sort();
+  }, [drivesList, filterData.driveStartDate]);
+
+  const handleStartDateChange = (val) => {
+    setFilterData(prev => ({
+      ...prev,
+      driveStartDate: val || ''
+    }));
+    if (val) {
+      if (!filterData.driveEndDate) {
+        setDateSelectionMode('start-first');
+      }
+    } else {
+      if (dateSelectionMode === 'start-first') {
+        setFilterData(prev => ({
+          ...prev,
+          driveEndDate: '',
+          totalRound: '',
+          department: '',
+          jobs: '',
+          _id: '',
+          driveId: ''
+        }));
+        setSelectedDrive(null);
+        setDateSelectionMode('none');
+      }
+    }
+  };
+
+  const handleEndDateChange = (val) => {
+    setFilterData(prev => ({
+      ...prev,
+      driveEndDate: val || ''
+    }));
+    if (val) {
+      if (!filterData.driveStartDate) {
+        setDateSelectionMode('end-first');
+      }
+    } else {
+      if (dateSelectionMode === 'end-first') {
+        setFilterData(prev => ({
+          ...prev,
+          driveStartDate: '',
+          totalRound: '',
+          department: '',
+          jobs: '',
+          _id: '',
+          driveId: ''
+        }));
+        setSelectedDrive(null);
+        setDateSelectionMode('none');
+      }
+    }
+  };
+
+  // Auto-fetch logic when Start Date is selected
+  useEffect(() => {
+    if (filterData.driveStartDate && dateSelectionMode === 'start-first') {
+      if (matchingEndDates.length === 1) {
+        const autoEnd = matchingEndDates[0];
+        if (filterData.driveEndDate !== autoEnd) {
+          setFilterData(prev => ({
+            ...prev,
+            driveEndDate: autoEnd
+          }));
+        }
+      } else if (matchingEndDates.length > 1) {
+        if (filterData.driveEndDate && !matchingEndDates.includes(filterData.driveEndDate)) {
+          setFilterData(prev => ({
+            ...prev,
+            driveEndDate: ''
+          }));
+        }
+      } else {
+        setFilterData(prev => ({
+          ...prev,
+          driveEndDate: ''
+        }));
+      }
+    }
+  }, [filterData.driveStartDate, matchingEndDates, filterData.driveEndDate, dateSelectionMode]);
+
+  // Auto-fetch logic when End Date is selected
+  useEffect(() => {
+    if (filterData.driveEndDate && dateSelectionMode === 'end-first') {
+      if (matchingStartDates.length === 1) {
+        const autoStart = matchingStartDates[0];
+        if (filterData.driveStartDate !== autoStart) {
+          setFilterData(prev => ({
+            ...prev,
+            driveStartDate: autoStart
+          }));
+        }
+      } else if (matchingStartDates.length > 1) {
+        if (filterData.driveStartDate && !matchingStartDates.includes(filterData.driveStartDate)) {
+          setFilterData(prev => ({
+            ...prev,
+            driveStartDate: ''
+          }));
+        }
+      } else {
+        setFilterData(prev => ({
+          ...prev,
+          driveStartDate: ''
+        }));
+      }
+    }
+  }, [filterData.driveEndDate, matchingStartDates, filterData.driveStartDate, dateSelectionMode]);
+
+  // Reset dateSelectionMode to 'none' if both fields are empty
+  useEffect(() => {
+    if (!filterData.driveStartDate && !filterData.driveEndDate) {
+      setDateSelectionMode('none');
+    }
+  }, [filterData.driveStartDate, filterData.driveEndDate]);
+
+  // Auto-populate other fields when a unique drive is matched by both start and end date
+  useEffect(() => {
+    if (filterData.driveStartDate && filterData.driveEndDate) {
+      const foundDrive = drivesList.find(d => d.startYmd === filterData.driveStartDate && d.endYmd === filterData.driveEndDate);
+      if (foundDrive) {
+        setSelectedDrive(foundDrive);
+        const rounds = foundDrive.rounds || foundDrive.round || '';
+        const departments = foundDrive.eligibleBranches || foundDrive.department || [];
+        const departmentStr = Array.isArray(departments) ? departments.join(', ') : departments;
+        const jobRole = foundDrive.jobRole || '';
+
+        setFilterData(prev => ({
+          ...prev,
+          _id: foundDrive._id,
+          driveId: foundDrive._id,
+          totalRound: rounds.toString(),
+          department: departmentStr,
+          jobs: jobRole
+        }));
+      } else {
+        setSelectedDrive(null);
+        setFilterData(prev => ({
+          ...prev,
+          totalRound: '',
+          department: '',
+          jobs: '',
+          _id: '',
+          driveId: ''
+        }));
+      }
+    } else {
+      setSelectedDrive(null);
+      setFilterData(prev => ({
+        ...prev,
+        totalRound: '',
+        department: '',
+        jobs: '',
+        _id: '',
+        driveId: ''
+      }));
+    }
+  }, [filterData.driveStartDate, filterData.driveEndDate, drivesList]);
 
   // Fetch company drives on mount
 
@@ -372,93 +570,7 @@ function AdminEsstudapp() {
 
 
 
-    // When drive start date changes, auto-fill end date and rounds
-
-    if (field === 'driveStartDate') {
-
-      const foundDrive = availableDrives.find(drive => {
-
-        // Extract date without timezone conversion
-
-        const driveStart = drive.startingDate ? drive.startingDate.split('T')[0] : '';
-
-        console.log('Comparing:', driveStart, 'with', value);
-
-        return driveStart === value;
-
-      });
-
-
-
-      console.log('Selected Drive:', foundDrive);
-
-      console.log('Available Drives:', availableDrives);
-
-
-
-      if (foundDrive) {
-
-        // Store the selected drive object
-
-        setSelectedDrive(foundDrive);
-
-        
-
-        // Extract dates without timezone conversion
-
-        const startDate = foundDrive.startingDate ? foundDrive.startingDate.split('T')[0] : '';
-
-        const endDate = foundDrive.endingDate ? foundDrive.endingDate.split('T')[0] : '';
-
-        const rounds = foundDrive.rounds || foundDrive.round || '';
-
-        const departments = foundDrive.eligibleBranches || foundDrive.department || [];
-
-        const departmentStr = Array.isArray(departments) ? departments.join(', ') : departments;
-
-        const jobRole = foundDrive.jobRole || '';
-
-        
-
-        console.log('Setting dates - Start:', startDate, 'End:', endDate);
-
-        console.log('Drive ID:', foundDrive._id);
-
-        
-
-        setFilterData(prev => ({
-
-          ...prev,
-
-          _id: foundDrive._id, // Include the unique drive ID
-
-          driveId: foundDrive._id,
-
-          driveStartDate: startDate,
-
-          driveEndDate: endDate,
-
-          totalRound: rounds.toString(),
-
-          department: departmentStr,
-
-          jobs: jobRole
-
-        }));
-
-      } else {
-
-        setFilterData(prev => ({
-
-          ...prev,
-
-          driveStartDate: value
-
-        }));
-
-      }
-
-    }
+    // Handled by handleStartDateChange and handleEndDateChange
 
   };
 
@@ -818,6 +930,7 @@ function AdminEsstudapp() {
 
                   {/* Company Name with Static Label */}
                   <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">Company Name</label>
                     <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
                       <select
                         id="companyName"
@@ -834,48 +947,73 @@ function AdminEsstudapp() {
                     </div>
                   </div>
 
-                  {/* Drive Start Date with Static Label */}
+                  {/* Dates Filter with Static Label and Start/End subfields */}
                   <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']}`}>
-                      <select
-                        id="driveStartDate"
-                        value={filterData.driveStartDate}
-                        onChange={(e) => handleFilterChange('driveStartDate', e.target.value)}
-                        className={styles['Admin-es-apk-select']}
-                        disabled={!filterData.companyName || availableDrives.length === 0}
-                      >
-                        <option value="">Start Date</option>
-                        {availableDrives.map((drive, idx) => {
+                    <label className={styles['Admin-es-apk-static-label']} htmlFor="admin-search-dates">
+                      Dates
+                    </label>
+                    <div className={styles['Admin-es-apk-date-range-inputs']}>
+                      {Boolean(filterData.driveEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
+                        <div className={`${styles['Admin-es-apk-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
+                          <select
+                            id="admin-search-start-date"
+                            className={styles['Admin-es-apk-select']}
+                            value={filterData.driveStartDate}
+                            onChange={(e) => handleStartDateChange(e.target.value)}
+                            onFocus={() => setStartDateFocused(true)}
+                            onBlur={() => setStartDateFocused(false)}
+                            style={{ padding: '10px 12px', fontSize: '0.9rem' }}
+                          >
+                            <option value="">Start</option>
+                            {matchingStartDates.map((ymd) => (
+                              <option key={ymd} value={ymd}>
+                                {toDmy(ymd)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <AdCalendar
+                          id="admin-search-start-date"
+                          value={filterData.driveStartDate}
+                          onChange={handleStartDateChange}
+                          variant="filter"
+                          enabledDates={filterData.driveEndDate ? matchingStartDates : uniqueStartDates}
+                          style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
+                        />
+                      )}
 
-                          // Extract date in YYYY-MM-DD format without timezone conversion
+                      <span className={styles['Admin-es-apk-date-range-sep']}>-</span>
 
-                          const startDate = drive.startingDate ? drive.startingDate.split('T')[0] : '';
-
-                          // Format for display as DD-MM-YYYY
-
-                          const displayDate = startDate ? startDate.split('-').reverse().join('-') : 'No Date';
-
-                          return startDate ? (
-
-                            <option key={idx} value={startDate}>{displayDate}</option>
-
-                          ) : null;
-
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Drive End Date with Static Label */}
-                  <div className={styles['Admin-es-apk-input-wrapper']}>
-                    <div className={styles['Admin-es-apk-search-input']}>
-                      <input
-                        type="text"
-                        id="driveEndDate"
-                        value={filterData.driveEndDate ? filterData.driveEndDate.split('-').reverse().join('-') : ''}
-                        readOnly
-                        placeholder="End Date"
-                      />
+                      {Boolean(filterData.driveStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
+                        <div className={`${styles['Admin-es-apk-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
+                          <select
+                            id="admin-search-end-date"
+                            className={styles['Admin-es-apk-select']}
+                            value={filterData.driveEndDate}
+                            onChange={(e) => handleEndDateChange(e.target.value)}
+                            onFocus={() => setEndDateFocused(true)}
+                            onBlur={() => setEndDateFocused(false)}
+                            style={{ padding: '10px 12px', fontSize: '0.9rem' }}
+                          >
+                            <option value="">End</option>
+                            {matchingEndDates.map((ymd) => (
+                              <option key={ymd} value={ymd}>
+                                {toDmy(ymd)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <AdCalendar
+                          id="admin-search-end-date"
+                          value={filterData.driveEndDate}
+                          onChange={handleEndDateChange}
+                          variant="filter"
+                          enabledDates={filterData.driveStartDate ? matchingEndDates : uniqueEndDates}
+                          style={{ padding: '0px 6px', fontSize: '0.9rem', gap: '4px' }}
+                        />
+                      )}
                     </div>
                   </div>
 
