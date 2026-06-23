@@ -72,7 +72,7 @@ const CoordinatorDriveScheduledBanner = ({
         </div>
         <div className={styles.content}>
           <p className={styles.header}>New Drive is Scheduled</p>
-          <p className={styles.coordinatorDetailText}>{subtitle}</p>
+          <p className={styles.detailText}>{subtitle}</p>
         </div>
         <button
           className={styles.closeButton}
