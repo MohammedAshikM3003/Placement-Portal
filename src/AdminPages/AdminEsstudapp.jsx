@@ -947,6 +947,20 @@ function AdminEsstudapp() {
                     </div>
                   </div>
 
+                  {/* Job Role with Static Label */}
+                  <div className={styles['Admin-es-apk-input-wrapper']}>
+                    <label className={styles['Admin-es-apk-static-label']} htmlFor="jobs">Job Role</label>
+                    <div className={styles['Admin-es-apk-search-input']}>
+                      <input
+                        type="text"
+                        id="jobs"
+                        value={filterData.jobs}
+                        readOnly
+                        placeholder="Job Role"
+                      />
+                    </div>
+                  </div>
+
                   {/* Dates Filter with Static Label and Start/End subfields */}
                   <div className={styles['Admin-es-apk-input-wrapper']}>
                     <label className={styles['Admin-es-apk-static-label']} htmlFor="admin-search-dates">
@@ -1323,27 +1337,7 @@ function AdminEsstudapp() {
 
 
 
-              <div className={styles['Admin-es-apk-filter-row']}>
 
-                <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.jobs ? styles['filled'] : ''}`}>
-
-                  <input 
-
-                    type="text" 
-
-                    id="jobs" 
-
-                    value={filterData.jobs} 
-
-                    readOnly
-
-                    placeholder="Jobs"
-
-                  />
-
-                </div>
-
-              </div>
 
 
 
