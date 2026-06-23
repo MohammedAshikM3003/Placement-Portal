@@ -187,16 +187,56 @@ const GlobalCoordinatorDriveScheduledChecker = () => {
     }
   }, [coordinatorId, coordinatorBranch, matchesCoordinatorBranch, getDriveSignature, showNextDrive]);
 
-  // Start polling
+  // Start polling and listen to instant events
   useEffect(() => {
     if (!coordinatorId || !coordinatorBranch) return;
 
+    // Initial check
     pollDrives();
+
+    // Standard interval backup
     pollingRef.current = setInterval(pollDrives, POLL_INTERVAL_MS);
+
+    // 1. Local window event listener
+    const handleLocalUpdate = () => {
+      console.log('⚡ [GlobalCoordinatorDriveScheduledChecker] Instant trigger via window event');
+      pollDrives();
+    };
+    window.addEventListener('companyDrivesUpdated', handleLocalUpdate);
+
+    // 2. Cross-tab storage change listener
+    const handleStorageUpdate = (e) => {
+      if (e.key === 'companyDrivesUpdatedSignal') {
+        console.log('⚡ [GlobalCoordinatorDriveScheduledChecker] Instant trigger via storage signal');
+        pollDrives();
+      }
+    };
+    window.addEventListener('storage', handleStorageUpdate);
+
+    // 3. Cross-tab BroadcastChannel listener
+    let channel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel = new BroadcastChannel('company-drives-channel');
+        channel.onmessage = (e) => {
+          if (e.data?.type === 'companyDrivesUpdated') {
+            console.log('⚡ [GlobalCoordinatorDriveScheduledChecker] Instant trigger via BroadcastChannel');
+            pollDrives();
+          }
+        };
+      }
+    } catch (err) {
+      console.warn('⚠️ [GlobalCoordinatorDriveScheduledChecker] BroadcastChannel failed to init:', err);
+    }
 
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
+      }
+      window.removeEventListener('companyDrivesUpdated', handleLocalUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
+      if (channel) {
+        channel.close();
       }
     };
   }, [coordinatorId, coordinatorBranch, pollDrives]);
