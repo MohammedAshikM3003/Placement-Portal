@@ -23,6 +23,8 @@
     height: calc(100vh - 50px);
     box-sizing: border-box;
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Custom Scrollbar - Green Theme */
@@ -64,32 +66,48 @@
 .Admin-Drive-AD-left-section {
     flex: 1;
     background: #ffffff;
-    border-radius: 12px;
-    padding: 10px 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    height:647px;
+    margin-bottom: 1.5rem;
 }
 
 .Admin-Drive-AD-header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #4EA24E;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0;
+}
+
+.Admin-Drive-AD-header-section .Admin-Drive-AD-section-title {
+    margin-bottom: 0;
 }
 
 .Admin-Drive-AD-section-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #4EA24E;
-    margin: 0;
-    padding-bottom: 0;
-    border-bottom: none;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    position: relative;
+    padding-bottom: 0.5rem;
     letter-spacing: 0.3px;
     flex-shrink: 0;
+    width: fit-content;
+}
+
+.Admin-Drive-AD-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
 }
 
 .Admin-Drive-AD-back-button {
@@ -754,12 +772,13 @@
 .Admin-Drive-AD-right-section {
     flex: 0.75;
     background: #ffffff;
-    border-radius: 12px;
-    padding: 20px 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    margin-bottom: 1.5rem;
 }
 
 .Admin-Drive-AD-right-section::-webkit-scrollbar {
@@ -1537,4 +1556,120 @@
 
 .Admin-Drive-AD-dept-btn-select:hover {
     background: #3d8a3d;
+}
+
+.Admin-Drive-AD-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #4b4b4b;
+    margin-bottom: 6px;
+    display: block;
+    text-align: left;
+}
+
+.Admin-Drive-AD-required-star {
+    color: #cc2a2a;
+    margin-left: 2px;
+    font-weight: 700;
+}
+
+/* Validation yellow warning box */
+.Admin-Drive-AD-validation-box {
+    width: calc(100% - 10px);
+    max-width: 1400px;
+    background-color: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    box-sizing: border-box;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.Admin-Drive-AD-validation-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0.9rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a6110;
+}
+
+.Admin-Drive-AD-validation-icon {
+    color: #f39c12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-Drive-AD-validation-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #8a6110;
+    text-align: left;
+}
+
+.Admin-Drive-AD-validation-item {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    list-style-position: inside;
+    position: relative;
+    line-height: 1.35;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.Admin-Drive-AD-validation-item:hover {
+    background-color: #ffeaa7;
+    color: #664d03;
+    font-weight: 600;
+    transform: translateX(5px);
+}
+
+.Admin-Drive-AD-validation-pointer-tooltip {
+    position: fixed;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+/* Blink animation for missing fields */
+@keyframes Admin-profile-field-blink {
+    0%, 100% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    25% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    50% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    75% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+.Admin-Drive-AD-field-highlight {
+    animation: Admin-profile-field-blink 1.5s ease-in-out 2;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
 }

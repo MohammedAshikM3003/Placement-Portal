@@ -952,7 +952,7 @@ function AdminCompanyDrive({ onLogout }) {
                                             />
                                         )}
 
-                                        <div className={styles['Admin-cd-date-range-sep']}>-</div>
+                                        <span className={styles['Admin-cd-date-range-sep']}>-</span>
 
                                         {Boolean(tempFilterStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
                                             <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>

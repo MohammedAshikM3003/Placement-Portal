@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Ad_Calendar from '../components/Calendar/Ad_Calendar';
@@ -67,10 +67,96 @@ const DriveAddedPopup = ({ onClose, mode = 'create' }) => {
     );
 };
 
+const RequiredStar = () => <span className={styles['Admin-Drive-AD-required-star']}>*</span>;
+
 function Adcompanydrivead({ onLogout }) {
     useAdminAuth(); // JWT authentication verification
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [formData, setFormData] = useState(initialFormData);
+    const [highlightedField, setHighlightedField] = useState(null);
+    const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+    const highlightResetTimerRef = useRef(null);
+    const highlightClearTimerRef = useRef(null);
+
+    const fieldRefs = useRef({});
+    const registerFieldRef = useCallback((field) => (node) => {
+        fieldRefs.current[field] = node;
+    }, []);
+
+    const clearFieldHighlight = useCallback(() => {
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+        setHighlightedField(null);
+    }, []);
+
+    const focusField = useCallback((field) => {
+        let target;
+        if (field.startsWith('round-')) {
+            const index = parseInt(field.split('-')[1], 10);
+            target = fieldRefs.current[`round-${index}`];
+        } else {
+            target = fieldRefs.current[field];
+        }
+
+        if (!target) return;
+
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+            try { target.focus({ preventScroll: true }); } catch { target.focus(); }
+        }, 100);
+
+        clearFieldHighlight();
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => { setHighlightedField(field); });
+        });
+
+        highlightClearTimerRef.current = window.setTimeout(() => {
+            setHighlightedField((cur) => (cur === field ? null : cur));
+        }, 3000);
+    }, [clearFieldHighlight]);
+
+    const handleTooltipMove = useCallback((event) => {
+        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    }, []);
+
+    const handleTooltipLeave = useCallback(() => {
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    }, []);
+
+    useEffect(() => () => {
+        if (highlightResetTimerRef.current) clearTimeout(highlightResetTimerRef.current);
+        if (highlightClearTimerRef.current) clearTimeout(highlightClearTimerRef.current);
+    }, []);
+
+    const missingFields = useMemo(() => {
+        const missing = [];
+        if (!formData.companyName) missing.push({ field: 'companyName', label: 'Company Name' });
+        if (!formData.mode) missing.push({ field: 'mode', label: 'Mode' });
+        if (!formData.jobRole) missing.push({ field: 'jobRole', label: 'Job Role' });
+        if (!formData.eligibleBranches || formData.eligibleBranches.length === 0) {
+            missing.push({ field: 'eligibleBranches', label: 'Branches' });
+        }
+        if (!formData.rounds || formData.rounds <= 0) {
+            missing.push({ field: 'rounds', label: formData.rounds > 1 ? 'Rounds' : 'Round' });
+        }
+        if (!formData.package) missing.push({ field: 'package', label: 'Package' });
+        if (!formData.companyType) missing.push({ field: 'companyType', label: 'Company Type' });
+        if (!formData.bondPeriod) missing.push({ field: 'bondPeriod', label: 'Bond Period' });
+        if (!formData.startingDate) missing.push({ field: 'startingDate', label: 'Start Date' });
+        if (!formData.endingDate) missing.push({ field: 'endingDate', label: 'End Date' });
+
+        if (formData.rounds > 0) {
+            formData.roundDetails.forEach((roundValue, index) => {
+                if (!roundValue || !roundValue.trim()) {
+                    missing.push({ field: `round-${index}`, label: `Round ${index + 1} Name` });
+                }
+            });
+        }
+        return missing;
+    }, [formData]);
     const [companies, setCompanies] = useState([]);
     const [branches, setBranches] = useState([]);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -477,7 +563,7 @@ function Adcompanydrivead({ onLogout }) {
                         <div className={styles['Admin-Drive-AD-left-section']}>
                             <div className={styles['Admin-Drive-AD-header-section']}>
                                 <h2 className={styles['Admin-Drive-AD-section-title']}>
-                                    {isEditing ? 'Edit Company Drive' : 'Add Company Drive'}
+                                    {isEditing ? 'Edit Company Drive' : 'Schedule Drive'}
                                 </h2>
                                 <button 
                                     className={styles['Admin-Drive-AD-back-button']}
@@ -489,14 +575,15 @@ function Adcompanydrivead({ onLogout }) {
                                     ← Back
                                 </button>
                             </div>
-                            
-                            <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
+                                                     <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Company Name <RequiredStar /></label>
                                     <select
+                                        ref={registerFieldRef('companyName')}
                                         name="companyName"
                                         value={formData.companyName}
                                         onChange={handleInputChange}
-                                        className={styles['Admin-Drive-AD-input']}
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'companyName' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         required
                                         disabled={viewMode || isLoading}
                                     >
@@ -507,86 +594,60 @@ function Adcompanydrivead({ onLogout }) {
                                             </option>
                                         ))}
                                     </select>
-                                    {validationWarnings.companyName && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.companyName}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Mode <RequiredStar /></label>
                                     <select
+                                        ref={registerFieldRef('mode')}
                                         name="mode"
                                         value={formData.mode}
                                         onChange={handleInputChange}
-                                        className={styles['Admin-Drive-AD-input']}
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'mode' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         required
                                         disabled={viewMode}
                                     >
-                                        <option value="">Mode :</option>
+                                        <option value="">Select Mode</option>
                                         <option value="Online">Online</option>
                                         <option value="Offline">Offline</option>
                                         <option value="Hybrid">Hybrid</option>
                                     </select>
-                                    {validationWarnings.mode && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.mode}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Job Role <RequiredStar /></label>
                                     <input
+                                        ref={registerFieldRef('jobRole')}
                                         type="text"
                                         name="jobRole"
                                         value={formData.jobRole}
                                         onChange={handleInputChange}
-                                        placeholder="Job Role :"
-                                        className={styles['Admin-Drive-AD-input']}
+                                        placeholder="Enter Job Role"
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'jobRole' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         required
                                         readOnly={viewMode}
                                         disabled={viewMode} 
                                     />
-                                    {validationWarnings.jobRole && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.jobRole}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']} style={{ position: 'relative' }}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Branches <RequiredStar /></label>
                                     <button
+                                        ref={registerFieldRef('eligibleBranches')}
                                         type="button"
                                         onClick={() => setShowDepartmentPopup(true)}
-                                        className={styles['Admin-Drive-AD-input']}
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'eligibleBranches' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         style={{ textAlign: 'left', cursor: viewMode ? 'default' : 'pointer', paddingRight: '45px' }}
                                         disabled={viewMode}
                                     >
                                         {formData.eligibleBranches && formData.eligibleBranches.length > 0
-                                            ? `${formData.eligibleBranches.length} Department${formData.eligibleBranches.length > 1 ? 's' : ''} Selected`
-                                            : 'Select Departments'}
+                                            ? `${formData.eligibleBranches.length} Branch${formData.eligibleBranches.length > 1 ? 'es' : ''} Selected`
+                                            : 'Select Branches'}
                                     </button>
-                                    {validationWarnings.eligibleBranches && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']} style={{ right: '45px' }}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.eligibleBranches}
-                                            </div>
-                                        </>
-                                    )}
                                     <div style={{
                                         position: 'absolute',
                                         right: '10px',
-                                        top: '50%',
+                                        top: 'calc(50% + 10px)',
                                         transform: 'translateY(-50%)',
                                         width: '28px',
                                         height: '28px',
@@ -604,34 +665,32 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>
+                                        {formData.rounds > 1 ? 'Rounds' : 'Round'} <RequiredStar />
+                                    </label>
                                     <input
+                                        ref={registerFieldRef('rounds')}
                                         type="number"
                                         name="rounds"
-                                        value={formData.rounds}
+                                        value={formData.rounds === 0 ? '' : formData.rounds}
                                         onChange={handleInputChange}
-                                        placeholder="Rounds :"
-                                        className={styles['Admin-Drive-AD-input']}
+                                        placeholder="Enter number of rounds"
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'rounds' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         min="0"
                                         required
                                     />
-                                    {validationWarnings.rounds && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.rounds}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <div className={styles['Admin-Drive-AD-input-with-chip']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Package <RequiredStar /></label>
+                                    <div className={`${styles['Admin-Drive-AD-input-with-chip']} ${highlightedField === 'package' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}>
                                         <input
+                                            ref={registerFieldRef('package')}
                                             type="number"
                                             name="package"
                                             value={formData.package}
                                             onChange={handleInputChange}
-                                            placeholder="Package :"
+                                            placeholder="e.g. 6"
                                             className={styles['Admin-Drive-AD-input']}
                                             required
                                             readOnly={viewMode}
@@ -639,50 +698,38 @@ function Adcompanydrivead({ onLogout }) {
                                         />
                                         <span className={styles['Admin-Drive-AD-chip']}>LPA</span>
                                     </div>
-                                    {validationWarnings.package && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.package}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Company Type <RequiredStar /></label>
                                     <select
+                                        ref={registerFieldRef('companyType')}
                                         name="companyType"
                                         value={formData.companyType}
                                         onChange={handleInputChange}
-                                        className={styles['Admin-Drive-AD-input']}
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'companyType' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         required
                                         disabled={viewMode}
                                     >
-                                        <option value="">Company Type :</option>
+                                        <option value="">Select Company Type</option>
                                         <option value="CORE">CORE</option>
                                         <option value="IT">IT</option>
                                         <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
                                         <option value="Marketing & Sales">Marketing & Sales</option>
                                         <option value="HR / Business analyst">HR / Business analyst</option>
                                     </select>
-                                    {validationWarnings.companyType && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.companyType}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <div className={styles['Admin-Drive-AD-input-with-chip']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Bond Period <RequiredStar /></label>
+                                    <div className={`${styles['Admin-Drive-AD-input-with-chip']} ${highlightedField === 'bondPeriod' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}>
                                         <input
+                                            ref={registerFieldRef('bondPeriod')}
                                             type="number"
                                             name="bondPeriod"
                                             value={formData.bondPeriod}
                                             onChange={handleInputChange}
-                                            placeholder="Bond Period :"
+                                            placeholder="e.g. 1"
                                             className={styles['Admin-Drive-AD-input']}
                                             min="0"
                                             required
@@ -693,54 +740,36 @@ function Adcompanydrivead({ onLogout }) {
                                             {formData.bondPeriod > 1 ? 'Years' : 'Year'}
                                         </span>
                                     </div>
-                                    {validationWarnings.bondPeriod && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.bondPeriod}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Start Date <RequiredStar /></label>
                                     <div
                                         className={styles['Admin-Drive-AD-datepicker-wrapper']}
                                         style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
                                     >
                                         <Ad_Calendar
+                                            ref={registerFieldRef('startingDate')}
                                             value={formData.startingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('startingDate', dateValue)}
+                                            triggerClassName={highlightedField === 'startingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
                                         />
                                     </div>
-                                    {validationWarnings.startingDate && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.startingDate}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>End Date <RequiredStar /></label>
                                     <div
                                         className={styles['Admin-Drive-AD-datepicker-wrapper']}
                                         style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
                                     >
                                         <Ad_Calendar
+                                            ref={registerFieldRef('endingDate')}
                                             value={formData.endingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('endingDate', dateValue)}
+                                            triggerClassName={highlightedField === 'endingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
                                         />
                                     </div>
-                                    {validationWarnings.endingDate && (
-                                        <>
-                                            <span className={styles['Admin-Drive-AD-warning-icon']}>!</span>
-                                            <div className={styles['Admin-Drive-AD-warning-tooltip']}>
-                                                {validationWarnings.endingDate}
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
                             </div>
 
@@ -756,13 +785,14 @@ function Adcompanydrivead({ onLogout }) {
 
                                     {formData.roundDetails.map((roundValue, index) => (
                                         <div className={styles['Admin-Drive-AD-round-item']} key={index}>
-                                            <label>Round {index + 1} :</label>
+                                            <label>Round {index + 1} <RequiredStar /> :</label>
                                             <input
+                                                ref={registerFieldRef(`round-${index}`)}
                                                 type="text"
                                                 value={roundValue}
                                                 onChange={(e) => handleRoundInputChange(index, e.target.value)}
                                                 placeholder="Enter Round Name"
-                                                className={styles['Admin-Drive-AD-round-input']}
+                                                className={`${styles['Admin-Drive-AD-round-input']} ${highlightedField === `round-${index}` ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                                 required
                                                 readOnly={viewMode}
                                                 disabled={viewMode}
@@ -772,20 +802,22 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
                             </div>
 
+
+
                             {!viewMode && (
                                 <div className={styles['Admin-Drive-AD-action-buttons']}>
                                     <button 
                                         className={styles['Admin-Drive-AD-add-btn']}
                                         onClick={handleAddDrive}
-                                        disabled={isLoading}
-                                        style={isLoading ? { cursor: 'not-allowed' } : {}}
+                                        disabled={isLoading || missingFields.length > 0}
+                                        style={(isLoading || missingFields.length > 0) ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
                                     >
                                         <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                                             <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                         </svg>
                                         <div className={styles['Admin-Drive-AD-btn-text']}>
-                                            <span>{isLoading ? (isEditing ? 'Updating...' : 'Adding...') : isEditing ? 'Update Drive' : 'Add Drive'}</span>
+                                            <span>{isLoading ? (isEditing ? 'Updating...' : 'Scheduling...') : isEditing ? 'Update Drive' : 'Schedule Drive'}</span>
                                         </div>
                                     </button>
 
@@ -847,8 +879,8 @@ function Adcompanydrivead({ onLogout }) {
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Rounds</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.rounds || ''}</div>
+                                    <label>{formData.rounds > 1 ? 'Rounds' : 'Round'}</label>
+                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.rounds === 0 ? '' : formData.rounds}</div>
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-detail-row']}>
@@ -902,6 +934,45 @@ function Adcompanydrivead({ onLogout }) {
                         </div>
 
                     </div>
+
+                    {!viewMode && missingFields.length > 0 && (
+                        <div className={styles['Admin-Drive-AD-validation-box']}>
+                            <h4 className={styles['Admin-Drive-AD-validation-heading']}>
+                                <span className={styles['Admin-Drive-AD-validation-icon']} aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                                        <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                                    </svg>
+                                </span>
+                                Required Fields Missing:
+                            </h4>
+                            <ul className={styles['Admin-Drive-AD-validation-list']}>
+                                {missingFields.map((error, index) => (
+                                    <li
+                                        key={`${error.field}-${index}`}
+                                        className={styles['Admin-Drive-AD-validation-item']}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => focusField(error.field)}
+                                        onMouseEnter={handleTooltipMove}
+                                        onMouseMove={handleTooltipMove}
+                                        onMouseLeave={handleTooltipLeave}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        {error.label} is required
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {errorTooltip.visible && (
+                        <div
+                            className={styles['Admin-Drive-AD-validation-pointer-tooltip']}
+                            style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+                        >
+                            Click to navigate
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -912,7 +983,7 @@ function Adcompanydrivead({ onLogout }) {
                 <div className={styles['Admin-Drive-AD-dept-popup-overlay']} onClick={handleDepartmentClose}>
                     <div className={styles['Admin-Drive-AD-dept-popup-container']} onClick={(e) => e.stopPropagation()}>
                         <div className={styles['Admin-Drive-AD-dept-popup-header']}>
-                            Departments : {selectedDepartments.length}
+                            Branches : {selectedDepartments.length}
                         </div>
                         <div className={styles['Admin-Drive-AD-dept-popup-content']}>
                             {branches.map(branch => {

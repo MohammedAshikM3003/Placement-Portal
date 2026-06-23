@@ -3,7 +3,7 @@
 .Admin-cp-page-layout {
     display: flex;
     min-height: 100vh;
-    background: #f8f8fb;
+    background: #f6f8fb;
     font-family: 'Poppins', Arial, sans-serif;
 }
 
@@ -26,12 +26,14 @@
 
 .Admin-cp-page-main {
     flex: 1;
-    margin: 65px 0 0 280px;
-    padding: 20px 30px 30px;
+    margin-left: 280px;
+    margin-top: 65px;
+    padding: 20px;
     height: calc(100vh - 65px);
     overflow-y: auto;
     overflow-x: hidden;
     box-sizing: border-box;
+    background-color: #f6f8fb;
 }
 
 .Admin-cp-page-main::-webkit-scrollbar {
@@ -54,10 +56,10 @@
 
 .Admin-cp-page-card {
     background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    padding: 2rem;
-    margin-bottom: 0.5rem;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
+    margin-bottom: 1.5rem;
     width: 100%;
     box-sizing: border-box;
 }
@@ -66,17 +68,30 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid #49a249;
-    padding-bottom: 12px;
+    padding-bottom: 0;
     margin-bottom: 1.5rem;
 }
 
 .Admin-cp-page-header h1 {
     margin: 0;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #49a249;
-    letter-spacing: 0.3px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    position: relative;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+    width: fit-content;
+}
+
+.Admin-cp-page-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
 }
 
 .Admin-cp-page-header p {
@@ -109,20 +124,21 @@
 .Admin-cp-page-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.5rem;
+    gap: 20px;
     align-items: start;
 }
 
 .Admin-cp-page-field {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 8px;
 }
 
-.Admin-cp-page-field label {
+.Admin-cp-page-field-label {
     font-size: 0.9rem;
-    font-weight: 600;
-    color: #333333;
+    font-weight: 700;
+    color: #4b4b4b;
+    letter-spacing: 0.02em;
 }
 
 .Admin-cp-page-field input,
@@ -131,15 +147,16 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    min-height: 50px;
-    padding: 0.9rem;
-    border-radius: 8px;
+    height: 53.6px;
+    min-height: 53.6px;
+    padding: 12px 15px;
+    border-radius: 6px;
     border: 1px solid #def4dd;
     background: #f9fff9;
-    color: #2f3a2f;
-    font-size: 0.95rem;
+    color: #333;
+    font-size: 1em;
     font-family: 'Poppins', sans-serif;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.3s, box-shadow 0.3s;
     min-width: 0;
 }
 
@@ -152,8 +169,8 @@
 .Admin-cp-page-field select:focus,
 .Admin-cp-page-date-input:focus {
     outline: none;
-    border-color: #4ea24e;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
 }
 
 .Admin-cp-page-field input:disabled,
@@ -166,11 +183,10 @@
 
 .Admin-cp-page-field select {
     appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23355035' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 18px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
     padding-right: 40px;
+    cursor: pointer;
 }
 
 /* Inline suffix chips for Package and Bond Period */
@@ -178,40 +194,40 @@
     display: flex;
     align-items: stretch;
     width: 100%;
-    min-height: 50px;
+    height: 53.6px;
+    min-height: 53.6px;
     border: 1px solid #def4dd;
-    border-radius: 8px;
+    border-radius: 6px;
     background: #f9fff9;
     overflow: hidden;
     box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .Admin-cp-page-field .Admin-cp-input-affix-wrapper:hover,
 .Admin-cp-page-field .Admin-cp-input-affix-wrapper:focus-within {
-    border-color: #4ea24e;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
 }
 
 .Admin-cp-page-field .Admin-cp-input-affix-input {
     flex: 1;
     min-width: 0;
-    min-height: 50px;
     height: 100%;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    padding: 0 0.9rem;
-    color: #2f3a2f;
-    font-size: 0.95rem;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 12px;
+    color: #333;
+    font-size: 1em;
     font-family: 'Poppins', sans-serif;
 }
 
 .Admin-cp-page-field .Admin-cp-input-affix-input:focus {
     outline: none;
-    border: none;
-    box-shadow: none;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .Admin-cp-page-field .Admin-cp-input-affix {
@@ -219,15 +235,26 @@
     align-items: center;
     justify-content: center;
     padding: 0 14px;
-    background-color: #4ea24e;
+    background: linear-gradient(135deg, #4EA24E 0%, #2E7D32 100%);
     color: #ffffff;
     font-weight: 700;
     font-size: 0.95rem;
     white-space: nowrap;
     flex-shrink: 0;
     min-width: 72px;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: none;
     box-sizing: border-box;
+}
+
+.Admin-cp-page-field .Admin-cp-input-affix-wrapper:has(.Admin-cp-input-affix-input:disabled) {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.Admin-cp-page-field .Admin-cp-input-affix-input:disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+    color: #7a7a7a;
 }
 
 .Admin-cp-page-actions-outside {
@@ -243,35 +270,69 @@
     border-radius: 8px;
     min-width: 170px;
     height: 44px;
-    font-size: 0.94rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 .Admin-cp-page-primary-btn {
-    background: linear-gradient(135deg, #4ea24e, #3d8a3d);
+    background-color: #4EA24E;
     color: #ffffff;
-    box-shadow: 0 6px 16px rgba(78, 162, 78, 0.25);
 }
 
 .Admin-cp-page-primary-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
+    background-color: #45924b;
 }
 
 .Admin-cp-page-secondary-btn {
-    background: #e8e8e8;
+    background-color: #e8e8e8;
     color: #666666;
 }
 
 .Admin-cp-page-secondary-btn:hover:not(:disabled) {
-    background: #d4d4d4;
+    background-color: #d4d4d4;
 }
 
 .Admin-cp-page-primary-btn:disabled,
 .Admin-cp-page-secondary-btn:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+/* Helper styles for required label fields, custom dropdowns, calendar inputs */
+.Admin-profile-required-star {
+    color: #d32f2f;
+    margin-left: 2px;
+    display: inline;
+    font-weight: 700;
+}
+
+.Admin-profile-label-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+.Admin-cp-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.Admin-cp-profile-dropdown-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+}
+
+.Admin-cp-date-wrapper {
+    width: 100%;
 }
 
 .Admin-cp-page-error {
@@ -485,4 +546,94 @@
     .Admin-cp-success-footer {
         padding: 1.2rem;
     }
+}
+
+/* Validation yellow warning box */
+.Admin-profile-validation-box {
+    width: 100%;
+    background-color: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    box-sizing: border-box;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.Admin-profile-validation-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0.9rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a6110;
+}
+
+.Admin-profile-validation-icon {
+    color: #f39c12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-profile-validation-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #8a6110;
+}
+
+.Admin-profile-validation-item {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    list-style-position: inside;
+    position: relative;
+    line-height: 1.35;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.Admin-profile-validation-pointer-tooltip {
+    position: fixed;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+/* Blink animation for missing fields */
+@keyframes Admin-profile-field-blink {
+    0%, 100% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    25% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    50% {
+        background-color: transparent;
+        border-color: initial;
+    }
+    75% {
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+.Admin-profile-field-highlight {
+    animation: Admin-profile-field-blink 1.5s ease-in-out 2;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
 }
