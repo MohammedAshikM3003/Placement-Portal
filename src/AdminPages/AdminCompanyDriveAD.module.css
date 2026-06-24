@@ -18,8 +18,7 @@
     flex: 1 1;
     margin-left: 280px;
     margin-top: 59px;
-    padding: 20px;
-    padding-right: 0;
+    padding: 10px 10px 10px 20px;
     height: calc(100vh - 50px);
     box-sizing: border-box;
     position: relative;
@@ -942,7 +941,7 @@
 @media (max-width: 1024px) {
     .Admin-Drive-AD-main-content {
         margin-left: 0;
-        padding: 20px;
+        padding: 10px 10px 10px 20px;
     }
 
     .Admin-Drive-AD-form-grid,
@@ -968,7 +967,7 @@
 
 @media (max-width: 768px) {
     .Admin-Drive-AD-main-content {
-        padding: 15px;
+        padding: 10px 10px 10px 20px;
         margin-top: 70px;
         margin-left: 0;
         margin-right: 0;
@@ -1154,7 +1153,7 @@
 
 @media (max-width: 480px) {
     .Admin-Drive-AD-main-content {
-        padding: 10px;
+        padding: 10px 10px 10px 20px;
     }
 
     .Admin-Drive-AD-container {

@@ -28,7 +28,7 @@
     flex: 1;
     margin-left: 280px;
     margin-top: 65px;
-    padding: 20px;
+    padding: 10px 10px 10px 20px;
     height: calc(100vh - 65px);
     overflow-y: auto;
     overflow-x: hidden;
@@ -481,7 +481,7 @@
     .Admin-cp-page-main {
         margin-left: 0;
         width: 100%;
-        padding: 16px;
+        padding: 10px 10px 10px 20px;
         height: calc(100vh - 65px);
     }
 
@@ -493,7 +493,7 @@
 @media (max-width: 768px) {
     .Admin-cp-page-main {
         margin: 70px 0 0 0;
-        padding: 12px;
+        padding: 10px 10px 10px 20px;
         height: calc(100vh - 70px);
     }
 

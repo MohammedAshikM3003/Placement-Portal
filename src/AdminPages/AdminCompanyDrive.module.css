@@ -14,7 +14,7 @@
     width: auto;
     flex-shrink: 0;
     /* Desktop: Sidebar is just part of the flow */
-    position: relative; 
+    position: relative;
     transform: none;
     /* Ensure sidebar sits above the overlay so links remain clickable */
     z-index: 3000;
@@ -23,11 +23,11 @@
 /* Main Content */
 .Admin-cd-main-content {
     flex-grow: 1;
-    padding: 20px;
+    padding: 10px 10px 10px 20px;
     margin: 65px 0px 0px 280px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     overflow: hidden;
     position: relative;
     height: calc(100vh - 65px);
@@ -47,7 +47,8 @@
 
 /* Mobile Toggle Button (Hidden by default on Desktop) */
 .Admin-cd-mobile-toggle {
-    display: none; /* Desktop: Hidden */
+    display: none;
+    /* Desktop: Hidden */
     cursor: pointer;
     padding: 10px 0;
     margin-left: 5px;
@@ -96,7 +97,7 @@
     color: white;
     height: 35px;
     line-height: 35px;
-    margin: 0 auto; 
+    margin: 0 auto;
     border-radius: 30px;
     display: block;
     width: 228px;
@@ -158,7 +159,7 @@
     gap: 8px;
 }
 
-.Admin-cd-date-range-inputs > div:not(.Admin-cd-date-range-sep) {
+.Admin-cd-date-range-inputs>div:not(.Admin-cd-date-range-sep) {
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -267,8 +268,8 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image: none;
-    position:relative;
-    bottom:5px;
+    position: relative;
+    bottom: 5px;
 }
 
 .Admin-cd-text::placeholder {
@@ -321,7 +322,9 @@
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
 }
 
-.Admin-cd-search-btn:hover { background-color: #3d8a3d; }
+.Admin-cd-search-btn:hover {
+    background-color: #3d8a3d;
+}
 
 /* Action Cards Section */
 .Admin-cd-action-cards-section {
@@ -373,7 +376,11 @@
     border-color: #4EA24E;
 }
 
-.Admin-cd-add-icon { margin-bottom: 10px; margin-top: 10px; }
+.Admin-cd-add-icon {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
 .Admin-cd-add-header {
     font-size: 1.9rem;
     font-weight: 720;
@@ -383,6 +390,7 @@
     letter-spacing: 1.5px;
     line-height: 30px;
 }
+
 .Admin-cd-add-description {
     font-size: 1rem;
     color: #666;
@@ -501,17 +509,67 @@
     flex-shrink: 0;
 }
 
-.Admin-cd-table-title { font-size: 1.3rem; font-weight: 700; color: #333; }
-.Admin-cd-table-actions { display: flex; align-items: center; gap: 12px; }
-.Admin-cd-print-button-container { position: relative; }
-.Admin-cd-print-btn { background-color: #4EA24E; color: white; border: none; padding: 8px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; }
-.Admin-cd-print-btn:hover { background-color: #3d8a3d; }
+.Admin-cd-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.Admin-cd-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.Admin-cd-print-button-container {
+    position: relative;
+}
+
+.Admin-cd-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Admin-cd-print-btn:hover {
+    background-color: #3d8a3d;
+}
 
 .Admin-cd-export-menu {
-    position: absolute; top: 100%; right: 0; margin-top: 5px; z-index: 2000; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); min-width: 180px; display: flex; flex-direction: column; overflow: hidden;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
-.Admin-cd-export-menu button { padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer; font-size: 0.95rem; color: #333; transition: background-color 0.2s; }
-.Admin-cd-export-menu button:hover { background-color: #f0f0f0; }
+
+.Admin-cd-export-menu button {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Admin-cd-export-menu button:hover {
+    background-color: #f0f0f0;
+}
 
 /* Table Styles */
 .Admin-cd-table-container {
@@ -542,8 +600,22 @@
     background: #3d8a3d;
 }
 
-.Admin-cd-students-table { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; white-space: nowrap; }
-.Admin-cd-table-head-row { position: sticky; top: 0; background-color: #ffffff; z-index: 11; }
+.Admin-cd-students-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.Admin-cd-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 11;
+}
+
 .Admin-cd-th {
     padding: 8px 10px;
     text-align: center;
@@ -553,13 +625,21 @@
     background-color: white;
     border-bottom: 2px solid #e0e0e0;
 }
+
 .Admin-cd-table-row {
     border-bottom: 1px solid #f5f5f5;
     cursor: pointer;
     transition: background-color 0.2s;
 }
-.Admin-cd-table-row:hover { background-color: #fafafa; }
-.Admin-cd-selected-row { background-color: #f7fff5 !important; }
+
+.Admin-cd-table-row:hover {
+    background-color: #fafafa;
+}
+
+.Admin-cd-selected-row {
+    background-color: #f7fff5 !important;
+}
+
 .Admin-cd-td {
     padding: 10px 10px;
     text-align: center;
@@ -571,10 +651,26 @@
 }
 
 /* Column widths */
-.Admin-cd-checkbox { width: 50px; text-align: center; }
-.Admin-cd-sno { width: 50px; text-align: center; }
-.Admin-cd-company { width: 120px; text-align: center; }
-.Admin-cd-domain { width: 150px; text-align: center; }
+.Admin-cd-checkbox {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-cd-sno {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-cd-company {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-cd-domain {
+    width: 150px;
+    text-align: center;
+}
+
 .Admin-cd-domain-single-line {
     display: block;
     width: 100%;
@@ -653,7 +749,8 @@
     background-color: #ffe3ce;
     border: 1px solid #ffe3ce;
     color: #856404;
-    border-radius: 30px;;
+    border-radius: 30px;
+    ;
 }
 
 /* Checkbox Styles */
@@ -666,20 +763,33 @@
 
 /* --- ICON ANIMATION KEYFRAMES --- */
 @keyframes Admin-cd-stroke {
-    100% { stroke-dashoffset: 0; }
+    100% {
+        stroke-dashoffset: 0;
+    }
 }
 
 @keyframes Admin-cd-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale3d(1.1, 1.1, 1); }
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
 }
 
 @keyframes Admin-cd-warning-fill {
-    100% { box-shadow: inset 0 0 0 40px #FF9800; }
+    100% {
+        box-shadow: inset 0 0 0 40px #FF9800;
+    }
 }
 
 @keyframes Admin-cd-delete-fill {
-    100% { box-shadow: inset 0 0 0 40px #D23B42; }
+    100% {
+        box-shadow: inset 0 0 0 40px #D23B42;
+    }
 }
 
 @keyframes Admin-cd-popup-enter {
@@ -687,6 +797,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -861,15 +972,23 @@
    ============================================================================ */
 
 @media screen and (max-width: 1200px) {
+
     /* 1. Reset Fixed Margins used in Desktop */
-    .Admin-cd-top-card, .Admin-cd-bottom-card {
+    .Admin-cd-top-card,
+    .Admin-cd-bottom-card {
         margin-left: 0;
         width: 100%;
         box-sizing: border-box;
     }
-    
+
     /* 2. Sidebar Drawer Logic */
-    .Admin-cd-print-button-container { position: relative; display: inline-block; z-index: 15; margin-top: -90px; }
+    .Admin-cd-print-button-container {
+        position: relative;
+        display: inline-block;
+        z-index: 15;
+        margin-top: -90px;
+    }
+
     .Admin-cd-sidebar-wrapper {
         position: fixed;
         top: 0;
@@ -884,12 +1003,15 @@
     /* Dark Overlay to dim content when sidebar is open */
     .Admin-cd-sidebar-overlay {
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
         z-index: 2990;
         pointer-events: auto;
     }
-    
+
     /* Show Toggle Button on Mobile */
     .Admin-cd-mobile-toggle {
         display: block;
@@ -918,7 +1040,7 @@
     .Admin-cd-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px !important;
+        padding: 10px 10px 10px 20px;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -928,7 +1050,7 @@
         align-items: stretch !important;
         justify-content: flex-start !important;
         -webkit-overflow-scrolling: touch !important;
-        gap: 15px !important;
+        gap: 10px;
         min-height: calc(100vh - 65px) !important;
         margin-left: 0 !important;
     }
@@ -937,15 +1059,18 @@
     .Admin-cd-main-content::-webkit-scrollbar {
         width: 10px;
     }
+
     .Admin-cd-main-content::-webkit-scrollbar-track {
         background: #f0f2f5;
         border-radius: 12px;
     }
+
     .Admin-cd-main-content::-webkit-scrollbar-thumb {
         background-color: #4EA24E;
         border-radius: 20px;
         border: 3px solid #f0f2f5;
     }
+
     .Admin-cd-main-content::-webkit-scrollbar-thumb:hover {
         background-color: #3d8a3d;
     }
@@ -970,7 +1095,7 @@
         max-width: 100% !important;
         box-sizing: border-box !important;
     }
-    
+
     .Admin-cd-filter-content {
         grid-template-columns: 1fr !important;
         gap: 12px !important;
@@ -991,7 +1116,7 @@
         height: auto !important;
         width: 100% !important;
     }
-    
+
     .Admin-cd-action-card {
         flex: 1 1 auto !important;
         width: 100% !important;
@@ -1008,7 +1133,7 @@
         width: 100% !important;
         margin-bottom: 40px !important;
     }
-    
+
     .Admin-cd-table-header-row {
         flex-direction: row !important;
         align-items: center !important;
@@ -1024,14 +1149,14 @@
     }
 
     .Admin-cd-table-container {
-        height: 290px !important;
-        max-height: 290px !important;
-        overflow-y: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
         overflow-x: auto !important;
         position: relative !important;
         bottom: auto !important;
-        flex-grow: 1 !important;
-        padding-bottom: 25px !important; /* Leave space for horizontal scrollbar on mobile */
+        flex-grow: 0 !important;
+        padding-bottom: 0 !important;
     }
 
     /* Align popup to top for scrolling */
@@ -1050,6 +1175,7 @@
 }
 
 @media (max-width: 768px) {
+
     /* Table scrollbar on mobile */
     .Admin-cd-table-container::-webkit-scrollbar {
         width: 8px;
@@ -1085,11 +1211,10 @@
 
 /* Loading Spinner Styles */
 .Admin-cd-loading-cell {
-    text-align: center;
-    padding: 48px 0;
-    width: 100%;
-    min-height: calc(72px * 3);
-    position: relative;
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
 }
 
 .Admin-cd-loading-row {
@@ -1097,29 +1222,23 @@
 }
 
 .Admin-cd-loading-wrapper {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 18px 22px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
 }
 
 .Admin-cd-spinner {
-    width: 34px;
-    margin-top: 50px;
-    height: 34px;
-    border-radius: 50%;
-    border: 4px solid rgba(78, 162, 78, 0.25);
-    border-top-color: #4EA24E;
-    animation: adminCompanyDriveSpin 0.7s linear infinite;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminCompanyDriveSpin 0.7s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes adminCompanyDriveSpin {

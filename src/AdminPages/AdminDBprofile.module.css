@@ -69,7 +69,7 @@
 .Admin-DB-AdProfile-dashboard-area, .AdProfile-dashboard-area {
     flex: 1;
     background: #f9fbf8;
-    padding: 25px;
+    padding: 10px 10px 10px 20px;
     margin-left: 230px;
     overflow-y: auto; 
     overflow-x: hidden;
@@ -578,7 +578,7 @@
 @media (max-width: 900px) {
     .Admin-DB-AdProfile-dashboard-area, .AdProfile-dashboard-area {
         margin-left: 0;
-        padding: 15px 20px;
+        padding: 10px 10px 10px 20px;
         height: auto;
     }
     .Admin-DB-AdProfile-main, .AdProfile-main {

@@ -78,6 +78,18 @@ function AdStuDBCertificateView() {
         console.log('🔍 Student ID from URL:', studentId);
     }, []);
 
+    // Control custom scroll indicator visibility based on filtered list length
+    useEffect(() => {
+        const filteredCount = certificates.filter(cert => {
+            const certName = (cert.name || cert.certificateName || '').toLowerCase();
+            const certDate = (cert.date || cert.uploadDate || '').toLowerCase();
+            const query = searchQuery.toLowerCase();
+            return certName.includes(query) || certDate.includes(query);
+        }).length;
+
+        setShowScrollIndicator(filteredCount > 3);
+    }, [certificates, searchQuery]);
+
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
@@ -684,7 +696,7 @@ function AdStuDBCertificateView() {
     };
 
     const handleBackToProfile = () => {
-        navigate(`/admin-profile/${studentId}`);
+        navigate(`/admin-student-view/${studentId}`);
     };
 
     // Filter certificates based on search
@@ -868,7 +880,7 @@ function AdStuDBCertificateView() {
                             <div className={styles['certificate-scroll-indicator']}>
                                 <div 
                                     className={styles['certificate-scroll-indicator-thumb']}
-                                    style={{ top: `${scrollPercent}%` }}
+                                    style={{ top: `calc(${scrollPercent}% - ${(scrollPercent / 100) * 34}px)` }}
                                 ></div>
                             </div>
                         )}

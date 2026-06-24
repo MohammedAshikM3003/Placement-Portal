@@ -1204,30 +1204,31 @@ min-height: 400px;
   }
 
   .Admin-ps-loading-cell {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 20px !important;
-    width: 100%;
-    height: auto;
-  }
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
+}
 
   .Admin-ps-loading-wrapper {
-    position: relative;
-    top: 0;
-    left: 0;
-    transform: none;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
+}
 
   .Admin-ps-spinner {
-    margin-top: 0;
-  }
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminPlacedStudentsSpin 0.7s linear infinite;
+  margin: 0 auto;
+}
 
   /* Center empty state messages in table */
   .Admin-ps-students-table tbody {
@@ -1257,11 +1258,10 @@ min-height: 400px;
 
 /* Loading Spinner Styles */
 .Admin-ps-loading-cell {
-    text-align: center;
-    padding: 48px 0;
-    width: 100%;
-    min-height: calc(72px * 3);
-    position: relative;
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
 }
 
 .Admin-ps-loading-row {
@@ -1269,29 +1269,23 @@ min-height: 400px;
 }
 
 .Admin-ps-loading-wrapper {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 18px 22px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
 }
 
 .Admin-ps-spinner {
-    width: 34px;
-    margin-top: 50px;
-    height: 34px;
-    border-radius: 50%;
-    border: 4px solid rgba(78, 162, 78, 0.25);
-    border-top-color: #4EA24E;
-    animation: adminPlacedStudentsSpin 0.7s linear infinite;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminPlacedStudentsSpin 0.7s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes adminPlacedStudentsSpin {

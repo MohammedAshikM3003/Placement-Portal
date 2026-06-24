@@ -34,7 +34,7 @@
 .dashboardArea {
     flex: 1;
     background: #f8f8fb;
-    padding: 20px 30px 30px 30px;
+    padding: 10px 10px 10px 20px;
     margin-left: 280px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -1391,7 +1391,7 @@ select:disabled {
     .dashboardArea {
         --mobile-side-gap: 10px;
         margin-left: 0 !important;
-        padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
+        padding: 10px 10px 10px 20px;
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         overflow-y: auto !important;
         width: 100% !important;

@@ -7,11 +7,11 @@
 
 .Ad-zbds-main-content {
     flex-grow: 1;
-    padding: 20px 25px;
+    padding: 10px 10px 10px 20px;
     margin: 65px 2px 0px 286px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     overflow-x: hidden;
 }
 
@@ -509,7 +509,7 @@
 @media screen and (max-width: 1024px) {
     .Ad-zbds-main-content {
         margin: 65px 0px 0 2px;
-        padding: 15px;
+        padding: 10px 10px 10px 20px;
     }
 
     .Ad-zbds-top-section {
@@ -530,9 +530,9 @@
 @media screen and (max-width: 768px) {
     .Ad-zbds-main-content {
         margin: 70px 0px 0 2px;
-        padding: 12px;
+        padding: 10px 10px 10px 20px;
         padding-bottom: 30px;
-        gap: 15px;
+        gap: 10px;
         width: calc(100% - 30px);
         max-height: calc(100vh - 70px);
         overflow-y: auto;
@@ -605,7 +605,7 @@
 @media screen and (max-width: 480px) {
     .Ad-zbds-main-content {
         margin: 55px 0px 0 2px;
-        padding: 10px;
+        padding: 10px 10px 10px 20px;
         width: calc(100% - 24px);
     }
 

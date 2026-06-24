@@ -920,30 +920,30 @@ function AdminEsstudapp() {
               </tbody>
             </table>
           </div>
-          {!isLoading && filteredStudents.length > 0 && (
-            <div className={styles['Admin-es-table-footer']}>
-              <button
-                className={styles['Admin-es-clear-btn']}
-                onClick={handleClearSelection}
-                disabled={isSubmitting}
-                style={{ opacity: isSubmitting ? 0.5 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-              >
-                Clear
-              </button>
-              <button
-                className={styles['Admin-es-select-btn']}
-                onClick={handleConfirmSelection}
-                disabled={isSubmitting || selectedStudents.length === 0}
-                style={{
-                  opacity: (isSubmitting || selectedStudents.length === 0) ? 0.5 : 1,
-                  cursor: (isSubmitting || selectedStudents.length === 0) ? 'not-allowed' : 'pointer'
-                }}
-              >
-                Select
-              </button>
-            </div>
-          )}
         </div>
+        {!isLoading && filteredStudents.length > 0 && (
+          <div className={styles['Admin-es-table-footer']}>
+            <button
+              className={styles['Admin-es-clear-btn']}
+              onClick={handleClearSelection}
+              disabled={isSubmitting}
+              style={{ opacity: isSubmitting ? 0.5 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+            >
+              Clear
+            </button>
+            <button
+              className={styles['Admin-es-select-btn']}
+              onClick={handleConfirmSelection}
+              disabled={isSubmitting || selectedStudents.length === 0}
+              style={{
+                opacity: (isSubmitting || selectedStudents.length === 0) ? 0.5 : 1,
+                cursor: (isSubmitting || selectedStudents.length === 0) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Select
+            </button>
+          </div>
+        )}
       </div>
 
       {isSidebarOpen && (
