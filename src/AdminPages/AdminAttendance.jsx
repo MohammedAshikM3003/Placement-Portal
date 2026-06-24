@@ -52,9 +52,9 @@ const AttendanceSuccessPopup = ({ onClose, isUpdate, presentCount, absentCount, 
 
           <svg className={styles['Admin-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
 
-            <circle className={styles['Admin-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+            <circle className={styles['Admin-success-icon--circle']} cx="26" cy="26" r="25" fill="none" />
 
-            <path className={styles['Admin-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            <path className={styles['Admin-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
 
           </svg>
 
@@ -128,9 +128,9 @@ const UnmarkedStudentsPopup = ({ students, onClose, onShow }) => (
 
         <svg className={styles['Admin-warning-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
 
-          <circle className={styles['Admin-warning-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
+          <circle className={styles['Admin-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
 
-          <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none"/>
+          <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
 
         </svg>
 
@@ -262,7 +262,7 @@ export default function AdminAtt({ onLogout }) {
 
     const searchLower = searchTerm.toLowerCase().trim();
 
-    return students.filter(student => 
+    return students.filter(student =>
 
       student.name.toLowerCase().includes(searchLower) ||
 
@@ -314,7 +314,7 @@ export default function AdminAtt({ onLogout }) {
 
         setIsLoading(true);
 
-        
+
 
         // Clear previous data to prevent caching
 
@@ -336,13 +336,13 @@ export default function AdminAtt({ onLogout }) {
 
         setAvailableEndDates([]);
 
-        
+
 
         console.log('=== ADMIN FETCHING FRESH DATA ===');
 
         console.log('Timestamp:', new Date().toISOString());
 
-        
+
 
         // Fetch from companies.drives collection AND eligible students
 
@@ -356,7 +356,7 @@ export default function AdminAtt({ onLogout }) {
 
         ]);
 
-        
+
 
         console.log('Admin RAW drives response:', drivesResponse);
 
@@ -364,7 +364,7 @@ export default function AdminAtt({ onLogout }) {
 
         console.log('Admin Eligible Students:', eligibleStudentsResponse.eligibleStudents);
 
-        
+
 
         const allDrives = Array.isArray(drivesResponse) ? drivesResponse : [];
 
@@ -376,7 +376,7 @@ export default function AdminAtt({ onLogout }) {
 
         setIsLoading(false);
 
-        
+
 
         console.log('=== ADMIN END FETCH ===');
 
@@ -394,7 +394,7 @@ export default function AdminAtt({ onLogout }) {
 
   }, [refreshKey]);
 
-  
+
 
   // Refresh data when page becomes visible (prevent stale cache)
 
@@ -412,7 +412,7 @@ export default function AdminAtt({ onLogout }) {
 
     };
 
-    
+
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -468,9 +468,9 @@ export default function AdminAtt({ onLogout }) {
 
       att => att.companyName === companyName &&
 
-             att.jobRole === jobRole &&
+        att.jobRole === jobRole &&
 
-             new Date(att.startDate).toDateString() === new Date(date).toDateString()
+        new Date(att.startDate).toDateString() === new Date(date).toDateString()
 
     );
 
@@ -484,7 +484,7 @@ export default function AdminAtt({ onLogout }) {
 
     const groups = {};
 
-    
+
 
     // Normalize date for comparison
 
@@ -498,7 +498,7 @@ export default function AdminAtt({ onLogout }) {
 
     };
 
-    
+
 
     drives.forEach(drive => {
 
@@ -506,11 +506,11 @@ export default function AdminAtt({ onLogout }) {
 
       const key = `${drive.companyName}:${jobRole}`;
 
-      
+
 
       const driveDateNormalized = normalizeDate(drive.startingDate || drive.driveStartDate || drive.companyDriveDate);
 
-      
+
 
       // Check if there's a matching eligible students record
 
@@ -522,11 +522,11 @@ export default function AdminAtt({ onLogout }) {
 
       });
 
-      
+
 
       console.log(`Drive ${drive.companyName} (${driveDateNormalized}): Has eligible students = ${hasEligibleStudents}`);
 
-      
+
 
       // ONLY add drive if it has eligible students
 
@@ -552,7 +552,7 @@ export default function AdminAtt({ onLogout }) {
 
     });
 
-    
+
 
     console.log('Grouped drives with eligible students:', Object.values(groups));
 
@@ -572,19 +572,19 @@ export default function AdminAtt({ onLogout }) {
 
       console.log('Auto-filling with company data:', companyData);
 
-      
+
 
       // Find matching drive group
 
       const matchingGroup = groupedDrives.find(
 
-        group => group.companyName === companyData.companyName && 
+        group => group.companyName === companyData.companyName &&
 
-                 group.jobRole === companyData.jobRole
+          group.jobRole === companyData.jobRole
 
       );
 
-      
+
 
       if (matchingGroup) {
 
@@ -598,7 +598,7 @@ export default function AdminAtt({ onLogout }) {
 
         setSelectedCompanyJob(matchingGroup);
 
-        
+
 
         // Extract and set dates (use startingDate/endingDate from companies.drives schema)
 
@@ -618,11 +618,11 @@ export default function AdminAtt({ onLogout }) {
 
           .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        
+
 
         setAvailableDates(dates);
 
-        
+
 
         // Auto-select start and end dates from company data
 
@@ -632,13 +632,13 @@ export default function AdminAtt({ onLogout }) {
 
           const endDateStr = new Date(companyData.endingDate).toISOString().split('T')[0];
 
-          
+
 
           // Find matching drive by date
 
           const matchingDrive = dates.find(d => d.date === startDateStr);
 
-          
+
 
           if (matchingDrive) {
 
@@ -652,7 +652,7 @@ export default function AdminAtt({ onLogout }) {
 
             setAvailableEndDates([{ date: endDateStr }]);
 
-            
+
 
             // Check if attendance already exists
 
@@ -660,13 +660,13 @@ export default function AdminAtt({ onLogout }) {
 
               att => att.companyName === companyData.companyName &&
 
-                     att.jobRole === companyData.jobRole &&
+                att.jobRole === companyData.jobRole &&
 
-                     new Date(att.startDate).toDateString() === new Date(startDateStr).toDateString()
+                new Date(att.startDate).toDateString() === new Date(startDateStr).toDateString()
 
             );
 
-            
+
 
             if (existingAttendance) {
 
@@ -696,7 +696,7 @@ export default function AdminAtt({ onLogout }) {
 
       }
 
-      
+
 
       // Clear the state after using it
 
@@ -716,7 +716,7 @@ export default function AdminAtt({ onLogout }) {
 
     setIsDriveOpen(false);
 
-    
+
 
     // Extract unique dates from drives in this group (use startingDate from companies.drives)
 
@@ -736,7 +736,7 @@ export default function AdminAtt({ onLogout }) {
 
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    
+
 
     setAvailableDates(dates);
 
@@ -764,7 +764,7 @@ export default function AdminAtt({ onLogout }) {
 
     setIsStartDateOpen(false);
 
-    
+
 
     // Auto-populate end date from the drive data (no dropdown needed)
 
@@ -772,7 +772,7 @@ export default function AdminAtt({ onLogout }) {
 
     setAvailableEndDates([]);
 
-    
+
 
     // Check if attendance already exists for this drive
 
@@ -780,13 +780,13 @@ export default function AdminAtt({ onLogout }) {
 
       att => att.companyName === selectedCompanyJob.companyName &&
 
-             att.jobRole === selectedCompanyJob.jobRole &&
+        att.jobRole === selectedCompanyJob.jobRole &&
 
-             new Date(att.startDate).toDateString() === new Date(dateObj.date).toDateString()
+        new Date(att.startDate).toDateString() === new Date(dateObj.date).toDateString()
 
     );
 
-    
+
 
     if (existingAttendance) {
 
@@ -886,7 +886,7 @@ export default function AdminAtt({ onLogout }) {
 
       console.log('🔍 Loading students for drive:', drive);
 
-      
+
 
       // First, try to find matching eligible students record
 
@@ -894,7 +894,7 @@ export default function AdminAtt({ onLogout }) {
 
       const allEligibleStudents = eligibleStudentsResponse.eligibleStudents || [];
 
-      
+
 
       console.log('📋 All eligible students records:', allEligibleStudents);
 
@@ -910,7 +910,7 @@ export default function AdminAtt({ onLogout }) {
 
       });
 
-      
+
 
       // Normalize date for comparison (remove time portion)
 
@@ -924,11 +924,11 @@ export default function AdminAtt({ onLogout }) {
 
       };
 
-      
+
 
       const driveDateNormalized = normalizeDate(drive.startingDate || drive.driveStartDate || drive.companyDriveDate);
 
-      
+
 
       // Find eligible students record matching this drive's company and date
 
@@ -938,17 +938,17 @@ export default function AdminAtt({ onLogout }) {
 
         const matches = es.companyName === drive.companyName && esDateNormalized === driveDateNormalized;
 
-        
+
 
         console.log(`Checking ${es.companyName} (${esDateNormalized}) vs ${drive.companyName} (${driveDateNormalized}): ${matches ? '✅' : '❌'}`);
 
-        
+
 
         return matches;
 
       });
 
-      
+
 
       if (!matchingEligibleStudents || !matchingEligibleStudents.students || matchingEligibleStudents.students.length === 0) {
 
@@ -972,13 +972,13 @@ export default function AdminAtt({ onLogout }) {
 
       }
 
-      
+
 
       console.log('✅ Found matching eligible students:', matchingEligibleStudents);
 
       console.log(`📊 Found ${matchingEligibleStudents.students.length} students`);
 
-      
+
 
       // Fetch complete student details for each student in the eligible students list
 
@@ -992,11 +992,11 @@ export default function AdminAtt({ onLogout }) {
 
           const studentData = response;
 
-          
+
 
           console.log('Student data fetched:', studentData);
 
-          
+
 
           // Format year-sec as III-B format
 
@@ -1012,7 +1012,7 @@ export default function AdminAtt({ onLogout }) {
 
           }
 
-          
+
 
           // Calculate semester from year (I->1,2; II->3,4; III->5,6; IV->7,8)
 
@@ -1036,7 +1036,7 @@ export default function AdminAtt({ onLogout }) {
 
           }
 
-          
+
 
           return {
 
@@ -1094,7 +1094,7 @@ export default function AdminAtt({ onLogout }) {
 
       });
 
-      
+
 
       const resolvedStudents = await Promise.all(studentPromises);
 
@@ -1146,7 +1146,7 @@ export default function AdminAtt({ onLogout }) {
 
     const percentage = marked > 0 ? Math.round((present / marked) * 100) : 0;
 
-    
+
 
     return { total, present, absent, percentage };
 
@@ -1156,17 +1156,17 @@ export default function AdminAtt({ onLogout }) {
 
   // Pie chart data - show grey circle if no data
 
-  const pieData = (stats.present === 0 && stats.absent === 0) 
+  const pieData = (stats.present === 0 && stats.absent === 0)
 
     ? [{ name: 'No Data', value: 1, color: '#D3D3D3' }]
 
     : [
 
-        { name: 'Present', value: stats.present, color: '#2DBE7F' },
+      { name: 'Present', value: stats.present, color: '#2DBE7F' },
 
-        { name: 'Absent', value: stats.absent, color: '#F04F4F' }
+      { name: 'Absent', value: stats.absent, color: '#F04F4F' }
 
-      ];
+    ];
 
 
   const dispatchAttendanceAbsentNotifications = (attendancePayload, driveData) => {
@@ -1297,13 +1297,13 @@ export default function AdminAtt({ onLogout }) {
 
       console.log('endDate:', endDate);
 
-      
+
 
       let driveId = selectedDrive?._id;
 
       console.log('Step 1 - driveId from selectedDrive:', driveId);
 
-      
+
 
       // If no selectedDrive, try to find the drive from selectedCompanyJob by matching dates
 
@@ -1313,7 +1313,7 @@ export default function AdminAtt({ onLogout }) {
 
         console.log('Number of drives:', selectedCompanyJob.drives.length);
 
-        
+
 
         // Try to find matching drive by date
 
@@ -1329,7 +1329,7 @@ export default function AdminAtt({ onLogout }) {
 
         });
 
-        
+
 
         if (matchingDrive) {
 
@@ -1353,11 +1353,11 @@ export default function AdminAtt({ onLogout }) {
 
       }
 
-      
+
 
       console.log('=== FINAL DRIVE ID:', driveId, '===');
 
-      
+
 
       if (!driveId) {
 
@@ -1371,7 +1371,7 @@ export default function AdminAtt({ onLogout }) {
 
       }
 
-      
+
 
       const attendanceData = {
 
@@ -1471,7 +1471,7 @@ export default function AdminAtt({ onLogout }) {
 
       }
 
-      
+
 
       if (response.success) {
 
@@ -1483,7 +1483,7 @@ export default function AdminAtt({ onLogout }) {
 
         dispatchAttendanceAbsentNotifications(attendanceData, selectedDrive);
 
-        
+
 
         // Refresh attendances list
 
@@ -1509,7 +1509,7 @@ export default function AdminAtt({ onLogout }) {
 
   };
 
-  
+
 
   const closeSuccessPopup = () => {
 
@@ -1521,9 +1521,9 @@ export default function AdminAtt({ onLogout }) {
 
     if (selectedDrive) {
 
-      navigate('/admin/company-drive/details', { 
+      navigate('/admin/company-drive/details', {
 
-        state: { 
+        state: {
 
           company: selectedDrive,
 
@@ -1531,7 +1531,7 @@ export default function AdminAtt({ onLogout }) {
 
           startingDate: selectedDrive.startingDate
 
-        } 
+        }
 
       });
 
@@ -1573,7 +1573,7 @@ export default function AdminAtt({ onLogout }) {
 
   };
 
-  
+
 
   const closeUnmarkedPopup = () => {
 
@@ -1583,7 +1583,7 @@ export default function AdminAtt({ onLogout }) {
 
   };
 
-  
+
 
   const handleShowUnmarkedStudent = (student) => {
 
@@ -1623,7 +1623,7 @@ export default function AdminAtt({ onLogout }) {
 
   };
 
-  
+
 
 
 
@@ -1655,7 +1655,7 @@ export default function AdminAtt({ onLogout }) {
 
       )}
 
-      
+
 
       {showUnmarkedPopup && (
 
@@ -1671,7 +1671,7 @@ export default function AdminAtt({ onLogout }) {
 
       )}
 
-      
+
 
       {/* Navbar & Sidebar */}
 
@@ -1687,7 +1687,7 @@ export default function AdminAtt({ onLogout }) {
 
         {/* Sidebar JSX */}
 
-          
+
 
 
 
@@ -1705,7 +1705,7 @@ export default function AdminAtt({ onLogout }) {
 
             <div className={styles['Admin-at-filter-select']}>
 
-              <div 
+              <div
 
                 className={styles['Admin-at-filter-select-display']}
 
@@ -1719,7 +1719,7 @@ export default function AdminAtt({ onLogout }) {
 
               <span className={styles['Admin-at-filter-select-arrow']} onClick={() => setIsDriveOpen(!isDriveOpen)}>
 
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
+                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
 
               </span>
 
@@ -1727,11 +1727,11 @@ export default function AdminAtt({ onLogout }) {
 
                 {isLoading ? (
 
-                  <div className={styles['Admin-at-filter-select-option']} style={{color: '#888'}}>Loading...</div>
+                  <div className={styles['Admin-at-filter-select-option']} style={{ color: '#888' }}>Loading...</div>
 
                 ) : groupedDrives.length === 0 ? (
 
-                  <div className={styles['Admin-at-filter-select-option']} style={{color: '#888'}}>No drives available</div>
+                  <div className={styles['Admin-at-filter-select-option']} style={{ color: '#888' }}>No drives available</div>
 
                 ) : (
 
@@ -1739,7 +1739,7 @@ export default function AdminAtt({ onLogout }) {
 
                     // Check if any date for this company/job has attendance (use startingDate from companies.drives)
 
-                    const hasAttendance = group.drives.some(drive => 
+                    const hasAttendance = group.drives.some(drive =>
 
                       hasExistingAttendance(
 
@@ -1755,11 +1755,11 @@ export default function AdminAtt({ onLogout }) {
 
                     return (
 
-                      <div 
+                      <div
 
-                        key={index} 
+                        key={index}
 
-                        className={styles['Admin-at-filter-select-option']} 
+                        className={styles['Admin-at-filter-select-option']}
 
                         onClick={() => handleCompanyJobSelect(group)}
 
@@ -1781,19 +1781,19 @@ export default function AdminAtt({ onLogout }) {
 
             </div>
 
-            
+
 
             {/* Start Date Dropdown */}
 
             <div className={styles['Admin-at-filter-select']}>
 
-              <div 
+              <div
 
                 className={styles['Admin-at-filter-select-display']}
 
                 onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
 
-                style={{ 
+                style={{
 
                   cursor: selectedCompanyJob ? 'pointer' : 'not-allowed',
 
@@ -1809,9 +1809,9 @@ export default function AdminAtt({ onLogout }) {
 
               </div>
 
-              <span 
+              <span
 
-                className={styles['Admin-at-filter-select-arrow']} 
+                className={styles['Admin-at-filter-select-arrow']}
 
                 onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
 
@@ -1819,7 +1819,7 @@ export default function AdminAtt({ onLogout }) {
 
               >
 
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
+                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
 
               </span>
 
@@ -1839,11 +1839,11 @@ export default function AdminAtt({ onLogout }) {
 
                   return (
 
-                    <div 
+                    <div
 
-                      key={index} 
+                      key={index}
 
-                      className={styles['Admin-at-filter-select-option']} 
+                      className={styles['Admin-at-filter-select-option']}
 
                       onClick={() => handleStartDateSelect(dateObj)}
 
@@ -1873,17 +1873,17 @@ export default function AdminAtt({ onLogout }) {
 
             </div>
 
-            
+
 
             {/* End Date Display (Read-only) */}
 
             <div className={styles['Admin-at-filter-select']}>
 
-              <div 
+              <div
 
                 className={styles['Admin-at-filter-select-display']}
 
-                style={{ 
+                style={{
 
                   cursor: 'default',
 
@@ -1899,7 +1899,7 @@ export default function AdminAtt({ onLogout }) {
 
               </div>
 
-              <span 
+              <span
 
                 className={styles['Admin-at-filter-select-arrow']}
 
@@ -1907,19 +1907,19 @@ export default function AdminAtt({ onLogout }) {
 
               >
 
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
+                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
 
               </span>
 
             </div>
 
-            
+
 
             {/* Submit/Update Button */}
 
-            <button 
+            <button
 
-              className={styles['Admin-at-filter-btn']} 
+              className={styles['Admin-at-filter-btn']}
 
               onClick={handleApply}
 
@@ -2071,7 +2071,7 @@ export default function AdminAtt({ onLogout }) {
 
           {/* Table Section */}
 
-          
+
 
           {/* UPDATED CLASS: Admin-at-table-section, Admin-at-table-header */}
 
@@ -2105,25 +2105,25 @@ export default function AdminAtt({ onLogout }) {
 
                   <tr>
 
-                      <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
+                    <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
 
-                      <th style={{ width: '13%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
+                    <th style={{ width: '13%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
 
-                      <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Register Number</th>
+                    <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Register Number</th>
 
-                      <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
+                    <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
 
-                      <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
+                    <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
 
-                      <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Year-sec</th>
+                    <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Year-sec</th>
 
-                      <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Sem</th>
+                    <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Sem</th>
 
-                      <th style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>Phone No</th>
+                    <th style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>Phone No</th>
 
-                      <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
+                    <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
 
-                      <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Action</th>
+                    <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Action</th>
 
                   </tr>
 
@@ -2187,9 +2187,9 @@ export default function AdminAtt({ onLogout }) {
 
                         <td style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>{student.phoneNo}</td>
 
-                        <td 
+                        <td
 
-                          style={{ 
+                          style={{
 
                             width: '8%',
 
@@ -2211,7 +2211,7 @@ export default function AdminAtt({ onLogout }) {
 
                         <td style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>
 
-                          <button 
+                          <button
 
                             className={styles['action-present-btn']}
 
@@ -2225,7 +2225,7 @@ export default function AdminAtt({ onLogout }) {
 
                           </button>
 
-                          <button 
+                          <button
 
                             className={styles['action-absent-btn']}
 

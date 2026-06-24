@@ -11,7 +11,7 @@ import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import * as XLSX from 'xlsx';
 import mongoDBService from '../services/mongoDBService';
 import styles from './AdminEligibleStudents.module.css';
-import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, CertificateDownloadProgressAlert } from '../components/alerts';
 
 // Eye Icon Component
 const EyeIcon = () => (
@@ -37,6 +37,7 @@ function AdminEsstudapp() {
   const [selectedCount, setSelectedCount] = useState(0);
   const [selectedCompanyName, setSelectedCompanyName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
   const [nasaDate, setNasaDate] = useState('');
 
   // Export popup states
@@ -87,6 +88,17 @@ function AdminEsstudapp() {
     if (roman.includes(raw)) return raw;
     const asNum = Number.parseInt(raw, 10);
     if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 8) return roman[asNum - 1];
+    return raw;
+  };
+
+  const normalizeSemNumeric = (value) => {
+    const raw = (value ?? '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+    const idx = roman.indexOf(raw);
+    if (idx !== -1) return (idx + 1).toString();
+    const asNum = Number.parseInt(raw, 10);
+    if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 8) return asNum.toString();
     return raw;
   };
 
@@ -248,23 +260,29 @@ function AdminEsstudapp() {
     });
 
     setIsSubmitting(true);
-    try {
-      // Prepare student data with full details
-      const studentsData = filteredStudents
-        .filter(student => selectedStudents.includes(student._id || student.id))
-        .map(student => ({
-          studentId: student._id || student.id,
-          regNo: student.regNo || 'N/A',
-          name: `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'N/A',
-          branch: student.branch || 'N/A',
-          batch: student.batch || 'N/A'
-        }));
+    setSubmitProgress(15);
 
-      console.log('Students Data:', studentsData);
+    let submitDone = false;
+    let submitInterval = null;
 
-      // Get the drive ID from filter criteria or selectedDrive prop
-      let driveId = filterCriteria?._id || filterCriteria?.driveId || location.state?.selectedDrive?._id;
+    // Prepare student data with full details
+    const studentsData = filteredStudents
+      .filter(student => selectedStudents.includes(student._id || student.id))
+      .map(student => ({
+        studentId: student._id || student.id,
+        regNo: student.regNo || 'N/A',
+        name: `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'N/A',
+        branch: student.branch || 'N/A',
+        batch: student.batch || 'N/A'
+      }));
 
+    console.log('Students Data:', studentsData);
+
+    // Get the drive ID from filter criteria or selectedDrive prop
+    let driveId = filterCriteria?._id || filterCriteria?.driveId || location.state?.selectedDrive?._id;
+
+    // 1. Run the DB storing operation in an async function
+    const performSubmit = async () => {
       // If still not found, try to find it from the company drives
       if (!driveId && companyName && driveStartDate) {
         try {
@@ -284,11 +302,7 @@ function AdminEsstudapp() {
       }
 
       if (!driveId) {
-        console.error('Drive ID not found in filter criteria:', filterCriteria);
-        console.error('Location state:', location.state);
-        alert('Error: Drive ID not found. Please go back and select the drive again.');
-        setIsSubmitting(false);
-        return;
+        throw new Error('Drive ID not found. Please go back and select the drive again.');
       }
 
       console.log('Using drive ID:', driveId);
@@ -314,17 +328,51 @@ function AdminEsstudapp() {
       } catch (evtError) {
         console.warn('Could not dispatch eligibleStudentsAdded event', evtError);
       }
-      setShowSuccessPopup(true);
-      setSelectedStudents([]);
-    } catch (error) {
-      console.error('Error storing eligible students:', error);
-      console.error('Error details:', error.response || error.message);
-      const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
-      const missingFields = error.response?.data?.missingFields || [];
-      alert(`Failed to store eligible students: ${errorMessage}${missingFields.length > 0 ? '\nMissing fields: ' + missingFields.join(', ') : ''}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    };
+
+    // Start submit task
+    performSubmit()
+      .then(() => {
+        submitDone = true;
+        if (submitInterval) window.clearInterval(submitInterval);
+        handleSelectionComplete();
+      })
+      .catch(error => {
+        submitDone = true;
+        if (submitInterval) window.clearInterval(submitInterval);
+        setIsSubmitting(false);
+        console.error('Error storing eligible students:', error);
+        console.error('Error details:', error.response || error.message);
+        const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+        const missingFields = error.response?.data?.missingFields || [];
+        alert(`Failed to store eligible students: ${errorMessage}${missingFields.length > 0 ? '\nMissing fields: ' + missingFields.join(', ') : ''}`);
+      });
+
+    // 2. Animate selection phase smoothly (15% to 60%) while waiting for API
+    submitInterval = window.setInterval(() => {
+      setSubmitProgress(prev => {
+        if (submitDone || prev >= 60) {
+          window.clearInterval(submitInterval);
+          return prev;
+        }
+        return prev + 5;
+      });
+    }, 100);
+
+    // 3. Complete stages sequentially to give user visual feedback
+    const handleSelectionComplete = () => {
+      setSubmitProgress(90);
+
+      setTimeout(() => {
+        setSubmitProgress(100);
+
+        setTimeout(() => {
+          setIsSubmitting(false);
+          setShowSuccessPopup(true);
+          setSelectedStudents([]);
+        }, 200);
+      }, 300);
+    };
   };
 
   const handleCloseSuccessPopup = () => {
@@ -341,7 +389,7 @@ function AdminEsstudapp() {
       diplomaPercentage: filterCriteria?.diplomaPercentage,
       ugCgpa: filterCriteria?.ugCgpa,
       backlogs: filterCriteria?.backlogs,
-      department: filterCriteria?.department,
+      department: true, // Always show branch
       batch: true, // Always show batch
     };
     return columns;
@@ -349,7 +397,7 @@ function AdminEsstudapp() {
 
   const getVisibleColumnCount = () => {
     const cols = getVisibleColumns();
-    let colCount = 5; // Checkbox, S.No, Student Name, Register Number, View
+    let colCount = 6; // Checkbox, S.No, Register Number, Name, Year-sem, View
     if (cols.batch) colCount++;
     if (cols.department) colCount++;
     if (cols.ugCgpa) colCount++;
@@ -454,18 +502,26 @@ function AdminEsstudapp() {
       await new Promise(resolve => setTimeout(resolve, 500));
       setExportProgress(30);
 
-      const exportData = filteredStudents.map((student, index) => ({
-        'S.No': index + 1,
-        'Student Name': `${student.firstName || ''} ${student.lastName || ''}`.trim(),
-        'Register Number': student.regNo || 'N/A',
-        'Batch': student.batch || 'N/A',
-        'Branch': student.branch || 'N/A',
-        'CGPA': student.overallCGPA || 'N/A',
-        '10th %': student.tenthPercentage || 'N/A',
-        '12th %': student.twelfthPercentage || 'N/A',
-        'Diploma %': student.diplomaPercentage || 'N/A',
-        'Backlogs': student.currentBacklogs || '0'
-      }));
+      const exportData = filteredStudents.map((student, index) => {
+        const studentYear = student.currentYear || student.year || calculateCurrentYear(student.batch);
+        const studentSem = student.currentSemester || student.semester || student.sem || '';
+        const yearSemStr = studentYear || studentSem 
+          ? `${normalizeYearRoman(studentYear)}-${normalizeSemNumeric(studentSem)}` 
+          : 'N/A';
+        return {
+          'S.No': index + 1,
+          'Register Number': student.regNo || 'N/A',
+          'Name': `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+          'Year-sem': yearSemStr,
+          'Batch': student.batch || 'N/A',
+          'Branch': student.branch || 'N/A',
+          'CGPA': student.overallCGPA || 'N/A',
+          '10th %': student.tenthPercentage || 'N/A',
+          '12th %': student.twelfthPercentage || 'N/A',
+          'Diploma %': student.diplomaPercentage || 'N/A',
+          'Backlogs': student.currentBacklogs || '0'
+        };
+      });
 
       setExportProgress(60);
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -519,21 +575,29 @@ function AdminEsstudapp() {
       setExportProgress(60);
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      const tableData = filteredStudents.map((student, index) => [
-        index + 1,
-        `${student.firstName || ''} ${student.lastName || ''}`.trim(),
-        student.regNo || 'N/A',
-        student.batch || 'N/A',
-        student.branch || 'N/A',
-        student.overallCGPA || 'N/A',
-        student.tenthPercentage || 'N/A',
-        student.twelfthPercentage || 'N/A',
-        student.diplomaPercentage || 'N/A',
-        student.currentBacklogs || '0'
-      ]);
+      const tableData = filteredStudents.map((student, index) => {
+        const studentYear = student.currentYear || student.year || calculateCurrentYear(student.batch);
+        const studentSem = student.currentSemester || student.semester || student.sem || '';
+        const yearSemStr = studentYear || studentSem 
+          ? `${normalizeYearRoman(studentYear)}-${normalizeSemNumeric(studentSem)}` 
+          : 'N/A';
+        return [
+          index + 1,
+          student.regNo || 'N/A',
+          `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+          yearSemStr,
+          student.batch || 'N/A',
+          student.branch || 'N/A',
+          student.overallCGPA || 'N/A',
+          student.tenthPercentage || 'N/A',
+          student.twelfthPercentage || 'N/A',
+          student.diplomaPercentage || 'N/A',
+          student.currentBacklogs || '0'
+        ];
+      });
 
       autoTable(doc, {
-        head: [['S.No', 'Name', 'Register No', 'Batch', 'Branch', 'CGPA', '10th %', '12th %', 'Diploma %', 'Backlogs']],
+        head: [['S.No', 'Register No', 'Name', 'Year-Sem', 'Batch', 'Branch', 'CGPA', '10th %', '12th %', 'Diploma %', 'Backlogs']],
         body: tableData,
         startY: 40,
         theme: 'grid',
@@ -651,7 +715,7 @@ function AdminEsstudapp() {
               <div className={styles['Admin-es-input-group']}>
                 <label className={styles['Admin-es-input-label']}>Year-Sem</label>
                 <div className={styles['Admin-es-yearsem-range-inputs']}>
-                  <div className={styles['Admin-es-search-input']}>
+                  <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
                     <select
                       value={localFilter.year}
                       onChange={(e) => handleYearChange(e.target.value)}
@@ -665,7 +729,7 @@ function AdminEsstudapp() {
                     </select>
                   </div>
                   <div className={styles['Admin-es-yearsem-range-sep']}>-</div>
-                  <div className={styles['Admin-es-search-input']}>
+                  <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
                     <select
                       value={localFilter.sem}
                       disabled={!localFilter.year}
@@ -685,7 +749,7 @@ function AdminEsstudapp() {
               {/* Branch Dropdown - Row 2 Column 2 */}
               <div className={styles['Admin-es-input-group']}>
                 <label className={styles['Admin-es-input-label']}>Branch</label>
-                <div className={styles['Admin-es-search-input']}>
+                <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
                   <select
                     value={localFilter.branch}
                     onChange={(e) => handleLocalFilterChange('branch', e.target.value)}
@@ -740,6 +804,20 @@ function AdminEsstudapp() {
         <div className={styles['Admin-es-bottom-card']}>
           <div className={styles['Admin-es-profile-header']}>
             <div className={styles['Admin-es-profile-title']}>ELIGIBLE STUDENTS</div>
+
+            <div className={styles['Admin-es-header-progress']}>
+              <span className={styles['Admin-es-header-progress-text']}>
+                Selected: <strong style={{ color: '#2085f6' }}>{selectedStudents.length}</strong> / {filteredStudents.length}
+              </span>
+              <div className={styles['Admin-es-header-bar-container']}>
+                <div
+                  className={styles['Admin-es-header-bar-fill']}
+                  style={{
+                    width: `${filteredStudents.length > 0 ? (selectedStudents.length / filteredStudents.length) * 100 : 0}%`
+                  }}
+                />
+              </div>
+            </div>
             <div className={styles['Admin-es-print-btn-container']}>
               <button className={styles['Admin-es-print-btn']} onClick={() => setShowDropdown(!showDropdown)}>Print</button>
               {showDropdown && (
@@ -764,8 +842,9 @@ function AdminEsstudapp() {
                     />
                   </th>
                   <th className={styles['Admin-es-col-sno']}>S.No</th>
-                  <th className={styles['Admin-es-col-name']}>Student Name</th>
                   <th className={styles['Admin-es-col-regno']}>Register Number</th>
+                  <th className={styles['Admin-es-col-name']}>Name</th>
+                  <th className={styles['Admin-es-col-yearsem']}>Year-sem</th>
                   {getVisibleColumns().batch && <th className={styles['Admin-es-col-batch']}>Batch</th>}
                   {getVisibleColumns().department && <th className={styles['Admin-es-col-branch']}>Branch</th>}
                   {getVisibleColumns().ugCgpa && <th className={styles['Admin-es-col-cgpa']}>CGPA</th>}
@@ -793,42 +872,50 @@ function AdminEsstudapp() {
                     </td>
                   </tr>
                 ) : (
-                  filteredStudents.map((student, index) => (
-                    <tr
-                      key={student._id || student.id}
-                      onClick={() => handleSelectStudent(student._id || student.id)}
-                      className={selectedStudents.includes(student._id || student.id) ? styles['Admin-es-selected-row'] : ''}
-                    >
-                      <td className={styles['Admin-es-col-checkbox']}>
-                        <input
-                          type="checkbox"
-                          className={styles['Admin-es-checkbox']}
-                          checked={selectedStudents.includes(student._id || student.id)}
-                          onChange={() => handleSelectStudent(student._id || student.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                      <td className={styles['Admin-es-col-sno']}>{index + 1}</td>
-                      <td className={styles['Admin-es-col-name']}>{`${student.firstName || ''} ${student.lastName || ''}`.trim()}</td>
-                      <td className={styles['Admin-es-col-regno']}>{student.regNo || 'N/A'}</td>
-                      {getVisibleColumns().batch && <td className={styles['Admin-es-col-batch']}>{student.batch || 'N/A'}</td>}
-                      {getVisibleColumns().department && <td className={styles['Admin-es-col-branch']}>{student.branch || 'N/A'}</td>}
-                      {getVisibleColumns().ugCgpa && <td className={styles['Admin-es-col-cgpa']}>{student.overallCGPA || 'N/A'}</td>}
-                      {getVisibleColumns().tenthPercentage && <td className={styles['Admin-es-col-pct']}>{student.tenthPercentage || 'N/A'}</td>}
-                      {getVisibleColumns().twelfthPercentage && <td className={styles['Admin-es-col-pct']}>{student.twelfthPercentage || 'N/A'}</td>}
-                      {getVisibleColumns().diplomaPercentage && <td className={styles['Admin-es-col-pct']}>{student.diplomaPercentage || 'N/A'}</td>}
-                      {getVisibleColumns().backlogs && <td className={styles['Admin-es-col-backlogs']}>{student.currentBacklogs || '0'}</td>}
-                      <td className={styles['Admin-es-col-view']} style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={(e) => {
-                        e.stopPropagation();
-                        const studentId = student._id || student.id;
-                        if (studentId) {
-                          handleViewProfile(studentId, student);
-                        }
-                      }}>
-                        <EyeIcon />
-                      </td>
-                    </tr>
-                  ))
+                  filteredStudents.map((student, index) => {
+                    const studentYear = student.currentYear || student.year || calculateCurrentYear(student.batch);
+                    const studentSem = student.currentSemester || student.semester || student.sem || '';
+                    const yearSemStr = studentYear || studentSem 
+                      ? `${normalizeYearRoman(studentYear)}-${normalizeSemNumeric(studentSem)}` 
+                      : 'N/A';
+                    return (
+                      <tr
+                        key={student._id || student.id}
+                        onClick={() => handleSelectStudent(student._id || student.id)}
+                        className={selectedStudents.includes(student._id || student.id) ? styles['Admin-es-selected-row'] : ''}
+                      >
+                        <td className={styles['Admin-es-col-checkbox']}>
+                          <input
+                            type="checkbox"
+                            className={styles['Admin-es-checkbox']}
+                            checked={selectedStudents.includes(student._id || student.id)}
+                            onChange={() => handleSelectStudent(student._id || student.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td className={styles['Admin-es-col-sno']}>{index + 1}</td>
+                        <td className={styles['Admin-es-col-regno']}>{student.regNo || 'N/A'}</td>
+                        <td className={styles['Admin-es-col-name']}>{`${student.firstName || ''} ${student.lastName || ''}`.trim()}</td>
+                        <td className={styles['Admin-es-col-yearsem']}>{yearSemStr}</td>
+                        {getVisibleColumns().batch && <td className={styles['Admin-es-col-batch']}>{student.batch || 'N/A'}</td>}
+                        {getVisibleColumns().department && <td className={styles['Admin-es-col-branch']}>{student.branch || 'N/A'}</td>}
+                        {getVisibleColumns().ugCgpa && <td className={styles['Admin-es-col-cgpa']}>{student.overallCGPA || 'N/A'}</td>}
+                        {getVisibleColumns().tenthPercentage && <td className={styles['Admin-es-col-pct']}>{student.tenthPercentage || 'N/A'}</td>}
+                        {getVisibleColumns().twelfthPercentage && <td className={styles['Admin-es-col-pct']}>{student.twelfthPercentage || 'N/A'}</td>}
+                        {getVisibleColumns().diplomaPercentage && <td className={styles['Admin-es-col-pct']}>{student.diplomaPercentage || 'N/A'}</td>}
+                        {getVisibleColumns().backlogs && <td className={styles['Admin-es-col-backlogs']}>{student.currentBacklogs || '0'}</td>}
+                        <td className={styles['Admin-es-col-view']} style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={(e) => {
+                          e.stopPropagation();
+                          const studentId = student._id || student.id;
+                          if (studentId) {
+                            handleViewProfile(studentId, student);
+                          }
+                        }}>
+                          <EyeIcon />
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -846,9 +933,13 @@ function AdminEsstudapp() {
               <button
                 className={styles['Admin-es-select-btn']}
                 onClick={handleConfirmSelection}
-                disabled={isSubmitting}
+                disabled={isSubmitting || selectedStudents.length === 0}
+                style={{
+                  opacity: (isSubmitting || selectedStudents.length === 0) ? 0.5 : 1,
+                  cursor: (isSubmitting || selectedStudents.length === 0) ? 'not-allowed' : 'pointer'
+                }}
               >
-                {isSubmitting ? 'Selecting...' : 'Select'}
+                Select
               </button>
             </div>
           )}
@@ -910,6 +1001,21 @@ function AdminEsstudapp() {
         isOpen={exportPopupState === 'failed'}
         onClose={() => setExportPopupState('none')}
         exportType={exportType}
+      />
+
+      {/* Selection Progress Popup */}
+      <CertificateDownloadProgressAlert
+        isOpen={isSubmitting}
+        progress={submitProgress}
+        fileLabel="eligible students"
+        title="Selecting..."
+        color="#4EA24E"
+        progressColor="#4EA24E"
+        messages={{
+          initial: 'Selecting eligible students...',
+          mid: 'Saving selections in database...',
+          final: 'Finalizing student selections...'
+        }}
       />
     </div>
   );
