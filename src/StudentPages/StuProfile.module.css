@@ -1027,6 +1027,7 @@ select:disabled {
     .formGrid { display: block; gap: 0; }
     .personalInfoFields { grid-column: auto; display: block; }
     .profileSectionContainer input, .profileSectionContainer select { margin-bottom: 1.5rem; }
+    .checkboxGroup { margin-bottom: 1.5rem; }
     .profilePhotoWrapper { grid-column: auto; margin-top: 1.5rem; }
     .formGrid input, .formGrid select { width: 100%; }
     .actionButtons { flex-direction: column; gap: 1rem; margin-bottom: env(safe-area-inset-bottom, 20px); }

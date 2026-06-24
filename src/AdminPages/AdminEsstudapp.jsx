@@ -818,42 +818,48 @@ function AdminEsstudapp() {
     setIsSearching(true);
     setSearchProgress(15);
 
-    let allStudentsData = null;
-    let fetchError = null;
     let fetchDone = false;
+    let fetchingInterval = null;
 
-    // Start fetching database records immediately in the background
+    // 1. Start fetching immediately
     mongoDBService.getStudents()
       .then(students => {
-        allStudentsData = students;
         fetchDone = true;
+        if (fetchingInterval) window.clearInterval(fetchingInterval);
+        handleFetchComplete(students, null);
       })
       .catch(err => {
         console.error('Preloading students failed:', err);
-        fetchError = err;
         fetchDone = true;
+        if (fetchingInterval) window.clearInterval(fetchingInterval);
+        handleFetchComplete(null, err);
       });
 
-    const interval = window.setInterval(() => {
+    // 2. Animate fetching phase smoothly (15% to 60%) while waiting for API
+    fetchingInterval = window.setInterval(() => {
       setSearchProgress(prev => {
-        // If progress is near 100 but fetch is not done, hold at 95%
-        if (prev >= 95 && !fetchDone) {
-          return 95;
+        if (fetchDone || prev >= 60) {
+          window.clearInterval(fetchingInterval);
+          return prev;
         }
-
-        let nextProgress = prev;
-        if (prev < 50) nextProgress = prev + 12;
-        else if (prev < 80) nextProgress = prev + 8;
-        else if (prev < 99) nextProgress = prev + 4;
-        else nextProgress = 100;
-
-        if (nextProgress >= 100) {
-          window.clearInterval(interval);
-          finalizeSearch(allStudentsData, fetchError);
-        }
-        return nextProgress;
+        return prev + 5;
       });
-    }, 180);
+    }, 100);
+
+    // 3. Complete stages sequentially to give user visual feedback
+    const handleFetchComplete = (students, error) => {
+      // Stage 2: Filtering (90% - displays "Filtering student database...")
+      setSearchProgress(90);
+
+      setTimeout(() => {
+        // Stage 3: Finalizing (100% - displays "Finalizing search results...")
+        setSearchProgress(100);
+
+        setTimeout(() => {
+          finalizeSearch(students, error);
+        }, 200);
+      }, 300);
+    };
   };
 
 

@@ -22,6 +22,8 @@ import LandingPage from "./LandingPage.jsx";
 import PlacementPortalLogin from "./mainlogin.jsx";
 import MainSignUp from "./MainSignUp.jsx";
 import MainRegistration from "./MainRegistration.jsx";
+import AdminEsstudapp from "./AdminPages/AdminEsstudapp.jsx";
+import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
 
 // --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
 const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
@@ -34,7 +36,6 @@ const AdminCompanyprofilePopup = lazy(() => import("./AdminPages/AdminCompanypro
 const AdminCompanyDrive = lazy(() => import("./AdminPages/AdminCompanyDrive.jsx"));
 const AdminCompanyDriveAD = lazy(() => import("./AdminPages/AdminCompanyDriveAD.jsx"));
 const AdminCompanyDrivedet = lazy(() => import("./AdminPages/AdminCompanyDrivedet.jsx"));
-const AdminEligiblestudents = lazy(() => import("./AdminPages/AdminEligiblestudents.jsx"));
 const AdminAtt = lazy(() => import("./AdminPages/AdminAttendance.jsx"));
 const AdminPlacedStudents = lazy(() => import("./AdminPages/AdminPlacedStudents.jsx"));
 const AdminRARW = lazy(() => import("./AdminPages/AdminRARW.jsx"));
@@ -67,7 +68,6 @@ const AdminStuProfileEdit = lazy(() =>
 );
 const AdminSemesterMarksheetView = lazy(() => import("./AdminPages/AdminSemesterMarksheetView.jsx"));
 const AdminSemesterMarksheetEdit = lazy(() => import("./AdminPages/AdminSemesterMarksheetEdit.jsx"));
-const AdminEsstudapp = lazy(() => import("./AdminPages/AdminEsstudapp.jsx"));
 const AdminCoDet = lazy(() => import("./AdminPages/AdAddCoordinatorform.jsx"));
 const AdExistingCoordinator = lazy(() => import("./AdminPages/AdExistingCoordinator.jsx"));
 const AdminABcoodet = lazy(() => import("./AdminPages/AdminABviewcoo.jsx"));
@@ -394,7 +394,7 @@ function AppContent() {
       <Route path="/admin/zipped-batch/department/:deptId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippedBatchDepartmentStudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/zipped-batch/department-details/:deptId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippedBatchDepartmentDetails onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin/zipping-history" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdZippingHistory onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/admin-eligible-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminEligiblestudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-eligible-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><AdminEligiblestudents onLogout={() => navigate('/')} /></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-attendance" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAtt onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-placed-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPlacedStudents onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-report-analysis-rarw" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminRARW onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
@@ -405,7 +405,7 @@ function AppContent() {
       <Route path="/admin-add-branch" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminABN onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-profile-main" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><Admainprofile onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/AdminEsprofile/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminStuProfile onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/admin-student-application" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminEsstudapp onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-student-application" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><AdminEsstudapp onLogout={() => navigate('/')} /></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-coordinator-detail" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminCoDet onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-manage-coordinators/:branchCode" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdExistingCoordinator onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-view-coordinator/:coordinatorId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminABcoodet onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

@@ -1190,7 +1190,7 @@ function AdminstudDB() {
                                 <div className={styles['Admin-DB-filter-content']}>
                                     {/* Row 1 Column 1: Search Input */}
                                     <div className={styles['Admin-DB-input-wrapper']}>
-                                        <label className={styles['Admin-DB-static-label']}>Enter Name / Registration Number</label>
+                                        <label className={styles['Admin-DB-static-label']}>Enter Name / Reg Number</label>
                                         <div className={`${styles['Admin-DB-text-container']} ${nameFocused ? styles['is-focused'] : ''}`}>
                                             <input
                                                 type="text"

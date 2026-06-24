@@ -1,10 +1,4 @@
-body {
-  background: #f8f8fb;
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', Arial, sans-serif;
-  overflow: hidden;
-}
+
 
 /* --- Base Layout --- */
 .Admin-es-layout {
@@ -780,698 +774,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Responsive Media Queries */
-@media (max-width: 1200px) {
-  .Admin-es-summary-cards {
-    flex-wrap: wrap;
-    height: auto;
-  }
-  .Admin-es-search-inputs {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Mobile Responsive - Large tablets and below (matching Admin_Dashboard) */
-@media (max-width: 900px) {
-  .Admin-es-layout {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    flex-direction: column;
-  }
-
-  .Admin-es-main-content {
-    margin-left: 0 !important;
-    margin-top: 60px;
-    width: 100% !important;
-    padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 90px) 16px !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: calc(100vh - 60px) !important;
-    max-height: calc(100vh - 60px);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Green volume-style scrollbar for mobile */
-  .Admin-es-main-content::-webkit-scrollbar { 
-    width: 10px; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-track { 
-    background: #f0f2f5; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E; 
-    border-radius: 20px; 
-    border: 3px solid #f0f2f5; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-thumb:hover { 
-    background-color: #3d8a3d; 
-  }
-}
-
-/* Mobile Responsive - Medium Devices */
-@media (max-width: 768px) {
-  body {
-    background: #f8f8fb;
-    margin: 0;
-    padding: 0;
-    font-family: 'Poppins', Arial, sans-serif;
-    overflow: auto;
-  }
-
-  .Admin-es-layout {
-    height: auto;
-    overflow-y: auto;
-    flex-direction: column;
-  }
-
-  .Admin-es-main-content {
-    padding: 15px;
-    margin-top: 60px;
-    margin-left: 0;
-    height: auto;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar { 
-    width: 10px; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-track { 
-    background: #f0f2f5; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E; 
-    border-radius: 20px; 
-    border: 3px solid #f0f2f5; 
-  }
-
-  .Admin-es-main-content::-webkit-scrollbar-thumb:hover { 
-    background-color: #3d8a3d; 
-  }
-
-  /* Table Scrollbar - Green vertical, Grey horizontal */
-  .Admin-es-table-scrollable,
-  .Admin-es-companies-table-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar-track,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar-thumb,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar-thumb {
-    background: #4ea24e;
-    border-radius: 8px;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar-thumb:hover,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #4ea24e;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar-thumb:horizontal,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar-thumb:horizontal {
-    background: #888;
-    border-radius: 8px;
-  }
-
-  .Admin-es-table-scrollable::-webkit-scrollbar-thumb:horizontal:hover,
-  .Admin-es-companies-table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #666;
-  }
-
-
-  .Admin-es-summary-card-icon {
-    width: 70px;
-    height: 50px;
-    margin: 20px auto 15px auto;
-    background: #f8f9fa;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .Admin-es-summary-card-icon img {
-    width: 60px;
-    height: 60px;
-  }
-
-  .Admin-es-summary-card-title-1 {
-    font-weight: 700;
-    font-size: 1.4em;
-    margin-top: 15px;
-    color: #333;
-  }
-
-  .Admin-es-summary-card-title-2 {
-    font-weight: 700;
-    font-size: 1.4em;
-    margin-top: -10px;
-    margin-bottom: 12px;
-    color: #333;
-  }
-
-  .Admin-es-summary-card-desc-1,
-  .Admin-es-summary-card-desc-2 {
-    font-size: 0.85em;
-    color: #666;
-    line-height: 1.4;
-  }
-
-  /* Company Profile Search Card */
-  .Admin-es-company-profile-search {
-    background: #E0E0E0;
-    border-radius: 18px;
-    width: 100%;
-    height: auto;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    padding: 40px 20px;
-    justify-content: center;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-tab {
-    position: absolute;
-        width: 400px;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #4EA24E;
-        color: #fff;
-        border-radius: 80px;
-        padding: 0px 45px;
-        font-size: 1.1em;
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-        z-index: 2;
-        height:35px;
-        padding-top:5px;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-inputs {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 35px;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-input {
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-input input {
-    width: 100%;
-    height: 41px;
-    padding: 10px 35px 10px 32px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 0.95em;
-    background: #fff;
-    transition: border 0.2s;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-input input:focus {
-    outline: none;
-    border: 1.5px solid #4EA24E;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7b7b7b;
-    font-size: 1.1em;
-    z-index: 1;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-clear-btn {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #bbb;
-    font-size: 1.1em;
-    z-index: 1;
-  }
-
-  .Admin-es-button-container {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 15px;
-    width: 100%;
-    max-width: 100%;
-    flex-wrap: wrap;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-search-btn-filter,
-  .Admin-es-clear-search-btn {
-    height: 45px;
-    font-size: 0.95em;
-    padding: 10px 25px;
-    flex: 1;
-    min-width: 100px;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-btn {
-    background: #ffffff;
-    color: #4EA24E;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 80px;
-    font-weight: 600;
-    font-size: 0.95em;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-    transition: background 0.2s;
-    cursor: pointer;
-    height: 45px;
-    margin-top: 5px;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-btn:hover {
-    background: #ffffff;
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-  }
-
-  /* Company Drive Card and Placed Students Card */
-  .Admin-es-action-addcard,
-  .Admin-es-placed-students-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    text-align: center;
-    width: 100%;
-    height: auto;
-    margin: 0;
-    border: 2px solid grey;
-    transition: box-shadow 0.2s, transform 0.15s;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-action-addcard:hover,
-  .Admin-es-placed-students-card:hover {
-    border: 2px solid rgb(2, 171, 41);
-  }
-
-  .Admin-es-action-addcard,
-  .Admin-es-placed-students-card-sized {
-    width: 100%;
-    height: auto;
-    transform: none;
-    margin-left: 0;
-    margin-top: 18px;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-action-addcard .Admin-es-add-icon {
-    width: 50px;
-    height: 50px;
-    margin: 15px auto;
-    background: none;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .Admin-es-action-addcard .Admin-es-add-header,
-  .Admin-es-placed-students-card .Admin-es-summary-card-title-1 {
-    font-weight: 600;
-    font-size: 1.2em;
-    margin-bottom: 8px;
-    color: #333;
-  }
-
-  .Admin-es-action-addcard .Admin-es-add-description,
-  .Admin-es-placed-students-card .Admin-es-summary-card-desc {
-    font-size: 0.85em;
-    color: #666;
-    line-height: 1.6;
-  }
-
-  /* Eligible Students Table */
-  .Admin-es-bottom-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 0px 0;
-    border: 2px solid #808080;
-    width: 100%;
-    height: auto;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 10px;
-  }
-
-  .Admin-es-profile-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .Admin-es-print-btn-container {
-    position: relative;
-    display: inline-block;
-  }
-
-  .Admin-es-print-btn {
-    background: #4EA24E;
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.95em;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-    transition: background 0.2s, transform 0.15s;
-    cursor: pointer;
-    position: relative;
-    white-space: nowrap;
-  }
-
-  .Admin-es-print-btn:hover {
-    background: #469146;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-  }
-
-  /* Table Container */
-  .Admin-es-table-container {
-    overflow-x: auto;
-    max-height: auto;
-    width: 100%;
-    margin: 0;
-    position: relative;
-    -webkit-overflow-scrolling: touch;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-profile-table {
-    border-collapse: collapse;
-    margin-top: 0;
-    min-width: 100%;
-    table-layout: auto;
-    font-size: 1em;
-  }
-
-  .Admin-es-profile-table th {
-    background: #fff;
-    padding: 12px 8px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 0.9em;
-    color: #808080;
-    border-bottom: 2px solid #dee2e6;
-    font-family: 'Poppins', Arial, sans-serif;
-    white-space: nowrap;
-    min-width: 80px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .Admin-es-profile-table td {
-    padding: 12px 8px;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 0.9em;
-    color: #000;
-    font-family: 'Poppins', Arial, sans-serif;
-    text-align: center;
-    white-space: nowrap;
-    min-width: 80px;
-  }
-
-  .Admin-es-profile-table th:first-child,
-  .Admin-es-profile-table td:first-child {
-    padding-left: 12px;
-    text-align: center;
-    min-width: 50px;
-  }
-
-  .Admin-es-profile-table th:last-child,
-  .Admin-es-profile-table td:last-child {
-    padding-right: 12px;
-    text-align: center;
-  }
-
-  .Admin-es-status-badge-one {
-    background: #D0F2EA;
-    color: #16C098;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: 600;
-    display: inline-block;
-  }
-
-  .Admin-es-status-badge-two {
-    background: #D9D9D9;
-    color: #787878;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: 600;
-    display: inline-block;
-  }
-
-  .Admin-es-view-icon {
-    width: 22px;
-    height: 22px;
-    cursor: pointer;
-  }
-}
-
-/* Mobile Responsive - Small Devices */
-@media (max-width: 480px) {
-  .Admin-es-dashboard-area {
-    padding: 10px;
-    margin-top: 50px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Summary Cards */
-  .Admin-es-summary-cards {
-    gap: 15px;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-summary-card {
-    padding: 15px 12px;
-    width: 100%;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-summary-card-icon {
-    width: 60px;
-    height: 40px;
-    margin: 15px auto 12px auto;
-  }
-
-  .Admin-es-summary-card-icon img {
-    width: 50px;
-    height: 50px;
-  }
-
-  .Admin-es-summary-card-title-1,
-  .Admin-es-summary-card-title-2 {
-    font-size: 1.2em;
-    margin-top: 10px;
-  }
-
-  .Admin-es-summary-card-desc-1,
-  .Admin-es-summary-card-desc-2 {
-    font-size: 0.8em;
-  }
-
-  /* Search Card */
-  .Admin-es-company-profile-search {
-    width: 100%;
-    padding: 35px 15px;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-tab {
-    padding: 6px 20px;
-    font-size: 0.9em;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-inputs {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-top: 30px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-input {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-company-profile-search .Admin-es-search-input input {
-    height: 40px;
-    padding: 8px 30px 8px 28px;
-    font-size: 0.9em;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-button-container {
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-search-btn-filter,
-  .Admin-es-clear-search-btn {
-    height: 40px;
-    font-size: 0.9em;
-    padding: 8px 20px;
-    flex: 1;
-    min-width: 100px;
-    box-sizing: border-box;
-  }
-
-  /* Drive and Application Cards */
-  .Admin-es-action-addcard,
-  .Admin-es-placed-students-card {
-    padding: 15px 12px;
-    width: 100%;
-    margin: 0;
-    box-sizing: border-box;
-  }
-  
-  .Admin-es-action-addcard {
-    margin-top: 32px;
-  }
-
-  .Admin-es-action-addcard .Admin-es-add-header,
-  .Admin-es-placed-students-card .Admin-es-summary-card-title {
-    font-size: 1.1em;
-  }
-
-  .Admin-es-action-addcard .Admin-es-add-description,
-  .Admin-es-placed-students-card .Admin-es-summary-card-desc {
-    font-size: 0.8em;
-  }
-
-  /* Table */
-  .Admin-es-bottom-card {
-    padding: 15px 12px;
-    width: 100%;
-    margin: 15px 0;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-profile-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .Admin-es-profile-title {
-    font-size: 1em;
-  }
-
-  .Admin-es-print-btn {
-    padding: 8px 20px;
-    font-size: 0.9em;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .Admin-es-profile-table {
-    font-size: 0.95em;
-  }
-
-  .Admin-es-profile-table th {
-    padding: 10px 6px;
-    font-size: 0.85em;
-    min-width: 70px;
-  }
-
-  .Admin-es-profile-table td {
-    padding: 10px 6px;
-    font-size: 0.85em;
-    min-width: 70px;
-  }
-
-  .Admin-es-profile-table th:first-child,
-  .Admin-es-profile-table td:first-child {
-    padding-left: 10px;
-    min-width: 45px;
-  }
-
-  .Admin-es-profile-table th:last-child,
-  .Admin-es-profile-table td:last-child {
-    padding-right: 10px;
-  }
-
-  .Admin-es-status-badge-one,
-  .Admin-es-status-badge-two {
-    padding: 4px 8px;
-    font-size: 0.75em;
-  }
-
-  .Admin-es-view-icon {
-    width: 20px;
-    height: 20px;
-  }
-}
-
 /* Success Popup Styles */
 .Admin-es-success-overlay {
   position: fixed;
@@ -1613,92 +915,240 @@ body {
   box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
 }
 
-/* ---------------------------------------------------------------------- */
-/* Responsive Layout Adjustments                                          */
-/* ---------------------------------------------------------------------- */
+/* ============================================================================
+   RESPONSIVE MEDIA QUERIES (Aligned with AdminEsstudapp)
+   ============================================================================ */
 
-/* Tablet and below: remove fixed left margin, allow vertical scrolling */
+/* Tablet & Large Mobile Landscape (max-width: 1200px) */
 @media (max-width: 1200px) {
-    .Admin-es-layout {
-        flex-direction: column;
-    }
+  .Admin-es-main-content {
+    margin: 65px 15px 16px 15px;
+    height: calc(100vh - 65px);
+  }
 
-    .Admin-es-main-content {
-        margin: 65px 15px 16px 15px;
-    }
+  .Admin-es-summary-cards {
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 15px !important;
+    height: 245px !important;
+    margin-left: 0;
+  }
 
-    .Admin-es-summary-cards {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        height: auto;
-        margin-left: 0;
-    }
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card {
+    width: 240px !important;
+    max-width: 100%;
+    height: 100% !important;
+  }
 
-    .Admin-es-action-addcard,
-    .Admin-es-filtered-students-card {
-        width: 438px;
-        max-width: 100%;
-        height: 236.5px;
-    }
+  .Admin-es-search-filters {
+    width: auto !important;
+    flex: 1 !important;
+    max-width: 600px !important;
+    height: 100% !important;
+    border-radius: 18px;
+    padding: 40px 20px 20px 20px !important;
+  }
 
-    .Admin-es-search-filters {
-        width: 438px;
-        max-width: 100%;
-        height: auto;
-        border-radius: 18px;
-    }
-
-    .Admin-es-search-inputs {
-        grid-template-columns: 1fr;
-    }
+  .Admin-es-search-inputs {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
-/* Mobile: stack cards, constrain table height, enable sidebar overlay */
-@media (max-width: 768px) {
-    .Admin-es-main-content {
-        margin: 80px 15px 16px 15px;
-    }
+/* Mobile responsive layout (max-width: 900px) */
+@media (max-width: 900px) {
+  .Admin-es-layout {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    background-color: #f6f8fb;
+  }
 
-    .Admin-es-summary-cards {
-        flex-direction: column;
-        gap: 16px;
-        height: auto;
-        margin-left: 0;
-        align-items: center;
-    }
+  .Admin-es-main-content {
+    margin-top: 65px !important;
+    width: 100% !important;
+    padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: calc(100vh - 65px) !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 15px !important;
+    min-height: calc(100vh - 65px) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 
-    .Admin-es-summary-card,
-    .Admin-es-action-addcard,
-    .Admin-es-filtered-students-card {
-        width: 438px !important;
-        max-width: 100% !important;
-        flex: 0 0 auto !important;
-        height: 236.5px !important;
-    }
+  .Admin-es-summary-cards {
+    margin-left: 0 !important;
+    margin-top: 0px !important;
+    gap: 15px !important;
+    flex-direction: column !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    height: auto !important;
+    align-items: stretch !important;
+  }
 
-    .Admin-es-search-filters {
-        width: 438px !important;
-        max-width: 100% !important;
-        height: auto !important;
-        border-radius: 25px;
-    }
+  .Admin-es-summary-card,
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card {
+    width: 100% !important;
+    height: auto !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+  }
 
-    .Admin-es-search-inputs {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
+  .Admin-es-summary-card-icon {
+    width: 70px !important;
+    height: 50px !important;
+    margin: 15px auto 10px auto !important;
+  }
 
-    .Admin-es-bottom-card {
-        padding: 12px 12px 16px 12px;
-    }
+  .Admin-es-summary-card-icon img,
+  .Admin-es-add-icon {
+    width: 60px !important;
+    height: 60px !important;
+  }
 
-    .Admin-es-table-container {
-        max-height: 380px;
-        overflow-y: auto;
-    }
+  .Admin-es-summary-card-title-1,
+  .Admin-es-summary-card-title-2,
+  .Admin-es-add-header,
+  .Admin-es-filtered-title {
+    font-size: 1.4rem !important;
+    margin-top: 15px !important;
+    margin-bottom: 8px !important;
+  }
 
-    .Admin-es-overlay {
-        display: block;
-    }
+  .Admin-es-filtered-count {
+    font-size: 3.5rem !important;
+  }
+
+  .Admin-es-search-filters {
+    border-radius: 25px !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 50px 20px 30px 20px !important;
+    min-height: auto !important;
+  }
+
+  .Admin-es-search-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-top: 25px !important;
+  }
+
+  /* Static Label Styling on Mobile */
+  .Admin-es-input-group {
+    padding-top: 0 !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .Admin-es-input-label {
+    position: static !important;
+    display: block !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #4b4b4b !important;
+    margin-bottom: 0 !important;
+    height: auto !important;
+    line-height: normal !important;
+    margin-left: 5px !important;
+    text-align: left !important;
+  }
+
+  .Admin-es-bottom-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 15px 15px 35px 15px !important;
+    flex: none !important;
+    width: 100% !important;
+    margin-bottom: 40px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Table Footer Buttons Stacking */
+  .Admin-es-table-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 1.5rem 0 0 0 !important;
+    position: static !important;
+    background-color: transparent !important;
+  }
+
+  .Admin-es-clear-btn,
+  .Admin-es-select-btn {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 1rem !important;
+    font-size: 1.1rem !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    border-radius: 8px !important;
+  }
+
+  /* Table container scrollable on mobile, matching AdminCompanyDrive */
+  .Admin-es-table-container {
+    height: 290px !important;
+    max-height: 290px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    position: relative !important;
+    bottom: auto !important;
+    flex-grow: 1 !important;
+    padding-bottom: 25px !important; /* Leave space for horizontal scrollbar on mobile */
+  }
+}
+
+/* Specific alignments for max-width: 600px matching Application page */
+@media (max-width: 600px) {
+  .Admin-es-bottom-card {
+    padding: 15px 15px 35px 15px !important;
+    max-width: calc(100% - 20px) !important;
+    margin: 0 auto 1.25rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-summary-card,
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card,
+  .Admin-es-search-filters {
+    max-width: calc(100% - 20px) !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Small devices tweaks (max-width: 480px) */
+@media (max-width: 480px) {
+  .Admin-es-main-content {
+    padding: 15px 10px calc(env(safe-area-inset-bottom, 20px) + 10px) 10px !important;
+  }
+
+  .Admin-es-profile-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .Admin-es-print-btn {
+    width: 100% !important;
+  }
 }
