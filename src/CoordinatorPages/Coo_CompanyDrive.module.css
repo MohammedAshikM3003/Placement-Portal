@@ -17,37 +17,31 @@
 
 /* Add vertical scroll for full page in mobile version */
 .co-cd-main-content::-webkit-scrollbar,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
-body::-webkit-scrollbar {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar {
   width: 10px;
 }
 .co-cd-main-content::-webkit-scrollbar-track,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track {
   background: #f0f2f5;
 }
 .co-cd-main-content::-webkit-scrollbar-thumb,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb {
   background-color: #d23b42;
   border-radius: 20px;
   border: 3px solid #f0f2f5;
 }
 .co-cd-main-content::-webkit-scrollbar-thumb:hover,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: #b32d34;
 }
 
 .co-cd-main-content::-webkit-scrollbar:horizontal,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal,
-body::-webkit-scrollbar:horizontal {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal {
   height: 12px; /* height of horizontal scrollbar */
 }
 
 .co-cd-main-content::-webkit-scrollbar-thumb:horizontal,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal,
-body::-webkit-scrollbar-thumb:horizontal {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal {
   background-color: #c1bfc1; /* grey color */
   border-radius: 20px;
   border: 3px solid #f0f2f5;
@@ -56,8 +50,7 @@ body::-webkit-scrollbar-thumb:horizontal {
   margin-top:0px;
 }
 .co-cd-main-content::-webkit-scrollbar-thumb:horizontal:hover,
-.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover,
-body::-webkit-scrollbar-thumb:horizontal:hover {
+.co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
   background-color: #c1bfc1; /* darker grey on hover */
 }
 
@@ -76,24 +69,10 @@ body::-webkit-scrollbar-thumb:horizontal:hover {
   height: auto; 
 }
 
- .co-cd-students-table tbody::-webkit-scrollbar,
-  body::-webkit-scrollbar {
-    width: 15px;
-  }
-.co-cd-students-table tbody::-webkit-scrollbar-track,
-  body::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-  .co-cd-students-table tbody::-webkit-scrollbar-thumb,
-  body::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-  .co-cd-students-table tbody::-webkit-scrollbar-thumb:hover,
-  body::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
+ .co-cd-students-table t
+.co-cd-students-table t
+  .co-cd-students-table t
+  .co-cd-students-table t
 /* Sidebar */
 .co-cd-sidebar {
   width: 270px;
@@ -1173,46 +1152,28 @@ margin-top:35px;
   }
   
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 12px;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-  background: #f0f2f5;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
-  background-color: #d23b42;
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-  background-color: #b32d34;
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal,
-body::-webkit-scrollbar:horizontal {
-  height: 12px; 
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal,
-body::-webkit-scrollbar-thumb:horizontal {
-  background-color: #c1bfc1; 
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover,
-body::-webkit-scrollbar-thumb:horizontal:hover {
-  background-color: #c1bfc1;
-}
+
 }
 
 .co-cd-drive-table-container__table-wrapper th {
@@ -1284,46 +1245,28 @@ padding: 8px 8px;
 }
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 12px;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-  background: #f0f2f5;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
-  background-color: #d23b42;
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
+
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-  background-color: #b32d34;
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal,
-body::-webkit-scrollbar:horizontal {
-  height: 12px; /* height of horizontal scrollbar */
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal,
-body::-webkit-scrollbar-thumb:horizontal {
-  background-color: #c1bfc1; /* grey color */
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
+
 
 
 .co-cd-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover,
-body::-webkit-scrollbar-thumb:horizontal:hover {
-  background-color: #c1bfc1; /* darker grey on hover */
-}
+
 
 /* ================================================================
    LOADING SPINNER STYLES (Red Theme)

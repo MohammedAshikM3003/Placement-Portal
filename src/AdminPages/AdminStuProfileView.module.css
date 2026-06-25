@@ -1083,9 +1083,9 @@
 .formGrid input:disabled,
 .formGrid select:disabled,
 .datepickerInput:disabled,
-button:disabled,
-input:disabled,
-select:disabled {
+.container button:disabled,
+.container input:disabled,
+.container select:disabled {
     cursor: not-allowed !important;
 }
 
@@ -2290,7 +2290,7 @@ select:disabled {
 
 
 /* ============================================================ */
-/* === ACHIEVEMENT POPUP (local copy — was cross-page import) === */
+/* === ACHIEVEMENT POPUP (local copy ï¿½ was cross-page import) === */
 /* ============================================================ */
 
 @keyframes Achievement-popup-enter {

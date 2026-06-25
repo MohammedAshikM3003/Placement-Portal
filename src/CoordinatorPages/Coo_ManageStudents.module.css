@@ -5,17 +5,7 @@
     background-color: #f4f6fb;
 }
 
-:global(body.co-ms-hide-scroll) {
-   overflow-y: auto;
-    /* overflow-x: hidden; */
-    scrollbar-width: none;
-    height: 100vh;
-    width: 100%;
-}
 
-:global(body.co-ms-hide-scroll::-webkit-scrollbar) {
-    display: none;
-}
 
 .co-ms-main-content {
     flex-grow: 1;

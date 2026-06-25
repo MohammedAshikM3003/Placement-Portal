@@ -2090,9 +2090,9 @@
 .Admin-main-profile-form-select:disabled,
 .Admin-main-profile-form-input-login:disabled,
 .Admin-main-profile-date-wrapper input:disabled,
-button:disabled,
-input:disabled,
-select:disabled {
+.Admin-main-profile-layout button:disabled,
+.Admin-main-profile-layout input:disabled,
+.Admin-main-profile-layout select:disabled {
     cursor: not-allowed !important;
 }
 

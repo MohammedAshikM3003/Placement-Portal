@@ -927,9 +927,9 @@
 .formGrid input:disabled,
 .formGrid select:disabled,
 .datepickerInput:disabled,
-button:disabled,
-input:disabled,
-select:disabled {
+.container button:disabled,
+.container input:disabled,
+.container select:disabled {
     cursor: not-allowed !important;
 }
 

@@ -1080,9 +1080,9 @@
 /* Ensure disabled elements show not-allowed cursor */
 .co-profile-form-input:disabled,
 .co-profile-date-input:disabled,
-select:disabled,
-button:disabled,
-input:disabled {
+.co-profile-layout select:disabled,
+.co-profile-layout button:disabled,
+.co-profile-layout input:disabled {
     cursor: not-allowed !important;
 }
 
@@ -1655,27 +1655,13 @@ input:disabled {
 /* Red scrollbar on mobile */
 @media (max-width: 1200px) {
   .co-profile-content::-webkit-scrollbar,
-  body::-webkit-scrollbar,
-  html::-webkit-scrollbar {
-    width: 10px;
-  }
+  
   .co-profile-content::-webkit-scrollbar-track,
-  body::-webkit-scrollbar-track,
-  html::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
+  
   .co-profile-content::-webkit-scrollbar-thumb,
-  body::-webkit-scrollbar-thumb,
-  html::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
+  
   .co-profile-content::-webkit-scrollbar-thumb:hover,
-  body::-webkit-scrollbar-thumb:hover,
-  html::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
+  
 
 }
 /* --- Success Popup Styles --- */
@@ -1813,9 +1799,9 @@ input:disabled {
 /* Ensure disabled elements show not-allowed cursor */
 .co-profile-form-input:disabled,
 .co-profile-date-input:disabled,
-select:disabled,
-button:disabled,
-input:disabled {
+.co-profile-layout select:disabled,
+.co-profile-layout button:disabled,
+.co-profile-layout input:disabled {
     cursor: not-allowed !important;
 }
 
