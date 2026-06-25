@@ -7,10 +7,10 @@
 /* ─── Container ──────────────────────────────────────────────── */
 .wrapper {
   width: 100%;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg, 12px);
-  box-shadow: var(--shadow-card, 0 2px 8px rgba(0,0,0,0.08));
-  overflow: hidden;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
   font-family: var(--font-base);
 }
 
@@ -107,18 +107,16 @@
 
 /* ─── Head ────────────────────────────────────────────────────── */
 .thead {
-  background: var(--color-bg, #f8f8f8);
+  background: #ffffff;
 }
 
 .th {
-  padding: var(--space-md) var(--space-lg);
-  text-align: left;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-bottom: 2px solid var(--color-border-light);
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-subtle, #999999);
+  border-bottom: 2px solid #e0e0e0;
   white-space: nowrap;
   user-select: none;
 }
@@ -135,7 +133,9 @@
 .thInner {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
+  width: 100%;
 }
 
 .sortIcon {
@@ -165,8 +165,8 @@
 .tbody {}
 
 .tr {
-  border-bottom: 1px solid var(--color-border-light);
-  transition: background 0.12s;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
 }
 
 .tr:last-child {
@@ -174,7 +174,7 @@
 }
 
 .tr:hover {
-  background: var(--color-bg);
+  background: #fafafa;
 }
 
 .trClickable {
@@ -182,11 +182,11 @@
 }
 
 .trSelected {
-  background: var(--color-info-bg, rgba(25, 122, 255, 0.07));
+  background: var(--primary-light, rgba(78, 162, 78, 0.12)) !important;
 }
 
 .trSelected:hover {
-  background: var(--color-info-bg, rgba(25, 122, 255, 0.10));
+  background: var(--primary-light, rgba(78, 162, 78, 0.15)) !important;
 }
 
 .trBlocked {
@@ -198,11 +198,14 @@
 }
 
 .td {
-  padding: var(--space-md) var(--space-lg);
-  font-size: var(--text-sm);
-  color: var(--color-text);
+  padding: 10px 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333333;
+  text-align: center;
   vertical-align: middle;
   white-space: nowrap;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 .td.center { text-align: center; }
@@ -211,8 +214,8 @@
 
 /* ─── Checkbox cell ────────────────────────────────────────────── */
 .checkboxCell {
-  padding: var(--space-md) var(--space-lg);
-  width: 44px;
+  padding: 10px 10px;
+  width: 50px;
   text-align: center;
   vertical-align: middle;
 }
@@ -226,9 +229,9 @@
 
 /* ─── Serial number cell ───────────────────────────────────────── */
 .snoCell {
-  width: 56px;
-  color: var(--color-text-subtle);
-  font-size: var(--text-xs);
+  width: 50px;
+  text-align: center;
+  font-size: 0.9rem;
 }
 
 /* ─── Empty / Loading states ───────────────────────────────────── */
