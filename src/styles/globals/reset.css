@@ -18,6 +18,20 @@ body, html {
   padding: 0;
 }
 
+/* ── Global typography baseline ─────────────────────────────────
+   This is the single source of truth for the base font.
+   All elements inherit from here — inputs, buttons, tables, etc.
+   Token defined in tokens/typography.css.
+   ──────────────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-base);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+
 /* Remove list styling when lists are used as nav/menu */
 ul, ol {
   list-style: none;
