@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Admin_TrainerDetailsPopup.module.css';
 
+const RequiredStar = () => <span style={{ color: '#e84343', marginLeft: '4px' }}>*</span>;
+
 const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null, submitLabel = 'Save', availableCourses = [] }) => {
   const [trainerName, setTrainerName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -32,9 +34,26 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
 
   const isFormValid =
     Boolean(trainerName.trim()) &&
-    Boolean(mobile.trim()) &&
+    mobile.length === 10 &&
     Boolean(email.trim()) &&
-    Boolean(gender);
+    Boolean(gender) &&
+    assignedCourses.length > 0 &&
+    assignedCourses.every((course) => Boolean((course || '').toString().trim()));
+
+  const handleMobileChange = (e) => {
+    let value = e.target.value;
+    // Remove leading zeros
+    value = value.replace(/^0+/, '');
+    // Only allow digits
+    value = value.replace(/\D/g, '');
+    // Must start with 6, 7, 8, or 9
+    if (value.length > 0 && !/^[6-9]/.test(value)) {
+      value = '';
+    }
+    // Limit to 10 digits
+    value = value.substring(0, 10);
+    setMobile(value);
+  };
 
   const handleDiscard = () => {
     setTrainerName('');
@@ -95,7 +114,7 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
         <div className={styles['popup-content']}>
           <div className={styles['form-grid']}>
             <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Trainer Name</label>
+              <label className={styles['form-label']}>Trainer Name <RequiredStar /></label>
               <input
                 type="text"
                 placeholder="Enter trainer name"
@@ -106,17 +125,20 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
             </div>
 
             <div className={styles['form-group']}>
-            <label className={styles['form-label']}>Mobile Number</label>
-              <input
-                type="tel"
-                placeholder="Enter mobile number"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                className={styles['form-input']}
-              />
+              <label className={styles['form-label']}>Mobile Number <RequiredStar /></label>
+              <div className={styles['mobileInputWrapper']}>
+                <div className={styles['countryCode']}>+91</div>
+                <input
+                  type="tel"
+                  placeholder="Enter mobile number"
+                  value={mobile}
+                  onChange={handleMobileChange}
+                  className={styles['mobileNumberInput']}
+                />
+              </div>
             </div>
             <div className={styles['form-group']}>
-            <label className={styles['form-label']}>Email Address</label>
+            <label className={styles['form-label']}>Email Address <RequiredStar /></label>
               <input
                 type="email"
                 placeholder="Enter email address"
@@ -126,7 +148,7 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
               />
             </div>
             <div className={styles['form-group']}>
-            <label className={styles['form-label']}>Gender</label>
+            <label className={styles['form-label']}>Gender <RequiredStar /></label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
@@ -140,7 +162,7 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
             </div>
 
             <div className={`${styles['form-group']} ${styles['full-width']}`}>
-              <label className={styles['form-label']}>Assigned Course(s)</label>
+              <label className={styles['form-label']}>Assigned Course(s) <RequiredStar /></label>
               <div className={styles['course-list']}>
                 {assignedCourses.map((courseValue, index) => (
                   <div className={styles['course-row']} key={`trainer-course-${index}`}>

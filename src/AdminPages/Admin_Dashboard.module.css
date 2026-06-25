@@ -123,7 +123,9 @@
 
 .ad-db-card-icon {
   margin-bottom: 10px;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .ad-db-card-icon img {

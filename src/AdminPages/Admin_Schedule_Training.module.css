@@ -1,21 +1,20 @@
 .page {
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
   background: #f0f2f5;
-  overflow: hidden;
 }
 
 .content {
-  margin-left: 290px;
-  margin-top: 50px;
-  height: calc(100vh - 64px);
+  margin-left: 280px;
+  margin-top: 65px;
+  height: calc(100vh - 65px);
   overflow: auto;
-  padding: 32px 24px;
+  padding: 10px 10px 10px 20px;
   box-sizing: border-box;
   position: relative;
-  top: 10px;
+  top: 0;
 }
 
 /* Custom Scrollbar - Green Theme */
@@ -51,8 +50,9 @@
 
 .cardTitle {
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2d3d;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0;
   margin-bottom: 1.5rem;
   position: relative;
   padding-bottom: 0.5rem;
@@ -881,7 +881,7 @@ select.control {
 @media (max-width: 1024px) {
   .content {
     margin-left: 0;
-    padding: 24px 16px;
+    padding: 10px 10px 10px 20px;
   }
 
   .card {
@@ -941,19 +941,62 @@ select.control {
   }
 }
 
-/* mobile phones */
-@media (max-width: 768px) {
+/* tablet and mobile responsiveness */
+@media (max-width: 900px) {
+  .page {
+    position: relative;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .content {
-    padding: 16px 12px;
+    margin-left: 0;
+    margin-top: 65px;
+    padding: 16px;
+    height: calc(100dvh - 65px);
+    overflow-y: auto;
+    top: 0;
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .formGroup {
+    max-width: 100%;
+    width: 100%;
   }
 
   .card {
-    padding: 1rem;
-    border-radius: 12px;
+    width: 100%;
+    max-width: none;
+    margin-bottom: 20px;
+    padding: 20px;
   }
 
-  .cardTitle {
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .discardBtn,
+  .saveBtn {
+    width: 100%;
+    padding: 1rem;
     font-size: 1.1rem;
+  }
+
+  .addBtn,
+  .batchBtn,
+  .phaseInputWrapper,
+  .control,
+  .calendarField {
+    width: 100%;
+    max-width: 100%;
   }
 
   .courseItem {
@@ -963,16 +1006,6 @@ select.control {
 
   .batchGrid {
     grid-template-columns: 1fr;
-  }
-
-  .actions {
-    gap: 10px;
-  }
-
-  .discardBtn,
-  .saveBtn {
-    width: 100%;
-    padding: 0.9rem;
   }
 }
 

@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import { DataTable } from '../components/table';
 
 // --- Existing Icons (Updated to use 'styles') ---
 const GradCapIcon = () => (
@@ -1453,83 +1454,53 @@ function AdminstudDB() {
                             </div>
                         </div>
 
-                        <div className={styles['Admin-DB-table-container']}>
-                            <table className={styles['Admin-DB-students-table']}>
-                                <thead>
-                                    <tr className={styles['Admin-DB-table-head-row']}>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-select']}`}>Select</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-sno']}`}>S.No</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-register-number']}`}>Register Number</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-name']}`}>Name</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-department']}`}>Branch</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-year-sec']}`}>Year-Sec</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-sem']}`}>Sem</th>
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-batch']}`}>Batch</th>
-                                        {aiColumns.map((columnKey) => (
-                                            <th key={columnKey} className={`${styles['Admin-DB-th']} ${styles['Admin-DB-ai-column']}`}>
-                                                {AI_EXTRA_COLUMNS[columnKey].label}
-                                            </th>
-                                        ))}
-                                        <th className={`${styles['Admin-DB-th']} ${styles['Admin-DB-profile']}`}>Profile</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {isTableLoading ? (
-                                        <tr className={styles['Admin-DB-loading-row']}>
-                                            <td colSpan={tableColumnCount} className={styles['Admin-DB-loading-cell']}>
-                                                <div className={styles['Admin-DB-loading-wrapper']}>
-                                                    <div className={styles['Admin-DB-spinner']}></div>
-                                                    <span className={styles['Admin-DB-loading-text']}>
-                                                        {aiFilterLoading ? 'Searching students…' : 'Loading students…'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : visibleStudents.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", padding: "20px" }}>
-                                                {viewBlocklist ? "No blocked students available" : "No data available"}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        visibleStudents.map((student, index) => (
-                                            <tr
-                                                key={student.id}
-                                                className={[
-                                                    styles['Admin-DB-table-row'],
-                                                    selectedStudentIds.has(student.id) && styles['Admin-DB-selected-row'],
-                                                    student.blocked && styles['Admin-DB-blocked-row']
-                                                ].filter(Boolean).join(' ')}
-                                                onClick={() => handleStudentSelect(student.id)}
-                                            >
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-select']}`} onClick={(e) => e.stopPropagation()}>
-                                                    <input type="checkbox" className={styles['Admin-DB-select-checkbox']} checked={selectedStudentIds.has(student.id)} onChange={() => handleStudentSelect(student.id)} />
-                                                </td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-sno']}`}>{pageStartSerial + index}</td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-register-number']}`}>{student.regNo}</td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-name']}`}>{student.name}</td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-department']}`}>{student.department}</td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-year-sec']}`}>
-                                                    {student.currentYear && student.section
-                                                        ? `${student.currentYear}-${student.section}`
-                                                        : student.currentYear || student.section || '--'}
-                                                </td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-sem']}`}>{student.currentSemester || '--'}</td>
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-batch']}`}>{student.batch}</td>
-                                                {aiColumns.map((columnKey) => (
-                                                    <td key={`${student.id}-${columnKey}`} className={`${styles['Admin-DB-td']} ${styles['Admin-DB-ai-column']}`}>
-                                                        {AI_EXTRA_COLUMNS[columnKey].render
-                                                            ? AI_EXTRA_COLUMNS[columnKey].render(student)
-                                                            : AI_EXTRA_COLUMNS[columnKey].value(student)}
-                                                    </td>
-                                                ))}
-                                                <td className={`${styles['Admin-DB-td']} ${styles['Admin-DB-profile']}`} onClick={(e) => { e.stopPropagation(); handleViewProfile(student.id); }}><EyeIcon /></td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                        <DataTable
+                            columns={[
+                                { key: 'regNo',           header: 'Register Number' },
+                                { key: 'name',            header: 'Name' },
+                                { key: 'department',      header: 'Branch' },
+                                { key: 'yearSec',         header: 'Year-Sec',
+                                    render: (row) => row.currentYear && row.section
+                                        ? `${row.currentYear}-${row.section}`
+                                        : row.currentYear || row.section || '--' },
+                                { key: 'currentSemester', header: 'Sem',
+                                    render: (row) => row.currentSemester || '--' },
+                                { key: 'batch',           header: 'Batch' },
+                                ...aiColumns.map(columnKey => ({
+                                    key: columnKey,
+                                    header: AI_EXTRA_COLUMNS[columnKey].label,
+                                    render: AI_EXTRA_COLUMNS[columnKey].render
+                                        ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
+                                        : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
+                                })),
+                                { key: 'profile', header: 'Profile', align: 'center',
+                                    stopPropagation: true,
+                                    render: (row) => (
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); handleViewProfile(row.id); }}
+                                            style={{ cursor: 'pointer', display: 'inline-flex' }}
+                                        >
+                                            <EyeIcon />
+                                        </span>
+                                    ) },
+                            ]}
+                            data={visibleStudents}
+                            rowKey="id"
+                            isLoading={isTableLoading}
+                            loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                            emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
+                            selectable
+                            selectedIds={selectedStudentIds}
+                            onSelectionChange={setSelectedStudentIds}
+                            onRowClick={(row) => handleStudentSelect(row.id)}
+                            getRowVariant={(row) => {
+                                if (selectedStudentIds.has(row.id)) return 'selected';
+                                if (row.blocked) return 'blocked';
+                                return null;
+                            }}
+                            showSerial
+                            serialOffset={pageStartSerial - 1}
+                        />
                     </div>
 
                     {/* --- POPUPS --- */}

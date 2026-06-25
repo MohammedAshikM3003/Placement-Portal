@@ -273,7 +273,11 @@ const AdminScheduleTraining = ({ onLogout }) => {
           setStartDate(firstPhase.startDate || '');
           setEndDate(firstPhase.endDate || '');
           setDuration(firstPhase.duration || '');
-          setSelectedCourses(Array.isArray(firstPhase.applicableCourses) ? firstPhase.applicableCourses : []);
+          const loadedCompany = existingSchedule.companyName || company || '';
+          const loadedCourses = Array.isArray(firstPhase.applicableCourses)
+            ? firstPhase.applicableCourses.map((cName) => `${loadedCompany}__${cName}`)
+            : [];
+          setSelectedCourses(loadedCourses);
 
           const mappedCourseTrainers = Array.isArray(firstPhase.courseTrainers)
             ? firstPhase.courseTrainers.reduce((acc, row) => {
@@ -282,7 +286,8 @@ const AdminScheduleTraining = ({ onLogout }) => {
                 const trainerNames = Array.isArray(row?.trainers)
                   ? row.trainers.map((name) => (name || '').toString().trim()).filter(Boolean)
                   : [];
-                acc[courseName] = trainerNames;
+                const courseKey = `${loadedCompany}__${courseName}`;
+                acc[courseKey] = trainerNames;
                 return acc;
               }, {})
             : {};
@@ -330,15 +335,15 @@ const AdminScheduleTraining = ({ onLogout }) => {
     const courseKey = `${companyItem.company}__${courseName}`;
     const coursesList = selectedCourses;
 
-    if (coursesList.includes(courseName)) {
+    if (coursesList.includes(courseKey)) {
       // Remove course
-      setSelectedCourses(coursesList.filter((course) => course !== courseName));
+      setSelectedCourses(coursesList.filter((course) => course !== courseKey));
       setSelectedCourseTrainers((prev) => {
         const next = { ...prev };
-        delete next[courseName];
+        delete next[courseKey];
         return next;
       });
-      if (activeCourseForTrainers === courseName) {
+      if (activeCourseForTrainers === courseKey) {
         setShowTrainerPopup(false);
         setActiveCourseForTrainers('');
         setPendingTrainerSelection([]);
@@ -361,10 +366,10 @@ const AdminScheduleTraining = ({ onLogout }) => {
       : [];
 
     setCompanyTrainers(trainersList);
-    setSelectedCourses([...coursesList, courseName]);
-    setActiveCourseForTrainers(courseName);
+    setSelectedCourses([...coursesList, courseKey]);
+    setActiveCourseForTrainers(courseKey);
     setPendingTrainerSelection(
-      Array.isArray(selectedCourseTrainers[courseName]) ? selectedCourseTrainers[courseName] : []
+      Array.isArray(selectedCourseTrainers[courseKey]) ? selectedCourseTrainers[courseKey] : []
     );
     setShowTrainerPopup(true);
   };
@@ -398,7 +403,9 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const trainersForActiveCourse = useMemo(() => {
     if (!activeCourseForTrainers) return [];
 
-    const activeCourseToken = normalizeTextToken(activeCourseForTrainers);
+    const parts = activeCourseForTrainers.split('__');
+    const bareCourseName = parts[1] || activeCourseForTrainers;
+    const activeCourseToken = normalizeTextToken(bareCourseName);
 
     return companyTrainers
       .filter((trainer) => {
@@ -479,6 +486,20 @@ const AdminScheduleTraining = ({ onLogout }) => {
   };
 
   const handleRemoveCompany = (id) => {
+    const companyItem = selectedCompanies.find((item) => item.id === id);
+    if (companyItem && companyItem.company) {
+      const prefix = `${companyItem.company}__`;
+      setSelectedCourses((prev) => prev.filter((cKey) => !cKey.startsWith(prefix)));
+      setSelectedCourseTrainers((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((key) => {
+          if (key.startsWith(prefix)) {
+            delete next[key];
+          }
+        });
+        return next;
+      });
+    }
     setSelectedCompanies(selectedCompanies.filter((item) => item.id !== id));
   };
 
@@ -500,12 +521,30 @@ const AdminScheduleTraining = ({ onLogout }) => {
   };
 
   const handleCompanySelect = (id, companyName) => {
+    const oldCompanyItem = selectedCompanies.find((item) => item.id === id);
+    const oldCompanyName = oldCompanyItem ? oldCompanyItem.company : '';
+
     const trainingInfo = trainingRecords.find(
       (record) => (record?.companyName || '').toString().trim().toLowerCase() === companyName.trim().toLowerCase()
     );
 
     const hr = trainingInfo?.companyHR || trainingInfo?.hrName || '';
     const location = trainingInfo?.location || trainingInfo?.companyLocation || trainingInfo?.companyInfo || '';
+
+    // Clear old company courses if changing company
+    if (oldCompanyName && oldCompanyName !== companyName) {
+      const prefix = `${oldCompanyName}__`;
+      setSelectedCourses((prev) => prev.filter((cKey) => !cKey.startsWith(prefix)));
+      setSelectedCourseTrainers((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((key) => {
+          if (key.startsWith(prefix)) {
+            delete next[key];
+          }
+        });
+        return next;
+      });
+    }
 
     setSelectedCompanies(selectedCompanies.map((item) => {
       if (item.id === id) {
@@ -560,36 +599,46 @@ const AdminScheduleTraining = ({ onLogout }) => {
       return;
     }
 
-    // In edit mode, save the current form data as a single phase
-    const phasesToSave = [{
-      phaseNumber: normalizedPhaseNumber,
-      trainingName: trainingName.trim(),
-      applicableYear: applicableYear,
-      startDate: startDate,
-      endDate: endDate,
-      duration: duration,
-      applicableCourses: selectedCourses,
-      courseTrainers: selectedCourses
-        .map((courseName) => ({
-          courseName,
-          trainers: Array.isArray(selectedCourseTrainers[courseName])
-            ? selectedCourseTrainers[courseName]
-            : []
-        }))
-        .filter((row) => row.trainers.length > 0)
-    }];
-
     // Save each company as a separate schedule entry
-    const payloads = selectedCompanies.map((companyItem) => ({
-      ...(isEditMode && currentScheduleId ? { scheduleId: currentScheduleId } : {}),
-      companyName: companyItem.company,
-      companyHR: companyItem.companyHR,
-      location: companyItem.companyLocation,
-      startDate: startDate,
-      endDate: endDate,
-      phases: phasesToSave,
-      batches: scheduledBatches
-    }));
+    const payloads = selectedCompanies.map((companyItem) => {
+      const companyPrefix = `${companyItem.company}__`;
+      // Filter selected courses for this company and strip the prefix
+      const companySelectedCourses = selectedCourses
+        .filter((cKey) => cKey.startsWith(companyPrefix))
+        .map((cKey) => cKey.substring(companyPrefix.length));
+
+      const phasesToSave = [{
+        phaseNumber: normalizedPhaseNumber,
+        trainingName: trainingName.trim(),
+        applicableYear: applicableYear,
+        startDate: startDate,
+        endDate: endDate,
+        duration: duration,
+        applicableCourses: companySelectedCourses,
+        courseTrainers: companySelectedCourses
+          .map((courseName) => {
+            const courseKey = `${companyItem.company}__${courseName}`;
+            return {
+              courseName,
+              trainers: Array.isArray(selectedCourseTrainers[courseKey])
+                ? selectedCourseTrainers[courseKey]
+                : []
+            };
+          })
+          .filter((row) => row.trainers.length > 0)
+      }];
+
+      return {
+        ...(isEditMode && currentScheduleId ? { scheduleId: currentScheduleId } : {}),
+        companyName: companyItem.company,
+        companyHR: companyItem.companyHR,
+        location: companyItem.companyLocation,
+        startDate: startDate,
+        endDate: endDate,
+        phases: phasesToSave,
+        batches: scheduledBatches
+      };
+    });
 
     console.log('Final payloads being sent:', JSON.stringify(payloads, null, 2));
 
@@ -811,18 +860,21 @@ const AdminScheduleTraining = ({ onLogout }) => {
                           <p className={styles.noDataText}>No courses available for this company</p>
                         ) : (
                           <div className={styles.coursesGrid}>
-                            {coursesList.map((course, idx) => (
-                              <label key={idx} className={styles.courseItem}>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedCourses.includes(course)}
-                                  onChange={() => handleCourseToggleWithCompany(companyItem, course)}
-                                  className={styles.courseCheckbox}
-                                  disabled={isViewMode || !companyItem.company}
-                                />
-                                <span className={styles.courseName}>{course}</span>
-                              </label>
-                            ))}
+                            {coursesList.map((course, idx) => {
+                              const courseKey = `${companyItem.company}__${course}`;
+                              return (
+                                <label key={idx} className={styles.courseItem}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCourses.includes(courseKey)}
+                                    onChange={() => handleCourseToggleWithCompany(companyItem, course)}
+                                    className={styles.courseCheckbox}
+                                    disabled={isViewMode || !companyItem.company}
+                                  />
+                                  <span className={styles.courseName}>{course}</span>
+                                </label>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -851,7 +903,9 @@ const AdminScheduleTraining = ({ onLogout }) => {
             <div className={styles.trainerPopupContainer} onClick={(e) => e.stopPropagation()}>
               <div className={styles.trainerPopupHeader}>Trainers</div>
               <div className={styles.trainerPopupBody}>
-                <p className={styles.trainerPopupCourse}>Course: {activeCourseForTrainers}</p>
+                <p className={styles.trainerPopupCourse}>
+                  Course: {activeCourseForTrainers.includes('__') ? activeCourseForTrainers.split('__')[1] : activeCourseForTrainers}
+                </p>
                 {trainersForActiveCourse.length === 0 ? (
                   <p className={styles.noDataText}>No trainers mapped for this course</p>
                 ) : (

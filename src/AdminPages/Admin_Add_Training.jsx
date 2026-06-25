@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import styles from './Admin_Add_Training.module.css';
 import Adnavbar from '../components/Navbar/Adnavbar';
@@ -57,6 +57,101 @@ const Admin_Add_Training = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMode, setSuccessMode] = useState('create');
+
+  const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+  const [highlightedField, setHighlightedField] = useState(null);
+  const highlightClearTimerRef = useRef(null);
+  const fieldRefs = useRef({});
+
+  const registerFieldRef = useCallback((field) => (node) => {
+    fieldRefs.current[field] = node;
+  }, []);
+
+  const clearFieldHighlight = useCallback(() => {
+    if (highlightClearTimerRef.current) {
+      clearTimeout(highlightClearTimerRef.current);
+      highlightClearTimerRef.current = null;
+    }
+    setHighlightedField(null);
+  }, []);
+
+  const focusField = useCallback((field) => {
+    const target = fieldRefs.current[field];
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      try { target.focus({ preventScroll: true }); } catch { target.focus(); }
+    }, 100);
+
+    clearFieldHighlight();
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => { setHighlightedField(field); });
+    });
+
+    highlightClearTimerRef.current = window.setTimeout(() => {
+      setHighlightedField((cur) => (cur === field ? null : cur));
+    }, 3000);
+  }, [clearFieldHighlight]);
+
+  const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return (
+      window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches ||
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    );
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const hybridQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const primaryQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const updatePointerSupport = () => {
+      const isSupported = hybridQuery.matches || primaryQuery.matches;
+      setSupportsPointerTooltip(isSupported);
+      if (!isSupported) {
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      }
+    };
+    updatePointerSupport();
+    if (typeof hybridQuery.addEventListener === 'function') {
+      hybridQuery.addEventListener('change', updatePointerSupport);
+      primaryQuery.addEventListener('change', updatePointerSupport);
+      return () => {
+        hybridQuery.removeEventListener('change', updatePointerSupport);
+        primaryQuery.removeEventListener('change', updatePointerSupport);
+      };
+    }
+    return undefined;
+  }, []);
+
+  const handleTooltipMove = useCallback((event) => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+  }, [supportsPointerTooltip]);
+
+  const handleTooltipLeave = useCallback(() => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+  }, [supportsPointerTooltip]);
+
+  useEffect(() => () => {
+    if (highlightClearTimerRef.current) clearTimeout(highlightClearTimerRef.current);
+  }, []);
+
+  const missingFields = useMemo(() => {
+    const missing = [];
+    if (!companyName.trim()) {
+      missing.push({ field: 'companyName', label: 'Company Name' });
+    }
+    if (courses.length === 0) {
+      missing.push({ field: 'courses', label: 'Minimum one course' });
+    }
+    if (trainers.length === 0) {
+      missing.push({ field: 'trainers', label: 'Minimum one trainer' });
+    }
+    return missing;
+  }, [companyName, courses, trainers]);
 
   // track sidebar visibility so hamburger toggle works
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -194,6 +289,8 @@ const Admin_Add_Training = () => {
             <label htmlFor="companyName">Company Name <span className={styles['Admin-aat-required']}>*</span></label>
             <input
               id="companyName"
+              ref={registerFieldRef('companyName')}
+              className={highlightedField === 'companyName' ? styles.fieldHighlight : ''}
               type="text"
               placeholder="Enter company name"
               value={companyName}
@@ -228,7 +325,11 @@ const Admin_Add_Training = () => {
         <div className={styles['Admin-aat-form-grid']}>
           {courses.length === 0 ? (
             <div className={styles['Admin-aat-add-btn-wrapper']}>
-              <button className={styles['Admin-aat-add-btn']} onClick={handleAddCourseClick}>
+              <button
+                ref={registerFieldRef('courses')}
+                className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'courses' ? styles.fieldHighlight : ''}`}
+                onClick={handleAddCourseClick}
+              >
                 <span className={styles['Admin-aat-plus']}>+</span> Click to Add Course
               </button>
             </div>
@@ -270,7 +371,11 @@ const Admin_Add_Training = () => {
         <div className={styles['Admin-aat-form-grid']}>
           {trainers.length === 0 ? (
             <div className={styles['Admin-aat-add-btn-wrapper']}>
-              <button className={styles['Admin-aat-add-btn']} onClick={handleAddTrainerClick}>
+              <button
+                ref={registerFieldRef('trainers')}
+                className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'trainers' ? styles.fieldHighlight : ''}`}
+                onClick={handleAddTrainerClick}
+              >
                 <span className={styles['Admin-aat-plus']}>+</span> Click to Add Trainer
               </button>
             </div>
@@ -318,9 +423,39 @@ const Admin_Add_Training = () => {
         </div>
       </div>
 
+      {missingFields.length > 0 && (
+        <div className={styles['Admin-aat-validation-box']}>
+          <h4 className={styles['Admin-aat-validation-heading']}>
+            <span className={styles['Admin-aat-validation-icon']} aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+              </svg>
+            </span>
+            Required Fields Missing:
+          </h4>
+          <ul className={styles['Admin-aat-validation-list']}>
+            {missingFields.map((error, index) => (
+              <li
+                key={`${error.field}-${index}`}
+                className={styles['Admin-aat-validation-item']}
+                role="button"
+                tabIndex={0}
+                onClick={() => focusField(error.field)}
+                onMouseEnter={handleTooltipMove}
+                onMouseMove={handleTooltipMove}
+                onMouseLeave={handleTooltipLeave}
+                style={{ cursor: 'pointer' }}
+              >
+                {error.label} is required
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className={styles['Admin-aat-actions']}>
         <button className={styles['Admin-aat-discard-btn']} onClick={handleDiscard}>Discard</button>
-        <button className={styles['Admin-aat-save-btn']} onClick={handleSave} disabled={isSaving}>
+        <button className={styles['Admin-aat-save-btn']} onClick={handleSave} disabled={isSaving || missingFields.length > 0}>
           {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update' : 'Save')}
         </button>
       </div>
@@ -341,6 +476,15 @@ const Admin_Add_Training = () => {
       />
 
       {showSuccessPopup && <TrainingSavedPopup onClose={() => setShowSuccessPopup(false)} mode={successMode} />}
+
+      {errorTooltip.visible && (
+        <div
+          className={styles.pointerTooltip}
+          style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+        >
+          Click to navigate
+        </div>
+      )}
     </div>
   );
 };
