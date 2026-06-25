@@ -1,0 +1,11 @@
+﻿/*
+ * typography.css — DEPRECATED STUB
+ *
+ * Font tokens moved to: styles/tokens/typography.css
+ * Browser reset moved to: styles/globals/reset.css
+ * Google Fonts import moved to: public/index.html
+ *
+ * This file is kept to avoid import errors from any CSS that still references it.
+ * It safely re-exports the token file.
+ */
+@import './tokens/typography.css';

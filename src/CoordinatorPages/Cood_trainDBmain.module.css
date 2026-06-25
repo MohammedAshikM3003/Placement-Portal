@@ -1,4 +1,4 @@
-/* Layout wrapper classes */
+﻿/* Layout wrapper classes */
 .coordinator-main-wrapper {
   display: flex;
   flex-direction: column;
@@ -950,7 +950,7 @@
   /* Hide footer on mobile */
   footer,
   .footer,
-  [class*="footer"] {
+  .footer {
     display: none !important;
   }
   .filtersPlaceholderLine {

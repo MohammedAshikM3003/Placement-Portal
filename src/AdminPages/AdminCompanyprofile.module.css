@@ -937,7 +937,7 @@ position: relative;
         margin-top: 0px !important;
         gap: 15px !important;
         flex-direction: column !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         width: 100% !important;
         height: auto !important;
     }
@@ -971,6 +971,7 @@ position: relative;
         gap: 10px !important;
         height: auto !important;
         width: 100% !important;
+        flex: none !important;
     }
     
     .Admin-cp-action-card {
@@ -1275,6 +1276,53 @@ position: relative;
     stroke-dasharray: 20;
     stroke-dashoffset: 20;
     animation: Admin-cp-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Pagination controls */
+.Admin-cp-table-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admin-cp-table-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.Admin-cp-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-cp-page-btn {
+    border: 1px solid #4ea24e;
+    background: #ffffff;
+    color: #2f7d31;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.Admin-cp-page-btn:hover:not(:disabled) {
+    background: #ecf8ec;
+}
+
+.Admin-cp-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.Admin-cp-page-indicator {
+    min-width: 56px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2f7d31;
 }
 
 /* Icon Wrapper for Delete Success */

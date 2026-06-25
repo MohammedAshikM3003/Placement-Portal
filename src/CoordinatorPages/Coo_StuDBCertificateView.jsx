@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Conavbar from '../components/Navbar/Conavbar.js';
 import Cosidebar from '../components/Sidebar/Cosidebar.js';
-import styles from '../AdminPages/AdStuDBCertificateView.module.css'; // Reuse admin CSS
+import styles from './Coo_StuDBCertificateView.module.css';
 import Coordinatoricon from "../assets/Coordinatorcap.png";
 import mongoDBService from '../services/mongoDBService.jsx';
 import gridfsService from '../services/gridfsService';

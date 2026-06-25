@@ -10,8 +10,9 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminStuProfileView.module.css'; // Module Import
-import achievementStyles from '../StudentPages/Achievements.module.css'; // Achievement popup styles
+// Achievement popup styles moved to AdminStuProfileView.module.css (was cross-page import)
 import '../components/alerts/AlertStyles.css';
+import SuccessPopup from '../components/dialog/SuccessPopup';
 import Adminicons from '../assets/AdmingreenCapicon.svg';
 import BestAchievement from '../assets/BestAchievementicon.svg';
 import StuEyeIcon from '../assets/StuProfileviewgreenicon.svg';
@@ -171,35 +172,7 @@ const CalendarIcon = () => (
     </svg>
 );
 
-const SuccessPopup = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-    return (
-        <div className={styles.popupOverlay} onClick={onClose}>
-            {/* Reuse Achievements-style animated success card */}
-            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
-                <div className={achievementStyles['Achievement-popup-header']}>Saved!</div>
-                <div className={achievementStyles['Achievement-popup-body']}>
-                    <svg className={achievementStyles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className={achievementStyles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                        <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                    </svg>
-                    <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-                        Changes Saved âœ“
-                    </h2>
-                    <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                        Your Details have been
-                    </p>
-                    <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-                        Successfully saved in the Portal
-                    </p>
-                </div>
-                <div className={achievementStyles['Achievement-popup-footer']}>
-                    <button onClick={onClose} className={achievementStyles['Achievement-popup-close-btn']}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
+// SuccessPopup moved to src/components/SuccessPopup/ — import above
 
 const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
     if (!isOpen) return null;
@@ -718,9 +691,9 @@ function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
         : `${changedFields.join(', ')} have successfully changed`;
     return (
         <div className={styles.popupOverlay}>
-            <div className={achievementStyles['Achievement-popup-container']} onClick={e => e.stopPropagation()}>
-                <div className={achievementStyles['Achievement-popup-header']}>Details Changed!</div>
-                <div className={achievementStyles['Achievement-popup-body']}>
+            <div className={styles.popupContainer} onClick={e => e.stopPropagation()}>
+                <div className={styles.popupHeader}>Details Changed!</div>
+                <div className={styles.popupBody}>
                     <div className={styles.unsavedIconWrap}>
                         <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="7" x2="12" y2="14"/>
@@ -730,8 +703,8 @@ function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
                     <h2 className={styles.unsavedTitle}>Save Changes!</h2>
                     <p className={styles.unsavedFieldText}>{fieldText}</p>
                 </div>
-                <div className={achievementStyles['Achievement-popup-footer']}>
-                    <button className={achievementStyles['Achievement-popup-cancel-btn']} onClick={onDiscard}>Discard</button>
+                <div className={styles.popupFooter}>
+                    <button className={styles['Achievement-popup-cancel-btn']} onClick={onDiscard}>Discard</button>
                     <button className={styles.unsavedSaveBtn} onClick={onSave}>Save</button>
                 </div>
             </div>

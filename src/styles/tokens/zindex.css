@@ -1,0 +1,17 @@
+﻿/*
+ * tokens/zindex.css
+ * Z-index stacking context.
+ */
+:root {
+  --z-below:    -1;
+  --z-base:      0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-sidebar:  500;
+  --z-navbar:   900;
+  --z-modal:   1000;
+  --z-toast:   1500;
+  --z-tooltip: 2000;
+  --z-datepicker: 99999;
+}

@@ -112,6 +112,8 @@ function Admincompanyprofile({ onLogout }) {
     const [companies, setCompanies] = useState([]);
     const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
     const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const companiesPerPage = 6;
     const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -190,6 +192,31 @@ function Admincompanyprofile({ onLogout }) {
             return matchesCompanyOrRole && matchesHrName && matchesMode && matchesVisitDate;
         });
     }, [companies, filters]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage) || 1;
+
+    const paginatedCompanies = useMemo(() => {
+        const startIndex = (currentPage - 1) * companiesPerPage;
+        return filteredCompanies.slice(startIndex, startIndex + companiesPerPage);
+    }, [filteredCompanies, currentPage]);
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage((prev) => prev - 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage((prev) => prev + 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
 
     const matchedCompanyVisitDate = useMemo(() => {
         const companyQuery = filters.company.trim().toLowerCase();
@@ -623,8 +650,38 @@ function Admincompanyprofile({ onLogout }) {
 
                 <div className={styles['Admin-cp-bottom-card']}>
                     <div className={styles['Admin-cp-table-header-row']}>
-                        <h3 className={styles['Admin-cp-table-title']}>COMPANY PROFILE</h3>
+                        <div className={styles['Admin-cp-table-title-wrap']}>
+                            <h3 className={styles['Admin-cp-table-title']}>COMPANY PROFILE</h3>
+                            {!isInitialLoading && (
+                                <div className={styles['Admin-cp-table-subtitle']}>
+                                    Page {currentPage} of {totalPages} | Showing {paginatedCompanies.length} on this page
+                                </div>
+                            )}
+                        </div>
                         <div className={styles['Admin-cp-table-actions']}>
+                            {totalPages > 1 && (
+                                <div className={styles['Admin-cp-pagination-controls']}>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cp-page-btn']}
+                                        onClick={handlePrevPage}
+                                        disabled={currentPage <= 1 || isLoading}
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className={styles['Admin-cp-page-indicator']}>
+                                        {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cp-page-btn']}
+                                        onClick={handleNextPage}
+                                        disabled={currentPage >= totalPages || isLoading}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
                             <div className={styles['Admin-cp-print-button-container']}>
                                 <button
                                     type="button"
@@ -669,8 +726,8 @@ function Admincompanyprofile({ onLogout }) {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : filteredCompanies.length ? (
-                                    filteredCompanies.map((company, index) => {
+                                ) : paginatedCompanies.length ? (
+                                    paginatedCompanies.map((company, index) => {
                                         const companyId = company.id || company._id;
                                         const isSelected = selectedCompanyIds.has(companyId);
 
@@ -688,7 +745,7 @@ function Admincompanyprofile({ onLogout }) {
                                                         onChange={() => toggleCompanySelection(companyId)}
                                                     />
                                                 </td>
-                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-sno']}`}>{index + 1}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-sno']}`}>{(currentPage - 1) * companiesPerPage + index + 1}</td>
                                                 <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-company']}`}>{company.company || company.companyName || '—'}</td>
                                                 <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-domain']}`}>{company.companyType || company.domain || '—'}</td>
                                                 <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-job-role']}`}>{company.jobRole || '—'}</td>

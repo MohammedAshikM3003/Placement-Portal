@@ -23,6 +23,11 @@ import PlacementPortalLogin from "./mainlogin.jsx";
 import MainSignUp from "./MainSignUp.jsx";
 import MainRegistration from "./MainRegistration.jsx";
 import AdminEsstudapp from "./AdminPages/AdminEsstudapp.jsx";
+// Dev-only component playground (only loaded in development)
+const ComponentPlayground = process.env.NODE_ENV === 'development'
+  ? require('./DevPages/ComponentPlayground').default
+  : null;
+
 import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
 
 // --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
@@ -413,6 +418,11 @@ function AppContent() {
       <Route path="/admin-student-edit/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminStuProfileEdit onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-semester-marksheet-view/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminSemesterMarksheetView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-semester-edit/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminSemesterMarksheetEdit onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+
+      {/* DEV-ONLY: Component playground — invisible in production */}
+      {process.env.NODE_ENV === 'development' && ComponentPlayground && (
+        <Route path="/dev/components" element={<ComponentPlayground />} />
+      )}
 
       {/* FALLBACK */}
       <Route path="*" element={<LandingPage />} />

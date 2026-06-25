@@ -1081,7 +1081,7 @@
         margin-top: 0px !important;
         gap: 15px !important;
         flex-direction: column !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         width: 100% !important;
         height: auto !important;
     }
@@ -1115,6 +1115,7 @@
         gap: 10px !important;
         height: auto !important;
         width: 100% !important;
+        flex: none !important;
     }
 
     .Admin-cd-action-card {
@@ -1251,4 +1252,51 @@
     color: #1f2937;
     font-weight: 600;
     font-size: 0.95rem;
+}
+
+/* Pagination controls */
+.Admin-cd-table-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admin-cd-table-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.Admin-cd-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-cd-page-btn {
+    border: 1px solid #4ea24e;
+    background: #ffffff;
+    color: #2f7d31;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.Admin-cd-page-btn:hover:not(:disabled) {
+    background: #ecf8ec;
+}
+
+.Admin-cd-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.Admin-cd-page-indicator {
+    min-width: 56px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2f7d31;
 }

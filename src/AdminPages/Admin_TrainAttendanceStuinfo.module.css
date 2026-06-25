@@ -1,4 +1,4 @@
-/* Green floating label for Name input */
+﻿/* Green floating label for Name input */
 .ad-train-att-filter-input-green {
   border: 2px solid #4CAF50;
   background: #fff;
@@ -893,7 +893,7 @@
   color: #888;
 }
 
-.ad-train-att-status-text[class*="-"] {
+.ad-train-att-status-text {
   color: #888;
 }
 

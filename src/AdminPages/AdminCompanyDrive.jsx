@@ -575,6 +575,12 @@ function AdminCompanyDrive({ onLogout }) {
 
     // Selected company IDs
     const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
+    const [currentPage, setCurrentPage] = useState(1);
+    const drivesPerPage = 6;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterCompany, filterDepartment, filterStartDate, filterEndDate, filterMode]);
 
     useEffect(() => {
         setFilterCompany(tempFilterCompany);
@@ -702,6 +708,27 @@ function AdminCompanyDrive({ onLogout }) {
 
         return companyMatch && departmentMatch && startDateMatch && endDateMatch && modeMatch;
     });
+
+    const totalPages = Math.ceil(filteredCompanies.length / drivesPerPage) || 1;
+
+    const paginatedDrives = useMemo(() => {
+        const startIndex = (currentPage - 1) * drivesPerPage;
+        return filteredCompanies.slice(startIndex, startIndex + drivesPerPage);
+    }, [filteredCompanies, currentPage]);
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage((prev) => prev - 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage((prev) => prev + 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
 
     const exportToExcel = async () => {
         setShowExportMenu(false);
@@ -1043,8 +1070,38 @@ function AdminCompanyDrive({ onLogout }) {
                     {/* Company Drive Table Section */}
                     <div className={styles['Admin-cd-bottom-card']}>
                         <div className={styles['Admin-cd-table-header-row']}>
-                            <h3 className={styles['Admin-cd-table-title']}>COMPANY DRIVE</h3>
+                            <div className={styles['Admin-cd-table-title-wrap']}>
+                                <h3 className={styles['Admin-cd-table-title']}>COMPANY DRIVE</h3>
+                                {!isInitialLoading && (
+                                    <div className={styles['Admin-cd-table-subtitle']}>
+                                        Page {currentPage} of {totalPages} | Showing {paginatedDrives.length} on this page
+                                    </div>
+                                )}
+                            </div>
                             <div className={styles['Admin-cd-table-actions']}>
+                                {totalPages > 1 && (
+                                    <div className={styles['Admin-cd-pagination-controls']}>
+                                        <button
+                                            type="button"
+                                            className={styles['Admin-cd-page-btn']}
+                                            onClick={handlePrevPage}
+                                            disabled={currentPage <= 1 || isInitialLoading}
+                                        >
+                                            Prev
+                                        </button>
+                                        <span className={styles['Admin-cd-page-indicator']}>
+                                            {currentPage} / {totalPages}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className={styles['Admin-cd-page-btn']}
+                                            onClick={handleNextPage}
+                                            disabled={currentPage >= totalPages || isInitialLoading}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                )}
                                 <div className={styles['Admin-cd-print-button-container']}>
                                     <button
                                         className={styles['Admin-cd-print-btn']}
@@ -1089,14 +1146,14 @@ function AdminCompanyDrive({ onLogout }) {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ) : filteredCompanies.length === 0 ? (
+                                    ) : paginatedDrives.length === 0 ? (
                                         <tr className={styles['Admin-cd-table-row']}>
                                             <td colSpan="12" className={styles['Admin-cd-td']} style={{ textAlign: 'center' }}>
                                                 No drives found matching your criteria.
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredCompanies.map((company, index) => (
+                                        paginatedDrives.map((company, index) => (
                                             <tr
                                                 key={company._id}
                                                 className={`${styles['Admin-cd-table-row']} ${selectedCompanyIds.has(company._id) ? styles['Admin-cd-selected-row'] : ''}`}
@@ -1111,7 +1168,7 @@ function AdminCompanyDrive({ onLogout }) {
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
                                                 </td>
-                                                <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-sno']}`}>{index + 1}</td>
+                                                <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-sno']}`}>{(currentPage - 1) * drivesPerPage + index + 1}</td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-company']}`}>{company.companyName}</td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-job-role']}`}>{company.jobRole}</td>
                                                 <td className={`${styles['Admin-cd-td']} ${styles['Admin-cd-date']}`}>

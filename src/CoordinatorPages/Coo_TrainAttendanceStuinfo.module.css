@@ -1,4 +1,4 @@
-/* Main Layout */
+﻿/* Main Layout */
 .coordinator-main-wrapper {
   display: flex;
   flex-direction: column;
@@ -890,7 +890,7 @@ select.ta-filter-input {
   color: #888;
 }
 
-.status-text[class*="-"] {
+.status-text {
   color: #888;
 }
 

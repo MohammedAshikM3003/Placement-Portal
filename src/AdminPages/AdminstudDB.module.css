@@ -1107,12 +1107,13 @@
     }
 
     .Admin-DB-top-card {
-        margin-left: 0;
-        margin-top: 0px;
-        gap: 15px;
-        flex-direction: column;
-        flex-wrap: wrap;
-        width: 100%;
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
     .Admin-DB-filter-section {
@@ -1153,14 +1154,19 @@
     }
 
     .Admin-DB-action-cards-section {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        width: 100% !important;
+        flex: none !important;
     }
 
     .Admin-DB-action-card {
-        flex: 1 1 auto;
-        width: 100%;
-        min-height: 55px;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 55px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-DB-bottom-card {

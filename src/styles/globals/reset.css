@@ -1,0 +1,63 @@
+﻿/*
+ * globals/reset.css
+ * Minimal browser normalization.
+ * No typography rules here — those are in tokens/typography.css.
+ * No layout rules — those are page-level CSS Modules.
+ */
+
+/* Box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin/padding from structural elements */
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove list styling when lists are used as nav/menu */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent font-size inflation on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Images and media don't overflow their containers */
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Remove default button styles — components own their button styles */
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+/* Remove default input/textarea appearance */
+input, textarea, select {
+  font: inherit;
+}
+
+/* Remove default anchor underlines */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Remove default table border-spacing */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}

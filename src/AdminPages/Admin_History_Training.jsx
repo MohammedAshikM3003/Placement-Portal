@@ -72,6 +72,45 @@ const DeleteSuccessPopup = ({ onClose }) => (
     </div>
 );
 
+// --- Date utility helper functions ---
+const normalizeDateValue = (date) => {
+    if (date === null || date === undefined || date === '') {
+        return '-';
+    }
+
+    if (typeof date === 'string') {
+        const trimmed = date.trim();
+        if (!trimmed) {
+            return '-';
+        }
+
+        const isoMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
+        if (isoMatch) {
+            return isoMatch[0].slice(0, 10);
+        }
+    }
+
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return String(date).trim() || '-';
+    }
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const formatDmy = (ymdStr) => {
+    if (!ymdStr || ymdStr === '-') return '-';
+    const parts = ymdStr.split('-');
+    if (parts.length === 3) {
+        const [y, m, d] = parts;
+        return `${d}-${m}-${y}`;
+    }
+    return ymdStr;
+};
+
 function AdminHistoryTraining({ onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -90,6 +129,8 @@ function AdminHistoryTraining({ onLogout }) {
     // Focus states
     const [courseFocused, setCourseFocused] = useState(false);
     const [batchFocused, setBatchFocused] = useState(false);
+    const [startDateFocused, setStartDateFocused] = useState(false);
+    const [endDateFocused, setEndDateFocused] = useState(false);
 
     // Dropdown options
     const [courseOptions, setCourseOptions] = useState([]);
@@ -97,8 +138,7 @@ function AdminHistoryTraining({ onLogout }) {
     const [startDateOptions, setStartDateOptions] = useState([]);
     const [endDateOptions, setEndDateOptions] = useState([]);
 
-    const enabledStartDates = useMemo(() => startDateOptions.filter(Boolean), [startDateOptions]);
-    const enabledEndDates = useMemo(() => endDateOptions.filter(Boolean), [endDateOptions]);
+    const [dateSelectionMode, setDateSelectionMode] = useState('none');
 
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [activePopup, setActivePopup] = useState(null);
@@ -112,43 +152,121 @@ function AdminHistoryTraining({ onLogout }) {
     const [trainingHistory, setTrainingHistory] = useState([]);
     const [selectedHistoryIds, setSelectedHistoryIds] = useState(new Set());
 
-    const normalizeDateValue = (date) => {
-        if (date === null || date === undefined || date === '') {
-            return '-';
-        }
+    // List of history entries matching current non-date filters
+    const historyListFilteredByNonDate = useMemo(() => {
+        return trainingHistory.map(h => ({
+            ...h,
+            startYmd: normalizeDateValue(h.startDate),
+            endYmd: normalizeDateValue(h.endDate)
+        })).filter(h => {
+            const courseMatch = filterCourse === '' || (h.courseName || '').toLowerCase().includes(filterCourse.toLowerCase());
+            const batchMatch = filterBatch === '' || (h.batch || '').toLowerCase().includes(filterBatch.toLowerCase());
+            return courseMatch && batchMatch;
+        });
+    }, [trainingHistory, filterCourse, filterBatch]);
 
-        if (typeof date === 'string') {
-            const trimmed = date.trim();
-            if (!trimmed) {
-                return '-';
+    // Unique start dates for calendar when no dates are selected
+    const uniqueStartDates = useMemo(() => {
+        const dates = historyListFilteredByNonDate.map(h => h.startYmd).filter(d => d && d !== '-');
+        return Array.from(new Set(dates)).sort();
+    }, [historyListFilteredByNonDate]);
+
+    // Unique end dates for calendar when no dates are selected
+    const uniqueEndDates = useMemo(() => {
+        const dates = historyListFilteredByNonDate.map(h => h.endYmd).filter(d => d && d !== '-');
+        return Array.from(new Set(dates)).sort();
+    }, [historyListFilteredByNonDate]);
+
+    // Matching start dates for the selected End Date
+    const matchingStartDates = useMemo(() => {
+        if (!filterEndDate) return [];
+        const dates = historyListFilteredByNonDate
+            .filter(h => h.endYmd === filterEndDate)
+            .map(h => h.startYmd)
+            .filter(d => d && d !== '-');
+        return Array.from(new Set(dates)).sort();
+    }, [historyListFilteredByNonDate, filterEndDate]);
+
+    // Matching end dates for the selected Start Date
+    const matchingEndDates = useMemo(() => {
+        if (!filterStartDate) return [];
+        const dates = historyListFilteredByNonDate
+            .filter(h => h.startYmd === filterStartDate)
+            .map(h => h.endYmd)
+            .filter(d => d && d !== '-');
+        return Array.from(new Set(dates)).sort();
+    }, [historyListFilteredByNonDate, filterStartDate]);
+
+    // Auto-fetch logic when Start Date is selected
+    useEffect(() => {
+        if (filterStartDate && dateSelectionMode === 'start-first') {
+            if (matchingEndDates.length === 1) {
+                const autoEnd = matchingEndDates[0];
+                if (filterEndDate !== autoEnd) {
+                    setFilterEndDate(autoEnd);
+                }
+            } else if (matchingEndDates.length > 1) {
+                if (filterEndDate && !matchingEndDates.includes(filterEndDate)) {
+                    setFilterEndDate('');
+                }
+            } else {
+                setFilterEndDate('');
             }
+        }
+    }, [filterStartDate, matchingEndDates, filterEndDate, dateSelectionMode]);
 
-            const isoMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
-            if (isoMatch) {
-                return isoMatch[0].slice(0, 10);
+    // Auto-fetch logic when End Date is selected
+    useEffect(() => {
+        if (filterEndDate && dateSelectionMode === 'end-first') {
+            if (matchingStartDates.length === 1) {
+                const autoStart = matchingStartDates[0];
+                if (filterStartDate !== autoStart) {
+                    setFilterStartDate(autoStart);
+                }
+            } else if (matchingStartDates.length > 1) {
+                if (filterStartDate && !matchingStartDates.includes(filterStartDate)) {
+                    setFilterStartDate('');
+                }
+            } else {
+                setFilterStartDate('');
             }
         }
+    }, [filterEndDate, matchingStartDates, filterStartDate, dateSelectionMode]);
 
-        const parsedDate = new Date(date);
-        if (Number.isNaN(parsedDate.getTime())) {
-            return String(date).trim() || '-';
+    // Reset dateSelectionMode to 'none' if both fields are empty
+    useEffect(() => {
+        if (!filterStartDate && !filterEndDate) {
+            setDateSelectionMode('none');
         }
+    }, [filterStartDate, filterEndDate]);
 
-        const year = parsedDate.getFullYear();
-        const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(parsedDate.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    const formatDmy = (ymdStr) => {
-        if (!ymdStr || ymdStr === '-') return '-';
-        const parts = ymdStr.split('-');
-        if (parts.length === 3) {
-            const [y, m, d] = parts;
-            return `${d}-${m}-${y}`;
+    const handleStartDateChange = useCallback((val) => {
+        setFilterStartDate(val || '');
+        if (val) {
+            if (!filterEndDate) {
+                setDateSelectionMode('start-first');
+            }
+        } else {
+            if (dateSelectionMode === 'start-first') {
+                setFilterEndDate('');
+                setDateSelectionMode('none');
+            }
         }
-        return ymdStr;
-    };
+    }, [filterEndDate, dateSelectionMode]);
+
+    const handleEndDateChange = useCallback((val) => {
+        setFilterEndDate(val || '');
+        if (val) {
+            if (!filterStartDate) {
+                setDateSelectionMode('end-first');
+            }
+        } else {
+            if (dateSelectionMode === 'end-first') {
+                setFilterStartDate('');
+                setDateSelectionMode('none');
+            }
+        }
+    }, [filterStartDate, dateSelectionMode]);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
@@ -380,6 +498,7 @@ function AdminHistoryTraining({ onLogout }) {
         setFilterBatch('');
         setFilterStartDate('');
         setFilterEndDate('');
+        setDateSelectionMode('none');
     };
 
     const filteredHistory = trainingHistory.filter(history => {
@@ -590,25 +709,65 @@ function AdminHistoryTraining({ onLogout }) {
                                 {/* Start Date */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>Start Date</label>
-                                    <AdCalendar
-                                        id="admin-search-start-date"
-                                        value={filterStartDate}
-                                        onChange={setFilterStartDate}
-                                        variant="filter"
-                                        enabledDates={enabledStartDates}
-                                    />
+                                    {Boolean(filterEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
+                                        <div className={`${styles['Admin-ht-text-container']} ${styles['Admin-ht-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
+                                            <select
+                                                id="admin-search-start-date"
+                                                className={`${styles['Admin-ht-text']} ${styles['Admin-ht-select']}`}
+                                                value={filterStartDate}
+                                                onChange={(e) => handleStartDateChange(e.target.value)}
+                                                onFocus={() => setStartDateFocused(true)}
+                                                onBlur={() => setStartDateFocused(false)}
+                                            >
+                                                <option value="">Start Date</option>
+                                                {matchingStartDates.map((ymd) => (
+                                                    <option key={ymd} value={ymd}>
+                                                        {formatDmy(ymd)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <AdCalendar
+                                            id="admin-search-start-date"
+                                            value={filterStartDate}
+                                            onChange={handleStartDateChange}
+                                            variant="filter"
+                                            enabledDates={filterEndDate ? matchingStartDates : uniqueStartDates}
+                                        />
+                                    )}
                                 </div>
 
                                 {/* End Date */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>End Date</label>
-                                    <AdCalendar
-                                        id="admin-search-end-date"
-                                        value={filterEndDate}
-                                        onChange={setFilterEndDate}
-                                        variant="filter"
-                                        enabledDates={enabledEndDates}
-                                    />
+                                    {Boolean(filterStartDate && matchingEndDates.length > 1 && dateSelectionMode === 'start-first') ? (
+                                        <div className={`${styles['Admin-ht-text-container']} ${styles['Admin-ht-select-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
+                                            <select
+                                                id="admin-search-end-date"
+                                                className={`${styles['Admin-ht-text']} ${styles['Admin-ht-select']}`}
+                                                value={filterEndDate}
+                                                onChange={(e) => handleEndDateChange(e.target.value)}
+                                                onFocus={() => setEndDateFocused(true)}
+                                                onBlur={() => setEndDateFocused(false)}
+                                            >
+                                                <option value="">End Date</option>
+                                                {matchingEndDates.map((ymd) => (
+                                                    <option key={ymd} value={ymd}>
+                                                        {formatDmy(ymd)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <AdCalendar
+                                            id="admin-search-end-date"
+                                            value={filterEndDate}
+                                            onChange={handleEndDateChange}
+                                            variant="filter"
+                                            enabledDates={filterStartDate ? matchingEndDates : uniqueEndDates}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>

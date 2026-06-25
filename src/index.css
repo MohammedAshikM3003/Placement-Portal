@@ -1,18 +1,26 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
+/* ============================================================ */
+/* === PLACEMENT PORTAL — GLOBAL DESIGN SYSTEM               === */
+/* === Each file imported directly — no CSS @import chains    === */
+/* ============================================================ */
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
+/* ── Design tokens (CSS custom properties only, no element selectors) ─── */
+@import './styles/tokens/colors.css';
+@import './styles/tokens/spacing.css';
+@import './styles/tokens/radius.css';
+@import './styles/tokens/shadows.css';
+@import './styles/tokens/typography.css';
+@import './styles/tokens/layout.css';
+@import './styles/tokens/zindex.css';
+@import './styles/tokens/motion.css';
+
+/* ── Globals (browser reset, role theme, third-party overrides) ─────── */
+@import './styles/globals/reset.css';
+@import './styles/globals/theme.css';
+@import './styles/globals/datepicker.css';
+
+/* ── Shared keyframe animations (used by shared components only) ─────── */
+@import './styles/animations.css';
+
 
 * {
   box-sizing: border-box;
@@ -372,8 +380,6 @@ html.admin-theme main {
   html.admin-theme [class*="main-content"],
   html.admin-theme [class*="dashboard-area"],
   html.admin-theme [class*="dashboardArea"],
-  html.admin-theme [class*="top-card"],
-  html.admin-theme [class*="bottom-card"],
   html.admin-theme main {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -381,6 +387,15 @@ html.admin-theme main {
     max-width: 100% !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
+  }
+
+  /* Reset layout width and margins for top/bottom cards without forcing a fixed height */
+  html.admin-theme [class*="top-card"],
+  html.admin-theme [class*="bottom-card"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 

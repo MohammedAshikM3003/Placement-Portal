@@ -1,10 +1,4 @@
-body {
-  background: #f8f8fb;
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', Arial, sans-serif;
-  overflow: hidden;
-}
+/* NOTE: bare body {} was removed — overflow and font-family are handled by index.css admin-theme */
 
 .Admin-cdd-container {
   font-family: 'Poppins', Arial, sans-serif;
