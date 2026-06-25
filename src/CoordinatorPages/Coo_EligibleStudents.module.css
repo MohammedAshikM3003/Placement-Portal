@@ -1019,20 +1019,42 @@
   }
   
   /* Custom vertical scrollbar for the entire page */
+.co-es-container::-webkit-scrollbar,
+.co-es-dashboard-area::-webkit-scrollbar {
+  width: 15px;
+}
 
+.co-es-container::-webkit-scrollbar-track,
+.co-es-dashboard-area::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
 
+.co-es-container::-webkit-scrollbar-thumb,
+.co-es-dashboard-area::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
 
-
-
-
-
+.co-es-container::-webkit-scrollbar-thumb:hover,
+.co-es-dashboard-area::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
 
 /* Optional: horizontal scrollbar style for full-page scroll if needed */
+.co-es-container::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
 
+.co-es-container::-webkit-scrollbar-thumb:horizontal {
+  background-color: #c1bfbf;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
 
-
-
-
+.co-es-container::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #a9a9a9;
+}
 
   /* Red scrollbar on mobile */
   

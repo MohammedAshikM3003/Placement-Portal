@@ -1294,15 +1294,21 @@ left: 30px;
 
 /* Red scrollbar on mobile */
 .co-rat-table-body-scroll::-webkit-scrollbar,
-.co-rat-round-buttons-container::-webkit-scrollbar,
-
+.co-rat-round-buttons-container::-webkit-scrollbar {
+  width: 10px;
+}
 .co-rat-table-body-scroll::-webkit-scrollbar-track,
-.co-rat-round-buttons-container::-webkit-scrollbar-track,
-
+.co-rat-round-buttons-container::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
 .co-rat-table-body-scroll::-webkit-scrollbar-thumb,
-.co-rat-round-buttons-container::-webkit-scrollbar-thumb,
-
+.co-rat-round-buttons-container::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
 .co-rat-table-body-scroll::-webkit-scrollbar-thumb:hover,
-.co-rat-round-buttons-container::-webkit-scrollbar-thumb:hover,
-
+.co-rat-round-buttons-container::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
 }
