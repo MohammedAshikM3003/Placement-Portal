@@ -261,6 +261,20 @@ function AdminTrainingCompany({ onLogout }) {
         setFilterPhase(tempFilterPhase);
     }, [tempFilterCompany, tempFilterBranch, tempFilterTraining, tempFilterPhase]);
 
+    const hasActiveFilters = Boolean(
+        tempFilterCompany ||
+        tempFilterBranch ||
+        tempFilterTraining ||
+        tempFilterPhase
+    );
+
+    const handleClearFilters = () => {
+        setTempFilterCompany('');
+        setTempFilterBranch('');
+        setTempFilterTraining('');
+        setTempFilterPhase('');
+    };
+
     const handleCompanySelect = (id) => {
         setSelectedCompanyIds(prevIds => {
             const newIds = new Set(prevIds);
@@ -363,10 +377,10 @@ function AdminTrainingCompany({ onLogout }) {
     };
 
     const filteredCompanies = trainingCompanies.filter(company => {
-        const companyMatch = filterCompany === '' || company.companyName.toLowerCase().includes(filterCompany.toLowerCase());
-        const branchMatch = filterBranch === '' || company.branch.toLowerCase().includes(filterBranch.toLowerCase());
-        const trainingMatch = filterTraining === '' || company.trainingName.toLowerCase().includes(filterTraining.toLowerCase());
-        const phaseMatch = filterPhase === '' || company.phaseName === filterPhase;
+        const companyMatch = filterCompany === '' || (company.companyName || '').toLowerCase().includes(filterCompany.toLowerCase());
+        const branchMatch = filterBranch === '' || (company.branch || '').toLowerCase().includes(filterBranch.toLowerCase());
+        const trainingMatch = filterTraining === '' || (company.trainingName || '').toLowerCase().includes(filterTraining.toLowerCase());
+        const phaseMatch = filterPhase === '' || (company.phaseName || '') === filterPhase;
 
         return companyMatch && branchMatch && trainingMatch && phaseMatch;
     });
@@ -507,14 +521,23 @@ function AdminTrainingCompany({ onLogout }) {
                         <div className={styles['Admin-tc-filter-section']}>
                             <div className={styles['Admin-tc-filter-header-container']}>
                                 <div className={styles['Admin-tc-filter-header']}>Training Company</div>
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-tc-clear-btn-header']}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
                             </div>
                             <div className={styles['Admin-tc-filter-content']}>
                                 {/* Company Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Company Name</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-tc-text']}
+                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
                                             value={tempFilterCompany}
                                             onChange={(e) => setTempFilterCompany(e.target.value)}
                                             onFocus={() => setCompanyFocused(true)}
@@ -530,9 +553,9 @@ function AdminTrainingCompany({ onLogout }) {
                                 {/* Branch Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Branch</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${branchFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${branchFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-tc-text']}
+                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
                                             value={tempFilterBranch}
                                             onChange={(e) => setTempFilterBranch(e.target.value)}
                                             onFocus={() => setBranchFocused(true)}
@@ -548,9 +571,9 @@ function AdminTrainingCompany({ onLogout }) {
                                 {/* Training Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Training Name</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${trainingFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${trainingFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-tc-text']}
+                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
                                             value={tempFilterTraining}
                                             onChange={(e) => setTempFilterTraining(e.target.value)}
                                             onFocus={() => setTrainingFocused(true)}
@@ -566,9 +589,9 @@ function AdminTrainingCompany({ onLogout }) {
                                 {/* Phase Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Phase</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${phaseFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${phaseFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-tc-text']}
+                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
                                             value={tempFilterPhase}
                                             onChange={(e) => setTempFilterPhase(e.target.value)}
                                             onFocus={() => setPhaseFocused(true)}
@@ -587,14 +610,17 @@ function AdminTrainingCompany({ onLogout }) {
                         <div className={styles['Admin-tc-action-cards-section']}>
                             {/* Edit Card */}
                             <div className={styles['Admin-tc-action-card']}>
-                                <h4 className={styles['Admin-tc-action-header']}>Editing</h4>
+                                <h4 className={selectedCompanyIds.size === 1 ? styles['Admin-tc-header-edit-active'] : styles['Admin-tc-header-disabled']}>Editing</h4>
                                 <p className={styles['Admin-tc-action-description']}>
-                                    Select The<br/>Company<br/>Before<br/>Editing
+                                    {selectedCompanyIds.size === 1
+                                        ? `Selected company: ${trainingCompanies.find(c => String(c._id) === String(Array.from(selectedCompanyIds)[0]))?.companyName || ''}`
+                                        : 'Select the company record before editing.'
+                                    }
                                 </p>
                                 <button
                                     className={`${styles['Admin-tc-action-btn']} ${styles['Admin-tc-edit-btn']}`}
                                     onClick={handleEdit}
-                                    disabled={!isSingleCompanySelected}
+                                    disabled={selectedCompanyIds.size !== 1}
                                 >
                                     Edit
                                 </button>
@@ -602,14 +628,17 @@ function AdminTrainingCompany({ onLogout }) {
 
                             {/* Delete Card */}
                             <div className={styles['Admin-tc-action-card']}>
-                                <h4 className={styles['Admin-tc-action-header']}>Deleting</h4>
+                                <h4 className={selectedCompanyIds.size >= 1 ? styles['Admin-tc-header-delete-active'] : styles['Admin-tc-header-disabled']}>Deleting</h4>
                                 <p className={styles['Admin-tc-action-description']}>
-                                    Select The<br/>Company<br/>Before<br/>Deleting
+                                    {selectedCompanyIds.size >= 1
+                                        ? `Delete ${selectedCompanyIds.size} selected company record${selectedCompanyIds.size > 1 ? 's' : ''}`
+                                        : 'Select the company records before deleting.'
+                                    }
                                 </p>
                                 <button
                                     className={`${styles['Admin-tc-action-btn']} ${styles['Admin-tc-delete-btn']}`}
                                     onClick={handleDeleteClick}
-                                    disabled={!isCompanySelected}
+                                    disabled={!selectedCompanyIds.size}
                                 >
                                     Delete
                                 </button>
@@ -643,12 +672,12 @@ function AdminTrainingCompany({ onLogout }) {
                             <table className={styles['Admin-tc-students-table']}>
                                 <thead>
                                     <tr className={styles['Admin-tc-table-head-row']}>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-checkbox']}`}>SELECT</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-checkbox']}`}>Select</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-sno']}`}>S.No</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-company']}`}>Company Name</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-hr']}`}>Company HR</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-location']}`}>Location</th>
-                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-courses']}`}>courses</th>
+                                        <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-courses']}`}>Courses</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-trainers']}`}>Trainers</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-history']}`}>History</th>
                                         <th className={`${styles['Admin-tc-th']} ${styles['Admin-tc-view']}`}>View</th>

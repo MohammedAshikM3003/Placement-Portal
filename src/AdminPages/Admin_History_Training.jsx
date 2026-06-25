@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 import styles from './Admin_History_Training.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import AdminAddTrainingIcon from '../assets/ad_addtrainingicon.svg';
@@ -89,12 +90,15 @@ function AdminHistoryTraining({ onLogout }) {
     // Focus states
     const [courseFocused, setCourseFocused] = useState(false);
     const [batchFocused, setBatchFocused] = useState(false);
-    const [startDateFocused, setStartDateFocused] = useState(false);
-    const [endDateFocused, setEndDateFocused] = useState(false);
 
     // Dropdown options
     const [courseOptions, setCourseOptions] = useState([]);
     const [batchOptions, setBatchOptions] = useState([]);
+    const [startDateOptions, setStartDateOptions] = useState([]);
+    const [endDateOptions, setEndDateOptions] = useState([]);
+
+    const enabledStartDates = useMemo(() => startDateOptions.filter(Boolean), [startDateOptions]);
+    const enabledEndDates = useMemo(() => endDateOptions.filter(Boolean), [endDateOptions]);
 
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [activePopup, setActivePopup] = useState(null);
@@ -134,6 +138,16 @@ function AdminHistoryTraining({ onLogout }) {
         const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
         const day = String(parsedDate.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    };
+
+    const formatDmy = (ymdStr) => {
+        if (!ymdStr || ymdStr === '-') return '-';
+        const parts = ymdStr.split('-');
+        if (parts.length === 3) {
+            const [y, m, d] = parts;
+            return `${d}-${m}-${y}`;
+        }
+        return ymdStr;
     };
 
     const toggleSidebar = () => {
@@ -241,9 +255,23 @@ function AdminHistoryTraining({ onLogout }) {
                 });
             });
 
+            // Extract unique start and end dates from historyList
+            const startDateSet = new Set();
+            const endDateSet = new Set();
+            historyList.forEach(item => {
+                if (item.startDate && item.startDate !== '-') {
+                    startDateSet.add(item.startDate);
+                }
+                if (item.endDate && item.endDate !== '-') {
+                    endDateSet.add(item.endDate);
+                }
+            });
+
             setTrainingHistory(historyList);
             setCourseOptions(['', ...Array.from(courseSet).sort()]);
             setBatchOptions(['', ...Array.from(batchSet).sort()]);
+            setStartDateOptions(['', ...Array.from(startDateSet).sort()]);
+            setEndDateOptions(['', ...Array.from(endDateSet).sort()]);
         } catch (error) {
             console.error("Failed to fetch training history:", error);
             setTrainingHistory([]);
@@ -340,9 +368,23 @@ function AdminHistoryTraining({ onLogout }) {
         });
     };
 
+    const hasActiveFilters = Boolean(
+        filterCourse ||
+        filterBatch ||
+        filterStartDate ||
+        filterEndDate
+    );
+
+    const handleClearFilters = () => {
+        setFilterCourse('');
+        setFilterBatch('');
+        setFilterStartDate('');
+        setFilterEndDate('');
+    };
+
     const filteredHistory = trainingHistory.filter(history => {
-        const courseMatch = filterCourse === '' || history.courseName.toLowerCase().includes(filterCourse.toLowerCase());
-        const batchMatch = filterBatch === '' || history.batch.toLowerCase().includes(filterBatch.toLowerCase());
+        const courseMatch = filterCourse === '' || (history.courseName || '').toLowerCase().includes(filterCourse.toLowerCase());
+        const batchMatch = filterBatch === '' || (history.batch || '').toLowerCase().includes(filterBatch.toLowerCase());
         const startDateMatch = filterStartDate === '' || normalizeDateValue(history.startDate) === filterStartDate;
         const endDateMatch = filterEndDate === '' || normalizeDateValue(history.endDate) === filterEndDate;
 
@@ -498,14 +540,23 @@ function AdminHistoryTraining({ onLogout }) {
                         <div className={styles['Admin-ht-filter-section']}>
                             <div className={styles['Admin-ht-filter-header-container']}>
                                 <div className={styles['Admin-ht-filter-header']}>Training companies</div>
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-ht-clear-btn-header']}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
                             </div>
                             <div className={styles['Admin-ht-filter-content']}>
                                 {/* Course */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>Course</label>
-                                    <div className={`${styles['Admin-ht-text-container']} ${courseFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-ht-text-container']} ${styles['Admin-ht-select-container']} ${courseFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-ht-text']}
+                                            className={`${styles['Admin-ht-text']} ${styles['Admin-ht-select']}`}
                                             value={filterCourse}
                                             onChange={(e) => setFilterCourse(e.target.value)}
                                             onFocus={() => setCourseFocused(true)}
@@ -521,9 +572,9 @@ function AdminHistoryTraining({ onLogout }) {
                                 {/* Batch */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>Batch</label>
-                                    <div className={`${styles['Admin-ht-text-container']} ${batchFocused ? styles['is-focused'] : ''}`}>
+                                    <div className={`${styles['Admin-ht-text-container']} ${styles['Admin-ht-select-container']} ${batchFocused ? styles['is-focused'] : ''}`}>
                                         <select
-                                            className={styles['Admin-ht-text']}
+                                            className={`${styles['Admin-ht-text']} ${styles['Admin-ht-select']}`}
                                             value={filterBatch}
                                             onChange={(e) => setFilterBatch(e.target.value)}
                                             onFocus={() => setBatchFocused(true)}
@@ -539,31 +590,25 @@ function AdminHistoryTraining({ onLogout }) {
                                 {/* Start Date */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>Start Date</label>
-                                    <div className={`${styles['Admin-ht-text-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
-                                        <input
-                                            type="date"
-                                            className={styles['Admin-ht-text']}
-                                            value={filterStartDate}
-                                            onChange={(e) => setFilterStartDate(e.target.value)}
-                                            onFocus={() => setStartDateFocused(true)}
-                                            onBlur={() => setStartDateFocused(false)}
-                                        />
-                                    </div>
+                                    <AdCalendar
+                                        id="admin-search-start-date"
+                                        value={filterStartDate}
+                                        onChange={setFilterStartDate}
+                                        variant="filter"
+                                        enabledDates={enabledStartDates}
+                                    />
                                 </div>
 
                                 {/* End Date */}
                                 <div className={styles['Admin-ht-input-wrapper']}>
                                     <label className={styles['Admin-ht-static-label']}>End Date</label>
-                                    <div className={`${styles['Admin-ht-text-container']} ${endDateFocused ? styles['is-focused'] : ''}`}>
-                                        <input
-                                            type="date"
-                                            className={styles['Admin-ht-text']}
-                                            value={filterEndDate}
-                                            onChange={(e) => setFilterEndDate(e.target.value)}
-                                            onFocus={() => setEndDateFocused(true)}
-                                            onBlur={() => setEndDateFocused(false)}
-                                        />
-                                    </div>
+                                    <AdCalendar
+                                        id="admin-search-end-date"
+                                        value={filterEndDate}
+                                        onChange={setFilterEndDate}
+                                        variant="filter"
+                                        enabledDates={enabledEndDates}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -572,13 +617,17 @@ function AdminHistoryTraining({ onLogout }) {
                         <div className={styles['Admin-ht-action-cards-section']}>
                             {/* Edit Card */}
                             <div className={styles['Admin-ht-action-card']}>
-                                <h4 className={styles['Admin-ht-action-header']}>Editing</h4>
+                                <h4 className={selectedHistoryIds.size === 1 ? styles['Admin-ht-header-edit-active'] : styles['Admin-ht-header-disabled']}>Editing</h4>
                                 <p className={styles['Admin-ht-action-description']}>
-                                    Select The<br/>Company<br/>Before<br/>Editing
+                                    {selectedHistoryIds.size === 1
+                                        ? `Selected course: ${trainingHistory.find(h => String(h._id) === String(Array.from(selectedHistoryIds)[0]))?.courseName || ''}`
+                                        : 'Select the training history record before editing.'
+                                    }
                                 </p>
                                 <button
                                     className={`${styles['Admin-ht-action-btn']} ${styles['Admin-ht-edit-btn']}`}
                                     onClick={handleEdit}
+                                    disabled={selectedHistoryIds.size !== 1}
                                 >
                                     Edit
                                 </button>
@@ -586,14 +635,17 @@ function AdminHistoryTraining({ onLogout }) {
 
                             {/* Delete Card */}
                             <div className={styles['Admin-ht-action-card']}>
-                                <h4 className={styles['Admin-ht-action-header']}>Deleting</h4>
+                                <h4 className={selectedHistoryIds.size >= 1 ? styles['Admin-ht-header-delete-active'] : styles['Admin-ht-header-disabled']}>Deleting</h4>
                                 <p className={styles['Admin-ht-action-description']}>
-                                    Select The<br/>Company<br/>Before<br/>Deleting
+                                    {selectedHistoryIds.size >= 1
+                                        ? `Delete ${selectedHistoryIds.size} selected history record${selectedHistoryIds.size > 1 ? 's' : ''}`
+                                        : 'Select the training history records before deleting.'
+                                    }
                                 </p>
                                 <button
                                     className={`${styles['Admin-ht-action-btn']} ${styles['Admin-ht-delete-btn']}`}
                                     onClick={handleDeleteClick}
-                                    disabled={!isHistorySelected}
+                                    disabled={!selectedHistoryIds.size}
                                 >
                                     Delete
                                 </button>
@@ -624,7 +676,7 @@ function AdminHistoryTraining({ onLogout }) {
                         </div>
 
                         <div className={styles['Admin-ht-table-container']}>
-                            <table className={styles['Admin-ht-history-table']}>
+                            <table className={styles['Admin-ht-students-table']}>
                                 <thead>
                                     <tr className={styles['Admin-ht-table-head-row']}>
                                         <th className={`${styles['Admin-ht-th']} ${styles['Admin-ht-checkbox']}`}>Select</th>
@@ -673,8 +725,8 @@ function AdminHistoryTraining({ onLogout }) {
                                                 </td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-sno']}`}>{index + 1}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-course']}`}>{history.courseName}</td>
-                                                <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-startdate']}`}>{history.startDate}</td>
-                                                <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-enddate']}`}>{history.endDate}</td>
+                                                <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-startdate']}`}>{formatDmy(history.startDate)}</td>
+                                                <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-enddate']}`}>{formatDmy(history.endDate)}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-trainer']}`}>{history.trainer}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-phase']}`}>{history.phase}</td>
                                                 <td className={`${styles['Admin-ht-td']} ${styles['Admin-ht-batch']}`}>{history.batch}</td>

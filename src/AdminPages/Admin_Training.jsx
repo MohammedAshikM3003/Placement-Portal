@@ -131,7 +131,7 @@ function AdminTraining({ onLogout }) {
 
         const cards = normalizedSchedules.map((schedule) => {
           const companyName = (schedule?.companyName || '').toString().trim() || 'Training';
-           const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+          const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
           const phaseNumbers = [...new Set(
             phases
               .map((phase) => (phase?.phaseNumber || '').toString().trim())
@@ -811,8 +811,8 @@ function AdminTraining({ onLogout }) {
         <div className={styles['ad-tr-top-grid']}>
           <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-training-company')}>
             <img className={styles['ad-tr-action-icon']} src={AddTrainingIcon} alt="Add Training" />
-            <h4 className={styles['ad-tr-action-title']}>Add Training Company</h4>
-            <p className={styles['ad-tr-action-sub']}>New Training Company for Scheduling</p>
+            <h4 className={styles['ad-tr-action-title']}>Training Company</h4>
+            <p className={styles['ad-tr-action-sub']}>All Training Company for Scheduling</p>
           </button>
 
           <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-schedule-training')}>

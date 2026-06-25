@@ -1,7 +1,7 @@
 .ad-tr-page {
   min-height: 100vh;
   background: #f4f7fb;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .ad-tr-content {
@@ -9,53 +9,19 @@
   margin: 65px 0px 0px 280px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   height: calc(100vh - 65px);
   box-sizing: border-box;
+  scrollbar-width: none; /* Firefox — hide scrollbar on desktop */
 }
 
-/* Desktop main-content scrollbar only */
-@media (min-width: 769px) {
-  .ad-tr-page {
-    overflow: hidden;
-  }
-
-  .ad-tr-content {
-    overflow-y: auto;
-    overflow-x: hidden;
-
-  }
-
-  .ad-tr-content::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-thumb:hover {
-    background-color: #3d8a3d;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-button {
-    display: none;
-    height: 0;
-    width: 0;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-button:start:decrement,
-  .ad-tr-content::-webkit-scrollbar-button:end:increment {
-    display: none;
-  }
+/* Hide scrollbar on desktop (Chrome/Safari/Edge) */
+.ad-tr-content::-webkit-scrollbar {
+  display: none;
 }
+
 
 .ad-tr-header-row {
   display: flex;
@@ -475,6 +441,7 @@
   margin-top: -2px;
   overflow-y: visible;
   align-content: start;
+  flex-shrink: 0;
 }
 
 
@@ -527,7 +494,6 @@
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 6px;
   position: relative;
   min-height: 280px;
@@ -606,7 +572,6 @@
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 6px;
   position: relative;
   min-height: 280px;
@@ -1101,7 +1066,8 @@
 /* ── Tablet: 769px – 1200px ── */
 @media (max-width: 1200px) and (min-width: 769px) {
   .ad-tr-content {
-    margin-left: 290px;
+    margin-left: 0;
+    margin-top: 65px;
     padding: 14px 16px;
   }
 
@@ -1118,13 +1084,8 @@
     font-size: 18px;
   }
 
-  .ad-tr-summary-card {
+  .ad-tr-filter-card {
     width: 100%;
-    grid-column: 1 / -1;
-  }
-
-  .ad-tr-summary-body {
-    height: auto;
   }
 
   .ad-tr-training-grid {
@@ -1134,6 +1095,8 @@
 
 /* ── Mobile: ≤ 768px ── */
 @media (max-width: 768px) {
+
+  /* Page shell: fixed to viewport so the inner content area can scroll */
   .ad-tr-page {
     position: fixed;
     inset: 0;
@@ -1142,142 +1105,104 @@
     overflow: hidden;
   }
 
+  /* Content area: full width, scrollable, no visible scrollbar */
   .ad-tr-content {
     margin-left: 0;
-    /* sidebar overlays, content uses full width */
-    margin-top: 55px;
-    padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px;
-    top: 0;
+    margin-top: 65px;
+    padding: 12px 12px calc(env(safe-area-inset-bottom, 20px) + 20px) 12px;
     overflow-y: auto;
     overflow-x: hidden;
-    height: 94vh;
+    height: calc(100vh - 65px);
     max-height: none;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: #4EA24E #f0f2f5;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
   }
 
+  /* Hide scrollbar on mobile (Chrome/Safari/Edge) */
   .ad-tr-content::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-thumb:hover {
-    background-color: #3d8a3d;
-  }
-
-  /* Remove scrollbar buttons */
-  .ad-tr-content::-webkit-scrollbar-button {
-    display: none;
-    height: 0;
-    width: 0;
-  }
-
-  .ad-tr-content::-webkit-scrollbar-button:start:decrement,
-  .ad-tr-content::-webkit-scrollbar-button:end:increment {
     display: none;
   }
 
+  /* Top grid: stack cards + filter card vertically */
   .ad-tr-top-grid {
-    flex-wrap: wrap;
+    flex-direction: column;
+    flex-wrap: nowrap;
     gap: 12px;
+    align-items: stretch;
+    height: auto;
   }
 
+  /* Action cards: full width on mobile */
   .ad-tr-action-card {
     width: 100%;
-    max-width: 430px;
+    max-width: 100%;
+    flex-shrink: 0;
+    min-height: 160px;
+    padding: 18px 20px;
   }
 
   .ad-tr-action-title {
-    font-size: 21px;
+    font-size: 20px;
   }
 
   .ad-tr-action-sub {
+    font-size: 14px;
+  }
+
+  /* Filter card: full width, single-column fields */
+  .ad-tr-filter-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .ad-tr-filter-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Section header */
+  .ad-tr-section-header {
     font-size: 16px;
-  }
-
-  .ad-tr-summary-card {
-    width: 430px;
-    position: relative;
-    left: 16px;
-  }
-
-  .ad-tr-summary-filters {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .ad-tr-summary-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 190px;
-    gap: 8px;
-  }
-
-  .ad-tr-summary-text {
+    padding: 8px 12px;
+    border-radius: 10px 10px 0 0;
     margin-top: 0;
-    text-align: center;
-    flex-shrink: 0;
   }
 
-  .ad-tr-summary-chart {
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .ad-tr-pie {
-    width: 150px;
-    height: 150px;
-    position: relative;
-    bottom: 0;
-  }
-
-  .ad-tr-summary-legend {
-    position: relative;
-    bottom: 20px;
-    flex-shrink: 0;
-  }
-
+  /* Training cards grid: single column */
   .ad-tr-training-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+    min-height: auto;
+    border-radius: 0 0 12px 12px;
   }
 
+  /* Center the logo on mobile cards */
   .ad-tr-training-logo,
   .ad-tr-training-logo-alt {
-    left: 112px;
-    top: 0;
-    margin-bottom: 12px;
+    left: 0;
+    right: 0;
+    margin: 0 auto 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
   }
 
-  .ad-tr-section-header {
-    font-size: 17px;
-    padding: 8px;
-  }
-
-  .ad-tr-training-card {
-    width: 100%;
-    margin-left: 0;
-    max-width: 400px;
-  }
-
+  .ad-tr-training-card,
   .ad-tr-training-card-alt {
     width: 100%;
-    margin-left: 0;
-    max-width: 400px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
+  /* Attendance popup grid: single column on mobile */
   .ad-tr-att-popup-grid {
     grid-template-columns: 1fr;
   }

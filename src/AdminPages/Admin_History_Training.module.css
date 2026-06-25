@@ -3,27 +3,57 @@
     display: flex;
     min-height: 100vh;
     background-color: #f6f8fb;
+    position: relative;
+    /* ADDED: Ensure layout uses full height on desktop */
+    height: 100vh;
+    overflow: hidden;
 }
 
+/* Sidebar Wrapper: Defaults for Desktop */
+.Admin-ht-sidebar-wrapper {
+    width: auto;
+    flex-shrink: 0;
+    /* Desktop: Sidebar is just part of the flow */
+    position: relative;
+    transform: none;
+    /* Ensure sidebar sits above the overlay so links remain clickable */
+    z-index: 3000;
+}
+
+/* Main Content */
 .Admin-ht-main-content {
     flex-grow: 1;
-    padding: 10px;
-    margin: 65px 2px 0px 286px;
+    padding: 10px 10px 10px 20px;
+    margin: 65px 0px 0px 280px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    overflow-x: hidden;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
 }
 
-/* Mobile sidebar overlay */
-.Admin-ht-overlay {
+/* Sidebar overlay for mobile when sidebar is open */
+.Admin-ht-mobile-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0);
-    z-index: 900;
+    /* Keep below the sidebar wrapper so sidebar links remain clickable */
+    z-index: 2000;
+}
+
+/* Mobile Toggle Button (Hidden by default on Desktop) */
+.Admin-ht-mobile-toggle {
+    display: none;
+    /* Desktop: Hidden */
+    cursor: pointer;
+    padding: 10px 0;
+    margin-left: 5px;
+    align-self: flex-start;
+    z-index: 100;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -34,8 +64,10 @@
     gap: 20px;
     align-items: stretch;
     flex-wrap: nowrap;
-    margin-left: 15px;
-    height: 245px;
+    margin-left: 0;
+    margin-right: 0;
+    height: auto;
+    flex-shrink: 0;
 }
 
 /* Filter Section */
@@ -53,6 +85,8 @@
 .Admin-ht-filter-header-container {
     position: relative;
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
 }
 
 .Admin-ht-filter-header {
@@ -61,46 +95,146 @@
     font-weight: 500;
     background-color: #4EA24E;
     color: white;
-    padding: 6px 0px 9px 0px;
+    height: 35px;
+    line-height: 35px;
     margin: 0 auto;
     border-radius: 30px;
     display: block;
     width: 228px;
 }
 
+.Admin-ht-clear-btn-header {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-ht-clear-btn-header:hover {
+    background-color: #c0c0c0;
+}
+
+.Admin-ht-filter-icon-container {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #4EA24E;
+}
+
 .Admin-ht-filter-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 15px;
     flex-grow: 1;
-    align-items: start;
-    align-content: start;
+    align-content: center;
 }
 
 /* Input Wrapper for Label + Input */
 .Admin-ht-input-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    height: 100%;
-    align-items: stretch;
-    position: relative;
-    padding-top: 20px;
+    gap: 0px;
 }
 
-/* Static Label */
+.Admin-ht-input-wrapper-full {
+    grid-column: 1 / -1;
+}
+
+.Admin-ht-date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-ht-date-range-inputs>div:not(.Admin-ht-date-range-sep) {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.Admin-ht-date-range-sep {
+    font-weight: 700;
+    color: #666;
+    flex-shrink: 0;
+}
+
+/* Static Label (Fixed on Top Left) */
 .Admin-ht-static-label {
     font-size: 0.85rem;
     font-weight: 600;
     color: #666;
     margin-left: 5px;
     display: block;
+}
+
+/* Dropdown styling */
+.Admin-ht-dropdown-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-ht-dropdown {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    appearance: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Show gray color for first option (placeholder) */
+.Admin-ht-dropdown option:first-child {
+    color: #999;
+}
+
+/* Make other options black */
+.Admin-ht-dropdown option:not(:first-child) {
+    color: #333;
+}
+
+.Admin-ht-dropdown-container::after {
+    content: '▼';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 20px;
-    line-height: 20px;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+}
+
+.Admin-ht-select-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+    line-height: 1;
+    z-index: 2;
 }
 
 .Admin-ht-text-container {
@@ -116,15 +250,26 @@
 .Admin-ht-text {
     width: 89%;
     height: 100%;
-    padding: 8px 15px 0;
+    padding: 0px 15px;
     border: none;
     background-color: transparent;
-    cursor: pointer;
+    cursor: text;
     font-size: 0.95rem;
     color: #333;
     position: relative;
     z-index: 0;
-    bottom: 3px;
+}
+
+.Admin-ht-select {
+    width: 100%;
+    padding: 8px 15px 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    position: relative;
+    bottom: 5px;
 }
 
 .Admin-ht-text::placeholder {
@@ -132,34 +277,78 @@
     opacity: 1;
 }
 
-.Admin-ht-text:focus::placeholder {
+.Admin-ht-text:focus::placeholder,
+.Admin-ht-dropdown:focus::placeholder {
     opacity: 0;
 }
 
-.Admin-ht-text:focus {
+.Admin-ht-text:focus,
+.Admin-ht-dropdown:focus {
     outline: none;
-    cursor: default;
 }
 
-.Admin-ht-text-container:hover {
+.Admin-ht-text-container:hover,
+.Admin-ht-text-container.is-focused,
+.Admin-ht-dropdown-container:hover {
     border-color: #4EA24E;
 }
 
-.Admin-ht-text-container.is-focused {
-    border-color: #4EA24E;
+.Admin-ht-button-group {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    margin-bottom: 5px;
+    gap: 45px;
+    border-radius: 10px;
 }
 
-/* For date inputs */
-.Admin-ht-text[type="date"] {
+.Admin-ht-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
     cursor: pointer;
+    font-weight: 700;
+    flex: 1;
+    transition: opacity 0.2s;
+    max-width: 150px;
 }
 
-.Admin-ht-text[type="date"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    color: #4EA24E;
+.Admin-ht-search-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
 }
 
-/* Training Companies Card */
+.Admin-ht-search-btn:hover {
+    background-color: #3d8a3d;
+}
+
+/* Action Cards Section */
+.Admin-ht-action-cards-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
+}
+
+.Admin-ht-action-card {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: none;
+    border: 2px solid #4EA24E;
+    transition: border-color 0.2s ease;
+}
+
 .Admin-ht-action-addcard {
     text-align: center;
     width: 211px;
@@ -179,7 +368,7 @@
 .Admin-ht-add-card {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 2px solid #808088;
+    border-color: #808088;
 }
 
 .Admin-ht-add-card:hover {
@@ -190,12 +379,6 @@
 .Admin-ht-add-icon {
     margin-bottom: 10px;
     margin-top: 10px;
-}
-
-.Admin-ht-add-icon img {
-    width: 65px;
-    height: 60px;
-    object-fit: contain;
 }
 
 .Admin-ht-add-header {
@@ -209,95 +392,91 @@
 }
 
 .Admin-ht-add-description {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #666;
     margin-top: 8px;
     font-weight: 500;
     line-height: 1.3;
 }
 
-/* Action Cards Section */
-.Admin-ht-action-cards-section {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 12px;
-    flex-wrap: nowrap;
-    margin-left: 0px;
-}
-
-.Admin-ht-action-card {
-    flex: 0 0 140px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    padding: 12px 15px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #808080;
-}
-
-.Admin-ht-icon-container {
-    margin-bottom: 10px;
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.Admin-ht-icon-container img {
-    width: 65px;
-    height: 60px;
-    object-fit: contain;
-}
-
+/* Edit/Delete Card Styling */
 .Admin-ht-action-header {
-    font-size: 1.4rem;
-    font-weight: 500;
-    margin-bottom: 5px;
-    margin-top: 0;
-    color: #4EA24E;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.Admin-ht-header-disabled {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-ht-header-edit-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #5932EA !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-ht-header-delete-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ff0000 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
 }
 
 .Admin-ht-action-description {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     color: #666;
-    margin-bottom: 15px;
-    margin-top: -2px;
-    padding: 0 5px;
+    margin: 0 15px;
+    padding: 0;
     font-weight: 500;
     line-height: 1.3;
     flex-grow: 1;
-    display: flex;
-    align-items: center;
-    text-align: center;
-    justify-content: center;
-    min-height: 70px;
+    display: block;
+    text-align: left;
 }
 
 .Admin-ht-action-btn {
-    padding: 8px 25px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 5px;
-    font-weight: 600;
+    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
-    min-width: 100px;
-    transition: opacity 0.2s;
+    width: 100px;
+    flex-shrink: 0;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
     font-size: 0.9rem;
 }
 
 .Admin-ht-action-btn:disabled {
-    opacity: 0.5;
+    background-color: #e0e0e0 !important;
+    color: #888888 !important;
     cursor: not-allowed;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
 }
 
-/* Specific Action Button Colors */
 .Admin-ht-edit-btn {
     background-color: #5932EA;
     color: white;
-    border-radius: 8px;
 }
 
 .Admin-ht-delete-btn {
@@ -307,28 +486,31 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Bottom Card (History Table) */
+/* Bottom Card (Company Table) */
 .Admin-ht-bottom-card {
     background-color: #ffffff;
     border-radius: 15px;
-    padding: 8px 20px;
-    margin-left: 10px;
+    padding: 12px 20px;
+    margin-left: 0;
+    margin-right: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .Admin-ht-table-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eee;
-    position: relative;
-    z-index: 15;
-    margin-bottom: -20px;
-    top: -17px;
+    flex-shrink: 0;
 }
 
 .Admin-ht-table-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #333;
 }
@@ -341,8 +523,6 @@
 
 .Admin-ht-print-button-container {
     position: relative;
-    display: inline-block;
-    z-index: 15;
 }
 
 .Admin-ht-print-btn {
@@ -354,18 +534,17 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 1rem;
-    margin-left: 40px;
 }
 
 .Admin-ht-print-btn:hover {
     background-color: #3d8a3d;
 }
 
-/* Export Menu Styles */
 .Admin-ht-export-menu {
     position: absolute;
-    top: 40px;
+    top: 100%;
     right: 0;
+    margin-top: 5px;
     z-index: 2000;
     background: white;
     border: 1px solid #ddd;
@@ -394,17 +573,18 @@
 
 /* Table Styles */
 .Admin-ht-table-container {
-    height: 300px;
-    overflow-y: scroll;
-    overflow-x: auto;
+    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
     border: none;
-    border-radius: 0;
+    border-radius: 8px;
+    max-height: 100%;
+    padding-bottom: 25px;
 }
 
-/* --- GREEN SCROLLBARS --- */
+/* --- Table Scrollbars (Desktop) --- */
 .Admin-ht-table-container::-webkit-scrollbar {
     width: 8px;
-    background: transparent;
 }
 
 .Admin-ht-table-container::-webkit-scrollbar-track {
@@ -420,84 +600,64 @@
     background: #3d8a3d;
 }
 
-.Admin-ht-table-container::-webkit-scrollbar:horizontal {
-    height: 6px;
-}
-
-.Admin-ht-table-container::-webkit-scrollbar-track:horizontal {
-    background: transparent;
-}
-
-.Admin-ht-table-container::-webkit-scrollbar-thumb:horizontal {
-    background: #afadad;
-    border-radius: 8px;
-}
-
-.Admin-ht-history-table {
+.Admin-ht-students-table {
     width: 100%;
-    border-collapse: collapse;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.9rem;
     white-space: nowrap;
 }
 
-/* TABLE HEAD */
 .Admin-ht-table-head-row {
     position: sticky;
     top: 0;
     background-color: #ffffff;
-    border-bottom: none;
     z-index: 11;
 }
 
 .Admin-ht-th {
-    padding: 12px 15px;
+    padding: 8px 10px;
     text-align: center;
     font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    background-color: #ffffff;
-    border-bottom: none;
+    color: #999;
+    white-space: nowrap;
+    background-color: white;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .Admin-ht-table-row {
+    border-bottom: 1px solid #f5f5f5;
     cursor: pointer;
-    transition: background-color 0.1s;
-    border-bottom: 1px solid #eee;
-    height: 47px;
+    transition: background-color 0.2s;
 }
 
 .Admin-ht-table-row:hover {
-    background-color: #f6f6f6;
+    background-color: #fafafa;
 }
 
 .Admin-ht-selected-row {
-    background-color: #e0ffe0 !important;
+    background-color: #f7fff5 !important;
 }
 
 .Admin-ht-td {
-    padding: 12px 15px;
-    text-align: left;
-    color: #2e2e2e;
-    font-weight: 450px;
-    white-space: nowrap;
+    padding: 10px 10px;
+    text-align: center;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f5f5f5;
 }
 
+/* Column widths */
 .Admin-ht-checkbox {
-    width: 60px;
+    width: 50px;
     text-align: center;
 }
 
-.Admin-ht-checkbox-input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #4EA24E;
-}
-
-/* Specific Column Width/Alignment adjustments */
 .Admin-ht-sno {
-    width: 60px;
+    width: 50px;
     text-align: center;
 }
 
@@ -507,56 +667,106 @@
 }
 
 .Admin-ht-startdate {
-    width: 120px;
+    width: 110px;
     text-align: center;
 }
 
 .Admin-ht-enddate {
-    width: 120px;
+    width: 110px;
     text-align: center;
 }
 
 .Admin-ht-trainer {
-    width: 150px;
-    text-align: center;
-}
-
-.Admin-ht-phase {
-    width: 100px;
-    text-align: center;
-}
-
-.Admin-ht-batch {
     width: 120px;
     text-align: center;
 }
 
-.Admin-ht-duration {
-    width: 100px;
-    text-align: center;
-}
-
-.Admin-ht-view {
+.Admin-ht-phase {
     width: 80px;
     text-align: center;
 }
 
+.Admin-ht-batch {
+    width: 80px;
+    text-align: center;
+}
+
+.Admin-ht-duration {
+    width: 90px;
+    text-align: center;
+}
+
+.Admin-ht-view {
+    width: 60px;
+    text-align: center;
+}
+
+/* Status Tag Styles */
+.Admin-ht-status-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 70px;
+}
+
+/* Confirmed Status */
+.Admin-ht-status-confirmed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 30px;
+}
+
+/* Pending Status */
+.Admin-ht-status-pending {
+    background-color: #ffe3ce;
+    border: 1px solid #ffe3ce;
+    color: #856404;
+    border-radius: 30px;
+    ;
+}
+
+/* Checkbox Styles */
+.Admin-ht-checkbox-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4EA24E;
+}
+
 /* --- ICON ANIMATION KEYFRAMES --- */
 @keyframes Admin-ht-stroke {
-    100% { stroke-dashoffset: 0; }
+    100% {
+        stroke-dashoffset: 0;
+    }
 }
 
 @keyframes Admin-ht-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale3d(1.1, 1.1, 1); }
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
 }
 
 @keyframes Admin-ht-warning-fill {
-    100% { box-shadow: inset 0 0 0 40px #FF9800; }
+    100% {
+        box-shadow: inset 0 0 0 40px #FF9800;
+    }
 }
 
 @keyframes Admin-ht-delete-fill {
-    100% { box-shadow: inset 0 0 0 40px #D23B42; }
+    100% {
+        box-shadow: inset 0 0 0 40px #D23B42;
+    }
 }
 
 @keyframes Admin-ht-popup-enter {
@@ -564,6 +774,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -712,6 +923,269 @@
     animation: Admin-ht-delete-fill 0.4s ease-in-out 0.4s forwards, Admin-ht-scale 0.3s ease-in-out 0.9s both;
 }
 
+/* Delete Icon - Legacy (keeping for backward compatibility) */
+.Admin-ht-delete-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: block;
+    background-color: #D23B42;
+    border-radius: 50%;
+    padding: 15px;
+}
+
+.Admin-ht-delete-icon--circle {
+    stroke: transparent;
+    stroke-width: 0;
+    fill: none;
+}
+
+.Admin-ht-delete-icon--bin {
+    stroke: #ffffff;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+
+@media screen and (max-width: 1200px) {
+
+    /* 1. Reset Fixed Margins used in Desktop */
+    .Admin-ht-top-card,
+    .Admin-ht-bottom-card {
+        margin-left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 2. Sidebar Drawer Logic */
+    .Admin-ht-print-button-container {
+        position: relative;
+        display: inline-block;
+        z-index: 15;
+        margin-top: -90px;
+    }
+
+    .Admin-ht-sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: auto;
+        z-index: 3000;
+        /* Allow clicks on sidebar content (navigation links) */
+        pointer-events: auto;
+    }
+
+    /* Dark Overlay to dim content when sidebar is open */
+    .Admin-ht-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2990;
+        pointer-events: auto;
+    }
+
+    /* Show Toggle Button on Mobile */
+    .Admin-ht-mobile-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+}
+
+@media (max-width: 900px) {
+    .Admin-ht-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
+    }
+
+    .Admin-ht-mobile-overlay {
+        display: block !important;
+    }
+
+    .Admin-ht-main-content {
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px 10px 20px;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
+        min-height: calc(100vh - 65px) !important;
+        margin-left: 0 !important;
+    }
+
+    /* Scrollbar for Main Content */
+    .Admin-ht-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+        border-radius: 12px;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+
+    /* Top Card Layout: Stack vertically */
+    .Admin-ht-top-card {
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Filter Section Adjustments */
+    .Admin-ht-filter-section {
+        border-radius: 25px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-ht-filter-content {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Add Card Adjustments */
+    .Admin-ht-action-addcard {
+        width: 100% !important;
+        height: auto !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Edit/Delete Cards Container */
+    .Admin-ht-action-cards-section {
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+
+    .Admin-ht-action-card {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 55px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Table Section Adjustments */
+    .Admin-ht-bottom-card {
+        margin-left: 0 !important;
+        padding: 15px 15px 35px 15px !important;
+        flex: none !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
+    }
+
+    .Admin-ht-table-header-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-ht-table-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-ht-table-container {
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Align popup to top for scrolling */
+    .Admin-ht-popup-overlay {
+        align-items: flex-start !important;
+        padding: 90px 10px !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-ht-popup-container.is-form,
+    .Admin-ht-popup-container.is-success {
+        max-width: 95vw !important;
+        margin-top: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Table scrollbar on mobile */
+    .Admin-ht-table-container::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb {
+        background: #4ea24e;
+        border-radius: 8px;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar:horizontal {
+        height: 8px;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
+    }
+}
+
 /* Loading Spinner Styles */
 .Admin-ht-loading-cell {
   text-align: center;
@@ -754,442 +1228,4 @@
     color: #1f2937;
     font-weight: 600;
     font-size: 0.95rem;
-}
-
-/* ============================================ */
-/* RESPONSIVE STYLES */
-/* ============================================ */
-
-/* Tablet View */
-@media screen and (max-width: 1024px) {
-    .Admin-ht-main-content {
-        margin: 65px 0px 0px 10px;
-        padding: 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-top-card {
-        flex-direction: column;
-        height: auto;
-        gap: 20px;
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-section {
-        flex: 1 1 auto;
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-cards-section {
-        flex-direction: row;
-        justify-content: space-between;
-        margin-left: 0;
-        margin-right: 0;
-        gap: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-card {
-        flex: 1 1 calc(50% - 10px);
-        max-width: 250px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-bottom-card {
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        padding: 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-table-container {
-        overflow-x: auto;
-        width: 100%;
-        box-sizing: border-box;
-    }
-}
-
-/* Mobile Landscape and Small Tablets */
-@media screen and (max-width: 768px) {
-    .Admin-ht-main-content {
-        margin: 70px 0px 0px 15px;
-        padding: 12px;
-        padding-bottom: 30px;
-        gap: 15px;
-        box-sizing: border-box;
-        width: calc(100% - 30px);
-        height: auto;
-        max-height: calc(100vh - 70px);
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    .Admin-ht-main-content::-webkit-scrollbar {
-        width: 10px;
-    }
-
-    .Admin-ht-main-content::-webkit-scrollbar-track {
-        background: #f0f2f5;
-    }
-
-    .Admin-ht-main-content::-webkit-scrollbar-thumb {
-        background-color: #4EA24E;
-        border-radius: 20px;
-        border: 3px solid #f0f2f5;
-    }
-
-    .Admin-ht-main-content::-webkit-scrollbar-thumb:hover {
-        background-color: #3d8a3d;
-    }
-
-    .Admin-ht-top-card {
-        flex-direction: column;
-        height: auto;
-        gap: 20px;
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-section {
-        flex: 1 1 auto;
-        width: 100%;
-        padding: 15px;
-        border-radius: 20px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-header {
-        margin: 0 auto;
-        width: 100%;
-        max-width: 228px;
-        font-size: 0.95rem;
-        padding: 8px 0;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-content {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        width: 100%;
-    }
-
-    .Admin-ht-text-container {
-        height: 50px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-addcard {
-        width: 100%;
-        max-width: 100%;
-        padding: 20px 15px;
-        box-sizing: border-box;
-        max-height: 236.5px;
-    }
-
-    .Admin-ht-add-header {
-        font-size: 1.6rem;
-        margin-bottom: 8px;
-    }
-
-    .Admin-ht-add-description {
-        font-size: 1.1rem;
-    }
-
-    .Admin-ht-action-cards-section {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-card {
-        flex: 1 1 auto;
-        width: 100%;
-        max-width: none;
-        height: 200px;
-        padding: 20px 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-header {
-        font-size: 1.3rem;
-    }
-
-    .Admin-ht-action-description {
-        font-size: 1.1rem;
-    }
-
-    .Admin-ht-bottom-card {
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        padding: 15px;
-        border-radius: 12px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-print-button-container {
-        position: relative;
-        display: inline-block;
-        z-index: 15;
-        left: 305px;
-        top: -65px;
-    }
-
-    .Admin-ht-table-header-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        margin-bottom: 0;
-        top: 0;
-    }
-
-    .Admin-ht-table-title {
-        font-size: 1.3rem;
-    }
-
-    .Admin-ht-table-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .Admin-ht-print-btn {
-        padding: 8px 20px;
-        font-size: 0.9rem;
-    }
-
-    .Admin-ht-table-container {
-        height: 330px;
-        overflow-x: auto;
-        width: 100%;
-        box-sizing: border-box;
-        position: relative;
-        bottom: 40px;
-    }
-
-    .Admin-ht-history-table {
-        font-size: 0.85rem;
-        width: 100%;
-    }
-
-    .Admin-ht-th,
-    .Admin-ht-td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-    }
-}
-
-@media screen and (max-width: 420px) {
-    .Admin-ht-action-cards-section {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Mobile Portrait View */
-@media screen and (max-width: 480px) {
-    .Admin-ht-main-content {
-        margin: 55px 12px 0 12px;
-        padding: 10px;
-        gap: 15px;
-        box-sizing: border-box;
-        width: calc(100% - 24px);
-        overflow-x: hidden;
-    }
-
-    .Admin-ht-top-card {
-        margin-left: 0;
-        margin-right: 0;
-        gap: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-section {
-        padding: 15px;
-        border-radius: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-header {
-        font-size: 0.9rem;
-        padding: 8px 15px;
-        border-radius: 20px;
-        margin: 0 auto;
-        width: auto;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-filter-content {
-        gap: 12px;
-        width: 100%;
-    }
-
-    .Admin-ht-text-container {
-        height: 45px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-text {
-        font-size: 0.85rem;
-        padding: 0 10px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-addcard {
-        padding: 5px 15px;
-        width: 100%;
-        margin-top: 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-add-icon {
-        margin-bottom: 10px;
-        margin-top: 0;
-    }
-
-    .Admin-ht-add-header {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .Admin-ht-add-description {
-        font-size: 1.05rem;
-        margin-top: 5px;
-    }
-
-    .Admin-ht-action-cards-section {
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        gap: 15px;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-card {
-        padding: 5px 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-action-header {
-        font-size: 1.3rem;
-    }
-
-    .Admin-ht-action-description {
-        font-size: 1.05rem;
-        min-height: 60px;
-    }
-
-    .Admin-ht-action-btn {
-        padding: 10px 25px;
-        font-size: 0.9rem;
-        min-width: 100px;
-    }
-
-    .Admin-ht-bottom-card {
-        padding: 15px;
-        border-radius: 12px;
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-table-header-row {
-        gap: 12px;
-        padding-bottom: 12px;
-    }
-
-    .Admin-ht-table-title {
-        font-size: 1.2rem;
-        margin-left: 0;
-    }
-
-    .Admin-ht-print-btn {
-        padding: 8px 20px;
-        font-size: 0.9rem;
-        margin-left: 0;
-    }
-
-    .Admin-ht-export-menu {
-        min-width: 150px;
-        right: 0;
-    }
-
-    .Admin-ht-export-menu button {
-        padding: 10px 15px;
-        font-size: 0.9rem;
-    }
-
-    .Admin-ht-table-container {
-        height: 350px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .Admin-ht-history-table {
-        font-size: 0.8rem;
-        width: 100%;
-    }
-
-    .Admin-ht-th {
-        padding: 10px 6px;
-        font-size: 0.75rem;
-    }
-
-    .Admin-ht-td {
-        padding: 10px 6px;
-        font-size: 0.8rem;
-    }
-
-    /* Adjust column widths for mobile */
-    .Admin-ht-sno {
-        width: 40px;
-    }
-
-    .Admin-ht-course {
-        min-width: 120px;
-    }
-
-    .Admin-ht-startdate {
-        min-width: 100px;
-    }
-
-    .Admin-ht-enddate {
-        min-width: 100px;
-    }
-
-    .Admin-ht-trainer {
-        min-width: 120px;
-    }
-
-    .Admin-ht-phase {
-        min-width: 80px;
-    }
-
-    .Admin-ht-batch {
-        min-width: 100px;
-    }
-
-    .Admin-ht-duration {
-        min-width: 80px;
-    }
 }

@@ -98,6 +98,7 @@
     flex-wrap: nowrap;
     margin-left: 0;
     height: 245px;
+    flex-shrink: 0;
 }
 
 
@@ -1240,7 +1241,7 @@
     .Admin-es-apk-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 10px 10px 10px 20px;
+        padding: 10px 10px 10px 10px;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -1254,7 +1255,13 @@
         min-height: calc(100vh - 65px) !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        scrollbar-width: none !important;
     }
+
+    .Admin-es-apk-main-content::-webkit-scrollbar {
+        display: none !important;
+    }
+
 
     /* Stacking Top Cards Vertically */
     .Admin-es-apk-top-card {
@@ -1262,10 +1269,11 @@
         margin-top: 0px !important;
         gap: 15px !important;
         flex-direction: column !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         width: 100% !important;
         height: auto !important;
         align-items: stretch !important;
+        flex-shrink: 0 !important;
     }
 
     /* Cards Adjustments */
@@ -1273,19 +1281,23 @@
     .Admin-es-apk-placed-students-card,
     .Admin-es-apk-filtered-students-card {
         width: 100% !important;
+        max-width: 100% !important;
         height: auto !important;
+        min-height: 160px !important;
         padding: 20px !important;
         box-sizing: border-box !important;
+        flex-shrink: 0 !important;
     }
 
     .Admin-es-apk-eligible-students-search {
         border-radius: 25px !important;
         width: 100% !important;
-        height: auto !important;
         max-width: 100% !important;
+        height: auto !important;
         box-sizing: border-box !important;
         padding: 50px 20px 30px 20px !important;
         min-height: auto !important;
+        flex-shrink: 0 !important;
     }
 
     .Admin-es-apk-eligible-inputs {

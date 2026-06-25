@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    Admin_Trainings_Archive.module.css
    Dedicated styles for the Archived Trainings page
    ============================================================ */
@@ -123,6 +123,7 @@
   margin-top: -2px;
   overflow-y: visible;
   align-content: start;
+  flex-shrink: 0;
 }
 
 .ad-tr-training-empty {
@@ -139,7 +140,6 @@
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 6px;
   position: relative;
   min-height: 280px;
@@ -152,7 +152,6 @@
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 6px;
   position: relative;
   min-height: 280px;
@@ -444,7 +443,8 @@
 /* ── Tablet: 769px to 1200px ── */
 @media (max-width: 1200px) and (min-width: 769px) {
   .ad-tr-content {
-    margin-left: 290px;
+    margin-left: 0;
+    margin-top: 65px;
     padding: 14px 16px;
   }
 
@@ -465,12 +465,11 @@
 
   .ad-tr-content {
     margin-left: 0;
-    margin-top: 55px;
+    margin-top: 65px;
     padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px;
-    top: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    height: 94vh;
+    height: calc(100vh - 65px);
     max-height: none;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
