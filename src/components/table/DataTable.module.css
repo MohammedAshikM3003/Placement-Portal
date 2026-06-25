@@ -1,0 +1,285 @@
+/*
+ * components/table/DataTable.module.css
+ * Shared DataTable component styles.
+ * Uses design tokens exclusively. No global element selectors.
+ */
+
+/* ─── Container ──────────────────────────────────────────────── */
+.wrapper {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-card, 0 2px 8px rgba(0,0,0,0.08));
+  overflow: hidden;
+  font-family: var(--font-base);
+}
+
+/* ─── Toolbar (title + actions) ──────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-2xl);
+  border-bottom: 1px solid var(--color-border-light);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* ─── Pagination Controls ─────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.pageBtn {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: var(--color-text-muted);
+}
+
+.pageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  padding: 0 var(--space-xs);
+}
+
+/* ─── Scrollable Table Area ───────────────────────────────────── */
+.scrollArea {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Table ───────────────────────────────────────────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-family: var(--font-base);
+}
+
+/* ─── Head ────────────────────────────────────────────────────── */
+.thead {
+  background: var(--color-bg, #f8f8f8);
+}
+
+.th {
+  padding: var(--space-md) var(--space-lg);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--color-border-light);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.th.sortable {
+  cursor: pointer;
+}
+
+.th.sortable:hover {
+  color: var(--color-text);
+  background: var(--color-border-light);
+}
+
+.thInner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.sortIcon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0.35;
+  font-size: 0.55rem;
+  line-height: 1;
+  transition: opacity 0.1s;
+}
+
+.th.sortable:hover .sortIcon,
+.th.sortActive .sortIcon {
+  opacity: 1;
+}
+
+.th.sortActive {
+  color: var(--color-text);
+}
+
+/* Alignment variants */
+.th.center { text-align: center; }
+.th.right  { text-align: right; }
+
+/* ─── Body ─────────────────────────────────────────────────────── */
+.tbody {}
+
+.tr {
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background 0.12s;
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background: var(--color-bg);
+}
+
+.trClickable {
+  cursor: pointer;
+}
+
+.trSelected {
+  background: var(--color-info-bg, rgba(25, 122, 255, 0.07));
+}
+
+.trSelected:hover {
+  background: var(--color-info-bg, rgba(25, 122, 255, 0.10));
+}
+
+.trBlocked {
+  background: var(--color-error-bg, rgba(211, 47, 47, 0.06));
+}
+
+.trBlocked:hover {
+  background: rgba(211, 47, 47, 0.10);
+}
+
+.td {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.td.center { text-align: center; }
+.td.right  { text-align: right; }
+.td.wrap   { white-space: normal; }
+
+/* ─── Checkbox cell ────────────────────────────────────────────── */
+.checkboxCell {
+  padding: var(--space-md) var(--space-lg);
+  width: 44px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary, #3e8ef7);
+  cursor: pointer;
+}
+
+/* ─── Serial number cell ───────────────────────────────────────── */
+.snoCell {
+  width: 56px;
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+/* ─── Empty / Loading states ───────────────────────────────────── */
+.stateRow {}
+
+.stateCell {
+  padding: var(--space-5xl) var(--space-lg);
+  text-align: center;
+}
+
+.stateContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-subtle);
+}
+
+.stateIcon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.stateText {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Loading spinner */
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary, #3e8ef7);
+  border-radius: 50%;
+  animation: dt-spin 0.7s linear infinite;
+}
+
+@keyframes dt-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Footer (optional slot below table) ──────────────────────── */
+.footer {
+  padding: var(--space-md) var(--space-2xl);
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}

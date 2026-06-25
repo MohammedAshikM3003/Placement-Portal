@@ -1,0 +1,160 @@
+/*
+ * components/dialog/ConfirmDialog/ConfirmDialog.module.css
+ * Shared confirm/warning dialog styles.
+ * Uses design tokens exclusively. No global element selectors.
+ */
+
+/* ─── Overlay ────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay, rgba(0,0,0,0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: cd-fadein 0.15s ease;
+  padding: var(--space-lg);
+}
+
+@keyframes cd-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Dialog box ─────────────────────────────────────────────── */
+.dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  font-family: var(--font-base);
+  animation: cd-slidein 0.18s ease;
+}
+
+@keyframes cd-slidein {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.header {
+  padding: var(--space-lg) var(--space-2xl);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-white);
+  background: var(--dialog-accent, var(--color-error));
+  letter-spacing: 0.04em;
+}
+
+/* Variant modifiers on the dialog element set the accent */
+.dialog[data-variant="delete"]  { --dialog-accent: var(--color-error,   #d32f2f); }
+.dialog[data-variant="block"]   { --dialog-accent: var(--color-error,   #d32f2f); }
+.dialog[data-variant="unblock"] { --dialog-accent: var(--color-warning, #f59e0b); }
+.dialog[data-variant="warn"]    { --dialog-accent: var(--color-warning, #f59e0b); }
+.dialog[data-variant="info"]    { --dialog-accent: var(--color-info,    #197AFF); }
+.dialog[data-variant="success"] { --dialog-accent: var(--color-success, #22C55E); }
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.body {
+  padding: var(--space-2xl) var(--space-2xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+}
+
+/* ─── Icon slot ──────────────────────────────────────────────── */
+.iconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dialog-accent-light, var(--color-error-bg));
+}
+
+.dialog[data-variant="delete"]  .iconWrap,
+.dialog[data-variant="block"]   .iconWrap { background: var(--color-error-bg); }
+.dialog[data-variant="unblock"] .iconWrap,
+.dialog[data-variant="warn"]    .iconWrap { background: var(--color-warning-bg); }
+.dialog[data-variant="info"]    .iconWrap { background: var(--color-info-bg); }
+.dialog[data-variant="success"] .iconWrap { background: var(--color-success-bg); }
+
+/* ─── Heading ────────────────────────────────────────────────── */
+.heading {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ─── Message ────────────────────────────────────────────────── */
+.message {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.footer {
+  padding: var(--space-lg) var(--space-2xl) var(--space-2xl);
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+.cancelBtn {
+  flex: 1;
+  max-width: 140px;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--color-bg);
+  border-color: var(--color-text-muted);
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmBtn {
+  flex: 1;
+  max-width: 140px;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--dialog-accent, var(--color-error));
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-white);
+  cursor: pointer;
+  transition: opacity 0.15s, filter 0.15s;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
