@@ -119,6 +119,16 @@ function AdminTraining({ onLogout }) {
           ])
         );
 
+        // Build a map of scheduleId → total student count across all batches
+        const studentCountByScheduleId = new Map();
+        normalizedBatchAssignments.forEach((assignment) => {
+          const sid = (assignment?.scheduleId || '').toString().trim();
+          if (sid) {
+            const count = Array.isArray(assignment?.students) ? assignment.students.length : 0;
+            studentCountByScheduleId.set(sid, (studentCountByScheduleId.get(sid) || 0) + count);
+          }
+        });
+
         const cards = normalizedSchedules.map((schedule) => {
           const companyName = (schedule?.companyName || '').toString().trim() || 'Training';
            const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
@@ -154,6 +164,9 @@ function AdminTraining({ onLogout }) {
             durationText = `${days} Day${days > 1 ? 's' : ''}`;
           }
 
+          const schedId = (schedule?._id || '').toString();
+          const studentCount = studentCountByScheduleId.get(schedId) || 0;
+
           return {
             id: schedule?._id || `${companyName}-${schedule?.startDate || ''}`,
             scheduleId: schedule?._id || '',
@@ -164,8 +177,8 @@ function AdminTraining({ onLogout }) {
             yearText,
             yearTokens,
             phaseText,
-            durationText
-            ,
+            durationText,
+            studentCount,
             isEnded: (() => {
               try {
                 const ed = new Date(schedule?.endDate);
@@ -797,19 +810,15 @@ function AdminTraining({ onLogout }) {
 
         <div className={styles['ad-tr-top-grid']}>
           <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-training-company')}>
-            <div className={styles['ad-tr-action-icon']}>
-              <img src={AddTrainingIcon} alt="Add Training" />
-            </div>
-            <div className={styles['ad-tr-action-title']}>Add Training Programme</div>
-            <div className={styles['ad-tr-action-sub']}>Click to Add Training programs to develop Students skills</div>
+            <img className={styles['ad-tr-action-icon']} src={AddTrainingIcon} alt="Add Training" />
+            <h4 className={styles['ad-tr-action-title']}>Add Training Company</h4>
+            <p className={styles['ad-tr-action-sub']}>New Training Company for Scheduling</p>
           </button>
 
           <button type="button" className={styles['ad-tr-action-card']} onClick={() => navigate('/admin-schedule-training')}>
-            <div className={styles['ad-tr-action-icon']}>
-              <img src={ScheduleTrainingIcon} alt="Schedule Training" />
-            </div>
-            <div className={styles['ad-tr-action-title']}>Schedule Training</div>
-            <div className={styles['ad-tr-action-sub']}>Plan phases and schedule your training sessions</div>
+            <img className={styles['ad-tr-action-icon']} src={ScheduleTrainingIcon} alt="Schedule Training" />
+            <h4 className={styles['ad-tr-action-title']}>Schedule Training</h4>
+            <p className={styles['ad-tr-action-sub']}>Plan phases and schedule your training sessions</p>
           </button>
 
           <button
@@ -818,16 +827,25 @@ function AdminTraining({ onLogout }) {
             onClick={handleOpenAttendancePopup}
             disabled={attendancePopupLoading}
           >
-            <div className={styles['ad-tr-action-icon']}>
-              <img src={AttendanceTrainingIcon} alt="Attendance and Student Info" />
-            </div>
-            <div className={styles['ad-tr-action-title']}>
-              {attendancePopupLoading ? 'Loading...' : 'Attendance & Student Info'}
-            </div>
-            <div className={styles['ad-tr-action-sub']}>View daily attendance status and student details</div>
+            <img className={styles['ad-tr-action-icon']} src={AttendanceTrainingIcon} alt="Attendance and Student Info" />
+            <h4 className={styles['ad-tr-action-title']}>
+              {attendancePopupLoading ? 'Loading...' : 'Attendance Information'}
+            </h4>
+            <p className={styles['ad-tr-action-sub']}>View daily attendance status and student details</p>
           </button>
           <div className={styles['ad-tr-filter-card']}>
-            <div className={styles['ad-tr-filter-title']}>Trainings</div>
+            <div className={styles['ad-tr-filter-header-container']}>
+              <div className={styles['ad-tr-filter-title']}>Trainings</div>
+              {(selectedCompany || selectedYear || selectedStartDate || selectedEndDate) && (
+                <button
+                  type="button"
+                  className={styles['ad-tr-filter-clear-btn']}
+                  onClick={handleClearFilters}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <div className={styles['ad-tr-filter-grid']}>
               <div className={styles['ad-tr-filter-field']}>
                 <label className={styles['ad-tr-filter-label']}>Company</label>
@@ -895,14 +913,6 @@ function AdminTraining({ onLogout }) {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className={styles['ad-tr-filter-clear-btn']}
-                onClick={handleClearFilters}
-              >
-                Clear Filters
-              </button>
-
             </div>
           </div>
         </div>
@@ -920,7 +930,10 @@ function AdminTraining({ onLogout }) {
 
         <div className={styles['ad-tr-training-grid']}>
           {isLoadingCards ? (
-            <div className={styles['ad-tr-training-empty']}>Loading scheduled trainings...</div>
+            <div className={styles['ad-tr-loading-wrapper']}>
+              <div className={styles['ad-tr-spinner']}></div>
+              <span className={styles['ad-tr-loading-text']}>Loading scheduled trainings…</span>
+            </div>
           ) : filteredTrainingCards.length === 0 ? (
             <div className={styles['ad-tr-training-empty']}>No scheduled trainings found.</div>
           ) : (
@@ -994,6 +1007,7 @@ function AdminTraining({ onLogout }) {
                   <div className={styles['ad-tr-training-name']}>{card.companyName}</div>
                   <div className={styles['ad-tr-training-meta']}>Year: {card.yearText}</div>
                   <div className={styles['ad-tr-training-meta']}>Phase: {card.phaseText}</div>
+                  <div className={styles['ad-tr-training-meta']}>Students: {card.studentCount}</div>
                   <div className={styles['ad-tr-training-meta']}>Start Date: {formatDateForDisplay(card.startDate)}</div>
                   <div className={styles['ad-tr-training-meta']}>End Date: {formatDateForDisplay(card.endDate)}</div>
                   <div className={styles['ad-tr-training-meta']}>Duration: {card.durationText}</div>

@@ -1,0 +1,532 @@
+﻿/* ============================================================
+   Admin_Trainings_Archive.module.css
+   Dedicated styles for the Archived Trainings page
+   ============================================================ */
+
+/* ── Page shell ── */
+.ad-tr-page {
+  min-height: 100vh;
+  background: #f4f7fb;
+  overflow-y: auto;
+}
+
+.ad-tr-content {
+  padding: 10px 10px 10px 20px;
+  margin: 65px 0px 0px 280px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
+  box-sizing: border-box;
+}
+
+/* Desktop scrollbar */
+@media (min-width: 769px) {
+  .ad-tr-page {
+    overflow: hidden;
+  }
+
+  .ad-tr-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .ad-tr-content::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-button:start:decrement,
+  .ad-tr-content::-webkit-scrollbar-button:end:increment {
+    display: none;
+  }
+}
+
+/* ── Header row ── */
+.ad-tr-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+.ad-tr-breadcrumb {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Section header bar ── */
+.ad-tr-section-header {
+  background: #3a9b4a;
+  color: #fff;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 10px 10px 0 0;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ad-tr-section-header-title {
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.ad-tr-section-archive-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ad-tr-section-archive-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Training grid ── */
+.ad-tr-training-grid {
+  border: 1px solid #e6eef6;
+  background: #ffffff;
+  border-radius: 0 0 12px 12px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  min-height: 315px;
+  margin-top: -2px;
+  overflow-y: visible;
+  align-content: start;
+}
+
+.ad-tr-training-empty {
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ── Training cards ── */
+.ad-tr-training-card {
+  border-radius: 14px;
+  background: #66c98a;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  position: relative;
+  min-height: 280px;
+}
+
+.ad-tr-training-card-alt {
+  border-radius: 14px;
+  background: #6cc6d4;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  position: relative;
+  min-height: 280px;
+}
+
+/* ── Card 3-dot menu ── */
+.ad-tr-training-card-menu {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.ad-tr-training-card-menu-btn {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ad-tr-training-card-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ad-tr-training-card-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ad-tr-training-card-menu-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e6eef6;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  min-width: 140px;
+}
+
+.ad-tr-training-card-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ad-tr-training-card-menu-item:hover {
+  background: #f0f2f5;
+}
+
+.ad-tr-training-card-menu-item:first-child {
+  border-bottom: 1px solid #e6eef6;
+}
+
+/* ── Card logo ── */
+.ad-tr-training-logo,
+.ad-tr-training-logo-alt {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2f9a45;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 24px;
+  margin-bottom: auto;
+  position: relative;
+  left: 52px;
+  top: 0px;
+}
+
+.ad-tr-training-logo-alt {
+  color: #1f8aa6;
+}
+
+/* ── Card text ── */
+.ad-tr-training-name {
+  font-weight: 800;
+  font-size: large;
+  font-family: poppins;
+}
+
+.ad-tr-training-meta {
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+/* ── Delete / confirm popup ── */
+.ad-tr-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ad-tr-popup-container {
+  width: 380px;
+  max-width: 92vw;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  font-family: 'Poppins', sans-serif;
+  animation: popupScaleIn 0.3s ease-out;
+}
+
+.ad-tr-popup-header {
+  background: #3a9b4a;
+  color: #fff;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px 20px;
+}
+
+.ad-tr-popup-body {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.ad-tr-popup-body h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-body p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+  line-height: 1.5;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-body p strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.ad-tr-warning-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffa500;
+  border-radius: 50%;
+  animation: iconBounce 0.4s ease-out;
+}
+
+.ad-tr-warning-icon svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.ad-tr-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4EA24E;
+  border-radius: 50%;
+  animation: iconBounce 0.4s ease-out;
+}
+
+.ad-tr-icon-wrapper svg {
+  width: 40px;
+  height: 40px;
+  stroke: #ffffff;
+}
+
+.ad-tr-popup-footer {
+  background: #f9fafb;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ad-tr-popup-cancel-btn,
+.ad-tr-popup-delete-btn,
+.ad-tr-popup-close-btn {
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 11px 28px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 95px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ad-tr-popup-cancel-btn,
+.ad-tr-popup-close-btn {
+  background: #d1d5db;
+  color: #374151;
+}
+
+.ad-tr-popup-cancel-btn:hover:not(:disabled),
+.ad-tr-popup-close-btn:hover:not(:disabled) {
+  background: #676d74;
+}
+
+.ad-tr-popup-delete-btn {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.ad-tr-popup-delete-btn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.ad-tr-popup-cancel-btn:disabled,
+.ad-tr-popup-delete-btn:disabled,
+.ad-tr-popup-close-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Tablet: 769px to 1200px ── */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .ad-tr-content {
+    margin-left: 290px;
+    padding: 14px 16px;
+  }
+
+  .ad-tr-training-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Mobile: 768px and below ── */
+@media (max-width: 768px) {
+  .ad-tr-page {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .ad-tr-content {
+    margin-left: 0;
+    margin-top: 55px;
+    padding: 15px 16px calc(env(safe-area-inset-bottom, 20px) + 20px) 16px;
+    top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 94vh;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #4EA24E #f0f2f5;
+  }
+
+  .ad-tr-content::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  .ad-tr-content::-webkit-scrollbar-button:start:decrement,
+  .ad-tr-content::-webkit-scrollbar-button:end:increment {
+    display: none;
+  }
+
+  .ad-tr-training-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ad-tr-training-logo,
+  .ad-tr-training-logo-alt {
+    left: 112px;
+    top: 0;
+    margin-bottom: 12px;
+  }
+
+  .ad-tr-section-header {
+    font-size: 17px;
+    padding: 8px;
+  }
+
+  .ad-tr-training-card,
+  .ad-tr-training-card-alt {
+    width: 100%;
+    margin-left: 0;
+    max-width: 400px;
+  }
+}

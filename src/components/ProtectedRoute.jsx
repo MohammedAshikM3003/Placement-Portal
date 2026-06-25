@@ -106,9 +106,9 @@ export const RoleGuard = ({ children, allowedRoles = [] }) => {
   const authToken = localStorage.getItem('authToken');
   const currentRole = role || storedRole;
 
-  // If AuthContext is loading OR we have storage data but context isn't authenticated yet,
-  // stay in the loading state. This prevents the "Redirect to Login" flicker.
-  if (isLoading || (!isAuthenticated && isLoggedIn && authToken)) {
+  // Only show loading during the initial AuthContext hydration.
+  // Once isLoading is false the context has finished its check — trust it.
+  if (isLoading) {
     return <LoadingSpinner message="Loading..." />;
   }
 

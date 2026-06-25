@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar.js';
 import AdSidebar from '../components/Sidebar/Adsidebar.js';
-import styles from './Admin_Training.module.css';
+import styles from './Admin_Trainings_Archive.module.css';
 import mongoDBService from '../services/mongoDBService';
 
 const TRAINING_ARCHIVE_STORAGE_KEY = 'placement-portal-admin-training-archives';
@@ -38,6 +38,7 @@ function AdminTrainingsArchive({ onLogout }) {
   const [activePopup, setActivePopup] = useState(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
+  const [studentCountMap, setStudentCountMap] = useState({});
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -54,7 +55,29 @@ function AdminTrainingsArchive({ onLogout }) {
   }, []);
 
   useEffect(() => {
-    setArchivedCards(readArchivedTrainings());
+    const cards = readArchivedTrainings();
+    setArchivedCards(cards);
+
+    // Fetch batch assignments to compute student counts
+    const fetchStudentCounts = async () => {
+      try {
+        const assignments = await mongoDBService.getScheduledTrainingBatchAssignments();
+        const normalized = Array.isArray(assignments) ? assignments : [];
+        const countMap = {};
+        normalized.forEach((assignment) => {
+          const sid = (assignment?.scheduleId || '').toString().trim();
+          if (sid) {
+            const count = Array.isArray(assignment?.students) ? assignment.students.length : 0;
+            countMap[sid] = (countMap[sid] || 0) + count;
+          }
+        });
+        setStudentCountMap(countMap);
+      } catch (err) {
+        console.error('Failed to load student counts for archive:', err);
+      }
+    };
+
+    fetchStudentCounts();
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen((v) => !v);
@@ -240,6 +263,7 @@ function AdminTrainingsArchive({ onLogout }) {
                   <div className={styles['ad-tr-training-name']}>{card.companyName}</div>
                   <div className={styles['ad-tr-training-meta']}>Year: {card.yearText || '-'}</div>
                   <div className={styles['ad-tr-training-meta']}>Phase: {card.phaseText || '-'}</div>
+                  <div className={styles['ad-tr-training-meta']}>Students: {studentCountMap[(card.scheduleId || '').toString()] || 0}</div>
                   <div className={styles['ad-tr-training-meta']}>Start Date: {formatDateForDisplay(card.startDate)}</div>
                   <div className={styles['ad-tr-training-meta']}>End Date: {formatDateForDisplay(card.endDate)}</div>
                   <div className={styles['ad-tr-training-meta']}>Duration: {card.durationText || '-'}</div>
