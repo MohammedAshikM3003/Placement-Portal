@@ -24,12 +24,11 @@ import PlacementPortalLogin from "./mainlogin.jsx";
 import MainSignUp from "./MainSignUp.jsx";
 import MainRegistration from "./MainRegistration.jsx";
 import AdminEsstudapp from "./AdminPages/AdminEsstudapp.jsx";
+import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
 // Dev-only component playground (only loaded in development)
 const ComponentPlayground = process.env.NODE_ENV === 'development'
   ? require('./DevPages/ComponentPlayground').default
   : null;
-
-import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
 
 // --- LAZY LOAD ADMIN PAGES (only loaded when admin navigates to them) ---
 const AdminDashboard = lazy(() => import("./AdminPages/Admin_Dashboard.jsx"));
