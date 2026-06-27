@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar';
 import AdSidebar from '../components/Sidebar/Adsidebar';
@@ -103,6 +103,87 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const [endDate, setEndDate] = useState('');
   const [duration, setDuration] = useState('');
 
+  const [highlightedField, setHighlightedField] = useState(null);
+  const highlightClearTimerRef = useRef(null);
+  const fieldRefs = useRef({});
+
+  const registerFieldRef = useCallback((field) => (node) => {
+    fieldRefs.current[field] = node;
+  }, []);
+
+  const clearFieldHighlight = useCallback(() => {
+    if (highlightClearTimerRef.current) {
+      clearTimeout(highlightClearTimerRef.current);
+      highlightClearTimerRef.current = null;
+    }
+    setHighlightedField(null);
+  }, []);
+
+  const focusField = useCallback((field) => {
+    const target = fieldRefs.current[field];
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      try { target.focus({ preventScroll: true }); } catch { target.focus(); }
+    }, 100);
+
+    clearFieldHighlight();
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => { setHighlightedField(field); });
+    });
+
+    highlightClearTimerRef.current = window.setTimeout(() => {
+      setHighlightedField((cur) => (cur === field ? null : cur));
+    }, 3000);
+  }, [clearFieldHighlight]);
+
+  const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return (
+      window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches ||
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    );
+  });
+  const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const hybridQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const primaryQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const updatePointerSupport = () => {
+      const isSupported = hybridQuery.matches || primaryQuery.matches;
+      setSupportsPointerTooltip(isSupported);
+      if (!isSupported) {
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      }
+    };
+    updatePointerSupport();
+    if (typeof hybridQuery.addEventListener === 'function') {
+      hybridQuery.addEventListener('change', updatePointerSupport);
+      primaryQuery.addEventListener('change', updatePointerSupport);
+      return () => {
+        hybridQuery.removeEventListener('change', updatePointerSupport);
+        primaryQuery.removeEventListener('change', updatePointerSupport);
+      };
+    }
+    return undefined;
+  }, []);
+
+  const handleTooltipMove = useCallback((event) => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+  }, [supportsPointerTooltip]);
+
+  const handleTooltipLeave = useCallback(() => {
+    if (!supportsPointerTooltip) return;
+    setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+  }, [supportsPointerTooltip]);
+
+  useEffect(() => () => {
+    if (highlightClearTimerRef.current) clearTimeout(highlightClearTimerRef.current);
+  }, []);
+
   // Preferred Training state
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
@@ -113,6 +194,35 @@ const AdminScheduleTraining = ({ onLogout }) => {
   const [pendingTrainerSelection, setPendingTrainerSelection] = useState([]);
   const [selectedCourseTrainers, setSelectedCourseTrainers] = useState({});
   const [alertPopup, setAlertPopup] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+
+  const missingFields = useMemo(() => {
+    const missing = [];
+    if (selectedCompanies.length === 0) {
+      missing.push({ field: 'selectedCompanies', label: 'Minimum one company' });
+    } else {
+      const unselectedCompanies = selectedCompanies.filter((item) => !item.company);
+      if (unselectedCompanies.length > 0) {
+        missing.push({ field: 'selectedCompanies', label: 'Company selection for all rows' });
+      }
+    }
+    const normalizedPhase = (phaseNumber || '').toString().trim().replace(/^Phase\s+/i, '');
+    if (!normalizedPhase) {
+      missing.push({ field: 'phaseNumber', label: 'Phase Number' });
+    }
+    if (!applicableYear) {
+      missing.push({ field: 'applicableYear', label: 'Applicable Year' });
+    }
+    if (!startDate) {
+      missing.push({ field: 'startDate', label: 'Start Date' });
+    }
+    if (!endDate) {
+      missing.push({ field: 'endDate', label: 'End Date' });
+    }
+    if (selectedCourses.length === 0) {
+      missing.push({ field: 'selectedCourses', label: 'Minimum one preferred course' });
+    }
+    return missing;
+  }, [selectedCompanies, phaseNumber, applicableYear, startDate, endDate, selectedCourses]);
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -447,7 +557,11 @@ const AdminScheduleTraining = ({ onLogout }) => {
   };
 
   const closeAlertPopup = () => {
+    const isSuccess = alertPopup.type === 'success';
     setAlertPopup({ isOpen: false, title: '', message: '', type: 'info' });
+    if (isSuccess) {
+      navigate('/admin-training');
+    }
   };
 
   const applyTrainerSelection = () => {
@@ -686,9 +800,10 @@ const AdminScheduleTraining = ({ onLogout }) => {
                     <div className={styles.formGroup}>
                       <label className={styles.fieldLabel}>Select Company <span className={styles.requiredStar}>*</span></label>
                       <select
+                        ref={index === 0 ? registerFieldRef('selectedCompanies') : null}
                         value={item.company}
                         onChange={(e) => handleCompanySelect(item.id, e.target.value)}
-                        className={styles.control}
+                        className={`${styles.control} ${highlightedField === 'selectedCompanies' ? styles.fieldHighlight : ''}`}
                         disabled={isLoadingCompanies || isViewMode}
                       >
                         <option value="">{isLoadingCompanies ? 'Loading companies...' : 'Select Company'}</option>
@@ -766,11 +881,12 @@ const AdminScheduleTraining = ({ onLogout }) => {
                 <div className={styles.phasePrefixInput}>
                   <span className={styles.phasePrefixChip}>Phase</span>
                   <input
+                    ref={registerFieldRef('phaseNumber')}
                     type="text"
                     value={phaseNumber}
                     onChange={(e) => setPhaseNumber(normalizePhaseNumber(e.target.value))}
                     placeholder="e.g. 1"
-                    className={`${styles.control} ${styles.phaseNumberControl}`}
+                    className={`${styles.control} ${styles.phaseNumberControl} ${highlightedField === 'phaseNumber' ? styles.fieldHighlight : ''}`}
                     disabled={isViewMode}
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -793,9 +909,10 @@ const AdminScheduleTraining = ({ onLogout }) => {
               <div className={styles.formGroup}>
                 <label className={styles.fieldLabel}>Applicable Year <span className={styles.requiredStar}>*</span></label>
                 <select
+                  ref={registerFieldRef('applicableYear')}
                   value={applicableYear}
                   onChange={(e) => setApplicableYear(e.target.value)}
-                  className={styles.control}
+                  className={`${styles.control} ${highlightedField === 'applicableYear' ? styles.fieldHighlight : ''}`}
                   disabled={isViewMode}
                 >
                   <option value="">Select Year</option>
@@ -810,12 +927,24 @@ const AdminScheduleTraining = ({ onLogout }) => {
             <div className={`${styles.formRow} ${styles.dynamicRow}`}>
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>Start Date <span className={styles.requiredStar}>*</span></label>
-                <AdCalendar value={startDate} onChange={setStartDate} disabled={isViewMode} />
+                <AdCalendar
+                  ref={registerFieldRef('startDate')}
+                  value={startDate}
+                  onChange={setStartDate}
+                  disabled={isViewMode}
+                  triggerClassName={highlightedField === 'startDate' ? styles.fieldHighlight : ''}
+                />
               </div>
 
               <div className={`${styles.formGroup} ${styles.calendarField}`}>
                 <label className={styles.fieldLabel}>End Date <span className={styles.requiredStar}>*</span></label>
-                <AdCalendar value={endDate} onChange={setEndDate} disabled={isViewMode} />
+                <AdCalendar
+                  ref={registerFieldRef('endDate')}
+                  value={endDate}
+                  onChange={setEndDate}
+                  disabled={isViewMode}
+                  triggerClassName={highlightedField === 'endDate' ? styles.fieldHighlight : ''}
+                />
               </div>
 
               <div className={styles.formGroup}>
@@ -832,10 +961,12 @@ const AdminScheduleTraining = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* Preferred Training Card */}
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Preferred Training</h2>
-          <div className={styles.cardContent}>
+          <div
+            ref={registerFieldRef('selectedCourses')}
+            className={`${styles.cardContent} ${highlightedField === 'selectedCourses' ? styles.fieldHighlight : ''}`}
+          >
             {selectedCompanies.length === 0 ? (
               <p className={styles.noDataText}>Please add companies first to view available courses</p>
             ) : (
@@ -889,10 +1020,40 @@ const AdminScheduleTraining = ({ onLogout }) => {
 
         
 
+        {!isViewMode && missingFields.length > 0 && (
+          <div className={styles.validationBox}>
+            <h4 className={styles.validationHeading}>
+              <span className={styles.validationIcon} aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                  <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+              </span>
+              Required Fields Missing:
+            </h4>
+            <ul className={styles.validationList}>
+              {missingFields.map((error, index) => (
+                <li
+                  key={`${error.field}-${index}`}
+                  className={styles.validationItem}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => focusField(error.field)}
+                  onMouseEnter={handleTooltipMove}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleTooltipLeave}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {error.label} is required
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {!isViewMode && (
           <div className={styles.actions}>
             <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving}>Discard</button>
-            <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={isSaving}>
+            <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={isSaving || missingFields.length > 0}>
               {isSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
@@ -963,6 +1124,14 @@ const AdminScheduleTraining = ({ onLogout }) => {
           </div>
         )}
       </div>
+      {errorTooltip.visible && (
+        <div
+          className={styles.pointerTooltip}
+          style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+        >
+          Click to navigate
+        </div>
+      )}
     </div>
   );
 };

@@ -1196,8 +1196,8 @@
     }
 
     .Admin-DB-table-container {
-        height: 290px;
-        max-height: 290px;
+        height: 250px;
+        max-height: 250px;
         overflow-y: auto;
         overflow-x: auto;
         position: relative;

@@ -163,6 +163,36 @@ function AdminScheduleTrainingBatch({ onLogout }) {
   const [trainerValidationError, setTrainerValidationError] = useState(false);
   const selectedPhaseKey = useMemo(() => normalizePhase(scheduleContext?.phaseNumber || ''), [scheduleContext?.phaseNumber]);
 
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      nameOrRegFilter.trim() ||
+      departmentFilter ||
+      sectionFilter ||
+      mobileFilter.trim() ||
+      cgpaFromFilter.trim() ||
+      cgpaToFilter.trim() ||
+      selectedTrainerFilters.length > 0
+    );
+  }, [
+    nameOrRegFilter,
+    departmentFilter,
+    sectionFilter,
+    mobileFilter,
+    cgpaFromFilter,
+    cgpaToFilter,
+    selectedTrainerFilters
+  ]);
+
+  const handleClearFilters = () => {
+    setNameOrRegFilter('');
+    setDepartmentFilter('');
+    setSectionFilter('');
+    setMobileFilter('');
+    setCgpaFromFilter('');
+    setCgpaToFilter('');
+    setSelectedTrainerFilters([]);
+  };
+
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
     window.addEventListener('closeSidebar', handleCloseSidebar);
@@ -212,7 +242,13 @@ function AdminScheduleTrainingBatch({ onLogout }) {
             year: (student?.currentYear || student?.year || '').toString().trim() || '-',
             section: (student?.section || '').toString().trim() || '-',
             cgpa: (student?.cgpa || student?.overallCGPA || student?.gpa || '').toString().trim() || '-',
-            mobile: (student?.mobile || student?.mobileNumber || student?.phone || '').toString().trim() || '-',
+            mobile: (() => {
+              const raw = (student?.mobileNo || student?.mobile || student?.mobileNumber || student?.phone || '').toString().trim();
+              if (!raw) return '-';
+              if (raw.startsWith('+91')) return raw.slice(3).trim();
+              if (raw.startsWith('91') && raw.length === 12) return raw.slice(2).trim();
+              return raw;
+            })(),
             preferredTraining: parseMultiValue(student?.preferredTraining),
             preferredTrainingByPhase: parsePreferredTrainingByPhase(student?.preferredTrainingByPhase)
           };
@@ -497,7 +533,13 @@ function AdminScheduleTrainingBatch({ onLogout }) {
       year: (student?.year || '-').toString(),
       section: (student?.section || '-').toString(),
       cgpa: (student?.cgpa || '-').toString(),
-      mobile: (student?.mobile || '-').toString(),
+      mobile: (() => {
+        const raw = (student?.mobile || student?.mobileNo || '').toString().trim();
+        if (!raw || raw === '-') return '-';
+        if (raw.startsWith('+91')) return raw.slice(3).trim();
+        if (raw.startsWith('91') && raw.length === 12) return raw.slice(2).trim();
+        return raw;
+      })(),
       preferredTraining: []
     }));
   }, [activeBatchTab, filteredStudents]);
@@ -773,7 +815,18 @@ function AdminScheduleTrainingBatch({ onLogout }) {
         {/* Filters + batch card row */}
         <div className={styles['ad-stb-top-row']}>
           <div className={styles['ad-stb-filters-card']}>
-            <div className={styles['ad-stb-training-pill']}>Training</div>
+            <div className={styles['ad-stb-filter-header-container']}>
+              <div className={styles['ad-stb-training-pill']}>Training</div>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className={styles['ad-stb-clear-btn-header']}
+                  onClick={handleClearFilters}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <div className={styles['ad-stb-filters-grid']}>
               <div className={styles['ad-stb-filter-group']}>
                 <label className={styles['ad-stb-filter-label']}>Name / Register Number</label>
@@ -786,9 +839,9 @@ function AdminScheduleTrainingBatch({ onLogout }) {
               </div>
 
               <div className={styles['ad-stb-filter-group']}>
-                <label className={styles['ad-stb-filter-label']}>Department</label>
+                <label className={styles['ad-stb-filter-label']}>Branches</label>
                 <select className={styles['ad-stb-input']} value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
-                  <option value="">Select Department</option>
+                  <option value="">Select Branch</option>
                   {departmentOptions.map((dept) => (
                     <option key={dept} value={dept}>{dept}</option>
                   ))}
@@ -878,6 +931,18 @@ function AdminScheduleTrainingBatch({ onLogout }) {
               </div>
             </div>
           </div>
+
+          <div className={styles['ad-stb-count-card']}>
+            <div className={styles['ad-stb-count-header']}>Selected Students</div>
+            <div className={styles['ad-stb-count-inner']}>
+              <div className={styles['ad-stb-count-ratio']}>
+                <span className={styles['ad-stb-count-selected']}>{selectedRows.length}</span>
+                <span className={styles['ad-stb-count-divider']}>/</span>
+                <span className={styles['ad-stb-count-total']}>{activeBatchStudents.length}</span>
+              </div>
+              <div className={styles['ad-stb-count-label']}>Total Students in Batch</div>
+            </div>
+          </div>
         </div>
 
         <div className={styles['ad-stb-batch-tabs']}>
@@ -902,9 +967,6 @@ function AdminScheduleTrainingBatch({ onLogout }) {
           <div className={styles['ad-stb-table-header']}>
             <div className={styles['ad-stb-table-title']}>
               {`${(scheduleContext.companyName || 'JIO').toString().trim() || 'JIO'}-${(courseFilter || scheduleContext.selectedCourse || 'DTH').toString().trim() || 'DTH'}-1`.toUpperCase()}
-            </div>
-            <div className={styles['ad-stb-selected-count']}>
-              Selected Students : {selectedRows.length}
             </div>
             <div className={styles['ad-stb-print-button-container']}>
               <button type="button" className={styles['ad-stb-print-btn']} onClick={handleToggleExportMenu}>

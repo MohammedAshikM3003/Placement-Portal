@@ -1038,3 +1038,105 @@ select.control {
 }
 
 /* No Data Text */
+
+/* Validation yellow warning box */
+.validationBox {
+  width: 100%;
+  background-color: #fff3cd;
+  border: 1px solid #ffe69c;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  box-sizing: border-box;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.validationHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.9rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8a6110;
+}
+
+.validationIcon {
+  color: #f39c12;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.validationList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #8a6110;
+}
+
+.validationItem {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  list-style-position: inside;
+  position: relative;
+  line-height: 1.35;
+  font-weight: 500;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.validationItem:hover {
+  background-color: #ffeaa7;
+  color: #664d03;
+  font-weight: 600;
+  transform: translateX(5px);
+}
+
+.pointerTooltip {
+  position: fixed;
+  background: #111827;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  z-index: 2147483646;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes fieldBlink {
+  0%, 100% {
+    background-color: transparent;
+    border-color: initial;
+    box-shadow: none;
+  }
+  25% {
+    background-color: #fff9e6;
+    border-color: #ffc107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+  }
+  50% {
+    background-color: transparent;
+    border-color: initial;
+    box-shadow: none;
+  }
+  75% {
+    background-color: #fff9e6;
+    border-color: #ffc107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+  }
+}
+
+.fieldHighlight {
+  animation: fieldBlink 1.5s ease-in-out 2;
+  border: 2px solid #ffc107 !important;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+}

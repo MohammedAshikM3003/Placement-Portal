@@ -667,16 +667,16 @@ const PlacementDashboard = () => {
               <table className={styles['Admin-ps-students-table']}>
                 <thead>
                   <tr>
-                    <th>S.No</th>
-                    <th>Name</th>
-                    <th>Reg No.</th>
-                    <th>Branch</th>
-                    <th>Batch</th>
-                    <th>Company</th>
-                    <th>Job Role</th>
-                    <th>Package</th>
-                    <th>Offer</th>
-                    <th>View</th>
+                    <th style={{ width: '5%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
+                    <th style={{ width: '16%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
+                    <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Reg No.</th>
+                    <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Branch</th>
+                    <th style={{ width: '9%', textAlign: 'center', verticalAlign: 'middle' }}>Batch</th>
+                    <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Company</th>
+                    <th style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>Job Role</th>
+                    <th style={{ width: '8%', textAlign: 'center', verticalAlign: 'middle' }}>Package</th>
+                    <th style={{ width: '7%', textAlign: 'center', verticalAlign: 'middle' }}>Offer</th>
+                    <th style={{ width: '7%', textAlign: 'center', verticalAlign: 'middle' }}>View</th>
                   </tr>
                 </thead>
                 <tbody>

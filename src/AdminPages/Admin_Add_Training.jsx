@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Admin_Add_Training.module.css';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import Admin_TrainerDetailsPopup from '../components/alerts/Admin_TrainerDetailsPopup';
 import useAdminAuth from '../utils/useAdminAuth';
 import mongoDBService from '../services/mongoDBService';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
+import { CertificateDownloadProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 
 const TrainingSavedPopup = ({ onClose, mode = 'create' }) => {
   const isUpdate = mode === 'update';
@@ -45,6 +47,7 @@ const TrainingSavedPopup = ({ onClose, mode = 'create' }) => {
 const Admin_Add_Training = () => {
   useAdminAuth(); // JWT authentication verification
   const location = useLocation();
+  const navigate = useNavigate();
   const editingTraining = location?.state?.editMode ? (location?.state?.editingTraining || null) : null;
   const isEditMode = Boolean(editingTraining?._id);
 
@@ -57,6 +60,8 @@ const Admin_Add_Training = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMode, setSuccessMode] = useState('create');
+  const [isInitialLoading, setIsInitialLoading] = useState(() => isEditMode);
+  const [loadingProgress, setLoadingProgress] = useState(15);
 
   const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
   const [highlightedField, setHighlightedField] = useState(null);
@@ -153,8 +158,7 @@ const Admin_Add_Training = () => {
     return missing;
   }, [companyName, courses, trainers]);
 
-  // track sidebar visibility so hamburger toggle works
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   
   // popup visibility states
   const [showTrainerPopup, setShowTrainerPopup] = useState(false);
@@ -227,18 +231,75 @@ const Admin_Add_Training = () => {
     setTrainers([]);
   };
 
+  // Dynamic progress loader logic matching student profile edit page
+  useEffect(() => {
+    if (!isInitialLoading) return undefined;
+
+    setLoadingProgress(15);
+    const timer = window.setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 95) return 95;
+        if (prev < 50) return prev + 12;
+        if (prev < 80) return prev + 6;
+        return prev + 3;
+      });
+    }, 150);
+
+    return () => window.clearInterval(timer);
+  }, [isInitialLoading]);
+
+  // Sync editingTraining initially and fetch fresh database values
   useEffect(() => {
     if (!editingTraining) {
       setEditingTrainingId('');
       return;
     }
 
-    setEditingTrainingId((editingTraining._id || '').toString());
+    const tId = (editingTraining._id || '').toString();
+    setEditingTrainingId(tId);
+
+    // Set initial values from state to ensure fast render
     setCompanyName((editingTraining.companyName || '').toString());
     setCompanyLocation((editingTraining.location || editingTraining.companyLocation || editingTraining.companyInfo || '').toString());
     setCompanyHRName((editingTraining.companyHRName || editingTraining.companyHR || '').toString());
     setCourses(Array.isArray(editingTraining.courses) ? editingTraining.courses : []);
     setTrainers(Array.isArray(editingTraining.trainers) ? editingTraining.trainers : []);
+
+    let isSubscribed = true;
+    const fetchLatestTraining = async () => {
+      try {
+        // Fetch all training records to get the absolute fresh version of this training
+        const trainingsList = await mongoDBService.getTrainings();
+        if (!isSubscribed) return;
+
+        const freshTraining = trainingsList.find(t => (t._id || '').toString() === tId);
+        if (freshTraining) {
+          setCompanyName((freshTraining.companyName || '').toString());
+          setCompanyLocation((freshTraining.location || freshTraining.companyLocation || freshTraining.companyInfo || '').toString());
+          setCompanyHRName((freshTraining.companyHRName || freshTraining.companyHR || '').toString());
+          setCourses(Array.isArray(freshTraining.courses) ? freshTraining.courses : []);
+          setTrainers(Array.isArray(freshTraining.trainers) ? freshTraining.trainers : []);
+        }
+      } catch (err) {
+        console.error("Failed to load fresh training details:", err);
+      } finally {
+        if (isSubscribed) {
+          setLoadingProgress(100);
+          setTimeout(() => {
+            if (isSubscribed) {
+              setIsInitialLoading(false);
+            }
+          }, 300);
+        }
+      }
+    };
+
+    setIsInitialLoading(true);
+    fetchLatestTraining();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [editingTraining]);
 
   const handleSave = async () => {
@@ -276,11 +337,7 @@ const Admin_Add_Training = () => {
   };
 
   return (
-    <div className={styles['Admin-aat-outer-wrapper']}>
-      <Adnavbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className={styles['Admin-aat-layout']}>
-        <Adsidebar isOpen={isSidebarOpen} />
-        <div className={styles['Admin-aat-main-wrapper']}>
+    <PageLayout navbar={<Adnavbar />} sidebar={<Adsidebar />}>
       {/* Company Details Card */}
       <div className={styles['Admin-aat-card']}>
         <h2 className={styles['Admin-aat-section-header']}>Company Details</h2>
@@ -319,6 +376,7 @@ const Admin_Add_Training = () => {
           </div>
         </div>
       </div>
+
       {/* Course Details Card */}
       <div className={styles['Admin-aat-card']}>
         <h2 className={styles['Admin-aat-section-header']}>Course Details</h2>
@@ -365,6 +423,7 @@ const Admin_Add_Training = () => {
           )}
         </div>
       </div>
+
       {/* Trainer Details Card */}
       <div className={styles['Admin-aat-card']}>
         <h2 className={styles['Admin-aat-section-header']}>Trainer Details</h2>
@@ -459,9 +518,7 @@ const Admin_Add_Training = () => {
           {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update' : 'Save')}
         </button>
       </div>
-        </div>
-      </div>
-      
+
       {/* Popup Components */}
       <Admin_TrainerDetailsPopup
         isOpen={showTrainerPopup}
@@ -475,7 +532,29 @@ const Admin_Add_Training = () => {
         availableCourses={courses.map((course) => (course?.name || '').toString().trim()).filter(Boolean)}
       />
 
-      {showSuccessPopup && <TrainingSavedPopup onClose={() => setShowSuccessPopup(false)} mode={successMode} />}
+      {showSuccessPopup && (
+        <TrainingSavedPopup
+          onClose={() => {
+            setShowSuccessPopup(false);
+            navigate('/admin-training');
+          }}
+          mode={successMode}
+        />
+      )}
+
+      <CertificateDownloadProgressAlert
+        isOpen={isInitialLoading}
+        progress={loadingProgress}
+        fileLabel="company profile"
+        title="Loading..."
+        color="#4EA24E"
+        progressColor="#4EA24E"
+        messages={{
+          initial: 'Fetching company details...',
+          mid: 'Loading training syllabus...',
+          final: 'Preparing page...'
+        }}
+      />
 
       {errorTooltip.visible && (
         <div
@@ -485,7 +564,7 @@ const Admin_Add_Training = () => {
           Click to navigate
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 export default Admin_Add_Training;

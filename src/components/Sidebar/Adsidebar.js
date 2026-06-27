@@ -87,6 +87,16 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
   const currentPath = location.pathname;
 
   const hasFetchedRef = useRef(false); // Prevent duplicate fetches
+  const closeTimeoutRef = useRef(null);
+
+  // Clear any pending timeout on unmount to prevent race conditions on mobile navigation
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
 
 
@@ -895,7 +905,10 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
                 // Auto-close sidebar on mobile after navigation
                 if (window.innerWidth <= 1200) {
-                  setTimeout(() => {
+                  if (closeTimeoutRef.current) {
+                    clearTimeout(closeTimeoutRef.current);
+                  }
+                  closeTimeoutRef.current = setTimeout(() => {
                     handleOverlayClick();
                   }, 150);
                 }
@@ -933,7 +946,10 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
             }
 
             if (window.innerWidth <= 1200) {
-              setTimeout(() => {
+              if (closeTimeoutRef.current) {
+                clearTimeout(closeTimeoutRef.current);
+              }
+              closeTimeoutRef.current = setTimeout(() => {
                 handleOverlayClick();
               }, 150);
             }

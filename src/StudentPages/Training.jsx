@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Sidebar from "../components/Sidebar/Sidebar";
 import styles from "./Training.module.css";
@@ -69,6 +69,8 @@ function Training({ onLogout, onViewChange }) {
     const [phaseMetaMap, setPhaseMetaMap] = useState({});
     const [courseTrainerMap, setCourseTrainerMap] = useState({});
     const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedCourseCompany, setSelectedCourseCompany] = useState('');
+    const [allPhaseEntries, setAllPhaseEntries] = useState([]);
     const [isCourseSubmitting, setIsCourseSubmitting] = useState(false);
     const [isCourseEnrolledPopupOpen, setIsCourseEnrolledPopupOpen] = useState(false);
     const [recentlyEnrolledCourse, setRecentlyEnrolledCourse] = useState('');
@@ -82,7 +84,11 @@ function Training({ onLogout, onViewChange }) {
         totalDays: 0,
         completedDays: 0
     });
-    
+
+    const lastSyncedRef = useRef({ phase: '', dbCourse: '' });
+    const lastLatestPhaseRef = useRef('');
+
+
     const normalizePhase = (value) => {
         const text = (value || '').toString().trim();
         const match = text.match(/\d+/);
@@ -159,14 +165,33 @@ function Training({ onLogout, onViewChange }) {
 
     const preferredTrainingRows = useMemo(() => {
         const selectedPhaseKey = normalizePhase(selectedPhase);
-        const selectedPhaseCourses = phaseMetaMap[selectedPhaseKey]?.courses || [];
+        if (!selectedPhaseKey) return [];
 
-        return [...new Set(
-            selectedPhaseCourses
-            .map((course) => normalizeCourseName(course))
-            .filter((course) => course && course !== '-')
-        )];
-    }, [phaseMetaMap, selectedPhase]);
+        const entries = allPhaseEntries.filter((entry) => entry.phaseKey === selectedPhaseKey);
+        const rows = [];
+        entries.forEach((entry) => {
+            const companyName = entry.companyName;
+            const courses = entry.courses || [];
+            courses.forEach((course) => {
+                const normalized = normalizeCourseName(course);
+                if (normalized && normalized !== '-') {
+                    rows.push({
+                        courseName: normalized,
+                        companyName: companyName
+                    });
+                }
+            });
+        });
+
+        // Deduplicate pairs of (courseName, companyName)
+        const seen = new Set();
+        return rows.filter((row) => {
+            const key = `${row.courseName.toLowerCase()}::${row.companyName.toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }, [allPhaseEntries, selectedPhase]);
 
     const selectedPhaseDetails = useMemo(() => {
         return phaseMetaMap[normalizePhase(selectedPhase)] || null;
@@ -221,7 +246,7 @@ function Training({ onLogout, onViewChange }) {
         if (!preferred) return '';
 
         const preferredLower = preferred.toLowerCase();
-        const existsInPhase = preferredTrainingRows.some((course) => course.toLowerCase() === preferredLower);
+        const existsInPhase = preferredTrainingRows.some((row) => row.courseName.toLowerCase() === preferredLower);
         return existsInPhase ? preferred : '';
     }, [preferredCourseForSelectedPhase, preferredTrainingRows]);
 
@@ -229,14 +254,39 @@ function Training({ onLogout, onViewChange }) {
 
     useEffect(() => {
         const currentPreferred = preferredCourseForSelectedPhase;
+        const phaseChanged = lastSyncedRef.current.phase !== selectedPhase;
+        const dbCourseChanged = lastSyncedRef.current.dbCourse !== currentPreferred;
 
-        if (currentPreferred && preferredTrainingRows.some((course) => course.toLowerCase() === currentPreferred.toLowerCase())) {
-            setSelectedCourse(currentPreferred);
-            return;
+        if (phaseChanged || dbCourseChanged) {
+            const matchingRow = currentPreferred
+                ? preferredTrainingRows.find((row) => row.courseName.toLowerCase() === currentPreferred.toLowerCase())
+                : null;
+
+            if (matchingRow) {
+                setSelectedCourse(currentPreferred);
+                setSelectedCourseCompany(matchingRow.companyName);
+                lastSyncedRef.current = { phase: selectedPhase, dbCourse: currentPreferred };
+            } else {
+                setSelectedCourse('');
+                setSelectedCourseCompany('');
+                if (!currentPreferred || phaseChanged) {
+                    lastSyncedRef.current = { phase: selectedPhase, dbCourse: currentPreferred };
+                }
+            }
+        } else {
+            // Neither phase nor dbCourse changed. This means preferredTrainingRows changed (likely due to polling).
+            // If currentPreferred is set, but selectedCourse is not, and the course is now in preferredTrainingRows, sync it.
+            const matchingRow = currentPreferred && !selectedCourse
+                ? preferredTrainingRows.find((row) => row.courseName.toLowerCase() === currentPreferred.toLowerCase())
+                : null;
+
+            if (matchingRow) {
+                setSelectedCourse(currentPreferred);
+                setSelectedCourseCompany(matchingRow.companyName);
+                lastSyncedRef.current = { phase: selectedPhase, dbCourse: currentPreferred };
+            }
         }
-
-        setSelectedCourse('');
-    }, [preferredCourseForSelectedPhase, preferredTrainingRows]);
+    }, [preferredCourseForSelectedPhase, preferredTrainingRows, selectedPhase, selectedCourse]);
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
@@ -270,8 +320,10 @@ function Training({ onLogout, onViewChange }) {
     useEffect(() => {
         let isActive = true;
 
-        const loadTrainingData = async () => {
-            setIsLoading(true);
+        const loadTrainingData = async (showSpinner = true) => {
+            if (showSpinner) {
+                setIsLoading(true);
+            }
             try {
                 const regNo = (studentData?.regNo || '').toString().trim();
                 if (!regNo) {
@@ -308,11 +360,21 @@ function Training({ onLogout, onViewChange }) {
                     const assignmentScheduleId = (assignment?.scheduleId || '').toString().trim();
                     const assignmentCompany = (assignment?.companyName || '').toString().trim().toLowerCase();
 
+                    // Always include schedules whose phases target the student's year
+                    // so that newly created schedules for that year show up immediately
+                    const yearMatchedSchedules = activeYear
+                        ? allSchedules.filter((schedule) => {
+                            const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
+                            return phases.some((phase) => {
+                                const phaseYear = normalizeYearToken(phase?.applicableYear || '');
+                                return !phaseYear || phaseYear === activeYear;
+                            });
+                        })
+                        : allSchedules;
+
                     if (assignmentScheduleId) {
                         const exact = allSchedules.filter((schedule) => ((schedule?._id || '').toString().trim() === assignmentScheduleId));
                         if (exact.length > 0) {
-                            // Include same-company schedules as fallback to avoid missing newer phases
-                            // when assignments were created against an older schedule id.
                             const siblingCompanySchedules = assignmentCompany
                                 ? allSchedules.filter((schedule) => {
                                     const scheduleId = (schedule?._id || '').toString().trim();
@@ -321,7 +383,7 @@ function Training({ onLogout, onViewChange }) {
                                 })
                                 : [];
 
-                            const merged = [...exact, ...siblingCompanySchedules];
+                            const merged = [...exact, ...siblingCompanySchedules, ...yearMatchedSchedules];
                             const dedupedById = Array.from(new Map(
                                 merged.map((schedule, index) => {
                                     const key = (schedule?._id || '').toString().trim();
@@ -334,12 +396,20 @@ function Training({ onLogout, onViewChange }) {
                     }
 
                     if (assignmentCompany) {
-                        return allSchedules.filter(
+                        const companySchedules = allSchedules.filter(
                             (schedule) => (schedule?.companyName || '').toString().trim().toLowerCase() === assignmentCompany
                         );
+                        // Merge company schedules + year-matched schedules (deduplicated)
+                        const merged = [...companySchedules, ...yearMatchedSchedules];
+                        return Array.from(new Map(
+                            merged.map((schedule, index) => {
+                                const key = (schedule?._id || '').toString().trim();
+                                return [key || `fallback-${index}`, schedule];
+                            })
+                        ).values());
                     }
 
-                    return allSchedules;
+                    return yearMatchedSchedules;
                 })();
                 const normalizedAssignmentCourse = normalizeCourseName(assignment?.courseName || '').toLowerCase();
 
@@ -400,6 +470,7 @@ function Training({ onLogout, onViewChange }) {
                         phaseEntries.push({
                             phaseKey,
                             phaseNumber,
+                            trainingName: (phase?.trainingName || '').toString().trim(),
                             courses: mergedPhaseCourses,
                             preferredCourse: (normalizedAssignmentCourse
                                 ? (mergedPhaseCourses.find((course) => course.toLowerCase() === normalizedAssignmentCourse) || '')
@@ -421,8 +492,47 @@ function Training({ onLogout, onViewChange }) {
 
                 const phaseMapFromSchedules = phaseEntries.reduce((acc, entry) => {
                     const previous = acc[entry.phaseKey];
-                    if (!previous || entry.updatedAt >= previous.updatedAt) {
+                    if (!previous) {
                         acc[entry.phaseKey] = entry;
+                    } else {
+                        // Merge current entry into previous
+                        // Determine which company details to prefer (the one matching student's assigned company)
+                        const studentCompany = (assignment?.companyName || '').toString().trim().toLowerCase();
+                        const isCurrentMatching = studentCompany && entry.companyName.toLowerCase() === studentCompany;
+                        const isPrevMatching = studentCompany && previous.companyName.toLowerCase() === studentCompany;
+
+                        // Prefer matching companyName, trainingName, trainer, batch, startDate, endDate, etc.
+                        const preferCurrent = isCurrentMatching && !isPrevMatching;
+                        const preferPrev = isPrevMatching && !isCurrentMatching;
+
+                        // Default fallback: keep the newer updatedAt if both have equal match status
+                        const chooseCurrent = preferCurrent || (!preferPrev && entry.updatedAt >= previous.updatedAt);
+
+                        const combinedCompanies = [
+                            ...new Set([
+                                ...previous.companyName.split(' / '),
+                                ...entry.companyName.split(' / ')
+                            ])
+                        ].map(c => c.trim()).filter(c => c && c !== '-');
+                        const mergedCompanyName = combinedCompanies.join(' / ') || '-';
+
+                        acc[entry.phaseKey] = {
+                            ...previous,
+                            companyName: mergedCompanyName,
+                            trainingName: chooseCurrent ? entry.trainingName : previous.trainingName,
+                            trainer: chooseCurrent ? entry.trainer : previous.trainer,
+                            batch: chooseCurrent ? entry.batch : previous.batch,
+                            startDate: chooseCurrent ? entry.startDate : previous.startDate,
+                            endDate: chooseCurrent ? entry.endDate : previous.endDate,
+                            totalDays: chooseCurrent ? entry.totalDays : previous.totalDays,
+                            updatedAt: Math.max(previous.updatedAt || 0, entry.updatedAt || 0),
+                            // Merged collections
+                            courses: [...new Set([...(previous.courses || []), ...(entry.courses || [])])],
+                            courseTrainersMap: {
+                                ...(previous.courseTrainersMap || {}),
+                                ...(entry.courseTrainersMap || {})
+                            }
+                        };
                     }
                     return acc;
                 }, {});
@@ -554,20 +664,27 @@ function Training({ onLogout, onViewChange }) {
 
                 setPhaseMetaMap(phaseMapFromSchedules);
                 setAvailablePhases(phaseOptions);
-                setSelectedPhase((prev) => {
-                    const latestPhase = pickLatestPhase(phaseOptions);
-                    if (!latestPhase) return '';
-
-                    const prevPhaseKey = normalizePhase(prev);
-                    const latestPhaseKey = normalizePhase(latestPhase);
-
-                    // If the schedule has advanced to a newer phase, always move the UI to it.
-                    if (!prev || !phaseOptions.includes(prev) || prevPhaseKey !== latestPhaseKey) {
-                        return latestPhase;
+                setAllPhaseEntries(phaseEntries);
+                
+                const latestPhase = pickLatestPhase(phaseOptions);
+                if (latestPhase) {
+                    const normalizedLatest = normalizePhase(latestPhase);
+                    const normalizedPrevLatest = normalizePhase(lastLatestPhaseRef.current);
+                    
+                    if (normalizedLatest !== normalizedPrevLatest) {
+                        setSelectedPhase(latestPhase);
+                        lastLatestPhaseRef.current = latestPhase;
+                    } else {
+                        // If the latest phase hasn't changed, but the current selectedPhase
+                        // is somehow not in the available phase options, default it to the latest.
+                        setSelectedPhase((prev) => {
+                            if (!prev || !phaseOptions.includes(prev)) {
+                                return latestPhase;
+                            }
+                            return prev;
+                        });
                     }
-
-                    return prev;
-                });
+                }
 
                 if (assignment) {
                     const startDate = assignment?.startDate || '';
@@ -625,6 +742,10 @@ function Training({ onLogout, onViewChange }) {
                     : [];
                 setTrainingAttendanceDocs(Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : []);
                 setAttendanceData({ present: 0, absent: 0, records: attendanceRows });
+
+                // Toast is handled globally by GlobalTrainingNotificationChecker in App.jsx
+
+
             } catch (error) {
                 console.error('Failed to load training data for student:', error);
                 if (!isActive) return;
@@ -645,16 +766,23 @@ function Training({ onLogout, onViewChange }) {
                 setCourseTrainerMap({});
                 setSelectedPhase('');
             } finally {
-                if (isActive) {
+                if (isActive && showSpinner) {
                     setIsLoading(false);
                 }
             }
         };
 
-        loadTrainingData();
+        // First initial load
+        loadTrainingData(true);
+
+        // Set up periodic polling every 2 seconds for fast toast response
+        const pollInterval = setInterval(() => {
+            loadTrainingData(false);
+        }, 2000);
 
         return () => {
             isActive = false;
+            clearInterval(pollInterval);
         };
     }, [studentData?.currentYear, studentData?.regNo, studentData?.year]);
 
@@ -762,7 +890,7 @@ function Training({ onLogout, onViewChange }) {
         { name: 'Absent', value: absentCount, color: '#F65C5F' }
     ];
 
-    const displayCompany = selectedPhaseDetails?.companyName || trainingData.company;
+    const displayCompany = selectedCourseCompany || selectedPhaseDetails?.companyName || trainingData.company;
     const displayStartDate = selectedPhaseDetails?.startDate ? formatDate(selectedPhaseDetails.startDate) : trainingData.startDate;
     const displayEndDate = selectedPhaseDetails?.endDate ? formatDate(selectedPhaseDetails.endDate) : trainingData.endDate;
     const displayTotalDays = selectedPhaseDetails ? selectedPhaseDetails.totalDays : trainingData.totalDays;
@@ -946,17 +1074,49 @@ function Training({ onLogout, onViewChange }) {
                                                 </tr>
                                             ))
                                         ) : preferredTrainingRows.length > 0 ? (
-                                            preferredTrainingRows.map((course, index) => (
-                                                <tr key={index}>
+                                            preferredTrainingRows.map((item, index) => (
+                                                <tr 
+                                                    key={index}
+                                                    onClick={() => {
+                                                        if (!isCourseSubmitting && !isCurrentPhaseSubmitted) {
+                                                            setSelectedCourse(prev => {
+                                                                const isAlreadySelected = Boolean(prev && item.courseName && prev.toLowerCase() === item.courseName.toLowerCase() && selectedCourseCompany.toLowerCase() === item.companyName.toLowerCase());
+                                                                if (isAlreadySelected) {
+                                                                    setSelectedCourseCompany('');
+                                                                    return '';
+                                                                } else {
+                                                                    setSelectedCourseCompany(item.companyName);
+                                                                    return item.courseName;
+                                                                }
+                                                            });
+                                                        }
+                                                    }}
+                                                    style={{ cursor: (isCourseSubmitting || isCurrentPhaseSubmitted) ? 'not-allowed' : 'pointer' }}
+                                                >
                                                     <td>{index + 1}</td>
-                                                    <td>{course}</td>
+                                                    <td>{item.courseName}</td>
                                                     <td className={styles.trainingCheckboxCell}>
                                                         <input
                                                             type="checkbox"
                                                             className={styles.trainingCheckbox}
-                                                            checked={selectedCourse.toLowerCase() === course.toLowerCase()}
-                                                            onChange={() => setSelectedCourse(course)}
-                                                            disabled={isCourseSubmitting}
+                                                            checked={Boolean(selectedCourse && item.courseName && selectedCourse.toLowerCase() === item.courseName.toLowerCase() && selectedCourseCompany.toLowerCase() === item.companyName.toLowerCase())}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                if (!isCourseSubmitting && !isCurrentPhaseSubmitted) {
+                                                                    setSelectedCourse(prev => {
+                                                                        const isAlreadySelected = Boolean(prev && item.courseName && prev.toLowerCase() === item.courseName.toLowerCase() && selectedCourseCompany.toLowerCase() === item.companyName.toLowerCase());
+                                                                        if (isAlreadySelected) {
+                                                                            setSelectedCourseCompany('');
+                                                                            return '';
+                                                                        } else {
+                                                                            setSelectedCourseCompany(item.companyName);
+                                                                            return item.courseName;
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            disabled={isCourseSubmitting || isCurrentPhaseSubmitted}
                                                         />
                                                     </td>
                                                 </tr>
@@ -1043,6 +1203,7 @@ function Training({ onLogout, onViewChange }) {
                 endDate={displayEndDate}
                 totalDays={displayTotalDays}
             />
+
         </div>
     );
 }

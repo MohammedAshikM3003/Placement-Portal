@@ -37,20 +37,7 @@
 }
 
 
-/* Full-screen overlay for mobile sidebar (click to close) */
 
-.Admin-es-apk-overlay {
-
-    position: fixed;
-
-    inset: 0;
-
-    /* Keep this under the sidebar so links remain clickable */
-    z-index: 1000;
-
-    background: transparent;
-
-}
 
 
 
@@ -1162,17 +1149,7 @@
         pointer-events: auto !important;
     }
 
-    /* Dark dimming overlay when sidebar is open */
-    .Admin-es-apk-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        z-index: 2990 !important;
-        pointer-events: auto !important;
-    }
+
 
     .Admin-es-apk-top-card {
         flex-direction: row !important;

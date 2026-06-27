@@ -15,6 +15,7 @@ import GlobalOfferLetterNotificationChecker from "./components/CertificateNotifi
 import GlobalCoordinatorCertificateUploadChecker from "./components/CertificateNotification/GlobalCoordinatorCertificateUploadChecker.jsx";
 import GlobalCoordinatorDriveScheduledChecker from "./components/CertificateNotification/GlobalCoordinatorDriveScheduledChecker.jsx";
 import GlobalSemesterNotificationChecker from "./components/CertificateNotification/GlobalSemesterNotificationChecker.jsx";
+import GlobalTrainingNotificationChecker from "./components/CertificateNotification/GlobalTrainingNotificationChecker.jsx";
 import { runCacheMigration } from './utils/cacheMigration';
 
 // --- LIGHTWEIGHT DIRECT IMPORTS (public routes - always needed) ---
@@ -303,6 +304,7 @@ function AppContent() {
           <GlobalDriveScheduledChecker />
           <GlobalOfferLetterNotificationChecker />
           <GlobalSemesterNotificationChecker />
+          <GlobalTrainingNotificationChecker />
         </>
       )}
 
@@ -381,7 +383,7 @@ function AppContent() {
       <Route path="/admin-schedule-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-schedule-training-batch" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminScheduleTrainingBatch onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-trainings-archive" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainingsArchive onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/admin-preferred-training-students" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPreferredTrainingButton onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
+      <Route path="/admin-preferred-training-students" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminPreferredTrainingButton onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary>} />
       <Route path="/admin-attendance-stdinfo" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminAttendanceStdinfo onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-train-attendance-stuinfo" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTrainAttendanceStuinfo onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-student-certificates/:studentId" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdStuDBCertificateView onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

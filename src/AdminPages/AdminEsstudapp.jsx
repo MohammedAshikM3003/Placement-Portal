@@ -1045,7 +1045,7 @@ function AdminEsstudapp() {
 
       <div className={styles['Admin-es-apk-sidebar-wrapper']}>
 
-        <AdSidebar isOpen={isSidebarOpen} />
+        <AdSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       </div>
 
@@ -1510,17 +1510,7 @@ function AdminEsstudapp() {
         }}
       />
 
-      {isSidebarOpen && (
 
-        <div
-
-          className={styles['Admin-es-apk-overlay']}
-
-          onClick={() => setIsSidebarOpen(false)}
-
-        />
-
-      )}
 
     </div>
 

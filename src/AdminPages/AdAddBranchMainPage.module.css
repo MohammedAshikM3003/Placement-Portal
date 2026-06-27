@@ -325,44 +325,57 @@
 /* ============================================================ */
 
 @media (max-width: 768px) {
-  /* 1. Prevent Browser Scroll */
+  /* 1. Layout & Scroll Behavior matches AdminCompanyDrive */
   .Admin-add-branch-layout {
-    height: auto;
-    overflow: visible; 
-    position: relative;
-    width: 100%;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    background-color: #f6f8fb;
   }
 
   .Admin-add-branch-main-content {
-    margin-left: 0;
-    margin-top: 67px; /* Matches Navbar height */
-    padding: 15px;
-    height: calc(100vh - 67px); /* Fills remaining screen exactly */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    margin-left: 0 !important;
+    margin-top: 67px !important;
+    width: 100% !important;
+    padding: 10px 10px 10px 20px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: calc(100vh - 67px) !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 10px;
+    min-height: calc(100vh - 67px) !important;
   }
 
-  /* 2. Stats Container: Fixed height for the group of cards */
+  /* 2. Stats Container: Stack vertically */
   .Admin-add-branch-stats-container {
     grid-template-columns: 1fr;
     gap: 10px;
-    height: auto; /* Let it shrink to fit */
+    height: auto !important;
     flex-shrink: 0;
     margin-bottom: 15px;
+    width: 100% !important;
   }
 
-  /* 3. Fix Green Card Icon & Card Heights */
+  /* 3. Card Heights */
   .Admin-add-branch-card {
     height: 100px; /* Compact height to save space */
     padding: 10px;
-    flex-direction: row; /* Horizontal layout looks better on mobile */
+    flex-direction: row;
     justify-content: space-around;
+    width: 100% !important;
   }
 
   .Admin-add-branch-card-icon {
     margin-bottom: 0;
-    transform: scale(0.8); /* Shrinks icon if it's too large */
+    transform: scale(0.8);
     display: flex;
     align-items: center;
   }
@@ -376,13 +389,16 @@
     margin-top: 0;
   }
 
-  /* 4. The Purple Section: Fills remaining space */
+  /* 4. The Purple Section: auto height, no overflow clip */
   .Admin-add-branch-section {
-    flex-grow: 1;
-    overflow: hidden; /* Important: Clips children to prevent page scroll */
+    flex: none !important;
+    height: auto !important;
+    overflow: visible !important;
     padding: 15px;
     display: flex;
     flex-direction: column;
+    width: 100% !important;
+    margin-bottom: 40px !important;
   }
 
   /* Header adjustments for mobile */
@@ -406,40 +422,29 @@
     font-size: 0.9rem;
   }
 
-  /* 5. The Internal List: This is where the scroll happens */
+  /* 5. The Internal List: scrolls with main container on mobile */
   .Admin-add-branch-list {
-    flex-grow: 1;
-    overflow-y: auto; /* Only the list scrolls */
+    flex-grow: 0;
+    height: auto !important;
+    overflow-y: visible !important;
     gap: 10px;
-    padding-bottom: 30px;
+    padding-bottom: 0;
   }
 
-  .Admin-add-branch-list::-webkit-scrollbar { 
-    width: 10px; 
-  }
-
-  .Admin-add-branch-list::-webkit-scrollbar-track { 
-    background: #f0f2f5; 
-  }
-
-  .Admin-add-branch-list::-webkit-scrollbar-thumb {
-    background-color: #4EA24E; 
-    border-radius: 20px; 
-    border: 3px solid #f0f2f5; 
-  }
-
-  .Admin-add-branch-list::-webkit-scrollbar-thumb:hover { 
-    background-color: #3d8a3d; 
+  .Admin-add-branch-scroll-indicator {
+    display: none !important;
   }
 
   /* 6. White Card Rows: More compact for mobile */
   .Admin-add-branch-item {
-    min-height: 70px; /* Reduced from 90px */
+    min-height: 70px;
     padding: 12px 20px;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-add-branch-item-info {
