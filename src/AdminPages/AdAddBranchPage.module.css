@@ -98,8 +98,15 @@
 }
 
 @keyframes Admin-add-branch-popup-enter {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Loading Spinner for Add Button */
@@ -115,8 +122,13 @@
 }
 
 @keyframes Admin-add-branch-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .Admin-add-branch-layout {
@@ -124,7 +136,7 @@
   height: 100vh;
   background: #f8f8f8;
   font-family: 'Poppins', sans-serif;
-  overflow: hidden; 
+  overflow: hidden;
   margin: 0;
   padding: 0;
 }
@@ -139,10 +151,10 @@
   display: flex;
   flex-direction: column;
   padding: 10px 10px 10px 20px;
-  margin: 65px 0px 0px 280px; 
+  margin: 65px 0px 0px 280px;
   height: calc(100vh - 65px);
   gap: 10px;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 /* ============================================================ */
@@ -155,7 +167,7 @@
   gap: 20px;
   flex-shrink: 0;
   height: 220px;
-  margin-bottom: 0; 
+  margin-bottom: 0;
 }
 
 .Admin-add-branch-card {
@@ -172,11 +184,21 @@
   color: #ffffff;
 }
 
-.Admin-add-branch-card-green { background: #4EA24E; }
-.Admin-add-branch-card-blue { background: #4A90E2; }
-.Admin-add-branch-card-red { background: #E55353; }
+.Admin-add-branch-card-green {
+  background: #4EA24E;
+}
 
-.Admin-add-branch-card-icon { margin-bottom: 5px; }
+.Admin-add-branch-card-blue {
+  background: #4A90E2;
+}
+
+.Admin-add-branch-card-red {
+  background: #E55353;
+}
+
+.Admin-add-branch-card-icon {
+  margin-bottom: 5px;
+}
 
 .Admin-add-branch-card-title {
   font-size: 1.8rem;
@@ -203,7 +225,7 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow: visible; 
+  overflow: visible;
 }
 
 .Admin-add-branch-form-title {
@@ -226,10 +248,10 @@
 }
 
 .Admin-add-branch-field-label {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: #4b4b4b;
-  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.02em;
 }
 
 .Admin-add-branch-required-star {
@@ -272,13 +294,12 @@
 
 .Admin-add-branch-input {
   width: 100%;
-  height: 48px;
-  padding: 12px 16px;
-  border: 1.5px solid #def4dd;
-  border-radius: 8px;
+  height: 53.6px;
+  padding: 12px 15px;
+  border: 1px solid #def4dd;
+  border-radius: 6px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 1rem;
   color: #333;
   background-color: #f9fff9;
   box-sizing: border-box;
@@ -310,7 +331,7 @@
 .Admin-add-branch-layout :global(.react-datepicker) {
   border-radius: 12px;
   border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: 'Poppins', sans-serif;
 }
 
@@ -344,7 +365,7 @@
 
 .Admin-add-branch-actions {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   margin-top: auto;
   padding-top: 30px;
@@ -370,10 +391,10 @@
   transition: all 0.3s ease;
 }
 
-.Admin-add-branch-btn-add-coord { 
-  background-color: #E55353; 
-  color: white; 
-} 
+.Admin-add-branch-btn-add-coord {
+  background-color: #E55353;
+  color: white;
+}
 
 .Admin-add-branch-btn-icon {
   width: 20px;
@@ -386,19 +407,19 @@
   background-color: #c94545;
 }
 
-.Admin-add-branch-btn-discard { 
-  background-color: #e8e8e8; 
-  color: #666; 
-} 
+.Admin-add-branch-btn-discard {
+  background-color: #e8e8e8;
+  color: #666;
+}
 
 .Admin-add-branch-btn-discard:not(:disabled):hover {
   background-color: #d4d4d4;
 }
 
-.Admin-add-branch-btn-save { 
-  background-color: #4EA24E; 
-  color: white; 
-} 
+.Admin-add-branch-btn-save {
+  background-color: #4EA24E;
+  color: white;
+}
 
 .Admin-add-branch-btn-save:not(:disabled):hover {
   background-color: #45924b;
@@ -431,10 +452,13 @@
 }
 
 @media (max-width: 1024px) {
-  .Admin-add-branch-form-grid { grid-template-columns: repeat(2, 1fr); }
+  .Admin-add-branch-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
+
   /* 1. Layout & Scroll Behavior matches AdminCompanyDrive */
   .Admin-add-branch-layout {
     position: fixed !important;
@@ -474,16 +498,16 @@
   }
 
   .Admin-add-branch-card {
-    height: 100px; 
+    height: 100px;
     padding: 10px;
-    flex-direction: row; 
+    flex-direction: row;
     justify-content: space-around;
     width: 100% !important;
   }
 
   .Admin-add-branch-card-icon {
     margin-bottom: 0;
-    transform: scale(0.8); 
+    transform: scale(0.8);
     display: flex;
     align-items: center;
   }

@@ -11,17 +11,17 @@
 
 .Admin-cood-detail-main-content {
     flex-grow: 1;
-    padding: 10px 25px 10px 50px;
+    padding: 10px 10px 10px 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 75px);
-    background-color: #f9fbf8;
-    margin-left: 260px;
-    margin-top: 75px;
+    height: calc(100vh - 65px);
+    background-color: #f8f8fb;
+    margin: 65px 0px 0px 280px;
+    box-sizing: border-box;
 }
 
 .Admin-cood-detail-main-content::-webkit-scrollbar {
@@ -43,7 +43,7 @@
 }
 
 .Admin-cood-detail-main-content.sidebar-open {
-    margin-left: 260px;
+    margin-left: 280px;
 }
 
 .Admin-cood-detail-main-card {
@@ -1078,6 +1078,13 @@
     }
 }
 
+@media (max-width: 1200px) {
+    .Admin-cood-detail-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
 @media (min-width: 768px) and (max-width: 1200px) {
     .Admin-cood-detail-details-grid {
         grid-template-columns: 2fr 1fr;
@@ -1096,15 +1103,31 @@
 
 @media (max-width: 768px) {
     .Admin-cood-detail-layout {
-        height: auto;
-        overflow: visible;
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
     }
 
     .Admin-cood-detail-main-content {
-        margin-left: 0;
-        margin-top: 65px;
-        height: calc(100vh - 65px);
-        padding: 15px 15px 30px;
+        margin-left: 0 !important;
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px 10px 20px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
+        min-height: calc(100vh - 65px) !important;
     }
 
     .Admin-cood-detail-details-grid {
@@ -1114,7 +1137,7 @@
 
     .Admin-cood-detail-credentials-card,
     .Admin-cood-detail-photo-box {
-        padding: 20px;
+        padding: 1.75rem !important;
     }
 
     .Admin-cood-detail-photo-wrapper {
