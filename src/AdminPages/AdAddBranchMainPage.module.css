@@ -16,10 +16,10 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 40px 20px 40px; /* Moves cards up */
-  margin-left: 280px; /* Sidebar offset */
-  margin-top: 67px;  /* Navbar offset */
-  height: calc(100vh - 67px);
+  padding: 10px 10px 10px 20px;
+  margin: 65px 0px 0px 280px; /* Sidebar and Navbar offset */
+  height: calc(100vh - 65px);
+  gap: 10px;
   overflow: hidden; 
 }
 
@@ -27,10 +27,10 @@
 .Admin-add-branch-stats-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
+  gap: 20px;
   flex-shrink: 0;
   height: 220px; /* Locked height */
-  margin-bottom: 30px; 
+  margin-bottom: 0; 
 }
 
 /* Card Styling: Center-aligned to match Image 2 */
@@ -71,7 +71,7 @@
 .Admin-add-branch-section {
   background: #6B5F96;
   border-radius: 20px;
-  padding: 15px 25px 25px 25px; /* Reduced top gap */
+  padding: 12px 20px;
   flex-grow: 1;
   overflow: hidden;
   display: flex;
@@ -324,6 +324,13 @@
 /* === MOBILE VERSION - NO BROWSER SCROLL (FIXED) === */
 /* ============================================================ */
 
+@media (max-width: 1200px) {
+  .Admin-add-branch-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* 1. Layout & Scroll Behavior matches AdminCompanyDrive */
   .Admin-add-branch-layout {
@@ -338,12 +345,12 @@
 
   .Admin-add-branch-main-content {
     margin-left: 0 !important;
-    margin-top: 67px !important;
+    margin-top: 65px !important;
     width: 100% !important;
     padding: 10px 10px 10px 20px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    height: calc(100vh - 67px) !important;
+    height: calc(100vh - 65px) !important;
     max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
@@ -351,7 +358,7 @@
     justify-content: flex-start !important;
     -webkit-overflow-scrolling: touch !important;
     gap: 10px;
-    min-height: calc(100vh - 67px) !important;
+    min-height: calc(100vh - 65px) !important;
   }
 
   /* 2. Stats Container: Stack vertically */
@@ -394,7 +401,7 @@
     flex: none !important;
     height: auto !important;
     overflow: visible !important;
-    padding: 15px;
+    padding: 15px 15px 35px 15px !important;
     display: flex;
     flex-direction: column;
     width: 100% !important;
