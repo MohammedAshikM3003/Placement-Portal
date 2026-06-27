@@ -161,11 +161,10 @@
 .Admin-cood-detail-field-label {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #4b4b4b;
-    letter-spacing: 0.02em;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2d3d;
 }
 
 .Admin-cood-detail-label-heading {
