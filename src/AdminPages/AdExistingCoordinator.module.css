@@ -25,7 +25,7 @@
 /* Top Card (Filter and Actions) */
 .Admin-MC-top-card {
     display: flex;
-    gap: 0px;
+    gap: 20px;
     align-items: stretch;
     flex-wrap: nowrap;
     /* FIXED: Removed margin-left and margin-top from main content elements */
@@ -38,12 +38,13 @@
 .Admin-MC-filter-section {
     flex: 0 0 450px;
     background-color: #e8e8e8;
-    padding: 24px 0px;
-    border-radius: 43px;
+    padding: 20px;
+    border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
 }
 
 .Admin-MC-filter-header-container {
@@ -75,6 +76,28 @@
     font-size: 1.3rem;
     color: #4EA24E;
     cursor: pointer;
+}
+
+.Admin-MC-clear-btn-header {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-MC-clear-btn-header:hover {
+    background-color: #c0c0c0;
 }
 
 .Admin-MC-filter-content {
@@ -354,32 +377,33 @@
 .Admin-MC-bottom-card {
     background-color: #ffffff;
     border-radius: 15px;
-    padding: 10px;
-    /* FIXED: Removed margin-left */
+    padding: 12px 20px;
     margin-left: 0;
+    margin-right: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding-bottom: 0px;
-    flex: 1;
+    transition: all 0.3s ease;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
-    width: 101%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .Admin-MC-table-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: -20px;
-    padding-bottom: 10px;
     flex-shrink: 0;
+    margin-bottom: 10px;
 }
 
 .Admin-MC-table-title {
     font-size: 1.3rem;
     font-weight: 700;
-    margin-left: 25px;
-    color: #000000;
+    margin-left: 0px;
+    color: #333;
 }
 
 .Admin-MC-table-actions {
@@ -709,6 +733,9 @@
         overflow-y: auto;
         overflow-x: hidden;
         max-height: calc(100vh - 70px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
 
     .Admin-MC-main-content::-webkit-scrollbar { 
@@ -730,39 +757,70 @@
     }
 
     .Admin-MC-top-card {
-        gap: 12px;
+        gap: 20px;
         flex-direction: column;
         width: 100%;
+        display: flex;
     }
 
     .Admin-MC-filter-section {
+        order: 2;
         padding: 20px;
         width: 100%;
         box-sizing: border-box;
-        position: relative;
-        top: 88px;
+        position: static;
+        border-radius: 25px;
     }
 
     .Admin-MC-action-cards-section {
+        order: 1;
         margin-left: 0;
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: static;
     }
 
-    /* Two cards per row on mobile, like AdminstudDB */
+    .Admin-MC-branch-info-top {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+        position: static;
+    }
+
+    .Admin-MC-branch-info-card {
+        flex: 1;
+        width: auto;
+        margin: 0;
+        padding: 10px 15px;
+    }
+
+    .Admin-MC-back-btn {
+        margin-left: 0;
+        width: auto;
+        padding: 8px 16px;
+        position: static;
+    }
+
     .Admin-MC-action-cards-row {
+        display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         gap: 15px;
-        position: relative;
-        bottom:30px;
+        position: static;
+        width: 100%;
     }
 
     .Admin-MC-action-card {
         flex: 1 1 calc(50% - 10px);
-        min-height: 236.5px;
+        min-height: 236px;
+        box-sizing: border-box;
     }
 
-    /* Filter + Blocklist buttons: keep them side by side on mobile */
     .Admin-MC-button-group {
         flex-direction: row;
         justify-content: center;
@@ -776,33 +834,13 @@
         flex: 1 1 140px;
     }
 
-    .Admin-MC-branch-info-top {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        position: relative;
-        bottom:280px;
-    }
-
-    .Admin-MC-back-btn {
-        margin-left: 0;
-        justify-content: center;
-        width: 100px;
-        position: relative;
-        left: 370px;
-        bottom: 60px;
-        
-    }
-
     .Admin-MC-bottom-card {
         width: 100%;
         box-sizing: border-box;
-        position: relative;
-        top:-18px;
+        position: static;
+        padding: 20px;
     }
 
-    /* Table: use a single scrollable container on mobile so header and
-       rows move together horizontally and vertically */
     .Admin-MC-table-container {
         width: 100%;
         overflow-x: auto;
@@ -818,7 +856,6 @@
     .Admin-MC-students-table thead {
         display: table-header-group;
         position: static;
-        padding-right: 0;
     }
 
     .Admin-MC-students-table tbody {
@@ -834,16 +871,12 @@
     }
 
     .Admin-MC-delete-branch-header-btn {
-       width: 133px;
-       position: relative;
-        left: 21px;
-        height: 52px;
+       width: auto;
+       height: auto;
+       padding: 8px 16px;
+       position: static;
     }
 
-     .Admin-MC-branch-info-card { flex: 1 1 auto; width: 350px;}
-
-    /* If there is an odd card (Delete) on the last row, keep its width
-       same as others and center it horizontally */
     .Admin-MC-action-cards-row .Admin-MC-action-card:last-child {
         max-width: calc(50% - 10px);
         margin-left: auto;

@@ -293,6 +293,22 @@ function AdminMcood() {
         };
     }, [branchCode]);
 
+    const hasActiveFilters = Boolean(
+        tempFilterName.trim() ||
+        tempFilterRegno.trim() ||
+        filterName.trim() ||
+        filterRegno.trim() ||
+        viewBlocklist
+    );
+
+    const handleClearFilters = () => {
+        setTempFilterName('');
+        setTempFilterRegno('');
+        setFilterName('');
+        setFilterRegno('');
+        setViewBlocklist(false);
+    };
+
     const handleViewCoordinators = () => {
         setFilterName(tempFilterName);
         setFilterRegno(tempFilterRegno);
@@ -546,8 +562,15 @@ function AdminMcood() {
                             <div className={styles['Admin-MC-filter-header-container']}>
                                 {/* UPDATED CLASS: Admin-MC-filter-header */}
                                 <div className={styles['Admin-MC-filter-header']}>View {branchCode} Coordinators</div>
-                                {/* UPDATED CLASS: Admin-MC-filter-icon-container */}
-                               
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-MC-clear-btn-header']}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
                             </div>
                             {/* UPDATED CLASS: Admin-MC-filter-content */}
                             <div className={styles['Admin-MC-filter-content']}>
