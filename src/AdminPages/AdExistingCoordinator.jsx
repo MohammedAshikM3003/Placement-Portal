@@ -175,12 +175,18 @@ function AdminMcood() {
         };
     }, []);
 
-    const [tempFilterName, setTempFilterName] = useState('');
-    const [tempFilterRegno, setTempFilterRegno] = useState('');
-    const [nameFocused, setNameFocused] = useState(false);
-    const [regnoFocused, setRegnoFocused] = useState(false);
-    const [filterName, setFilterName] = useState('');
-    const [filterRegno, setFilterRegno] = useState('');
+    const [tempFilterSearch, setTempFilterSearch] = useState('');
+    const [tempFilterCabin, setTempFilterCabin] = useState('');
+    const [tempFilterMobile, setTempFilterMobile] = useState('');
+    const [tempFilterEmail, setTempFilterEmail] = useState('');
+    const [searchFocused, setSearchFocused] = useState(false);
+    const [cabinFocused, setCabinFocused] = useState(false);
+    const [mobileFocused, setMobileFocused] = useState(false);
+    const [emailFocused, setEmailFocused] = useState(false);
+    const [filterSearch, setFilterSearch] = useState('');
+    const [filterCabin, setFilterCabin] = useState('');
+    const [filterMobile, setFilterMobile] = useState('');
+    const [filterEmail, setFilterEmail] = useState('');
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [fullBranchName, setFullBranchName] = useState('');
 
@@ -294,24 +300,37 @@ function AdminMcood() {
     }, [branchCode]);
 
     const hasActiveFilters = Boolean(
-        tempFilterName.trim() ||
-        tempFilterRegno.trim() ||
-        filterName.trim() ||
-        filterRegno.trim() ||
+        tempFilterSearch.trim() ||
+        tempFilterCabin.trim() ||
+        tempFilterMobile.trim() ||
+        tempFilterEmail.trim() ||
         viewBlocklist
     );
 
     const handleClearFilters = () => {
-        setTempFilterName('');
-        setTempFilterRegno('');
-        setFilterName('');
-        setFilterRegno('');
+        setTempFilterSearch('');
+        setTempFilterCabin('');
+        setTempFilterMobile('');
+        setTempFilterEmail('');
+        setFilterSearch('');
+        setFilterCabin('');
+        setFilterMobile('');
+        setFilterEmail('');
         setViewBlocklist(false);
     };
 
+    useEffect(() => {
+        setFilterSearch(tempFilterSearch);
+        setFilterCabin(tempFilterCabin);
+        setFilterMobile(tempFilterMobile);
+        setFilterEmail(tempFilterEmail);
+    }, [tempFilterSearch, tempFilterCabin, tempFilterMobile, tempFilterEmail]);
+
     const handleViewCoordinators = () => {
-        setFilterName(tempFilterName);
-        setFilterRegno(tempFilterRegno);
+        setFilterSearch(tempFilterSearch);
+        setFilterCabin(tempFilterCabin);
+        setFilterMobile(tempFilterMobile);
+        setFilterEmail(tempFilterEmail);
         setViewBlocklist(false);
     };
     
@@ -509,9 +528,21 @@ function AdminMcood() {
         const branchMatch = normalizedBranchCode ? (coordinator.branch || '').toUpperCase() === normalizedBranchCode : true;
         if (!branchMatch) return false;
         
-        const nameMatch = filterName === '' || coordinator.name.toLowerCase().includes(filterName.toLowerCase());
-        const regnoMatch = filterRegno === '' || coordinator.coordinatorId.includes(filterRegno);
-        return nameMatch && regnoMatch;
+        const searchVal = (filterSearch || '').trim().toLowerCase();
+        const searchMatch = searchVal === '' || 
+            coordinator.name.toLowerCase().includes(searchVal) || 
+            coordinator.coordinatorId.toLowerCase().includes(searchVal);
+            
+        const cabinVal = (filterCabin || '').trim().toLowerCase();
+        const cabinMatch = cabinVal === '' || (coordinator.cabin || '').toLowerCase().includes(cabinVal);
+        
+        const mobileVal = (filterMobile || '').trim().toLowerCase();
+        const mobileMatch = mobileVal === '' || (coordinator.phone || '').toLowerCase().includes(mobileVal);
+        
+        const emailVal = (filterEmail || '').trim().toLowerCase();
+        const emailMatch = emailVal === '' || (coordinator.emailId || '').toLowerCase().includes(emailVal);
+        
+        return searchMatch && cabinMatch && mobileMatch && emailMatch;
     });
     
     const blockedCoordinators = filteredCoordinators.filter(c => c.blocked);
@@ -524,7 +555,7 @@ function AdminMcood() {
     
     const exportToExcel = () => {
         const data = visibleCoordinators.map((c, i) => [i + 1, c.name, c.cabin, c.phone || 'N/A', c.coordinatorId, c.password, c.emailId || 'N/A']);
-        const header = ["S.No", "Name", "Cabin", "Phone", "Coordinator ID", "Password", "Mail ID"];
+        const header = ["S.No", "Name", "Cabin", "Mobile Number", "Coo ID", "Password", "Mail ID"];
         const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Coordinators");
@@ -534,7 +565,7 @@ function AdminMcood() {
 
     const exportToPDF = () => {
         const doc = new jsPDF('landscape');
-        const columns = ["S.No", "Name", "Cabin", "Phone", "Coordinator ID", "Password", "Mail ID"];
+        const columns = ["S.No", "Name", "Cabin", "Mobile Number", "Coo ID", "Password", "Mail ID"];
         const rows = visibleCoordinators.map((c, i) => [i + 1, c.name, c.cabin, c.phone || 'N/A', c.coordinatorId, c.password, c.emailId || 'N/A']);
         doc.text(`Coordinators Report - ${branchCode}`, 14, 15);
         autoTable(doc,{ head: [columns], body: rows, startY: 20, styles: { fontSize: 8 } });
@@ -561,7 +592,7 @@ function AdminMcood() {
                             {/* UPDATED CLASS: Admin-MC-filter-header-container */}
                             <div className={styles['Admin-MC-filter-header-container']}>
                                 {/* UPDATED CLASS: Admin-MC-filter-header */}
-                                <div className={styles['Admin-MC-filter-header']}>View {branchCode} Coordinators</div>
+                                <div className={styles['Admin-MC-filter-header']}>Filter & Sort</div>
                                 {hasActiveFilters && (
                                     <button
                                         type="button"
@@ -574,20 +605,65 @@ function AdminMcood() {
                             </div>
                             {/* UPDATED CLASS: Admin-MC-filter-content */}
                             <div className={styles['Admin-MC-filter-content']}>
-                                {/* UPDATED CLASS: Admin-MC-text-container, has-value, is-focused, Admin-MC-floating-label, Admin-MC-text */}
-                                <div className={`${styles['Admin-MC-text-container']} ${tempFilterName ? styles['has-value'] : ''} ${nameFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-MC-floating-label']}>Name</label>
-                                    <input type="text" className={styles['Admin-MC-text']} value={tempFilterName} onChange={(e) => setTempFilterName(e.target.value)} onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)} onKeyPress={handleKeyPress} />
+                                <div className={styles['Admin-MC-input-wrapper']}>
+                                    <label className={styles['Admin-MC-static-label']}>Enter Name / Coo ID</label>
+                                    <div className={`${styles['Admin-MC-text-container']} ${searchFocused ? styles['is-focused'] : ''}`}>
+                                        <input 
+                                            type="text" 
+                                            className={styles['Admin-MC-text']} 
+                                            placeholder="Enter Name / Coo ID" 
+                                            value={tempFilterSearch} 
+                                            onChange={(e) => setTempFilterSearch(e.target.value)} 
+                                            onFocus={() => setSearchFocused(true)} 
+                                            onBlur={() => setSearchFocused(false)} 
+                                            onKeyPress={handleKeyPress} 
+                                        />
+                                    </div>
                                 </div>
-                                {/* UPDATED CLASS: Admin-MC-text-container, has-value, is-focused, Admin-MC-floating-label, Admin-MC-text */}
-                                <div className={`${styles['Admin-MC-text-container']} ${tempFilterRegno ? styles['has-value'] : ''} ${regnoFocused ? styles['is-focused'] : ''}`}>
-                                    <label className={styles['Admin-MC-floating-label']}>Coordinator ID</label>
-                                    <input type="text" className={styles['Admin-MC-text']} value={tempFilterRegno} onChange={(e) => setTempFilterRegno(e.target.value)} onFocus={() => setRegnoFocused(true)} onBlur={() => setRegnoFocused(false)} onKeyPress={handleKeyPress} />
+                                <div className={styles['Admin-MC-input-wrapper']}>
+                                    <label className={styles['Admin-MC-static-label']}>Cabin Number</label>
+                                    <div className={`${styles['Admin-MC-text-container']} ${cabinFocused ? styles['is-focused'] : ''}`}>
+                                        <input 
+                                            type="text" 
+                                            className={styles['Admin-MC-text']} 
+                                            placeholder="Enter Cabin Number" 
+                                            value={tempFilterCabin} 
+                                            onChange={(e) => setTempFilterCabin(e.target.value)} 
+                                            onFocus={() => setCabinFocused(true)} 
+                                            onBlur={() => setCabinFocused(false)} 
+                                            onKeyPress={handleKeyPress} 
+                                        />
+                                    </div>
                                 </div>
-                                {/* UPDATED CLASS: Admin-MC-button-group, Admin-MC-button, Admin-MC-view-students-btn, Admin-MC-blocklist-btn */}
-                                <div className={styles['Admin-MC-button-group']}>
-                                    <button className={`${styles['Admin-MC-button']} ${styles['Admin-MC-view-students-btn']}`} onClick={handleViewCoordinators}>Filter</button>
-                                    <button className={`${styles['Admin-MC-button']} ${styles['Admin-MC-blocklist-btn']}`} onClick={() => setViewBlocklist(true)}>Blocklist</button>
+                                <div className={styles['Admin-MC-input-wrapper']}>
+                                    <label className={styles['Admin-MC-static-label']}>Enter Mobile Number</label>
+                                    <div className={`${styles['Admin-MC-text-container']} ${mobileFocused ? styles['is-focused'] : ''}`}>
+                                        <input 
+                                            type="text" 
+                                            className={styles['Admin-MC-text']} 
+                                            placeholder="Enter Mobile Number" 
+                                            value={tempFilterMobile} 
+                                            onChange={(e) => setTempFilterMobile(e.target.value)} 
+                                            onFocus={() => setMobileFocused(true)} 
+                                            onBlur={() => setMobileFocused(false)} 
+                                            onKeyPress={handleKeyPress} 
+                                        />
+                                    </div>
+                                </div>
+                                <div className={styles['Admin-MC-input-wrapper']}>
+                                    <label className={styles['Admin-MC-static-label']}>Mail ID</label>
+                                    <div className={`${styles['Admin-MC-text-container']} ${emailFocused ? styles['is-focused'] : ''}`}>
+                                        <input 
+                                            type="text" 
+                                            className={styles['Admin-MC-text']} 
+                                            placeholder="Enter Mail ID" 
+                                            value={tempFilterEmail} 
+                                            onChange={(e) => setTempFilterEmail(e.target.value)} 
+                                            onFocus={() => setEmailFocused(true)} 
+                                            onBlur={() => setEmailFocused(false)} 
+                                            onKeyPress={handleKeyPress} 
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -647,6 +723,12 @@ function AdminMcood() {
                                 >
                                     Delete Branch ({branchCode})
                                 </button>
+                                <button
+                                    className={viewBlocklist ? styles['Admin-MC-blocks-active-btn'] : styles['Admin-MC-blocks-btn']}
+                                    onClick={() => setViewBlocklist(!viewBlocklist)}
+                                >
+                                    {viewBlocklist ? 'Back' : 'Blocked'}
+                                </button>
                                 <div className={styles['Admin-MC-print-button-container']}>
                                     <button className={styles['Admin-MC-print-btn']} onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}>Print</button>
                                     {showExportMenu && (
@@ -672,8 +754,8 @@ function AdminMcood() {
                                         <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-name']}`}>Name</th>
                                         <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-dob']}`}>DOB</th>
                                         <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-cabin-no']}`}>Cabin</th>
-                                        <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-phone']}`}>Phone</th>
-                                        <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-cid']}`}>Coordinator ID</th>
+                                        <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-phone']}`}>Mobile Number</th>
+                                        <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-cid']}`}>Coo ID</th>
                                         <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-email']}`}>Mail ID</th>
                                         <th className={`${styles['Admin-MC-th']} ${styles['Admin-MC-view']}`}>View</th>
                                     </tr>

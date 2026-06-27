@@ -101,69 +101,53 @@
 }
 
 .Admin-MC-filter-content {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
     width: 100%;
     max-width: 400px;
 }
 
+.Admin-MC-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+}
+
+.Admin-MC-static-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4b4b4b;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
 .Admin-MC-text-container {
     position: relative;
-    border: 2px solid #9d9d9d;
-    border-radius: 12px;
-    overflow: visible;
-    height: 45px;
-    /* Adjusted width and margin to flow within max-width: 400px */
-    width: 90%; 
-    margin: 0 auto; 
-    background-color: #ffffff;
-    transition: border-color 0.2s ease, border-width 0.2s ease;
-}
-
-.Admin-MC-text-container:hover{
-    border-color: #4EA24E;
-}
-
-.Admin-MC-floating-label {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0 5px;
-    color: #999;
-    font-size: 0.95rem;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    z-index: 1;
-    background-color: transparent;
-}
-
-.Admin-MC-text-container.has-value .Admin-MC-floating-label,
-.Admin-MC-text-container.is-focused .Admin-MC-floating-label {
-    top: -12px;
-    left: 5px;
-    font-size: 0.8rem;
-    color: #4EA24E;
-    font-weight: 600;
-    padding: 0 8px;
+    border: 2px solid #def4dd;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 48px;
+    width: 100%;
+    background-color: #f9fff9;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .Admin-MC-text {
     width: 100%;
     height: 100%;
-    padding: 0px 15px;
+    padding: 0 12px;
     border: none;
     background-color: transparent;
-    cursor: text;
     font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
     color: #333;
-    position: relative;
-    z-index: 0;
+    box-sizing: border-box;
 }
 
 .Admin-MC-text::placeholder {
-    color: transparent;
+    color: #999;
 }
 
 .Admin-MC-text:focus,
@@ -172,12 +156,12 @@
 }
 
 .Admin-MC-text-container:hover {
-    border-color: #3d8a3d;
+    border-color: #4ea24e;
 }
 
 .Admin-MC-text-container.is-focused {
     border-color: #4EA24E;
-    box-shadow: 0 0 0 2px rgba(78, 162, 78, 0.1);
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 
 .Admin-MC-button-group {
@@ -430,6 +414,54 @@
 
 .Admin-MC-print-btn:hover {
     background-color: #2ea730;
+}
+
+.Admin-MC-delete-branch-header-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-MC-delete-branch-header-btn:hover {
+    background-color: #b52e35;
+}
+
+.Admin-MC-blocks-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-MC-blocks-btn:hover {
+    background-color: #b52e35;
+}
+
+.Admin-MC-blocks-active-btn {
+    background-color: #555555;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-MC-blocks-active-btn:hover {
+    background-color: #333333;
 }
 
 .Admin-MC-export-menu {
@@ -770,6 +802,11 @@
         box-sizing: border-box;
         position: static;
         border-radius: 25px;
+    }
+
+    .Admin-MC-filter-content {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
 
     .Admin-MC-action-cards-section {
