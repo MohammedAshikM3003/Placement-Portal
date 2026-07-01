@@ -2392,3 +2392,21 @@
     stroke-dashoffset: 48;
     animation: Achievement-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
+
+/* Custom Dropdown Overrides for Student Profile View */
+.view-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.view-dropdown-header {
+    height: 53.6px !important;
+    border: 1px solid #def4dd !important;
+    border-radius: 8px !important;
+    background-color: #f9fff9 !important;
+    font-size: 0.95rem !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1f2d3d !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}

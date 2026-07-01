@@ -11,6 +11,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminStuProfileEdit.module.css'; // Module Import
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/AdmingreenCapicon.svg';
 import BestAchievement from '../assets/BestAchievementicon.svg';
@@ -2760,123 +2761,104 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select
-                                            name="degree"
-                                            value={selectedDegree}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setSelectedDegree(value);
-                                                setStudentData(prev => ({ ...prev, degree: value }));
-                                                setSelectedBranch('');
-                                            }}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Select Degree</option>
-                                            {degrees.map((degree) => {
+                                        <Dropdown
+                                            options={degrees.map((degree) => {
                                                 const value = degree.degreeAbbreviation || degree.degreeFullName;
                                                 const label = degree.degreeFullName
                                                     ? degree.degreeAbbreviation
                                                         ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
                                                         : degree.degreeFullName
                                                     : value;
-                                                return (
-                                                    <option key={degree.id || degree._id || value} value={value}>{label}</option>
-                                                );
+                                                return { label, value };
                                             })}
-                                        </select>
+                                            selectedOption={selectedDegree}
+                                            onSelect={(value) => {
+                                                setSelectedDegree(value);
+                                                setStudentData(prev => ({ ...prev, degree: value }));
+                                                setSelectedBranch('');
+                                            }}
+                                            placeholder="Select Degree"
+                                            disabled={isSaving}
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Branch <RequiredStar /></label>
-                                        <select
-                                            name="branch"
-                                            value={selectedBranch}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setSelectedBranch(value);
-                                                setStudentData(prev => ({ ...prev, branch: value }));
-                                            }}
-                                            disabled={isSaving || !selectedDegree}
-                                        >
-                                            <option value="" disabled>
-                                                {selectedDegree ? 'Select Branch' : 'Select Degree First'}
-                                            </option>
-                                            {filteredBranches.map((branch) => {
+                                        <Dropdown
+                                            options={filteredBranches.map((branch) => {
                                                 const value = getBranchOptionValue(branch);
                                                 const label = branch.branchFullName
                                                     ? branch.branchAbbreviation
                                                         ? `${branch.branchFullName} (${branch.branchAbbreviation})`
                                                         : branch.branchFullName
                                                     : value;
-                                                return (
-                                                    <option key={branch.id || branch._id || value} value={value}>{label}</option>
-                                                );
+                                                return { label, value };
                                             })}
-                                        </select>
+                                            selectedOption={selectedBranch}
+                                            onSelect={(value) => {
+                                                setSelectedBranch(value);
+                                                setStudentData(prev => ({ ...prev, branch: value }));
+                                            }}
+                                            placeholder={selectedDegree ? 'Select Branch' : 'Select Degree First'}
+                                            disabled={isSaving || !selectedDegree}
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Year <RequiredStar /></label>
-                                        <select
-                                            name="currentYear"
-                                            value={currentYear || ''}
-                                            required
-                                            onChange={(e) => {
-                                                const newYear = e.target.value;
+                                        <Dropdown
+                                            options={['I', 'II', 'III', 'IV']}
+                                            selectedOption={currentYear}
+                                            onSelect={(newYear) => {
                                                 setCurrentYear(newYear);
                                                 const semesters = getAvailableSemesters(newYear);
                                                 const firstSemester = semesters[0] || '';
                                                 setCurrentSemester(firstSemester);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
                                             }}
+                                            placeholder="Current Year"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Current Year</option>
-                                            <option value="I">I</option>
-                                            <option value="II">II</option>
-                                            <option value="III">III</option>
-                                            <option value="IV">IV</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Semester <RequiredStar /></label>
-                                        <select
-                                            name="currentSemester"
-                                            value={currentSemester || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                        <Dropdown
+                                            options={getAvailableSemesters(currentYear)}
+                                            selectedOption={currentSemester}
+                                            onSelect={(value) => {
                                                 setCurrentSemester(value);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
                                             }}
-                                            required
+                                            placeholder={currentYear ? 'Current Semester' : 'Select Year First'}
                                             disabled={!currentYear || isSaving}
-                                        >
-                                            <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
-                                            {getAvailableSemesters(currentYear).map((sem) => (
-                                                <option key={sem} value={sem}>
-                                                    {sem}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Section <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="section"
-                                                value={selectedSection}
-                                                onChange={(e) => {
-                                                    setSelectedSection(e.target.value);
-                                                    setStudentData((prev) => ({ ...(prev || {}), section: e.target.value }));
+                                            <Dropdown
+                                                options={['A', 'B', 'C', 'D']}
+                                                selectedOption={selectedSection}
+                                                onSelect={(val) => {
+                                                    setSelectedSection(val);
+                                                    setStudentData((prev) => ({ ...(prev || {}), section: val }));
                                                 }}
+                                                placeholder="Section"
                                                 disabled={isSaving}
-                                            >
-                                                <option value="" disabled>
-                                                    Section *
-                                                </option>
-                                                <option value="A">A</option>
-                                                <option value="B">B</option>
-                                                <option value="C">C</option>
-                                                <option value="D">D</option>
-                                            </select>
+                                                role="admin"
+                                                className={styles['edit-dropdown-wrapper']}
+                                                headerClassName={styles['edit-dropdown-header']}
+                                            />
                                             <input type="hidden" name="section" value={selectedSection || ''} />
                                         </>
                                     </div>

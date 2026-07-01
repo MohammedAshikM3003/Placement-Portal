@@ -6,6 +6,7 @@ import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 import styles from './AdminCompanyprofile.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -577,22 +578,15 @@ function Admincompanyprofile({ onLogout }) {
                                 <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-mode">
                                     Search Mode
                                 </label>
-                                <div className={`${styles['Admin-cp-text-container']} ${styles['Admin-cp-select-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
-                                    <select
-                                        id="admin-search-mode"
-                                        className={`${styles['Admin-cp-text']} ${styles['Admin-cp-select']}`}
-                                        value={filters.mode}
-                                        onChange={(event) => setFilters((prev) => ({ ...prev, mode: event.target.value }))}
-                                        onFocus={() => setModeFocused(true)}
-                                        onBlur={() => setModeFocused(false)}
-                                        aria-label="Search Mode"
-                                    >
-                                        <option value="">Search Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                </div>
+                                <Dropdown
+                                    options={['Online', 'Offline', 'Hybrid']}
+                                    selectedOption={filters.mode}
+                                    onSelect={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
+                                    placeholder="Search Mode"
+                                    role="admin"
+                                    className={styles['cp-dropdown-wrapper']}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
                             </div>
 
                             {/* Visit Date Calendar with Static Label */}

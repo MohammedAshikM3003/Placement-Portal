@@ -3048,3 +3048,23 @@
     }
 }
 
+/* Custom Dropdown Overrides for Student Profile Edit */
+.edit-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.edit-dropdown-header {
+    height: 53.6px !important;
+    border: 1px solid #def4dd !important;
+    border-radius: 8px !important;
+    background-color: #f9fff9 !important;
+    font-size: 0.95rem !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #333 !important;
+}
+
+.edit-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
+

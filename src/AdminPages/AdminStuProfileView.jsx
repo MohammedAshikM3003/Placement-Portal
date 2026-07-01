@@ -10,6 +10,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminStuProfileView.module.css'; // Module Import
+import Dropdown from '../components/common/Dropdown/Dropdown';
 // Achievement popup styles moved to AdminStuProfileView.module.css (was cross-page import)
 import '../components/alerts/AlertStyles.css';
 import SuccessPopup from '../components/dialog/SuccessPopup';
@@ -2163,84 +2164,75 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>Degree</option>
-                                            <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
-                                        </select>
+                                        <Dropdown
+                                            options={[studentData?.degree || 'N/A']}
+                                            selectedOption={studentData?.degree || ''}
+                                            placeholder="Degree"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Branch <RequiredStar /></label>
-                                        <select
-                                            name="branch"
-                                            value={studentData?.branch || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
-                                        >
-                                            <option value="" disabled>Branch</option>
-                                            <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
-                                        </select>
+                                        <Dropdown
+                                            options={[studentData?.branch || 'N/A']}
+                                            selectedOption={studentData?.branch || ''}
+                                            placeholder="Branch"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Year <RequiredStar /></label>
-                                        <select
-                                            name="currentYear"
-                                            value={currentYear || ''}
-                                            required
-                                            onChange={(e) => {
-                                                const newYear = e.target.value;
+                                        <Dropdown
+                                            options={['I', 'II', 'III', 'IV']}
+                                            selectedOption={currentYear}
+                                            onSelect={(newYear) => {
                                                 setCurrentYear(newYear);
                                                 const semesters = getAvailableSemesters(newYear);
                                                 const firstSemester = semesters[0] || '';
                                                 setCurrentSemester(firstSemester);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
                                             }}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Current Year</option>
-                                            <option value="I">I</option>
-                                            <option value="II">II</option>
-                                            <option value="III">III</option>
-                                            <option value="IV">IV</option>
-                                        </select>
+                                            placeholder="Current Year"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Semester <RequiredStar /></label>
-                                        <select
-                                            name="currentSemester"
-                                            value={currentSemester || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                        <Dropdown
+                                            options={getAvailableSemesters(currentYear)}
+                                            selectedOption={currentSemester}
+                                            onSelect={(value) => {
                                                 setCurrentSemester(value);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
                                             }}
-                                            required
-                                            disabled={!currentYear || isSaving}
-                                        >
-                                            <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
-                                            {getAvailableSemesters(currentYear).map((sem) => (
-                                                <option key={sem} value={sem}>
-                                                    {sem}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder={currentYear ? 'Current Semester' : 'Select Year First'}
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Section <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="section"
-                                                value={selectedSection}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>
-                                                    Section *
-                                                </option>
-                                                <option value="A">A</option>
-                                                <option value="B">B</option>
-                                                <option value="C">C</option>
-                                                <option value="D">D</option>
-                                            </select>
+                                            <Dropdown
+                                                options={['A', 'B', 'C', 'D']}
+                                                selectedOption={selectedSection}
+                                                placeholder="Section"
+                                                disabled={true}
+                                                role="admin"
+                                                className={styles['view-dropdown-wrapper']}
+                                                headerClassName={styles['view-dropdown-header']}
+                                            />
                                             <input type="hidden" name="section" value={selectedSection || ''} />
                                         </>
                                     </div>

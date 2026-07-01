@@ -5,6 +5,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Conavbar from '../components/Navbar/Adnavbar';
 import Cosidebar from '../components/Sidebar/Adsidebar';
 import styles from './AdminCompanyDrive.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from '../assets/Adminicon.png';
 import AdminAddcompany from '../assets/Adminschedulenewdrive.svg';
 import EligibleStudentsIcon from '../assets/ad_cd_eligiblestu.svg';
@@ -917,24 +918,15 @@ function AdminCompanyDrive({ onLogout }) {
                                     <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-department">
                                         Department
                                     </label>
-                                    <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${departmentFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            id="admin-search-department"
-                                            className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
-                                            value={tempFilterDepartment}
-                                            onChange={(e) => setTempFilterDepartment(e.target.value)}
-                                            onFocus={() => setDepartmentFocused(true)}
-                                            onBlur={() => setDepartmentFocused(false)}
-                                        >
-                                            {departmentOptions && departmentOptions.length > 0 ? (
-                                                departmentOptions.map((opt, idx) => (
-                                                    <option key={idx} value={opt}>{opt === '' ? 'All Departments' : opt}</option>
-                                                ))
-                                            ) : (
-                                                <option value="">All Departments</option>
-                                            )}
-                                        </select>
-                                    </div>
+                                <Dropdown
+                                    options={departmentOptions && departmentOptions.length > 0 ? departmentOptions.map(opt => ({ label: opt === '' ? 'All Departments' : opt, value: opt })) : [{ label: 'All Departments', value: '' }]}
+                                    selectedOption={tempFilterDepartment}
+                                    onSelect={(val) => setTempFilterDepartment(val)}
+                                    placeholder="All Departments"
+                                    role="admin"
+                                    className={styles['cd-dropdown-wrapper']}
+                                    headerClassName={styles['cd-dropdown-header']}
+                                />
                                 </div>
 
                                 {/* Dates Filter with Static Label and Start/End subfields */}
@@ -1012,21 +1004,15 @@ function AdminCompanyDrive({ onLogout }) {
                                     <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-mode">
                                         Search Mode
                                     </label>
-                                    <div className={`${styles['Admin-cd-text-container']} ${styles['Admin-cd-select-container']} ${modeFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            id="admin-search-mode"
-                                            className={`${styles['Admin-cd-text']} ${styles['Admin-cd-select']}`}
-                                            value={tempFilterMode}
-                                            onChange={(e) => setTempFilterMode(e.target.value)}
-                                            onFocus={() => setModeFocused(true)}
-                                            onBlur={() => setModeFocused(false)}
-                                        >
-                                            <option value="">Search Mode</option>
-                                            <option value="Online">Online</option>
-                                            <option value="Offline">Offline</option>
-                                            <option value="Hybrid">Hybrid</option>
-                                        </select>
-                                    </div>
+                                <Dropdown
+                                    options={['Online', 'Offline', 'Hybrid']}
+                                    selectedOption={tempFilterMode}
+                                    onSelect={(val) => setTempFilterMode(val)}
+                                    placeholder="Search Mode"
+                                    role="admin"
+                                    className={styles['cd-dropdown-wrapper']}
+                                    headerClassName={styles['cd-dropdown-header']}
+                                />
                                 </div>
                             </div>
                         </div>
