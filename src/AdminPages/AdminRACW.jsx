@@ -12,6 +12,7 @@ import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 // FIXED: Import CSS as a Module
 import styles from './AdminRACW.module.css';
@@ -58,10 +59,6 @@ function AdminRACW() {
   const [availableDates, setAvailableDates] = useState([]);
   const [availableEndDates, setAvailableEndDates] = useState([]);
   const [selectedCompanyJob, setSelectedCompanyJob] = useState(null);
-  const [isCompanyOpen, setIsCompanyOpen] = useState(false);
-  const [isJobRoleOpen, setIsJobRoleOpen] = useState(false);
-  const [isStartDateOpen, setIsStartDateOpen] = useState(false);
-  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportPopupState, setExportPopupState] = useState('none');
@@ -80,30 +77,6 @@ function AdminRACW() {
     window.addEventListener('closeSidebar', handleCloseSidebar);
     return () => {
       window.removeEventListener('closeSidebar', handleCloseSidebar);
-    };
-  }, []);
-
-  const companyRef = useRef(null);
-  const jobRoleRef = useRef(null);
-  const startDateRef = useRef(null);
-
-  // Close dropdowns on click outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (companyRef.current && !companyRef.current.contains(event.target)) {
-        setIsCompanyOpen(false);
-      }
-      if (jobRoleRef.current && !jobRoleRef.current.contains(event.target)) {
-        setIsJobRoleOpen(false);
-      }
-      if (startDateRef.current && !startDateRef.current.contains(event.target)) {
-        setIsStartDateOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -349,7 +322,6 @@ function AdminRACW() {
   const handleCompanySelect = (companyName) => {
     console.log('Selected company:', companyName);
     setSelectedCompany(companyName);
-    setIsCompanyOpen(false);
     
     // Reset dependent fields
     setSelectedJobRole(null);
@@ -366,7 +338,6 @@ function AdminRACW() {
   const handleJobRoleSelect = (jobRole) => {
     console.log('Selected job role:', jobRole);
     setSelectedJobRole(jobRole);
-    setIsJobRoleOpen(false);
     
     // Find the group with this company and job role
     const group = groupedDrives.find(g => 
@@ -404,7 +375,6 @@ function AdminRACW() {
   // Handle start date selection
   const handleStartDateSelect = async (dateObj) => {
     setStartDate(dateObj.date);
-    setIsStartDateOpen(false);
     
     // Automatically set the end date from the selected drive
     if (dateObj.endDate) {
@@ -632,103 +602,44 @@ function AdminRACW() {
 
             {/* UPDATED CLASSES: Admin-racw-filter-inputs, Admin-racw-filter-select, Admin-racw-filter-date-input */}
             <div className={styles['Admin-racw-filter-inputs']}>
-              <div className={styles['Admin-racw-dropdown-wrapper']} ref={companyRef}>
-                <div 
-                  className={styles['Admin-racw-dropdown-header']} 
-                  onClick={() => setIsCompanyOpen(!isCompanyOpen)}
-                >
-                  <span>{selectedCompany || 'Select Company'}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 292.4 292.4"
-                    className={`${styles['Admin-racw-dropdown-arrow']} ${isCompanyOpen ? styles['Admin-racw-dropdown-arrow-open'] : ''}`}
-                  >
-                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
-                  </svg>
-                </div>
-                {isCompanyOpen && (
-                  <div className={styles['Admin-racw-dropdown-menu']}>
-                    {uniqueCompanies.map((company, index) => (
-                      <div
-                        key={index}
-                        className={styles['Admin-racw-dropdown-item']}
-                        onClick={() => handleCompanySelect(company)}
-                      >
-                        {company}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={uniqueCompanies}
+                selectedOption={selectedCompany}
+                onSelect={handleCompanySelect}
+                placeholder="Select Company"
+                role="admin"
+              />
 
-              <div className={styles['Admin-racw-dropdown-wrapper']} ref={jobRoleRef}>
-                <div 
-                  className={`${styles['Admin-racw-dropdown-header']} ${!selectedCompany ? styles['Admin-racw-dropdown-disabled'] : ''}`}
-                  onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
-                >
-                  <span>{selectedJobRole || 'Job Role'}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 292.4 292.4"
-                    className={`${styles['Admin-racw-dropdown-arrow']} ${isJobRoleOpen ? styles['Admin-racw-dropdown-arrow-open'] : ''}`}
-                  >
-                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
-                  </svg>
-                </div>
-                {isJobRoleOpen && selectedCompany && (
-                  <div className={styles['Admin-racw-dropdown-menu']}>
-                    {availableJobRoles.map((jobRole, index) => (
-                      <div
-                        key={index}
-                        className={styles['Admin-racw-dropdown-item']}
-                        onClick={() => handleJobRoleSelect(jobRole)}
-                      >
-                        {jobRole}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableJobRoles}
+                selectedOption={selectedJobRole}
+                onSelect={handleJobRoleSelect}
+                placeholder="Job Role"
+                disabled={!selectedCompany}
+                role="admin"
+              />
 
-              <div className={styles['Admin-racw-dropdown-wrapper']} ref={startDateRef}>
-                <div 
-                  className={`${styles['Admin-racw-dropdown-header']} ${!selectedCompanyJob ? styles['Admin-racw-dropdown-disabled'] : ''}`}
-                  onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-                >
-                  <span>{startDate ? formatDisplayDate(startDate) : 'Start Date'}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 292.4 292.4"
-                    className={`${styles['Admin-racw-dropdown-arrow']} ${isStartDateOpen ? styles['Admin-racw-dropdown-arrow-open'] : ''}`}
-                  >
-                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
-                  </svg>
-                </div>
-                {isStartDateOpen && selectedCompanyJob && (
-                  <div className={styles['Admin-racw-dropdown-menu']}>
-                    {availableDates.map((dateObj, index) => (
-                      <div
-                        key={index}
-                        className={styles['Admin-racw-dropdown-item']}
-                        onClick={() => handleStartDateSelect(dateObj)}
-                      >
-                        {formatDisplayDate(dateObj.date)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableDates.map(dateObj => formatDisplayDate(dateObj.date))}
+                selectedOption={startDate ? formatDisplayDate(startDate) : null}
+                onSelect={(formattedDate) => {
+                  const matchedDateObj = availableDates.find(d => formatDisplayDate(d.date) === formattedDate);
+                  if (matchedDateObj) {
+                    handleStartDateSelect(matchedDateObj);
+                  }
+                }}
+                placeholder="Start Date"
+                disabled={!selectedCompanyJob}
+                role="admin"
+              />
 
-              {/* End Date - Auto-populated from selected drive */}
-              <div className={styles['Admin-racw-dropdown-wrapper']}>
-                <div 
-                  className={`${styles['Admin-racw-dropdown-header']} ${styles['Admin-racw-dropdown-disabled']}`}
-                  title="End date is automatically set based on the selected drive"
-                >
-                  <span>{endDate ? formatDisplayDate(endDate) : 'End Date'}</span>
-                  <span className={styles['Admin-racw-dropdown-arrow']}>✓</span>
-                </div>
-              </div>
+              <Dropdown
+                options={[]}
+                selectedOption={endDate ? formatDisplayDate(endDate) : null}
+                placeholder="End Date"
+                disabled={true}
+                role="admin"
+              />
             </div>
           </div> 
 

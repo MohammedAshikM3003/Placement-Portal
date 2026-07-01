@@ -1,0 +1,92 @@
+import React, { useState, useEffect, useRef } from 'react';
+import styles from './Dropdown.module.css';
+
+const roleColors = {
+  admin: { thumb: '#4EA24E', hover: '#3d8a3d' },
+  coo: { thumb: '#D23B42', hover: '#b32d34' },
+  coordinator: { thumb: '#D23B42', hover: '#b32d34' },
+  stu: { thumb: '#2085f6', hover: '#4338CA' },
+  student: { thumb: '#2085f6', hover: '#4338CA' }
+};
+
+const Dropdown = ({ 
+  options = [], 
+  selectedOption = null, 
+  onSelect = () => {}, 
+  placeholder = 'Select Option', 
+  disabled = false,
+  role = 'admin'
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleToggle = () => {
+    if (!disabled) {
+      setIsOpen(prev => !prev);
+    }
+  };
+
+  const handleSelect = (option) => {
+    onSelect(option);
+    setIsOpen(false);
+  };
+
+  const themeColors = roleColors[role.toLowerCase()] || roleColors.admin;
+
+  return (
+    <div 
+      className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''}`} 
+      ref={dropdownRef}
+    >
+      <div
+        className={`${styles['dropdown-header']} ${disabled ? styles['dropdown-header-disabled'] : ''}`}
+        onClick={handleToggle}
+      >
+        <span>{selectedOption || placeholder}</span>
+        {!disabled && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 292.4 292.4"
+            className={`${styles['dropdown-arrow']} ${isOpen ? styles['dropdown-arrow-open'] : ''}`}
+          >
+            <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
+          </svg>
+        )}
+      </div>
+      {isOpen && !disabled && (
+        <div 
+          className={styles['dropdown-menu']}
+          style={{
+            '--scrollbar-thumb-color': themeColors.thumb,
+            '--scrollbar-thumb-hover-color': themeColors.hover
+          }}
+        >
+          {options.map((option, index) => (
+            <div
+              key={index}
+              className={styles['dropdown-item']}
+              onClick={() => handleSelect(option)}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Dropdown;

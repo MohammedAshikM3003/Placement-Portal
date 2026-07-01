@@ -1,0 +1,98 @@
+.dropdown-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 200px;
+    max-width: 262px;
+}
+
+.dropdown-header {
+    background: #f6f8fb;
+    border: 2px solid #808080;
+    height: 51px;
+    border-radius: 7px;
+    font-size: 1rem;
+    color: #282828;
+    font-weight: 600;
+    padding: 0 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.dropdown-header:hover {
+    border-color: #4EA24E;
+}
+
+.dropdown-header-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.dropdown-header-disabled:hover {
+    border-color: #808080;
+}
+
+.dropdown-arrow {
+    width: 10px;
+    height: 10px;
+    fill: #808080;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-arrow-open {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #808080;
+    border-radius: 7px;
+    margin-top: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom Inset Scrollbar with Role Colors */
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-color, #4EA24E);
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover-color, #3d8a3d);
+}
+
+.dropdown-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #282828;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #f0f0f0;
+}
+
+.dropdown-item:not(:last-child) {
+    border-bottom: 1px solid #e5e5e5;
+}
