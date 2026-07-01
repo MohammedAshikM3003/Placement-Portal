@@ -1103,7 +1103,7 @@ function AdminEsstudapp() {
                 <label className={styles['Admin-es-apk-static-label']} htmlFor="companyName">
                   Company Name <RequiredStar />
                 </label>
-                <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'companyName' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
+                <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'companyName' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   <Dropdown
                     options={companyNames}
                     selectedOption={filterData.companyName}
@@ -1197,7 +1197,7 @@ function AdminEsstudapp() {
                   Job Role <RequiredStar />
                 </label>
                 {uniqueJobRolesForDates.length > 1 ? (
-                  <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
+                  <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                     <Dropdown
                       options={uniqueJobRolesForDates}
                       selectedOption={filterData.jobs}
@@ -1384,7 +1384,7 @@ function AdminEsstudapp() {
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="arrearStatus">Arrear Status</label>
-              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.arrearStatus ? styles['filled'] : ''}`}>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.arrearStatus ? styles['filled'] : ''}`}>
                 <Dropdown
                   options={ARREAR_STATUS_OPTIONS}
                   selectedOption={filterData.arrearStatus}
@@ -1399,7 +1399,7 @@ function AdminEsstudapp() {
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="bondWillingness">Bond Willingness</label>
-              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.bondWillingness ? styles['filled'] : ''}`}>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.bondWillingness ? styles['filled'] : ''}`}>
                 <Dropdown
                   options={YES_NO_OPTIONS}
                   selectedOption={filterData.bondWillingness}
@@ -1420,7 +1420,7 @@ function AdminEsstudapp() {
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="driveMode">Mode of Drive</label>
-              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.driveMode ? styles['filled'] : ''}`}>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.driveMode ? styles['filled'] : ''}`}>
                 <Dropdown
                   options={MODE_OF_DRIVE_OPTIONS}
                   selectedOption={filterData.driveMode}
@@ -1435,7 +1435,7 @@ function AdminEsstudapp() {
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="companyType">Company Type</label>
-              <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.companyType ? styles['filled'] : ''}`}>
+              <div className={`${styles['Admin-es-apk-filter-input']} ${filterData.companyType ? styles['filled'] : ''}`}>
                 <Dropdown
                   options={COMPANY_TYPE_OPTIONS}
                   selectedOption={filterData.companyType}
