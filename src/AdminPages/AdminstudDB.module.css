@@ -59,7 +59,10 @@
 
 /* AI mode should size to content instead of keeping the default tall filter card height. */
 .Admin-DB-filter-section-ai-mode {
-    min-height: auto;
+    min-height: auto !important;
+    height: auto !important;
+    flex: 0 0 500px !important;
+    width: 500px !important;
 }
 
 .Admin-DB-filter-header-container {
@@ -199,6 +202,7 @@
 .Admin-DB-ai-button-group {
     display: flex;
     gap: 22px;
+    justify-content: center;
 }
 
 .Admin-DB-button {

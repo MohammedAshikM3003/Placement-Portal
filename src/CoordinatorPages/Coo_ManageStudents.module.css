@@ -2027,6 +2027,8 @@ overflow: hidden  ;
 .co-ms-filter-section-ai-mode {
     min-height: auto !important;
     height: auto !important;
+    flex: 0 0 500px !important;
+    width: 500px !important;
 }
 
 .co-ms-ai-toggle-btn {
@@ -2131,6 +2133,7 @@ overflow: hidden  ;
     display: flex;
     gap: 22px;
     width: 100%;
+    justify-content: center;
 }
 
 .co-ms-button {
