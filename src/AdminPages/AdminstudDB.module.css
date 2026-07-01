@@ -201,6 +201,22 @@
     gap: 22px;
 }
 
+.Admin-DB-button {
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+}
+
+.Admin-DB-button:active {
+    transform: scale(0.98);
+}
+
 .Admin-DB-ai-apply-btn {
     background-color: #4ea24e;
     color: #ffffff;
@@ -208,7 +224,12 @@
 
 .Admin-DB-ai-apply-btn:hover {
     color: #ffffff;
-    background-color: #4EA24E;
+    background-color: #2ea730;
+}
+
+.Admin-DB-ai-apply-btn:disabled {
+    background-color: #a8dba8;
+    cursor: not-allowed;
 }
 
 .Admin-DB-ai-discard-btn {

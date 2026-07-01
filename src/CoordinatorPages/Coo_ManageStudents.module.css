@@ -2133,6 +2133,22 @@ overflow: hidden  ;
     width: 100%;
 }
 
+.co-ms-button {
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+}
+
+.co-ms-button:active {
+    transform: scale(0.98);
+}
+
 .co-ms-ai-apply-btn {
     background-color: #d23b42;
     color: #ffffff;
@@ -2141,6 +2157,11 @@ overflow: hidden  ;
 .co-ms-ai-apply-btn:hover {
     color: #ffffff;
     background-color: #b32d34;
+}
+
+.co-ms-ai-apply-btn:disabled {
+    background-color: #e59a9e;
+    cursor: not-allowed;
 }
 
 .co-ms-ai-discard-btn {
