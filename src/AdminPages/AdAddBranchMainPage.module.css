@@ -285,12 +285,12 @@
 /* Scroll Indicator Bar */
 .Admin-add-branch-scroll-indicator {
   position: absolute;
-  right: 15px;
-  top: 110px;
-  bottom: 30px;
-  width: 6px;
-  background: rgba(211, 211, 211, 0.25);
-  border-radius: 10px;
+  right: 10px;
+  top: 95px;
+  bottom: 24px;
+  width: 8px;
+  background: transparent;
+  border-radius: 20px;
   z-index: 10;
 }
 
@@ -298,11 +298,15 @@
   position: absolute;
   width: 100%;
   height: 40px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
-  border-radius: 10px;
-  transition: top 0.1s ease;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  transition: top 0.1s ease, background-color 0.2s ease;
   transform: translateY(-50%);
+  cursor: grab;
+}
+
+.Admin-add-branch-scroll-indicator-thumb:hover {
+  background: #ffffff;
 }
 
 /* Empty and Error States */
