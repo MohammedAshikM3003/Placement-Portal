@@ -282,6 +282,7 @@
 
 /* Scroll Indicator Bar */
 .Admin-add-branch-scroll-indicator {
+  display: none !important;
   position: absolute;
   right: 15px;
   top: 110px;
