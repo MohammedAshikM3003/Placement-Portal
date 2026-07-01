@@ -549,3 +549,22 @@
         font-size: 0.9rem;
     }
 }
+
+/* Custom Dropdown Overrides for Zipping History */
+.zh-dropdown-wrapper {
+    min-width: 220px !important;
+    max-width: 100% !important;
+}
+
+.zh-dropdown-header {
+    height: 44px !important;
+    border: 2px solid #ddd !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.zh-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

@@ -521,3 +521,22 @@
         font-size: 0.9rem;
     }
 }
+
+/* Custom Dropdown Overrides for Active Zip */
+.az-dropdown-wrapper {
+    min-width: 180px !important;
+    max-width: 100% !important;
+}
+
+.az-dropdown-header {
+    height: 48px !important;
+    border: 2px solid #ddd !important;
+    border-radius: 10px !important;
+    background-color: #fff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.az-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

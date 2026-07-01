@@ -4,6 +4,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Ad_Zipping_History.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from '../assets/Adminicon.png';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -279,16 +280,19 @@ const Ad_Zipping_History = () => {
                 </div>
 
                 <div className={styles['Ad-zh-action-filter-wrapper']}>
-                    <select
-                        id="ad-zh-action-filter"
-                        className={styles['Ad-zh-action-filter-select']}
-                        value={actionFilter}
-                        onChange={(e) => setActionFilter(e.target.value)}
-                    >
-                        <option value="all">All Batches</option>
-                        <option value="zipped">Zipped Batches</option>
-                        <option value="unzipped">Unzipped Batches</option>
-                    </select>
+                    <Dropdown
+                        options={[
+                            { label: 'All Batches', value: 'all' },
+                            { label: 'Zipped Batches', value: 'zipped' },
+                            { label: 'Unzipped Batches', value: 'unzipped' }
+                        ]}
+                        selectedOption={actionFilter}
+                        onSelect={(val) => setActionFilter(val)}
+                        placeholder="All Batches"
+                        role="admin"
+                        className={styles['zh-dropdown-wrapper']}
+                        headerClassName={styles['zh-dropdown-header']}
+                    />
                 </div>
 
                 {/* Table Card */}

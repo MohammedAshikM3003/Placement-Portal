@@ -4,6 +4,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Ad_ActiveZip.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from '../assets/Adminicon.png';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -387,18 +388,18 @@ const Ad_ActiveZip = () => {
 
                 {/* Filter Row */}
                 <div className={styles['Ad-az-filter-row']}>
-                    <div className={styles['Ad-az-select-wrapper']}>
-                        <select
-                            className={styles['Ad-az-select']}
-                            value={selectedBatch}
-                            onChange={handleBatchChange}
-                        >
-                            <option value="">Select Batch</option>
-                            {batches.map((batch, index) => (
-                                <option key={index} value={batch}>{batch}</option>
-                            ))}
-                        </select>
-                    </div>
+                    <Dropdown
+                        options={batches}
+                        selectedOption={selectedBatch}
+                        onSelect={(val) => {
+                            setSelectedBatch(val);
+                            setZipArchiveName(generateZipArchiveName(val));
+                        }}
+                        placeholder="Select Batch"
+                        role="admin"
+                        className={styles['az-dropdown-wrapper']}
+                        headerClassName={styles['az-dropdown-header']}
+                    />
 
                     <div className={styles['Ad-az-archive-name-wrapper']}>
                         <span className={styles['Ad-az-archive-label']}>Zip Archive Name :</span>
