@@ -524,8 +524,7 @@
 
 /* Custom Dropdown Overrides for Active Zip */
 .az-dropdown-wrapper {
-    min-width: 180px !important;
-    max-width: 100% !important;
+    width: 180px !important;
 }
 
 .az-dropdown-header {

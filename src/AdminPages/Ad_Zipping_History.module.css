@@ -552,8 +552,7 @@
 
 /* Custom Dropdown Overrides for Zipping History */
 .zh-dropdown-wrapper {
-    min-width: 220px !important;
-    max-width: 100% !important;
+    width: 220px !important;
 }
 
 .zh-dropdown-header {
