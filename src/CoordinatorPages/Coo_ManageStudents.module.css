@@ -2025,10 +2025,6 @@ overflow: hidden  ;
 
 /* AI Filter styles for Coordinator (Red Theme) */
 .co-ms-filter-section-ai-mode {
-    min-height: auto !important;
-    height: auto !important;
-    flex: 0 0 500px !important;
-    width: 500px !important;
 }
 
 .co-ms-ai-toggle-btn {

@@ -57,12 +57,8 @@
     height: 305px;
 }
 
-/* AI mode should size to content instead of keeping the default tall filter card height. */
+/* AI mode should inherit standard filter card dimensions */
 .Admin-DB-filter-section-ai-mode {
-    min-height: auto !important;
-    height: auto !important;
-    flex: 0 0 500px !important;
-    width: 500px !important;
 }
 
 .Admin-DB-filter-header-container {
