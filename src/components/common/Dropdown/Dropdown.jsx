@@ -9,7 +9,7 @@ const roleColors = {
   student: { thumb: '#2085f6', hover: '#4338CA' }
 };
 
-const Dropdown = React.forwardRef(({ 
+const Dropdown = ({ 
   options = [], 
   selectedOption = null, 
   onSelect = () => {}, 
@@ -17,8 +17,9 @@ const Dropdown = React.forwardRef(({
   disabled = false,
   role = 'admin',
   className = '',
-  headerClassName = ''
-}, ref) => {
+  headerClassName = '',
+  ref = null
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -118,6 +119,6 @@ const Dropdown = React.forwardRef(({
       )}
     </div>
   );
-});
+};
 
 export default Dropdown;
