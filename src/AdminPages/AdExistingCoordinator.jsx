@@ -5,6 +5,7 @@ import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 // FIXED: Import CSS as a Module
 import styles from './AdExistingCoordinator.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import achStyles from '../StudentPages/Achievements.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import * as XLSX from 'xlsx';
@@ -695,20 +696,15 @@ function AdminMcood() {
                                 </div>
                                 <div className={styles['Admin-MC-input-wrapper']}>
                                     <label className={styles['Admin-MC-static-label']}>Cabin Number</label>
-                                    <div className={`${styles['Admin-MC-text-container']} ${styles['Admin-MC-select-container']} ${cabinFocused ? styles['is-focused'] : ''}`}>
-                                        <select 
-                                            className={`${styles['Admin-MC-text']} ${styles['Admin-MC-dropdown-select']}`}
-                                            value={tempFilterCabin} 
-                                            onChange={(e) => setTempFilterCabin(e.target.value)} 
-                                            onFocus={() => setCabinFocused(true)} 
-                                            onBlur={() => setCabinFocused(false)} 
-                                        >
-                                            <option value="">All Cabins</option>
-                                            {uniqueCabins.map(cabin => (
-                                                <option key={cabin} value={cabin}>{cabin}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                        <Dropdown
+                                            options={uniqueCabins}
+                                            selectedOption={tempFilterCabin}
+                                            onSelect={setTempFilterCabin}
+                                            placeholder="All Cabins"
+                                            role="admin"
+                                            className={styles['coord-dropdown-wrapper']}
+                                            headerClassName={styles['coord-dropdown-header']}
+                                        />
                                 </div>
                                 <div className={styles['Admin-MC-input-wrapper']}>
                                     <label className={styles['Admin-MC-static-label']}>DOB</label>

@@ -9,6 +9,7 @@ import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import Ad_Calendar from '../components/Calendar/Ad_Calendar.jsx';
 import styles from './AdAddCoordinatorform.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from "../assets/Adminicon.png";
 import ProfileGraduationcap from "../assets/VectorGC.svg";
 import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
@@ -594,24 +595,21 @@ function AdminCoDet() {
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Gender <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={genderSelectRef}
-                                                            name="gender"
-                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                            value={formData.gender}
-                                                            onChange={handleInputChange}
-                                                            disabled={isViewMode}
-                                                        >
-                                                            <option value="" disabled>Select Gender</option>
-                                                            <option value="Male">Male</option>
-                                                            <option value="Female">Female</option>
-                                                            <option value="Other">Other</option>
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(genderSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={[
+                                                            { label: 'Male', value: 'Male' },
+                                                            { label: 'Female', value: 'Female' },
+                                                            { label: 'Other', value: 'Other' }
+                                                        ]}
+                                                        selectedOption={formData.gender}
+                                                        onSelect={(val) => handleInputChange({ target: { name: 'gender', value: val } })}
+                                                        placeholder="Select Gender"
+                                                        disabled={isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={`${styles['Admin-cood-detail-form-input']} ${styles['coord-form-dropdown-header']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        ref={genderSelectRef}
+                                                    />
                                                 </label>
 
                                                 <label className={styles['Admin-cood-detail-field-label']}>
@@ -674,73 +672,52 @@ function AdminCoDet() {
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Degree <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={degreeSelectRef}
-                                                            name="degree"
-                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                            value={selectedDegree}
-                                                            onChange={(event) => {
-                                                                const degreeValue = event.target.value;
-                                                                setSelectedDegree(degreeValue);
-                                                                handleInputChange({ target: { name: 'degree', value: degreeValue } });
-                                                                if (!lockedBranchMeta) {
-                                                                    handleInputChange({ target: { name: 'branch', value: '' } });
-                                                                }
-                                                            }}
-                                                            disabled={Boolean(lockedBranchMeta) || isViewMode}
-                                                        >
-                                                            <option value="" disabled>Select Degree</option>
-                                                            {degrees.map((degree) => {
-                                                                const value = degreeOptionValue(degree);
-                                                                const label = degree?.degreeFullName && degree?.degreeAbbreviation
-                                                                    ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                                                                    : degree?.degreeFullName || degree?.degreeAbbreviation || value;
-                                                                return (
-                                                                    <option key={degree.id || degree._id || value} value={value}>
-                                                                        {label}
-                                                                    </option>
-                                                                );
-                                                            })}
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(degreeSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={degrees.map((degree) => {
+                                                            const value = degreeOptionValue(degree);
+                                                            const label = degree?.degreeFullName && degree?.degreeAbbreviation
+                                                                ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                                : degree?.degreeFullName || degree?.degreeAbbreviation || value;
+                                                            return { label, value };
+                                                        })}
+                                                        selectedOption={selectedDegree}
+                                                        onSelect={(degreeValue) => {
+                                                            setSelectedDegree(degreeValue);
+                                                            handleInputChange({ target: { name: 'degree', value: degreeValue } });
+                                                            if (!lockedBranchMeta) {
+                                                                handleInputChange({ target: { name: 'branch', value: '' } });
+                                                            }
+                                                        }}
+                                                        placeholder="Select Degree"
+                                                        disabled={Boolean(lockedBranchMeta) || isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={`${styles['Admin-cood-detail-form-input']} ${styles['coord-form-dropdown-header']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        ref={degreeSelectRef}
+                                                    />
                                                 </label>
 
                                                 <label className={styles['Admin-cood-detail-field-label']}>
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Branch <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={branchSelectRef}
-                                                            name="branch"
-                                                            className={`${styles['Admin-cood-detail-form-input']} ${styles['Admin-cood-detail-form-select']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`}
-                                                            value={formData.branch}
-                                                            onChange={handleInputChange}
-                                                            disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
-                                                        >
-                                                            <option value="" disabled>
-                                                                {filteredBranches.length ? 'Select Branch' : 'No branches available'}
-                                                            </option>
-                                                            {filteredBranches.map((branch) => {
-                                                                const label = branch?.branchFullName && branch?.branchAbbreviation
-                                                                    ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                                    : branch?.branchFullName || branch?.branchAbbreviation;
-                                                                const value = branchSelectValue(branch);
-                                                                return (
-                                                                    <option key={branch.id || branch._id || value} value={value}>
-                                                                        {label}
-                                                                    </option>
-                                                                );
-                                                            })}
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(branchSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={filteredBranches.map((branch) => {
+                                                            const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                                ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                                : branch?.branchFullName || branch?.branchAbbreviation;
+                                                            const value = branchSelectValue(branch);
+                                                            return { label, value };
+                                                        })}
+                                                        selectedOption={formData.branch}
+                                                        onSelect={(val) => handleInputChange({ target: { name: 'branch', value: val } })}
+                                                        placeholder={filteredBranches.length ? 'Select Branch' : 'No branches available'}
+                                                        disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={`${styles['Admin-cood-detail-form-input']} ${styles['coord-form-dropdown-header']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`}
+                                                        ref={branchSelectRef}
+                                                    />
                                                 </label>
                                             </div>
                                         </section>
@@ -2075,27 +2052,24 @@ const [branches, setBranches] = useState([]);
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Gender <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={(node) => {
-                                                                genderSelectRef.current = node;
-                                                                fieldRefs.current.gender = node;
-                                                            }}
-                                                            name="gender"
-                                                            className={getCoordinatorFieldClassName('gender', `${styles['Admin-cood-detail-form-select']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`)}
-                                                            value={formData.gender}
-                                                            onChange={handleInputChange}
-                                                            disabled={isViewMode}
-                                                        >
-                                                            <option value="" disabled>Select Gender</option>
-                                                            <option value="Male">Male</option>
-                                                            <option value="Female">Female</option>
-                                                            <option value="Other">Other</option>
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(genderSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={[
+                                                            { label: 'Male', value: 'Male' },
+                                                            { label: 'Female', value: 'Female' },
+                                                            { label: 'Other', value: 'Other' }
+                                                        ]}
+                                                        selectedOption={formData.gender}
+                                                        onSelect={(val) => handleInputChange({ target: { name: 'gender', value: val } })}
+                                                        placeholder="Select Gender"
+                                                        disabled={isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={getCoordinatorFieldClassName('gender', `${styles['coord-form-dropdown-header']} ${errors.gender ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                        ref={(node) => {
+                                                            genderSelectRef.current = node;
+                                                            fieldRefs.current.gender = node;
+                                                        }}
+                                                    />
                                                 </label>
 
                                                 <label className={styles['Admin-cood-detail-field-label']}>
@@ -2167,79 +2141,58 @@ const [branches, setBranches] = useState([]);
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Degree <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={(node) => {
-                                                                degreeSelectRef.current = node;
-                                                                fieldRefs.current.degree = node;
-                                                            }}
-                                                            name="degree"
-                                                            className={getCoordinatorFieldClassName('degree', `${styles['Admin-cood-detail-form-select']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`)}
-                                                            value={selectedDegree}
-                                                            onChange={(event) => {
-                                                                const degreeValue = event.target.value;
-                                                                setSelectedDegree(degreeValue);
-                                                                handleInputChange({ target: { name: 'degree', value: degreeValue } });
-                                                                if (!lockedBranchMeta) {
-                                                                    handleInputChange({ target: { name: 'branch', value: '' } });
-                                                                }
-                                                            }}
-                                                            disabled={Boolean(lockedBranchMeta) || isViewMode}
-                                                        >
-                                                            <option value="" disabled>Select Degree</option>
-                                                            {degrees.map((degree) => {
-                                                                const value = degreeOptionValue(degree);
-                                                                const label = degree?.degreeFullName && degree?.degreeAbbreviation
-                                                                    ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                                                                    : degree?.degreeFullName || degree?.degreeAbbreviation || value;
-                                                                return (
-                                                                    <option key={degree.id || degree._id || value} value={value}>
-                                                                        {label}
-                                                                    </option>
-                                                                );
-                                                            })}
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(degreeSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={degrees.map((degree) => {
+                                                            const value = degreeOptionValue(degree);
+                                                            const label = degree?.degreeFullName && degree?.degreeAbbreviation
+                                                                ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                                                                : degree?.degreeFullName || degree?.degreeAbbreviation || value;
+                                                            return { label, value };
+                                                        })}
+                                                        selectedOption={selectedDegree}
+                                                        onSelect={(degreeValue) => {
+                                                            setSelectedDegree(degreeValue);
+                                                            handleInputChange({ target: { name: 'degree', value: degreeValue } });
+                                                            if (!lockedBranchMeta) {
+                                                                handleInputChange({ target: { name: 'branch', value: '' } });
+                                                            }
+                                                        }}
+                                                        placeholder="Select Degree"
+                                                        disabled={Boolean(lockedBranchMeta) || isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={getCoordinatorFieldClassName('degree', `${styles['coord-form-dropdown-header']} ${errors.degree ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                        ref={(node) => {
+                                                            degreeSelectRef.current = node;
+                                                            fieldRefs.current.degree = node;
+                                                        }}
+                                                    />
                                                 </label>
 
                                                 <label className={styles['Admin-cood-detail-field-label']}>
                                                     <span className={styles['Admin-cood-detail-label-heading']}>
                                                         Branch <RequiredStar />
                                                     </span>
-                                                    <div className={styles['Admin-cood-detail-select-wrapper']}>
-                                                        <select
-                                                            ref={(node) => {
-                                                                branchSelectRef.current = node;
-                                                                fieldRefs.current.branch = node;
-                                                            }}
-                                                            name="branch"
-                                                            className={getCoordinatorFieldClassName('branch', `${styles['Admin-cood-detail-form-select']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`)}
-                                                            value={formData.branch}
-                                                            onChange={handleInputChange}
-                                                            disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
-                                                        >
-                                                            <option value="" disabled>
-                                                                {filteredBranches.length ? 'Select Branch' : 'No branches available'}
-                                                            </option>
-                                                            {filteredBranches.map((branch) => {
-                                                                const label = branch?.branchFullName && branch?.branchAbbreviation
-                                                                    ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                                    : branch?.branchFullName || branch?.branchAbbreviation;
-                                                                const value = branchSelectValue(branch);
-                                                                return (
-                                                                    <option key={branch.id || branch._id || value} value={value}>
-                                                                        {label}
-                                                                    </option>
-                                                                );
-                                                            })}
-                                                        </select>
-                                                        <div onClick={() => handleDropdownIconClick(branchSelectRef)} style={{ cursor: 'pointer' }}>
-                                                            <DropdownIcon />
-                                                        </div>
-                                                    </div>
+                                                    <Dropdown
+                                                        options={filteredBranches.map((branch) => {
+                                                            const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                                ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                                : branch?.branchFullName || branch?.branchAbbreviation;
+                                                            const value = branchSelectValue(branch);
+                                                            return { label, value };
+                                                        })}
+                                                        selectedOption={formData.branch}
+                                                        onSelect={(val) => handleInputChange({ target: { name: 'branch', value: val } })}
+                                                        placeholder={filteredBranches.length ? 'Select Branch' : 'No branches available'}
+                                                        disabled={Boolean(lockedBranchMeta) || (!lockedBranchMeta && !selectedDegree) || !filteredBranches.length || isViewMode}
+                                                        role="admin"
+                                                        className={styles['coord-form-dropdown-wrapper']}
+                                                        headerClassName={getCoordinatorFieldClassName('branch', `${styles['coord-form-dropdown-header']} ${errors.branch ? styles['Admin-cood-detail-input-error'] : ''}`)}
+                                                        ref={(node) => {
+                                                            branchSelectRef.current = node;
+                                                            fieldRefs.current.branch = node;
+                                                        }}
+                                                    />
                                                 </label>
                                             </div>
                                         </section>

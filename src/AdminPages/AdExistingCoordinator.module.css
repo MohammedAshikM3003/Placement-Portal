@@ -1516,3 +1516,22 @@ td.Admin-MC-email {
         transform: rotate(360deg);
     }
 }
+
+/* Custom Dropdown Overrides for AdExistingCoordinator */
+.coord-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.coord-dropdown-header {
+    height: 42px !important;
+    border: 2px solid #ccc !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.coord-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
