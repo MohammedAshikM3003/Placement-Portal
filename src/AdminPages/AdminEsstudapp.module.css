@@ -1570,3 +1570,41 @@
         box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
     }
 }
+
+/* Custom Dropdown Overrides for AdminEsstudapp */
+.es-apk-search-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.es-apk-search-dropdown-header {
+    height: 45px !important;
+    border: 1.5px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    font-size: 1em !important;
+    color: #333 !important;
+}
+
+.es-apk-search-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
+
+.es-apk-filter-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.es-apk-filter-dropdown-header {
+    height: 48px !important;
+    border: 1.5px solid #def4dd !important;
+    border-radius: 8px !important;
+    background-color: #f9fff9 !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.es-apk-filter-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

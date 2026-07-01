@@ -15,6 +15,7 @@ import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 
 // FIXED: Import CSS as a Module
 import styles from './AdminEsstudapp.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 import { CertificateDownloadProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 
@@ -1103,18 +1104,16 @@ function AdminEsstudapp() {
                   Company Name <RequiredStar />
                 </label>
                 <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'companyName' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
-                  <select
-                    id="companyName"
-                    value={filterData.companyName}
-                    onChange={(e) => handleFilterChange('companyName', e.target.value)}
-                    className={styles['Admin-es-apk-select']}
+                  <Dropdown
+                    options={companyNames}
+                    selectedOption={filterData.companyName}
+                    onSelect={(val) => handleFilterChange('companyName', val)}
+                    placeholder="Select Company Name"
                     disabled={isLoading}
-                  >
-                    <option value="">Select Company Name</option>
-                    {companyNames.map((name, idx) => (
-                      <option key={idx} value={name}>{name}</option>
-                    ))}
-                  </select>
+                    role="admin"
+                    className={styles['es-apk-search-dropdown-wrapper']}
+                    headerClassName={styles['es-apk-search-dropdown-header']}
+                  />
                 </div>
               </div>
 
@@ -1199,17 +1198,15 @@ function AdminEsstudapp() {
                 </label>
                 {uniqueJobRolesForDates.length > 1 ? (
                   <div className={`${styles['Admin-es-apk-search-input']} ${styles['Admin-es-apk-select-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
-                    <select
-                      id="jobs"
-                      value={filterData.jobs}
-                      onChange={(e) => handleFilterChange('jobs', e.target.value)}
-                      className={styles['Admin-es-apk-select']}
-                    >
-                      <option value="">Select Job Role</option>
-                      {uniqueJobRolesForDates.map((role, idx) => (
-                        <option key={idx} value={role}>{role}</option>
-                      ))}
-                    </select>
+                    <Dropdown
+                      options={uniqueJobRolesForDates}
+                      selectedOption={filterData.jobs}
+                      onSelect={(val) => handleFilterChange('jobs', val)}
+                      placeholder="Select Job Role"
+                      role="admin"
+                      className={styles['es-apk-search-dropdown-wrapper']}
+                      headerClassName={styles['es-apk-search-dropdown-header']}
+                    />
                   </div>
                 ) : (
                   <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
@@ -1388,34 +1385,30 @@ function AdminEsstudapp() {
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="arrearStatus">Arrear Status</label>
               <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.arrearStatus ? styles['filled'] : ''}`}>
-                <select
-                  id="arrearStatus"
-                  value={filterData.arrearStatus}
-                  onChange={(e) => handleFilterChange('arrearStatus', e.target.value)}
-                  className={styles['Admin-es-apk-select']}
-                >
-                  <option value="">Select Arrear Status</option>
-                  {ARREAR_STATUS_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={ARREAR_STATUS_OPTIONS}
+                  selectedOption={filterData.arrearStatus}
+                  onSelect={(val) => handleFilterChange('arrearStatus', val)}
+                  placeholder="Select Arrear Status"
+                  role="admin"
+                  className={styles['es-apk-filter-dropdown-wrapper']}
+                  headerClassName={styles['es-apk-filter-dropdown-header']}
+                />
               </div>
             </div>
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="bondWillingness">Bond Willingness</label>
               <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.bondWillingness ? styles['filled'] : ''}`}>
-                <select
-                  id="bondWillingness"
-                  value={filterData.bondWillingness}
-                  onChange={(e) => handleFilterChange('bondWillingness', e.target.value)}
-                  className={styles['Admin-es-apk-select']}
-                >
-                  <option value="">Select Bond Willingness</option>
-                  {YES_NO_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={YES_NO_OPTIONS}
+                  selectedOption={filterData.bondWillingness}
+                  onSelect={(val) => handleFilterChange('bondWillingness', val)}
+                  placeholder="Select Bond Willingness"
+                  role="admin"
+                  className={styles['es-apk-filter-dropdown-wrapper']}
+                  headerClassName={styles['es-apk-filter-dropdown-header']}
+                />
               </div>
             </div>
 
@@ -1428,34 +1421,30 @@ function AdminEsstudapp() {
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="driveMode">Mode of Drive</label>
               <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.driveMode ? styles['filled'] : ''}`}>
-                <select
-                  id="driveMode"
-                  value={filterData.driveMode}
-                  onChange={(e) => handleFilterChange('driveMode', e.target.value)}
-                  className={styles['Admin-es-apk-select']}
-                >
-                  <option value="">Select Mode of Drive</option>
-                  {MODE_OF_DRIVE_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={MODE_OF_DRIVE_OPTIONS}
+                  selectedOption={filterData.driveMode}
+                  onSelect={(val) => handleFilterChange('driveMode', val)}
+                  placeholder="Select Mode of Drive"
+                  role="admin"
+                  className={styles['es-apk-filter-dropdown-wrapper']}
+                  headerClassName={styles['es-apk-filter-dropdown-header']}
+                />
               </div>
             </div>
 
             <div className={styles['Admin-es-apk-field-group']}>
               <label className={styles['Admin-es-apk-field-label']} htmlFor="companyType">Company Type</label>
               <div className={`${styles['Admin-es-apk-filter-input']} ${styles['Admin-es-apk-select-input']} ${filterData.companyType ? styles['filled'] : ''}`}>
-                <select
-                  id="companyType"
-                  value={filterData.companyType}
-                  onChange={(e) => handleFilterChange('companyType', e.target.value)}
-                  className={styles['Admin-es-apk-select']}
-                >
-                  <option value="">Select Company Type</option>
-                  {COMPANY_TYPE_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={COMPANY_TYPE_OPTIONS}
+                  selectedOption={filterData.companyType}
+                  onSelect={(val) => handleFilterChange('companyType', val)}
+                  placeholder="Select Company Type"
+                  role="admin"
+                  className={styles['es-apk-filter-dropdown-wrapper']}
+                  headerClassName={styles['es-apk-filter-dropdown-header']}
+                />
               </div>
             </div>
 
