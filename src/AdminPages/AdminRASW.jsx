@@ -843,7 +843,13 @@ function AdminRASW() {
                   onClick={() => setIsCompanyOpen(!isCompanyOpen)}
                 >
                   <span>{selectedCompany || 'Select Company'}</span>
-                  <span className={styles['Admin-rasw-dropdown-arrow']}>{isCompanyOpen ? '▲' : '▼'}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 292.4 292.4"
+                    className={`${styles['Admin-rasw-dropdown-arrow']} ${isCompanyOpen ? styles['Admin-rasw-dropdown-arrow-open'] : ''}`}
+                  >
+                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
+                  </svg>
                 </div>
                 {isCompanyOpen && (
                   <div className={styles['Admin-rasw-dropdown-menu']}>
@@ -867,7 +873,13 @@ function AdminRASW() {
                   onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
                 >
                   <span>{selectedJobRole || 'Job Role'}</span>
-                  <span className={styles['Admin-rasw-dropdown-arrow']}>{isJobRoleOpen ? '▲' : '▼'}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 292.4 292.4"
+                    className={`${styles['Admin-rasw-dropdown-arrow']} ${isJobRoleOpen ? styles['Admin-rasw-dropdown-arrow-open'] : ''}`}
+                  >
+                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
+                  </svg>
                 </div>
                 {isJobRoleOpen && selectedCompany && (
                   <div className={styles['Admin-rasw-dropdown-menu']}>
@@ -891,7 +903,13 @@ function AdminRASW() {
                   onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
                 >
                   <span>{startDate ? formatDisplayDate(startDate) : 'Start Date'}</span>
-                  <span className={styles['Admin-rasw-dropdown-arrow']}>{isStartDateOpen ? '▲' : '▼'}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 292.4 292.4"
+                    className={`${styles['Admin-rasw-dropdown-arrow']} ${isStartDateOpen ? styles['Admin-rasw-dropdown-arrow-open'] : ''}`}
+                  >
+                    <path fill="#808080" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-4.9 0-9.2 1.8-12.9 5.4-3.7 3.6-5.5 8-5.5 13s1.8 9.4 5.5 13l128.8 128.8c3.7 3.7 8 5.5 13 5.5s9.4-1.8 13-5.5l128.8-128.8c3.7-3.6 5.4-8 5.4-13s-1.7-9.4-5.4-13z" />
+                  </svg>
                 </div>
                 {isStartDateOpen && selectedCompanyJob && (
                   <div className={styles['Admin-rasw-dropdown-menu']}>

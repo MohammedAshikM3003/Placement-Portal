@@ -660,8 +660,14 @@
 }
 
 .Admin-racw-dropdown-arrow {
-    font-size: 0.8rem;
-    color: #808080;
+    width: 10px;
+    height: 10px;
+    fill: #808080;
+    transition: transform 0.2s ease;
+}
+
+.Admin-racw-dropdown-arrow-open {
+    transform: rotate(180deg);
 }
 
 .Admin-racw-dropdown-menu {
