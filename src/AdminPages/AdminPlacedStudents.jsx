@@ -13,6 +13,7 @@ import mongoDBService from '../services/mongoDBService';
 import styles from "./AdminPlacedStudents.module.css";
 import Adminicon from "../assets/Adminicon.png";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, OfferUploadSuccessAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 // Component for the Bar Chart
 const BarChartComponent = ({ data }) => {
@@ -544,59 +545,42 @@ const PlacementDashboard = () => {
           {/* Filters Container */}
           {/* UPDATED CLASS: Admin-ps-filters-container */}
           <div className={styles['Admin-ps-filters-container']}>
-            {/* UPDATED CLASS: Admin-ps-filter-select */}
-            <select
-              className={styles['Admin-ps-filter-select']}
-              name="branch"
-              value={filters.branch}
-              onChange={handleFilterChange}
-            >
-              {branches.map(branch => (
-                <option key={branch} value={branch}>
-                  {branch}
-                </option>
-              ))}
-            </select>
-            {/* UPDATED CLASS: Admin-ps-filter-select */}
-            <select
-              className={styles['Admin-ps-filter-select']}
-              name="batch"
-              value={filters.batch}
-              onChange={handleFilterChange}
-            >
-              {uniqueBatches.map(batch => (
-                <option key={batch} value={batch}>
-                  {batch}
-                </option>
-              ))}
-            </select>
-            {/* UPDATED CLASS: Admin-ps-filter-select */}
-            <select
-              className={styles['Admin-ps-filter-select']}
-              name="company"
-              value={filters.company}
-              onChange={handleFilterChange}
-            >
-              {companies.map(company => (
-                <option key={company} value={company}>
-                  {company}
-                </option>
-              ))}
-            </select>
-            {/* Job Role dropdown */}
-            <select
-              className={styles['Admin-ps-filter-select']}
-              name="jobRole"
-              value={filters.jobRole}
-              onChange={handleFilterChange}
-            >
-              <option value="All Job Roles">All Job Roles</option>
-              {jobRoles.map(role => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              options={branches}
+              selectedOption={filters.branch}
+              onSelect={(val) => handleFilterChange({ target: { name: 'branch', value: val } })}
+              placeholder="All Branches"
+              role="admin"
+              className={styles['ps-dropdown-wrapper']}
+              headerClassName={styles['ps-dropdown-header']}
+            />
+            <Dropdown
+              options={uniqueBatches}
+              selectedOption={filters.batch}
+              onSelect={(val) => handleFilterChange({ target: { name: 'batch', value: val } })}
+              placeholder="All Batches"
+              role="admin"
+              className={styles['ps-dropdown-wrapper']}
+              headerClassName={styles['ps-dropdown-header']}
+            />
+            <Dropdown
+              options={companies}
+              selectedOption={filters.company}
+              onSelect={(val) => handleFilterChange({ target: { name: 'company', value: val } })}
+              placeholder="All Companies"
+              role="admin"
+              className={styles['ps-dropdown-wrapper']}
+              headerClassName={styles['ps-dropdown-header']}
+            />
+            <Dropdown
+              options={jobRoles}
+              selectedOption={filters.jobRole}
+              onSelect={(val) => handleFilterChange({ target: { name: 'jobRole', value: val } })}
+              placeholder="All Job Roles"
+              role="admin"
+              className={styles['ps-dropdown-wrapper']}
+              headerClassName={styles['ps-dropdown-header']}
+            />
           </div>
 
           {/* Dashboard Grid with Stats and Chart */}

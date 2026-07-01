@@ -1518,3 +1518,22 @@
     font-size: 0.98rem;
     color: #6B6D74;
 }
+
+/* Custom Dropdown Overrides for AdminstudDB Page */
+.db-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.db-dropdown-header {
+    height: 45px !important;
+    border: 3px solid #ccc !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.db-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

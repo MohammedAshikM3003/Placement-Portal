@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import { DataTable } from '../components/table';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 // --- Existing Icons (Updated to use 'styles') ---
 const GradCapIcon = () => (
@@ -1208,16 +1209,15 @@ function AdminstudDB() {
                                     {/* Row 1 Column 2: Branch Select */}
                                     <div className={styles['Admin-DB-input-wrapper']}>
                                         <label className={styles['Admin-DB-static-label']}>Branch</label>
-                                        <div className={styles['Admin-DB-dropdown-container']}>
-                                            <select className={styles['Admin-DB-dropdown']} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-                                                <option value="">Select Branch</option>
-                                                {branches.map((branch, index) => (
-                                                    <option key={branch._id || branch.id || index} value={branch.branchAbbreviation}>
-                                                        {branch.branchAbbreviation}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                            <Dropdown
+                                                options={branches.map(branch => branch.branchAbbreviation)}
+                                                selectedOption={filterDept}
+                                                onSelect={setFilterDept}
+                                                placeholder="Select Branch"
+                                                role="admin"
+                                                className={styles['db-dropdown-wrapper']}
+                                                headerClassName={styles['db-dropdown-header']}
+                                            />
                                     </div>
 
                                     {/* Row 2 Column 1: Batch Range */}
@@ -1263,56 +1263,44 @@ function AdminstudDB() {
                                     {/* Row 2 Column 2: Section Dropdown */}
                                     <div className={styles['Admin-DB-input-wrapper']}>
                                         <label className={styles['Admin-DB-static-label']}>Section</label>
-                                        <div className={styles['Admin-DB-dropdown-container']}>
-                                            <select className={styles['Admin-DB-dropdown']} value={filterSection} onChange={(e) => setFilterSection(e.target.value)}>
-                                                <option value="">Select Section</option>
-                                                {sectionOptions.map((sec) => (
-                                                    <option key={sec} value={sec}>
-                                                        {sec}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                            <Dropdown
+                                                options={sectionOptions}
+                                                selectedOption={filterSection}
+                                                onSelect={setFilterSection}
+                                                placeholder="Select Section"
+                                                role="admin"
+                                                className={styles['db-dropdown-wrapper']}
+                                                headerClassName={styles['db-dropdown-header']}
+                                            />
                                     </div>
 
                                     {/* Row 3 Column 1: Year-Sem */}
                                     <div className={styles['Admin-DB-input-wrapper']}>
                                         <label className={styles['Admin-DB-static-label']}>Year-Sem</label>
                                         <div className={styles['Admin-DB-yearsem-range-inputs']}>
-                                            <div className={styles['Admin-DB-dropdown-container']}>
-                                                <select
-                                                    className={styles['Admin-DB-dropdown']}
-                                                    value={filterYear}
-                                                    onChange={(e) => {
-                                                        const year = (e.target.value || '').toString();
-                                                        setFilterYear(year);
-                                                        setFilterSem('');
-                                                    }}
-                                                >
-                                                    <option value="">Year</option>
-                                                    {YEAR_OPTIONS.map((y) => (
-                                                        <option key={y} value={y}>
-                                                            {y}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            <Dropdown
+                                                options={YEAR_OPTIONS}
+                                                selectedOption={filterYear}
+                                                onSelect={(year) => {
+                                                    setFilterYear(year);
+                                                    setFilterSem('');
+                                                }}
+                                                placeholder="Year"
+                                                role="admin"
+                                                className={styles['db-dropdown-wrapper']}
+                                                headerClassName={styles['db-dropdown-header']}
+                                            />
                                             <div className={styles['Admin-DB-yearsem-range-sep']}>-</div>
-                                            <div className={styles['Admin-DB-dropdown-container']}>
-                                                <select
-                                                    className={styles['Admin-DB-dropdown']}
-                                                    value={filterSem}
-                                                    disabled={!filterYear}
-                                                    onChange={(e) => setFilterSem(e.target.value)}
-                                                >
-                                                    <option value="">Sem</option>
-                                                    {(SEM_OPTIONS_BY_YEAR[filterYear] || []).map((s) => (
-                                                        <option key={s} value={s}>
-                                                            {s}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            <Dropdown
+                                                options={SEM_OPTIONS_BY_YEAR[filterYear] || []}
+                                                selectedOption={filterSem}
+                                                onSelect={setFilterSem}
+                                                placeholder="Sem"
+                                                disabled={!filterYear}
+                                                role="admin"
+                                                className={styles['db-dropdown-wrapper']}
+                                                headerClassName={styles['db-dropdown-header']}
+                                            />
                                         </div>
                                     </div>
 

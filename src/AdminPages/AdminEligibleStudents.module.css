@@ -1514,3 +1514,23 @@
   width: 60px;
   text-align: center;
 }
+
+/* Custom Dropdown Overrides for AdminEligibleStudents Page */
+.es-dropdown-wrapper {
+    flex-grow: 1;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.es-dropdown-header {
+    height: 45px !important;
+    border: 1.5px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.es-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

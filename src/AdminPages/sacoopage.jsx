@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import Sanavbar from '../components/Navbar/sanavbar.js';
 import Sasidebar from '../components/Sidebar/sasidebar.js';
 import styles from './sacoopage.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 const getInitials = (value) => {
   const text = (value || '').trim();
@@ -171,17 +172,13 @@ function SaCooPage({ onLogout }) {
 
               <label className={styles.field}>
                 <span className={styles.srOnly}>Department</span>
-                <select
-                  value={filters.department}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, department: event.target.value }))}
-                >
-                  <option value="">Department</option>
-                  <option value="CSE">CSE</option>
-                  <option value="ECE">ECE</option>
-                  <option value="MECH">MECH</option>
-                  <option value="EEE">EEE</option>
-                  <option value="IT">IT</option>
-                </select>
+                <Dropdown
+                  options={['CSE', 'ECE', 'MECH', 'EEE', 'IT']}
+                  selectedOption={filters.department}
+                  onSelect={(val) => setFilters((prev) => ({ ...prev, department: val }))}
+                  placeholder="Department"
+                  role="admin"
+                />
               </label>
 
               <label className={styles.field}>

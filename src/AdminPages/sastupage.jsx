@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import Sanavbar from '../components/Navbar/sanavbar.js';
 import Sasidebar from '../components/Sidebar/sasidebar.js';
 import styles from './sastupage.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 const getInitials = (value) => {
   const text = (value || '').trim();
@@ -203,28 +204,24 @@ function SastuPage({ onLogout, onViewChange }) {
 
               <label className={styles.field}>
                 <span className={styles.srOnly}>Branch</span>
-                <select
-                  value={filters.branch}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, branch: event.target.value }))}
-                >
-                  <option value="">Branch</option>
-                  {branchOptions.map((branch) => (
-                    <option key={branch} value={branch}>{branch}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={branchOptions}
+                  selectedOption={filters.branch}
+                  onSelect={(val) => setFilters((prev) => ({ ...prev, branch: val }))}
+                  placeholder="Branch"
+                  role="admin"
+                />
               </label>
 
               <label className={styles.field}>
                 <span className={styles.srOnly}>Batch</span>
-                <select
-                  value={filters.batch}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, batch: event.target.value }))}
-                >
-                  <option value="">Batch</option>
-                  {batchOptions.map((batch) => (
-                    <option key={batch} value={batch}>{batch}</option>
-                  ))}
-                </select>
+                <Dropdown
+                  options={batchOptions}
+                  selectedOption={filters.batch}
+                  onSelect={(val) => setFilters((prev) => ({ ...prev, batch: val }))}
+                  placeholder="Batch"
+                  role="admin"
+                />
               </label>
             </div>
 

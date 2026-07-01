@@ -11,6 +11,7 @@ import AdSidebar from "../components/Sidebar/Adsidebar.js";
 import * as XLSX from 'xlsx';
 import mongoDBService from '../services/mongoDBService';
 import styles from './AdminEligibleStudents.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, CertificateDownloadProgressAlert } from '../components/alerts';
 
 // Eye Icon Component
@@ -715,51 +716,41 @@ function AdminEsstudapp() {
               <div className={styles['Admin-es-input-group']}>
                 <label className={styles['Admin-es-input-label']}>Year-Sem</label>
                 <div className={styles['Admin-es-yearsem-range-inputs']}>
-                  <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
-                    <select
-                      value={localFilter.year}
-                      onChange={(e) => handleYearChange(e.target.value)}
-                    >
-                      <option value="">Year</option>
-                      {YEAR_OPTIONS.map((y) => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={YEAR_OPTIONS}
+                    selectedOption={localFilter.year}
+                    onSelect={handleYearChange}
+                    placeholder="Year"
+                    role="admin"
+                    className={styles['es-dropdown-wrapper']}
+                    headerClassName={styles['es-dropdown-header']}
+                  />
                   <div className={styles['Admin-es-yearsem-range-sep']}>-</div>
-                  <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
-                    <select
-                      value={localFilter.sem}
-                      disabled={!localFilter.year}
-                      onChange={(e) => handleLocalFilterChange('sem', e.target.value)}
-                    >
-                      <option value="">Sem</option>
-                      {(SEM_OPTIONS_BY_YEAR[localFilter.year] || []).map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={SEM_OPTIONS_BY_YEAR[localFilter.year] || []}
+                    selectedOption={localFilter.sem}
+                    onSelect={(val) => handleLocalFilterChange('sem', val)}
+                    placeholder="Sem"
+                    disabled={!localFilter.year}
+                    role="admin"
+                    className={styles['es-dropdown-wrapper']}
+                    headerClassName={styles['es-dropdown-header']}
+                  />
                 </div>
               </div>
 
               {/* Branch Dropdown - Row 2 Column 2 */}
               <div className={styles['Admin-es-input-group']}>
                 <label className={styles['Admin-es-input-label']}>Branch</label>
-                <div className={`${styles['Admin-es-search-input']} ${styles['Admin-es-select-input']}`}>
-                  <select
-                    value={localFilter.branch}
-                    onChange={(e) => handleLocalFilterChange('branch', e.target.value)}
-                  >
-                    <option value="">Select Branch</option>
-                    {filterCriteria?.department && filterCriteria.department.split(',').map((branch, index) => (
-                      <option key={index} value={branch.trim()}>{branch.trim()}</option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  options={filterCriteria?.department ? filterCriteria.department.split(',').map(branch => branch.trim()) : []}
+                  selectedOption={localFilter.branch}
+                  onSelect={(val) => handleLocalFilterChange('branch', val)}
+                  placeholder="Select Branch"
+                  role="admin"
+                  className={styles['es-dropdown-wrapper']}
+                  headerClassName={styles['es-dropdown-header']}
+                />
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../utils/apiConfig';
 import Sanavbar from '../components/Navbar/sanavbar.js';
 import Sasidebar from '../components/Sidebar/sasidebar.js';
 import styles from './saadpage.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 const getInitials = (value) => {
   const text = (value || '').trim();
@@ -187,14 +188,16 @@ function SaAdPage({ onLogout }) {
 
               <label className={styles.field}>
                 <span className={styles.srOnly}>Status</span>
-                <select
-                  value={filters.status}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
-                >
-                  <option value="">Status</option>
-                  <option value="active">Active</option>
-                  <option value="blocked">Blocked</option>
-                </select>
+                <Dropdown
+                  options={[
+                    { label: 'Active', value: 'active' },
+                    { label: 'Blocked', value: 'blocked' }
+                  ]}
+                  selectedOption={filters.status}
+                  onSelect={(val) => setFilters((prev) => ({ ...prev, status: val }))}
+                  placeholder="Status"
+                  role="admin"
+                />
               </label>
             </div>
 

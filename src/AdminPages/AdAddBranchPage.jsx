@@ -4,6 +4,7 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar.js';
 import Adsidebar from '../components/Sidebar/Adsidebar.js';
 import styles from './AdAddBranchPage.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from "../assets/Adminicon.png";
 import AddCoordinatoricon from "../assets/AddCoordinatoricon.svg";
 import BranchIcon from "../assets/adaddbranchicon.svg";
@@ -350,34 +351,24 @@ function AdminABN() {
                 <label className={styles['Admin-add-branch-field-label']} htmlFor="degreeAbbreviation">
                   <span className={styles['Admin-add-branch-label-heading']}>Degree <RequiredStar /></span>
                 </label>
-                <div className={styles['Admin-add-branch-select-wrapper']}>
-                  <select
-                    id="degreeAbbreviation"
-                    name="degreeAbbreviation"
-                    value={formData.degreeAbbreviation}
-                    onChange={handleDegreeChange}
-                    className={`${styles['Admin-add-branch-input']} ${styles['Admin-add-branch-form-select']}`}
-                    disabled={isLoadingDegrees || degreeError}
-                  >
-                    <option value="" disabled>
-                      {isLoadingDegrees ? 'Loading degrees...' : 'Degree'}
-                    </option>
-                    {degrees.map((degree) => {
-                      const value = degree.degreeAbbreviation || degree.degreeFullName;
-                      const label = degree.degreeFullName
-                        ? degree.degreeAbbreviation
-                          ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                          : degree.degreeFullName
-                        : value;
-                      return (
-                        <option key={degree.id || degree._id || value} value={value}>
-                          {label}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <DropdownIcon />
-                </div>
+                <Dropdown
+                  options={degrees.map(degree => {
+                    const value = degree.degreeAbbreviation || degree.degreeFullName;
+                    const label = degree.degreeFullName
+                      ? degree.degreeAbbreviation
+                        ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
+                        : degree.degreeFullName
+                      : value;
+                    return { label, value };
+                  })}
+                  selectedOption={formData.degreeAbbreviation}
+                  onSelect={(val) => handleDegreeChange({ target: { value: val } })}
+                  placeholder={isLoadingDegrees ? 'Loading degrees...' : 'Degree'}
+                  disabled={isLoadingDegrees || !!degreeError}
+                  role="admin"
+                  className={styles['branch-dropdown-wrapper']}
+                  headerClassName={styles['branch-dropdown-header']}
+                />
               </div>
 
               <div className={styles['Admin-add-branch-field']}>

@@ -1102,3 +1102,23 @@
     font-weight: 600;
     font-size: 0.95rem;
 }
+
+/* Custom Dropdown Overrides for AdminPlacedStudents Page */
+.ps-dropdown-wrapper {
+    flex-grow: 1;
+    max-width: 100% !important;
+}
+
+.ps-dropdown-header {
+    height: 44px !important;
+    border: 2px solid #808080 !important;
+    border-radius: 12px !important;
+    background-color: #ffffff !important;
+    color: #888 !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+}
+
+.ps-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
