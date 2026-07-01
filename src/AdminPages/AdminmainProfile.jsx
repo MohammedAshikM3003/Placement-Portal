@@ -16,6 +16,7 @@ import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
 // FIXED: Import CSS as a Module
 import styles from './AdminmainProfile.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import ContentContainer from '../components/layout/ContentContainer/ContentContainer';
 import ResponsiveGrid from '../components/layout/ResponsiveGrid/ResponsiveGrid';
@@ -2841,23 +2842,21 @@ function Admainprofile() {
                                             <label className={styles['Admin-main-profile-field-label']} htmlFor="gender">
                                                 <span className={styles['Admin-profile-label-heading']}>Gender <RequiredStar /></span>
                                             </label>
-                                            <div className={styles['Admin-profile-select-wrapper']}>
-                                                <select
-                                                    id="gender"
-                                                    name="gender"
-                                                    className={`${getAdminFieldClassName('gender')} ${styles['Admin-main-profile-form-select']}`}
-                                                    value={formData.gender}
-                                                    onChange={handleInputChange}
-                                                    disabled={isSaving}
-                                                    ref={registerFieldRef('gender')}
-                                                >
-                                                    <option value="" disabled hidden>Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                                <DropdownIcon />
-                                            </div>
+                                            <Dropdown
+                                                options={[
+                                                    { label: 'Male', value: 'Male' },
+                                                    { label: 'Female', value: 'Female' },
+                                                    { label: 'Other', value: 'Other' }
+                                                ]}
+                                                selectedOption={formData.gender}
+                                                onSelect={(value) => handleInputChange({ target: { name: 'gender', value } })}
+                                                placeholder="Gender"
+                                                disabled={isSaving}
+                                                role="admin"
+                                                className={styles['profile-dropdown-wrapper']}
+                                                headerClassName={`${getAdminFieldClassName('gender')} ${styles['profile-dropdown-header']}`}
+                                                ref={registerFieldRef('gender')}
+                                            />
                                         </div>
 
                                         <div className={styles['Admin-main-profile-field']}>
@@ -2918,29 +2917,23 @@ function Admainprofile() {
                                             <label className={styles['Admin-main-profile-field-label']} htmlFor="department">
                                                 <span className={styles['Admin-profile-label-heading']}>Branch <RequiredStar /></span>
                                             </label>
-                                            <div className={styles['Admin-profile-select-wrapper']}>
-                                                <select
-                                                    id="department"
-                                                    name="department"
-                                                    className={`${getAdminFieldClassName('department')} ${styles['Admin-main-profile-form-select']}`}
-                                                    value={formData.department}
-                                                    onChange={handleInputChange}
-                                                    disabled={isSaving}
-                                                    ref={registerFieldRef('department')}
-                                                >
-                                                    <option value="" disabled hidden>Select Branch</option>
-                                                    {branches.map((branch) => {
-                                                        const label = branch?.branchFullName && branch?.branchAbbreviation
-                                                            ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                            : branch?.branchFullName || branch?.branchAbbreviation || '';
-                                                        const value = branch?.branchAbbreviation || branch?.branchFullName || branch?._id || '';
-                                                        return (
-                                                            <option key={branch._id || value} value={value}>{label}</option>
-                                                        );
-                                                    })}
-                                                </select>
-                                                <DropdownIcon />
-                                            </div>
+                                            <Dropdown
+                                                options={branches.map(branch => {
+                                                    const label = branch?.branchFullName && branch?.branchAbbreviation
+                                                        ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                                        : branch?.branchFullName || branch?.branchAbbreviation || '';
+                                                    const value = branch?.branchAbbreviation || branch?.branchFullName || branch?._id || '';
+                                                    return { label, value };
+                                                })}
+                                                selectedOption={formData.department}
+                                                onSelect={(value) => handleInputChange({ target: { name: 'department', value } })}
+                                                placeholder="Select Branch"
+                                                disabled={isSaving}
+                                                role="admin"
+                                                className={styles['profile-dropdown-wrapper']}
+                                                headerClassName={`${getAdminFieldClassName('department')} ${styles['profile-dropdown-header']}`}
+                                                ref={registerFieldRef('department')}
+                                            />
                                         </div>
                                     </div>
                                 </section>

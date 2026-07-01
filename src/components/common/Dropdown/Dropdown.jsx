@@ -9,14 +9,16 @@ const roleColors = {
   student: { thumb: '#2085f6', hover: '#4338CA' }
 };
 
-const Dropdown = ({ 
+const Dropdown = React.forwardRef(({ 
   options = [], 
   selectedOption = null, 
   onSelect = () => {}, 
   placeholder = 'Select Option', 
   disabled = false,
-  role = 'admin'
-}) => {
+  role = 'admin',
+  className = '',
+  headerClassName = ''
+}, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -40,22 +42,48 @@ const Dropdown = ({
   };
 
   const handleSelect = (option) => {
-    onSelect(option);
+    const value = (typeof option === 'object' && option !== null) ? option.value : option;
+    onSelect(value);
     setIsOpen(false);
+  };
+
+  const getDisplayLabel = () => {
+    if (selectedOption === null || selectedOption === undefined || selectedOption === '') {
+      return placeholder;
+    }
+    const matchedOption = options.find(opt => {
+      if (typeof opt === 'object' && opt !== null) {
+        return opt.value === selectedOption;
+      }
+      return opt === selectedOption;
+    });
+    if (matchedOption) {
+      return typeof matchedOption === 'object' ? matchedOption.label : matchedOption;
+    }
+    return selectedOption;
   };
 
   const themeColors = roleColors[role.toLowerCase()] || roleColors.admin;
 
   return (
     <div 
-      className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''}`} 
-      ref={dropdownRef}
+      className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''} ${className}`} 
+      ref={(node) => {
+        dropdownRef.current = node;
+        if (ref) {
+          if (typeof ref === 'function') {
+            ref(node);
+          } else {
+            ref.current = node;
+          }
+        }
+      }}
     >
       <div
-        className={`${styles['dropdown-header']} ${disabled ? styles['dropdown-header-disabled'] : ''}`}
+        className={`${styles['dropdown-header']} ${disabled ? styles['dropdown-header-disabled'] : ''} ${headerClassName}`}
         onClick={handleToggle}
       >
-        <span>{selectedOption || placeholder}</span>
+        <span>{getDisplayLabel()}</span>
         {!disabled && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -74,19 +102,22 @@ const Dropdown = ({
             '--scrollbar-thumb-hover-color': themeColors.hover
           }}
         >
-          {options.map((option, index) => (
-            <div
-              key={index}
-              className={styles['dropdown-item']}
-              onClick={() => handleSelect(option)}
-            >
-              {option}
-            </div>
-          ))}
+          {options.map((option, index) => {
+            const label = (typeof option === 'object' && option !== null) ? option.label : option;
+            return (
+              <div
+                key={index}
+                className={styles['dropdown-item']}
+                onClick={() => handleSelect(option)}
+              >
+                {label}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
-};
+});
 
 export default Dropdown;
