@@ -400,6 +400,119 @@ const parseCalendarDate = (value) => {
     return new Date(year, month - 1, day);
 };
 
+function AdminFieldUpdateBanner({ isVisible, updatedFields = [] }) {
+    if (!isVisible || updatedFields.length === 0) return null;
+
+    const fieldText = updatedFields.join('  •  ');
+    const shouldScroll = updatedFields.length > 1;
+
+    return (
+        <div className={styles.adminBannerContainer}>
+            <div className={styles.adminBanner}>
+                <div className={styles.adminBannerIconWrapper}>
+                    <svg
+                        className={styles.adminBannerSaveIcon}
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <path
+                            d="M17 21V13H7V21"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <path
+                            d="M7 3V8H15"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div className={styles.adminBannerContent}>
+                    <p className={styles.adminBannerHeader}>Unsaved Changes</p>
+                    <div className={`${styles.adminBannerFieldNamesWrapper} ${shouldScroll ? styles.adminBannerScrolling : ''}`}>
+                        <div className={`${styles.adminBannerFieldNames} ${shouldScroll ? styles.adminBannerMarquee : ''}`}>
+                            <span>{fieldText}</span>
+                            {shouldScroll && <span>{fieldText}</span>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function UnsavedChangesModal({ isOpen, changedFields, onClose, onDiscard, onSave, isSaving = false }) {
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles.adminUnsavedOverlay} onClick={isSaving ? undefined : onClose}>
+            <div className={styles.adminUnsavedContainer} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.adminUnsavedHeader}>Details Changed !</div>
+
+                <div className={styles.adminUnsavedBody}>
+                    <div className={styles.adminUnsavedIconWrap}>
+                        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="6" x2="12" y2="14" />
+                            <circle cx="12" cy="18" r="0.75" fill="#fff" stroke="#fff" />
+                        </svg>
+                    </div>
+
+                    <h2 className={styles.adminUnsavedTitle}>Modified Fields !</h2>
+
+                    {changedFields.length > 0 && (
+                        <div className={styles.adminUnsavedFieldsContainer}>
+                            <div className={styles.adminUnsavedFieldsList}>
+                                {changedFields.map((field, index) => (
+                                    <span key={`${field}-${index}`} className={styles.adminUnsavedFieldChip}>
+                                        {field}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <p className={styles.adminUnsavedMessage}>
+                        Do you want to save these changes before leaving?
+                    </p>
+                </div>
+
+                <div className={styles.adminUnsavedFooter}>
+                    <button
+                        type="button"
+                        className={styles.adminUnsavedDiscardButton}
+                        onClick={onDiscard}
+                        disabled={isSaving}
+                    >
+                        Discard
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.adminUnsavedSaveButton}
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function AdminCoDet() {
     /*
     return (
@@ -953,6 +1066,106 @@ const [branches, setBranches] = useState([]);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [showAllErrors, setShowAllErrors] = useState(false);
+
+    const [initialData, setInitialData] = useState({
+        firstName: '',
+        lastName: '',
+        dob: null,
+        gender: '',
+        emailId: '',
+        domainMailId: '',
+        phoneNumber: '',
+        coordinatorId: '',
+        cabin: '',
+        password: '',
+        confirmPassword: '',
+        degree: '',
+        branch: ''
+    });
+
+    const changedFields = useMemo(() => {
+        if (!initialData) return [];
+        const changed = [];
+        const normalize = (val) => {
+            if (val === null || val === undefined) return '';
+            if (val instanceof Date) {
+                return val.toDateString();
+            }
+            return String(val).trim();
+        };
+
+        const EDITABLE_FIELD_LABELS = {
+            firstName: 'First Name',
+            lastName: 'Last Name',
+            dob: 'Date Of Birth',
+            gender: 'Gender',
+            emailId: 'Email ID',
+            domainMailId: 'Domain Mail ID',
+            phoneNumber: 'Phone Number',
+            cabin: 'Cabin',
+            degree: 'Degree',
+            branch: 'Branch',
+            coordinatorId: 'Coo ID',
+            password: 'Password',
+            confirmPassword: 'Confirm Password'
+        };
+
+        Object.keys(EDITABLE_FIELD_LABELS).forEach((key) => {
+            let formVal = formData[key];
+            let initVal = initialData[key];
+            if (key === 'dob') {
+                const formDobStr = formVal ? new Date(formVal).toDateString() : '';
+                const initDobStr = initVal ? new Date(initVal).toDateString() : '';
+                if (formDobStr !== initDobStr) {
+                    changed.push(EDITABLE_FIELD_LABELS[key]);
+                }
+            } else {
+                if (normalize(formVal) !== normalize(initVal)) {
+                    changed.push(EDITABLE_FIELD_LABELS[key]);
+                }
+            }
+        });
+
+        return changed;
+    }, [formData, initialData]);
+
+    const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+    const [pendingNavView, setPendingNavView] = useState(null);
+
+    useEffect(() => {
+        if (changedFields.length === 0) return undefined;
+
+        const handleBeforeUnload = (event) => {
+            event.preventDefault();
+            event.returnValue = '';
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [changedFields.length]);
+
+    const performViewChange = useCallback((view) => {
+        if (!view) return;
+        const targetPath = view.startsWith('/') ? view : `/${view}`;
+        navigate(targetPath);
+    }, [navigate]);
+
+    const handleViewChange = useCallback((view) => {
+        if (changedFields.length > 0) {
+            setPendingNavView(view);
+            setShowUnsavedModal(true);
+            setIsSidebarOpen(false);
+            return;
+        }
+
+        performViewChange(view);
+        setIsSidebarOpen(false);
+    }, [changedFields.length, performViewChange]);
+
+    const handleUnsavedModalSave = async () => {
+        setShowUnsavedModal(false);
+        await handleConfirmSave();
+    };
     const [highlightedField, setHighlightedField] = useState(null);
     const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
     const [supportsPointerTooltip, setSupportsPointerTooltip] = useState(() => {
@@ -1245,7 +1458,9 @@ const [branches, setBranches] = useState([]);
             lastName: formData.lastName,
             dob: formData.dob ? formData.dob.toISOString() : null,
             gender: formData.gender,
+            email: formData.emailId,
             emailId: formData.emailId,
+            domainEmail: formData.domainMailId,
             domainMailId: formData.domainMailId,
             phoneNumber: formData.phoneNumber,
             degree: selectedDegreeObj?.degreeFullName || formData.degree,
@@ -1289,6 +1504,7 @@ const [branches, setBranches] = useState([]);
                 console.log('Coordinator created:', response);
             }
             setSaveStatus('saved');
+            setInitialData({ ...formData });
             setShowSuccessModal(true);
         } catch (error) {
             console.error('Error saving coordinator:', error);
@@ -1644,6 +1860,11 @@ const [branches, setBranches] = useState([]);
                             degree: preferredDegreeValue,
                             branch: branchValue
                         }));
+                        setInitialData((prev) => ({
+                            ...prev,
+                            degree: preferredDegreeValue,
+                            branch: branchValue
+                        }));
                         return;
                     }
                 }
@@ -1722,7 +1943,7 @@ const [branches, setBranches] = useState([]);
                     setSelectedDegree(degreeValue);
 
                     const calculatedPassword = dobValue ? formatDobForPassword(dobValue) : '';
-                    setFormData({
+                    const loadedData = {
                         firstName: coordinator.firstName || '',
                         lastName: coordinator.lastName || '',
                         dob: dobValue,
@@ -1736,7 +1957,9 @@ const [branches, setBranches] = useState([]);
                         confirmPassword: calculatedPassword,
                         degree: degreeValue,
                         branch: branchValue
-                    });
+                    };
+                    setFormData(loadedData);
+                    setInitialData(loadedData);
 
                     if (coordinator.profilePhoto) {
                         const resolvedPhoto = normalizeProfilePhotoUrl(coordinator.profilePhoto, coordinator.profilePhotoName, API_BASE_URL);
@@ -1765,8 +1988,16 @@ const [branches, setBranches] = useState([]);
     return (
         <>
             <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
+            <AdminFieldUpdateBanner
+                isVisible={changedFields.length > 0}
+                updatedFields={changedFields}
+            />
             <div className={styles['Admin-cood-detail-layout']}>
-                <AdSidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
+                <AdSidebar
+                    isOpen={isSidebarOpen}
+                    onLogout={handleLogout}
+                    onViewChange={handleViewChange}
+                />
 
                 <div className={`${styles['Admin-cood-detail-main-content']} ${isSidebarOpen ? styles['sidebar-open'] : ''}`}>
                     {isInitialLoading && (
@@ -2293,6 +2524,26 @@ const [branches, setBranches] = useState([]);
                 isOpen={isFileSizeErrorOpen}
                 onClose={() => setIsFileSizeErrorOpen(false)}
                 fileSizeKB={fileSizeErrorKB}
+            />
+
+            <UnsavedChangesModal
+                isOpen={showUnsavedModal}
+                changedFields={changedFields}
+                onClose={() => {
+                    if (isSaving) return;
+                    setShowUnsavedModal(false);
+                    setPendingNavView(null);
+                }}
+                onSave={handleUnsavedModalSave}
+                onDiscard={() => {
+                    if (isSaving) return;
+                    setShowUnsavedModal(false);
+                    if (pendingNavView) {
+                        performViewChange(pendingNavView);
+                        setPendingNavView(null);
+                    }
+                }}
+                isSaving={isSaving}
             />
         </>
     );

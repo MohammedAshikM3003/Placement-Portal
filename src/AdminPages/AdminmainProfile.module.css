@@ -1,4 +1,5 @@
 /* FIXED: Removed global * and ::-webkit-scrollbar tags to prevent clashing */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 /* ============================================================
    VALIDATION / MISSING FIELDS CARD — mirrors coordinator form
@@ -6,7 +7,7 @@
 
 /* Required star */
 .Admin-profile-required-star {
-    color: #d32f2f;
+    color: #dc3545;
     margin-left: 2px;
     display: inline;
     font-weight: 700;
@@ -200,12 +201,19 @@
 
 /* --- Global Layout --- */
 .Admin-main-profile-layout {
-    display: flex;
-    height: 100vh;
-    width: 100%;
-    background-color: #f6f8fb;
     position: relative;
     font-family: 'Poppins', sans-serif; 
+}
+
+/* Inherit Poppins font family on all form controls, headers and labels */
+.Admin-main-profile-layout input,
+.Admin-main-profile-layout select,
+.Admin-main-profile-layout textarea,
+.Admin-main-profile-layout button,
+.Admin-main-profile-layout label,
+.Admin-main-profile-layout section,
+.Admin-main-profile-layout h3 {
+    font-family: 'Poppins', sans-serif;
 }
 
 /* Custom Scrollbar - Green Theme */
@@ -227,20 +235,7 @@
     background-color: #2E7D32;
 }
 
-.Admin-main-profile-main-content {
-    flex-grow: 1;
-    padding: 10px 25px 10px 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: calc(100vh - 75px);
-    background-color: #f9fbf8;
-    margin-left: 260px;
-    margin-top: 75px;
-}
+
 
 /* --- Master Card Container --- */
 .Admin-main-profile-master-card {
@@ -256,6 +251,10 @@
     flex-direction: column;
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.Admin-main-profile-master-card > div {
+    padding: 2.5rem !important;
 }
 
 /* --- Content Grid (Forms + Photo) --- */
@@ -322,26 +321,25 @@
 .Admin-main-profile-input-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .Admin-main-profile-input-grid-three-col {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .Admin-main-profile-field {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.4rem;
 }
 
 .Admin-main-profile-field-label {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #4b4b4b;
-    letter-spacing: 0.02em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2d3d;
 }
 
 /* --- Form Inputs --- */
@@ -350,8 +348,8 @@
     height: 53.6px;
     padding: 12px 15px;
     border: 1px solid #def4dd;
-    border-radius: 6px;
-    font-size: 1em;
+    border-radius: 8px;
+    font-size: 0.95rem;
     color: #333;
     background-color: #f9fff9;
     box-sizing: border-box;
@@ -372,8 +370,8 @@
     margin-bottom: 18px;
     padding: 12px 15px;
     border: 1px solid #def4dd;
-    border-radius: 6px;
-    font-size: 1em;
+    border-radius: 8px;
+    font-size: 0.95rem;
     color: #333;
     background-color: #f9fff9;
     box-sizing: border-box;
@@ -473,7 +471,7 @@
 .Admin-main-profile-photo-card {
     background-color: #ffffff;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.75rem;
     border: 1px solid #e6f4dd;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     display: flex;
@@ -744,6 +742,7 @@
     -moz-appearance: none;
     padding-right: 40px;
     cursor: pointer;
+    font-size: 0.95rem;
 }
 
 /* --- Modal Overlay --- */
@@ -1287,22 +1286,32 @@
 
 /* --- Responsive Adjustments --- */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+
     .Admin-main-profile-layout {
-        padding-top: 60px;
-        flex-direction: column;
+        margin-top: -26px !important;
+        margin-left: -16px !important;
+        margin-right: -16px !important;
+        width: calc(100% + 32px) !important;
     }
-    
-    .Admin-main-profile-main-content {
-        padding: 15px;
-        margin-left: 0;
-        margin-top: 0;
-        height: calc(100vh - 60px);
-    }
-    
+
     .Admin-main-profile-master-card {
-        padding: 20px 15px 30px 15px;
-        margin-left: 0;
+        padding: 10px 10px 10px 20px !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-main-profile-master-card > div {
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto 1.25rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 2.5rem !important;
+    }
+
+    .Admin-main-profile-card {
+        padding: 1.75rem;
     }
 
     .Admin-main-profile-content-grid {
@@ -1316,12 +1325,17 @@
     }
     
     .Admin-main-profile-action-buttons {
+        flex-direction: column;
+        gap: 1rem;
         justify-content: center;
         margin-left: 0;
+        margin-bottom: env(safe-area-inset-bottom, 20px);
     }
 
     .Admin-main-profile-action-buttons button {
         width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
     }
 
     .Admin-main-profile-input-grid,
@@ -1437,7 +1451,7 @@
 }
 
 /* --- Tablet Responsive --- */
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 901px) and (max-width: 1024px) {
     .Admin-main-profile-college-cards-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1734,7 +1748,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .adminBannerContainer {
         top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
         right: 12px;
@@ -2100,4 +2114,11 @@
 .admin-profile-saving label {
     pointer-events: none !important;
 }
+
+@media (max-width: 600px) {
+    .Admin-main-profile-master-card > div {
+        padding: 1.75rem !important;
+    }
+}
+
 

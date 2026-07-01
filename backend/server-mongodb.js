@@ -6085,6 +6085,14 @@ app.put('/api/coordinators/:coordinatorId', async (req, res) => {
             }
         }
 
+        // Map emailId/domainMailId to schema email/domainEmail fields
+        if (updateData.emailId !== undefined) {
+            updatePayload.email = updateData.emailId;
+        }
+        if (updateData.domainMailId !== undefined) {
+            updatePayload.domainEmail = updateData.domainMailId;
+        }
+
         // Map phone to phoneNumber for consistency
         if (updateData.phone && !updatePayload.phoneNumber) {
             updatePayload.phoneNumber = updateData.phone;

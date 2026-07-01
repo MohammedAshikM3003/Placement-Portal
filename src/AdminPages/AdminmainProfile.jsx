@@ -16,6 +16,9 @@ import AdNavbar from "../components/Navbar/Adnavbar.js";
 import AdSidebar from "../components/Sidebar/Adsidebar.js";
 // FIXED: Import CSS as a Module
 import styles from './AdminmainProfile.module.css';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
+import ContentContainer from '../components/layout/ContentContainer/ContentContainer';
+import ResponsiveGrid from '../components/layout/ResponsiveGrid/ResponsiveGrid';
 
 // Placeholder image
 import Adminicon from "../assets/Adminicon.png";
@@ -1014,6 +1017,9 @@ function UnsavedChangesModal({ isOpen, changedFields, onClose, onDiscard, onSave
 function Admainprofile() {
     useAdminAuth(); // JWT authentication verification
     const navigate = useNavigate();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const toggleSidebar = () => setIsSidebarOpen(v => !v);
+    
     // State to manage form data
     const [formData, setFormData] = useState({
         firstName: '',
@@ -1041,7 +1047,7 @@ function Admainprofile() {
     const [profilePhotoBase64, setProfilePhotoBase64] = useState('');
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [saveStatus, setSaveStatus] = useState(null);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
     const [showLoginDetails, setShowLoginDetails] = useState(false);
@@ -2596,9 +2602,7 @@ function Admainprofile() {
         }
     };
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(prev => !prev);
-    };
+
 
     const toggleLoginDetails = () => {
         setShowLoginDetails(prev => !prev);
@@ -2742,22 +2746,21 @@ function Admainprofile() {
     };
 
     return (
-        <>
-            <AdNavbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
+        <PageLayout
+            navbar={<AdNavbar Adminicon={Adminicon} />}
+            sidebar={
+                <AdSidebar
+                    onViewChange={handleViewChange}
+                    onLogout={() => console.log('Logout Clicked')}
+                />
+            }
+        >
             <AdminFieldUpdateBanner
                 isVisible={changedFields.length > 0}
                 updatedFields={changedFields}
             />
-            {/* UPDATED CLASS: Admin-main-profile-layout */}
             {isSaving && <div className={styles['admin-profile-saving-overlay']} />}
             <div className={`${styles['Admin-main-profile-layout']} ${isSaving ? styles['admin-profile-saving'] : ''}`}>
-                <AdSidebar
-                    isOpen={isSidebarOpen}
-                    onLogout={() => console.log('Logout Clicked')}
-                    onViewChange={handleViewChange}
-                />
-                {/* UPDATED CLASS: Admin-main-profile-main-content */}
-                <div className={styles['Admin-main-profile-main-content']}>
 
                     {isLoading ? (
                         <div style={{
@@ -2774,7 +2777,7 @@ function Admainprofile() {
                     <>
                     {/* UPDATED CLASS: Admin-main-profile-master-card */}
                     <div className={styles['Admin-main-profile-master-card']}>
-                        <div className={styles['Admin-main-profile-card']}>
+                        <ContentContainer>
 
                         {/* UPDATED CLASS: Admin-main-profile-content-grid */}
                         <div className={styles['Admin-main-profile-content-grid']}>
@@ -3143,13 +3146,13 @@ function Admainprofile() {
                             </div>
                         </section>
                         )}
-                        </div>
+                        </ContentContainer>
 
                         {/* College Details Section - Independent */}
-                        <div className={styles['Admin-main-profile-card']}>
+                        <ContentContainer>
                         <div className={styles['Admin-main-profile-college-section']}>
                             <h3 className={styles['Admin-main-profile-section-header']}>College Details</h3>
-                            <div className={styles['Admin-main-profile-college-cards-grid']}>
+                            <ResponsiveGrid columns={4}>
                                 {/* College Banner Card */}
                                 <div className={styles['Admin-main-profile-college-card']}>
                                     <h4 className={styles['Admin-main-profile-college-card-title']}>College Banner</h4>
@@ -3284,9 +3287,9 @@ function Admainprofile() {
                                     {logoUploadSuccess && <p className={styles['Admin-main-profile-upload-success-message']}>Logo uploaded!</p>}
                                     <p className={styles['Admin-main-profile-upload-hint']}>*JPG, JPEG, PNG, SVG formats allowed.</p>
                                 </div>
-                            </div>
+                            </ResponsiveGrid>
                         </div>
-                        </div>
+                        </ContentContainer>
                     </div>
 
                     {/* Action Buttons */}
@@ -3323,7 +3326,6 @@ function Admainprofile() {
                     />
                     </>
                     )}
-                </div>
             </div>
 
             {/* Image Preview Modal */}
@@ -3384,7 +3386,7 @@ function Admainprofile() {
                 }}
                 isSaving={isSaving}
             />
-        </>
+        </PageLayout>
     );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, useMemo } from 'react'; 
 import { useNavigate, useParams } from "react-router-dom"; 
 import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar.js';
@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import mongoDBService from '../services/mongoDBService';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 
 // --- ICONS ---
 const EyeIcon = () => (
@@ -152,6 +153,16 @@ function AdminMcood() {
     const navigate = useNavigate();
     const { branchCode } = useParams(); 
 
+    const formatDOB = (dobStr) => {
+        if (!dobStr) return 'N/A';
+        const dateObj = new Date(dobStr);
+        if (isNaN(dateObj.getTime())) return 'N/A';
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const y = dateObj.getFullYear();
+        return `${d}-${m}-${y}`;
+    };
+
     // Sidebar state (same pattern as AdminstudDB/AdminCompanyDrive)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -179,6 +190,7 @@ function AdminMcood() {
     const [tempFilterCabin, setTempFilterCabin] = useState('');
     const [tempFilterMobile, setTempFilterMobile] = useState('');
     const [tempFilterEmail, setTempFilterEmail] = useState('');
+    const [tempFilterDob, setTempFilterDob] = useState('');
     const [searchFocused, setSearchFocused] = useState(false);
     const [cabinFocused, setCabinFocused] = useState(false);
     const [mobileFocused, setMobileFocused] = useState(false);
@@ -187,6 +199,7 @@ function AdminMcood() {
     const [filterCabin, setFilterCabin] = useState('');
     const [filterMobile, setFilterMobile] = useState('');
     const [filterEmail, setFilterEmail] = useState('');
+    const [filterDob, setFilterDob] = useState('');
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [fullBranchName, setFullBranchName] = useState('');
 
@@ -299,11 +312,20 @@ function AdminMcood() {
         };
     }, [branchCode]);
 
+    const uniqueCabins = useMemo(() => {
+        const cabins = coordinators
+            .map(c => c.cabin)
+            .filter(Boolean)
+            .map(c => c.trim());
+        return Array.from(new Set(cabins)).sort();
+    }, [coordinators]);
+
     const hasActiveFilters = Boolean(
         tempFilterSearch.trim() ||
         tempFilterCabin.trim() ||
         tempFilterMobile.trim() ||
         tempFilterEmail.trim() ||
+        tempFilterDob.trim() ||
         viewBlocklist
     );
 
@@ -312,10 +334,12 @@ function AdminMcood() {
         setTempFilterCabin('');
         setTempFilterMobile('');
         setTempFilterEmail('');
+        setTempFilterDob('');
         setFilterSearch('');
         setFilterCabin('');
         setFilterMobile('');
         setFilterEmail('');
+        setFilterDob('');
         setViewBlocklist(false);
     };
 
@@ -324,13 +348,15 @@ function AdminMcood() {
         setFilterCabin(tempFilterCabin);
         setFilterMobile(tempFilterMobile);
         setFilterEmail(tempFilterEmail);
-    }, [tempFilterSearch, tempFilterCabin, tempFilterMobile, tempFilterEmail]);
+        setFilterDob(tempFilterDob);
+    }, [tempFilterSearch, tempFilterCabin, tempFilterMobile, tempFilterEmail, tempFilterDob]);
 
     const handleViewCoordinators = () => {
         setFilterSearch(tempFilterSearch);
         setFilterCabin(tempFilterCabin);
         setFilterMobile(tempFilterMobile);
         setFilterEmail(tempFilterEmail);
+        setFilterDob(tempFilterDob);
         setViewBlocklist(false);
     };
     
@@ -542,7 +568,26 @@ function AdminMcood() {
         const emailVal = (filterEmail || '').trim().toLowerCase();
         const emailMatch = emailVal === '' || (coordinator.emailId || '').toLowerCase().includes(emailVal);
         
-        return searchMatch && cabinMatch && mobileMatch && emailMatch;
+        const dobVal = (filterDob || '').trim();
+        let dobMatch = true;
+        if (dobVal !== '') {
+            if (coordinator.dob) {
+                const dateObj = new Date(coordinator.dob);
+                if (!isNaN(dateObj.getTime())) {
+                    const y = dateObj.getFullYear();
+                    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const d = String(dateObj.getDate()).padStart(2, '0');
+                    const coordDobYmd = `${y}-${m}-${d}`;
+                    dobMatch = coordDobYmd === dobVal;
+                } else {
+                    dobMatch = false;
+                }
+            } else {
+                dobMatch = false;
+            }
+        }
+        
+        return searchMatch && cabinMatch && mobileMatch && emailMatch && dobMatch;
     });
     
     const blockedCoordinators = filteredCoordinators.filter(c => c.blocked);
@@ -552,7 +597,12 @@ function AdminMcood() {
     const selectedCoordinators = coordinators.filter(c => selectedCoordinatorIds.has(c.id));
     const allSelectedAreBlocked = selectedCoordinators.length > 0 && selectedCoordinators.every(c => c.blocked);
     const allSelectedAreUnblocked = selectedCoordinators.length > 0 && selectedCoordinators.every(c => !c.blocked);
-    
+
+    const isEditActive = selectedCoordinatorIds.size === 1 && !blockInProgress && !unblockInProgress && !isDeletingCoordinator;
+    const isBlockActive = selectedCoordinatorIds.size >= 1 && !blockInProgress && !unblockInProgress && !isDeletingCoordinator && !allSelectedAreBlocked;
+    const isUnblockActive = selectedCoordinatorIds.size >= 1 && !blockInProgress && !unblockInProgress && !isDeletingCoordinator && !allSelectedAreUnblocked;
+    const isDeleteActive = selectedCoordinatorIds.size >= 1 && !blockInProgress && !unblockInProgress && !isDeletingCoordinator;
+
     const exportToExcel = () => {
         const data = visibleCoordinators.map((c, i) => [i + 1, c.name, c.cabin, c.phone || 'N/A', c.coordinatorId, c.password, c.emailId || 'N/A']);
         const header = ["S.No", "Name", "Cabin", "Mobile Number", "Coo ID", "Password", "Mail ID"];
@@ -587,6 +637,14 @@ function AdminMcood() {
                     
                     {/* UPDATED CLASS: Admin-MC-top-card */}
                     <div className={styles['Admin-MC-top-card']}>
+                        {/* UPDATED CLASS: Admin-MC-branch-info-top, Admin-MC-branch-info-card, Admin-MC-branch-info-text, Admin-MC-back-btn, Admin-MC-back-arrow */}
+                        <div className={styles['Admin-MC-branch-info-top']}>
+                            <div className={styles['Admin-MC-branch-info-card']}>
+                                <p className={styles['Admin-MC-branch-info-text']}>{displayBranchName}</p>
+                            </div>
+                            <button className={styles['Admin-MC-back-btn']} onClick={() => navigate('/admin-add-branch-main')}>Back <span className={styles['Admin-MC-back-arrow']}>➜</span></button>
+                        </div>
+
                         {/* UPDATED CLASS: Admin-MC-filter-section */}
                         <div className={styles['Admin-MC-filter-section']}>
                             {/* UPDATED CLASS: Admin-MC-filter-header-container */}
@@ -621,21 +679,6 @@ function AdminMcood() {
                                     </div>
                                 </div>
                                 <div className={styles['Admin-MC-input-wrapper']}>
-                                    <label className={styles['Admin-MC-static-label']}>Cabin Number</label>
-                                    <div className={`${styles['Admin-MC-text-container']} ${cabinFocused ? styles['is-focused'] : ''}`}>
-                                        <input 
-                                            type="text" 
-                                            className={styles['Admin-MC-text']} 
-                                            placeholder="Enter Cabin Number" 
-                                            value={tempFilterCabin} 
-                                            onChange={(e) => setTempFilterCabin(e.target.value)} 
-                                            onFocus={() => setCabinFocused(true)} 
-                                            onBlur={() => setCabinFocused(false)} 
-                                            onKeyPress={handleKeyPress} 
-                                        />
-                                    </div>
-                                </div>
-                                <div className={styles['Admin-MC-input-wrapper']}>
                                     <label className={styles['Admin-MC-static-label']}>Enter Mobile Number</label>
                                     <div className={`${styles['Admin-MC-text-container']} ${mobileFocused ? styles['is-focused'] : ''}`}>
                                         <input 
@@ -651,59 +694,60 @@ function AdminMcood() {
                                     </div>
                                 </div>
                                 <div className={styles['Admin-MC-input-wrapper']}>
-                                    <label className={styles['Admin-MC-static-label']}>Mail ID</label>
-                                    <div className={`${styles['Admin-MC-text-container']} ${emailFocused ? styles['is-focused'] : ''}`}>
-                                        <input 
-                                            type="text" 
-                                            className={styles['Admin-MC-text']} 
-                                            placeholder="Enter Mail ID" 
-                                            value={tempFilterEmail} 
-                                            onChange={(e) => setTempFilterEmail(e.target.value)} 
-                                            onFocus={() => setEmailFocused(true)} 
-                                            onBlur={() => setEmailFocused(false)} 
-                                            onKeyPress={handleKeyPress} 
-                                        />
+                                    <label className={styles['Admin-MC-static-label']}>Cabin Number</label>
+                                    <div className={`${styles['Admin-MC-text-container']} ${styles['Admin-MC-select-container']} ${cabinFocused ? styles['is-focused'] : ''}`}>
+                                        <select 
+                                            className={`${styles['Admin-MC-text']} ${styles['Admin-MC-dropdown-select']}`}
+                                            value={tempFilterCabin} 
+                                            onChange={(e) => setTempFilterCabin(e.target.value)} 
+                                            onFocus={() => setCabinFocused(true)} 
+                                            onBlur={() => setCabinFocused(false)} 
+                                        >
+                                            <option value="">All Cabins</option>
+                                            {uniqueCabins.map(cabin => (
+                                                <option key={cabin} value={cabin}>{cabin}</option>
+                                            ))}
+                                        </select>
                                     </div>
+                                </div>
+                                <div className={styles['Admin-MC-input-wrapper']}>
+                                    <label className={styles['Admin-MC-static-label']}>DOB</label>
+                                    <AdCalendar
+                                        value={tempFilterDob}
+                                        onChange={(val) => setTempFilterDob(val)}
+                                        variant="filter"
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         {/* UPDATED CLASS: Admin-MC-action-cards-section */}
                         <div className={styles['Admin-MC-action-cards-section']}>
-                            {/* UPDATED CLASS: Admin-MC-branch-info-top, Admin-MC-branch-info-card, Admin-MC-branch-info-text, Admin-MC-back-btn, Admin-MC-back-arrow */}
-                            <div className={styles['Admin-MC-branch-info-top']}>
-                                <div className={styles['Admin-MC-branch-info-card']}>
-                                    <p className={styles['Admin-MC-branch-info-text']}>{displayBranchName}</p>
-
-                                </div>
-                                <button className={styles['Admin-MC-back-btn']} onClick={() => navigate('/admin-add-branch-main')}>Back <span className={styles['Admin-MC-back-arrow']}>➜</span></button>
-                            </div>
-
                             {/* UPDATED CLASS: Admin-MC-action-cards-row */}
                             <div className={styles['Admin-MC-action-cards-row']}>
                                 {/* UPDATED CLASSES for all action cards and buttons */}
                                 <div className={styles['Admin-MC-action-card']}>
-                                    <h4 className={styles['Admin-MC-action-firstheader']}>Additional</h4>
+                                    <h4 className={styles['Admin-MC-header-add-active']}>Additional</h4>
                                     <p className={styles['Admin-MC-action-description']}>Add <br/>Coordinator<br/>To<br/> Manage<br/> The Branch</p>
                                     <button className={`${styles['Admin-MC-action-btn']} ${styles['Admin-MC-add-btn']}`} onClick={handleAddCoordinator}>Add</button>
                                 </div>
                                 <div className={styles['Admin-MC-action-card']}>
-                                    <h4 className={styles['Admin-MC-action-header']}>Editing</h4>
+                                    <h4 className={isEditActive ? styles['Admin-MC-header-edit-active'] : styles['Admin-MC-header-disabled']}>Editing</h4>
                                     <p className={styles['Admin-MC-action-description']}>Select <br/>Coordinator <br/>Record<br/> Before <br/> Editing</p>
                                     <button className={`${styles['Admin-MC-action-btn']} ${styles['Admin-MC-edit-btn']}`} onClick={handleEdit} disabled={selectedCoordinatorIds.size !== 1 || blockInProgress || unblockInProgress || isDeletingCoordinator}>Edit</button>
                                 </div>
                                 <div className={styles['Admin-MC-action-card']}>
-                                    <h4 className={styles['Admin-MC-action-header']}>Blocking</h4>
+                                    <h4 className={isBlockActive ? styles['Admin-MC-header-block-active'] : styles['Admin-MC-header-disabled']}>Blocking</h4>
                                     <p className={styles['Admin-MC-action-description']}>Select <br/>coordinator<br/> Record <br/>Before<br/> Blocking</p>
                                     <button className={`${styles['Admin-MC-action-btn']} ${styles['Admin-MC-block-btn']}`} onClick={handleBlockClick} disabled={selectedCoordinatorIds.size < 1 || blockInProgress || unblockInProgress || isDeletingCoordinator || allSelectedAreBlocked}>{blockInProgress ? 'Blocking...' : 'Block'}</button>
                                 </div>
                                 <div className={styles['Admin-MC-action-card']}>
-                                    <h4 className={styles['Admin-MC-action-header']}>Unblocking</h4>
+                                    <h4 className={isUnblockActive ? styles['Admin-MC-header-unblock-active'] : styles['Admin-MC-header-disabled']}>Unblocking</h4>
                                     <p className={styles['Admin-MC-action-description']}>Select <br/>coordinator<br/>Record<br/> Before<br/> Unblocking</p>
                                     <button className={`${styles['Admin-MC-action-btn']} ${styles['Admin-MC-unblock-btn']}`} onClick={handleUnblockClick} disabled={selectedCoordinatorIds.size < 1 || unblockInProgress || blockInProgress || isDeletingCoordinator || allSelectedAreUnblocked}>{unblockInProgress ? 'Unblocking...' : 'Unblock'}</button>
                                 </div>
                                 <div className={styles['Admin-MC-action-card']}>
-                                    <h4 className={styles['Admin-MC-action-header']}>Deleting</h4>
+                                    <h4 className={isDeleteActive ? styles['Admin-MC-header-delete-active'] : styles['Admin-MC-header-disabled']}>Deleting</h4>
                                     <p className={styles['Admin-MC-action-description']}>Select <br/> Coordinator<br/> Record <br/> Before <br/>Deleting</p>
                                     <button className={`${styles['Admin-MC-action-btn']} ${styles['Admin-MC-delete-btn']}`} onClick={handleDeleteClick} disabled={selectedCoordinatorIds.size < 1 || blockInProgress || unblockInProgress || isDeletingCoordinator}>Delete</button>
                                 </div>
@@ -784,7 +828,7 @@ function AdminMcood() {
                                                 </td>
                                                 <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-sno']}`}>{index + 1}</td>
                                                 <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-name']}`}>{coordinator.name}</td>
-                                                <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-dob']}`}>{coordinator.dob ? new Date(coordinator.dob).toLocaleDateString('en-GB') : 'N/A'}</td>
+                                                <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-dob']}`}>{formatDOB(coordinator.dob)}</td>
                                                 <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-cabin-no']}`}>{coordinator.cabin}</td>
                                                 <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-phone']}`}>{coordinator.phone || 'N/A'}</td>
                                                 <td className={`${styles['Admin-MC-td']} ${styles['Admin-MC-cid']}`}>{coordinator.coordinatorId}</td>

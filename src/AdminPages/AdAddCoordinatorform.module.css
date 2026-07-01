@@ -154,7 +154,7 @@
 .Admin-cood-detail-login-credentials-wrapper {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 1.5rem;
     width: 100%;
 }
 
@@ -1032,18 +1032,18 @@
 @media (min-width: 768px) {
     .Admin-cood-detail-input-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        gap: 1.5rem;
     }
 
     .Admin-cood-detail-login-fields {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 20px;
+        gap: 1.5rem;
         align-items: start;
     }
 
     .Admin-cood-detail-input-grid-three-col {
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 20px;
+        gap: 1.5rem;
     }
 
     .Admin-cood-detail-photo-wrapper {
@@ -1087,7 +1087,7 @@
 @media (min-width: 768px) and (max-width: 1200px) {
     .Admin-cood-detail-details-grid {
         grid-template-columns: 2fr 1fr;
-        gap: 20px;
+        gap: 1.5rem;
     }
 
     .Admin-cood-detail-login-fields,
@@ -1356,3 +1356,649 @@
     cursor: not-allowed;
     color: #666;
 }
+
+
+.adminBannerContainer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    animation: adminBannerSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminBannerSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.adminBanner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: #4a4a4a;
+    padding: 14px 16px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    gap: 12px;
+    min-width: 260px;
+    max-width: 340px;
+}
+
+.adminBannerIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+}
+
+.adminBannerSaveIcon {
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+}
+
+.adminBannerContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.adminBannerHeader {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+    margin: 0;
+    padding: 0;
+}
+
+.adminBannerFieldNamesWrapper {
+    overflow: hidden;
+    max-width: 240px;
+    position: relative;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before,
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before {
+    left: 0;
+    background: linear-gradient(to right, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    right: 0;
+    background: linear-gradient(to left, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNames {
+    font-size: 13px;
+    font-weight: 400;
+    color: #b0b0b0;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    gap: 30px;
+}
+
+.adminBannerFieldNames span {
+    display: inline-block;
+    padding-right: 30px;
+}
+
+.adminBannerMarquee {
+    animation: adminBannerMarqueeScroll 15s linear infinite;
+}
+
+.adminBannerFieldNamesWrapper:hover .adminBannerMarquee {
+    animation-play-state: paused;
+}
+
+@keyframes adminBannerMarqueeScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* --- Admin Unsaved Changes Popup --- */
+.adminUnsavedOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.adminUnsavedContainer {
+    width: 90%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.2s ease-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedHeader {
+    background: #4EA24E;
+    color: #fff;
+    text-align: center;
+    padding: 20px 24px 16px;
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.adminUnsavedBody {
+    padding: 24px;
+    text-align: center;
+}
+
+.adminUnsavedIconWrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: #ffa500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: warningFill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.adminUnsavedTitle {
+    margin: 16px 0 8px;
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.adminUnsavedFieldsContainer {
+    margin: 20px 0;
+    padding: 16px;
+    background: #fff3e0;
+    border-radius: 8px;
+    border: 1px solid #ffe0b2;
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.adminUnsavedFieldsList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.adminUnsavedFieldChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #ffb74d;
+    color: #e26a00;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.adminUnsavedMessage {
+    margin: 16px 0 0;
+    color: #555;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.adminUnsavedFooter {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.adminUnsavedDiscardButton,
+.adminUnsavedSaveButton {
+    min-width: 120px;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedDiscardButton {
+    background: #9d9d9d;
+    color: #fff;
+}
+
+.adminUnsavedDiscardButton:hover {
+    background: #8c8c8c;
+}
+
+.adminUnsavedSaveButton {
+    background: #4EA24E;
+    color: #fff;
+}
+
+.adminUnsavedSaveButton:hover {
+    background: #3f9346;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.4);
+}
+
+.adminUnsavedDiscardButton:disabled,
+.adminUnsavedSaveButton:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+@keyframes warningFill {
+    100% {
+        box-shadow: inset 0 0 0 40px #ffa500;
+    }
+}
+
+@media (max-width: 768px) {
+    .adminBannerContainer {
+        top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
+        right: 12px;
+    }
+
+    .adminBanner {
+        padding: 12px 14px;
+        min-width: 220px;
+        max-width: 300px;
+        gap: 10px;
+    }
+
+    .adminBannerHeader {
+        font-size: 13px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 200px;
+    }
+
+    .adminBannerFieldNames {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adminBannerContainer {
+        right: 10px;
+    }
+
+    .adminBanner {
+        min-width: 240px;
+        max-width: 280px;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 170px;
+    }
+}
+
+.Admin-main-profile-discard-btn-disabled {
+    background-color: #f0f0f0 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+}
+
+/* Loading Spinner */
+.Admin-main-profile-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: admin-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes admin-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success Popup */
+.Admin-main-profile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.Admin-main-profile-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.Admin-main-profile-popup-body {
+    padding: 2rem;
+}
+
+.Admin-main-profile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+}
+
+.Admin-main-profile-popup-close-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Admin-main-profile-popup-close-btn:hover {
+    background-color: #2dbc09;
+}
+
+/* Success icon animations */
+.Admin-main-profile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4bb71b;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-main-profile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke: #4bb71b;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Admin-main-profile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+
+@keyframes fill {
+    100% { box-shadow: inset 0 0 0 40px #4bb71b; }
+}
+
+/* Green Theme for DatePicker - Scoped to Admin Profile DOB field */
+.Admin-main-profile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--selected),
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #2E7D32 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #c8e6c9 !important;
+    color: #333 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #4EA24E;
+    border-radius: 50%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__header) {
+    background-color: #4EA24E !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+/* Success Popup Styles */
+.Admin-DB-AdProfile-popup-container { 
+    background-color: #fff; 
+    border-radius: 12px; 
+    width: 400px; 
+    text-align: center; 
+    overflow: hidden; 
+}
+
+.Admin-DB-AdProfile-popup-header { 
+    background-color: #4EA24E; 
+    color: white; 
+    padding: 1rem; 
+    font-size: 1.5rem; 
+    font-weight: 600; 
+}
+
+.Admin-DB-AdProfile-popup-body { 
+    padding: 2rem; 
+}
+
+.Admin-DB-AdProfile-popup-body h2 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 24px;
+    color: #000;
+    font-weight: 700;
+}
+
+.Admin-DB-AdProfile-popup-body p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+}
+
+.Admin-DB-AdProfile-popup-footer { 
+    padding: 1.5rem; 
+    background-color: #f7f7f7; 
+}
+
+.Admin-DB-AdProfile-popup-close-btn { 
+    background-color: #d9534f; 
+    color: white; 
+    border: none; 
+    padding: 0.8rem 1.5rem; 
+    border-radius: 8px; 
+    font-size: 1rem; 
+    font-weight: 500; 
+    cursor: pointer; 
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Admin-DB-AdProfile-popup-close-btn:hover {
+    background-color: #c9302c;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.3);
+}
+
+/* Success icon animations */
+.Admin-DB-AdProfile-success-icon {
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    display: block; 
+    stroke-width: 2; 
+    stroke: #fff; 
+    margin: 0 auto; 
+    box-shadow: inset 0 0 0 #4bb71b; 
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-DB-AdProfile-success-icon--circle {
+    stroke-dasharray: 166; 
+    stroke-dashoffset: 166; 
+    stroke-width: 2; 
+    stroke: #4bb71b; 
+    fill: none; 
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Admin-DB-AdProfile-success-icon--check {
+    transform-origin: 50% 50%; 
+    stroke-dasharray: 48; 
+    stroke-dashoffset: 48; 
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke { 
+    100% { stroke-dashoffset: 0; } 
+}
+
+@keyframes scale { 
+    0%, 100% { transform: none; } 
+    50% { transform: scale3d(1.1, 1.1, 1); } 
+}
+
+@keyframes fill { 
+    100% { box-shadow: inset 0 0 0 40px #4bb71b; } 
+}
+
+/* Saving state - not-allowed cursor on entire page */
+.admin-profile-saving,
+.admin-profile-saving * {
+    cursor: not-allowed !important;
+}
+
+.admin-profile-saving-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    background: transparent;
+    cursor: not-allowed;
+    pointer-events: all;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+.Admin-main-profile-form-input:disabled,
+.Admin-main-profile-form-select:disabled,
+.Admin-main-profile-form-input-login:disabled,
+.Admin-main-profile-date-wrapper input:disabled,
+.Admin-main-profile-layout button:disabled,
+.Admin-main-profile-layout input:disabled,
+.Admin-main-profile-layout select:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Prevent pointer events on disabled labels during saving */
+.admin-profile-saving label {
+    pointer-events: none !important;
+}
+
