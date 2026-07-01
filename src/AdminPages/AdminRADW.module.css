@@ -739,12 +739,14 @@
 }
 
 .Admin-radw-dropdown-menu::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
 }
 
 .Admin-radw-dropdown-menu::-webkit-scrollbar-thumb {
     background-color: #4EA24E;
     border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: content-box;
 }
 
 .Admin-radw-dropdown-menu::-webkit-scrollbar-thumb:hover {

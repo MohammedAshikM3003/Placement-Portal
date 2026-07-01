@@ -894,12 +894,14 @@
 }
 
 .Admin-rasw-dropdown-menu::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
 }
 
 .Admin-rasw-dropdown-menu::-webkit-scrollbar-thumb {
     background-color: #4EA24E;
     border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: content-box;
 }
 
 .Admin-rasw-dropdown-menu::-webkit-scrollbar-thumb:hover {
