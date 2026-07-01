@@ -2238,11 +2238,18 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Gender <RequiredStar /></label>
-                                        <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>Gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
+                                        <Dropdown
+                                            options={[
+                                                { label: 'Male', value: 'male' },
+                                                { label: 'Female', value: 'female' }
+                                            ]}
+                                            selectedOption={studentData?.gender || ''}
+                                            placeholder="Gender"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
@@ -2366,29 +2373,31 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Community <RequiredStar /></label>
-                                        <select name="community" value={studentData?.community || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>
-                                                Community
-                                            </option>
-                                            <option value="OC">OC</option>
-                                            <option value="BC">BC</option>
-                                            <option value="BCM">BCM</option>
-                                            <option value="MBC">MBC</option>
-                                            <option value="SC">SC</option>
-                                            <option value="SCA">SCA</option>
-                                            <option value="ST">ST</option>
-                                        </select>
+                                        <Dropdown
+                                            options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
+                                            selectedOption={studentData?.community || ''}
+                                            placeholder="Community"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Medium of Study <RequiredStar /></label>
-                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>
-                                                Medium
-                                            </option>
-                                            <option value="English">English</option>
-                                            <option value="Tamil">Tamil</option>
-                                            <option value="Other">Others</option>
-                                        </select>
+                                        <Dropdown
+                                            options={[
+                                                { label: 'English', value: 'English' },
+                                                { label: 'Tamil', value: 'Tamil' },
+                                                { label: 'Others', value: 'Other' }
+                                            ]}
+                                            selectedOption={studentData?.mediumOfStudy || ''}
+                                            placeholder="Medium"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Blood Group</label>
@@ -2424,13 +2433,15 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Board / University <RequiredStar /></label>
-                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>10th Board/University</option>
-                                            <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other State Board">Other State Board</option>
-                                        </select>
+                                        <Dropdown
+                                            options={['State Board (Tamil Nadu)', 'CBSE', 'ICSE', 'Other State Board']}
+                                            selectedOption={studentData?.tenthBoard || ''}
+                                            placeholder="10th Board/University"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
@@ -2451,13 +2462,15 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Board / University <RequiredStar /></label>
-                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}>
-                                                    <option value="" disabled>12th Board/University</option>
-                                                    <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                                    <option value="CBSE">CBSE</option>
-                                                    <option value="ICSE">ICSE</option>
-                                                    <option value="Other State Board">Other State Board</option>
-                                                </select>
+                                                <Dropdown
+                                                    options={['State Board (Tamil Nadu)', 'CBSE', 'ICSE', 'Other State Board']}
+                                                    selectedOption={studentData?.twelfthBoard || ''}
+                                                    placeholder="12th Board/University"
+                                                    disabled={true}
+                                                    role="admin"
+                                                    className={styles['view-dropdown-wrapper']}
+                                                    headerClassName={styles['view-dropdown-header']}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
@@ -3043,30 +3056,28 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                             <div className={styles.formGrid}>
                                     <div className={styles.field}>
                                         <label>Residential Status <RequiredStar /></label>
-                                        <select
-                                            name="residentialStatus"
-                                            value={studentData?.residentialStatus || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Residential status</option>
-                                            <option value="Hosteller">Hosteller</option>
-                                            <option value="Dayscholar">Dayscholar</option>
-                                        </select>
+                                        <Dropdown
+                                            options={['Hosteller', 'Dayscholar']}
+                                            selectedOption={studentData?.residentialStatus || ''}
+                                            placeholder="Residential status"
+                                            disabled={true}
+                                            role="admin"
+                                            className={styles['view-dropdown-wrapper']}
+                                            headerClassName={styles['view-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Quota <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="quota"
-                                                value={studentData?.quota || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Quota</option>
-                                                <option value="Management">Management</option>
-                                                <option value="Counselling">Counselling</option>
-                                            </select>
+                                            <Dropdown
+                                                options={['Management', 'Counselling']}
+                                                selectedOption={studentData?.quota || ''}
+                                                placeholder="Quota"
+                                                disabled={true}
+                                                role="admin"
+                                                className={styles['view-dropdown-wrapper']}
+                                                headerClassName={styles['view-dropdown-header']}
+                                            />
                                             <input type="hidden" name="quota" value={studentData?.quota || ''} />
                                         </>
                                     </div>
@@ -3084,16 +3095,15 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     <div className={styles.field}>
                                         <label>First Graduate <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="firstGraduate"
-                                                value={studentData?.firstGraduate || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>First Graduate</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
+                                            <Dropdown
+                                                options={['Yes', 'No']}
+                                                selectedOption={studentData?.firstGraduate || ''}
+                                                placeholder="First Graduate"
+                                                disabled={true}
+                                                role="admin"
+                                                className={styles['view-dropdown-wrapper']}
+                                                headerClassName={styles['view-dropdown-header']}
+                                            />
                                             <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
                                         </>
                                     </div>
@@ -3178,33 +3188,34 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                     <div className={styles.field}>
                                         <label>Willing to Sign Bond <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="willingToSignBond"
-                                                value={studentData?.willingToSignBond || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Willing to Sign Bond</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
+                                            <Dropdown
+                                                options={['Yes', 'No']}
+                                                selectedOption={studentData?.willingToSignBond || ''}
+                                                placeholder="Willing to Sign Bond"
+                                                disabled={true}
+                                                role="admin"
+                                                className={styles['view-dropdown-wrapper']}
+                                                headerClassName={styles['view-dropdown-header']}
+                                            />
                                             <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
                                         </>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Preferred Mode of Drive <RequiredStar /></label>
                                         <>
-                                            <select
-                                                name="preferredModeOfDrive"
-                                                value={studentData?.preferredModeOfDrive || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Preferred Mode of Drive</option>
-                                                <option value="On-Campus">On-Campus</option>
-                                                <option value="Off-Campus">Off-Campus</option>
-                                                <option value="Hybrid">Hybrid</option>
-                                            </select>
+                                            <Dropdown
+                                                options={[
+                                                    { label: 'On-Campus', value: 'On-Campus' },
+                                                    { label: 'Off-Campus', value: 'Off-Campus' },
+                                                    { label: 'Hybrid', value: 'Hybrid' }
+                                                ]}
+                                                selectedOption={studentData?.preferredModeOfDrive || ''}
+                                                placeholder="Preferred Mode of Drive"
+                                                disabled={true}
+                                                role="admin"
+                                                className={styles['view-dropdown-wrapper']}
+                                                headerClassName={styles['view-dropdown-header']}
+                                            />
                                             <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
                                         </>
                                     </div>

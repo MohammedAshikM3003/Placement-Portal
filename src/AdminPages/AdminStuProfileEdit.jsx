@@ -2864,16 +2864,19 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Gender <RequiredStar /></label>
-                                        <select
-                                            name="gender"
-                                            value={studentData?.gender || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, gender: e.target.value }))}
+                                        <Dropdown
+                                            options={[
+                                                { label: 'Male', value: 'male' },
+                                                { label: 'Female', value: 'female' }
+                                            ]}
+                                            selectedOption={studentData?.gender || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, gender: val }))}
+                                            placeholder="Gender"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
@@ -3037,39 +3040,33 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Community <RequiredStar /></label>
-                                        <select
-                                            name="community"
-                                            value={studentData?.community || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, community: e.target.value }))}
+                                        <Dropdown
+                                            options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
+                                            selectedOption={studentData?.community || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, community: val }))}
+                                            placeholder="Community"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>
-                                                Community
-                                            </option>
-                                            <option value="OC">OC</option>
-                                            <option value="BC">BC</option>
-                                            <option value="BCM">BCM</option>
-                                            <option value="MBC">MBC</option>
-                                            <option value="SC">SC</option>
-                                            <option value="SCA">SCA</option>
-                                            <option value="ST">ST</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Medium of Study <RequiredStar /></label>
-                                        <select
-                                            name="mediumOfStudy"
-                                            value={studentData?.mediumOfStudy || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, mediumOfStudy: e.target.value }))}
+                                        <Dropdown
+                                            options={[
+                                                { label: 'English', value: 'English' },
+                                                { label: 'Tamil', value: 'Tamil' },
+                                                { label: 'Others', value: 'Other' }
+                                            ]}
+                                            selectedOption={studentData?.mediumOfStudy || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, mediumOfStudy: val }))}
+                                            placeholder="Medium"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>
-                                                Medium
-                                            </option>
-                                            <option value="English">English</option>
-                                            <option value="Tamil">Tamil</option>
-                                            <option value="Other">Others</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field} style={{ marginTop: '24px' }}>
                                         <label>Blood Group</label>
@@ -3144,18 +3141,16 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Board / University <RequiredStar /></label>
-                                        <select
-                                            name="tenthBoard"
-                                            value={studentData?.tenthBoard || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, tenthBoard: e.target.value }))}
+                                        <Dropdown
+                                            options={['State Board (Tamil Nadu)', 'CBSE', 'ICSE', 'Other State Board']}
+                                            selectedOption={studentData?.tenthBoard || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, tenthBoard: val }))}
+                                            placeholder="10th Board/University"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>10th Board/University</option>
-                                            <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other State Board">Other State Board</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
@@ -3198,18 +3193,16 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Board / University <RequiredStar /></label>
-                                                <select
-                                                    name="twelfthBoard"
-                                                    value={studentData?.twelfthBoard || ''}
-                                                    onChange={(e) => setStudentData(prev => ({ ...prev, twelfthBoard: e.target.value }))}
+                                                <Dropdown
+                                                    options={['State Board (Tamil Nadu)', 'CBSE', 'ICSE', 'Other State Board']}
+                                                    selectedOption={studentData?.twelfthBoard || ''}
+                                                    onSelect={(val) => setStudentData(prev => ({ ...prev, twelfthBoard: val }))}
+                                                    placeholder="12th Board/University"
                                                     disabled={isSaving}
-                                                >
-                                                    <option value="" disabled>12th Board/University</option>
-                                                    <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                                    <option value="CBSE">CBSE</option>
-                                                    <option value="ICSE">ICSE</option>
-                                                    <option value="Other State Board">Other State Board</option>
-                                                </select>
+                                                    role="admin"
+                                                    className={styles['edit-dropdown-wrapper']}
+                                                    headerClassName={styles['edit-dropdown-header']}
+                                                />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
@@ -3845,29 +3838,29 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                             <div className={styles.formGrid}>
                                     <div className={styles.field}>
                                         <label>Residential Status <RequiredStar /></label>
-                                        <select
-                                            name="residentialStatus"
-                                            value={studentData?.residentialStatus || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
+                                        <Dropdown
+                                            options={['Hosteller', 'Dayscholar']}
+                                            selectedOption={studentData?.residentialStatus || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, residentialStatus: val }))}
+                                            placeholder="Residential status"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Residential status</option>
-                                            <option value="Hosteller">Hosteller</option>
-                                            <option value="Dayscholar">Dayscholar</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Quota <RequiredStar /></label>
-                                        <select
-                                            name="quota"
-                                            value={studentData?.quota || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, quota: e.target.value }))}
+                                        <Dropdown
+                                            options={['Management', 'Counselling']}
+                                            selectedOption={studentData?.quota || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, quota: val }))}
+                                            placeholder="Quota"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Quota</option>
-                                            <option value="Management">Management</option>
-                                            <option value="Counselling">Counselling</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Spoken Languages</label>
@@ -3882,16 +3875,16 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>First Graduate <RequiredStar /></label>
-                                        <select
-                                            name="firstGraduate"
-                                            value={studentData?.firstGraduate || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, firstGraduate: e.target.value }))}
+                                        <Dropdown
+                                            options={['Yes', 'No']}
+                                            selectedOption={studentData?.firstGraduate || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, firstGraduate: val }))}
+                                            placeholder="First Graduate"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>First Graduate</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Passport No.</label>
@@ -3972,30 +3965,33 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Willing to Sign Bond <RequiredStar /></label>
-                                        <select
-                                            name="willingToSignBond"
-                                            value={studentData?.willingToSignBond || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, willingToSignBond: e.target.value }))}
+                                        <Dropdown
+                                            options={['Yes', 'No']}
+                                            selectedOption={studentData?.willingToSignBond || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, willingToSignBond: val }))}
+                                            placeholder="Willing to Sign Bond"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Willing to Sign Bond</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Preferred Mode of Drive <RequiredStar /></label>
-                                        <select
-                                            name="preferredModeOfDrive"
-                                            value={studentData?.preferredModeOfDrive || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, preferredModeOfDrive: e.target.value }))}
+                                        <Dropdown
+                                            options={[
+                                                { label: 'On-Campus', value: 'On-Campus' },
+                                                { label: 'Off-Campus', value: 'Off-Campus' },
+                                                { label: 'Hybrid', value: 'Hybrid' }
+                                            ]}
+                                            selectedOption={studentData?.preferredModeOfDrive || ''}
+                                            onSelect={(val) => setStudentData(prev => ({ ...prev, preferredModeOfDrive: val }))}
+                                            placeholder="Preferred Mode of Drive"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Preferred Mode of Drive</option>
-                                            <option value="On-Campus">On-Campus</option>
-                                            <option value="Off-Campus">Off-Campus</option>
-                                            <option value="Hybrid">Hybrid</option>
-                                        </select>
+                                            role="admin"
+                                            className={styles['edit-dropdown-wrapper']}
+                                            headerClassName={styles['edit-dropdown-header']}
+                                        />
                                     </div>
                                     <div className={styles.field}>
                                         <label>GitHub Link</label>
