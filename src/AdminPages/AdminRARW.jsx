@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from '../utils/useAdminAuth';
 import * as XLSX from 'xlsx';
@@ -75,6 +75,30 @@ function AdminRARW() {
     window.addEventListener('closeSidebar', handleCloseSidebar);
     return () => {
       window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
+
+  const companyRef = useRef(null);
+  const jobRoleRef = useRef(null);
+  const startDateRef = useRef(null);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (companyRef.current && !companyRef.current.contains(event.target)) {
+        setIsCompanyOpen(false);
+      }
+      if (jobRoleRef.current && !jobRoleRef.current.contains(event.target)) {
+        setIsJobRoleOpen(false);
+      }
+      if (startDateRef.current && !startDateRef.current.contains(event.target)) {
+        setIsStartDateOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -619,7 +643,7 @@ function AdminRARW() {
 
             {/* UPDATED CLASSES: Admin-rarw-filter-inputs, Admin-rarw-filter-select, Admin-rarw-filter-date-input */}
             <div className={styles['Admin-rarw-filter-inputs']}>
-              <div className={styles['Admin-rarw-dropdown-wrapper']}>
+              <div className={styles['Admin-rarw-dropdown-wrapper']} ref={companyRef}>
                 <div
                   className={styles['Admin-rarw-dropdown-header']}
                   onClick={() => setIsCompanyOpen(!isCompanyOpen)}
@@ -648,7 +672,7 @@ function AdminRARW() {
                 )}
               </div>
 
-              <div className={styles['Admin-rarw-dropdown-wrapper']}>
+              <div className={styles['Admin-rarw-dropdown-wrapper']} ref={jobRoleRef}>
                 <div
                   className={`${styles['Admin-rarw-dropdown-header']} ${!selectedCompany ? styles['Admin-rarw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
@@ -677,7 +701,7 @@ function AdminRARW() {
                 )}
               </div>
 
-              <div className={styles['Admin-rarw-dropdown-wrapper']}>
+              <div className={styles['Admin-rarw-dropdown-wrapper']} ref={startDateRef}>
                 <div
                   className={`${styles['Admin-rarw-dropdown-header']} ${!selectedCompanyJob ? styles['Admin-rarw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}

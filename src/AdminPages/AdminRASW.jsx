@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from '../utils/useAdminAuth';
 import * as XLSX from 'xlsx'; 
@@ -72,6 +72,30 @@ function AdminRASW() {
     window.addEventListener('closeSidebar', handleCloseSidebar);
     return () => {
       window.removeEventListener('closeSidebar', handleCloseSidebar);
+    };
+  }, []);
+
+  const companyRef = useRef(null);
+  const jobRoleRef = useRef(null);
+  const startDateRef = useRef(null);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (companyRef.current && !companyRef.current.contains(event.target)) {
+        setIsCompanyOpen(false);
+      }
+      if (jobRoleRef.current && !jobRoleRef.current.contains(event.target)) {
+        setIsJobRoleOpen(false);
+      }
+      if (startDateRef.current && !startDateRef.current.contains(event.target)) {
+        setIsStartDateOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -837,7 +861,7 @@ function AdminRASW() {
             {/* UPDATED CLASSES: Admin-rasw-filter-inputs, Admin-rasw-filter-select, Admin-rasw-filter-date-input */}
             <div className={styles['Admin-rasw-filter-inputs']}>
               {/* Company dropdown */}
-              <div className={styles['Admin-rasw-dropdown-wrapper']}>
+              <div className={styles['Admin-rasw-dropdown-wrapper']} ref={companyRef}>
                 <div 
                   className={styles['Admin-rasw-dropdown-header']} 
                   onClick={() => setIsCompanyOpen(!isCompanyOpen)}
@@ -867,7 +891,7 @@ function AdminRASW() {
               </div>
 
               {/* Job Role dropdown */}
-              <div className={styles['Admin-rasw-dropdown-wrapper']}>
+              <div className={styles['Admin-rasw-dropdown-wrapper']} ref={jobRoleRef}>
                 <div 
                   className={`${styles['Admin-rasw-dropdown-header']} ${!selectedCompany ? styles['Admin-rasw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
@@ -897,7 +921,7 @@ function AdminRASW() {
               </div>
 
               {/* Start Date dropdown */}
-              <div className={styles['Admin-rasw-dropdown-wrapper']}>
+              <div className={styles['Admin-rasw-dropdown-wrapper']} ref={startDateRef}>
                 <div 
                   className={`${styles['Admin-rasw-dropdown-header']} ${!selectedCompanyJob ? styles['Admin-rasw-dropdown-disabled'] : ''}`}
                   onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
