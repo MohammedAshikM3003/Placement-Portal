@@ -1951,3 +1951,27 @@
   }
 
 }
+
+.attendance-dropdown-wrapper {
+  max-width: none !important;
+  min-width: 180px !important;
+  flex-grow: 1 !important;
+  width: auto !important;
+}
+
+.attendance-dropdown-header {
+  height: 44px !important;
+  background-color: #ffffff !important;
+  border: 2px solid #808080 !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: 0.95rem !important;
+  color: #333333 !important;
+  font-weight: 500 !important;
+  padding: 0 15px !important;
+}
+
+.attendance-dropdown-header:hover {
+  border-color: #4EA24E !important;
+}

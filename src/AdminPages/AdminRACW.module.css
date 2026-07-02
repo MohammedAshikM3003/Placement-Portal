@@ -1,60 +1,78 @@
+:root {
+  --racw-page-padding: 10px 10px 10px 20px;
+  --racw-card-padding: 20px;
+  --racw-grid-gap: 20px;
+  --racw-card-radius: 18px;
+  --racw-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 /* ======================================= */
 /* === NEW LAYOUT CLASSES FOR ALIGNMENT ===*/
 /* ======================================= */
 .Admin-racw-layout {
-  display: flex; /* Enables Flexbox for sidebar and main content */
-  min-height: 100vh; /* Ensures layout takes full viewport height */
+  display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .Admin-racw-main-content {
-  flex-grow: 1; /* Allows main content to take up all available space */
-  padding: 5px 14px 10px 40px;
-  background: #f8f8f8; 
-  margin-right: 5px;
-  /* FIXED: Set margin-left to offset the sidebar on desktop */
-  margin-left: 260px;
-  margin-top: 65px; /* Offset for navbar */
+  flex-grow: 1;
+  padding: var(--racw-page-padding);
+  margin: 65px 0px 0px 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--racw-grid-gap);
+  overflow: hidden;
+  position: relative;
   height: calc(100vh - 65px);
-  overflow-y: auto;
+  background-color: #f6f8fb;
 }
 
 .Admin-racw-filter-box {
-  background: #D3D1D1;
-  border-radius: 16px;
-  max-width: 1180px; 
-  /* FIXED: Reset margins from inner elements */
-  margin: 25px 0 0 15px; 
-  padding: 16px 26px 16px 26px;
-  box-shadow: 0 0 12px #e1e6ef32;
+  background-color: #e8e8e8;
+  padding: var(--racw-card-padding);
+  border-radius: var(--racw-card-radius);
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 5px;
+  gap: var(--racw-grid-gap);
+  margin: 0;
+  box-shadow: var(--racw-shadow);
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .Admin-racw-tab-container {
-  display: flex;
-  /* Keep this gap consistent with the filter inputs gap */
-  gap: 44px;
-  margin-bottom: 8px;
-  text-align:center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--racw-grid-gap);
+  margin-bottom: 0px;
+  text-align: center;
+  width: 100%;
 }
 
 /* === ALIGNMENT FIX: 1. Set a fixed width for ALL tab items === */
 .Admin-racw-tab-inactive, .Admin-racw-tab-active-green {
-  /* Set width to ensure all four tabs are identical in width */
-  flex: 1; /* Allow flex to calculate width */
-  min-width: 200px;
-  max-width: 262px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
   border-radius: 8px;
-  padding: 5px 32px; /* This padding contributes to the internal layout */
+  padding: 8px 16px;
   font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   cursor: pointer;
   border: 2px solid #808080;
   box-shadow: 0 6px 8px -4px #333; 
   transition: background 0.2s, color 0.2s;
-  box-sizing: border-box; /* Ensure padding doesn't increase the total width */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
 }
 
 /* Ensure specific active/inactive styles apply without changing the critical width */
@@ -80,18 +98,16 @@
 
 /* This container is now used for filter inputs */
 .Admin-racw-filter-inputs {
-  /* Keep this gap consistent with the tab container gap */
-  display: flex;
-  gap: 44px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--racw-grid-gap);
   margin-bottom: 0px; 
+  width: 100%;
 }
 
 /* === Filter Input Styles === */
 .Admin-racw-filter-select, .Admin-racw-filter-date-input {
-  /* Set the same width/flex properties as the tab containers to achieve column alignment */
-  flex: 1;
-  min-width: 200px;
-  max-width: 262px;
+  width: 100%;
   background: #f6f8fb;
   border: 2px solid #808080;
   height: 51px;
@@ -142,16 +158,20 @@
 /* --- Table Styles --- */
 
 .Admin-racw-table-section {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 1180px; 
-  /* FIXED: Reset margins and adjust padding */
-  margin: 10px 0px 0px 15px;
-  padding: 26px 32px 0px 12px;
-  box-shadow: 0 0 14px #e3e6ee2a;
-  border: 2px solid #808080;
-  width: auto;
-  height: 465px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 12px 20px;
+  margin: 0;
+  box-shadow: var(--racw-shadow);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  border: none;
 }
 
 .Admin-racw-table-header-row {
@@ -161,20 +181,22 @@
   position: sticky;
   left: 0px;
   z-index: 10;
+  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
 .Admin-racw-table-title {
   font-size: 1.25rem;
   font-weight: bold;
   color: #191c2f;
-  margin-bottom:33px;
+  margin: 0;
 }
 
 .Admin-racw-table-actions {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-bottom:20px;
+  margin: 0;
 }
 
 .Admin-racw-view-status-btn-all, .Admin-racw-view-status-btn-filtered {
@@ -245,88 +267,81 @@
 
 .Admin-racw-data-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: separate;
-  margin-top: -8px;
-  font-size: 1.02rem;
-  table-layout: fixed; 
+  border-spacing: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .Admin-racw-data-table thead {
-  display: block;
-  width: 100%;
   position: sticky;
-  top: 0 ;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 11;
 }
 
 .Admin-racw-data-table th {
-  background: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
-  color:rgb(175, 175, 175);
-  padding: 12px 8px;
+  padding: 8px 10px;
   text-align: center;
-  border-bottom: 2px solid #f2f0f2;
-  white-space: normal;
-  line-height: 1.2;
+  font-weight: 600;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .Admin-racw-table-body-scroll {
-  /* Constrain height so body scrolls inside card on all devices */
-  max-height: 360px;
-  overflow-y: auto;
-  overflow-x: auto; 
+  flex-grow: 1;
   width: 100%;
-  padding-right: 0px;
-  position: relative;
+  overflow: auto;
+  border: none;
+  border-radius: 8px;
+  max-height: 100%;
+  padding-bottom: 10px;
 }
 
 /* --- GREEN SCROLLBARS --- */
 .Admin-racw-table-body-scroll::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 .Admin-racw-table-body-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
+  background: transparent;
 }
 
 .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb {
-    background: #4EA24E;
-    border-radius: 4px;
+  background: #4EA24E;
+  border-radius: 8px;
 }
 
 .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb:hover {
-    background: #3d8a3d;
-}
-
-.Admin-racw-table-body-scroll::-webkit-scrollbar-button {
-    display: none;
+  background: #3d8a3d;
 }
 
 .Admin-racw-data-table tbody {
-  display: block;
   width: 100%;
 }
 
 .Admin-racw-data-table tr {
-  display: flex; 
-  width: 100%;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+  cursor: pointer;
 }
 
-.Admin-racw-data-table th, .Admin-racw-data-table td {
-  min-width: 0;
-  text-align: center;
+.Admin-racw-data-table tr:hover {
+  background-color: #fafafa;
 }
 
 .Admin-racw-data-table td {
-  padding: 13px 8px;
-  color: #30334e;
+  padding: 10px 10px;
+  text-align: center;
+  color: #333;
+  vertical-align: middle;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-bottom: 1.5px solid #f2f0f2;
-  white-space: normal; 
-  overflow: visible; 
-  word-wrap: break-word;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 /* === Column widths for the table (8 columns total, sum = 100%) === */
@@ -351,264 +366,202 @@
 
 /* Responsive styles (Mobile/Tablet) */
 @media (max-width: 1024px) {
+  .Admin-racw-layout {
+    height: 100vh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
   .Admin-racw-main-content {
-    margin-left: 0;
-    padding: 15px;
-    height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: calc(100vh - 70px);
+    margin: 65px 0 0 0 !important;
+    padding: 10px 10px 30px 10px !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
   }
 
-  .Admin-racw-main-content::-webkit-scrollbar { 
-    width: 10px; 
+  .Admin-racw-main-content::-webkit-scrollbar {
+    width: 10px !important;
   }
 
-  .Admin-racw-main-content::-webkit-scrollbar-track { 
-    background: #f0f2f5; 
+  .Admin-racw-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
   }
 
   .Admin-racw-main-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E; 
-    border-radius: 20px; 
-    border: 3px solid #f0f2f5; 
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  .Admin-racw-main-content::-webkit-scrollbar-thumb:hover { 
-    background-color: #3d8a3d; 
+  .Admin-racw-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
   }
+
   .Admin-racw-filter-box {
-    margin: 15px 0 0 0;
-    max-width: 100%;
-    width: 100%;
+    margin: 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
   }
-  .Admin-racw-tab-container, .Admin-racw-filter-inputs {
-    gap: 15px; 
-    flex-wrap: wrap; 
-  }
-  .Admin-racw-tab-inactive, .Admin-racw-tab-active-green,
-  .Admin-racw-filter-select, .Admin-racw-filter-date-input {
-    flex: 1 1 45%; /* Two columns per row on tablet */
-    min-width: 150px;
-    max-width: none;
-  }
+
+  .Admin-racw-tab-container,
   .Admin-racw-filter-inputs {
-    flex-direction: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
+
+  .Admin-racw-tab-inactive,
+  .Admin-racw-tab-active-green,
+  .Admin-racw-filter-select,
+  .Admin-racw-filter-date-input {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
   .Admin-racw-table-section {
-    margin: 15px 0 30px 0;
-    max-width: 100%;
-    width: 100%;
-    padding: 15px;
+    margin: 0 0 25px 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 15px !important;
+    flex-grow: 1 !important;
+    min-height: 280px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 }
 
 @media (max-width: 768px) {
-  .Admin-racw-tab-inactive, .Admin-racw-tab-active-green,
-  .Admin-racw-filter-select, .Admin-racw-filter-date-input {
-    flex: 1 1 100%; /* Single column on phone */
-    max-width: 100%;
-    font-size: 1rem;
-    padding: 10px 15px;
-    line-height: 1.4;
+  .Admin-racw-tab-inactive,
+  .Admin-racw-tab-active-green,
+  .Admin-racw-filter-select,
+  .Admin-racw-filter-date-input {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+    padding: 8px 12px !important;
+    height: 45px !important;
   }
-  .Admin-racw-tab-container {
-    flex-direction: column;
-    gap: 10px;
-  }
+
+  .Admin-racw-tab-container,
   .Admin-racw-filter-inputs {
-    flex-direction: column;
-    gap: 10px;
-    margin-left:65px;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
   }
+
   .Admin-racw-table-header-row {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
   }
+
   .Admin-racw-table-actions {
-    width: auto;
-    margin-left: auto;
-    justify-content: flex-end;
-    margin-bottom: 0;
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
   }
+
   .Admin-racw-print-button-container {
-    margin: 0;
+    margin: 0 !important;
   }
+
   .Admin-racw-table-title {
-    margin-bottom: 5px;
-    font-size: 1.1rem;
-  }
-  .Admin-racw-data-table {
-    min-width: 0;
-    width: 100%;
-  }
-  .Admin-racw-data-table-has-data {
-    min-width: 1400px;
+    margin-bottom: 0 !important;
+    font-size: 1.1rem !important;
   }
 
   .Admin-racw-table-body-scroll {
-    overflow-x: hidden;
-    overflow-y: hidden;
-  }
-  .Admin-racw-table-body-scroll-has-data {
-    overflow-x: auto;
-    overflow-y: auto;
-  }
-
-  .Admin-racw-table-body-scroll {
-    overflow-x: auto;
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding-bottom: 10px !important;
+    width: 100% !important;
+    display: block !important;
   }
 
-  /* Center loading spinner and messages in table on mobile */
-  .Admin-racw-loading-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    width: 100%;
-    min-height: 350px;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+    display: block !important;
   }
 
-  .Admin-racw-loading-cell {
-    display: flex !important;
-    align-items: flex-start;
-    justify-content: flex-start;
-    text-align: left;
-    padding: 40px 20px !important;
-    width: 100%;
-    height: auto;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
   }
 
-  .Admin-racw-loading-wrapper {
-    position: relative;
-    top: 0;
-    left: 0;
-    transform: none;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb {
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  .Admin-racw-spinner {
-    margin-top: 0;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
   }
 
-  /* Center empty state messages in table */
-  .Admin-racw-data-table tbody {
-    display: block;
-    width: 100%;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #999999 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  .Admin-racw-data-table tbody tr {
-    display: flex;
-    width: 100%;
-    flex-direction: row;
-  }
-
-  .Admin-racw-data-table tbody td[colspan] {
-    display: flex !important;
-    align-items: flex-start;
-    justify-content: flex-start;
-    text-align: left;
-    padding: 40px 20px !important;
-    font-size: 1.1rem;
-    width: 100%;
-    white-space: normal;
-    line-height: 1.3;
-  }
-
-  /* Mobile scrollbar styling: Green for vertical, Grey for horizontal */
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
-
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 6px;
-  }
-
-  /* Vertical scrollbar - Green (volume bar style) */
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar-thumb:vertical {
-    background: #4EA24E;
-    border-radius: 6px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar-thumb:vertical:hover {
-    background: #3d8a3d;
-    background-clip: content-box;
-  }
-
-  /* Horizontal scrollbar - Grey (volume bar style) */
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar-thumb:horizontal {
-    background: #999999;
-    border-radius: 6px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-
-  .Admin-racw-table-body-scroll-has-data::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #666666;
-    background-clip: content-box;
+  .Admin-racw-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #666666 !important;
   }
 }
 
 /* Loading spinner styles */
 .Admin-racw-loading-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%; /* Force the cell to take up the full table width */
-    min-height: 300px; /* Provides a clear area for the spinner */
-    padding: 0;
-    border: none !important;
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
 }
 
 .Admin-racw-loading-row {
-    display: flex; /* Matches the <tr> display style of your table */
-    width: 100%;
-    border-bottom: none;
+  height: 100%;
 }
 
 .Admin-racw-loading-wrapper {
-    position: static;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 18px 26px;
-    border-radius: 16px;
-    background: #ffffff;
-    text-align: center;
-    margin-left: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
 }
 
 .Admin-racw-spinner {
-    width: 34px;
-    margin-top: 0;
-    height: 34px;
-    border-radius: 50%;
-    border: 4px solid rgba(78, 162, 78, 0.25);
-    border-top-color: #4EA24E;
-    animation: adminRacwSpin 0.7s linear infinite;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminRacwSpin 0.7s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes adminRacwSpin {
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .Admin-racw-loading-text {
-    color: #111827;
-    font-weight: 700;
-    font-size: 1rem;
-    white-space: nowrap;
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 /* Empty table placeholder */
@@ -624,10 +577,8 @@
 
 /* Dropdown styles */
 .Admin-racw-dropdown-wrapper {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-    max-width: 262px;
+  position: relative;
+  width: 100%;
 }
 
 .Admin-racw-dropdown-header {

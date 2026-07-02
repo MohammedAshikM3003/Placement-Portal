@@ -1467,6 +1467,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         // load data from the API using the studentId from URL params, NOT from localStorage.
         // localStorage.studentData contains the logged-in admin's data, not the viewed student's data.
 
+        setIsInitialLoading(true);
         loadStartedAtRef.current = Date.now();
 
         // Clear and fetch student data only if studentId has actually changed to prevent flickering loops

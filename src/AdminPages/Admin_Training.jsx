@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar.js';
 import AdSidebar from '../components/Sidebar/Adsidebar.js';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import AddTrainingIcon from '../assets/ad_addtrainingicon.svg';
 import ScheduleTrainingIcon from '../assets/ad_scheduletrainingicon.svg';
 import AttendanceTrainingIcon from '../assets/ad_at_attendance.svg';
@@ -283,6 +284,28 @@ function AdminTraining({ onLogout }) {
         .filter(Boolean)
     )].sort((a, b) => new Date(a) - new Date(b));
   }, [baseCardsForDateOptions, selectedStartDate]);
+
+  const companyDropdownOptions = useMemo(() => {
+    return companies.map(c => ({ label: c, value: c }));
+  }, [companies]);
+
+  const yearDropdownOptions = useMemo(() => {
+    return yearOptions.map(y => ({ label: y, value: y }));
+  }, [yearOptions]);
+
+  const startDateDropdownOptions = useMemo(() => {
+    return startDateOptions.map(dateVal => ({
+      label: formatDateForDisplay(dateVal),
+      value: dateVal
+    }));
+  }, [startDateOptions]);
+
+  const endDateDropdownOptions = useMemo(() => {
+    return endDateOptions.map(dateVal => ({
+      label: formatDateForDisplay(dateVal),
+      value: dateVal
+    }));
+  }, [endDateOptions]);
 
   useEffect(() => {
     if (selectedStartDate && !startDateOptions.includes(selectedStartDate)) {
@@ -578,6 +601,29 @@ function AdminTraining({ onLogout }) {
     });
   }, [attendancePopupSchedules, attendanceSelectedCompany, attendanceSelectedCourse, attendanceSelectedApplicableYear]);
 
+  const modalCompanyOptions = useMemo(() => {
+    return attendanceCompanyOptions.map(c => ({ label: c, value: c }));
+  }, [attendanceCompanyOptions]);
+
+  const modalCourseOptions = useMemo(() => {
+    return attendanceCourseOptions.map(c => ({ label: c, value: c }));
+  }, [attendanceCourseOptions]);
+
+  const modalApplicableYearOptions = useMemo(() => {
+    return attendanceApplicableYearOptions.map(y => ({ label: y, value: y }));
+  }, [attendanceApplicableYearOptions]);
+
+  const modalPhaseOptions = useMemo(() => {
+    return attendancePhaseOptions.map(p => ({ label: `Phase ${p}`, value: p }));
+  }, [attendancePhaseOptions]);
+
+  const modalStartDateOptions = useMemo(() => {
+    return attendanceStartDateOptions.map(d => ({
+      label: formatDateForDisplay(d),
+      value: d
+    }));
+  }, [attendanceStartDateOptions]);
+
   const todayInfo = useMemo(() => {
     const now = new Date();
     const dateOnlyToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -849,68 +895,56 @@ function AdminTraining({ onLogout }) {
             <div className={styles['ad-tr-filter-grid']}>
               <div className={styles['ad-tr-filter-field']}>
                 <label className={styles['ad-tr-filter-label']}>Company</label>
-                <div className={styles['ad-tr-filter-container']}>
-                  <select
-                    className={styles['ad-tr-filter-control']}
-                    value={selectedCompany}
-                    onChange={(e) => setSelectedCompany(e.target.value)}
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  options={companyDropdownOptions}
+                  selectedOption={selectedCompany}
+                  onSelect={setSelectedCompany}
+                  placeholder="Select Company"
+                  role="admin"
+                  className={styles['training-dropdown-wrapper']}
+                  headerClassName={styles['training-dropdown-header']}
+                />
               </div>
 
               <div className={styles['ad-tr-filter-field']}>
                 <label className={styles['ad-tr-filter-label']}>Year</label>
-                <div className={styles['ad-tr-filter-container']}>
-                  <select
-                    className={styles['ad-tr-filter-control']}
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                  >
-                    <option value="">Select Year</option>
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  options={yearDropdownOptions}
+                  selectedOption={selectedYear}
+                  onSelect={setSelectedYear}
+                  placeholder="Select Year"
+                  role="admin"
+                  className={styles['training-dropdown-wrapper']}
+                  headerClassName={styles['training-dropdown-header']}
+                />
               </div>
 
               <div className={styles['ad-tr-filter-field']}>
                 <label className={styles['ad-tr-filter-label']}>Start Date</label>
-                <div className={styles['ad-tr-filter-container']}>
-                  <select
-                    className={styles['ad-tr-filter-control']}
-                    value={selectedStartDate}
-                    onChange={(e) => setSelectedStartDate(e.target.value)}
-                    disabled={startDateOptions.length === 0}
-                  >
-                    <option value="">Select Start Date</option>
-                    {startDateOptions.map((dateValue) => (
-                      <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  options={startDateDropdownOptions}
+                  selectedOption={selectedStartDate}
+                  onSelect={setSelectedStartDate}
+                  placeholder="Select Start Date"
+                  disabled={startDateOptions.length === 0}
+                  role="admin"
+                  className={styles['training-dropdown-wrapper']}
+                  headerClassName={styles['training-dropdown-header']}
+                />
               </div>
 
               <div className={styles['ad-tr-filter-field']}>
                 <label className={styles['ad-tr-filter-label']}>End Date</label>
-                <div className={styles['ad-tr-filter-container']}>
-                  <select
-                    className={styles['ad-tr-filter-control']}
-                    value={selectedEndDate}
-                    onChange={(e) => setSelectedEndDate(e.target.value)}
-                    disabled={endDateOptions.length === 0}
-                  >
-                    <option value="">Select End Date</option>
-                    {endDateOptions.map((dateValue) => (
-                      <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  options={endDateDropdownOptions}
+                  selectedOption={selectedEndDate}
+                  onSelect={setSelectedEndDate}
+                  placeholder="Select End Date"
+                  disabled={endDateOptions.length === 0}
+                  role="admin"
+                  className={styles['training-dropdown-wrapper']}
+                  headerClassName={styles['training-dropdown-header']}
+                />
               </div>
 
             </div>
@@ -1027,86 +1061,71 @@ function AdminTraining({ onLogout }) {
               <div className={styles['ad-tr-att-popup-grid']}>
                 <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Company</label>
-                  <div className={styles['ad-tr-att-dropdown-container']}>
-                    <select
-                      className={styles['ad-tr-att-dropdown']}
-                      value={attendanceSelectedCompany}
-                      onChange={(e) => handleAttendanceCompanyChange(e.target.value)}
-                    >
-                      <option value="">Select Company</option>
-                      {attendanceCompanyOptions.map((companyName) => (
-                        <option key={companyName} value={companyName}>{companyName}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={modalCompanyOptions}
+                    selectedOption={attendanceSelectedCompany}
+                    onSelect={handleAttendanceCompanyChange}
+                    placeholder="Select Company"
+                    role="admin"
+                    className={styles['training-dropdown-wrapper']}
+                    headerClassName={styles['training-dropdown-header']}
+                  />
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Course</label>
-                  <div className={styles['ad-tr-att-dropdown-container']}>
-                    <select
-                      className={styles['ad-tr-att-dropdown']}
-                      value={attendanceSelectedCourse}
-                      onChange={(e) => handleAttendanceCourseChange(e.target.value)}
-                      disabled={!attendanceSelectedCompany}
-                    >
-                      <option value="">Select Course</option>
-                      {attendanceCourseOptions.map((courseName) => (
-                        <option key={courseName} value={courseName}>{courseName}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={modalCourseOptions}
+                    selectedOption={attendanceSelectedCourse}
+                    onSelect={handleAttendanceCourseChange}
+                    placeholder="Select Course"
+                    disabled={!attendanceSelectedCompany}
+                    role="admin"
+                    className={styles['training-dropdown-wrapper']}
+                    headerClassName={styles['training-dropdown-header']}
+                  />
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Applicable Year</label>
-                  <div className={styles['ad-tr-att-dropdown-container']}>
-                    <select
-                      className={styles['ad-tr-att-dropdown']}
-                      value={attendanceSelectedApplicableYear}
-                      onChange={(e) => handleAttendanceApplicableYearChange(e.target.value)}
-                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse}
-                    >
-                      <option value="">Select Applicable Year</option>
-                      {attendanceApplicableYearOptions.map((yearValue) => (
-                        <option key={yearValue} value={yearValue}>{yearValue}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={modalApplicableYearOptions}
+                    selectedOption={attendanceSelectedApplicableYear}
+                    onSelect={handleAttendanceApplicableYearChange}
+                    placeholder="Select Applicable Year"
+                    disabled={!attendanceSelectedCompany || !attendanceSelectedCourse}
+                    role="admin"
+                    className={styles['training-dropdown-wrapper']}
+                    headerClassName={styles['training-dropdown-header']}
+                  />
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Phase</label>
-                  <div className={styles['ad-tr-att-dropdown-container']}>
-                    <select
-                      className={styles['ad-tr-att-dropdown']}
-                      value={attendanceSelectedPhase}
-                      onChange={(e) => handleAttendancePhaseChange(e.target.value)}
-                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear}
-                    >
-                      <option value="">Select Phase</option>
-                      {attendancePhaseOptions.map((phaseValue) => (
-                        <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={modalPhaseOptions}
+                    selectedOption={attendanceSelectedPhase}
+                    onSelect={handleAttendancePhaseChange}
+                    placeholder="Select Phase"
+                    disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear}
+                    role="admin"
+                    className={styles['training-dropdown-wrapper']}
+                    headerClassName={styles['training-dropdown-header']}
+                  />
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>
                   <label className={styles['ad-tr-att-static-label']}>Start Date</label>
-                  <div className={styles['ad-tr-att-dropdown-container']}>
-                    <select
-                      className={styles['ad-tr-att-dropdown']}
-                      value={attendanceSelectedStartDate}
-                      onChange={(e) => handleAttendanceStartDateChange(e.target.value)}
-                      disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear || !attendanceSelectedPhase}
-                    >
-                      <option value="">Select Start Date</option>
-                      {attendanceStartDateOptions.map((startDate) => (
-                        <option key={startDate} value={startDate}>{formatDateForDisplay(startDate)}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    options={modalStartDateOptions}
+                    selectedOption={attendanceSelectedStartDate}
+                    onSelect={handleAttendanceStartDateChange}
+                    placeholder="Select Start Date"
+                    disabled={!attendanceSelectedCompany || !attendanceSelectedCourse || !attendanceSelectedApplicableYear || !attendanceSelectedPhase}
+                    role="admin"
+                    className={styles['training-dropdown-wrapper']}
+                    headerClassName={styles['training-dropdown-header']}
+                  />
                 </div>
 
                 <div className={styles['ad-tr-att-input-wrapper']}>

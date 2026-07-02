@@ -4,8 +4,10 @@ import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Admin_Training_Company.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import Adminicon from '../assets/Adminicon.png';
 import AdminAddTrainingCompany from '../assets/Admin_Add_Training_Company.svg';
+
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -481,6 +483,26 @@ function AdminTrainingCompany({ onLogout }) {
         }
     };
 
+    const companyDropdownOptions = companyOptions.map(opt => ({
+        label: opt === '' ? 'All Companies' : opt,
+        value: opt
+    }));
+
+    const branchDropdownOptions = branchOptions.map(opt => ({
+        label: opt === '' ? 'All Branches' : opt,
+        value: opt
+    }));
+
+    const trainingDropdownOptions = trainingOptions.map(opt => ({
+        label: opt === '' ? 'All Trainings' : opt,
+        value: opt
+    }));
+
+    const phaseDropdownOptions = phaseOptions.map(opt => ({
+        label: opt === '' ? 'All Phases' : opt,
+        value: opt
+    }));
+
     return (
         <>
             {activePopup === 'deleteWarning' && (
@@ -535,73 +557,57 @@ function AdminTrainingCompany({ onLogout }) {
                                 {/* Company Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Company Name</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
-                                            value={tempFilterCompany}
-                                            onChange={(e) => setTempFilterCompany(e.target.value)}
-                                            onFocus={() => setCompanyFocused(true)}
-                                            onBlur={() => setCompanyFocused(false)}
-                                        >
-                                            {companyOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Companies' : opt}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <Dropdown
+                                        options={companyDropdownOptions}
+                                        selectedOption={tempFilterCompany}
+                                        onSelect={setTempFilterCompany}
+                                        placeholder="All Companies"
+                                        role="admin"
+                                        className={styles['company-dropdown-wrapper']}
+                                        headerClassName={styles['company-dropdown-header']}
+                                    />
                                 </div>
 
                                 {/* Branch Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Branch</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${branchFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
-                                            value={tempFilterBranch}
-                                            onChange={(e) => setTempFilterBranch(e.target.value)}
-                                            onFocus={() => setBranchFocused(true)}
-                                            onBlur={() => setBranchFocused(false)}
-                                        >
-                                            {branchOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Branches' : opt}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <Dropdown
+                                        options={branchDropdownOptions}
+                                        selectedOption={tempFilterBranch}
+                                        onSelect={setTempFilterBranch}
+                                        placeholder="All Branches"
+                                        role="admin"
+                                        className={styles['company-dropdown-wrapper']}
+                                        headerClassName={styles['company-dropdown-header']}
+                                    />
                                 </div>
 
                                 {/* Training Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Training Name</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${trainingFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
-                                            value={tempFilterTraining}
-                                            onChange={(e) => setTempFilterTraining(e.target.value)}
-                                            onFocus={() => setTrainingFocused(true)}
-                                            onBlur={() => setTrainingFocused(false)}
-                                        >
-                                            {trainingOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Trainings' : opt}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <Dropdown
+                                        options={trainingDropdownOptions}
+                                        selectedOption={tempFilterTraining}
+                                        onSelect={setTempFilterTraining}
+                                        placeholder="All Trainings"
+                                        role="admin"
+                                        className={styles['company-dropdown-wrapper']}
+                                        headerClassName={styles['company-dropdown-header']}
+                                    />
                                 </div>
 
                                 {/* Phase Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
                                     <label className={styles['Admin-tc-static-label']}>Phase</label>
-                                    <div className={`${styles['Admin-tc-text-container']} ${styles['Admin-tc-select-container']} ${phaseFocused ? styles['is-focused'] : ''}`}>
-                                        <select
-                                            className={`${styles['Admin-tc-text']} ${styles['Admin-tc-select']}`}
-                                            value={tempFilterPhase}
-                                            onChange={(e) => setTempFilterPhase(e.target.value)}
-                                            onFocus={() => setPhaseFocused(true)}
-                                            onBlur={() => setPhaseFocused(false)}
-                                        >
-                                            {phaseOptions.map((opt, idx) => (
-                                                <option key={idx} value={opt}>{opt === '' ? 'All Phases' : opt}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <Dropdown
+                                        options={phaseDropdownOptions}
+                                        selectedOption={tempFilterPhase}
+                                        onSelect={setTempFilterPhase}
+                                        placeholder="All Phases"
+                                        role="admin"
+                                        className={styles['company-dropdown-wrapper']}
+                                        headerClassName={styles['company-dropdown-header']}
+                                    />
                                 </div>
                             </div>
                         </div>

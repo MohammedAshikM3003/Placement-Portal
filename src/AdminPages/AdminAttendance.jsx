@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar/Adnavbar.js";
 
 import Sidebar from "../components/Sidebar/Adsidebar.js";
 
-
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 import mongoDBService from '../services/mongoDBService';
 
@@ -559,6 +559,45 @@ export default function AdminAtt({ onLogout }) {
     return Object.values(groups);
 
   }, [drives, eligibleStudentsData]);
+
+  const driveDropdownOptions = useMemo(() => {
+    return groupedDrives.map(group => {
+      const key = `${group.companyName}:${group.jobRole}`;
+      const hasAttendance = group.drives.some(drive =>
+        hasExistingAttendance(
+          group.companyName,
+          group.jobRole,
+          drive.startingDate || drive.driveStartDate || drive.companyDriveDate
+        )
+      );
+      return {
+        label: `${group.companyName} : ${group.jobRole}`,
+        value: key,
+        style: {
+          color: hasAttendance ? '#4EA24E' : '#555',
+          fontWeight: hasAttendance ? '600' : 'bold'
+        }
+      };
+    });
+  }, [groupedDrives, existingAttendances]);
+
+  const startDateDropdownOptions = useMemo(() => {
+    return availableDates.map(dateObj => {
+      const hasAttendance = selectedCompanyJob && hasExistingAttendance(
+        selectedCompanyJob.companyName,
+        selectedCompanyJob.jobRole,
+        dateObj.date
+      );
+      return {
+        label: formatDateDisplay(dateObj.date),
+        value: dateObj.date,
+        style: {
+          color: hasAttendance ? '#4EA24E' : '#555',
+          fontWeight: hasAttendance ? '600' : 'bold'
+        }
+      };
+    });
+  }, [availableDates, selectedCompanyJob, existingAttendances]);
 
 
 
@@ -1702,176 +1741,33 @@ export default function AdminAtt({ onLogout }) {
           <div className={styles['Admin-at-filter-section']}>
 
             {/* Select Drive Dropdown (Company : Job Role) */}
-
-            <div className={styles['Admin-at-filter-select']}>
-
-              <div
-
-                className={styles['Admin-at-filter-select-display']}
-
-                onClick={() => setIsDriveOpen(!isDriveOpen)}
-
-              >
-
-                {selectedCompanyJob ? `${selectedCompanyJob.companyName} : ${selectedCompanyJob.jobRole}` : "Select Drive"}
-
-              </div>
-
-              <span className={styles['Admin-at-filter-select-arrow']} onClick={() => setIsDriveOpen(!isDriveOpen)}>
-
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
-
-              </span>
-
-              <div className={`${styles['Admin-at-filter-select-options']} ${isDriveOpen ? styles['open'] : ''}`}>
-
-                {isLoading ? (
-
-                  <div className={styles['Admin-at-filter-select-option']} style={{ color: '#888' }}>Loading...</div>
-
-                ) : groupedDrives.length === 0 ? (
-
-                  <div className={styles['Admin-at-filter-select-option']} style={{ color: '#888' }}>No drives available</div>
-
-                ) : (
-
-                  groupedDrives.map((group, index) => {
-
-                    // Check if any date for this company/job has attendance (use startingDate from companies.drives)
-
-                    const hasAttendance = group.drives.some(drive =>
-
-                      hasExistingAttendance(
-
-                        group.companyName,
-
-                        group.jobRole,
-
-                        drive.startingDate || drive.driveStartDate || drive.companyDriveDate
-
-                      )
-
-                    );
-
-                    return (
-
-                      <div
-
-                        key={index}
-
-                        className={styles['Admin-at-filter-select-option']}
-
-                        onClick={() => handleCompanyJobSelect(group)}
-
-                        style={{ color: hasAttendance ? '#4EA24E' : '#555', fontWeight: hasAttendance ? '600' : 'normal' }}
-
-                      >
-
-                        {group.companyName} : {group.jobRole}
-
-                      </div>
-
-                    );
-
-                  })
-
-                )}
-
-              </div>
-
-            </div>
-
-
+            <Dropdown
+              options={driveDropdownOptions}
+              selectedOption={selectedCompanyJob ? `${selectedCompanyJob.companyName}:${selectedCompanyJob.jobRole}` : ''}
+              onSelect={(key) => {
+                const group = groupedDrives.find(g => `${g.companyName}:${g.jobRole}` === key);
+                if (group) handleCompanyJobSelect(group);
+              }}
+              placeholder="Select Drive"
+              role="admin"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
 
             {/* Start Date Dropdown */}
-
-            <div className={styles['Admin-at-filter-select']}>
-
-              <div
-
-                className={styles['Admin-at-filter-select-display']}
-
-                onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-
-                style={{
-
-                  cursor: selectedCompanyJob ? 'pointer' : 'not-allowed',
-
-                  backgroundColor: selectedCompanyJob ? 'white' : '#ffffff',
-
-                  color: selectedCompanyJob ? '#333' : '#999'
-
-                }}
-
-              >
-
-                {startDate ? formatDateDisplay(startDate) : "Select Start Date"}
-
-              </div>
-
-              <span
-
-                className={styles['Admin-at-filter-select-arrow']}
-
-                onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-
-                style={{ cursor: selectedCompanyJob ? 'pointer' : 'not-allowed' }}
-
-              >
-
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
-
-              </span>
-
-              <div className={`${styles['Admin-at-filter-select-options']} ${isStartDateOpen ? styles['open'] : ''}`}>
-
-                {availableDates.map((dateObj, index) => {
-
-                  const hasAttendance = selectedCompanyJob && hasExistingAttendance(
-
-                    selectedCompanyJob.companyName,
-
-                    selectedCompanyJob.jobRole,
-
-                    dateObj.date
-
-                  );
-
-                  return (
-
-                    <div
-
-                      key={index}
-
-                      className={styles['Admin-at-filter-select-option']}
-
-                      onClick={() => handleStartDateSelect(dateObj)}
-
-                      style={{ color: hasAttendance ? '#4EA24E' : '#555', fontWeight: hasAttendance ? '600' : 'normal' }}
-
-                    >
-
-                      {formatDateDisplay(dateObj.date)}
-
-                    </div>
-
-                  );
-
-                })}
-
-                {availableDates.length === 0 && selectedCompanyJob && (
-
-                  <div className={styles['Admin-at-filter-select-option']} style={{ color: '#999', cursor: 'default' }}>
-
-                    No dates available
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
+            <Dropdown
+              options={startDateDropdownOptions}
+              selectedOption={startDate}
+              onSelect={(selectedDate) => {
+                const dateObj = availableDates.find(d => d.date === selectedDate);
+                if (dateObj) handleStartDateSelect(dateObj);
+              }}
+              placeholder="Select Start Date"
+              disabled={!selectedCompanyJob}
+              role="admin"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
 
 
 

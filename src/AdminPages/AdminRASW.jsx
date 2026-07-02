@@ -837,6 +837,8 @@ function AdminRASW() {
                 onSelect={handleCompanySelect}
                 placeholder="Select Company"
                 role="admin"
+                className={styles['Admin-rasw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rasw-dropdown-header']}
               />
 
               <Dropdown
@@ -846,6 +848,8 @@ function AdminRASW() {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="admin"
+                className={styles['Admin-rasw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rasw-dropdown-header']}
               />
 
               <Dropdown
@@ -860,6 +864,8 @@ function AdminRASW() {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="admin"
+                className={styles['Admin-rasw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rasw-dropdown-header']}
               />
 
               <Dropdown
@@ -868,6 +874,8 @@ function AdminRASW() {
                 placeholder="End Date"
                 disabled={true}
                 role="admin"
+                className={styles['Admin-rasw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rasw-dropdown-header']}
               />
             </div>
 
@@ -950,7 +958,7 @@ function AdminRASW() {
                       <td colSpan="9" className={styles['Admin-rasw-loading-cell']}>
                         <div className={styles['Admin-rasw-loading-wrapper']}>
                           <div className={styles['Admin-rasw-spinner']}></div>
-                          <span className={styles['Admin-rasw-loading-text']}>Loading students…</span>
+                          <span className={styles['Admin-rasw-loading-text']}>Loading students...</span>
                         </div>
                       </td>
                     </tr>
@@ -978,7 +986,7 @@ function AdminRASW() {
 
                   {!isLoading && filteredData.length === 0 && (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>
                         No students found matching the current filters.
                       </td>
                     </tr>

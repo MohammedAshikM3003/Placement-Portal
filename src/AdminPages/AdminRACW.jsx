@@ -608,6 +608,8 @@ function AdminRACW() {
                 onSelect={handleCompanySelect}
                 placeholder="Select Company"
                 role="admin"
+                className={styles['Admin-racw-dropdown-wrapper']}
+                headerClassName={styles['Admin-racw-dropdown-header']}
               />
 
               <Dropdown
@@ -617,6 +619,8 @@ function AdminRACW() {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="admin"
+                className={styles['Admin-racw-dropdown-wrapper']}
+                headerClassName={styles['Admin-racw-dropdown-header']}
               />
 
               <Dropdown
@@ -631,6 +635,8 @@ function AdminRACW() {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="admin"
+                className={styles['Admin-racw-dropdown-wrapper']}
+                headerClassName={styles['Admin-racw-dropdown-header']}
               />
 
               <Dropdown
@@ -639,6 +645,8 @@ function AdminRACW() {
                 placeholder="End Date"
                 disabled={true}
                 role="admin"
+                className={styles['Admin-racw-dropdown-wrapper']}
+                headerClassName={styles['Admin-racw-dropdown-header']}
               />
             </div>
           </div> 
@@ -687,7 +695,7 @@ function AdminRACW() {
                       <td colSpan="8" className={styles['Admin-racw-loading-cell']}>
                         <div className={styles['Admin-racw-loading-wrapper']}>
                           <div className={styles['Admin-racw-spinner']}></div>
-                          <span className={styles['Admin-racw-loading-text']}>Loading students…</span>
+                          <span className={styles['Admin-racw-loading-text']}>Loading students...</span>
                         </div>
                       </td>
                     </tr>
@@ -714,7 +722,7 @@ function AdminRACW() {
 
                   {!isLoading && filteredData.length === 0 && (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
                         {!selectedCompanyJob ? (
                           'Please select company & job role'
                         ) : !startDate ? (

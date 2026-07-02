@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdNavbar from '../components/Navbar/Adnavbar';
 import AdSidebar from '../components/Sidebar/Adsidebar';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import styles from './Admin_Schedule_Training.module.css';
 import AdCalendar from '../components/Calendar/Ad_Calendar';
 import mongoDBService from '../services/mongoDBService';
@@ -223,6 +224,19 @@ const AdminScheduleTraining = ({ onLogout }) => {
     }
     return missing;
   }, [selectedCompanies, phaseNumber, applicableYear, startDate, endDate, selectedCourses]);
+
+  const companyDropdownOptions = useMemo(() => {
+    return companies.map(c => ({ label: c, value: c }));
+  }, [companies]);
+
+  const yearDropdownOptions = useMemo(() => {
+    return [
+      { label: 'I', value: 'I' },
+      { label: 'II', value: 'II' },
+      { label: 'III', value: 'III' },
+      { label: 'IV', value: 'IV' }
+    ];
+  }, []);
 
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -797,22 +811,18 @@ const AdminScheduleTraining = ({ onLogout }) => {
               <>
                 {selectedCompanies.map((item, index) => (
                   <div key={item.id} className={styles.formRow}>
-                    <div className={styles.formGroup}>
+                    <div className={styles.formGroup} ref={index === 0 ? registerFieldRef('selectedCompanies') : null}>
                       <label className={styles.fieldLabel}>Select Company <span className={styles.requiredStar}>*</span></label>
-                      <select
-                        ref={index === 0 ? registerFieldRef('selectedCompanies') : null}
-                        value={item.company}
-                        onChange={(e) => handleCompanySelect(item.id, e.target.value)}
-                        className={`${styles.control} ${highlightedField === 'selectedCompanies' ? styles.fieldHighlight : ''}`}
+                      <Dropdown
+                        options={companyDropdownOptions}
+                        selectedOption={item.company}
+                        onSelect={(val) => handleCompanySelect(item.id, val)}
+                        placeholder={isLoadingCompanies ? 'Loading companies...' : 'Select Company'}
                         disabled={isLoadingCompanies || isViewMode}
-                      >
-                        <option value="">{isLoadingCompanies ? 'Loading companies...' : 'Select Company'}</option>
-                        {companies.map((companyName) => (
-                          <option key={companyName} value={companyName}>
-                            {companyName}
-                          </option>
-                        ))}
-                      </select>
+                        role="admin"
+                        className={`${styles['schedule-dropdown-wrapper']} ${highlightedField === 'selectedCompanies' ? styles.fieldHighlight : ''}`}
+                        headerClassName={styles['schedule-dropdown-header']}
+                      />
                     </div>
 
                     <div className={styles.formGroup}>
@@ -906,21 +916,18 @@ const AdminScheduleTraining = ({ onLogout }) => {
                 />
               </div>
 
-              <div className={styles.formGroup}>
+              <div className={styles.formGroup} ref={registerFieldRef('applicableYear')}>
                 <label className={styles.fieldLabel}>Applicable Year <span className={styles.requiredStar}>*</span></label>
-                <select
-                  ref={registerFieldRef('applicableYear')}
-                  value={applicableYear}
-                  onChange={(e) => setApplicableYear(e.target.value)}
-                  className={`${styles.control} ${highlightedField === 'applicableYear' ? styles.fieldHighlight : ''}`}
+                <Dropdown
+                  options={yearDropdownOptions}
+                  selectedOption={applicableYear}
+                  onSelect={setApplicableYear}
+                  placeholder="Select Year"
                   disabled={isViewMode}
-                >
-                  <option value="">Select Year</option>
-                  <option value="I">I</option>
-                  <option value="II">II</option>
-                  <option value="III">III</option>
-                  <option value="IV">IV</option>
-                </select>
+                  role="admin"
+                  className={`${styles['schedule-dropdown-wrapper']} ${highlightedField === 'applicableYear' ? styles.fieldHighlight : ''}`}
+                  headerClassName={styles['schedule-dropdown-header']}
+                />
               </div>
             </div>
 

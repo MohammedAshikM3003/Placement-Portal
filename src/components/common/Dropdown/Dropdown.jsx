@@ -105,10 +105,12 @@ const Dropdown = ({
         >
           {options.map((option, index) => {
             const label = (typeof option === 'object' && option !== null) ? option.label : option;
+            const itemStyle = (typeof option === 'object' && option !== null) ? option.style : undefined;
             return (
               <div
                 key={index}
                 className={styles['dropdown-item']}
+                style={itemStyle}
                 onClick={() => handleSelect(option)}
               >
                 {label}

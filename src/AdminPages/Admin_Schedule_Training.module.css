@@ -1140,3 +1140,27 @@ select.control {
   border: 2px solid #ffc107 !important;
   box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
 }
+
+.schedule-dropdown-wrapper {
+  max-width: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.schedule-dropdown-header {
+  height: 53.6px !important;
+  background-color: #f9fff9 !important;
+  border: 1px solid #def4dd !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 0.95rem !important;
+  color: #333333 !important;
+  font-weight: 500 !important;
+  padding: 0 0.9rem !important;
+}
+
+.schedule-dropdown-header:hover {
+  border-color: #4EA24E !important;
+}
+

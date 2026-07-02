@@ -335,3 +335,27 @@
   outline: none;
   box-shadow: none;
 }
+
+.trainer-dropdown-wrapper {
+  max-width: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.trainer-dropdown-header {
+  height: 48px !important;
+  background-color: #ffffff !important;
+  border: 2px solid #e1e5e9 !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: 0.95rem !important;
+  color: #333333 !important;
+  font-weight: 500 !important;
+  padding: 0 16px !important;
+}
+
+.trainer-dropdown-header:hover {
+  border-color: #4ea24e !important;
+}
+

@@ -1,60 +1,75 @@
-/* ======================================= */
-/* === NEW LAYOUT CLASSES FOR ALIGNMENT ===*/
-/* ======================================= */
+:root {
+  --rasw-page-padding: 10px 10px 10px 20px;
+  --rasw-card-padding: 20px;
+  --rasw-grid-gap: 20px;
+  --rasw-card-radius: 18px;
+  --rasw-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .Admin-rasw-layout {
-  display: flex; /* Enables Flexbox for sidebar and main content */
-  min-height: 100vh; /* Ensures layout takes full viewport height */
+  display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .Admin-rasw-main-content {
-  flex-grow: 1; /* Allows main content to take up all available space */
-  padding: 20px 14px 10px 40px;
-  background: #f8f8f8; 
-  margin-right: 5px;
-  /* FIXED: Set margin-left to offset the sidebar on desktop */
-  margin-left: 260px;
-  margin-top: 65px; /* Offset for navbar */
+  flex-grow: 1;
+  padding: var(--rasw-page-padding);
+  margin: 65px 0px 0px 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rasw-grid-gap);
+  overflow: hidden;
+  position: relative;
   height: calc(100vh - 65px);
-  overflow-y: auto; /* Allow content to scroll within the main area */
+  background-color: #f6f8fb;
 }
 
 .Admin-rasw-filter-box {
-  background: #D3D1D1;
-  border-radius: 16px;
-  max-width: 1180px; 
-  /* FIXED: Reset margins from inner elements */
-  margin: 25px 0 0 15px; 
-  padding: 16px 26px 16px 26px;
-  box-shadow: 0 0 12px #e1e6ef32;
+  background-color: #e8e8e8;
+  padding: var(--rasw-card-padding);
+  border-radius: var(--rasw-card-radius);
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: -8px;
+  gap: var(--rasw-grid-gap);
+  margin: 0;
+  box-shadow: var(--rasw-shadow);
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .Admin-rasw-tab-container {
-  display: flex;
-  /* Keep this gap consistent with the filter inputs gap */
-  gap: 44px;
-  margin-bottom: 8px;
-  text-align:center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--rasw-grid-gap);
+  margin-bottom: 0px;
+  text-align: center;
+  width: 100%;
 }
 
 /* === ALIGNMENT FIX: 1. Set a fixed width for ALL tab items === */
 .Admin-rasw-tab-inactive, .Admin-rasw-tab-active-green {
-  /* FIXED: Use flex to calculate width and maintain alignment */
-  flex: 1;
-  min-width: 200px;
-  max-width: 262px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
   border-radius: 8px;
-  padding: 5px 32px;
+  padding: 8px 16px;
   font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   cursor: pointer;
   border: 2px solid #808080;
   box-shadow: 0 6px 8px -4px #333; 
   transition: background 0.2s, color 0.2s;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
 }
 
 /* Ensure specific active/inactive styles apply without changing the critical width */
@@ -79,18 +94,16 @@
 
 /* This container is now used for filter inputs */
 .Admin-rasw-filter-inputs {
-  /* Keep this gap consistent with the tab container gap */
-  display: flex;
-  gap: 44px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--rasw-grid-gap);
   margin-bottom: 0px; 
+  width: 100%;
 }
 
 /* === Filter Input Styles === */
 .Admin-rasw-filter-select, .Admin-rasw-filter-date-input {
-  /* Set the same width/flex properties as the tab containers to achieve column alignment */
-  flex: 1;
-  min-width: 200px;
-  max-width: 262px;
+  width: 100%;
   background: #f6f8fb;
   border: 2px solid #808080;
   height: 51px;
@@ -101,7 +114,7 @@
   box-sizing: border-box;
   padding: 10px 15px; 
   line-height: normal;
-  text-align:center; 
+  text-align: center; 
   transition: border-color 0.2s; 
 }
 
@@ -329,19 +342,92 @@
   box-shadow: 0 4px 6px -6px #333;
 }
 
+.Admin-rasw-rounds-container {
+  background-color: transparent;
+  padding: 5px 0;
+  margin: 0;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-rounds-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  margin-left: 0px;
+  padding: 0;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar {
+  height: 6px;
+  margin-top: 2px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb {
+  background: #808080;
+  border-radius: 4px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb:hover {
+  background: #606060;
+}
+
+.Admin-rasw-round-btn {
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 2px solid #808080;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-round-btn-inactive {
+  background: #f8f8f8;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+}
+
+.Admin-rasw-round-btn-inactive:hover {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.Admin-rasw-round-btn-active {
+  background: #4EA24E;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 6px -6px #333;
+}
+
 /* --- Table Styles --- */
 
 .Admin-rasw-table-section {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 1180px; 
-  /* FIXED: Reset margins and adjust padding */
-  margin: 10px 0px 0px 15px;
-  padding: 26px 32px 0px 12px;
-  box-shadow: 0 0 14px #e3e6ee2a;
-  border: 2px solid #808080;
-  width: auto;
-  height: 399px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 12px 20px;
+  margin: 0;
+  box-shadow: var(--rasw-shadow);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  border: none;
 }
 
 .Admin-rasw-table-header-row {
@@ -351,20 +437,22 @@
   position: sticky;
   left: 0px;
   z-index: 10;
+  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
 .Admin-rasw-table-title {
   font-size: 1.25rem;
   font-weight: bold;
   color: #191c2f;
-  margin-bottom:33px;
+  margin: 0;
 }
 
 .Admin-rasw-table-actions {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-bottom:20px;
+  margin: 0;
 }
 
 .Admin-rasw-view-status-btn-all, .Admin-rasw-view-status-btn-filtered {
@@ -435,113 +523,101 @@
 
 .Admin-rasw-data-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: separate;
-  margin-top: -8px;
-  font-size: 0.95rem;
-  table-layout: fixed;
-  min-width: 0px;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .Admin-rasw-data-table thead {
-  display: block;
-  width: 100%;
-  min-width: 0px;
   position: sticky;
   top: 0;
+  background-color: #ffffff;
+  z-index: 11;
 }
 
 .Admin-rasw-data-table th {
-  background: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
-  color:rgb(175, 175, 175);
-  padding: 12px 8px;
+  padding: 8px 10px;
   text-align: center;
-  border-bottom: 2px solid #f2f0f2;
-  white-space: normal;
-  line-height: 1.2;
+  font-weight: 600;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .Admin-rasw-table-body-scroll {
-  /* Constrain height so table data scrolls inside the card instead of overflowing */
-  max-height: 294px;
-  overflow-y: auto;
-  overflow-x: auto;
+  flex-grow: 1;
   width: 100%;
-  min-width: 0px;
-  padding-right: 0px;
-  position: relative;
+  overflow: auto;
+  border: none;
+  border-radius: 8px;
+  max-height: 100%;
+  padding-bottom: 10px;
 }
 
 /* --- GREEN SCROLLBARS --- */
 .Admin-rasw-table-body-scroll::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 .Admin-rasw-table-body-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
+  background: transparent;
 }
 
 .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb {
-    background: #4EA24E;
-    border-radius: 4px;
+  background: #4EA24E;
+  border-radius: 8px;
 }
 
 .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:hover {
-    background: #3d8a3d;
-}
-
-.Admin-rasw-table-body-scroll::-webkit-scrollbar-button {
-    display: none;
+  background: #3d8a3d;
 }
 
 .Admin-rasw-data-table tbody {
-  display: block;
   width: 100%;
-  min-width: 0px;
 }
 
 .Admin-rasw-data-table tr {
-  display: flex;
-  width: 100%;
-  min-height: 45px;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+  cursor: pointer;
 }
 
-.Admin-rasw-data-table th, .Admin-rasw-data-table td {
-  min-width: 0;
-  text-align: center;
+.Admin-rasw-data-table tr:hover {
+  background-color: #fafafa;
 }
 
 .Admin-rasw-data-table td {
-  padding: 13px 8px;
-  color: #30334e;
+  padding: 10px 10px;
+  text-align: center;
+  color: #333;
+  vertical-align: middle;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-bottom: 1.5px solid #f2f0f2;
-  white-space: normal; 
-  overflow: visible; 
-  word-wrap: break-word;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 /* === Percentage-based column widths (9 columns, total = 100%) === */
-.Admin-rasw-data-table th:nth-child(1), .Admin-rasw-data-table td:nth-child(1) { width: 4%; flex-shrink: 0; }  /* S.No */
-.Admin-rasw-data-table th:nth-child(2), .Admin-rasw-data-table td:nth-child(2) { width: 15%; flex-shrink: 0; } /* Name */
-.Admin-rasw-data-table th:nth-child(3), .Admin-rasw-data-table td:nth-child(3) { width: 13%; flex-shrink: 0; } /* Register Number */
-.Admin-rasw-data-table th:nth-child(4), .Admin-rasw-data-table td:nth-child(4) { width: 9%; flex-shrink: 0; }  /* Branch */
-.Admin-rasw-data-table th:nth-child(5), .Admin-rasw-data-table td:nth-child(5) { width: 10%; flex-shrink: 0; } /* Year-Sec */
-.Admin-rasw-data-table th:nth-child(6), .Admin-rasw-data-table td:nth-child(6) { width: 11%; flex-shrink: 0; } /* Reached */
-.Admin-rasw-data-table th:nth-child(7), .Admin-rasw-data-table td:nth-child(7) { width: 13%; flex-shrink: 0; } /* Mobile */
-.Admin-rasw-data-table th:nth-child(8), .Admin-rasw-data-table td:nth-child(8) { width: 19%; flex-shrink: 0; } /* Email */
-.Admin-rasw-data-table th:nth-child(9), .Admin-rasw-data-table td:nth-child(9) { width: 6%; flex-shrink: 0; }  /* View */
+.Admin-rasw-data-table th:nth-child(1), .Admin-rasw-data-table td:nth-child(1) { width: 4%; }  /* S.No */
+.Admin-rasw-data-table th:nth-child(2), .Admin-rasw-data-table td:nth-child(2) { width: 15%; } /* Name */
+.Admin-rasw-data-table th:nth-child(3), .Admin-rasw-data-table td:nth-child(3) { width: 13%; } /* Register Number */
+.Admin-rasw-data-table th:nth-child(4), .Admin-rasw-data-table td:nth-child(4) { width: 9%; }  /* Branch */
+.Admin-rasw-data-table th:nth-child(5), .Admin-rasw-data-table td:nth-child(5) { width: 10%; } /* Year-Sec */
+.Admin-rasw-data-table th:nth-child(6), .Admin-rasw-data-table td:nth-child(6) { width: 11%; } /* Reached */
+.Admin-rasw-data-table th:nth-child(7), .Admin-rasw-data-table td:nth-child(7) { width: 13%; } /* Mobile */
+.Admin-rasw-data-table th:nth-child(8), .Admin-rasw-data-table td:nth-child(8) { width: 19%; } /* Email */
+.Admin-rasw-data-table th:nth-child(9), .Admin-rasw-data-table td:nth-child(9) { width: 6%; }  /* View */
 
 /* Enable text wrapping specifically for the email column */
-.Admin-rasw-data-table td:nth-child(9) {
-    word-break: break-all;
-    overflow-wrap: anywhere;
-    line-height: 1.2;
-    padding: 8px 4px;
-    text-align: left;
+.Admin-rasw-data-table td:nth-child(8) {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  padding: 8px 4px;
+  text-align: left;
 }
 
 .Admin-rasw-status-cell-placed-green, .Admin-rasw-status-cell-rejected {
@@ -556,288 +632,225 @@
 
 /* Responsive styles (Mobile/Tablet) */
 @media (max-width: 1024px) {
+  .Admin-rasw-layout {
+    height: 100vh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
   .Admin-rasw-main-content {
-    margin-left: 0;
-    padding: 15px;
-    height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: calc(100vh - 70px);
+    margin: 65px 0 0 0 !important;
+    padding: 10px 10px 30px 10px !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
   }
 
-  .Admin-rasw-main-content::-webkit-scrollbar { 
-    width: 10px; 
+  .Admin-rasw-main-content::-webkit-scrollbar {
+    width: 10px !important;
   }
 
-  .Admin-rasw-main-content::-webkit-scrollbar-track { 
-    background: #f0f2f5; 
+  .Admin-rasw-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
   }
 
   .Admin-rasw-main-content::-webkit-scrollbar-thumb {
-    background-color: #4EA24E; 
-    border-radius: 20px; 
-    border: 3px solid #f0f2f5; 
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  .Admin-rasw-main-content::-webkit-scrollbar-thumb:hover { 
-    background-color: #3d8a3d; 
+  .Admin-rasw-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
   }
+
   .Admin-rasw-filter-box {
-    margin: 15px 0 0 0;
-    max-width: 100%;
-    width: 100%;
+    margin: 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
   }
-  .Admin-rasw-tab-container, .Admin-rasw-filter-inputs {
-    gap: 15px; 
-    flex-wrap: wrap; 
-  }
-  .Admin-rasw-tab-inactive, .Admin-rasw-tab-active-green,
-  .Admin-rasw-filter-select, .Admin-rasw-filter-date-input {
-    flex: 1 1 45%; /* Two columns per row on tablet */
-    min-width: 150px;
-    max-width: none;
-  }
+
+  .Admin-rasw-tab-container,
   .Admin-rasw-filter-inputs {
-    flex-direction: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
+
+  .Admin-rasw-tab-inactive,
+  .Admin-rasw-tab-active-green,
+  .Admin-rasw-filter-select,
+  .Admin-rasw-filter-date-input {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
   .Admin-rasw-rounds-container {
-    margin: 15px 0 10px 0;
-    padding: 0;
-    max-width: 100%;
-    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
   }
+
   .Admin-rasw-table-section {
-    margin: 15px 0 30px 0;
-    max-width: 100%;
-    width: 100%;
-    padding: 15px;
+    margin: 0 0 25px 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 15px !important;
+    flex-grow: 1 !important;
+    min-height: 280px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 }
 
 @media (max-width: 768px) {
-  .Admin-rasw-tab-inactive, .Admin-rasw-tab-active-green,
-  .Admin-rasw-filter-select, .Admin-rasw-filter-date-input {
-    flex: 1 1 100%; /* Single column on phone */
-    max-width: 100%;
-    font-size: 1rem;
-    padding: 10px 15px;
-    line-height: 1.4;
+  .Admin-rasw-tab-inactive,
+  .Admin-rasw-tab-active-green,
+  .Admin-rasw-filter-select,
+  .Admin-rasw-filter-date-input {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+    padding: 8px 12px !important;
+    height: 45px !important;
   }
-  .Admin-rasw-tab-container {
-    flex-direction: column;
-    gap: 10px;
-  }
+
+  .Admin-rasw-tab-container,
   .Admin-rasw-filter-inputs {
-    flex-direction: column;
-    gap: 10px;
-    margin-left: 65px; /* keep inputs fully inside the grey filter box */
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
   }
-  /* Stack the "Select by" search row vertically on mobile */
+
   .Admin-rasw-search-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
   }
+
   .Admin-rasw-select-label {
-    align-self: flex-start;
+    align-self: flex-start !important;
   }
+
   .Admin-rasw-select-type-dropdown,
   .Admin-rasw-search-input-field,
   .Admin-rasw-name-register-input,
   .Admin-rasw-branch-dropdown {
-    width: 100%;
+    width: 100% !important;
   }
+
   .Admin-rasw-table-header-row {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
   }
+
   .Admin-rasw-table-actions {
-    width: auto;
-    margin-left: auto;
-    justify-content: flex-end;
-    margin-bottom: 0;
-  }
-  .Admin-rasw-print-button-container {
-    margin: 0;
-  }
-  .Admin-rasw-table-title {
-    margin-bottom: 5px;
-    font-size: 1.1rem;
-  }
-  .Admin-rasw-data-table {
-    min-width: 0;
-    width: 100%;
-  }
-  .Admin-rasw-data-table-has-data {
-    min-width: 1400px;
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
   }
 
   .Admin-rasw-table-body-scroll {
-    overflow-x: hidden;
-    overflow-y: hidden;
-  }
-  .Admin-rasw-table-body-scroll-has-data {
-    overflow-x: auto;
-    overflow-y: auto;
-  }
-
-  /* Center loading spinner and messages in table on mobile */
-  .Admin-rasw-loading-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    width: 100%;
-    min-height: 350px;
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding-bottom: 10px !important;
+    width: 100% !important;
+    display: block !important;
   }
 
-  .Admin-rasw-loading-cell {
-    display: flex !important;
-    align-items: flex-start;
-    justify-content: flex-start;
-    text-align: left;
-    padding: 40px 20px !important;
-    width: 100%;
-    height: auto;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+    display: block !important;
   }
 
-  .Admin-rasw-loading-wrapper {
-    position: relative;
-    top: 0;
-    left: 0;
-    transform: none;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
   }
 
-  .Admin-rasw-spinner {
-    margin-top: 0;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb {
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  /* Center empty state messages in table */
-  .Admin-rasw-data-table tbody {
-    display: block;
-    width: 100%;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
   }
 
-  .Admin-rasw-data-table tbody tr {
-    display: flex;
-    width: 100%;
-    flex-direction: row;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #999999 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
   }
 
-  .Admin-rasw-data-table tbody td[colspan] {
-    display: flex !important;
-    align-items: flex-start;
-    justify-content: flex-start;
-    text-align: left;
-    padding: 40px 20px !important;
-    font-size: 1.1rem;
-    width: 100%;
-    white-space: normal;
-    line-height: 1.3;
-  }
-
-  /* Mobile scrollbar styling: Green for vertical, Grey for horizontal */
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
-
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 6px;
-  }
-
-  /* Vertical scrollbar - Green (volume bar style) */
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar-thumb:vertical {
-    background: #4EA24E;
-    border-radius: 6px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar-thumb:vertical:hover {
-    background: #3d8a3d;
-    background-clip: content-box;
-  }
-
-  /* Horizontal scrollbar - Grey (volume bar style) */
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar-thumb:horizontal {
-    background: #999999;
-    border-radius: 6px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-
-  .Admin-rasw-table-body-scroll-has-data::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #666666;
-    background-clip: content-box;
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #666666 !important;
   }
 }
 
 /* Loading spinner styles */
 .Admin-rasw-loading-cell {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 100% !important;
-    min-height: 300px;
-    padding: 0;
-    border: none !important;
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
 }
 
 .Admin-rasw-loading-row {
-    display: flex;
-    width: 100%;
-    border-bottom: none !important;
+  height: 100%;
 }
 
 .Admin-rasw-loading-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 24px 40px;
-    border-radius: 16px;
-    background: #ffffff;
-    margin: 0 auto !important;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
 }
 
 .Admin-rasw-spinner {
-    width: 34px;
-    margin-top: 0;
-    height: 34px;
-    border-radius: 50%;
-    border: 4px solid rgba(78, 162, 78, 0.25);
-    border-top-color: #4EA24E;
-    animation: adminRaswSpin 0.7s linear infinite;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminRaswSpin 0.7s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes adminRaswSpin {
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .Admin-rasw-loading-text {
-    color: #111827;
-    font-weight: 700;
-    font-size: 1rem;
-    white-space: nowrap;
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 /* Dropdown styles */
 .Admin-rasw-dropdown-wrapper {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-    max-width: 262px;
+  position: relative;
+  width: 100%;
 }
 
 .Admin-rasw-dropdown-header {

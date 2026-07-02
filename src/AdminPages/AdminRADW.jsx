@@ -627,6 +627,8 @@ function AdminRADW() {
                 onSelect={handleCompanySelect}
                 placeholder="Select Company"
                 role="admin"
+                className={styles['Admin-radw-dropdown-wrapper']}
+                headerClassName={styles['Admin-radw-dropdown-header']}
               />
 
               <Dropdown
@@ -636,6 +638,8 @@ function AdminRADW() {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="admin"
+                className={styles['Admin-radw-dropdown-wrapper']}
+                headerClassName={styles['Admin-radw-dropdown-header']}
               />
 
               <Dropdown
@@ -650,6 +654,8 @@ function AdminRADW() {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="admin"
+                className={styles['Admin-radw-dropdown-wrapper']}
+                headerClassName={styles['Admin-radw-dropdown-header']}
               />
 
               <Dropdown
@@ -658,6 +664,8 @@ function AdminRADW() {
                 placeholder="End Date"
                 disabled={true}
                 role="admin"
+                className={styles['Admin-radw-dropdown-wrapper']}
+                headerClassName={styles['Admin-radw-dropdown-header']}
               />
             </div>
             
@@ -719,7 +727,7 @@ function AdminRADW() {
                       <td colSpan="8" className={styles['Admin-radw-loading-cell']}>
                         <div className={styles['Admin-radw-loading-wrapper']}>
                           <div className={styles['Admin-radw-spinner']}></div>
-                          <span className={styles['Admin-radw-loading-text']}>Loading students…</span>
+                          <span className={styles['Admin-radw-loading-text']}>Loading students...</span>
                         </div>
                       </td>
                     </tr>
@@ -746,7 +754,7 @@ function AdminRADW() {
 
                   {!isLoading && filteredData.length === 0 && (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
                         No students found matching the current filters.
                       </td>
                     </tr>

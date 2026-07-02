@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Admin_TrainerDetailsPopup.module.css';
+import Dropdown from '../common/Dropdown/Dropdown';
 
 const RequiredStar = () => <span style={{ color: '#e84343', marginLeft: '4px' }}>*</span>;
 
@@ -9,6 +10,13 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
   const [assignedCourses, setAssignedCourses] = useState(['']);
+
+  const genderOptions = [
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Other', value: 'other' }
+  ];
+
 
   useEffect(() => {
     if (!isOpen) return;
@@ -149,16 +157,15 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
             </div>
             <div className={styles['form-group']}>
             <label className={styles['form-label']}>Gender <RequiredStar /></label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className={styles['form-input']}
-              >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
+              <Dropdown
+                options={genderOptions}
+                selectedOption={gender}
+                onSelect={setGender}
+                placeholder="Select gender"
+                role="admin"
+                className={styles['trainer-dropdown-wrapper']}
+                headerClassName={styles['trainer-dropdown-header']}
+              />
             </div>
 
             <div className={`${styles['form-group']} ${styles['full-width']}`}>
@@ -166,16 +173,15 @@ const Admin_TrainerDetailsPopup = ({ isOpen, onClose, onSave, initialData = null
               <div className={styles['course-list']}>
                 {assignedCourses.map((courseValue, index) => (
                   <div className={styles['course-row']} key={`trainer-course-${index}`}>
-                    <select
-                      value={courseValue}
-                      onChange={(e) => handleCourseChange(index, e.target.value)}
-                      className={`${styles['form-input']} ${styles['course-select']}`}
-                    >
-                      <option value="">Select course</option>
-                      {availableCourses.map((courseName) => (
-                        <option key={`${courseName}-${index}`} value={courseName}>{courseName}</option>
-                      ))}
-                    </select>
+                    <Dropdown
+                      options={availableCourses}
+                      selectedOption={courseValue}
+                      onSelect={(val) => handleCourseChange(index, val)}
+                      placeholder="Select course"
+                      role="admin"
+                      className={`${styles['trainer-dropdown-wrapper']} ${styles['course-select']}`}
+                      headerClassName={styles['trainer-dropdown-header']}
+                    />
                     {assignedCourses.length > 1 && (
                       <button
                         type="button"

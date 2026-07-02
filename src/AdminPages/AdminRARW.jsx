@@ -518,14 +518,14 @@ function AdminRARW() {
       setExportProgress(30);
 
       const header = [
-          "S.No", "Name", "RegNo", "Branch", "Year-Sec",
-          "Email", "Mobile"
+        "S.No", "Name", "RegNo", "Branch", "Year-Sec",
+        "Email", "Mobile"
       ];
 
       const data = filteredData.map((item) => [
-          item["S.No"], item.Name, item.RegNo, item.Branch,
-          item["Year-Sec"],
-          item.Email, item.Mobile
+        item["S.No"], item.Name, item.RegNo, item.Branch,
+        item["Year-Sec"],
+        item.Email, item.Mobile
       ]);
 
       setExportProgress(60);
@@ -559,15 +559,15 @@ function AdminRARW() {
       const doc = new jsPDF('landscape');
 
       const tableColumn = [
-          "S.No", "Name", "RegNo", "Branch", "Year-Sec",
-          "Email", "Mobile"
+        "S.No", "Name", "RegNo", "Branch", "Year-Sec",
+        "Email", "Mobile"
       ];
 
       setExportProgress(60);
       const tableRows = filteredData.map((item) => [
-          item["S.No"], item.Name, item.RegNo, item.Branch,
-          item["Year-Sec"],
-          item.Email, item.Mobile
+        item["S.No"], item.Name, item.RegNo, item.Branch,
+        item["Year-Sec"],
+        item.Email, item.Mobile
       ]);
 
       doc.setFontSize(14);
@@ -575,10 +575,10 @@ function AdminRARW() {
 
       setExportProgress(80);
       autoTable(doc, {
-          head: [tableColumn], body: tableRows, startY: 20,
-          styles: { fontSize: 7, cellPadding: 1, overflow: 'linebreak' },
-          headStyles: { fillColor: [78, 162, 78], textColor: 255, fontStyle: 'bold' },
-          margin: { top: 20, left: 5, right: 5 },
+        head: [tableColumn], body: tableRows, startY: 20,
+        styles: { fontSize: 7, cellPadding: 1, overflow: 'linebreak' },
+        headStyles: { fillColor: [78, 162, 78], textColor: 255, fontStyle: 'bold' },
+        margin: { top: 20, left: 5, right: 5 },
       });
 
       setExportProgress(90);
@@ -606,10 +606,10 @@ function AdminRARW() {
           <div className={styles['Admin-rarw-filter-box']}>
             {/* UPDATED CLASSES: Admin-rarw-tab-container, Admin-rarw-tab-inactive, Admin-rarw-tab-active-green */}
             <div className={styles['Admin-rarw-tab-container']}>
-              <div className={styles['Admin-rarw-tab-active-green']}>Round wise <br/> Analysis</div>
-              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-company')} style={{ cursor: 'pointer' }}>Company wise <br/> Analysis</div>
-              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-department')} style={{ cursor: 'pointer' }}>Department wise <br/>Analysis</div>
-              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-student')} style={{ cursor: 'pointer' }}>Student wise<br/> Analysis</div>
+              <div className={styles['Admin-rarw-tab-active-green']}>Round wise <br /> Analysis</div>
+              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-company')} style={{ cursor: 'pointer' }}>Company wise <br /> Analysis</div>
+              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-department')} style={{ cursor: 'pointer' }}>Department wise <br />Analysis</div>
+              <div className={styles['Admin-rarw-tab-inactive']} onClick={() => navigate('/admin-report-analysis-student')} style={{ cursor: 'pointer' }}>Student wise<br /> Analysis</div>
             </div>
 
             {/* UPDATED CLASSES: Admin-rarw-filter-inputs, Admin-rarw-filter-select, Admin-rarw-filter-date-input */}
@@ -717,7 +717,7 @@ function AdminRARW() {
                       <td colSpan="9" className={styles['Admin-rarw-loading-cell']}>
                         <div className={styles['Admin-rarw-loading-wrapper']}>
                           <div className={styles['Admin-rarw-spinner']}></div>
-                          <span className={styles['Admin-rarw-loading-text']}>Loading studentsâ€¦</span>
+                          <span className={styles['Admin-rarw-loading-text']}>Loading students...</span>
                         </div>
                       </td>
                     </tr>
@@ -774,7 +774,7 @@ function AdminRARW() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>
                         {selectedCompanyJob ? 'No students found for this round.' : 'Please select a company and drive to view students.'}
                       </td>
                     </tr>
@@ -811,7 +811,7 @@ function AdminRARW() {
 
       <ExportProgressAlert
         isOpen={exportPopupState === 'progress'}
-        onClose={() => {}}
+        onClose={() => { }}
         progress={exportProgress}
         exportType={exportType}
       />
