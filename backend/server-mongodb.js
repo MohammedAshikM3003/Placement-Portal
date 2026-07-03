@@ -4945,7 +4945,7 @@ app.get('/api/public/college-images', async (req, res) => {
         // OPTIMIZATION: Add timeout protection and error handling
         const admin = await AdminModel.findOne({ adminLoginID: 'admin1000' })
             .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
-            .maxTimeMS(3000) // 3s timeout
+            .maxTimeMS(15000) // 15s timeout
             .lean()
             .catch(err => {
                 console.log('⚠️ College images query timeout:', err.message);

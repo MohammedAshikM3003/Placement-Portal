@@ -50,31 +50,11 @@ export const BannerSkeleton = () => (
     <div 
       className={`${styles.skeletonBlock} ${styles.shimmer}`} 
       style={{ 
-        flex: '1',
-        maxWidth: '1100px', 
-        minWidth: '500px',
+        width: '100%',
         height: '160px', 
         borderRadius: '12px' 
       }} 
     />
-    <div className={styles.certificatesGroup}>
-      <div 
-        className={`${styles.skeletonBlock} ${styles.shimmer}`} 
-        style={{ 
-          width: '150px', 
-          height: '150px', 
-          borderRadius: '50%'
-        }} 
-      />
-      <div 
-        className={`${styles.skeletonBlock} ${styles.shimmer}`} 
-        style={{ 
-          width: '150px', 
-          height: '150px', 
-          borderRadius: '50%'
-        }} 
-      />
-    </div>
   </div>
 );
 

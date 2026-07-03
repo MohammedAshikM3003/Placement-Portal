@@ -259,7 +259,7 @@ export const fetchCollegeImagesPublic = async () => {
   try {
     // Public endpoint requires adminLoginID param
     const adminLoginID = localStorage.getItem('adminLoginID') || 'admin1000';
-    const data = await fastFetch(`${API_BASE_URL}/public/college-images/${adminLoginID}`, {}, 10000);
+    const data = await fastFetch(`${API_BASE_URL}/public/college-images/${adminLoginID}`, {}, 45000);
     if (data.success && data.data) {
       const resolved = resolveImages(data.data);
       setCache(key, resolved);
@@ -283,7 +283,7 @@ export const fetchCollegeImagesPublic = async () => {
         const adminData = await fastFetch(
           `${API_BASE_URL}/admin/profile/${adminLoginID}`,
           { headers: { Authorization: `Bearer ${authToken}` } },
-          10000
+          45000
         );
         if (adminData.success && adminData.data) {
           const resolved = resolveImages(adminData.data);

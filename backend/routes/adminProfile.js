@@ -43,7 +43,7 @@ router.get('/college-images/:adminLoginID', async (req, res) => {
     
     const admin = await Admin.findOne({ adminLoginID: loginID })
       .select('collegeBanner naacCertificate nbaCertificate collegeLogo')
-      .maxTimeMS(3000)
+      .maxTimeMS(15000)
       .lean();
     
     if (!admin) {
