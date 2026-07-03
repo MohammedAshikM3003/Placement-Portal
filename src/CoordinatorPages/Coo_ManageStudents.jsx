@@ -9,6 +9,7 @@ import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from "../services/mongoDBService.jsx";
 import { createBlockNotifications } from '../services/blockNotificationService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 
 // IMPORTS for Export Functionality
 import * as XLSX from 'xlsx';
@@ -1047,12 +1048,17 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     };
       
 
-      const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
   };
 
-    return (
+  const isEditActive = selectedStudentIds.size === 1 && !blockInProgress && !unblockInProgress && !deleteInProgress;
+  const isBlockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !hasBlockedSelection;
+  const isUnblockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !hasUnblockedSelection;
+  const isDeleteActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress;
+
+  return (
         <>
             <Navbar   onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
             <div className={styles["co-ms-layout"]}>
@@ -1156,61 +1162,44 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className={styles["co-ms-section-filter"]}>
                                         <div className={styles["co-ms-section-filter-label"]}>Section</div>
-                                        <select
-                                            className={styles["co-ms-section-filter-select"]}
-                                            value={selectedSection}
-                                            onChange={(e) => setSelectedSection(e.target.value)}
-                                        >
-                                            <option value="">Section</option>
-                                            {sectionOptions.map((sec) => (
-                                                <option key={sec} value={sec}>
-                                                    {sec}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Dropdown
+                                            options={sectionOptions}
+                                            selectedOption={selectedSection}
+                                            onSelect={setSelectedSection}
+                                            placeholder="Section"
+                                            role="coordinator"
+                                        />
                                     </div>
                                     
                                     <div className={styles["co-ms-yearsem-range"]}>
                                         <div className={styles["co-ms-yearsem-range-label"]}>Year-Sem</div>
                                         <div className={styles["co-ms-yearsem-range-inputs"]}>
                                             <div className={styles["co-ms-yearsem-range-field"]}>
-                                                <select
-                                                    className={styles["co-ms-yearsem-range-select"]}
-                                                    value={selectedYear}
-                                                    onChange={(e) => {
-                                                        const year = (e.target.value || '').toString();
-                                                        setSelectedYear(year);
+                                                <Dropdown
+                                                    options={YEAR_OPTIONS}
+                                                    selectedOption={selectedYear}
+                                                    onSelect={(val) => {
+                                                        setSelectedYear(val);
                                                         setSelectedSem('');
                                                     }}
-                                                >
-                                                    <option value="">Year</option>
-                                                    {YEAR_OPTIONS.map((y) => (
-                                                        <option key={y} value={y}>
-                                                            {y}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    placeholder="Year"
+                                                    role="coordinator"
+                                                />
                                             </div>
 
                                             <div className={styles["co-ms-yearsem-range-sep"]}>-</div>
 
                                             <div className={styles["co-ms-yearsem-range-field"]}>
-                                                <select
-                                                    className={styles["co-ms-yearsem-range-select"]}
-                                                    value={selectedSem}
+                                                <Dropdown
+                                                    options={SEM_OPTIONS_BY_YEAR[selectedYear] || []}
+                                                    selectedOption={selectedSem}
+                                                    onSelect={setSelectedSem}
+                                                    placeholder="Sem"
+                                                    role="coordinator"
                                                     disabled={!selectedYear}
-                                                    onChange={(e) => setSelectedSem(e.target.value)}
-                                                >
-                                                    <option value="">Sem</option>
-                                                    {(SEM_OPTIONS_BY_YEAR[selectedYear] || []).map((s) => (
-                                                        <option key={s} value={s}>
-                                                            {s}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -1268,10 +1257,10 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             )}
                         </div>
 
-                        {/* Action Cards Section - No change */}
+                        {/* Action Cards Section */}
                         <div className={styles["co-ms-action-cards-section"]}>
-                            <div className={styles["co-ms-action-card"]}>
-                                <h4 className={styles["co-ms-action-header"]}>Semester</h4>
+                            <div className={cx(styles["co-ms-action-card"], styles["card-semester-active"])}>
+                                <h4 className={styles["co-ms-header-semester-active"]}>Semester</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Update <br/>Semester <br/>Wise<br/> Student <br/> CGPA
                                 </p>
@@ -1287,8 +1276,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                 </button>
                             </div>
 
-                            <div className={styles["co-ms-action-card"]}>
-                                <h4 className={styles["co-ms-action-header"]} >Editing</h4>
+                            <div className={cx(styles["co-ms-action-card"], isEditActive && styles["card-edit-active"])}>
+                                <h4 className={isEditActive ? styles["co-ms-header-edit-active"] : styles["co-ms-header-disabled"]} >Editing</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Select <br/>Student <br/>Record<br/> Before <br/> Editing
                                 </p>
@@ -1303,8 +1292,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                     disabled={selectedStudentIds.size !== 1}>Edit</button>
                             </div>
                             
-                            <div className={styles["co-ms-action-card"]}>
-                                <h4 className={styles["co-ms-action-header"]}>Blocking</h4>
+                            <div className={cx(styles["co-ms-action-card"], isBlockActive && styles["card-block-active"])}>
+                                <h4 className={isBlockActive ? styles["co-ms-header-block-active"] : styles["co-ms-header-disabled"]}>Blocking</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Select <br/>Student<br/> Record <br/>Before<br/> Blocking
                                 </p>
@@ -1317,8 +1306,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                 </button>
                             </div>
                             
-                            <div className={styles["co-ms-action-card"]}>
-                                <h4 className={styles["co-ms-action-header"]}>Unblocking</h4>
+                            <div className={cx(styles["co-ms-action-card"], isUnblockActive && styles["card-unblock-active"])}>
+                                <h4 className={isUnblockActive ? styles["co-ms-header-unblock-active"] : styles["co-ms-header-disabled"]}>Unblocking</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Select <br/>Student<br/>Record<br/> Before<br/> Unblocking
                                 </p>
@@ -1331,8 +1320,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                 </button>
                             </div>
                             
-                            <div className={cx(styles["co-ms-action-card"], styles["co-ms-delete-card"]) }>
-                                <h4 className={styles["co-ms-action-header"]}>Deleting</h4>
+                            <div className={cx(styles["co-ms-action-card"], styles["co-ms-delete-card"], isDeleteActive && styles["card-delete-active"]) }>
+                                <h4 className={isDeleteActive ? styles["co-ms-header-delete-active"] : styles["co-ms-header-disabled"]}>Deleting</h4>
                                 <p className={styles["co-ms-action-description"]}>
                                     Select <br/> Student <br/> Record <br/> Before <br/>Deleting
                                 </p>

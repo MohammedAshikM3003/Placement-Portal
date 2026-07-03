@@ -16,6 +16,7 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 
 // Import CSS Files
 import styles from './Coo_ReportAnalysisCW.module.css'; 
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 
 // Import necessary assets for the Navbar (Adminicon)
 import Adminicon from "../assets/Adminicon.png";
@@ -632,85 +633,44 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
             </div>
 
             <div className={styles["co-ras-filter-inputs"]}>
-              <div className={styles["co-ras-dropdown-wrapper"]}>
-                <div 
-                  className={styles["co-ras-dropdown-header"]} 
-                  onClick={() => setIsCompanyOpen(!isCompanyOpen)}
-                >
-                  <span>{selectedCompany || 'Select Company'}</span>
-                  <span className={styles["co-ras-dropdown-arrow"]}>{isCompanyOpen ? '▲' : '▼'}</span>
-                </div>
-                {isCompanyOpen && (
-                  <div className={styles["co-ras-dropdown-menu"]}>
-                    {uniqueCompanies.map((company, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ras-dropdown-item"]}
-                        onClick={() => handleCompanySelect(company)}
-                      >
-                        {company}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={uniqueCompanies}
+                selectedOption={selectedCompany}
+                onSelect={handleCompanySelect}
+                placeholder="Select Company"
+                role="coordinator"
+              />
 
-              <div className={styles["co-ras-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ras-dropdown-header"]} ${!selectedCompany ? styles["co-ras-dropdown-disabled"] : ''}`}
-                  onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
-                >
-                  <span>{selectedJobRole || 'Job Role'}</span>
-                  <span className={styles["co-ras-dropdown-arrow"]}>{isJobRoleOpen ? '▲' : '▼'}</span>
-                </div>
-                {isJobRoleOpen && selectedCompany && (
-                  <div className={styles["co-ras-dropdown-menu"]}>
-                    {availableJobRoles.map((jobRole, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ras-dropdown-item"]}
-                        onClick={() => handleJobRoleSelect(jobRole)}
-                      >
-                        {jobRole}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableJobRoles}
+                selectedOption={selectedJobRole}
+                onSelect={handleJobRoleSelect}
+                placeholder="Job Role"
+                disabled={!selectedCompany}
+                role="coordinator"
+              />
 
-              <div className={styles["co-ras-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ras-dropdown-header"]} ${!selectedCompanyJob ? styles["co-ras-dropdown-disabled"] : ''}`}
-                  onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-                >
-                  <span>{startDate ? formatDisplayDate(startDate) : 'Start Date'}</span>
-                  <span className={styles["co-ras-dropdown-arrow"]}>{isStartDateOpen ? '▲' : '▼'}</span>
-                </div>
-                {isStartDateOpen && selectedCompanyJob && (
-                  <div className={styles["co-ras-dropdown-menu"]}>
-                    {availableDates.map((dateObj, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ras-dropdown-item"]}
-                        onClick={() => handleStartDateSelect(dateObj)}
-                      >
-                        {formatDisplayDate(dateObj.date)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableDates.map(dateObj => formatDisplayDate(dateObj.date))}
+                selectedOption={startDate ? formatDisplayDate(startDate) : null}
+                onSelect={(formattedDate) => {
+                  const matchedDateObj = availableDates.find(d => formatDisplayDate(d.date) === formattedDate);
+                  if (matchedDateObj) {
+                    handleStartDateSelect(matchedDateObj);
+                  }
+                }}
+                placeholder="Start Date"
+                disabled={!selectedCompanyJob}
+                role="coordinator"
+              />
 
-              {/* End Date - Auto-populated from selected drive */}
-              <div className={styles["co-ras-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ras-dropdown-header"]} ${styles["co-ras-dropdown-disabled"]}`}
-                  title="End date is automatically set based on the selected drive"
-                >
-                  <span>{endDate ? formatDisplayDate(endDate) : 'End Date'}</span>
-                  <span className={styles["co-ras-dropdown-arrow"]}>✓</span>
-                </div>
-              </div>
+              <Dropdown
+                options={endDate ? [formatDisplayDate(endDate)] : []}
+                selectedOption={endDate ? formatDisplayDate(endDate) : null}
+                placeholder="End Date"
+                disabled={true}
+                role="coordinator"
+              />
             </div>
           </div>
 

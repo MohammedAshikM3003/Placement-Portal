@@ -14,6 +14,7 @@ import Infosis from './assets/LandingInfosys.svg';
 import Zoho from './assets/LandingZoho.svg';
 import WiproLogo from './assets/LandingWipro.svg';
 import TCS from './assets/LandingTcs.svg';
+import TPCellGroup from './assets/T&P cell whole group.png';
 
 // --- Navbar Assets ---
 import Adminicon from "./assets/Adminicon.png";
@@ -210,6 +211,10 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
   return (
     <div className={styles['placement-container-wrapper']} id="about">
       <div className={styles['placement-container']}>
+        <section className={styles['tp-cell-section']}>
+          <img src={TPCellGroup} alt="Training & Placement Cell Logo" className={styles['tp-cell-logo']} />
+          <h2 className={styles['tp-cell-title']}>Training & Placement Cell</h2>
+        </section>
         {!isLoading && students.length > 0 && (
           <>
             <h2 className={styles['section-title']}>PLACEMENT HIGHLIGHTS</h2>

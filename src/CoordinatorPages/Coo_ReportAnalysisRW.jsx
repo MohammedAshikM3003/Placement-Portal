@@ -11,6 +11,7 @@ import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 import styles from './Coo_ReportAnalysisRW.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 import Adminicon from "../assets/Adminicon.png";
 import CoordFeedbackIcon from "../assets/CoordFeedbackicon.svg";
 import CooRAFeedbackView from './Coo_RA_FeedbackView';
@@ -763,83 +764,44 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
             </div>
 
             <div className={styles["co-ram-filter-inputs"]}>
-              <div className={styles["co-ram-dropdown-wrapper"]}>
-                <div 
-                  className={styles["co-ram-dropdown-header"]} 
-                  onClick={() => setIsCompanyOpen(!isCompanyOpen)}
-                >
-                  <span>{selectedCompany || 'All Companies'}</span>
-                  <span className={styles["co-ram-dropdown-arrow"]}>{isCompanyOpen ? '▲' : '▼'}</span>
-                </div>
-                {isCompanyOpen && (
-                  <div className={styles["co-ram-dropdown-menu"]}>
-                    {uniqueCompanies.map((company, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ram-dropdown-item"]}
-                        onClick={() => handleCompanySelect(company)}
-                      >
-                        {company}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={uniqueCompanies}
+                selectedOption={selectedCompany}
+                onSelect={handleCompanySelect}
+                placeholder="All Companies"
+                role="coordinator"
+              />
 
-              <div className={styles["co-ram-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ram-dropdown-header"]} ${!selectedCompany ? styles["co-ram-dropdown-disabled"] : ''}`}
-                  onClick={() => selectedCompany && setIsJobRoleOpen(!isJobRoleOpen)}
-                >
-                  <span>{selectedJobRole || 'Job Role'}</span>
-                  <span className={styles["co-ram-dropdown-arrow"]}>{isJobRoleOpen ? '▲' : '▼'}</span>
-                </div>
-                {isJobRoleOpen && selectedCompany && (
-                  <div className={styles["co-ram-dropdown-menu"]}>
-                    {availableJobRoles.map((jobRole, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ram-dropdown-item"]}
-                        onClick={() => handleJobRoleSelect(jobRole)}
-                      >
-                        {jobRole}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableJobRoles}
+                selectedOption={selectedJobRole}
+                onSelect={handleJobRoleSelect}
+                placeholder="Job Role"
+                disabled={!selectedCompany}
+                role="coordinator"
+              />
 
-              <div className={styles["co-ram-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ram-dropdown-header"]} ${!selectedCompanyJob ? styles["co-ram-dropdown-disabled"] : ''}`}
-                  onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-                >
-                  <span>{startDateFilter ? formatDisplayDate(startDateFilter) : 'Start Date'}</span>
-                  <span className={styles["co-ram-dropdown-arrow"]}>{isStartDateOpen ? '▲' : '▼'}</span>
-                </div>
-                {isStartDateOpen && selectedCompanyJob && (
-                  <div className={styles["co-ram-dropdown-menu"]}>
-                    {availableDates.map((dateObj, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-ram-dropdown-item"]}
-                        onClick={() => handleStartDateSelect(dateObj)}
-                      >
-                        {formatDisplayDate(dateObj.date)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableDates.map(dateObj => formatDisplayDate(dateObj.date))}
+                selectedOption={startDateFilter ? formatDisplayDate(startDateFilter) : null}
+                onSelect={(formattedDate) => {
+                  const matchedDateObj = availableDates.find(d => formatDisplayDate(d.date) === formattedDate);
+                  if (matchedDateObj) {
+                    handleStartDateSelect(matchedDateObj);
+                  }
+                }}
+                placeholder="Start Date"
+                disabled={!selectedCompanyJob}
+                role="coordinator"
+              />
 
-              <div className={styles["co-ram-dropdown-wrapper"]}>
-                <div 
-                  className={`${styles["co-ram-dropdown-header"]} ${styles["co-ram-dropdown-disabled"]}`}
-                  style={{ cursor: 'default', opacity: 0.9 }}
-                >
-                  <span>{endDateFilter ? formatDisplayDate(endDateFilter) : 'End Date'}</span>
-                </div>
-              </div>
+              <Dropdown
+                options={endDateFilter ? [formatDisplayDate(endDateFilter)] : []}
+                selectedOption={endDateFilter ? formatDisplayDate(endDateFilter) : null}
+                placeholder="End Date"
+                disabled={true}
+                role="coordinator"
+              />
             </div>
           </div>
 

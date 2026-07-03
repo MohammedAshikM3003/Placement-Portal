@@ -46,7 +46,7 @@
     margin-top: 0px;
     margin-right: 20px;
     flex-shrink: 0;
-    height: 200px;
+    height: 305px;
 }
   .co-ms-table-container::-webkit-scrollbar {
     height:12px;
@@ -72,7 +72,7 @@
     display: flex;
     flex-direction: column;
     margin-left: 0px;
-    height: 200px;
+    height: 305px;
 }
 
 .co-ms-filter-header-container {
@@ -597,15 +597,38 @@
     background-color: #ffffff;
     border-radius: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #808080;
+    border: 2px solid #d23b42;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.co-ms-action-header {
+.co-ms-header-disabled {
     font-size: 1.15rem;
     font-weight: 720;
     margin-bottom: 5px;
     margin-top: 0px;
-    color: #dc3545;
+    color: #888888 !important;
+    transition: color 0.2s ease;
+}
+
+.co-ms-header-semester-active,
+.co-ms-header-edit-active,
+.co-ms-header-block-active,
+.co-ms-header-unblock-active,
+.co-ms-header-delete-active {
+    font-size: 1.15rem;
+    font-weight: 720;
+    margin-bottom: 5px;
+    margin-top: 0px;
+    color: #d23b42 !important;
+    transition: color 0.2s ease;
+}
+
+.card-edit-active,
+.card-block-active,
+.card-unblock-active,
+.card-delete-active,
+.card-semester-active {
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.25) !important;
 }
 
 .co-ms-action-description {
@@ -2025,8 +2048,6 @@ overflow: hidden  ;
 
 /* AI Filter styles for Coordinator (Red Theme) */
 .co-ms-filter-section-ai-mode {
-    min-height: auto !important;
-    height: auto !important;
 }
 
 .co-ms-ai-toggle-btn {
@@ -2088,7 +2109,8 @@ overflow: hidden  ;
 
 .co-ms-ai-filter-input {
     width: 100%;
-    min-height: 110px;
+    flex: 1;
+    min-height: 0;
     border: 2px solid #d23b42;
     border-radius: 14px;
     background: #ffffff;

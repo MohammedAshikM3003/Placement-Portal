@@ -22,7 +22,7 @@
 }
 
 .dropdown-header:hover {
-    border-color: #4EA24E;
+    border-color: var(--dropdown-hover-color, #4EA24E);
 }
 
 .dropdown-header-disabled {

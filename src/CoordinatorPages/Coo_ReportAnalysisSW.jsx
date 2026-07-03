@@ -15,6 +15,7 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 
 // Import CSS Files
 import styles from './Coo_ReportAnalysisSW.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 
 // Helper function to read coordinator data from storage
 const readStoredCoordinatorData = () => {
@@ -521,149 +522,43 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
 
             {/* First Search Row - Company, Job Role, Dates */}
             <div className={styles["co-rat-filter-inputs"]}>
-              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="company">
-                <div 
-                  className={styles["co-rat-dropdown-header"]} 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('[Dropdown] Company clicked, current state:', isCompanyOpen);
-                    console.log('[Dropdown] Available companies:', availableCompanies);
-                    setIsCompanyOpen(!isCompanyOpen);
-                    setIsJobRoleOpen(false);
-                    setIsStartDateOpen(false);
-                    setIsEndDateOpen(false);
-                  }}
-                >
-                  <span>{companyFilter || 'Select Company'}</span>
-                  <span className={styles["co-rat-dropdown-arrow"]}>{isCompanyOpen ? '▲' : '▼'}</span>
-                </div>
-                {isCompanyOpen && (
-                  <div className={styles["co-rat-dropdown-menu"]}>
-                    <div
-                      className={styles["co-rat-dropdown-item"]}
-                      onClick={(e) => { e.stopPropagation(); setCompanyFilter('Select Company'); setIsCompanyOpen(false); }}
-                    >
-                      Select Company
-                    </div>
-                    {availableCompanies.map((company, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-rat-dropdown-item"]}
-                        onClick={(e) => { e.stopPropagation(); setCompanyFilter(company); setIsCompanyOpen(false); }}
-                      >
-                        {company}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableCompanies}
+                selectedOption={companyFilter && companyFilter !== 'Select Company' ? companyFilter : null}
+                onSelect={(val) => setCompanyFilter(val || 'Select Company')}
+                placeholder="Select Company"
+                role="coordinator"
+              />
 
-              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="jobrole">
-                <div 
-                  className={styles["co-rat-dropdown-header"]}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('[Dropdown] Job Role clicked, current state:', isJobRoleOpen);
-                    console.log('[Dropdown] Available job roles:', availableJobRoles);
-                    setIsJobRoleOpen(!isJobRoleOpen);
-                    setIsCompanyOpen(false);
-                    setIsStartDateOpen(false);
-                    setIsEndDateOpen(false);
-                  }}
-                >
-                  <span>{jobRoleFilter || 'Job Role'}</span>
-                  <span className={styles["co-rat-dropdown-arrow"]}>{isJobRoleOpen ? '▲' : '▼'}</span>
-                </div>
-                {isJobRoleOpen && (
-                  <div className={styles["co-rat-dropdown-menu"]}>
-                    <div
-                      className={styles["co-rat-dropdown-item"]}
-                      onClick={(e) => { e.stopPropagation(); setJobRoleFilter('Job Role'); setIsJobRoleOpen(false); }}
-                    >
-                      Job Role
-                    </div>
-                    {availableJobRoles.map((role, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-rat-dropdown-item"]}
-                        onClick={(e) => { e.stopPropagation(); setJobRoleFilter(role); setIsJobRoleOpen(false); }}
-                      >
-                        {role}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableJobRoles}
+                selectedOption={jobRoleFilter && jobRoleFilter !== 'Job Role' ? jobRoleFilter : null}
+                onSelect={(val) => setJobRoleFilter(val || 'Job Role')}
+                placeholder="Job Role"
+                role="coordinator"
+              />
 
-              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="startdate">
-                <div 
-                  className={styles["co-rat-dropdown-header"]}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsStartDateOpen(!isStartDateOpen);
-                    setIsCompanyOpen(false);
-                    setIsJobRoleOpen(false);
-                    setIsEndDateOpen(false);
-                  }}
-                >
-                  <span>{startDateFilter ? formatDisplayDate(startDateFilter) : 'Start Date'}</span>
-                  <span className={styles["co-rat-dropdown-arrow"]}>{isStartDateOpen ? '▲' : '▼'}</span>
-                </div>
-                {isStartDateOpen && (
-                  <div className={styles["co-rat-dropdown-menu"]}>
-                    <div
-                      className={styles["co-rat-dropdown-item"]}
-                      onClick={(e) => { e.stopPropagation(); setStartDateFilter(''); setIsStartDateOpen(false); }}
-                    >
-                      Start Date
-                    </div>
-                    {availableDates.map((date, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-rat-dropdown-item"]}
-                        onClick={(e) => { e.stopPropagation(); setStartDateFilter(date); setIsStartDateOpen(false); }}
-                      >
-                        {formatDisplayDate(date)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableDates.map(date => formatDisplayDate(date))}
+                selectedOption={startDateFilter ? formatDisplayDate(startDateFilter) : null}
+                onSelect={(formattedDate) => {
+                  const matched = availableDates.find(d => formatDisplayDate(d) === formattedDate);
+                  setStartDateFilter(matched || '');
+                }}
+                placeholder="Start Date"
+                role="coordinator"
+              />
 
-              <div className={styles["co-rat-dropdown-wrapper"]} data-dropdown="enddate">
-                <div 
-                  className={styles["co-rat-dropdown-header"]}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEndDateOpen(!isEndDateOpen);
-                    setIsCompanyOpen(false);
-                    setIsJobRoleOpen(false);
-                    setIsStartDateOpen(false);
-                  }}
-                >
-                  <span>{endDateFilter ? formatDisplayDate(endDateFilter) : 'End Date'}</span>
-                  <span className={styles["co-rat-dropdown-arrow"]}>{isEndDateOpen ? '▲' : '▼'}</span>
-                </div>
-                {isEndDateOpen && (
-                  <div className={styles["co-rat-dropdown-menu"]}>
-                    <div
-                      className={styles["co-rat-dropdown-item"]}
-                      onClick={(e) => { e.stopPropagation(); setEndDateFilter(''); setIsEndDateOpen(false); }}
-                    >
-                      End Date
-                    </div>
-                    {availableDates.map((date, index) => (
-                      <div
-                        key={index}
-                        className={styles["co-rat-dropdown-item"]}
-                        onClick={(e) => { e.stopPropagation(); setEndDateFilter(date); setIsEndDateOpen(false); }}
-                      >
-                        {formatDisplayDate(date)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Dropdown
+                options={availableDates.map(date => formatDisplayDate(date))}
+                selectedOption={endDateFilter ? formatDisplayDate(endDateFilter) : null}
+                onSelect={(formattedDate) => {
+                  const matched = availableDates.find(d => formatDisplayDate(d) === formattedDate);
+                  setEndDateFilter(matched || '');
+                }}
+                placeholder="End Date"
+                role="coordinator"
+              />
             </div>
             
             {/* Second Search Row - Name, Branch, Mobile/Email */}
@@ -677,14 +572,15 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
               />
              
               <div className={styles["co-rat-select-label"]}>Select by:</div>
-              <select 
-                className={styles["co-rat-select-type-dropdown"]} 
-                value={searchType} 
-                onChange={(e) => { setSearchType(e.target.value); setSearchError(''); }}
-              >
-                <option value="Mobile number">Mobile number</option>
-                <option value="Email">Email</option>
-              </select>
+              <Dropdown
+                options={['Mobile number', 'Email']}
+                selectedOption={searchType}
+                onSelect={(value) => { setSearchType(value); setSearchError(''); }}
+                placeholder="Select by"
+                role="coordinator"
+                className={styles["co-rat-select-type-dropdown-wrapper"]}
+                headerClassName={styles["co-rat-select-type-header"]}
+              />
               <input 
                 type="text" 
                 placeholder={searchType === 'Mobile number' ? 'Enter Mobile Number' : 'Enter Email'} 

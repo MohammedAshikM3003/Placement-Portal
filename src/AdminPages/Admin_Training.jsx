@@ -396,7 +396,7 @@ function AdminTraining({ onLogout }) {
     setCardToDelete(null);
   };
 
-  const formatDateForDisplay = (rawDate) => {
+  function formatDateForDisplay(rawDate) {
     if (!rawDate) return '-';
     const parsed = new Date(rawDate);
     if (Number.isNaN(parsed.getTime())) return '-';
@@ -404,9 +404,9 @@ function AdminTraining({ onLogout }) {
     const month = String(parsed.getMonth() + 1).padStart(2, '0');
     const year = parsed.getFullYear();
     return `${day}-${month}-${year}`;
-  };
+  }
 
-  const parseScheduleCourses = (scheduleRecord) => {
+  function parseScheduleCourses(scheduleRecord) {
     // Handle batch assignments (courseName field)
     if (scheduleRecord?.courseName) {
       return [(scheduleRecord.courseName || '').toString().trim()].filter(Boolean);
@@ -420,7 +420,7 @@ function AdminTraining({ onLogout }) {
     });
 
     return [...new Set(courses)];
-  };
+  }
 
   function normalizeDateKey(rawDate) {
     if (!rawDate) return '';
@@ -448,7 +448,7 @@ function AdminTraining({ onLogout }) {
     return yearAliases[compact] || compact;
   }
 
-  const parseSchedulePhases = (scheduleRecord) => {
+  function parseSchedulePhases(scheduleRecord) {
     const phases = Array.isArray(scheduleRecord?.phases) ? scheduleRecord.phases : [];
     return phases
       .map((phase) => ({
@@ -459,9 +459,9 @@ function AdminTraining({ onLogout }) {
           : []
       }))
       .filter((phase) => phase.phaseNumber || phase.applicableYear || phase.applicableCourses.length > 0);
-  };
+  }
 
-  const getSelectedAttendanceSchedule = () => {
+  function getSelectedAttendanceSchedule() {
     const companyKey = attendanceSelectedCompany.toString().trim().toLowerCase();
     const courseKey = attendanceSelectedCourse.toString().trim().toLowerCase();
     const yearKey = normalizeYearToken(attendanceSelectedApplicableYear);

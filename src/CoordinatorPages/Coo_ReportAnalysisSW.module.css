@@ -1026,6 +1026,17 @@ display: inline-block;
 .co-rat-export-popup-close-btn:active {
   transform: scale(0.98);
 }
+
+.co-rat-select-type-dropdown-wrapper {
+  width: 170px !important;
+  max-width: 170px !important;
+  min-width: 170px !important;
+}
+
+.co-rat-select-type-header {
+  height: 39px !important;
+}
+
 @media (max-width: 768px) {
 /* 1. Main Layout Adjustments for Mobile */
 .co-main-content {

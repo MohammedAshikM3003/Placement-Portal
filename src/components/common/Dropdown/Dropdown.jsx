@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './Dropdown.module.css';
 
 const roleColors = {
-  admin: { thumb: '#4EA24E', hover: '#3d8a3d' },
-  coo: { thumb: '#D23B42', hover: '#b32d34' },
-  coordinator: { thumb: '#D23B42', hover: '#b32d34' },
-  stu: { thumb: '#2085f6', hover: '#4338CA' },
-  student: { thumb: '#2085f6', hover: '#4338CA' }
+  admin: { thumb: '#4EA24E', hover: '#3d8a3d', borderHover: '#4EA24E' },
+  coo: { thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42' },
+  coordinator: { thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42' },
+  stu: { thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6' },
+  student: { thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6' }
 };
 
 const Dropdown = ({ 
@@ -69,6 +69,9 @@ const Dropdown = ({
   return (
     <div 
       className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''} ${className}`} 
+      style={{
+        '--dropdown-hover-color': themeColors.borderHover
+      }}
       ref={(node) => {
         dropdownRef.current = node;
         if (ref) {

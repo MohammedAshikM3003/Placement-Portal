@@ -1321,3 +1321,65 @@
     font-size: 0.9rem;
   }
 }
+
+/* --- T&P Cell Card --- */
+.tp-cell-section {
+  background-color: #cfcfcf;
+  border-radius: 15px;
+  padding: 30px 40px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-top: 10px;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  max-width: 1450px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.tp-cell-logo {
+  max-height: 120px;
+  width: auto;
+  object-fit: contain;
+}
+
+.tp-cell-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333333;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .tp-cell-section {
+    flex-direction: column;
+    padding: 25px 20px;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .tp-cell-logo {
+    max-height: 100px;
+  }
+  .tp-cell-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .tp-cell-section {
+    padding: 20px 15px;
+    gap: 10px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  .tp-cell-logo {
+    max-height: 80px;
+  }
+  .tp-cell-title {
+    font-size: 1.5rem;
+  }
+}
