@@ -11,7 +11,7 @@ import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
 
 // Import the clearSidebarCache function
-import { clearSidebarCache } from '../components/Sidebar/Sidebar';
+import { sidebarCache } from '../components/Sidebar/sidebarCache';
 import profileUtils from '../components/Sidebar/profileUtils';
 const { resolveProfileUrl: resolveProfileUrlShared, canonicalStorePath } = profileUtils;
 
@@ -476,7 +476,7 @@ export const AuthProvider = ({ children }) => {
         };
 
         // Clear any cached sidebar data from a previous user
-        clearSidebarCache();
+        sidebarCache.clear();
 
         // 2. Dispatch success IMMEDIATELY to unlock route guards
         dispatch({
@@ -730,7 +730,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('userRole');
 
       // Clear sidebar cache to prevent profile data clashes between users
-      clearSidebarCache();
+      sidebarCache.clear();
 
       // Update global state
       dispatch({ type: AUTH_ACTIONS.LOGOUT });

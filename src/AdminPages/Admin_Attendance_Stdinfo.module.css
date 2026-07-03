@@ -1,4 +1,4 @@
-﻿/* Green floating label for Name input */
+/* Green floating label for Name input */
 
 .ad-train-att-filter-input-green {
   border: 2px solid #4CAF50;
@@ -439,9 +439,7 @@
 
   flex-direction: column;
 
-  height: 100vh;
-
-  overflow: hidden;
+  min-height: 100vh;
 
 }
 
@@ -453,8 +451,6 @@
 
   flex: 1;
 
-  overflow: hidden;
-
 }
 
 
@@ -464,8 +460,6 @@
   flex: 1;
 
   padding: 15px 20px;
-
-  overflow: hidden;
 
   background-color: #f5f5f5;
 
@@ -489,7 +483,7 @@
 
     max-width: calc(100vw - 270px);
 
-    height: calc(100vh - 63px);
+    min-height: calc(100vh - 63px);
 
     padding: 16px 20px 12px 20px;
 

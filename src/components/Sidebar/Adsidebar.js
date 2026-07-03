@@ -824,9 +824,11 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
       <nav className={styles['ad-nav']}>
 
-        <div className={styles['ad-nav-section']}>
+        <div className={styles.menu}>
 
-          {sidebarItems.map((item) => (
+          <div className={styles['ad-nav-section']}>
+
+            {sidebarItems.map((item) => (
 
             <NavLink
 
@@ -927,11 +929,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
         </div>
 
-
-
         <div className={styles['ad-nav-divider']}></div>
-
-
 
         <NavLink
 
@@ -964,15 +962,15 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
         </NavLink>
 
-
-
-        <button className={styles['ad-logout-btn']} onClick={handleLogoutClick}>
-
-          Logout
-
-        </button>
+        </div>
 
       </nav>
+
+      <button className={styles['ad-logout-btn']} onClick={handleLogoutClick}>
+
+        Logout
+
+      </button>
 
     </div>
     </>

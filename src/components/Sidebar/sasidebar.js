@@ -487,8 +487,9 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
       </div>
 
       <nav className={styles['sa-nav']}>
-        <div className={styles['sa-nav-section']}>
-          {sidebarItems.map((item) => (
+        <div className={styles.menu}>
+          <div className={styles['sa-nav-section']}>
+            {sidebarItems.map((item) => (
             <NavLink
               key={item.text}
               to={viewToPath(item.view)}
@@ -541,6 +542,7 @@ const Sasidebar = ({ isOpen, onLogout, onViewChange }) => {
               <span className={styles['sa-nav-text']}>{item.text}</span>
             </NavLink>
           ))}
+        </div>
         </div>
       </nav>
 

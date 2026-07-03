@@ -440,8 +440,9 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
         </div>
 
         <nav className={styles.nav}>
-          <div className={styles['nav-section']}>
-            {sidebarItems.map((item) => (
+          <div className={styles.menu}>
+            <div className={styles['nav-section']}>
+              {sidebarItems.map((item) => (
               <NavLink
                 key={item.text}
                 to={viewToPath(item.view)}
@@ -515,11 +516,12 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
             <img src={AdminProfileicon} alt="Profile" />
             <span className={styles['nav-text']}>Profile</span>
           </NavLink>
-
-          <button className={styles['logout-btn']} onClick={handleLogoutClick}>
-            Logout
-          </button>
+          </div>
         </nav>
+
+        <button className={styles['logout-btn']} onClick={handleLogoutClick}>
+          Logout
+        </button>
       </div>
     </>
   );

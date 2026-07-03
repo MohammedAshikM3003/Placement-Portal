@@ -3,7 +3,7 @@
 /* ---------------------------------------------------------------------- */
 .Admin-DB-layout {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f6f8fb;
 }
 
@@ -13,10 +13,9 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    overflow: hidden;
     position: relative;
-    height: calc(100vh - 65px);
     margin-top: 65px;
+    box-sizing: border-box;
 }
 
 /* --- Sidebar Overlay (Mobile) --- */
@@ -1102,11 +1101,8 @@
 
 @media (max-width: 900px) {
     .Admin-DB-layout {
-        position: fixed;
-        inset: 0;
         width: 100%;
-        height: 100%;
-        overflow: hidden;
+        min-height: 100vh;
         flex-direction: column;
     }
 
@@ -1118,18 +1114,14 @@
         margin-top: 64px;
         width: 100% !important;
         padding: 10px 10px 10px 20px;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        height: calc(100vh - 64px) !important;
-        /* height adjusted for navbar */
         max-height: none;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         justify-content: flex-start;
-        -webkit-overflow-scrolling: touch;
         gap: 10px;
         min-height: calc(100vh - 64px);
+        box-sizing: border-box;
     }
 
     .Admin-DB-top-card {

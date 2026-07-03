@@ -1,17 +1,15 @@
 .sidebar {
   background: #fff;
   width: 290px;
-  height: calc(100vh - 65px);
-  box-shadow: 2px 0 12px #e1e6ef3a;
-  display: flex;
-  flex-direction: column;
   position: fixed;
   left: 0;
   top: 65px;
-  /* Allow scrolling when sidebar content is taller than viewport so Logout
-     and lower items are always reachable. */
-  overflow-y: auto;
-  overflow-x: hidden;
+  bottom: 0;
+  height: auto;
+  box-shadow: 2px 0 12px #e1e6ef3a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Restrict scrolling to inner navigation */
   z-index: 1002;
   transition: transform 0.3s ease-in-out;
   font-family: 'Poppins', sans-serif;
@@ -20,20 +18,20 @@
   /* Improve animation smoothness */
 }
 
-.sidebar::-webkit-scrollbar {
+.sidebar .nav::-webkit-scrollbar {
   width: 8px;
 }
 
-.sidebar::-webkit-scrollbar-track {
+.sidebar .nav::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar .nav::-webkit-scrollbar-thumb {
   background: #D23B42;
   border-radius: 8px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
+.sidebar .nav::-webkit-scrollbar-thumb:hover {
   background: #b72f35;
 }
 
@@ -122,17 +120,26 @@
 .sidebar .nav {
   display: flex;
   flex-direction: column;
+  flex: 1; /* Grow to fill the remaining height */
   padding: 0;
   justify-content: flex-start;
-  gap: 0;
-  min-height: 0;
+  min-height: 0; /* Crucial for inner scrolling */
+  overflow-y: auto; /* Independent inner scrolling */
+  overflow-x: hidden;
+}
+
+.sidebar .menu {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  width: 100%;
 }
 
 .sidebar .nav-section {
   display: flex;
   flex-direction: column;
-  gap: 0px;
-  flex-shrink: 0;
+  gap: clamp(4px, 1.2vh, 12px); /* Responsive gap based on height */
+  flex-shrink: 0; /* Prevent list itself from squishing below natural size */
 }
 
 .sidebar .nav-item {
@@ -146,7 +153,8 @@
   transition: all 0.18s;
   gap: 15px;
   border-left: 4px solid transparent;
-  margin: 3px 0;
+  margin: 0;
+  flex-shrink: 0; /* Prevent individual item from squishing or overlapping */
 }
 
 .sidebar .nav-text {
@@ -187,7 +195,7 @@
   height: 1px;
   width: 85%;
   background: #e0e0e0;
-  margin: 4px auto;
+  margin: 10px auto; /* Tightly packed below the last navigation link */
   border-top: 1px dotted #ccc;
   flex-shrink: 0;
 }
@@ -204,7 +212,7 @@
   transition: background 0.2s;
   flex-shrink: 0;
   width: calc(100% - 40px);
-  margin: 5px 20px 20px 20px;
+  margin: 10px 20px; /* 10px top and bottom margin, 20px horizontal margin */
   position: relative;
   z-index: 10;
   pointer-events: auto;
@@ -213,6 +221,8 @@
 .sidebar .logout-btn:hover {
   background: #d55a6a;
 }
+
+/* Bottom section removed in final architecture */
 
 .overlay {
   display: none;

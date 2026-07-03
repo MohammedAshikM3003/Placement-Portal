@@ -40,7 +40,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   const navigate = useNavigate();
   const hasFetchedRef = useRef(false);
   const loadedImageUrlRef = useRef(null); // Track the currently loaded image URL to prevent re-fetching same image
-  
+
   const [currentStudentData, setCurrentStudentData] = useState(() => {
     // Initialize from cache immediately on mount
     if (cachedStudentData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
@@ -59,7 +59,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
     }
     return null;
   });
-  
+
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState(() => {
@@ -80,27 +80,27 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   // Preload and cache image - but only if URL actually changed
   const preloadAndCacheImage = async (imageUrl) => {
     if (!imageUrl) return;
-    
+
     try {
       // First try to resolve the URL
       let resolvedUrl = resolveProfileUrlShared(imageUrl, API_BASE_URL);
       console.log('🔄 Sidebar: Resolving image URL:', imageUrl, '→', resolvedUrl);
-      
+
       if (!resolvedUrl) return;
-      
+
       // CRITICAL: If this exact URL is already loaded, DON'T re-fetch (prevents flickering!)
       if (loadedImageUrlRef.current === resolvedUrl) {
         console.log('⏭️ Sidebar: Image already loaded, skipping re-fetch', resolvedUrl);
         return;
       }
-      
+
       // Try to fetch and cache as blob (with auth headers included)
       const blobUrl = await fetchAndCacheBlob(resolvedUrl);
       if (blobUrl && blobUrl !== resolvedUrl) {
         resolvedUrl = blobUrl;
         console.log('🖼️ Sidebar: Image cached as blob for faster rendering');
       }
-      
+
       // Only update if URL actually changed
       if (loadedImageUrlRef.current !== resolvedUrl) {
         loadedImageUrlRef.current = resolvedUrl;
@@ -140,11 +140,11 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           console.log('🔄 Sidebar: Fetching student data from MongoDB...');
           setIsLoading(true);
           const storedData = JSON.parse(localStorage.getItem('studentData') || 'null');
-          
+
           if (storedData?._id) {
             const { default: fastDataService } = await import('../../services/fastDataService.jsx');
             const completeData = await fastDataService.getCompleteStudentData(storedData._id);
-            
+
             if (completeData?.student) {
               console.log('✅ Sidebar: Student data fetched');
               cachedStudentData = completeData.student;
@@ -152,7 +152,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
               setCurrentStudentData(completeData.student);
               setImageError(false);
               hasFetchedRef.current = true;
-              
+
               // Preload image if available
               if (completeData.student.profilePicURL) {
                 preloadAndCacheImage(completeData.student.profilePicURL);
@@ -166,7 +166,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
         }
       }
     };
-    
+
     fetchStudentData();
   }, [studentData]);
 
@@ -179,7 +179,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           cachedStudentData = event.detail;
           cacheTimestamp = Date.now();
           setCurrentStudentData(event.detail);
-          
+
           // Only preload if image URL is different
           if (loadedImageUrlRef.current !== event.detail.profilePicURL) {
             preloadAndCacheImage(event.detail.profilePicURL);
@@ -198,7 +198,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           cacheTimestamp = Date.now();
           setCurrentStudentData(event.detail);
           setImageError(false);
-          
+
           // Only preload if image URL is different
           if (event.detail.profilePicURL && loadedImageUrlRef.current !== event.detail.profilePicURL) {
             preloadAndCacheImage(event.detail.profilePicURL);
@@ -217,7 +217,7 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           cacheTimestamp = Date.now();
           setCurrentStudentData(event.detail.student);
           setImageError(false);
-          
+
           // Only preload if image URL is different
           if (event.detail.student.profilePicURL && loadedImageUrlRef.current !== event.detail.student.profilePicURL) {
             preloadAndCacheImage(event.detail.student.profilePicURL);
@@ -240,9 +240,9 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   }, []);
 
   const handleOverlayClick = () => {
-    const hamburger = 
-      document.querySelector('button[class*="hamburger-menu"]') || 
-      document.querySelector('button[class*="hamburgerMenu"]') || 
+    const hamburger =
+      document.querySelector('button[class*="hamburger-menu"]') ||
+      document.querySelector('button[class*="hamburgerMenu"]') ||
       document.querySelector('button[class*="ad-hamburger-menu"]') ||
       document.querySelector('button[class*="hamburger"]') ||
       document.querySelector('[aria-label*="navigation"]') ||
@@ -257,118 +257,118 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
   return (
     <>
       {isOpen && (
-        <div 
-          className={styles.overlay} 
-          onClick={handleOverlayClick} 
+        <div
+          className={styles.overlay}
+          onClick={handleOverlayClick}
         />
       )}
       <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
-      <div className={styles['user-info']}>
-        <div className={styles['user-details']}>
-          {profilePicUrl && !imageError ? (
-            <img 
-              src={profilePicUrl} 
-              alt="Profile" 
-              onError={() => {
-                console.warn('❌ Sidebar: Image load error');
-                setImageError(true);
-              }}
-              style={{ 
-                width: '60px', 
-                height: '60px', 
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '1px solid rgb(36 36 36)',
-                display: 'block'
-              }} 
-            />
-          ) : (
-            // While loading data for a logged-in student, avoid flashing the blue
-            // Admin placeholder. Show a neutral circular skeleton/empty avatar
-            // instead, and only use the Admin icon when there is no student.
-            (isLoading || currentStudentData?._id) ? (
-              <div
+        <div className={styles['user-info']}>
+          <div className={styles['user-details']}>
+            {profilePicUrl && !imageError ? (
+              <img
+                src={profilePicUrl}
+                alt="Profile"
+                onError={() => {
+                  console.warn('❌ Sidebar: Image load error');
+                  setImageError(true);
+                }}
                 style={{
                   width: '60px',
                   height: '60px',
                   borderRadius: '50%',
-                  border: '1px solid rgb(200 200 200)',
-                  background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
+                  objectFit: 'cover',
+                  border: '1px solid rgb(36 36 36)',
                   display: 'block'
                 }}
               />
             ) : (
-              <img 
-                src={Adminicon} 
-                alt="Admin" 
-                style={{ 
-                  width: '60px',
-                  height: '60px',
-                  filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)",
-                  display: 'block'
-                }} 
-              />
-            )
-          )}
-          <div className={styles['user-text']}>
-            <span style={{ display: 'block' }}>
-              {currentStudentData?.name 
-                ? currentStudentData.name.toUpperCase()
-                : (currentStudentData?.firstName || currentStudentData?.lastName)
-                  ? `${currentStudentData.firstName || ''} ${currentStudentData.lastName || ''}`.trim().toUpperCase()
-                  : (currentStudentData?.regNo || currentStudentData?.registerNumber)
-                    ? String(currentStudentData.regNo || currentStudentData.registerNumber)
-                    : isLoading ? 'Loading...' : 'Student'}
-            </span>
+              // While loading data for a logged-in student, avoid flashing the blue
+              // Admin placeholder. Show a neutral circular skeleton/empty avatar
+              // instead, and only use the Admin icon when there is no student.
+              (isLoading || currentStudentData?._id) ? (
+                <div
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    border: '1px solid rgb(200 200 200)',
+                    background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
+                    display: 'block'
+                  }}
+                />
+              ) : (
+                <img
+                  src={Adminicon}
+                  alt="Admin"
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    filter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(2000%) hue-rotate(220deg) brightness(100%) contrast(100%)",
+                    display: 'block'
+                  }}
+                />
+              )
+            )}
+            <div className={styles['user-text']}>
+              <span style={{ display: 'block' }}>
+                {currentStudentData?.name
+                  ? currentStudentData.name.toUpperCase()
+                  : (currentStudentData?.firstName || currentStudentData?.lastName)
+                    ? `${currentStudentData.firstName || ''} ${currentStudentData.lastName || ''}`.trim().toUpperCase()
+                    : (currentStudentData?.regNo || currentStudentData?.registerNumber)
+                      ? String(currentStudentData.regNo || currentStudentData.registerNumber)
+                      : isLoading ? 'Loading...' : 'Student'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-      <nav className={styles.nav}>
-        <div className={styles['nav-section']}>
-          {sidebarItems.map((item) => (
-            <span
-              key={item.text}
-              // FIX: styles['nav-item'] + conditional styles.selected
-              className={`${styles['nav-item']} ${item.view === currentView ? styles.selected : ''}`}
-              onClick={() => onViewChange(item.view)}
-            >
-              <img src={item.icon} alt={item.text} /> {item.text}
-            </span>
-          ))}
-        </div>
-        <div className={styles['nav-divider']}></div>
-        <span 
-          className={`${styles['nav-item']} ${currentView === 'profile' ? styles.selected : ''}`}
-          onClick={() => onViewChange('profile')}
-        >
-          <img src={require('../../assets/ProfileSideBarIcon.png')} alt="Profile" /> Profile
-        </span>
+        <nav className={styles.nav}>
+          <div className={styles['nav-section']}>
+            {sidebarItems.map((item) => (
+              <span
+                key={item.text}
+                // FIX: styles['nav-item'] + conditional styles.selected
+                className={`${styles['nav-item']} ${item.view === currentView ? styles.selected : ''}`}
+                onClick={() => onViewChange(item.view)}
+              >
+                <img src={item.icon} alt={item.text} /> {item.text}
+              </span>
+            ))}
+          </div>
+          <div className={styles['nav-divider']}></div>
+          <span
+            className={`${styles['nav-item']} ${currentView === 'profile' ? styles.selected : ''}`}
+            onClick={() => onViewChange('profile')}
+          >
+            <img src={require('../../assets/ProfileSideBarIcon.png')} alt="Profile" /> Profile
+          </span>
 
-        <button className={styles['logout-btn']} onClick={async () => {
-          // Clear all student data
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('authRole');
-          localStorage.removeItem('isLoggedIn');
-          localStorage.removeItem('studentData');
-          localStorage.removeItem('completeStudentData');
-          localStorage.removeItem('resumeData');
-          localStorage.removeItem('certificatesData');
-          
-          // Clear all sidebar caches (including blob URL)
-          clearSidebarCache();
-          
-          // Call AuthContext logout
-          if (authLogout) {
-            await authLogout();
-          }
-          
-          // Navigate to landing page
-          navigate('/');
-        }}>
-          Logout
-        </button>
-      </nav>
-    </div>
+          <button className={styles['logout-btn']} onClick={async () => {
+            // Clear all student data
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authRole');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('studentData');
+            localStorage.removeItem('completeStudentData');
+            localStorage.removeItem('resumeData');
+            localStorage.removeItem('certificatesData');
+
+            // Clear all sidebar caches (including blob URL)
+            clearSidebarCache();
+
+            // Call AuthContext logout
+            if (authLogout) {
+              await authLogout();
+            }
+
+            // Navigate to landing page
+            navigate('/');
+          }}>
+            Logout
+          </button>
+        </nav>
+      </div>
     </>
   );
 };
