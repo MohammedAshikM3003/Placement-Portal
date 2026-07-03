@@ -343,31 +343,31 @@ const Sidebar = ({ isOpen, onLogout, onViewChange, currentView, studentData }) =
           >
             <img src={require('../../assets/ProfileSideBarIcon.png')} alt="Profile" /> Profile
           </span>
-
-          <button className={styles['logout-btn']} onClick={async () => {
-            // Clear all student data
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('authRole');
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('studentData');
-            localStorage.removeItem('completeStudentData');
-            localStorage.removeItem('resumeData');
-            localStorage.removeItem('certificatesData');
-
-            // Clear all sidebar caches (including blob URL)
-            clearSidebarCache();
-
-            // Call AuthContext logout
-            if (authLogout) {
-              await authLogout();
-            }
-
-            // Navigate to landing page
-            navigate('/');
-          }}>
-            Logout
-          </button>
         </nav>
+
+        <button className={styles['logout-btn']} onClick={async () => {
+          // Clear all student data
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authRole');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('studentData');
+          localStorage.removeItem('completeStudentData');
+          localStorage.removeItem('resumeData');
+          localStorage.removeItem('certificatesData');
+
+          // Clear all sidebar caches (including blob URL)
+          clearSidebarCache();
+
+          // Call AuthContext logout
+          if (authLogout) {
+            await authLogout();
+          }
+
+          // Navigate to landing page
+          navigate('/');
+        }}>
+          Logout
+        </button>
       </div>
     </>
   );
