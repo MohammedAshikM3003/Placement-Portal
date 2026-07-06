@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_ManageStudentSemesterMarksheetView.module.css';
-import Adminicon from '../assets/Adminicon.png';
+import Adminicon from '../assets/BlueAdminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig';
 import mongoDBService from '../services/mongoDBService.jsx';
 

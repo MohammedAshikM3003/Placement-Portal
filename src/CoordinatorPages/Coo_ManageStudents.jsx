@@ -10,6 +10,7 @@ import mongoDBService from "../services/mongoDBService.jsx";
 import { createBlockNotifications } from '../services/blockNotificationService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
+import { DataTable } from '../components/table';
 
 // IMPORTS for Export Functionality
 import * as XLSX from 'xlsx';
@@ -345,13 +346,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         [coordinatorData]
     );
 
-    useEffect(() => {
-        if (typeof document === 'undefined') return;
-        document.body.classList.add('co-ms-hide-scroll');
-        return () => {
-            document.body.classList.remove('co-ms-hide-scroll');
-        };
-    }, []);
+    // No body layout overflow overrides to match Admin Student Database styling behavior
 
     useEffect(() => {
         let isMounted = true;
@@ -423,26 +418,34 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     
     const [filterDept, setFilterDept] = useState(coordinatorDepartment);
     const [filterBatch, setFilterBatch] = useState('');
+    const [filterBatchStart, setFilterBatchStart] = useState('');
+    const [filterBatchEnd, setFilterBatchEnd] = useState('');
     const [filterYear, setFilterYear] = useState('');
     const [filterSem, setFilterSem] = useState('');
     const [filterSection, setFilterSection] = useState('');
-    
-    // DROPDOWN SELECTION STATES (change instantly as user selects)
-    // MODIFICATION 2: Removed selectedDept state
-    const [selectedBatch, setSelectedBatch] = useState(''); // active value used by filtering: "YYYY-YYYY"
-    const [selectedBatchStart, setSelectedBatchStart] = useState('');
-    const [selectedBatchEnd, setSelectedBatchEnd] = useState('');
-    const [selectedYear, setSelectedYear] = useState('');
-    const [selectedSem, setSelectedSem] = useState('');
-    const [selectedSection, setSelectedSection] = useState('');
+    const [filterSearch, setFilterSearch] = useState('');
 
     useEffect(() => {
         setFilterDept(coordinatorDepartment);
     }, [coordinatorDepartment]);
 
-    // Search can be either Name or Reg No
-    const [filterSearch, setFilterSearch] = useState('');
-    const [selectedSearch, setSelectedSearch] = useState('');
+    const hasActiveFilters = Boolean(
+        filterSearch.trim() ||
+        filterBatchStart ||
+        filterSection ||
+        filterYear ||
+        filterSem
+    );
+
+    const handleClearFilters = () => {
+        setFilterSearch('');
+        setFilterBatchStart('');
+        setFilterBatchEnd('');
+        setFilterBatch('');
+        setFilterYear('');
+        setFilterSem('');
+        setFilterSection('');
+    };
 
     // 1. ADD NEW POPUP STATES
     const [isDeleteWarningOpen, setDeleteWarningOpen] = useState(false); // New state for delete warning
@@ -458,6 +461,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     
     // 2. Add state to track export menu visibility
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [nameFocused, setNameFocused] = useState(false);
 
     const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
     const [exportProgress, setExportProgress] = useState(0);
@@ -599,19 +603,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         }
     }, [coordinatorDepartment]);
 
-    // Function to apply filters from dropdowns and switch to main view
-    const applyFilters = () => {
-        // filterDept is already defaulted to 'CSE' and does not need to be updated from a selection state
-        setFilterBatch(selectedBatch);
-        setFilterYear(selectedYear);
-        setFilterSem(selectedSem);
-        setFilterSection(selectedSection);
-        
-        setFilterSearch(selectedSearch.trim());
-        setAiFilterActive(false);
 
-        setViewBlocklist(false);
-    };
 
     const handleToggleFilterMode = () => {
         setViewBlocklist(false);
@@ -1057,7 +1049,6 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
   const isBlockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !hasBlockedSelection;
   const isUnblockActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress && !hasUnblockedSelection;
   const isDeleteActive = selectedStudentIds.size >= 1 && !blockInProgress && !unblockInProgress && !deleteInProgress;
-
   return (
         <>
             <Navbar   onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
@@ -1065,6 +1056,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                 <Sidebar  isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange}
           onClose={() => setIsSidebarOpen(false)}
         />
+                {isSidebarOpen && <div className={styles["co-ms-overlay"]} onClick={() => setIsSidebarOpen(false)}></div>}
                 <div className={styles["co-ms-main-content"]}>
                     
                     {/* TOP CARD: Filter and Actions */}
@@ -1109,118 +1101,117 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             </div>
                             {!isAIFilterMode ? (
                                 <div className={styles["co-ms-filter-content"]}>
-                                    <div className={styles["co-ms-floating-input-container"]}>
-                                        <input
-                                            className={styles["co-ms-floating-input"]}
-                                            placeholder="Name/RegNo"
-                                            value={selectedSearch}
-                                            onChange={(e) => setSelectedSearch(e.target.value)}
-                                        />
-                                        <label className={styles["co-ms-floating-label"]}>Name/Reg No</label>
+                                    <div className={styles["co-ms-input-wrapper-full"]}>
+                                        <label className={styles["co-ms-static-label"]}>Enter Name / Reg Number</label>
+                                        <div className={cx(styles["co-ms-text-container"], nameFocused && styles["is-focused"])}>
+                                            <input
+                                                type="text"
+                                                className={styles["co-ms-text"]}
+                                                placeholder="Enter Name / Reg No"
+                                                value={filterSearch}
+                                                onChange={(e) => setFilterSearch(e.target.value)}
+                                                onFocus={() => setNameFocused(true)}
+                                                onBlur={() => setNameFocused(false)}
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* MODIFICATION: Swapped position with Batch Dropdown */}
-                                    <div className={styles["co-ms-batch-range"]}>
-                                        <div className={styles["co-ms-batch-range-label"]}>
-                                            Batch <span className={styles["co-ms-batch-range-required"]}>*</span>
-                                        </div>
+                                    {/* Row 2 Column 1: Batch Range */}
+                                    <div className={styles["co-ms-input-wrapper"]}>
+                                        <label className={styles["co-ms-static-label"]}>Batch</label>
                                         <div className={styles["co-ms-batch-range-inputs"]}>
-                                            <div className={styles["co-ms-batch-range-field"]}>
+                                            <div className={styles["co-ms-text-container"]}>
                                                 <input
-                                                    className={styles["co-ms-batch-range-input"]}
+                                                    type="text"
+                                                    className={styles["co-ms-text"]}
                                                     placeholder="Start"
                                                     inputMode="numeric"
-                                                    value={selectedBatchStart}
+                                                    value={filterBatchStart}
                                                     onChange={(e) => {
                                                         const start = (e.target.value || '').replace(/[^\d]/g, '').slice(0, 4);
-                                                        setSelectedBatchStart(start);
+                                                        setFilterBatchStart(start);
 
                                                         if (!start) {
-                                                            setSelectedBatchEnd('');
-                                                            setSelectedBatch('');
+                                                            setFilterBatchEnd('');
+                                                            setFilterBatch('');
                                                             return;
                                                         }
 
                                                         const startNum = Number.parseInt(start, 10);
                                                         const endNum = Number.isFinite(startNum) ? startNum + 4 : '';
                                                         const endStr = endNum ? `${endNum}` : '';
-                                                        setSelectedBatchEnd(endStr);
-                                                        setSelectedBatch(endStr ? `${start}-${endStr}` : start);
+                                                        setFilterBatchEnd(endStr);
+                                                        setFilterBatch(endStr ? `${start}-${endStr}` : start);
                                                     }}
                                                 />
                                             </div>
-
                                             <div className={styles["co-ms-batch-range-sep"]}>-</div>
-
-                                            <div className={styles["co-ms-batch-range-field"]}>
+                                            <div className={styles["co-ms-text-container"]}>
                                                 <input
-                                                    className={styles["co-ms-batch-range-input"]}
+                                                    type="text"
+                                                    className={styles["co-ms-text"]}
                                                     placeholder="End"
-                                                    value={selectedBatchEnd}
+                                                    value={filterBatchEnd}
                                                     readOnly
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className={styles["co-ms-section-filter"]}>
-                                        <div className={styles["co-ms-section-filter-label"]}>Section</div>
+
+                                    {/* Row 2 Column 2: Section Dropdown */}
+                                    <div className={styles["co-ms-input-wrapper"]}>
+                                        <label className={styles["co-ms-static-label"]}>Section</label>
                                         <Dropdown
                                             options={sectionOptions}
-                                            selectedOption={selectedSection}
-                                            onSelect={setSelectedSection}
-                                            placeholder="Section"
+                                            selectedOption={filterSection}
+                                            onSelect={setFilterSection}
+                                            placeholder="Select Section"
                                             role="coordinator"
+                                            className={styles["db-dropdown-wrapper"]}
+                                            headerClassName={styles["db-dropdown-header"]}
                                         />
                                     </div>
-                                    
-                                    <div className={styles["co-ms-yearsem-range"]}>
-                                        <div className={styles["co-ms-yearsem-range-label"]}>Year-Sem</div>
+
+                                    {/* Row 3 Column 1: Year-Sem */}
+                                    <div className={styles["co-ms-input-wrapper"]}>
+                                        <label className={styles["co-ms-static-label"]}>Year-Sem</label>
                                         <div className={styles["co-ms-yearsem-range-inputs"]}>
-                                            <div className={styles["co-ms-yearsem-range-field"]}>
-                                                <Dropdown
-                                                    options={YEAR_OPTIONS}
-                                                    selectedOption={selectedYear}
-                                                    onSelect={(val) => {
-                                                        setSelectedYear(val);
-                                                        setSelectedSem('');
-                                                    }}
-                                                    placeholder="Year"
-                                                    role="coordinator"
-                                                />
-                                            </div>
-
+                                            <Dropdown
+                                                options={YEAR_OPTIONS}
+                                                selectedOption={filterYear}
+                                                onSelect={(val) => {
+                                                    setFilterYear(val);
+                                                    setFilterSem('');
+                                                }}
+                                                placeholder="Year"
+                                                role="coordinator"
+                                                className={styles["db-dropdown-wrapper"]}
+                                                headerClassName={styles["db-dropdown-header"]}
+                                            />
                                             <div className={styles["co-ms-yearsem-range-sep"]}>-</div>
-
-                                            <div className={styles["co-ms-yearsem-range-field"]}>
-                                                <Dropdown
-                                                    options={SEM_OPTIONS_BY_YEAR[selectedYear] || []}
-                                                    selectedOption={selectedSem}
-                                                    onSelect={setSelectedSem}
-                                                    placeholder="Sem"
-                                                    role="coordinator"
-                                                    disabled={!selectedYear}
-                                                />
-                                            </div>
+                                            <Dropdown
+                                                options={SEM_OPTIONS_BY_YEAR[filterYear] || []}
+                                                selectedOption={filterSem}
+                                                onSelect={setFilterSem}
+                                                placeholder="Sem"
+                                                role="coordinator"
+                                                disabled={!filterYear}
+                                                className={styles["db-dropdown-wrapper"]}
+                                                headerClassName={styles["db-dropdown-header"]}
+                                            />
                                         </div>
                                     </div>
 
-                                    <div className={styles["co-ms-button-group"]}>
+                                    {/* Row 3 Column 2: Clear Filters */}
+                                    {hasActiveFilters && (
                                         <button 
-                                            className={cx(styles["co-ms-button"], styles["co-ms-view-students-btn"])} 
-                                            onClick={applyFilters}
+                                            type="button" 
+                                            className={styles["co-ms-clear-btn"]} 
+                                            onClick={handleClearFilters}
                                         >
-                                            View Students
+                                            Clear Filters
                                         </button>
-                                        <button className={cx(styles["co-ms-button"], styles["co-ms-blocklist-btn"])} 
-                                            onClick={() => {
-                                                setFilterBatch(selectedBatch);
-                                                setFilterYear(selectedYear);
-                                                setFilterSem(selectedSem);
-                                                setFilterSection(selectedSection);
-                                                setViewBlocklist(true);
-                                            }}
-                                        > Blocklist</button>
-                                    </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className={styles["co-ms-ai-filter-content"]}>
@@ -1262,7 +1253,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={cx(styles["co-ms-action-card"], styles["card-semester-active"])}>
                                 <h4 className={styles["co-ms-header-semester-active"]}>Semester</h4>
                                 <p className={styles["co-ms-action-description"]}>
-                                    Update <br/>Semester <br/>Wise<br/> Student <br/> CGPA
+                                    Update Semester Wise Student CGPA
                                 </p>
                                 <button 
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-semester-btn"])} 
@@ -1279,7 +1270,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={cx(styles["co-ms-action-card"], isEditActive && styles["card-edit-active"])}>
                                 <h4 className={isEditActive ? styles["co-ms-header-edit-active"] : styles["co-ms-header-disabled"]} >Editing</h4>
                                 <p className={styles["co-ms-action-description"]}>
-                                    Select <br/>Student <br/>Record<br/> Before <br/> Editing
+                                    Select Student Record Before Editing
                                 </p>
                                 <button 
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-edit-btn"])} 
@@ -1295,7 +1286,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={cx(styles["co-ms-action-card"], isBlockActive && styles["card-block-active"])}>
                                 <h4 className={isBlockActive ? styles["co-ms-header-block-active"] : styles["co-ms-header-disabled"]}>Blocking</h4>
                                 <p className={styles["co-ms-action-description"]}>
-                                    Select <br/>Student<br/> Record <br/>Before<br/> Blocking
+                                    Select Student Record Before Blocking
                                 </p>
                                 <button 
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-block-btn"])} 
@@ -1309,7 +1300,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={cx(styles["co-ms-action-card"], isUnblockActive && styles["card-unblock-active"])}>
                                 <h4 className={isUnblockActive ? styles["co-ms-header-unblock-active"] : styles["co-ms-header-disabled"]}>Unblocking</h4>
                                 <p className={styles["co-ms-action-description"]}>
-                                    Select <br/>Student<br/>Record<br/> Before<br/> Unblocking
+                                    Select Student Record Before Unblocking
                                 </p>
                                 <button 
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-unblock-btn"])} 
@@ -1323,7 +1314,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             <div className={cx(styles["co-ms-action-card"], styles["co-ms-delete-card"], isDeleteActive && styles["card-delete-active"]) }>
                                 <h4 className={isDeleteActive ? styles["co-ms-header-delete-active"] : styles["co-ms-header-disabled"]}>Deleting</h4>
                                 <p className={styles["co-ms-action-description"]}>
-                                    Select <br/> Student <br/> Record <br/> Before <br/>Deleting
+                                    Select Student Record Before Deleting
                                 </p>
                                 {/* 7. Use the function to open the delete warning popup */}
                                 <button 
@@ -1341,11 +1332,23 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                     {/* BOTTOM CARD: Student Table */}
                     <div className={styles["co-ms-bottom-card"]}>
                         <div className={styles["co-ms-table-header-row"]}>
-                            {/* Update table title to use filterDept */}
-                            <h3 className={styles["co-ms-table-title"]}>
-                                {isTableLoading ? 'STUDENTS' : `${(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE (${visibleStudents.length})`}
-                            </h3>
+                            <div className={styles["co-ms-table-title-wrap"]}>
+                                <h3 className={styles["co-ms-table-title"]}>
+                                    {isTableLoading ? 'STUDENTS' : `${(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE (${visibleStudents.length})`}
+                                </h3>
+                                {!isTableLoading && (
+                                    <div className={styles["co-ms-table-subtitle"]}>
+                                        Showing {visibleStudents.length} student{visibleStudents.length !== 1 ? 's' : ''} on this page
+                                    </div>
+                                )}
+                            </div>
                             <div className={styles["co-ms-table-actions"]}>
+                                <button
+                                    className={viewBlocklist ? styles['co-ms-blocks-active-btn'] : styles['co-ms-blocks-btn']}
+                                    onClick={() => setViewBlocklist(!viewBlocklist)}
+                                >
+                                    {viewBlocklist ? 'Back' : 'Blocked'}
+                                </button>
                                 {/* 3. Add the Print button with click handler to toggle the export menu */}
                                 <div className={styles["co-ms-print-button-container"]}>
                                     <button 
@@ -1365,101 +1368,51 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             </div>
                         </div>
 
-                        <div className={styles["co-ms-table-container"]}>
-                            <table className={styles["co-ms-students-table"]}>
-                                <thead>
-                                    <tr className={styles["co-ms-table-head-row"]}>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-select"])}>Select</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-sno"])}>S.No</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-register-number"])}>Register Number</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-name"])}>Name</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-year-sec"])}>Year-Sec</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-sem"])}>Sem</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-batch"])}>Batch</th>
-                                        {aiColumns.map((columnKey) => (
-                                            <th key={columnKey} className={cx(styles["co-ms-th"], styles["co-ms-ai-column"])}>
-                                                {AI_EXTRA_COLUMNS[columnKey].label}
-                                            </th>
-                                        ))}
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-phone"])}>Phone</th>
-                                        <th className={cx(styles["co-ms-th"], styles["co-ms-profile"])}>Profile</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {isTableLoading ? (
-                                        <tr className={styles["co-ms-loading-row"]}>
-                                            <td colSpan={tableColumnCount} className={styles["co-ms-loading-cell"]}>
-                                                <div className={styles["co-ms-loading-wrapper"]}>
-                                                    <div className={styles['co-ms-spinner']}></div>
-                                                    <span style={{ color: '#1f2937', fontWeight: 600, fontSize: '0.95rem' }}>
-                                                        {aiFilterLoading ? 'Searching students…' : 'Loading students…'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : loadError ? (
-                                        <tr>
-                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#d23b42", fontSize: "1.1rem", fontFamily: "Arial, sans-serif" }}>
-                                                {loadError}
-                                            </td>
-                                        </tr>
-                                    ) : visibleStudents.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={tableColumnCount} style={{ textAlign: "center", color: "#2d2d2d", fontSize: "1.2rem", fontFamily: "Arial, sans-serif" }}>
-                                                {viewBlocklist ? "No blocked students available" : "No data available"}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        visibleStudents.map((student, index) => (
-                                            <tr
-                                                key={student.id}
-                                                className={cx(
-                                                    styles["co-ms-table-row"],
-                                                    selectedStudentIds.has(student.id) && styles["co-ms-selected-row"],
-                                                    student.blocked && styles["co-ms-blocked-row"]
-                                                )}
-                                                onClick={() => handleStudentSelect(student.id)}
-                                            >
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-select"])} onClick={(e) => e.stopPropagation()}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedStudentIds.has(student.id)}
-                                                        onChange={() => handleStudentSelect(student.id)}
-                                                    />
-                                                </td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-sno"])}>{index + 1}</td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-register-number"])}>{student.regNo}</td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-name"])}>{student.name}</td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-year-sec"])}>
-                                                    {student.currentYear && student.section
-                                                        ? `${student.currentYear}-${student.section}`
-                                                        : student.currentYear || student.section || '--'}
-                                                </td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-sem"])}>{student.currentSemester || '--'}</td>
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-batch"])}>{student.batch}</td>
-                                                {aiColumns.map((columnKey) => (
-                                                    <td key={`${student.id}-${columnKey}`} className={cx(styles["co-ms-td"], styles["co-ms-ai-column"])}>
-                                                        {AI_EXTRA_COLUMNS[columnKey].render
-                                                            ? AI_EXTRA_COLUMNS[columnKey].render(student)
-                                                            : AI_EXTRA_COLUMNS[columnKey].value(student)}
-                                                    </td>
-                                                ))}
-                                                <td className={cx(styles["co-ms-td"], styles["co-ms-phone"])}>{student.phone}</td>
-                                                <td
-                                                    className={cx(styles["co-ms-td"], styles["co-ms-profile"])}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        navigate(`/coo-manage-students/view/${student.id}`, { state: { mode: 'view' } });
-                                                    }}
-                                                >
-                                                    <EyeIcon />
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                        <DataTable
+                            columns={[
+                                { key: 'regNo',           header: 'Register Number' },
+                                { key: 'name',            header: 'Name' },
+                                { key: 'department',      header: 'Branch',
+                                    render: (row) => row.department || '--' },
+                                { key: 'yearSec',         header: 'Year-Sec',
+                                    render: (row) => row.currentYear && row.section
+                                        ? `${row.currentYear}-${row.section}`
+                                        : row.currentYear || row.section || '--' },
+                                { key: 'currentSemester', header: 'Sem',
+                                    render: (row) => row.currentSemester || '--' },
+                                { key: 'batch',           header: 'Batch' },
+                                ...aiColumns.map(columnKey => ({
+                                    key: columnKey,
+                                    header: AI_EXTRA_COLUMNS[columnKey].label,
+                                    render: AI_EXTRA_COLUMNS[columnKey].render
+                                        ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
+                                        : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
+                                })),
+                                { key: 'profile', header: 'Profile', align: 'center',
+                                    stopPropagation: true,
+                                    render: (row) => (
+                                        <span
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/coo-manage-students/view/${row.id}`, { state: { mode: 'view' } });
+                                            }}
+                                            style={{ cursor: 'pointer', display: 'inline-flex' }}
+                                        >
+                                            <EyeIcon />
+                                        </span>
+                                    ) },
+                            ]}
+                            data={visibleStudents}
+                            rowKey="id"
+                            isLoading={isTableLoading}
+                            loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                            emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
+                            selectable
+                            selectedIds={selectedStudentIds}
+                            onSelectionChange={setSelectedStudentIds}
+                            onRowClick={(row) => handleStudentSelect(row.id)}
+                            getRowVariant={(row) => row.blocked ? 'blocked' : null}
+                        />
                     </div>
                 </div>
             </div>

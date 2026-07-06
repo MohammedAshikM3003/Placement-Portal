@@ -1,2240 +1,1935 @@
  /* --- Base Layout --- */
-.co-ms-layout {
-    display: flex;
-    min-height: 100vh;
-    background-color: #f4f6fb;
-}
-
-
-
-.co-ms-main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow: hidden;
-    padding: 19px 10px 0px 16px;
-    height: calc(100vh - 65px);
-    margin-top: 65px;
-}
-
-/* Desktop scrollbar - red styling to match theme */
-.co-ms-students-table thead::-webkit-scrollbar {
-    width: 15px;
-}
-.co-ms-students-table thead::-webkit-scrollbar-track {
-    background: #f0f2f5;
-}
-.co-ms-students-table thead::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-}
-.co-ms-students-table thead::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Top Card (Filter and Actions) */
-.co-ms-top-card {
-    background-color: transparent;
-    display: flex;
-    gap: 30px;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    margin-left: 285px;
-    margin-top: 0px;
-    margin-right: 20px;
-    flex-shrink: 0;
-    height: 305px;
-}
-  .co-ms-table-container::-webkit-scrollbar {
-    height:12px;
-  }
-.co-ms-table-container::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-  .co-ms-table-container::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-  .co-ms-table-container::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
-/* Filter Section */
-.co-ms-filter-section {
-    flex: 0 0 424px;
-    background-color: #e8e8e8;
-    padding: 15px 20px;
-    border-radius: 18px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    margin-left: 0px;
-    height: 305px;
-}
-
-.co-ms-filter-header-container {
-    position: relative;
-    margin-bottom: 15px;
-}
-
-.co-ms-filter-header {
-    text-align: center;
-    font-size: 1rem;
-    font-weight: 500;
-    background-color: #dc3545;
-    color: white;
-    padding: 6px 0px 9px 0px;
-    margin: -10px auto 10px auto;
-    border-radius: 30px;
-    display: block;
-    width: 180px;
-}
-
-.co-ms-filter-icon-container {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    color: #dc3545;
-}
-
-.co-ms-filter-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    flex-grow: 1;
-    align-items: start;
-    margin-top: 0px;
-}
-
-/* Explicit ordering so buttons stay below all fields */
-.co-ms-filter-content .co-ms-floating-input-container {
-    order: 1;
-}
-
-.co-ms-filter-content .co-ms-batch-range {
-    order: 2;
-}
-
-/* Swap positions: Year-Sem (left) and Section (right) */
-.co-ms-filter-content .co-ms-yearsem-range {
-    order: 3;
-    margin-top: -18px;
-}
-
-.co-ms-filter-content .co-ms-section-filter {
-    order: 4;
-    margin-top: -18px;
-}
-
-.co-ms-filter-content .co-ms-button-group {
-    order: 5;
-    grid-column: 1 / -1;
-    margin-top: 6px;
-}
-
-/* Batch range (Start - End) */
-.co-ms-batch-range {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 215px;
-}
-
-.co-ms-batch-range-label {
-    font-weight: 600;
-    color: #111;
-    font-size: 0.95rem;
-    padding-left: 2px;
-}
-
-.co-ms-batch-range-required {
-    color: #dc3545;
-}
-
-.co-ms-batch-range-inputs {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.co-ms-batch-range-field {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.co-ms-batch-range-select,
-.co-ms-batch-range-input {
-    width: 111%;
-    height: 45px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    padding: 0 15px;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-}
-
-.co-ms-batch-range-select:focus,
-.co-ms-batch-range-input:focus {
-    border-color: #d23b42;
-    border-width: 2px;
-}
-
-.co-ms-batch-range-sep {
-    flex: 0 0 auto;
-    font-weight: 700;
-    color: #444;
-    margin-top: 2px;
-}
-
-/* Year-Sem (same style as Batch) */
-.co-ms-yearsem-range {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 215px;
-}
-
-.co-ms-yearsem-range-label {
-    font-weight: 600;
-    color: #111;
-    font-size: 0.95rem;
-    padding-left: 2px;
-}
-
-.co-ms-yearsem-range-inputs {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.co-ms-yearsem-range-field {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.co-ms-yearsem-range-select {
-    width: 100%;
-    height: 45px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    padding: 0 15px;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-    appearance: none;
-    cursor: pointer;
-}
-
-.co-ms-yearsem-range-select:focus {
-    border-color: #d23b42;
-    border-width: 2px;
-}
-
-.co-ms-yearsem-range-sep {
-    flex: 0 0 auto;
-    font-weight: 700;
-    color: #444;
-    margin-top: 2px;
-}
-
-/* Section filter (placed under Batch, same fixed-label style) */
-.co-ms-section-filter {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 215px;
-}
-
-.co-ms-section-filter-label {
-    font-weight: 600;
-    color: #111;
-    font-size: 0.95rem;
-    padding-left: 2px;
-}
-
-.co-ms-section-filter-select {
-    width: 100%;
-    height: 45px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    padding: 0 15px;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-    appearance: none;
-    cursor: pointer;
-}
-
-.co-ms-section-filter-select:focus {
-    border-color: #d23b42;
-    border-width: 2px;
-}
-
-.co-ms-dropdown-container1 {
-    position: relative;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 45px;
-    width: 215px;
-    left:0px;
-    background-color: #ffffff;
-
-}
-
-.co-ms-dropdown-container1:hover{
-    border:2px solid #d23b42;
-}
-
-/* Floating Label Styles */
-.co-ms-floating-input-container {
-    position: relative;
-    width: 100%;
-    max-width: 215px;
-    height: 45px;
-    margin-bottom: 12px;
-}
-
-/* In Filter box: make Name/Reg No label fixed on top (not floating) */
-.co-ms-filter-section .co-ms-floating-input-container {
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 8px;
-    height: auto;
-}
-
-.co-ms-filter-section .co-ms-floating-label {
-    position: static;
-    top: auto;
-    left: auto;
-    transform: none;
-    padding: 0;
-    background: transparent;
-    font-weight: 600;
-    color: #111;
-    pointer-events: none;
-}
-
-.co-ms-filter-section .co-ms-floating-input {
-    height: 45px;
-    padding: 0 15px;
-}
-
-.co-ms-filter-section .co-ms-floating-input::placeholder {
-    color: #9aa0a6;
-}
-
-.co-ms-filter-section .co-ms-floating-input:focus::placeholder {
-    color: transparent;
-}
-
-.co-ms-filter-section .co-ms-floating-input:focus + .co-ms-floating-label,
-.co-ms-filter-section .co-ms-floating-input:not(:placeholder-shown) + .co-ms-floating-label {
-    transform: none;
-    color: #111;
-    margin-top: 0;
-    background: transparent;
-}
-
-.co-ms-floating-input {
-    width: 100%;
-    height: 100%;
-    padding: 15px 15px 5px 15px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.co-ms-floating-input:focus {
-    border-color: #d23b42;
-    border-width: 2px;
-}
-
-.co-ms-floating-input:focus + .co-ms-floating-label,
-.co-ms-floating-input:not(:placeholder-shown) + .co-ms-floating-label {
-    transform: translateY(-20px) scale(0.85);
-    color: #d23b42;
-    margin-top: -40px;
-    transform: none;
-    background: transparent;
-}
-
-.co-ms-floating-label {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: #ffffff;
-    padding: 0 5px;
-    color: #999;
-    font-size: 0.95rem;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    transform-origin: left center;
-}
-
-.co-ms-floating-input-container:hover .co-ms-floating-input {
-    border-color: #d23b42;
-}
-
-/* Floating Select Styles */
-.co-ms-floating-select-container {
-    position: relative;
-    width: 100%;
-    max-width: 215px;
-    height: 45px;
-    margin-bottom: 12px;
-}
-
-.co-ms-floating-select {
-    width: 100%;
-    height: 100%;
-    padding: 15px 15px 5px 15px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-
-.co-ms-floating-select:focus {
-    border-color: #d23b42;
-    border-width: 2px;
-   
-}
-
-.co-ms-floating-select:focus + .co-ms-floating-label,
-.co-ms-floating-select:not([value=""]) + .co-ms-floating-label {
-    transform: translateY(-20px) scale(0.85);
-    color: #d23b42;
-    
-}
-
-/* Batch dropdown - ONLY float when clicked/focused */
-.co-ms-floating-select-container .co-ms-floating-select:focus + .co-ms-floating-label,
-.co-ms-floating-select-container.co-ms-floating-select-has-value .co-ms-floating-label {
-    transform: translateY(-20px) scale(0.85);
-    color: #d23b42;
-    margin-top: -40px;
-    transform: none;
-    background: transparent;
-}
-
-/* When Batch is NOT focused (and no value), keep label centered and gray */
-.co-ms-floating-select-container:not(.co-ms-floating-select-has-value) .co-ms-floating-label {
-    transform: translateY(-50%);
-    color: #999;
-}
-
-.co-ms-floating-select-container:hover .co-ms-floating-select {
-    border-color: #d23b42;
-}
-
-.co-ms-floating-select-container::after {
-    content: '▼';
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    color: #888;
-    pointer-events: none;
-    transition: color 0.3s ease;
-}
-
-.co-ms-floating-select-container:hover::after {
-    color: #d23b42;
-}
-
-/* Dropdown styling */
-.co-ms-dropdown-container-dept {
-    position: relative;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 45px;
-    width: 100%;
-    max-width: 215px;
-    background-color: #ffffff;
-    margin-bottom: 12px;
-}
-.co-ms-dropdown-container-batch {
-    position: relative;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 45px;
-    width: 100%;
-    max-width: 215px;
-    background-color: #ffffff;
-    margin-bottom: 12px;
-}
-
-.co-ms-dropdown-container:hover{
-    border:2px solid #d23b42;
-}
-
-.co-ms-dropdown-container-dept:hover{
-    border:2px solid #d23b42;
-}
-.co-ms-dropdown-container-batch:hover{
-    border:2px solid #d23b42;
-}
-
-.co-ms-dropdown {
-    width: 100%;
-    height: 100%;
-    padding: 10px 15px;
-    border: none;
-    background-color: transparent;
-    appearance: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: #999;
-}
-
-.co-ms-dropdown-container-batch::after {
-    content: '▼';
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    color: #888;
-    pointer-events: none;
-}
-
-
-
-
-
-
-.co-ms-button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: auto;
-    gap: 45px;
-    border-radius: 10px;
-    grid-column: 1 / -1;
-}
-
-.co-ms-button {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 25px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: 700;
-    flex: 1;
-    transition: opacity 0.2s;
-}
-
-.co-ms-view-students-btn {
-    background-color: #ffffff;
-    color: #dc3545;
-    border: 2px solid transparent;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
-}
-.co-ms-view-students-btn:hover{
-    color: #ffffff;
-    background-color: #dc3545;
-}
-
-.co-ms-blocklist-btn {
-    background-color: #dc3545;
-    color: white;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
-}
-.co-ms-blocklist-btn:hover{
-    background-color: #c2191ecc;
-
-}
-
-/* Action Cards Section */
-.co-ms-action-cards-section {
-    display: flex;
-    flex: 1;
-    gap: 15px;
-    margin-left: 0px;
-    flex-wrap: nowrap;
-    min-width: 0;
-}
-
-.co-ms-action-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    padding: 12px 10px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #d23b42;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.co-ms-header-disabled {
-    font-size: 1.15rem;
-    font-weight: 720;
-    margin-bottom: 5px;
-    margin-top: 0px;
-    color: #888888 !important;
-    transition: color 0.2s ease;
-}
-
-.co-ms-header-semester-active,
-.co-ms-header-edit-active,
-.co-ms-header-block-active,
-.co-ms-header-unblock-active,
-.co-ms-header-delete-active {
-    font-size: 1.15rem;
-    font-weight: 720;
-    margin-bottom: 5px;
-    margin-top: 0px;
-    color: #d23b42 !important;
-    transition: color 0.2s ease;
-}
-
-.card-edit-active,
-.card-block-active,
-.card-unblock-active,
-.card-delete-active,
-.card-semester-active {
-    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.25) !important;
-}
-
-.co-ms-action-description {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 10px;
-    padding: 0 5px;
-    font-weight: 500;
-    line-height: 1.3;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    text-align: center;
-}
-
-.co-ms-action-btn {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 30px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    max-width: 140px;
-    transition: opacity 0.2s;
-    font-size: 0.9rem;
-}
-
-.co-ms-action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Specific Action Button Colors */
-.co-ms-semester-btn { background-color: #22c55e; color: white; }
-.co-ms-edit-btn { background-color: #5932EA; color: white; }
-.co-ms-block-btn { background-color: #d23b42; color: white; }
-.co-ms-unblock-btn { background-color: #555555; color: white; }
-.co-ms-delete-btn { background-color: #ff0000; color: white; }
-
-/* ---------------------------------------------------------------------- */
-/* Bottom Card (Student Table) */
-.co-ms-bottom-card {
-    background-color: #ffffff;
-    border-radius: 15px;
-    padding: 18px 25px;
-    margin-left: 285px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 2px solid #808080;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    margin-bottom: 24px;
-    min-height: 300px;
-}
-
-.co-ms-table-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: -20px;
-    padding-bottom: 10px;
-}
-
-.co-ms-table-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #333;
-}
-
-.co-ms-table-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.co-ms-print-button-container {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .co-ms-print-btn {
-    background-color: #d23b42;
-    color: white;
-    border: none;
-    padding: 8px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  
-  .co-ms-print-btn:hover {
-    background-color: #a72e33;
-  }
-  
-  .co-ms-export-menu {
-    position: absolute;
-    top: 40px;
-    right: 0;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    min-width: 160px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  
-  .co-ms-export-menu button {
-    border: none;
-    background: none;
-    padding: 8px 20px;
-    cursor: pointer;
-    text-align: left;
-    font-size: 0.9rem;
-    color: #444;
-    transition: background 0.15s ease;
-  }
-  
-  .co-ms-export-menu button:hover {
-    background-color: #f2f2f2;
-  }
-  
-
-.co-ms-print-btn:hover {
-    background-color: #a72e33;
-}
-
-.co-ms-table-container {
-    overflow-y: auto;
-    overflow-x: auto;
-    margin-bottom: 0;
-    flex-grow: 1;
-    padding-right: 0;
-}
-
-.co-ms-students-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.95rem;
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-}
-/* ============================================================
+ .co-ms-layout {
+     display: flex;
+     min-height: 100vh;
+     background-color: #f4f6fb;
+ }
+
+
+
+ .co-ms-main-content {
+     flex-grow: 1;
+     padding: 10px 10px 10px 20px;
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     position: relative;
+     margin-top: 65px;
+     box-sizing: border-box;
+     height: calc(100vh - 65px);
+     overflow: hidden;
+ }
+
+ /* Desktop scrollbar - red styling to match theme */
+ .co-ms-students-table thead::-webkit-scrollbar {
+     width: 15px;
+ }
+
+ .co-ms-students-table thead::-webkit-scrollbar-track {
+     background: #f0f2f5;
+ }
+
+ .co-ms-students-table thead::-webkit-scrollbar-thumb {
+     background-color: #d23b42;
+     border-radius: 20px;
+     border: 3px solid #f0f2f5;
+ }
+
+ .co-ms-students-table thead::-webkit-scrollbar-thumb:hover {
+     background-color: #b32d34;
+ }
+
+ /* ---------------------------------------------------------------------- */
+ /* Top Card (Filter and Actions) */
+ .co-ms-top-card {
+     background-color: transparent;
+     display: flex;
+     gap: 20px;
+     align-items: stretch;
+     flex-wrap: nowrap;
+     margin-left: 280px;
+     margin-top: 0px;
+     flex-shrink: 0;
+     height: 305px;
+ }
+
+ .co-ms-table-container::-webkit-scrollbar {
+     height: 12px;
+ }
+
+ .co-ms-table-container::-webkit-scrollbar-track {
+     background: #f0f2f5;
+ }
+
+ .co-ms-table-container::-webkit-scrollbar-thumb {
+     background-color: #d23b42;
+     border-radius: 20px;
+     border: 3px solid #f0f2f5;
+ }
+
+ .co-ms-table-container::-webkit-scrollbar-thumb:hover {
+     background-color: #b32d34;
+ }
+
+ /* Filter Section */
+ .co-ms-filter-section {
+     flex: 1.35;
+     min-width: 650px;
+     background-color: #e8e8e8;
+     padding: 15px 20px;
+     border-radius: 18px;
+     position: relative;
+     display: flex;
+     flex-direction: column;
+     margin-left: 0px;
+     height: 305px;
+ }
+
+ .co-ms-filter-header-container {
+     position: relative;
+ }
+
+ .co-ms-filter-header {
+     text-align: center;
+     font-size: 1rem;
+     font-weight: 500;
+     background-color: #d23b42;
+     /* coordinator red */
+     color: white;
+     padding: 6px 0px 9px 0px;
+     margin: -10px auto 10px auto;
+     border-radius: 30px;
+     display: block;
+     width: 228px;
+ }
+
+ .co-ms-filter-icon-container {
+     position: absolute;
+     top: 50%;
+     right: 10px;
+     transform: translateY(-50%);
+     font-size: 1.2rem;
+     color: #d23b42;
+ }
+
+ .co-ms-filter-content {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 12px;
+     flex-grow: 1;
+     position: relative;
+     top: 0px;
+ }
+
+ .co-ms-input-wrapper {
+     display: flex;
+     flex-direction: column;
+     gap: 5px;
+ }
+
+ .co-ms-input-wrapper-full {
+     grid-column: 1 / -1;
+     display: flex;
+     flex-direction: column;
+     gap: 5px;
+ }
+
+ .co-ms-static-label {
+     font-size: 0.85rem;
+     font-weight: 600;
+     color: #666;
+     margin-left: 5px;
+     display: block;
+ }
+
+ .co-ms-text-container {
+     position: relative;
+     border: 3px solid #ccc;
+     border-radius: 8px;
+     overflow: visible;
+     height: 45px;
+     background-color: #ffffff;
+     transition: border-color 0.2s ease;
+ }
+
+ .co-ms-text {
+     width: 100%;
+     height: 100%;
+     padding: 0px 15px;
+     border: none;
+     background-color: transparent;
+     cursor: text;
+     font-size: 0.95rem;
+     color: #333;
+     position: relative;
+     z-index: 0;
+ }
+
+ .co-ms-text::placeholder {
+     color: #999;
+     opacity: 1;
+ }
+
+ .co-ms-text:focus::placeholder {
+     opacity: 0;
+ }
+
+ .co-ms-text:focus {
+     outline: none;
+ }
+
+ .co-ms-text-container:hover,
+ .co-ms-text-container.is-focused {
+     border-color: #d23b42;
+ }
+
+ .co-ms-batch-range-inputs,
+ .co-ms-yearsem-range-inputs {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+ }
+
+ .co-ms-batch-range-inputs .co-ms-text-container,
+ .co-ms-yearsem-range-inputs .co-ms-dropdown-container {
+     flex: 1;
+     min-width: 0;
+ }
+
+ .co-ms-batch-range-sep,
+ .co-ms-yearsem-range-sep {
+     font-weight: 700;
+     color: #666;
+     flex-shrink: 0;
+ }
+
+ /* Custom Dropdown Overrides for Coordinator */
+ .db-dropdown-wrapper {
+     max-width: 100% !important;
+     width: 100% !important;
+ }
+
+ .db-dropdown-header {
+     height: 45px !important;
+     border: 3px solid #ccc !important;
+     border-radius: 8px !important;
+     background-color: #ffffff !important;
+     font-size: 0.95rem !important;
+     color: #333 !important;
+ }
+
+ .db-dropdown-header:hover {
+     border-color: #d23b42 !important;
+ }
+
+ .co-ms-button-group {
+     display: flex;
+     justify-content: space-between;
+     margin-top: auto;
+     gap: 45px;
+     border-radius: 10px;
+     grid-column: 1 / -1;
+ }
+
+ .co-ms-button {
+     padding: 8px 20px;
+     border: none;
+     border-radius: 8px;
+     font-size: 1rem;
+     cursor: pointer;
+     font-weight: 700;
+     flex: 1;
+     transition: opacity 0.2s;
+ }
+
+ .co-ms-view-students-btn {
+     background-color: #ffffff;
+     color: #dc3545;
+     border: 2px solid transparent;
+     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+ }
+
+ .co-ms-view-students-btn:hover {
+     color: #ffffff;
+     background-color: #dc3545;
+ }
+
+ .co-ms-blocklist-btn {
+     background-color: #dc3545;
+     color: white;
+     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+ }
+
+ .co-ms-blocklist-btn:hover {
+     background-color: #c2191ecc;
+
+ }
+
+ /* Action Cards Section */
+ .co-ms-action-cards-section {
+     display: flex;
+     flex-direction: column;
+     flex: 1;
+     gap: 8px;
+     margin-left: 0px;
+     min-width: 0;
+     overflow-y: auto;
+     height: 305px;
+     padding-right: 5px;
+ }
+
+ .co-ms-action-cards-section::-webkit-scrollbar {
+     width: 6px;
+ }
+
+ .co-ms-action-cards-section::-webkit-scrollbar-track {
+     background: transparent;
+ }
+
+ .co-ms-action-cards-section::-webkit-scrollbar-thumb {
+     background-color: rgba(210, 59, 66, 0.3);
+     border-radius: 3px;
+ }
+
+ .co-ms-action-cards-section::-webkit-scrollbar-thumb:hover {
+     background-color: rgba(210, 59, 66, 0.6);
+ }
+
+ .co-ms-action-card {
+     flex: 0 0 88px;
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+     justify-content: space-between;
+     padding: 10px 20px;
+     background-color: #ffffff;
+     border-radius: 15px;
+     border: 2px solid #d23b42;
+     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+ }
+
+ .co-ms-header-disabled {
+     font-size: 1.15rem;
+     font-weight: 700;
+     margin: 0;
+     color: #888888 !important;
+     width: 110px;
+     text-align: left;
+     flex-shrink: 0;
+     transition: color 0.2s ease;
+ }
+
+ .co-ms-header-semester-active,
+ .co-ms-header-edit-active,
+ .co-ms-header-block-active,
+ .co-ms-header-unblock-active,
+ .co-ms-header-delete-active {
+     font-size: 1.15rem;
+     font-weight: 700;
+     margin: 0;
+     width: 110px;
+     text-align: left;
+     flex-shrink: 0;
+     transition: color 0.2s ease;
+ }
+
+ .co-ms-header-semester-active {
+     color: #22c55e !important;
+ }
+
+ .co-ms-header-edit-active {
+     color: #5932EA !important;
+ }
+
+ .co-ms-header-block-active {
+     color: #d23b42 !important;
+ }
+
+ .co-ms-header-unblock-active {
+     color: #555555 !important;
+ }
+
+ .co-ms-header-delete-active {
+     color: #ff0000 !important;
+ }
+
+ .card-edit-active,
+ .card-block-active,
+ .card-unblock-active,
+ .card-delete-active,
+ .card-semester-active {}
+
+ .co-ms-action-description {
+     font-size: 0.95rem;
+     color: #666;
+     margin: 0 15px;
+     padding: 0;
+     font-weight: 500;
+     line-height: 1.3;
+     flex-grow: 1;
+     display: block;
+     text-align: left;
+ }
+
+ .co-ms-action-btn {
+     padding: 8px 16px;
+     border: none;
+     border-radius: 8px;
+     font-weight: 700;
+     cursor: pointer;
+     width: 100px;
+     flex-shrink: 0;
+     transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+     font-size: 0.9rem;
+ }
+
+ .co-ms-action-btn:disabled {
+     background-color: #e0e0e0 !important;
+     color: #888888 !important;
+     cursor: not-allowed;
+     border-color: transparent !important;
+     box-shadow: none !important;
+     opacity: 1 !important;
+ }
+
+ /* Specific Action Button Colors */
+ .co-ms-semester-btn {
+     background-color: #22c55e;
+     color: white;
+ }
+
+ .co-ms-edit-btn {
+     background-color: #5932EA;
+     color: white;
+ }
+
+ .co-ms-block-btn {
+     background-color: #d23b42;
+     color: white;
+ }
+
+ .co-ms-unblock-btn {
+     background-color: #555555;
+     color: white;
+ }
+
+ .co-ms-delete-btn {
+     background-color: #ff0000;
+     color: white;
+ }
+
+ /* ---------------------------------------------------------------------- */
+ /* Bottom Card (Student Table) */
+ .co-ms-bottom-card {
+     background-color: #ffffff;
+     border-radius: 15px;
+     padding: 12px 20px;
+     margin-left: 280px;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+     flex-grow: 1;
+     display: flex;
+     flex-direction: column;
+     min-height: 0;
+     overflow: hidden;
+     margin-bottom: 0px;
+
+     /* Apply Red theme overrides to the shared DataTable component children */
+     --primary: #d23b42;
+     --primary-hover: #b32d34;
+     --primary-light: rgba(210, 59, 66, 0.12);
+ }
+
+ .co-ms-table-header-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     flex-shrink: 0;
+ }
+
+ .co-ms-table-title-wrap {
+     display: flex;
+     flex-direction: column;
+     gap: 2px;
+ }
+
+ .co-ms-table-title {
+     font-size: 1.3rem;
+     font-weight: 700;
+     color: #333;
+ }
+
+ .co-ms-table-subtitle {
+     font-size: 0.9rem;
+     color: #6b7280;
+     font-weight: 500;
+ }
+
+ .co-ms-table-actions {
+     display: flex;
+     align-items: center;
+     gap: 12px;
+ }
+
+ .co-ms-print-button-container {
+     position: relative;
+ }
+
+ .co-ms-print-btn {
+     background-color: #d23b42;
+     color: white;
+     border: none;
+     padding: 8px 30px;
+     border-radius: 8px;
+     cursor: pointer;
+     font-weight: 600;
+     font-size: 1rem;
+ }
+
+ .co-ms-print-btn:hover {
+     background-color: #b32d34;
+ }
+
+ .co-ms-export-menu {
+     position: absolute;
+     top: 100%;
+     right: 0;
+     margin-top: 5px;
+     background: white;
+     border: 1px solid #ccc;
+     border-radius: 6px;
+     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+     min-width: 160px;
+     z-index: 1000;
+     display: flex;
+     flex-direction: column;
+     overflow: hidden;
+ }
+
+ .co-ms-export-menu button {
+     border: none;
+     background: none;
+     padding: 10px 15px;
+     cursor: pointer;
+     text-align: left;
+     font-size: 0.9rem;
+     color: #444;
+     transition: background 0.2s;
+ }
+
+ .co-ms-export-menu button:hover {
+     background-color: #f2f2f2;
+ }
+
+ .co-ms-students-table {
+     width: 100%;
+     border-collapse: separate;
+     border-spacing: 0;
+     font-size: 0.95rem;
+     display: flex;
+     flex-direction: column;
+     min-height: 100%;
+ }
+
+ /* ============================================================
    Horizontal Scrollbar Styling (Grey theme)
    Works for Chrome, Edge, Safari (WebKit)
    ============================================================ */
 
-/* Target horizontal scrollbars ONLY */
-.co-ms-students-table::-webkit-scrollbar:horizontal {
-    height: 0 !important;
-}
-
-.co-ms-students-table::-webkit-scrollbar-track:horizontal,
-.co-ms-students-table::-webkit-scrollbar-thumb:horizontal {
-    background: transparent !important;
-    border: none !important;
-}
-
-
-/* Table Header */
-.co-ms-students-table thead {
-    display: block;
-    padding-right: 0;
-    box-sizing: border-box;
-    background-color: #ffffff;
-}
-
-.co-ms-table-head-row {
-    border-bottom: 2px solid #e0e0e0;
-    display: flex;
-    position: relative;
-    top: 0px;
-}
-
-
-.co-ms-th {
-    padding: 12px 12px; 
-    text-align: left;
-    font-weight: 600;
-    color: #999;
-    white-space: nowrap;
-    font-size: 0.95rem;
-    flex-shrink: 0;
-}
-
-/* Table Body for Vertical Scroll */
-.co-ms-students-table tbody {
-    flex-grow: 1;
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-y: auto;
-}
-.co-ms-students-table tbody::-webkit-scrollbar {
-    width: 10px;
-}
-.co-ms-students-table tbody::-webkit-scrollbar-track {
-    background: #f0f2f5;
-}
-.co-ms-students-table tbody::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 12px;
-    border: 2px solid #f0f2f5;
-}
-.co-ms-students-table tbody::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-}
-.co-ms-students-table tbody::-webkit-scrollbar-button {
-    height: 0;
-}
-
-/* Keep header visible when tbody scrolls */
-.co-ms-students-table thead,
-.co-ms-table-head-row {
-    position: sticky;
-    top: 0;
-    z-index: 4;
-    background-color: #fff;
-}
-
-/* Table Data Rows */
-.co-ms-table-row {
-    border-bottom: 1px solid #f5f5f5;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    width: 100%;
-    align-items: center;
-}
-
-.co-ms-table-row:hover {
-    background-color: #fafafa;
-}
-
-.co-ms-selected-row {
-    background-color: #fff5f5 !important;
-}
-
-.co-ms-td {
-    padding: 14px 12px;
-    text-align: center;
-    color: #333;
-    vertical-align: middle;
-    font-size: 0.95rem;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.co-ms-loading-row {
-    background: transparent;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.co-ms-loading-cell {
-    padding: 48px 0;
-    text-align: center;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.co-ms-loading-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.co-ms-spinner {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 4px solid rgba(210, 59, 66, 0.25);
-    border-top-color: #d23b42;
-    animation: co-ms-spin 0.8s linear infinite;
-}
-
-@keyframes co-ms-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Column Specific Styling */
-.co-ms-select {
-    width: 60px;
-    flex: 0 0 60px;
-    text-align: center;
-}
-
-/* Checkbox Styling */
-.co-ms-select input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #d23b42;
-    transform: scale(1.3);
-}
-
-.co-ms-sno {
-    width: 85px; 
-    flex: 0 0 85px;
-    text-align: center;
-}
-.co-ms-register-number {
-    min-width: 165px; 
-    flex: 1 1 0;
-    text-align: center; 
-}
-.co-ms-name {
-    min-width: 170px; 
-    flex: 1 1 0;
-    text-align: center; 
-}
-.co-ms-year-sec {
-    width: 120px;
-    flex: 0 0 120px;
-    text-align: center;
-}
-.co-ms-sem {
-    width: 80px;
-    flex: 0 0 80px;
-    text-align: center;
-}
-.co-ms-batch { 
-    min-width: 130px;
-    flex: 1 1 0;
-    text-align: center;
-}
-.co-ms-phone {
-    min-width: 150px; 
-    flex: 1 1 0;
-    text-align: center; 
-}
-.co-ms-profile { 
-    width: 120px; 
-    flex: 0 0 120px;
-    text-align: center;
-}
-/* Place this at the end of your CSS file */
-.custom-block-img {
-    position: relative;
-    left: 8px;         /* Move image 8px left, adjust this value to your taste */
-    top: 2px;           /* Optional: adjust image slightly down for better header alignment */
-    width: 24px;        /* Set appropriate width for icon size */
-    height: 24px;       /* Set appropriate height for icon size */
-    vertical-align: middle;
-  }
-  
-  .co-ms-profile-img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  }
-  
-
-.co-ms-photo-icon {
-    font-size: 2.5rem;
-    color: #3e8ef7;
-    display: inline-block;
-    text-align: center; 
-}
-
-.co-ms-resume-status {
-    font-size: 1.4rem;
-    display: inline-block;
-    text-align: center; 
-}
-
-.co-ms-resume-uploaded { 
-    color: #22c55e;
-    background-color: #dcfce7;
-    padding: 8px 10px;
-    border-radius: 50%;
-    
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-}
-
-.co-ms-resume-not-uploaded { 
-    color: #dc3545;
-    background-color: #fee2e2;
-    padding: 8px 10px;
-    border-radius: 50%;
-   
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-}
-
-.co-ms-profile-eye-icon {
-    color: #dc3545;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.co-ms-profile-eye-icon:hover {
-    transform: scale(1.1);
-}
-
-/* Placement Status Tag Styling */
-.co-ms-placement-data {
-    text-align: center;
-}
-
-.co-ms-status-tag {
-    display: inline-block;
-    padding: 6px 18px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    min-width: 95px;
-}
-
-.co-ms-status-placed {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.co-ms-status-unplaced {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.co-ms-blocked-row {
-    color: #d23b42 !important;
-    text-decoration: line-through;
-}
-
-.co-ms-blocked-row .co-ms-td {
-    color: inherit;
-}
-
-  .coordinator-content-area {
-    flex: 1 1;
-    background: #fff;
-    margin-left: 270px;
-    transition: margin-left 0.3s 
-ease-in-out;
-overflow: hidden  ;
-}
-/* --- Responsive Adjustments --- */
-/* --- Responsive Adjustments --- */
-
-/*POpups*/
-
-.delete-warning-header {
-    background-color: #d23b42; /* Warning yellow color */
-}
-
-.co-ms-StuProfile-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-}
-
-.co-ms-StuProfile-popup-container {
-    background-color: #fff;
-    border-radius: 12px;
-    width: 400px;
-    max-width: 90vw;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    font-family: 'Poppins', sans-serif;
-}
-
-.co-ms-StuProfile-popup-header {
-    background-color: #d73d3d;
-    color: white;
-    padding: 1.2rem;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-}
-
-.co-ms-StuProfile-popup-body {
-    padding: 2rem;
-}
-
-.co-ms-StuProfile-popup-body h2,
-.co-ms-StuProfile-popup-body p {
-    margin: 0.25rem 0;
-    color: #333;
-}
-
-.co-ms-StuProfile-popup-body h2 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.co-ms-StuProfile-popup-body p {
-    color: #666;
-}
-
-.co-ms-StuProfile-popup-footer {
-    padding: 1.5rem;
-    background-color: #f7f7f7;
-    display: flex;
-    justify-content: center;
-    gap: 32px;
-    flex-wrap: wrap;
-}
-
-.co-ms-StuProfile-popup-back-btn {
-    background-color: #6c757d;
-    color: #ffffff;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.15s ease;
-    min-width: 110px;
-}
-
-.co-ms-StuProfile-popup-back-btn:hover {
-    background-color: #5a6268;
-}
-
-.co-ms-StuProfile-popup-back-btn:active {
-    transform: translateY(1px);
-}
-
-.co-ms-StuProfile-popup-confirm-btn {
-    background-color: #d23b42;
-    color: #ffffff;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.15s ease;
-    min-width: 110px;
-}
-
-.co-ms-StuProfile-popup-confirm-btn:hover {
-    background-color: #b32d34;
-}
-
-.co-ms-StuProfile-popup-confirm-btn:active {
-    transform: translateY(1px);
-}
-
-.co-ms-StuProfile-popup-confirm-btn:disabled {
-    background-color: #f2a3a8;
-    cursor: not-allowed;
-    transform: none;
-    opacity: 0.7;
-}
-
-.co-ms-StuProfile-popup-close-btn {
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.co-ms-StuProfile-popup-close-btn:hover {
-    background-color: #c9302c;
-}
-
-/* --- NEW: Student Deleted Popup Specific Styles --- */
-.delete-success-header {
-    background-color: #d23b42; /* Red for deleted header */
-}
-
-.co-ms-StuProfile-delete-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    color: #d23b42; /* Red for the trash icon */
-}
-
-/* File: Coo_ManageStuEditPage.css */
-
-/* ... (Existing styles for layout, buttons, and delete header colors) ... */
-
-/* 2. Warning Icon (Exclamation Mark) Styles */
-.co-ms-StuProfile-warning-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 3;
-    stroke: #E9DE48;
-    stroke-miterlimit: 10;
-    fill: none;
-    margin: 0 auto;
-    box-shadow: inset 0 0 0 transparent;
-    /* FIX: No fill/scale animation for warning for visibility */
-    animation: co-ms-DeleteWarning-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteWarning-scale 0.3s ease-in-out 0.9s both;
-}
-
-.co-ms-StuProfile-warning-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 3;
-    stroke-miterlimit: 10;
-    stroke: #E9DE48;
-    fill: none;
-    /* Uses the generic stroke keyframe */
-    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.co-ms-StuProfile-warning-icon--exclamation {
-    stroke-width: 3;
-    stroke: #fff; 
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    /* Uses the generic dash keyframe */
-    animation: co-ms-StuProfile-dash 0.3s 0.6s ease-in-out forwards;
-    stroke-dasharray: 16;
-    stroke-dashoffset: 16;
-}
-
-/* REMOVED: .Achievement-warning-icon--trashbin CSS class is no longer needed/used. */
-
-/* 3. Delete Success Icon (Bin) Styles */
-/* 3. Delete Success Icon (Bin) Styles */
-.co-ms-StuProfile-delete-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff;
-    stroke-miterlimit: 10;
-    fill: none;
-    background-color: transparent; 
-    margin: 0 auto;
-    box-shadow: inset 0 0 0 transparent;
-    /* Uses the dedicated success fill and scale keyframes */
-    animation: co-ms-DeleteSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteSuccess-scale 0.3s ease-in-out 0.9s both;
-}
-
-.co-ms-StuProfile-delete-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #D23B42;
-    fill: none;
-    /* Uses the generic stroke keyframe */
-    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.co-ms-StuProfile-delete-icon--bin {
-    stroke-width: 2;
-    stroke: #fff;
-    stroke-miterlimit: 10;
-    fill: none;
-    /* Uses the generic dash keyframe for the bin paths */
-    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
-    stroke-dasharray: 100; /* Adjust this value if the bin paths are not drawing correctly */
-    stroke-dashoffset: 100;
-}
-/* =================================== */
-/* ===== DELETE POPUP KEYFRAMES ===== */
-/* =================================== */
-
-/* --- SHARED STROKE/DASH ANIMATIONS (Used by both warning and success) --- */
-@keyframes co-ms-StuProfile-stroke {
-    100% {
-        stroke-dashoffset: 0;
-    }
-}
-
-@keyframes co-ms-StuProfile-dash {
-    100% {
-        stroke-dashoffset: 0;
-    }
-}
-
-/* --- DELETE SUCCESS KEYFRAMES (RED Fill for Trash Bin) --- */
-@keyframes co-ms-DeleteSuccess-scale {
-    0%, 100% {
-        transform: none;
-    }
-    50% {
-        transform: scale3d(1.1, 1.1, 1);
-    }
-}
-
-@keyframes co-ms-DeleteSuccess-fill {
-    100% {
-        /* Fills the circle with Delete Red (#D23B42) */
-        box-shadow: inset 0 0 0 80px #D23B42;
-    }
-}
-
-/* --- DELETE WARNING KEYFRAMES (YELLOW Fill - Provided but NOT used in final CSS for visibility) --- */
-/* Note: The warning icon in the CSS below relies only on the stroke animation for visibility. */
-@keyframes co-ms-DeleteWarning-scale {
-    0%, 100% {
-        transform: none;
-    }
-    50% {
-        transform: scale3d(1.05, 1.05, 1);
-    }
-}
-
-@keyframes co-ms-DeleteWarning-fill {
-    100% {
-        /* Fills the circle with Warning Yellow (#E9DE48) */
-        box-shadow: inset 0 0 0 80px #E9DE48;
-    }
-}
-
-/* --- NEW: Blocked Popup Specific Styles --- */
-.block-popup-header {
-    background-color: #d23b42; /* Orange/Yellow for blocked header */
-}
-
-.co-ms-StuProfile-block-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    color: #f0ad4e; /* Orange/Yellow for the lock icon */
-}
-.co-ms-StuProfile-block-icon svg {
-    width: 100%;
-    height: 100%;
-}
-/* --- UNBLOCK SUCCESS ICON (GREEN - Unlocked Padlock) --- */
-.co-ms-StuProfile-unblock-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff; /* White icon stroke against green fill */
-    stroke-miterlimit: 10;
-    fill: none;
-    margin: 0 auto;
-    box-shadow: inset 0 0 0 transparent;
-    /* Applies Green Fill and Scale animations */
-    animation: co-ms-UnblockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-UnblockSuccess-scale 0.3s ease-in-out 0.9s both;
-}
-
-.co-ms-StuProfile-table-unblock-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #4CAF50; /* Green circle stroke */
-    fill: none;
-    /* Uses the shared stroke keyframe */
-    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.co-ms-StuProfile-table-unblock-icon--lock {
-    stroke-width: 2;
-    stroke: #fff; 
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    /* Uses the shared dash keyframe to draw the unlocked padlock */
-    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-}
-
-/* --- BLOCK SUCCESS ICON (RED - Locked Padlock) --- */
-.co-ms-StuProfile-table-block-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff; /* White icon stroke against red fill */
-    stroke-miterlimit: 10;
-    fill: none;
-    margin: 0 auto;
-    box-shadow: inset 0 0 0 transparent;
-    /* Applies Red Fill and Scale animations */
-    animation: co-ms-BlockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-BlockSuccess-scale 0.3s ease-in-out 0.9s both;
-}
-
-.co-ms-StuProfile-table-block-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #D23B42; /* Red circle stroke */
-    fill: none;
-    /* Uses the shared stroke keyframe */
-    animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.co-ms-StuProfile-table-block-icon--lock {
-    stroke-width: 2;
-    stroke: #fff; 
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    /* Uses the shared dash keyframe to draw the locked padlock */
-    animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-}
-/* --- UNBLOCK SUCCESS KEYFRAMES (GREEN Fill for Unlocked Padlock) --- */
-@keyframes co-ms-table-UnblockSuccess-scale {
-    0%, 100% {
-        transform: none;
-    }
-    50% {
-        transform: scale3d(1.1, 1.1, 1);
-    }
-}
-
-@keyframes co-ms-table-UnblockSuccess-fill {
-    100% {
-        /* Fills the circle with Success Green (#4CAF50) */
-        box-shadow: inset 0 0 0 80px #4CAF50;
-    }
-}
-
-/* --- BLOCK SUCCESS KEYFRAMES (RED Fill for Locked Padlock) --- */
-@keyframes co-ms-table-BlockSuccess-scale {
-    0%, 100% {
-        transform: none;
-    }
-    50% {
-        transform: scale3d(1.1, 1.1, 1);
-    }
-}
-
-@keyframes co-ms-table-BlockSuccess-fill {
-    100% {
-        /* Fills the circle with Block Red (#D23B42) */
-        box-shadow: inset 0 0 0 80px #D23B42;
-    }
-}
-/* --- NEW: Unblocked Popup Specific Styles --- */
-.co-ms-StuProfile-table-popup-header.unblock-popup-header {
-    background-color: #d23b42; /* Green for unblocked header */
-}
-
-
-
-
-
-@media (max-width: 1200px) {
-    .co-ms-top-card, .co-ms-bottom-card { margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; max-width: 100% !important; }
-    .co-ms-top-card { flex-wrap: nowrap; margin-top: 0px; }
-    .co-ms-filter-section { flex: 0 0 424px; }
-}
-
-@media (max-width: 900px) {
-    .co-ms-main-content {
-        padding: 15px;
-        padding-top: 90px;
-        overflow-x: hidden;
-        overflow-y: auto;
-        height: 100vh;
-        box-sizing: border-box;
-        background-color: #fff;
-    }
-
-    /* Red scrollbar on mobile */
-    .co-ms-main-content::-webkit-scrollbar {
-      width: 10px;
-    }
-    .co-ms-main-content::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-    .co-ms-main-content::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-    .co-ms-main-content::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
-    }
-
-    /* Top and Bottom Card Resets (Stacking and positioning fixes) */
-    .co-ms-top-card {
-        flex-direction: column; 
-        align-items: stretch;
-        gap: 20px; 
-        margin-left: 0;
-        margin-top: 0; 
-        padding: 0; 
-        width: 100%;
-        height: auto;
-        max-height: none;
-    }
-
-    .co-ms-bottom-card 
-    {
-       margin: 20px 0 0 0;
-        padding: 15px;
-        width: 100%; 
-       max-width: 100%;
-       position: static;
-       top: auto;
-    }
- .co-ms-table-container::-webkit-scrollbar {
-      width: 10px;
-    }
-    .co-ms-table-container::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-    .co-ms-table-container::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-    .co-ms-table-container::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
-    }
-
-    .co-ms-students-table::-webkit-scrollbar:horizontal {
-      height: 12px !important;
-    }
-
-    .co-ms-students-table tbody::-webkit-scrollbar:horizontal {
-      height: 12px !important;
-    }
-
-    .co-ms-students-table tbody::-webkit-scrollbar-thumb:horizontal {
-      background-color: #c1bfc1;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-
-    .co-ms-students-table tbody::-webkit-scrollbar-thumb:horizontal:hover {
-      background-color: #c1bfbf;
-    }
-    .co-ms-filter-section {
-        flex: none;
-        width: 100%;
-        max-width: 100%;
-        margin-left: 0;
-        padding: 16px 15px;
-        border-radius: 18px;
-        margin-top: 0;
-        height: auto;
-    }
-    .co-ms-filter-content {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 0;
-    }
-    
-    .co-ms-filter-header {
-        margin-left: auto;
-        margin-right: auto;
-        bottom: 0;
-    }
-    
-    /* Filter Fields Stacking (Fixes overlap/positioning) */
-    .co-ms-dropdown-container1, 
-    .co-ms-floating-input-container,
-    .co-ms-floating-select-container,
-    .co-ms-dropdown-container-dept,
-    .co-ms-dropdown-container-batch {
-        width: 100%;
-        max-width: 100%;
-        left: 0 !important;
-        top: 0 !important;
-        margin-top: 0 !important;
-        margin-bottom: 4px;
-    }
-
-    .co-ms-batch-range,
-    .co-ms-yearsem-range,
-    .co-ms-section-filter {
-        width: 100%;
-        max-width: 100%;
-        margin-top: 0;
-    }
-
-    .co-ms-batch-range-inputs,
-    .co-ms-yearsem-range-inputs {
-        width: 100%;
-    }
-
-    .co-ms-batch-range-field,
-    .co-ms-yearsem-range-field {
-        flex: 1 1 0;
-        min-width: 0;
-    }
-
-    .co-ms-batch-range-select,
-    .co-ms-batch-range-input,
-    .co-ms-yearsem-range-select,
-    .co-ms-section-filter-select,
-    .co-ms-floating-input {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .co-ms-batch-range-label,
-    .co-ms-yearsem-range-label,
-    .co-ms-section-filter-label,
-    .co-ms-filter-section .co-ms-floating-label {
-        margin: 0;
-    }
-
-    .co-ms-name-container, .co-ms-register-number-container {
-        margin-bottom: 8px;
-    }
-
-    /* Mobile-specific filter section input containers with proper spacing */
-    .co-ms-filter-section .co-ms-batch-range,
-    .co-ms-filter-section .co-ms-yearsem-range,
-    .co-ms-filter-section .co-ms-section-filter {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        width: 100%;
-        max-width: 100%;
-        margin-bottom: 8px;
-        margin-top: 0.1px;
-    }
-
-    /* Mobile filter section labels with proper spacing */
-    .co-ms-filter-section .co-ms-batch-range-label,
-    .co-ms-filter-section .co-ms-yearsem-range-label,
-    .co-ms-filter-section .co-ms-section-filter-label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #111;
-        margin: 0 0 4px 0;
-        padding: 0;
-    }
-
-    /* Mobile filter section input rows */
-    .co-ms-filter-section .co-ms-batch-range-inputs,
-    .co-ms-filter-section .co-ms-yearsem-range-inputs {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-    }
-
-    /* Mobile filter section inputs */
-    .co-ms-filter-section .co-ms-batch-range-select,
-    .co-ms-filter-section .co-ms-batch-range-input,
-    .co-ms-filter-section .co-ms-yearsem-range-select,
-    .co-ms-filter-section .co-ms-section-filter-select {
-        height: 42px;
-        padding: 0 12px;
-        font-size: 0.9rem;
-        border-radius: 8px;
-    }
-
-    /* Mobile filter section separators */
-    .co-ms-filter-section .co-ms-batch-range-sep,
-    .co-ms-filter-section .co-ms-yearsem-range-sep {
-        font-weight: 700;
-        color: #444;
-        margin-top: 0;
-    }
-
-    /* Mobile filter section input fields */
-    .co-ms-filter-section .co-ms-batch-range-field,
-    .co-ms-filter-section .co-ms-yearsem-range-field {
-        flex: 1 1 0;
-        min-width: 0;
-    }
-
-    /* Button Group */
-    .co-ms-button-group {
-        flex-direction: column; 
-        gap: 15px;
-        margin-top: 10px;
-        width: 100%;
-    }
-    
-    .co-ms-button {
-        flex: 1; 
-    }
-
-    .co-ms-blocklist-btn {
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-    }
-
-    /* Action Card Container */
-    .co-ms-action-cards-section {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        width: 100%;
-        margin-left: 0;
-        order: 2;
-        position: static;
-        top: auto;
-        margin-top: 20px;
-    }
-    
-    .co-ms-action-card {
-       min-width: 0;
-        max-width: 100%;
-        width: 100%;
-        margin-left: 0;
-    }
-
-    .co-ms-delete-card {
-        width: 100%;
-        grid-column: 1 / -1;
-        justify-self: center;
-        max-width: calc((100% - 15px) / 2);
-    }
-
-
-    /* Table Container: Horizontal Scroll */
-    .co-ms-table-container {
-        overflow-x: auto; 
-        margin-bottom: 0;
-        width:100%;
-    }
-
-    .co-ms-students-table 
-    {
-        height: auto; 
-        flex-direction: column; 
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-    
-    /* Table Header: Fixed header on horizontal scroll */
-    .co-ms-students-table thead {
-        display: block; 
-        padding-right: 17px; 
-        box-sizing: border-box;
-        width: 100%;
-    }
-    
-    /* Table Body: Vertical Scroll for table data */
-    .co-ms-students-table tbody {
-        display: block; 
-        width: 100%; 
-        max-height: 198px; 
-        
-    }
-    .co-ms-table-head-row,
-    .co-ms-table-row {
-        width: 100%; 
-    }
-    
-    /* Column widths (ensure these match in thead and tbody) */
-    .co-ms-th, .co-ms-td {
-        padding: 8px 8px;
-        font-size: 0.8rem;
-        white-space: nowrap; 
-    }
-    /* Desktop scrollbar - red styling to match theme */
-.co-ms-students-table thead::-webkit-scrollbar 
-{
-    width: 15px;
-}
-.co-ms-students-table thead::-webkit-scrollbar-track 
-{
-    background: #f0f2f5;
-}
-.co-ms-students-table thead::-webkit-scrollbar-thumb 
-{
-    background-color: #f0f2f5;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-}
-.co-ms-students-table thead::-webkit-scrollbar-thumb:hover 
-{
-    background-color: #f0f2f5;
-}
-    
-    /* Explicit width definitions for column alignment (must match desktop) */
-    .co-ms-select, .co-ms-sno { width: 50px; } 
-    .co-ms-photo { width: 80px; } 
-    .co-ms-register-number { width: 130px; } 
-    .co-ms-name { width: 150px; } 
-    .co-ms-section { width: 90px; } 
-    .co-ms-batch { width: 120px; } 
-    .co-ms-phone { width: 120px; }
-    .co-ms-resume { width: 100px; }
-    .co-ms-profile { width: 110px; }
-    .co-ms-placement-status { width: 110px; }
-    .co-ms-blocked-row {
-        color: #d23b42;
-    }
-
-}
-
-/* ============================================
+ /* Target horizontal scrollbars ONLY */
+ .co-ms-students-table::-webkit-scrollbar:horizontal {
+     height: 0 !important;
+ }
+
+ .co-ms-students-table::-webkit-scrollbar-track:horizontal,
+ .co-ms-students-table::-webkit-scrollbar-thumb:horizontal {
+     background: transparent !important;
+     border: none !important;
+ }
+
+
+ /* Table Header */
+ .co-ms-students-table thead {
+     display: block;
+     padding-right: 0;
+     box-sizing: border-box;
+     background-color: #ffffff;
+ }
+
+ .co-ms-table-head-row {
+     border-bottom: 2px solid #e0e0e0;
+     display: flex;
+     position: relative;
+     top: 0px;
+ }
+
+
+ .co-ms-th {
+     padding: 12px 12px;
+     text-align: left;
+     font-weight: 600;
+     color: #999;
+     white-space: nowrap;
+     font-size: 0.95rem;
+     flex-shrink: 0;
+ }
+
+ /* Table Body for Vertical Scroll */
+ .co-ms-students-table tbody {
+     flex-grow: 1;
+     display: block;
+     width: 100%;
+     box-sizing: border-box;
+     overflow-y: auto;
+ }
+
+ .co-ms-students-table tbody::-webkit-scrollbar {
+     width: 10px;
+ }
+
+ .co-ms-students-table tbody::-webkit-scrollbar-track {
+     background: #f0f2f5;
+ }
+
+ .co-ms-students-table tbody::-webkit-scrollbar-thumb {
+     background-color: #d23b42;
+     border-radius: 12px;
+     border: 2px solid #f0f2f5;
+ }
+
+ .co-ms-students-table tbody::-webkit-scrollbar-thumb:hover {
+     background-color: #b32d34;
+ }
+
+ .co-ms-students-table tbody::-webkit-scrollbar-button {
+     height: 0;
+ }
+
+ /* Keep header visible when tbody scrolls */
+ .co-ms-students-table thead,
+ .co-ms-table-head-row {
+     position: sticky;
+     top: 0;
+     z-index: 4;
+     background-color: #fff;
+ }
+
+ /* Table Data Rows */
+ .co-ms-table-row {
+     border-bottom: 1px solid #f5f5f5;
+     cursor: pointer;
+     transition: background-color 0.2s;
+     display: flex;
+     width: 100%;
+     align-items: center;
+ }
+
+ .co-ms-table-row:hover {
+     background-color: #fafafa;
+ }
+
+ .co-ms-selected-row {
+     background-color: #fff5f5 !important;
+ }
+
+ .co-ms-td {
+     padding: 14px 12px;
+     text-align: center;
+     color: #333;
+     vertical-align: middle;
+     font-size: 0.95rem;
+     font-weight: 500;
+     white-space: nowrap;
+ }
+
+ .co-ms-loading-row {
+     background: transparent;
+     width: 100%;
+     display: flex;
+     justify-content: center;
+ }
+
+ .co-ms-loading-cell {
+     padding: 48px 0;
+     text-align: center;
+     width: 100%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .co-ms-loading-wrapper {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     gap: 12px;
+     padding: 0;
+     background: transparent;
+     box-shadow: none;
+ }
+
+ .co-ms-spinner {
+     width: 34px;
+     height: 34px;
+     border-radius: 50%;
+     border: 4px solid rgba(210, 59, 66, 0.25);
+     border-top-color: #d23b42;
+     animation: co-ms-spin 0.8s linear infinite;
+ }
+
+ @keyframes co-ms-spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }
+
+ /* Column Specific Styling */
+ .co-ms-select {
+     width: 60px;
+     flex: 0 0 60px;
+     text-align: center;
+ }
+
+ /* Checkbox Styling */
+ .co-ms-select input[type="checkbox"] {
+     width: 18px;
+     height: 18px;
+     cursor: pointer;
+     accent-color: #d23b42;
+     transform: scale(1.3);
+ }
+
+ .co-ms-sno {
+     width: 85px;
+     flex: 0 0 85px;
+     text-align: center;
+ }
+
+ .co-ms-register-number {
+     min-width: 165px;
+     flex: 1 1 0;
+     text-align: center;
+ }
+
+ .co-ms-name {
+     min-width: 170px;
+     flex: 1 1 0;
+     text-align: center;
+ }
+
+ .co-ms-year-sec {
+     width: 120px;
+     flex: 0 0 120px;
+     text-align: center;
+ }
+
+ .co-ms-sem {
+     width: 80px;
+     flex: 0 0 80px;
+     text-align: center;
+ }
+
+ .co-ms-batch {
+     min-width: 130px;
+     flex: 1 1 0;
+     text-align: center;
+ }
+
+ .co-ms-phone {
+     min-width: 150px;
+     flex: 1 1 0;
+     text-align: center;
+ }
+
+ .co-ms-branch {
+     min-width: 120px;
+     flex: 1 1 0;
+     text-align: center;
+ }
+
+ .co-ms-profile {
+     width: 120px;
+     flex: 0 0 120px;
+     text-align: center;
+ }
+
+ /* Place this at the end of your CSS file */
+ .custom-block-img {
+     position: relative;
+     left: 8px;
+     /* Move image 8px left, adjust this value to your taste */
+     top: 2px;
+     /* Optional: adjust image slightly down for better header alignment */
+     width: 24px;
+     /* Set appropriate width for icon size */
+     height: 24px;
+     /* Set appropriate height for icon size */
+     vertical-align: middle;
+ }
+
+ .co-ms-profile-img {
+     width: 32px;
+     height: 32px;
+     border-radius: 50%;
+     object-fit: cover;
+     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+ }
+
+
+ .co-ms-photo-icon {
+     font-size: 2.5rem;
+     color: #3e8ef7;
+     display: inline-block;
+     text-align: center;
+ }
+
+ .co-ms-resume-status {
+     font-size: 1.4rem;
+     display: inline-block;
+     text-align: center;
+ }
+
+ .co-ms-resume-uploaded {
+     color: #22c55e;
+     background-color: #dcfce7;
+     padding: 8px 10px;
+     border-radius: 50%;
+
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 1.3rem;
+     font-weight: 700;
+ }
+
+ .co-ms-resume-not-uploaded {
+     color: #dc3545;
+     background-color: #fee2e2;
+     padding: 8px 10px;
+     border-radius: 50%;
+
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 1.3rem;
+     font-weight: 700;
+ }
+
+ .co-ms-profile-eye-icon {
+     color: #dc3545;
+     font-size: 1.5rem;
+     cursor: pointer;
+     transition: transform 0.2s;
+ }
+
+ .co-ms-profile-eye-icon:hover {
+     transform: scale(1.1);
+ }
+
+ /* Placement Status Tag Styling */
+ .co-ms-placement-data {
+     text-align: center;
+ }
+
+ .co-ms-status-tag {
+     display: inline-block;
+     padding: 6px 18px;
+     border-radius: 20px;
+     font-size: 0.9rem;
+     font-weight: 600;
+     min-width: 95px;
+ }
+
+ .co-ms-status-placed {
+     background-color: #d4edda;
+     color: #155724;
+ }
+
+ .co-ms-status-unplaced {
+     background-color: #f8d7da;
+     color: #721c24;
+ }
+
+ .co-ms-blocked-row {
+     color: #d23b42 !important;
+     text-decoration: line-through;
+ }
+
+ .co-ms-blocked-row .co-ms-td {
+     color: inherit;
+ }
+
+ .coordinator-content-area {
+     flex: 1 1;
+     background: #fff;
+     margin-left: 270px;
+     transition: margin-left 0.3s ease-in-out;
+     overflow: hidden;
+ }
+
+ /* --- Responsive Adjustments --- */
+ /* --- Responsive Adjustments --- */
+
+ /*POpups*/
+
+ .delete-warning-header {
+     background-color: #d23b42;
+     /* Warning yellow color */
+ }
+
+ .co-ms-StuProfile-popup-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: rgba(0, 0, 0, 0.2);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 10000;
+ }
+
+ .co-ms-StuProfile-popup-container {
+     background-color: #fff;
+     border-radius: 12px;
+     width: 400px;
+     max-width: 90vw;
+     text-align: center;
+     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+     overflow: hidden;
+     font-family: 'Poppins', sans-serif;
+ }
+
+ .co-ms-StuProfile-popup-header {
+     background-color: #d73d3d;
+     color: white;
+     padding: 1.2rem;
+     font-size: 1.4rem;
+     font-weight: 700;
+     letter-spacing: 0.02em;
+ }
+
+ .co-ms-StuProfile-popup-body {
+     padding: 2rem;
+ }
+
+ .co-ms-StuProfile-popup-body h2,
+ .co-ms-StuProfile-popup-body p {
+     margin: 0.25rem 0;
+     color: #333;
+ }
+
+ .co-ms-StuProfile-popup-body h2 {
+     margin-top: 1rem;
+     margin-bottom: 0.5rem;
+ }
+
+ .co-ms-StuProfile-popup-body p {
+     color: #666;
+ }
+
+ .co-ms-StuProfile-popup-footer {
+     padding: 1.5rem;
+     background-color: #f7f7f7;
+     display: flex;
+     justify-content: center;
+     gap: 32px;
+     flex-wrap: wrap;
+ }
+
+ .co-ms-StuProfile-popup-back-btn {
+     background-color: #6c757d;
+     color: #ffffff;
+     border: none;
+     padding: 0.8rem 1.5rem;
+     border-radius: 8px;
+     font-size: 1rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: background-color 0.2s ease, transform 0.15s ease;
+     min-width: 110px;
+ }
+
+ .co-ms-StuProfile-popup-back-btn:hover {
+     background-color: #5a6268;
+ }
+
+ .co-ms-StuProfile-popup-back-btn:active {
+     transform: translateY(1px);
+ }
+
+ .co-ms-StuProfile-popup-confirm-btn {
+     background-color: #d23b42;
+     color: #ffffff;
+     border: none;
+     padding: 0.8rem 1.5rem;
+     border-radius: 8px;
+     font-size: 1rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: background-color 0.2s ease, transform 0.15s ease;
+     min-width: 110px;
+ }
+
+ .co-ms-StuProfile-popup-confirm-btn:hover {
+     background-color: #b32d34;
+ }
+
+ .co-ms-StuProfile-popup-confirm-btn:active {
+     transform: translateY(1px);
+ }
+
+ .co-ms-StuProfile-popup-confirm-btn:disabled {
+     background-color: #f2a3a8;
+     cursor: not-allowed;
+     transform: none;
+     opacity: 0.7;
+ }
+
+ .co-ms-StuProfile-popup-close-btn {
+     background-color: #d9534f;
+     color: white;
+     border: none;
+     padding: 0.8rem 1.5rem;
+     border-radius: 8px;
+     font-size: 1rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: background-color 0.2s;
+ }
+
+ .co-ms-StuProfile-popup-close-btn:hover {
+     background-color: #c9302c;
+ }
+
+ /* --- NEW: Student Deleted Popup Specific Styles --- */
+ .delete-success-header {
+     background-color: #d23b42;
+     /* Red for deleted header */
+ }
+
+ .co-ms-StuProfile-delete-icon {
+     width: 80px;
+     height: 80px;
+     margin: 0 auto;
+     color: #d23b42;
+     /* Red for the trash icon */
+ }
+
+ /* File: Coo_ManageStuEditPage.css */
+
+ /* ... (Existing styles for layout, buttons, and delete header colors) ... */
+
+ /* 2. Warning Icon (Exclamation Mark) Styles */
+ .co-ms-StuProfile-warning-icon {
+     width: 80px;
+     height: 80px;
+     border-radius: 50%;
+     display: block;
+     stroke-width: 3;
+     stroke: #E9DE48;
+     stroke-miterlimit: 10;
+     fill: none;
+     margin: 0 auto;
+     box-shadow: inset 0 0 0 transparent;
+     /* FIX: No fill/scale animation for warning for visibility */
+     animation: co-ms-DeleteWarning-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteWarning-scale 0.3s ease-in-out 0.9s both;
+ }
+
+ .co-ms-StuProfile-warning-icon--circle {
+     stroke-dasharray: 166;
+     stroke-dashoffset: 166;
+     stroke-width: 3;
+     stroke-miterlimit: 10;
+     stroke: #E9DE48;
+     fill: none;
+     /* Uses the generic stroke keyframe */
+     animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+ }
+
+ .co-ms-StuProfile-warning-icon--exclamation {
+     stroke-width: 3;
+     stroke: #fff;
+     stroke-linecap: round;
+     stroke-linejoin: round;
+     /* Uses the generic dash keyframe */
+     animation: co-ms-StuProfile-dash 0.3s 0.6s ease-in-out forwards;
+     stroke-dasharray: 16;
+     stroke-dashoffset: 16;
+ }
+
+ /* REMOVED: .Achievement-warning-icon--trashbin CSS class is no longer needed/used. */
+
+ /* 3. Delete Success Icon (Bin) Styles */
+ /* 3. Delete Success Icon (Bin) Styles */
+ .co-ms-StuProfile-delete-icon {
+     width: 80px;
+     height: 80px;
+     border-radius: 50%;
+     display: block;
+     stroke-width: 2;
+     stroke: #fff;
+     stroke-miterlimit: 10;
+     fill: none;
+     background-color: transparent;
+     margin: 0 auto;
+     box-shadow: inset 0 0 0 transparent;
+     /* Uses the dedicated success fill and scale keyframes */
+     animation: co-ms-DeleteSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-DeleteSuccess-scale 0.3s ease-in-out 0.9s both;
+ }
+
+ .co-ms-StuProfile-delete-icon--circle {
+     stroke-dasharray: 166;
+     stroke-dashoffset: 166;
+     stroke-width: 2;
+     stroke-miterlimit: 10;
+     stroke: #D23B42;
+     fill: none;
+     /* Uses the generic stroke keyframe */
+     animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+ }
+
+ .co-ms-StuProfile-delete-icon--bin {
+     stroke-width: 2;
+     stroke: #fff;
+     stroke-miterlimit: 10;
+     fill: none;
+     /* Uses the generic dash keyframe for the bin paths */
+     animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+     stroke-dasharray: 100;
+     /* Adjust this value if the bin paths are not drawing correctly */
+     stroke-dashoffset: 100;
+ }
+
+ /* =================================== */
+ /* ===== DELETE POPUP KEYFRAMES ===== */
+ /* =================================== */
+
+ /* --- SHARED STROKE/DASH ANIMATIONS (Used by both warning and success) --- */
+ @keyframes co-ms-StuProfile-stroke {
+     100% {
+         stroke-dashoffset: 0;
+     }
+ }
+
+ @keyframes co-ms-StuProfile-dash {
+     100% {
+         stroke-dashoffset: 0;
+     }
+ }
+
+ /* --- DELETE SUCCESS KEYFRAMES (RED Fill for Trash Bin) --- */
+ @keyframes co-ms-DeleteSuccess-scale {
+
+     0%,
+     100% {
+         transform: none;
+     }
+
+     50% {
+         transform: scale3d(1.1, 1.1, 1);
+     }
+ }
+
+ @keyframes co-ms-DeleteSuccess-fill {
+     100% {
+         /* Fills the circle with Delete Red (#D23B42) */
+         box-shadow: inset 0 0 0 80px #D23B42;
+     }
+ }
+
+ /* --- DELETE WARNING KEYFRAMES (YELLOW Fill - Provided but NOT used in final CSS for visibility) --- */
+ /* Note: The warning icon in the CSS below relies only on the stroke animation for visibility. */
+ @keyframes co-ms-DeleteWarning-scale {
+
+     0%,
+     100% {
+         transform: none;
+     }
+
+     50% {
+         transform: scale3d(1.05, 1.05, 1);
+     }
+ }
+
+ @keyframes co-ms-DeleteWarning-fill {
+     100% {
+         /* Fills the circle with Warning Yellow (#E9DE48) */
+         box-shadow: inset 0 0 0 80px #E9DE48;
+     }
+ }
+
+ /* --- NEW: Blocked Popup Specific Styles --- */
+ .block-popup-header {
+     background-color: #d23b42;
+     /* Orange/Yellow for blocked header */
+ }
+
+ .co-ms-StuProfile-block-icon {
+     width: 80px;
+     height: 80px;
+     margin: 0 auto;
+     color: #f0ad4e;
+     /* Orange/Yellow for the lock icon */
+ }
+
+ .co-ms-StuProfile-block-icon svg {
+     width: 100%;
+     height: 100%;
+ }
+
+ /* --- UNBLOCK SUCCESS ICON (GREEN - Unlocked Padlock) --- */
+ .co-ms-StuProfile-unblock-icon {
+     width: 80px;
+     height: 80px;
+     border-radius: 50%;
+     display: block;
+     stroke-width: 2;
+     stroke: #fff;
+     /* White icon stroke against green fill */
+     stroke-miterlimit: 10;
+     fill: none;
+     margin: 0 auto;
+     box-shadow: inset 0 0 0 transparent;
+     /* Applies Green Fill and Scale animations */
+     animation: co-ms-UnblockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-UnblockSuccess-scale 0.3s ease-in-out 0.9s both;
+ }
+
+ .co-ms-StuProfile-table-unblock-icon--circle {
+     stroke-dasharray: 166;
+     stroke-dashoffset: 166;
+     stroke-width: 2;
+     stroke-miterlimit: 10;
+     stroke: #4CAF50;
+     /* Green circle stroke */
+     fill: none;
+     /* Uses the shared stroke keyframe */
+     animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+ }
+
+ .co-ms-StuProfile-table-unblock-icon--lock {
+     stroke-width: 2;
+     stroke: #fff;
+     stroke-linecap: round;
+     stroke-linejoin: round;
+     /* Uses the shared dash keyframe to draw the unlocked padlock */
+     animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+     stroke-dasharray: 100;
+     stroke-dashoffset: 100;
+ }
+
+ /* --- BLOCK SUCCESS ICON (RED - Locked Padlock) --- */
+ .co-ms-StuProfile-table-block-icon {
+     width: 80px;
+     height: 80px;
+     border-radius: 50%;
+     display: block;
+     stroke-width: 2;
+     stroke: #fff;
+     /* White icon stroke against red fill */
+     stroke-miterlimit: 10;
+     fill: none;
+     margin: 0 auto;
+     box-shadow: inset 0 0 0 transparent;
+     /* Applies Red Fill and Scale animations */
+     animation: co-ms-BlockSuccess-fill 0.4s ease-in-out 0.4s forwards, co-ms-BlockSuccess-scale 0.3s ease-in-out 0.9s both;
+ }
+
+ .co-ms-StuProfile-table-block-icon--circle {
+     stroke-dasharray: 166;
+     stroke-dashoffset: 166;
+     stroke-width: 2;
+     stroke-miterlimit: 10;
+     stroke: #D23B42;
+     /* Red circle stroke */
+     fill: none;
+     /* Uses the shared stroke keyframe */
+     animation: co-ms-StuProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+ }
+
+ .co-ms-StuProfile-table-block-icon--lock {
+     stroke-width: 2;
+     stroke: #fff;
+     stroke-linecap: round;
+     stroke-linejoin: round;
+     /* Uses the shared dash keyframe to draw the locked padlock */
+     animation: co-ms-StuProfile-dash 0.6s 0.6s ease-in-out forwards;
+     stroke-dasharray: 100;
+     stroke-dashoffset: 100;
+ }
+
+ /* --- UNBLOCK SUCCESS KEYFRAMES (GREEN Fill for Unlocked Padlock) --- */
+ @keyframes co-ms-table-UnblockSuccess-scale {
+
+     0%,
+     100% {
+         transform: none;
+     }
+
+     50% {
+         transform: scale3d(1.1, 1.1, 1);
+     }
+ }
+
+ @keyframes co-ms-table-UnblockSuccess-fill {
+     100% {
+         /* Fills the circle with Success Green (#4CAF50) */
+         box-shadow: inset 0 0 0 80px #4CAF50;
+     }
+ }
+
+ /* --- BLOCK SUCCESS KEYFRAMES (RED Fill for Locked Padlock) --- */
+ @keyframes co-ms-table-BlockSuccess-scale {
+
+     0%,
+     100% {
+         transform: none;
+     }
+
+     50% {
+         transform: scale3d(1.1, 1.1, 1);
+     }
+ }
+
+ @keyframes co-ms-table-BlockSuccess-fill {
+     100% {
+         /* Fills the circle with Block Red (#D23B42) */
+         box-shadow: inset 0 0 0 80px #D23B42;
+     }
+ }
+
+ /* --- NEW: Unblocked Popup Specific Styles --- */
+ .co-ms-StuProfile-table-popup-header.unblock-popup-header {
+     background-color: #d23b42;
+     /* Green for unblocked header */
+ }
+
+
+
+
+
+ @media (max-width: 1200px) {
+
+     .co-ms-top-card,
+     .co-ms-bottom-card {
+         margin-left: 0 !important;
+         margin-right: 0 !important;
+         width: 100% !important;
+         max-width: 100% !important;
+     }
+
+     .co-ms-top-card {
+         flex-wrap: nowrap;
+         margin-top: 0px;
+     }
+
+     .co-ms-filter-section {
+         flex: 0 0 424px;
+     }
+ }
+
+ @media (max-width: 900px) {
+     .co-ms-layout {
+         width: 100%;
+         min-height: 100vh;
+         flex-direction: column;
+     }
+
+     .co-ms-overlay {
+         display: block;
+     }
+
+     .co-ms-main-content {
+         margin-top: 64px;
+         width: 100% !important;
+         padding: 10px 10px 10px 20px;
+         max-height: none;
+         display: flex;
+         flex-direction: column;
+         align-items: stretch;
+         justify-content: flex-start;
+         gap: 10px;
+         min-height: calc(100vh - 64px);
+         box-sizing: border-box;
+     }
+
+     .co-ms-top-card {
+         margin-left: 0 !important;
+         margin-top: 0px !important;
+         gap: 15px !important;
+         flex-direction: column !important;
+         flex-wrap: nowrap !important;
+         width: 100% !important;
+         height: auto !important;
+     }
+
+     .co-ms-filter-section {
+         border-radius: 25px;
+         flex: 1 1 auto;
+         width: 100%;
+         height: auto !important;
+         min-height: 0;
+         min-width: 0 !important;
+     }
+
+     .co-ms-ai-toggle-btn {
+         right: 0;
+         top: -10px;
+         width: 44px;
+         height: 40px;
+     }
+
+     .co-ms-ai-filter-input {
+         min-height: 110px;
+         font-size: 1.25rem;
+     }
+
+     .co-ms-ai-filter-input::placeholder {
+         font-size: 1rem;
+     }
+
+     .co-ms-ai-button-group {
+         gap: 10px;
+     }
+
+     .co-ms-filter-content {
+         grid-template-columns: 1fr !important;
+         gap: 12px !important;
+     }
+
+     .co-ms-button-group {
+         gap: 10px;
+     }
+
+     .co-ms-action-cards-section {
+         flex-direction: column !important;
+         gap: 10px !important;
+         height: auto !important;
+         width: 100% !important;
+         flex: none !important;
+     }
+
+     .co-ms-action-card {
+         flex: 1 1 auto !important;
+         width: 100% !important;
+         min-height: 55px !important;
+         height: auto !important;
+         box-sizing: border-box !important;
+     }
+
+     .co-ms-bottom-card {
+         margin-left: 0 !important;
+         padding: 15px 15px 35px 15px !important;
+         flex: none !important;
+         width: 100% !important;
+         margin-bottom: 40px !important;
+     }
+
+     .co-ms-table-header-row {
+         flex-direction: row !important;
+         align-items: center !important;
+         justify-content: space-between !important;
+         gap: 15px !important;
+         flex-wrap: wrap !important;
+     }
+
+     .co-ms-table-actions {
+         width: 100% !important;
+         justify-content: flex-end !important;
+         flex-wrap: wrap !important;
+     }
+
+     .co-ms-pagination-controls {
+         order: -1 !important;
+     }
+
+     /* Desktop scrollbar - red styling to match theme */
+     .co-ms-main-content::-webkit-scrollbar {
+         width: 10px;
+     }
+
+     .co-ms-main-content::-webkit-scrollbar-track {
+         background: #f0f2f5;
+     }
+
+     .co-ms-main-content::-webkit-scrollbar-thumb {
+         background-color: #d23b42;
+         border-radius: 20px;
+         border: 3px solid #f0f2f5;
+     }
+
+     .co-ms-main-content::-webkit-scrollbar-thumb:hover {
+         background-color: #b32d34;
+     }
+ }
+
+ @media (max-width: 768px) {}
+
+ @media (max-width: 480px) {
+     .co-ms-action-card {
+         flex: 1 1 auto !important;
+     }
+ }
+
+ /* ============================================
    Export Popup Styles
    ============================================ */
 
-/* Popup Overlay */
-.co-ms-export-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    animation: co-ms-export-popup-fade-in 0.3s ease-out;
-}
+ /* Popup Overlay */
+ .co-ms-export-popup-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: rgba(0, 0, 0, 0.5);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 2000;
+     animation: co-ms-export-popup-fade-in 0.3s ease-out;
+ }
 
-@keyframes co-ms-export-popup-fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
+ @keyframes co-ms-export-popup-fade-in {
+     from {
+         opacity: 0;
+     }
 
-/* Popup Container */
-.co-ms-export-popup-container {
-    background-color: #fff;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    animation: co-ms-export-popup-scale-in 0.3s ease-out;
-}
+     to {
+         opacity: 1;
+     }
+ }
 
-@keyframes co-ms-export-popup-scale-in {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-@keyframes co-ms-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale(1.1); }
-  }
-  @keyframes co-ms-stroke {
-    100% {
-        stroke-dashoffset: 0;
-    }
-}
+ /* Popup Container */
+ .co-ms-export-popup-container {
+     background-color: #fff;
+     border-radius: 12px;
+     width: 90%;
+     max-width: 400px;
+     overflow: hidden;
+     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+     animation: co-ms-export-popup-scale-in 0.3s ease-out;
+ }
 
-@keyframes co-ms-fill {
-    100% {
-        box-shadow: inset 0px 0px 0px 60px #4caf50; /* Adjust to match the fill color */
-        background-color: #4caf50;
-    }
-}
-/* Popup Header */
-.co-ms-export-popup-header {
-    background-color: #d23b42;
-    color: white;
-    padding: 15px 20px;
-    font-size: 2.25rem;
-    border-radius: 10px;
-    font-weight: 600;
-    text-align: center;
-}
+ @keyframes co-ms-export-popup-scale-in {
+     from {
+         opacity: 0;
+         transform: scale(0.9);
+     }
 
-/* Popup Body */
-.co-ms-export-popup-body {
-    padding: 30px 20px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
+     to {
+         opacity: 1;
+         transform: scale(1);
+     }
+ }
 
-/* Progress Circle Container */
-.co-ms-export-progress-circle {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-}
+ @keyframes co-ms-scale {
 
-.co-ms-export-progress-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #d23b42;
-}
+     0%,
+     100% {
+         transform: none;
+     }
 
-/* Success Icon */
-.co-ms-export-success-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: co-ms-scale 0.3s ease-in-out 0.9s both;
-}
+     50% {
+         transform: scale(1.1);
+     }
+ }
 
-.co-ms-success-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #4caf50;
-    fill: none;
-    animation: co-ms-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards, 
-    co-ms-fill-color 0.4s ease-in-out 0.6s forwards; 
+ @keyframes co-ms-stroke {
+     100% {
+         stroke-dashoffset: 0;
+     }
+ }
 
-}
+ @keyframes co-ms-fill {
+     100% {
+         box-shadow: inset 0px 0px 0px 60px #4caf50;
+         /* Adjust to match the fill color */
+         background-color: #4caf50;
+     }
+ }
 
-.co-ms-success-icon--check {
-    transform-origin: 50% 50%;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    stroke: #ffffff;
-    stroke-width: 3;
-    fill: none;
-    animation: co-ms-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
+ /* Popup Header */
+ .co-ms-export-popup-header {
+     background-color: #d23b42;
+     color: white;
+     padding: 15px 20px;
+     font-size: 2.25rem;
+     border-radius: 10px;
+     font-weight: 600;
+     text-align: center;
+ }
 
-@keyframes co-ms-fill-color {
-    0% { fill: none; }
-    100% { fill: #4caf50; } /* Fill the circle with green after stroke */
-}
-/* Failed Icon */
-.co-ms-export-failed-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+ /* Popup Body */
+ .co-ms-export-popup-body {
+     padding: 30px 20px;
+     text-align: center;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 15px;
+ }
 
-/* Popup Title */
-.co-ms-export-popup-title {
-    color: #2d2d2d;
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
+ /* Progress Circle Container */
+ .co-ms-export-progress-circle {
+     position: relative;
+     width: 100px;
+     height: 100px;
+     margin: 0 auto;
+ }
 
-/* Popup Message */
-.co-ms-export-popup-message {
-    color: #666;
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
+ .co-ms-export-progress-text {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     font-size: 1.2rem;
+     font-weight: 700;
+     color: #d23b42;
+ }
 
-/* Popup Footer */
-.co-ms-export-popup-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #eee;
-    text-align: center;
-    background-color: #ffffff;
-}
+ /* Success Icon */
+ .co-ms-export-success-icon {
+     width: 80px;
+     height: 80px;
+     margin: 0 auto;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     animation: co-ms-scale 0.3s ease-in-out 0.9s both;
+ }
 
-/* Close Button */
-.co-ms-export-popup-close-btn {
-    background-color: #d23b42;
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 0.3s;
-    width: 100%;
-    max-width: 150px;
-}
+ .co-ms-success-icon--circle {
+     stroke-dasharray: 166;
+     stroke-dashoffset: 166;
+     stroke-width: 2;
+     stroke-miterlimit: 10;
+     stroke: #4caf50;
+     fill: none;
+     animation: co-ms-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards,
+         co-ms-fill-color 0.4s ease-in-out 0.6s forwards;
 
-.co-ms-export-popup-close-btn:hover {
-    background-color: #b32d34;
-}
+ }
 
-.co-ms-export-popup-close-btn:active {
-    transform: scale(0.98);
-}
+ .co-ms-success-icon--check {
+     transform-origin: 50% 50%;
+     stroke-dasharray: 48;
+     stroke-dashoffset: 48;
+     stroke: #ffffff;
+     stroke-width: 3;
+     fill: none;
+     animation: co-ms-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+ }
 
-/* AI Filter styles for Coordinator (Red Theme) */
-.co-ms-filter-section-ai-mode {
-}
+ @keyframes co-ms-fill-color {
+     0% {
+         fill: none;
+     }
 
-.co-ms-ai-toggle-btn {
-    position: absolute;
-    top: -12px;
-    right: 8px;
-    border: 2px solid #d23b42;
-    background: transparent;
-    color: #d23b42;
-    border-radius: 14px;
-    width: 48px;
-    height: 42px;
-    padding: 0;
-    cursor: pointer;
-    line-height: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.18s ease;
-}
+     100% {
+         fill: #4caf50;
+     }
 
-.co-ms-ai-toggle-btn:hover {
-    background: #d23b42;
-    color: #ffffff;
-}
+     /* Fill the circle with green after stroke */
+ }
 
-.co-ms-ai-toggle-btn svg {
-    width: 22px;
-    height: 22px;
-}
+ /* Failed Icon */
+ .co-ms-export-failed-icon {
+     width: 80px;
+     height: 80px;
+     margin: 0 auto;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
 
-.co-ms-ai-toggle-btn:focus-visible {
-    outline: 3px solid rgba(210, 59, 66, 0.4);
-    outline-offset: 2px;
-}
+ /* Popup Title */
+ .co-ms-export-popup-title {
+     color: #2d2d2d;
+     margin: 0;
+     font-size: 1.5rem;
+     font-weight: 700;
+ }
 
-.co-ms-ai-pointer-tooltip {
-    position: fixed;
-    background: #111827;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 6px 9px;
-    border-radius: 6px;
-    white-space: nowrap;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
-    pointer-events: none;
-    z-index: 2147483646;
-}
+ /* Popup Message */
+ .co-ms-export-popup-message {
+     color: #666;
+     margin: 0;
+     font-size: 0.95rem;
+     line-height: 1.5;
+ }
 
-.co-ms-ai-filter-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex-grow: 1;
-    width: 100%;
-}
+ /* Popup Footer */
+ .co-ms-export-popup-footer {
+     padding: 15px 20px;
+     border-top: 1px solid #eee;
+     text-align: center;
+     background-color: #ffffff;
+ }
 
-.co-ms-ai-filter-input {
-    width: 100%;
-    flex: 1;
-    min-height: 0;
-    border: 2px solid #d23b42;
-    border-radius: 14px;
-    background: #ffffff;
-    resize: none;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 18px;
-    font-size: 1.2rem;
-    color: #4a4a4a;
-    outline: none;
-    font-family: 'Poppins', sans-serif;
-    box-sizing: border-box;
-}
+ /* Close Button */
+ .co-ms-export-popup-close-btn {
+     background-color: #d23b42;
+     color: white;
+     border: none;
+     padding: 10px 30px;
+     border-radius: 8px;
+     cursor: pointer;
+     font-size: 1rem;
+     font-weight: 500;
+     transition: background-color 0.3s;
+     width: 100%;
+     max-width: 150px;
+ }
 
-.co-ms-ai-filter-input::-webkit-scrollbar {
-    width: 6px;
-}
+ .co-ms-export-popup-close-btn:hover {
+     background-color: #b32d34;
+ }
 
-.co-ms-ai-filter-input::-webkit-scrollbar-track {
-    background: transparent;
-}
+ .co-ms-export-popup-close-btn:active {
+     transform: scale(0.98);
+ }
 
-.co-ms-ai-filter-input::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 999px;
-}
+ /* AI Filter styles for Coordinator (Red Theme) */
+ .co-ms-filter-section-ai-mode {}
 
-.co-ms-ai-filter-input::-webkit-scrollbar-button {
-    display: none;
-    width: 0;
-    height: 0;
-}
+ .co-ms-ai-toggle-btn {
+     position: absolute;
+     top: -12px;
+     right: 8px;
+     border: 2px solid #d23b42;
+     background: transparent;
+     color: #d23b42;
+     border-radius: 14px;
+     width: 48px;
+     height: 42px;
+     padding: 0;
+     cursor: pointer;
+     line-height: 0;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     transition: background-color 0.18s ease;
+ }
 
-.co-ms-ai-filter-input::placeholder {
-    color: #5a5a5a;
-    font-size: 1.2rem;
-}
+ .co-ms-ai-toggle-btn:hover {
+     background: #d23b42;
+     color: #ffffff;
+ }
 
-.co-ms-ai-button-group {
-    display: flex;
-    gap: 22px;
-    width: 100%;
-}
+ .co-ms-ai-toggle-btn svg {
+     width: 22px;
+     height: 22px;
+ }
 
-.co-ms-ai-apply-btn {
-    background-color: #d23b42;
-    color: #ffffff;
-}
+ .co-ms-ai-toggle-btn:focus-visible {
+     outline: 3px solid rgba(210, 59, 66, 0.4);
+     outline-offset: 2px;
+ }
 
-.co-ms-ai-apply-btn:hover {
-    color: #ffffff;
-    background-color: #b32d34;
-}
+ .co-ms-ai-pointer-tooltip {
+     position: fixed;
+     background: #111827;
+     color: #ffffff;
+     font-size: 13px;
+     font-weight: 600;
+     padding: 6px 9px;
+     border-radius: 6px;
+     white-space: nowrap;
+     border: 1px solid rgba(255, 255, 255, 0.2);
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+     pointer-events: none;
+     z-index: 2147483646;
+ }
 
-.co-ms-ai-discard-btn {
-    background-color: #555555;
-    color: #ffffff;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
-}
+ .co-ms-ai-filter-content {
+     display: flex;
+     flex-direction: column;
+     gap: 12px;
+     flex-grow: 1;
+     width: 100%;
+ }
 
-.co-ms-ai-discard-btn:hover {
-    background-color: #333333;
-}
+ .co-ms-ai-filter-input {
+     width: 100%;
+     flex: 1;
+     min-height: 0;
+     border: 2px solid #d23b42;
+     border-radius: 14px;
+     background: #ffffff;
+     resize: none;
+     overflow-y: auto;
+     overflow-x: hidden;
+     padding: 18px;
+     font-size: 1.2rem;
+     color: #4a4a4a;
+     outline: none;
+     font-family: 'Poppins', sans-serif;
+     box-sizing: border-box;
+ }
 
-/* AI Reason/Explanation Display */
-.co-ms-ai-reason {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: linear-gradient(135deg, #fff5f5 0%, #ffebeb 100%);
-    border-radius: 10px;
-    border-left: 3px solid #d23b42;
-}
+ .co-ms-ai-filter-input::-webkit-scrollbar {
+     width: 6px;
+ }
 
-.co-ms-ai-reason-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-}
+ .co-ms-ai-filter-input::-webkit-scrollbar-track {
+     background: transparent;
+ }
 
-.co-ms-ai-reason-text {
-    font-size: 13px;
-    color: #374151;
-    line-height: 1.4;
-    font-style: italic;
-}
+ .co-ms-ai-filter-input::-webkit-scrollbar-thumb {
+     background-color: #d23b42;
+     border-radius: 999px;
+ }
 
-.co-ms-ai-column {
-    width: 130px;
-    min-width: 100px;
-    max-width: 180px;
-    text-align: center;
-}
+ .co-ms-ai-filter-input::-webkit-scrollbar-button {
+     display: none;
+     width: 0;
+     height: 0;
+ }
 
-@media (max-width: 900px) {
-    .co-ms-filter-section-ai-mode {
-        min-height: auto !important;
-        height: auto !important;
-        align-self: flex-start;
-    }
+ .co-ms-ai-filter-input::placeholder {
+     color: #5a5a5a;
+     font-size: 1.2rem;
+ }
 
-    .co-ms-ai-filter-content {
-        flex-grow: 0;
-    }
+ .co-ms-ai-button-group {
+     display: flex;
+     gap: 22px;
+     width: 100%;
+ }
 
-    .co-ms-ai-toggle-btn {
-        right: 0;
-        top: -10px;
-        width: 44px;
-        height: 40px;
-    }
+ .co-ms-ai-apply-btn {
+     background-color: #d23b42;
+     color: #ffffff;
+ }
 
-    .co-ms-ai-filter-input {
-        min-height: 110px;
-        font-size: 1.25rem;
-    }
+ .co-ms-ai-apply-btn:hover {
+     color: #ffffff;
+     background-color: #b32d34;
+ }
 
-    .co-ms-ai-filter-input::placeholder {
-        font-size: 1rem;
-    }
+ .co-ms-ai-discard-btn {
+     background-color: #555555;
+     color: #ffffff;
+     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+ }
 
-    .co-ms-ai-button-group {
-        gap: 10px;
-        flex-direction: row !important;
-    }
-}
+ .co-ms-ai-discard-btn:hover {
+     background-color: #333333;
+ }
+
+ /* AI Reason/Explanation Display */
+ .co-ms-ai-reason {
+     display: flex;
+     align-items: flex-start;
+     gap: 8px;
+     margin-top: 12px;
+     padding: 10px 14px;
+     background: linear-gradient(135deg, #fff5f5 0%, #ffebeb 100%);
+     border-radius: 10px;
+     border-left: 3px solid #d23b42;
+ }
+
+ .co-ms-ai-reason-icon {
+     font-size: 14px;
+     flex-shrink: 0;
+ }
+
+ .co-ms-ai-reason-text {
+     font-size: 13px;
+     color: #374151;
+     line-height: 1.4;
+     font-style: italic;
+ }
+
+ .co-ms-ai-column {
+     width: 130px;
+     min-width: 100px;
+     max-width: 180px;
+     text-align: center;
+ }
+
+ @media (max-width: 900px) {
+     .co-ms-filter-section-ai-mode {
+         min-height: auto !important;
+         height: auto !important;
+         align-self: flex-start;
+     }
+
+     .co-ms-ai-filter-content {
+         flex-grow: 0;
+     }
+
+     .co-ms-ai-toggle-btn {
+         right: 0;
+         top: -10px;
+         width: 44px;
+         height: 40px;
+     }
+
+     .co-ms-ai-filter-input {
+         min-height: 110px;
+         font-size: 1.25rem;
+     }
+
+     .co-ms-ai-filter-input::placeholder {
+         font-size: 1rem;
+     }
+
+     .co-ms-ai-button-group {
+         gap: 10px;
+         flex-direction: row !important;
+     }
+ }
+
+ .co-ms-clear-btn {
+     height: 45px;
+     align-self: end;
+     border: none;
+     border-radius: 8px;
+     background: #dcdcdc;
+     color: #333;
+     font-size: 0.95rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: background 0.2s ease;
+ }
+
+ .co-ms-clear-btn:hover {
+     background: #c0c0c0;
+ }
+
+ .co-ms-blocks-btn {
+     background-color: #d23b42;
+     color: white;
+     border: none;
+     padding: 8px 30px;
+     border-radius: 8px;
+     cursor: pointer;
+     font-weight: 600;
+     font-size: 1rem;
+     margin-right: 10px;
+     transition: background-color 0.2s ease;
+ }
+
+ .co-ms-blocks-btn:hover {
+     background-color: #b32d34;
+ }
+
+ .co-ms-blocks-active-btn {
+     background-color: #6c757d;
+     color: white;
+     border: none;
+     padding: 8px 30px;
+     border-radius: 8px;
+     cursor: pointer;
+     font-weight: 600;
+     font-size: 1rem;
+     margin-right: 10px;
+     transition: background-color 0.2s ease;
+ }
+
+ .co-ms-blocks-active-btn:hover {
+     background-color: #5a6268;
+ }

@@ -96,6 +96,9 @@ function DataTable({
   footer,
   serialOffset = 0,
   showSerial = true,
+  className = '',
+  style = {},
+  scrollAreaStyle = {},
 }) {
   // ── Derived state ──────────────────────────────────────────────
   const hasData = data.length > 0;
@@ -140,7 +143,7 @@ function DataTable({
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${className}`} style={style}>
 
       {/* ── Toolbar ─────────────────────────────────────────── */}
       {(title || toolbarActions || pagination) && (
@@ -181,7 +184,7 @@ function DataTable({
       )}
 
       {/* ── Scrollable table area ────────────────────────────── */}
-      <div className={styles.scrollArea}>
+      <div className={styles.scrollArea} style={scrollAreaStyle}>
         <table className={styles.table} role="table">
           <thead className={styles.thead}>
             <tr>

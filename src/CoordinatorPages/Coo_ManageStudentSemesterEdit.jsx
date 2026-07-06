@@ -10,7 +10,7 @@ import Sidebar from '../components/Sidebar/Cosidebar.js';
 import CooCalendar from '../components/Calendar/Coo_Calendar';
 import styles from './Coo_ManageStudentSemesterEdit.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
-import Adminicons from '../assets/Adminicon.png';
+import Adminicons from '../assets/BlueAdminicon.png';
 import BestAchievement from '../assets/BestAchievementicon.svg';
 import StuEyeIcon from '../assets/Coordviewicon.svg';
 import StuUploadMarksheetIcon from '../assets/StuUploadMarksheeticon.svg';
