@@ -11,13 +11,24 @@
  * - Coordinator theme: #D23B42
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useImperativeHandle, forwardRef } from 'react';
 import ReactDOM from 'react-dom';
 
-function Coo_Calendar({ value, onChange }) {
+const Coo_Calendar = forwardRef(function Coo_Calendar({
+  value,
+  onChange,
+  disabled = false,
+  maxDate = null,
+  enabledDates = null,
+  triggerClassName = '',
+  triggerHighlighted = false,
+  variant = 'default',
+  style = {}
+}, ref) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
   const today = useMemo(() => new Date(), []);
+  const maxDateValue = useMemo(() => (maxDate ? new Date(maxDate) : null), [maxDate]);
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [hovered, setHovered] = useState(false);
@@ -28,6 +39,8 @@ function Coo_Calendar({ value, onChange }) {
   const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
   const triggerRef  = useRef(null);
   const calendarRef = useRef(null);
+
+  useImperativeHandle(ref, () => triggerRef.current);
 
   const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -45,7 +58,7 @@ function Coo_Calendar({ value, onChange }) {
     ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
     : '';
 
-  const currentYearForPicker = new Date().getFullYear();
+  const currentYearForPicker = (maxDateValue || today).getFullYear();
   const years = Array.from({ length: currentYearForPicker - 2000 + 1 }, (_, i) => 2000 + i);
   const yearListRef    = useRef(null);
   const yearThumbRef   = useRef(null);
@@ -101,7 +114,10 @@ function Coo_Calendar({ value, onChange }) {
     document.addEventListener('mouseup', onUp);
   };
 
-  const handleToggle = () => setOpen(o => !o);
+  const handleToggle = () => {
+    if (disabled) return;
+    setOpen(o => !o);
+  };
   const handleClose  = () => setOpen(false);
 
   useEffect(() => {
@@ -114,6 +130,14 @@ function Coo_Calendar({ value, onChange }) {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  // Sync calendar view with selected date
+  useEffect(() => {
+    if (selMonth !== null && selYear !== null) {
+      setCalMonth(selMonth);
+      setCalYear(selYear);
+    }
+  }, [selMonth, selYear]);
 
   const calendarPortal = open ? ReactDOM.createPortal(
     <div
@@ -263,10 +287,22 @@ function Coo_Calendar({ value, onChange }) {
                   const sel = isSelected(day);
                   const tod = isToday(day);
                   const isHov = hoveredDay === day;
+                  const dateObj = new Date(calYear, calMonth, day);
+                  const yearStr = calYear;
+                  const monthStr = String(calMonth + 1).padStart(2, '0');
+                  const dayStr = String(day).padStart(2, '0');
+                  const ymdStr = `${yearStr}-${monthStr}-${dayStr}`;
+
+                  let isDisabled = maxDateValue && dateObj > maxDateValue;
+                  if (!isDisabled && enabledDates) {
+                    isDisabled = !enabledDates.includes(ymdStr);
+                  }
                   return (
                     <button
                       key={day}
+                      disabled={isDisabled}
                       onClick={() => {
+                        if (isDisabled) return;
                         const mm = String(calMonth + 1).padStart(2, '0');
                         const dd = String(day).padStart(2, '0');
                         onChange(`${calYear}-${mm}-${dd}`);
@@ -277,10 +313,11 @@ function Coo_Calendar({ value, onChange }) {
                       style={{
                         textAlign: 'center', padding: '7px 0', borderRadius: '50%',
                         border: 'none',
-                        cursor: 'pointer', fontSize: '0.95rem',
+                        cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem',
                         fontWeight: sel || tod ? 700 : 500,
                         backgroundColor: sel ? '#D23B42' : isHov ? '#fce8e9' : tod ? '#fce8e9' : 'transparent',
-                        color: sel ? '#fff' : tod ? '#D23B42' : '#333',
+                        color: sel ? '#fff' : isDisabled ? '#b7b7b7' : tod ? '#D23B42' : '#333',
+                        opacity: isDisabled ? 0.45 : 1,
                         fontFamily: "'Poppins', sans-serif",
                         transition: 'background-color 0.15s',
                         position: 'relative'
@@ -312,6 +349,8 @@ function Coo_Calendar({ value, onChange }) {
     document.body
   ) : null;
 
+  const isFilterVariant = variant === 'filter';
+
   return (
     <div style={{ position: 'relative' }}>
       {/* Trigger field - Coordinator Red Theme */}
@@ -323,16 +362,31 @@ function Coo_Calendar({ value, onChange }) {
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          border: hovered ? '1px solid #D73D3D' : '1px solid #f4dddd',
-          boxShadow: hovered ? '0 0 0 3px rgba(215,61,61,0.2)' : 'none',
+          border: isFilterVariant 
+            ? (open || (hovered && !disabled) ? '3px solid #D23B42' : '3px solid #ccc')
+            : (triggerHighlighted ? '2px solid #b32d34' : hovered && !disabled ? '1px solid #D23B42' : '1px solid #fce8e9'),
+          boxShadow: isFilterVariant
+            ? 'none'
+            : (triggerHighlighted ? '0 0 0 3px rgba(210,59,66,0.18), 0 0 14px rgba(210,59,66,0.28)' : hovered && !disabled ? '0 0 0 3px rgba(210,59,66,0.2)' : 'none'),
           borderRadius: '8px',
-          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#fff9f9',
+          padding: isFilterVariant ? '0px 15px' : '0.9rem',
+          height: isFilterVariant ? '45px' : 'auto',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          backgroundColor: disabled ? '#f5f5f5' : '#ffffff',
           fontSize: '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
-          transition: 'border-color 0.3s, box-shadow 0.3s'
+          opacity: disabled ? 0.78 : 1,
+          transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s',
+          ...style
         }}
       >
-        <span style={{ flex: 1, fontWeight: 500, color: displayVal ? '#222' : '#8a8a8a' }}>{displayVal || 'DD-MM-YYYY'}</span>
+        <span style={{
+          flex: 1,
+          fontWeight: isFilterVariant ? 450 : 600,
+          color: displayVal ? '#333' : '#999'
+        }}>
+          {displayVal || 'DD-MM-YYYY'}
+        </span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="4" width="18" height="18" rx="2" />
           <line x1="16" y1="2" x2="16" y2="6" />
@@ -343,6 +397,6 @@ function Coo_Calendar({ value, onChange }) {
       {calendarPortal}
     </div>
   );
-}
+});
 
 export default Coo_Calendar;

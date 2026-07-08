@@ -503,7 +503,10 @@
 
     .Admin-cp-page-header {
         padding: 14px 14px 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
     }
 
     .Admin-cp-page-header h1 {
@@ -511,7 +514,8 @@
     }
 
     .Admin-cp-page-header-back-btn {
-        width: 100%;
+        width: auto !important;
+        min-width: 120px;
     }
 
     .Admin-cp-page-form {

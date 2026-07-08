@@ -1,0 +1,347 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.Coo-cp-page-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f6f8fb;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+.Coo-cp-page-loading {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #472f30;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.Coo-cp-page-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 900;
+}
+
+.Coo-cp-page-main {
+    flex: 1;
+    margin-left: 280px;
+    margin-top: 65px;
+    padding: 10px 10px 10px 20px;
+    height: calc(100vh - 65px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    background-color: #f6f8fb;
+}
+
+.Coo-cp-page-main::-webkit-scrollbar {
+    width: 10px;
+}
+
+.Coo-cp-page-main::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.Coo-cp-page-main::-webkit-scrollbar-thumb {
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.Coo-cp-page-main::-webkit-scrollbar-thumb:hover {
+    background-color: #b53138;
+}
+
+.Coo-cp-page-card {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.Coo-cp-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0;
+    margin-bottom: 1.5rem;
+}
+
+.Coo-cp-page-header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    position: relative;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+    width: fit-content;
+}
+
+.Coo-cp-page-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #d23b42;
+    border-radius: 2px;
+}
+
+.Coo-cp-page-header p {
+    display: none;
+}
+
+.Coo-cp-page-header-back-btn {
+    border: none;
+    border-radius: 8px;
+    background: #d23b42;
+    color: #ffffff;
+    height: 44px;
+    min-width: 120px;
+    padding: 0 18px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 16px rgba(210, 59, 66, 0.25);
+}
+
+.Coo-cp-page-header-back-btn:hover {
+    transform: translateY(-1px);
+}
+
+.Coo-cp-page-form {
+    padding: 0;
+}
+
+.Coo-cp-page-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.Coo-cp-page-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.Coo-cp-page-field-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #4b4b4b;
+    letter-spacing: 0.02em;
+}
+
+.Coo-cp-page-field input,
+.Coo-cp-page-field select,
+.Coo-cp-page-date-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    height: 53.6px;
+    min-height: 53.6px;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #fdefed;
+    background: #fff9f9;
+    color: #333;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    min-width: 0;
+}
+
+.Coo-cp-page-field input::placeholder,
+.Coo-cp-page-date-input::placeholder {
+    color: #9d8f8f;
+}
+
+.Coo-cp-page-field input:focus,
+.Coo-cp-page-field select:focus,
+.Coo-cp-page-date-input:focus {
+    outline: none;
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(236, 79, 82, 0.2);
+}
+
+.Coo-cp-page-field input:disabled,
+.Coo-cp-page-field select:disabled,
+.Coo-cp-page-date-input:disabled {
+    background: #f5f5f5;
+    color: #7a7a7a;
+    cursor: not-allowed;
+}
+
+.Coo-cp-page-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* Inline suffix chips for Package and Bond Period */
+.Coo-cp-page-field .Coo-cp-input-affix-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 53.6px;
+    min-height: 53.6px;
+    border: 1px solid #fdefed;
+    border-radius: 6px;
+    background: #fff9f9;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix-wrapper:hover,
+.Coo-cp-page-field .Coo-cp-input-affix-wrapper:focus-within {
+    border-color: #d23b42;
+    box-shadow: 0 0 0 3px rgba(236, 79, 82, 0.2);
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 12px;
+    color: #333;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix-input:focus {
+    outline: none;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    background: linear-gradient(135deg, #d23b42 0%, #b53138 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 72px;
+    border-left: none;
+    box-sizing: border-box;
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix-wrapper:has(.Coo-cp-input-affix-input:disabled) {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.Coo-cp-page-field .Coo-cp-input-affix-input:disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+    color: #7a7a7a;
+}
+
+/* Helper styles for required label fields, custom dropdowns */
+.Coo-profile-required-star {
+    color: #d32f2f;
+    margin-left: 2px;
+    display: inline;
+    font-weight: 700;
+}
+
+.Coo-profile-label-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+.Coo-cp-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.Coo-cp-profile-dropdown-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+}
+
+.Coo-cp-page-error {
+    margin: 1rem 0 0;
+    color: #cc2a2a;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .Coo-cp-page-main {
+        margin-left: 0;
+        width: 100%;
+        padding: 10px 10px 10px 20px;
+        height: calc(100vh - 65px);
+    }
+
+    .Coo-cp-page-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .Coo-cp-page-main {
+        margin: 70px 0 0 0;
+        padding: 10px 10px 10px 20px;
+        height: calc(100vh - 70px);
+    }
+
+    .Coo-cp-page-card {
+        border-radius: 14px;
+    }
+
+    .Coo-cp-page-header {
+        padding: 14px 14px 10px;
+        flex-wrap: nowrap !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .Coo-cp-page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .Coo-cp-page-header-back-btn {
+        width: auto !important;
+        min-width: 120px;
+    }
+
+    .Coo-cp-page-form {
+        padding: 0;
+    }
+
+    .Coo-cp-page-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

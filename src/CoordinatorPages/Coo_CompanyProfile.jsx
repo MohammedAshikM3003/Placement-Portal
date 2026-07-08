@@ -17,8 +17,10 @@ import CooCompanyprofileConfirmed from '../assets/CooCompanyprofileconfirmed.svg
 import styles from './Coo_CompanyProfile.module.css';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
-import CooCompanyProfilePopup from './Coo_CompanyProfilePopup';
+
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
+import CooCalendar from '../components/Calendar/Coo_Calendar.jsx';
 
 const sampleCompanyData = [
   {
@@ -183,10 +185,17 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
   // State for search filters
   const [filters, setFilters] = useState({
     company: '',
-    domain: '',
-    jobRole: '',
-    mode: ''
+    companyType: '',
+    hrName: '',
+    mode: '',
+    visitDate: '',
+    location: ''
   });
+
+  const [companyFocused, setCompanyFocused] = useState(false);
+  const [hrNameFocused, setHrNameFocused] = useState(false);
+  const [locationFocused, setLocationFocused] = useState(false);
+  const [visitDateFocused, setVisitDateFocused] = useState(false);
 
   const [activeItem, setActiveItem] = useState("Company Profile");
   const navigate = useNavigate();
@@ -226,22 +235,100 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
     fetchCompanies();
   }, [fetchCompanies]);
 
+  const matchedCompanyVisitDate = useMemo(() => {
+    const companyQuery = filters.company.trim().toLowerCase();
+    if (!companyQuery) return '';
+    const matchedCompany = companies.find((company) =>
+      (company.company || company.companyName || '').trim().toLowerCase() === companyQuery
+    );
+    return matchedCompany ? (matchedCompany.visitDate || '').slice(0, 10) : '';
+  }, [companies, filters.company]);
+
+  const visitDateOptions = useMemo(() => {
+    if (matchedCompanyVisitDate) return [matchedCompanyVisitDate];
+    if (!companies.length) return [];
+    const uniqueDates = new Set(
+      companies
+        .map((company) => (company.visitDate || '').slice(0, 10))
+        .filter(Boolean)
+    );
+    return Array.from(uniqueDates).sort();
+  }, [companies, matchedCompanyVisitDate]);
+
+  const handleFilterVisitDateChange = useCallback((value) => {
+    setFilters((prev) => ({
+      ...prev,
+      visitDate: value || ''
+    }));
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      company: '',
+      companyType: '',
+      hrName: '',
+      mode: '',
+      visitDate: '',
+      location: ''
+    });
+  }, []);
+
+  useEffect(() => {
+    setFilters((prev) => {
+      if (matchedCompanyVisitDate && prev.visitDate !== matchedCompanyVisitDate) {
+        return {
+          ...prev,
+          visitDate: matchedCompanyVisitDate
+        };
+      }
+      if (!matchedCompanyVisitDate && !visitDateOptions.includes(prev.visitDate)) {
+        return {
+          ...prev,
+          visitDate: ''
+        };
+      }
+      return prev;
+    });
+  }, [matchedCompanyVisitDate, visitDateOptions]);
+
+  const hasActiveFilters = Boolean(
+    filters.company.trim() ||
+    filters.companyType ||
+    filters.hrName.trim() ||
+    filters.mode ||
+    filters.visitDate ||
+    filters.location.trim()
+  );
+
   // Filtered data using useMemo for performance
   const filteredData = useMemo(() => {
     if (!companies.length) return [];
 
-    return companies.filter(company => {
-      const companyName = (company.company || company.companyName || '').toLowerCase();
-      const domain = (company.domain || company.companyType || '').toLowerCase();
-      const jobRole = (company.jobRole || '').toLowerCase();
-      const mode = (company.mode || '').toLowerCase();
+    const companyQuery = filters.company.trim().toLowerCase();
+    const hrNameQuery = filters.hrName.trim().toLowerCase();
+    const modeQuery = filters.mode;
+    const visitDateQuery = filters.visitDate;
+    const companyTypeQuery = filters.companyType;
+    const locationQuery = filters.location.trim().toLowerCase();
 
-      return (
-        companyName.includes((filters.company || '').toLowerCase()) &&
-        domain.includes((filters.domain || '').toLowerCase()) &&
-        jobRole.includes((filters.jobRole || '').toLowerCase()) &&
-        mode.includes((filters.mode || '').toLowerCase())
-      );
+    return companies.filter((company) => {
+      const companyName = (company.company || company.companyName || '').toLowerCase();
+      const jobRole = (company.jobRole || '').toLowerCase();
+      const hrName = (company.hrName || '').toLowerCase();
+      const mode = company.mode || '';
+      const visitDate = (company.visitDate || '').slice(0, 10);
+      const companyType = company.companyType || company.domain || '';
+      const location = (company.location || '').toLowerCase();
+
+      const matchesCompanyOrRole =
+        !companyQuery || companyName.includes(companyQuery) || jobRole.includes(companyQuery);
+      const matchesHrName = !hrNameQuery || hrName.includes(hrNameQuery);
+      const matchesMode = !modeQuery || mode === modeQuery;
+      const matchesVisitDate = !visitDateQuery || visitDate === visitDateQuery;
+      const matchesCompanyType = !companyTypeQuery || companyType === companyTypeQuery;
+      const matchesLocation = !locationQuery || location.includes(locationQuery);
+
+      return matchesCompanyOrRole && matchesHrName && matchesMode && matchesVisitDate && matchesCompanyType && matchesLocation;
     });
   }, [companies, filters]);
 
@@ -477,18 +564,10 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
     setIsSidebarOpen(prev => !prev);
   };
 
-  // Handle view popup
+  // Navigate to view page
   const openViewPopup = (companyId) => {
     const company = companies.find(c => (c.id || c._id) === companyId);
-    if (company) {
-      setViewingCompany(company);
-      setShowViewPopup(true);
-    }
-  };
-
-  const handlePopupClose = () => {
-    setShowViewPopup(false);
-    setViewingCompany(null);
+    navigate(`/coo-company-profile/manage/view/${companyId}`, { state: { company } });
   };
 
   return (
@@ -500,89 +579,138 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
         />
         <div className={styles['co-cp-main-content']}>
           {/* Top Cards Row */}
-          <div className={styles['co-cp-top-cards-row']} style={{marginTop:"-20px"}}>
+          <div className={styles['co-cp-top-cards-row']}>
 
-            {/* 1: Student Analysis Card */}
-            <div className={`${styles['co-cp-card']} ${styles['co-cp-report-analysis-card']}`} onClick={() => handleCardClick('company-drive')}  >
-              <img src={CompanyDrive} alt="Student Analysis" className={styles['co-cp-report-analysis-card__image']} />
-              <span className={`${styles['co-cp-card-title']} ${styles['report-analysis-card__title']}`} >Company Drive</span>
-              <span className={`${styles['co-cp-card-desc']} ${styles['report-analysis-card__description']}`}><br/> View upcoming,<br/>Ongoing,and<br/>Completed drives</span>
+            {/* 1: Company Drive Card */}
+            <div className={`${styles['co-cp-card']} ${styles['co-cp-report-analysis-card']}`} onClick={() => handleCardClick('company-drive')} role="button" tabIndex={0} onKeyDown={(event) => event.key === 'Enter' && handleCardClick('company-drive')} >
+              <img src={CompanyDrive} alt="Company Drive" className={styles['co-cp-report-analysis-card__image']} />
+              <h4 className={styles['co-cp-card-title']}>Company Drive</h4>
+              <p className={styles['co-cp-card-desc']}>
+                View upcoming, Ongoing, and Completed drives
+              </p>
             </div>
 
-            {/* 2: Student Profile Search Card */}
+            {/* 2: Search Filter Card */}
             <div className={styles['co-cp-search-filter-card']} >
-              <div className={styles['co-cp-search-filter-card__tabs-container']}>
-                <button className={styles['co-cp-search-filter-card__tab-button']}>Company Profile</button>
+              <div className={styles['co-cp-filter-header-container']}>
+                <div className={styles['co-cp-filter-header']}>Company Profile</div>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    className={styles['co-cp-clear-btn-header']}
+                    onClick={handleClearFilters}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               <div className={styles['co-cp-search-filter-card__fields-container']}>
-                <div className={styles['co-cp-search-filter-card__fields-row']}>
-
-                  {/* Name Search Input */}
-                  <div className={styles['co-cp-search-filter-card__input-wrapper']}>
+                {/* 1. Company / Job Role Input */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-company">
+                    Company / Job Role
+                  </label>
+                  <div className={`${styles['co-cp-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
                     <input
                       id="search-company"
-                      className={styles['co-cp-search-filter-card__input']}
-                      placeholder="Search Company"
+                      type="text"
+                      className={styles['co-cp-text']}
+                      placeholder="Search Company / Job Role"
                       value={filters.company}
                       onChange={(e) => handleFilterChange('company', e.target.value)}
-                      required
+                      onFocus={() => setCompanyFocused(true)}
+                      onBlur={() => setCompanyFocused(false)}
+                      aria-label="Search Company or Job Role"
                     />
-                    <label htmlFor="search-company" className={styles['co-cp-search-filter-card__label']}>
-                      Search Company
-                    </label>
-                  </div>
-
-                  {/* Department Search Input */}
-                  <div className={styles['co-cp-search-filter-card__input-wrapper']}>
-                    <input
-                      id="search-domain"
-                      className={styles['co-cp-search-filter-card__input']}
-                      placeholder="Search by Domain"
-                      value={filters.domain}
-                      onChange={(e) => handleFilterChange('domain', e.target.value)}
-                      required
-                    />
-                    <label htmlFor="search-domain" className={styles['co-cp-search-filter-card__label']}>
-                      Search by Domain
-                    </label>
                   </div>
                 </div>
-                <div className={styles['co-cp-search-filter-card__fields-row']}>
 
-                  {/* Branch Search Input */}
-                  <div className={styles['co-cp-search-filter-card__input-wrapper']}>
+                {/* 2. Company Type Dropdown */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-company-type">
+                    Company Type
+                  </label>
+                  <Dropdown
+                    id="search-company-type"
+                    options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                    selectedOption={filters.companyType}
+                    onSelect={(val) => handleFilterChange('companyType', val)}
+                    placeholder="Search Company Type"
+                    role="coordinator"
+                    className={styles['cp-dropdown-wrapper']}
+                    headerClassName={styles['cp-dropdown-header']}
+                  />
+                </div>
+
+                {/* 3. HR Name Input */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-hr-name">
+                    HR Name
+                  </label>
+                  <div className={`${styles['co-cp-text-container']} ${hrNameFocused ? styles['is-focused'] : ''}`}>
                     <input
-                      id="search-jobrole"
-                      className={styles['co-cp-search-filter-card__input']}
-                      placeholder="Search Job Role"
-                      value={filters.jobRole}
-                      onChange={(e) => handleFilterChange('jobRole', e.target.value)}
-                      required
+                      id="search-hr-name"
+                      type="text"
+                      className={styles['co-cp-text']}
+                      placeholder="Search HR Name"
+                      value={filters.hrName}
+                      onChange={(e) => handleFilterChange('hrName', e.target.value)}
+                      onFocus={() => setHrNameFocused(true)}
+                      onBlur={() => setHrNameFocused(false)}
+                      aria-label="Search HR Name"
                     />
-                    <label htmlFor="search-jobrole" className={styles['co-cp-search-filter-card__label']}>
-                      Search Job Role
-                    </label>
                   </div>
+                </div>
 
-                  {/* Status Search Dropdown */}
-                  <div className={styles['co-cp-search-filter-card__input-wrapper1']}>
-    <select
-      id="search-mode"
-      className={styles['co-cp-search-filter-card__input']}
-      
-      value={filters.mode}
-      onChange={(e) => handleFilterChange('mode', e.target.value)}
-      required
-    >
-      <option value="" disabled>Search by Mode</option>
-      <option value="Online">Online</option>
-      <option value="Offline">Offline</option>
-      <option value="Hybrid">Hybrid</option>
-    </select>
-    <label htmlFor="search-mode" className={styles['co-cp-search-filter-card__label']}>
-                      Search by Mode
-                    </label>
-</div>
+                {/* 4. Search Mode Dropdown */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-mode">
+                    Search Mode
+                  </label>
+                  <Dropdown
+                    id="search-mode"
+                    options={['Online', 'Offline', 'Hybrid']}
+                    selectedOption={filters.mode}
+                    onSelect={(val) => handleFilterChange('mode', val)}
+                    placeholder="Search Mode"
+                    role="coordinator"
+                    className={styles['cp-dropdown-wrapper']}
+                    headerClassName={styles['cp-dropdown-header']}
+                  />
+                </div>
+
+                {/* 5. Visit Date Calendar */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-visit-date">
+                    Visit Date
+                  </label>
+                  <CooCalendar
+                    id="search-visit-date"
+                    value={filters.visitDate}
+                    onChange={handleFilterVisitDateChange}
+                    variant="filter"
+                    enabledDates={visitDateOptions}
+                  />
+                </div>
+
+                {/* 6. Location Input */}
+                <div className={styles['co-cp-input-wrapper']}>
+                  <label className={styles['co-cp-static-label']} htmlFor="search-location">
+                    Location
+                  </label>
+                  <div className={`${styles['co-cp-text-container']} ${locationFocused ? styles['is-focused'] : ''}`}>
+                    <input
+                      id="search-location"
+                      type="text"
+                      className={styles['co-cp-text']}
+                      placeholder="Search Location"
+                      value={filters.location}
+                      onChange={(e) => handleFilterChange('location', e.target.value)}
+                      onFocus={() => setLocationFocused(true)}
+                      onBlur={() => setLocationFocused(false)}
+                      aria-label="Search Location"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -660,7 +788,6 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                   <table className={styles['co-cp-students-table']}>
                       <thead>
                           <tr className={styles['co-cp-table-head-row']}>
-                              <th className={`${styles['co-cp-th']} ${styles['co-cp-checkbox']}`}>Select</th>
                               <th className={`${styles['co-cp-th']} ${styles['co-cp-sno']}`}>S.No</th>
                               <th className={`${styles['co-cp-th']} ${styles['co-cp-company']}`}>Company</th>
                               <th className={`${styles['co-cp-th']} ${styles['co-cp-domain']}`}>Company Type</th>
@@ -675,7 +802,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                       <tbody>
                           {isInitialLoading ? (
                               <tr className={styles['co-cp-loading-row']}>
-                                  <td colSpan="10" className={styles['co-cp-loading-cell']}>
+                                  <td colSpan="9" className={styles['co-cp-loading-cell']}>
                                       <div className={styles['co-cp-loading-wrapper']}>
                                           <div className={styles['co-cp-spinner']}></div>
                                           <span className={styles['co-cp-loading-text']}>Loading companies…</span>
@@ -693,14 +820,6 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                                           className={`${styles['co-cp-table-row']} ${isSelected ? styles['co-cp-selected-row'] : ''}`}
                                           onClick={() => toggleCompanySelection(companyId)}
                                       >
-                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-checkbox']}`} onClick={(event) => event.stopPropagation()}>
-                                              <input
-                                                  type="checkbox"
-                                                  className={styles['co-cp-checkbox-input']}
-                                                  checked={isSelected}
-                                                  onChange={() => toggleCompanySelection(companyId)}
-                                              />
-                                          </td>
                                           <td className={`${styles['co-cp-td']} ${styles['co-cp-sno']}`}>{(currentPage - 1) * companiesPerPage + index + 1}</td>
                                           <td className={`${styles['co-cp-td']} ${styles['co-cp-company']}`}>{company.company || company.companyName || '—'}</td>
                                           <td className={`${styles['co-cp-td']} ${styles['co-cp-domain']}`}>{company.companyType || company.domain || '—'}</td>
@@ -725,7 +844,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                               })
                           ) : (
                               <tr>
-                                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem 0' }}>
                                       No companies found matching the applied filters.
                                   </td>
                               </tr>
@@ -761,12 +880,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
         color="#d23b42"
       />
 
-            {/* Company View Popup */}
-            <CooCompanyProfilePopup
-                isOpen={showViewPopup}
-                onClose={handlePopupClose}
-                viewingCompany={viewingCompany}
-            />
+
          
     </>
   );

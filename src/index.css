@@ -467,7 +467,7 @@ html.coo-theme main {
   html.coo-theme [class*="dashboard-area"],
   html.coo-theme [class*="dashboardArea"],
   html.coo-theme main {
-    padding-bottom: 24px !important;
+    padding-bottom: 10px !important;
     margin-bottom: 0 !important;
   }
 }

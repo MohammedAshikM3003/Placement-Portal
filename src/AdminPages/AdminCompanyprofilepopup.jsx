@@ -452,27 +452,21 @@ function AdminCompanyprofilePopup({ onLogout }) {
                     </form>
                 </section>
 
-                <div className={styles['Admin-cp-page-actions-outside']}>
-                    {isViewMode ? (
-                        <button type="button" className={styles['Admin-cp-page-primary-btn']} onClick={handleBack}>
-                            Back to Company Profile
+                {!isViewMode && (
+                    <div className={styles['Admin-cp-page-actions-outside']}>
+                        <button type="button" className={styles['Admin-cp-page-secondary-btn']} onClick={handleBack} disabled={isProcessing}>
+                            Cancel
                         </button>
-                    ) : (
-                        <>
-                            <button type="button" className={styles['Admin-cp-page-secondary-btn']} onClick={handleBack} disabled={isProcessing}>
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                form="admin-company-profile-form"
-                                className={styles['Admin-cp-page-primary-btn']}
-                                disabled={isProcessing || isLoadingCompany || missingFields.length > 0}
-                            >
-                                {isEditMode ? (isProcessing ? 'Updating...' : 'Update Company') : (isProcessing ? 'Adding...' : 'Add Company')}
-                            </button>
-                        </>
-                    )}
-                </div>
+                        <button
+                            type="submit"
+                            form="admin-company-profile-form"
+                            className={styles['Admin-cp-page-primary-btn']}
+                            disabled={isProcessing || isLoadingCompany || missingFields.length > 0}
+                        >
+                            {isEditMode ? (isProcessing ? 'Updating...' : 'Update Company') : (isProcessing ? 'Adding...' : 'Add Company')}
+                        </button>
+                    </div>
+                )}
 
                 {!isReadOnly && missingFields.length > 0 && (
                     <div className={styles['Admin-profile-validation-box']}>
