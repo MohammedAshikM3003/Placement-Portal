@@ -61,25 +61,27 @@
 .Admin-cd-top-card {
     background-color: transparent;
     display: flex;
-    gap: 20px;
+    gap: 10px;
     align-items: stretch;
     flex-wrap: nowrap;
     margin-left: 0;
     margin-right: 0;
     height: auto;
     flex-shrink: 0;
+    width: 100%;
+    min-width: 0;
 }
 
 /* Filter Section */
 .Admin-cd-filter-section {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     background-color: #e8e8e8;
     padding: 20px;
     border-radius: 18px;
     position: relative;
     display: flex;
     flex-direction: column;
-    max-width: 750px;
 }
 
 .Admin-cd-filter-header-container {
@@ -136,8 +138,12 @@
 
 .Admin-cd-filter-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    grid-template-columns:
+        minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 0.7fr);
+    column-gap: 14px;
+    row-gap: 12px;
+    width: 100%;
+    min-width: 0;
     flex-grow: 1;
     align-content: center;
 }
@@ -245,10 +251,12 @@
     height: 45px;
     background-color: #ffffff;
     transition: border-color 0.2s ease, border-width 0.2s ease;
+    width: 100%;
+    min-width: 0;
 }
 
 .Admin-cd-text {
-    width: 89%;
+    width: 100%;
     height: 100%;
     padding: 0px 15px;
     border: none;
@@ -258,6 +266,7 @@
     color: #333;
     position: relative;
     z-index: 0;
+    box-sizing: border-box;
 }
 
 .Admin-cd-select {
@@ -328,31 +337,35 @@
 
 /* Action Cards Section */
 .Admin-cd-action-cards-section {
+    flex: 0 0 430px;
+    min-width: 400px;
     display: flex;
     flex-direction: column;
-    flex: 1;
     gap: 10px;
-    min-width: 0;
+    overflow: hidden;
+    align-self: stretch;
 }
 
 .Admin-cd-action-card {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 105px minmax(0, 1fr) 100px;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
+    column-gap: 12px;
+    padding: 12px 16px;
+    box-sizing: border-box;
     background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: none;
     border: 2px solid #4EA24E;
+    border-radius: 15px;
+    overflow: hidden;
     transition: border-color 0.2s ease;
 }
 
 .Admin-cd-action-addcard {
     text-align: center;
-    width: 211px;
-    flex-shrink: 0;
+    flex: 0 1 210px;
+    min-width: 190px;
     padding: 15px;
     background-color: #ffffff;
     border-radius: var(--radius-lg, 12px);
@@ -415,64 +428,82 @@
     font-weight: 700;
     margin: 0;
     color: #888888;
-    width: 110px;
+    width: 100%;
     text-align: left;
+    align-self: center;
+    justify-self: start;
     flex-shrink: 0;
     transition: color 0.2s ease;
 }
 
 .Admin-cd-header-disabled {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
     color: #888888 !important;
-    width: 110px;
+    width: 100%;
     text-align: left;
+    align-self: center;
+    justify-self: start;
     flex-shrink: 0;
 }
 
 .Admin-cd-header-edit-active {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
     color: #5932EA !important;
-    width: 110px;
+    width: 100%;
     text-align: left;
+    align-self: center;
+    justify-self: start;
     flex-shrink: 0;
 }
 
 .Admin-cd-header-delete-active {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
     color: #ff0000 !important;
-    width: 110px;
+    width: 100%;
     text-align: left;
+    align-self: center;
+    justify-self: start;
     flex-shrink: 0;
 }
 
 .Admin-cd-action-description {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #666;
-    margin: 0 15px;
-    padding: 0;
     font-weight: 500;
-    line-height: 1.3;
-    flex-grow: 1;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
     display: block;
     text-align: left;
+    line-height: 1.3;
+    align-self: center;
+    justify-self: stretch;
+    overflow-wrap: break-word;
 }
 
 .Admin-cd-action-btn {
-    padding: 8px 16px;
+    padding: 8px 8px;
     border: none;
     border-radius: 8px;
     font-weight: 700;
     cursor: pointer;
-    width: 100px;
-    flex-shrink: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: 100px;
+    margin: 0;
+    justify-self: end;
+    align-self: center;
+    flex: none;
+    box-sizing: border-box;
     transition: opacity 0.2s, background-color 0.2s, color 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .Admin-cd-action-btn:disabled {
@@ -1129,11 +1160,34 @@
     }
 
     .Admin-cd-action-card {
-        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 12px !important;
         width: 100% !important;
-        min-height: 55px !important;
         height: auto !important;
         box-sizing: border-box !important;
+    }
+
+    .Admin-cd-action-header,
+    .Admin-cd-header-disabled,
+    .Admin-cd-header-edit-active,
+    .Admin-cd-header-delete-active {
+        align-self: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+
+    .Admin-cd-action-description {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .Admin-cd-action-btn {
+        width: 100% !important;
+        max-width: none !important;
+        margin-top: 8px !important;
     }
 
     /* Table Section Adjustments */
@@ -1222,10 +1276,10 @@
 
 /* Loading Spinner Styles */
 .Admin-cd-loading-cell {
-  text-align: center;
-  height: 200px;
-  vertical-align: middle;
-  width: 100%;
+    text-align: center;
+    height: 200px;
+    vertical-align: middle;
+    width: 100%;
 }
 
 .Admin-cd-loading-row {
@@ -1233,23 +1287,23 @@
 }
 
 .Admin-cd-loading-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    width: 100%;
 }
 
 .Admin-cd-spinner {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 4px solid rgba(78, 162, 78, 0.25);
-  border-top-color: #4EA24E;
-  animation: adminCompanyDriveSpin 0.7s linear infinite;
-  margin: 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adminCompanyDriveSpin 0.7s linear infinite;
+    margin: 0 auto;
 }
 
 @keyframes adminCompanyDriveSpin {
@@ -1315,6 +1369,7 @@
 .cd-dropdown-wrapper {
     max-width: 100% !important;
     width: 100% !important;
+    min-width: 0 !important;
 }
 
 .cd-dropdown-header {

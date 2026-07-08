@@ -119,6 +119,8 @@ function AdminCompanyDrive({ onLogout }) {
     const [tempFilterStartDate, setTempFilterStartDate] = useState('');
     const [tempFilterEndDate, setTempFilterEndDate] = useState('');
     const [tempFilterMode, setTempFilterMode] = useState('');
+    const [tempFilterStatus, setTempFilterStatus] = useState('');
+    const [tempFilterRounds, setTempFilterRounds] = useState('');
 
     // Focus states for floating labels
     const [companyFocused, setCompanyFocused] = useState(false);
@@ -126,6 +128,8 @@ function AdminCompanyDrive({ onLogout }) {
     const [startDateFocused, setStartDateFocused] = useState(false);
     const [endDateFocused, setEndDateFocused] = useState(false);
     const [modeFocused, setModeFocused] = useState(false);
+    const [statusFocused, setStatusFocused] = useState(false);
+    const [roundsFocused, setRoundsFocused] = useState(false);
 
     // Applied filter states
     const [filterCompany, setFilterCompany] = useState('');
@@ -133,6 +137,8 @@ function AdminCompanyDrive({ onLogout }) {
     const [filterStartDate, setFilterStartDate] = useState('');
     const [filterEndDate, setFilterEndDate] = useState('');
     const [filterMode, setFilterMode] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filterRounds, setFilterRounds] = useState('');
     // Dropdown option lists derived from table content
     const [departmentOptions, setDepartmentOptions] = useState([]);
 
@@ -161,6 +167,8 @@ function AdminCompanyDrive({ onLogout }) {
         const q = (tempFilterCompany || '').trim().toLowerCase();
         const deptFilter = (tempFilterDepartment || '').trim();
         const modeFilter = tempFilterMode;
+        const statusFilter = tempFilterStatus;
+        const roundsFilter = tempFilterRounds;
 
         return companies.map(c => ({
             ...c,
@@ -186,9 +194,34 @@ function AdminCompanyDrive({ onLogout }) {
             // Match Mode
             if (modeFilter && c.mode !== modeFilter) return false;
 
+            // Match Status
+            if (statusFilter) {
+                let currentStatus = 'Eligibility';
+                if (c.allRoundsCompleted || c.driveStatus === 'completed') {
+                    currentStatus = 'Ended';
+                } else if (c.attendanceTaken) {
+                    currentStatus = 'Resume';
+                } else if (c.eligibleCreated) {
+                    currentStatus = 'Attendance';
+                } else {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const startStr = toYmd(c.startingDate);
+                    if (startStr && startStr > todayStr) {
+                        currentStatus = 'Scheduled';
+                    }
+                }
+                if (currentStatus !== statusFilter) return false;
+            }
+
+            // Match Rounds
+            if (roundsFilter) {
+                const driveRounds = String(c.rounds || c.numberOfRounds || '');
+                if (!driveRounds.includes(roundsFilter)) return false;
+            }
+
             return true;
         });
-    }, [companies, tempFilterCompany, tempFilterDepartment, tempFilterMode]);
+    }, [companies, tempFilterCompany, tempFilterDepartment, tempFilterMode, tempFilterStatus, tempFilterRounds]);
 
     // Unique start dates for calendar when no dates are selected
     const uniqueStartDates = useMemo(() => {
@@ -296,7 +329,9 @@ function AdminCompanyDrive({ onLogout }) {
         tempFilterDepartment ||
         tempFilterStartDate ||
         tempFilterEndDate ||
-        tempFilterMode
+        tempFilterMode ||
+        tempFilterStatus ||
+        tempFilterRounds.trim()
     );
 
     const handleClearFilters = useCallback(() => {
@@ -305,6 +340,8 @@ function AdminCompanyDrive({ onLogout }) {
         setTempFilterStartDate('');
         setTempFilterEndDate('');
         setTempFilterMode('');
+        setTempFilterStatus('');
+        setTempFilterRounds('');
         setDateSelectionMode('none');
     }, []);
 
@@ -581,7 +618,7 @@ function AdminCompanyDrive({ onLogout }) {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterCompany, filterDepartment, filterStartDate, filterEndDate, filterMode]);
+    }, [filterCompany, filterDepartment, filterStartDate, filterEndDate, filterMode, filterStatus, filterRounds]);
 
     useEffect(() => {
         setFilterCompany(tempFilterCompany);
@@ -589,7 +626,9 @@ function AdminCompanyDrive({ onLogout }) {
         setFilterStartDate(tempFilterStartDate);
         setFilterEndDate(tempFilterEndDate);
         setFilterMode(tempFilterMode);
-    }, [tempFilterCompany, tempFilterDepartment, tempFilterStartDate, tempFilterEndDate, tempFilterMode]);
+        setFilterStatus(tempFilterStatus);
+        setFilterRounds(tempFilterRounds);
+    }, [tempFilterCompany, tempFilterDepartment, tempFilterStartDate, tempFilterEndDate, tempFilterMode, tempFilterStatus, tempFilterRounds]);
 
     const handleCompanySelect = (id) => {
         setSelectedCompanyIds(prevIds => {
@@ -707,7 +746,30 @@ function AdminCompanyDrive({ onLogout }) {
 
         const modeMatch = filterMode === '' || company.mode === filterMode;
 
-        return companyMatch && departmentMatch && startDateMatch && endDateMatch && modeMatch;
+        // Status matching
+        let statusMatch = true;
+        if (filterStatus) {
+            let currentStatus = 'Eligibility';
+            if (company.allRoundsCompleted || company.driveStatus === 'completed') {
+                currentStatus = 'Ended';
+            } else if (company.attendanceTaken) {
+                currentStatus = 'Resume';
+            } else if (company.eligibleCreated) {
+                currentStatus = 'Attendance';
+            } else {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const startStr = toYmd(company.startingDate);
+                if (startStr && startStr > todayStr) {
+                    currentStatus = 'Scheduled';
+                }
+            }
+            statusMatch = currentStatus === filterStatus;
+        }
+
+        // Rounds matching
+        const roundsMatch = filterRounds === '' || String(company.rounds || company.numberOfRounds || '').includes(filterRounds);
+
+        return companyMatch && departmentMatch && startDateMatch && endDateMatch && modeMatch && statusMatch && roundsMatch;
     });
 
     const totalPages = Math.ceil(filteredCompanies.length / drivesPerPage) || 1;
@@ -765,15 +827,21 @@ function AdminCompanyDrive({ onLogout }) {
                 const year = d.getFullYear();
                 return `${day}-${month}-${year}`;
             };
+            const formatBranches = (company) => {
+                const branches = Array.isArray(company.eligibleBranches)
+                    ? company.eligibleBranches.map((branch) => String(branch || '').trim()).filter(Boolean)
+                    : [];
+                return branches.length > 0 ? branches.join(', ') : company.department || '—';
+            };
             const data = filteredCompanies.map(company => [
                 company.companyName,
                 company.jobRole,
                 formatDate(company.startingDate),
                 formatDate(company.endingDate),
                 company.mode,
-                company.department
+                formatBranches(company)
             ]);
-            const header = ["Company", "Job Role", "Start Date", "End Date", "Mode", "Department"];
+            const header = ["Company", "Job Role", "Start Date", "End Date", "Mode", "Branches"];
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Company Drives");
@@ -825,14 +893,20 @@ function AdminCompanyDrive({ onLogout }) {
                 const year = d.getFullYear();
                 return `${day}-${month}-${year}`;
             };
-            const columns = ["Company", "Job Role", "Start Date", "End Date", "Mode", "Department"];
+            const formatBranches = (company) => {
+                const branches = Array.isArray(company.eligibleBranches)
+                    ? company.eligibleBranches.map((branch) => String(branch || '').trim()).filter(Boolean)
+                    : [];
+                return branches.length > 0 ? branches.join(', ') : company.department || '—';
+            };
+            const columns = ["Company", "Job Role", "Start Date", "End Date", "Mode", "Branches"];
             const rows = filteredCompanies.map(company => [
                 company.companyName,
                 company.jobRole,
                 formatDate(company.startingDate),
                 formatDate(company.endingDate),
                 company.mode,
-                company.department
+                formatBranches(company)
             ]);
             doc.text("Company Drive Report", 14, 15);
             autoTable(doc, { head: [columns], body: rows, startY: 20, styles: { fontSize: 8 } });
@@ -913,20 +987,36 @@ function AdminCompanyDrive({ onLogout }) {
                                     </div>
                                 </div>
 
-                                {/* Department Filter with Static Label */}
+                                {/* Branches Filter with Static Label */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-department">
-                                        Department
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-branches">
+                                        Branches
                                     </label>
-                                <Dropdown
-                                    options={departmentOptions && departmentOptions.length > 0 ? departmentOptions.map(opt => ({ label: opt === '' ? 'All Departments' : opt, value: opt })) : [{ label: 'All Departments', value: '' }]}
-                                    selectedOption={tempFilterDepartment}
-                                    onSelect={(val) => setTempFilterDepartment(val)}
-                                    placeholder="All Departments"
-                                    role="admin"
-                                    className={styles['cd-dropdown-wrapper']}
-                                    headerClassName={styles['cd-dropdown-header']}
-                                />
+                                    <Dropdown
+                                        options={departmentOptions && departmentOptions.length > 0 ? departmentOptions.map(opt => ({ label: opt === '' ? 'All Branches' : opt, value: opt })) : [{ label: 'All Branches', value: '' }]}
+                                        selectedOption={tempFilterDepartment}
+                                        onSelect={(val) => setTempFilterDepartment(val)}
+                                        placeholder="All Branches"
+                                        role="admin"
+                                        className={styles['cd-dropdown-wrapper']}
+                                        headerClassName={styles['cd-dropdown-header']}
+                                    />
+                                </div>
+
+                                {/* Mode Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-mode">
+                                        Search Mode
+                                    </label>
+                                    <Dropdown
+                                        options={['Online', 'Offline', 'Hybrid']}
+                                        selectedOption={tempFilterMode}
+                                        onSelect={(val) => setTempFilterMode(val)}
+                                        placeholder="Search Mode"
+                                        role="admin"
+                                        className={styles['cd-dropdown-wrapper']}
+                                        headerClassName={styles['cd-dropdown-header']}
+                                    />
                                 </div>
 
                                 {/* Dates Filter with Static Label and Start/End subfields */}
@@ -999,20 +1089,39 @@ function AdminCompanyDrive({ onLogout }) {
                                     </div>
                                 </div>
 
-                                {/* Mode Filter with Static Label */}
+                                {/* Status Filter with Static Label */}
                                 <div className={styles['Admin-cd-input-wrapper']}>
-                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-mode">
-                                        Search Mode
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-status">
+                                        Status
                                     </label>
-                                <Dropdown
-                                    options={['Online', 'Offline', 'Hybrid']}
-                                    selectedOption={tempFilterMode}
-                                    onSelect={(val) => setTempFilterMode(val)}
-                                    placeholder="Search Mode"
-                                    role="admin"
-                                    className={styles['cd-dropdown-wrapper']}
-                                    headerClassName={styles['cd-dropdown-header']}
-                                />
+                                    <Dropdown
+                                        options={['Eligibility', 'Attendance', 'Resume', 'Ended']}
+                                        selectedOption={tempFilterStatus}
+                                        onSelect={(val) => setTempFilterStatus(val)}
+                                        placeholder="Search Status"
+                                        role="admin"
+                                        className={styles['cd-dropdown-wrapper']}
+                                        headerClassName={styles['cd-dropdown-header']}
+                                    />
+                                </div>
+
+                                {/* Rounds Filter with Static Label */}
+                                <div className={styles['Admin-cd-input-wrapper']}>
+                                    <label className={styles['Admin-cd-static-label']} htmlFor="admin-search-rounds">
+                                        Rounds
+                                    </label>
+                                    <div className={`${styles['Admin-cd-text-container']} ${roundsFocused ? styles['is-focused'] : ''}`}>
+                                        <input
+                                            id="admin-search-rounds"
+                                            type="text"
+                                            className={styles['Admin-cd-text']}
+                                            placeholder="Search Rounds"
+                                            value={tempFilterRounds}
+                                            onChange={(e) => setTempFilterRounds(e.target.value)}
+                                            onFocus={() => setRoundsFocused(true)}
+                                            onBlur={() => setRoundsFocused(false)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1117,7 +1226,7 @@ function AdminCompanyDrive({ onLogout }) {
                                         <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-date']}`}>End Date</th>
                                         <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-rounds']}`}>Rounds</th>
                                         <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-mode']}`}>Mode</th>
-                                        <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-domain']}`}>Department</th>
+                                        <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-domain']}`}>Branches</th>
                                         <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-view']}`}>View</th>
                                         <th className={`${styles['Admin-cd-th']} ${styles['Admin-cd-action']}`}>Action</th>
                                     </tr>

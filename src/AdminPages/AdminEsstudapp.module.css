@@ -110,7 +110,7 @@
 
     text-align: center;
 
-    border: 2px solid grey;
+    border: 3px solid #e0e0e0;
 
     transition: border 0.2s, transform 0.2s;
 
@@ -130,8 +130,8 @@
 
 .Admin-es-apk-eligible-student-card:hover {
 
-    border: 2px solid rgb(2, 171, 41);
-
+    border-color: #4ea24e;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.15);
     transform: translateY(-2px);
 
 }
@@ -674,7 +674,7 @@
 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-    border: 2px solid #808080;
+    border: 3px solid #e0e0e0;
 
     transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
 
@@ -685,10 +685,8 @@
 
 
 .Admin-es-apk-placed-students-card:hover {
-
-    border: 2px solid #4EA24E;
-
-    box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
+    border-color: #4ea24e;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.15);
 
     transform: translateY(-2px);
 
@@ -1124,8 +1122,9 @@
    ============================================================================ */
 
 @media (max-width: 1200px) {
+
     /* Reset Fixed Margins used in Desktop */
-    .Admin-es-apk-top-card, 
+    .Admin-es-apk-top-card,
     .Admin-es-apk-bottom-filters {
         margin-left: 0 !important;
         margin-right: 0 !important;
@@ -1319,6 +1318,7 @@
 }
 
 @media (max-width: 600px) {
+
     /* Margin Centering and Padding Pattern */
     .Admin-es-apk-bottom-filters {
         padding: 1.75rem !important;

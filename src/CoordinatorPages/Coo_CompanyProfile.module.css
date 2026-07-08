@@ -1,81 +1,54 @@
 /* Layout */
 .co-cp-layout {
   display: flex;
-  background: #f6f6f6;
-  height: calc(100vh - 72px);
+  background-color: #f6f8fb;
+  min-height: 100vh;
+  position: relative;
+  height: 100vh;
   overflow: hidden;
-  height: 727px;
 }
 
 /* Main Section */
 .co-cp-main-content {
-  flex: 1;
-  padding-top: 0px;
-  overflow-x: hidden;
-  padding-left: -40px;
-  overflow-y: hidden;
- width:1000px;
-  box-sizing: border-box;
-  height: 100vh;
+  flex-grow: 1;
+  padding: 10px 10px 10px 20px;
+  margin: 65px 0px 0px 290px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
   box-sizing: border-box;
   background: #f6f8fb;
-
 }
 
 /* Desktop scrollbar - red styling to match theme */
-.co-cp-main-content::-webkit-scrollbar{width: 10px;}
-.co-cp-table-scroll-wrapper::-webkit-scrollbar,
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar {
-  width: 15px;
-}
-.co-cp-main-content::-webkit-scrollbar-track,
-.co-cp-table-scroll-wrapper::-webkit-scrollbar-track,
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track {
+.co-cp-main-content::-webkit-scrollbar { width: 10px; }
+.co-cp-main-content::-webkit-scrollbar-track {
   background: #f0f2f5;
 }
-.co-cp-main-content::-webkit-scrollbar-thumb,
-.co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb,
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb {
+.co-cp-main-content::-webkit-scrollbar-thumb {
   background-color: #d23b42;
   border-radius: 20px;
   border: 3px solid #f0f2f5;
 }
-.co-cp-main-content::-webkit-scrollbar-thumb:hover,
-.co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover {
+.co-cp-main-content::-webkit-scrollbar-thumb:hover {
   background-color: #b32d34;
 }
 
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal {
-height: 12px !important ;/* height of the horizontal scrollbar */
-}
-
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal {
-background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
-border-radius: 20px;
-border: 3px solid #f0f2f5;
-}
-
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
-background-color: #c1bfbf !important; /* darker grey on hover */
-}
-
 .co-cp-top-cards-row {
+  background-color: transparent;
   display: flex;
-  gap: 5px;
+  gap: 20px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  margin-left: 0;
+  margin-right: 0;
+  height: auto;
+  flex-shrink: 0;
   margin-bottom: 10px;
-  justify-content: space-evenly;
-  flex-wrap: wrap;
-  min-width: 100%;
-  padding-bottom: 21px;
-  padding-left: 320px;
-  padding-top: 100px;
-  margin-left:-66px;
 }
-
-/* ================================================================
-   GENERAL LAYOUT & CARD STYLE
-================================================================ */
 
 /* Base styles for all cards */
 .co-cp-card {
@@ -95,218 +68,136 @@ background-color: #c1bfbf !important; /* darker grey on hover */
 .co-cp-card-title {
   font-size: 1.9rem;
   font-weight: 600;
-  line-height:33px;
+  line-height: 33px;
 }
 
 .co-cp-card-desc {
- color: #888;
+  color: #888;
   font-size: 0.96rem;
   line-height: 21px;
   margin-top: -14px;
   font-weight: 600;
 }
 
-.co-cp-card.co-cp-report-analysis-card{
+.co-cp-card.co-cp-report-analysis-card {
   flex: 1;
-   max-width: 211px; 
-   min-width: 211px;
-    align-items: center;
-    min-height: 245px; 
-    margin-left: 40px; 
-}
-.co-cp-card.co-cp-company-profile-card{
-flex:1;
-max-width: 243.2px;
-min-width:130px;
- align-items:center;
-  min-height: 245px;
-   margin-left: -41px;
-}
-/* Hover effect for the Report Analysis card */
-.co-cp-report-analysis-card:hover {
-  box-shadow: 0 8px 20px rgba(215, 61, 61, 0.2);
-  border: 2px solid #d73d3d;
+  max-width: 211px; 
+  min-width: 211px;
+  align-items: center;
+  min-height: 245px; 
 }
 
-/* Hover effect for the Company Profile card */
-.co-cp-company-profile-card:hover {
-  box-shadow: 0 8px 20px rgba(215, 61, 61, 0.2);
-  border: 2px solid #d73d3d;
+/* Hover effect for the Report Analysis card */
+.co-cp-report-analysis-card:hover {
+  box-shadow: 0 8px 20px rgba(210, 59, 66, 0.2);
+  border: 2px solid #d23b42;
 }
-.co-cp-floating-select {
-  width: 100%;
-  height: 100%;
-  padding: 15px 15px 5px 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #ffffff;
-  font-size: 0.95rem;
-  color: #333;
-  outline: none;
-  appearance: none;
-  cursor: pointer;
-  transition: border-color 0.3s 
-ease;
-}
-/* ================================================================
-   1. REPORT ANALYSIS CARD
-================================================================ */
-.co-cp-report-analysis-card {
-  border: 2px solid #808080;
-}
+
 .co-cp-report-analysis-card__image {
   width: 54px;
   height: 54px;
 }
+
 .co-cp-report-analysis-card__title {
   margin-top: 18px;
   margin-bottom: 3px;
 }
 
-/* ================================================================
-   2. SEARCH FILTER CARD
-================================================================ */
+/* Search Filter Card */
 .co-cp-search-filter-card {
-  background: #D2D1D1;
+  background: #e8e8e8;
   min-width: 330px;
-  max-width: 628px;
+  max-width: 650px;
   height: 245px;
   border-radius: 18px;
   box-shadow: 0px 2.5px 13px #e6e6e6c7;
   padding: 16px 24px 12px 24px;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
-  margin: 0 8px;
-  flex: 2 1 0;
+  flex: 1.8;
+  box-sizing: border-box;
 }
 
 .co-cp-search-filter-card__tabs-container {
-  width: 570px;
-  top: -30px;
+  width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  margin-top: -10px;
 }
 
 .co-cp-search-filter-card__tab-button {
-  background: #d73d3d;
+  background: #d23b42;
   color: #fff;
   border: none;
   font-size: 1rem;
   font-weight: 500;
   border-radius: 30px;
-  padding: 9px 0px 9px 0px;
+  padding: 8px 0px;
   width: 220px;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
 }
 
 .co-cp-search-filter-card__fields-container {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  width: 570px;
-  margin-bottom: 20px;
-  margin-right: 10px;
-  justify-content: space-evenly;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
 }
 
 .co-cp-search-filter-card__fields-row {
   display: flex;
-  gap: 20px;
-  width: 570px;
-  height: 46px;
-  justify-content: space-evenly;
-  margin-top:15px;
+  gap: 15px;
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
 }
 
 .co-cp-search-filter-card__input-wrapper {
   position: relative;
   flex: 1;
-  height: 46px;
-  width: 280px;
-  top:10px;
+  height: 40px;
 }
 
 .co-cp-search-filter-card__input-wrapper1 {
   position: relative;
   flex: 1;
-  height: 46px;
-  top:10px;
+  height: 40px;
 }
 
 .co-cp-search-filter-card__input {
   border-radius: 8px;
-  border: 1px solid #e1e1e1;
-  padding: 12px 14px 12px 10px;
-  font-size: 1rem;
+  border: 1px solid #ccc;
+  padding: 10px 12px;
+  font-size: 0.95rem;
   outline: none;
-  width: 280px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   background: #fff;
+  transition: border-color 0.2s;
 }
 
-.co-cp-search-filter-card__input::placeholder {
-  color: #9a9a9a;
-  opacity: 1;
-}
-
-.co-cp-search-filter-card__input:focus::placeholder {
-  opacity: 0;
-}
-
-.co-cp-search-filter-card__input:not(:placeholder-shown)::placeholder {
-  opacity: 0;
-}
-
+.co-cp-search-filter-card__input:focus,
 .co-cp-search-filter-card__input:hover {
-  border-color: #d73d3d;
+  border-color: #d23b42;
 }
 
 .co-cp-search-filter-card__label {
   position: absolute;
-  top: -27px;
-  left: 10px;
-  color: #000;
+  top: -18px;
+  left: 5px;
+  color: #666;
   pointer-events: none;
   transition: all 0.2s ease-out;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: transparent;
   padding: 0;
-}
-
-.co-cp-search-filter-card__input:focus + .co-cp-search-filter-card__label,
-.co-cp-search-filter-card__input:valid + .co-cp-search-filter-card__label {
-  top: -27px;
-  left: 10px;
-  font-size: 1rem;
-  color: #000;
-  padding: 0;
-  font-weight: 500;
-  transform: none;
-}
-
-.co-cp-search-filter-card__input option[value=""] {
-  color: #9a9a9a;
-}
-
-.co-cp-search-filter-card__input:required:invalid {
-  color: #9a9a9a;
-}
-
-.co-cp-search-filter-card__input:required:valid {
-  color: #333;
-}
-
-.co-cp-company-profile-card {
-  border: 2px solid #808080;
-}
-.co-cp-company-profile-card__image {
-  width: 54px;
-  height: 54px;
-}
-.co-cp-company-profile-card__title {
-  margin-top: 18px;
 }
 
 /* Stat cards (Companies / Confirmed) */
@@ -340,179 +231,249 @@ ease;
   line-height: 1;
 }
 
-
-/* ================================================================
-   4. COMPANY DRIVE TABLE - Updated with Admin-like styling
-================================================================ */
-.co-cp-drive-table-container {
-  background: #fff;
-  border-radius: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-top: -16px;
-  width: 1219.6px;
-  height: 379px;
-  padding: 10px 25px;
-  position: relative;
-  border: 2px solid #808080;
-  margin-left:305px;
-  transition: all 0.3s ease;
+/* Bottom Card (Student Table) */
+.co-cp-bottom-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 12px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    margin-bottom: 25px;
 }
 
-.co-cp-drive-table-container__print-button {
-  top: -11px;
-  bottom: 15px;
-  right: 13px;
-  background: #d73d3d;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 24px;
-  cursor: pointer;
-  box-shadow: 0px 2px 7px #ececec;
-  z-index: 100;
-  position: relative;
-  white-space: nowrap;
+.co-cp-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 10px;
 }
 
-.co-cp-drive-table-container__print-button:hover {
-  background: #b92d39;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+.co-cp-table-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.co-cp-print-menu-wrapper {
-  position: absolute;
-  top: 25px;
-  right: 32px;
-  z-index: 101;
+.co-cp-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.co-cp-table-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.co-cp-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.co-cp-print-button-container {
+    position: relative;
+}
+
+.co-cp-print-btn {
+    background-color: #d23b42;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.co-cp-print-btn:hover {
+    background-color: #b32d34;
 }
 
 .co-cp-export-menu {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-width: 150px;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: -7px;
-  overflow: hidden;
-}
-.co-cp-export-menu div {
-  padding: 10px 15px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.co-cp-export-menu div:hover {
-  background-color: #f5f5f5;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+    min-width: 160px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.co-cp-drive-table-container__title-bar {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: #333;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  padding-top: 10px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+.co-cp-export-menu button {
+    border: none;
+    background: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
 }
 
-.co-cp-drive-table-container__results-count {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: normal;
-  margin-left: 10px;
+.co-cp-export-menu button:hover {
+    background-color: #f0f0f0;
 }
 
-.co-cp-drive-table-container__table-wrapper {
-  height: 300px;
-  overflow-y: scroll;
-  overflow-x: auto;
-  border: none;
-  border-radius: 0;
-  width:1179px;
+/* Pagination controls */
+.co-cp-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* Red Scrollbars for table */
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb {
-  background: #d23b42;
-  border-radius: 4px;
-}
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #b32d34;
+.co-cp-page-btn {
+    border: 1px solid #d23b42;
+    background: #ffffff;
+    color: #d23b42;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
 }
 
-.co-cp-drive-table-container__table-wrapper table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-  white-space: nowrap;
+.co-cp-page-btn:hover:not(:disabled) {
+    background: rgba(210, 59, 66, 0.08);
 }
 
-.co-cp-drive-table-container__table-wrapper thead tr {
-  position: sticky;
-  top: 0;
-  background-color: #ffffff;
-  border-bottom: none;
-  z-index: 11;
+.co-cp-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.co-cp-drive-table-container__table-wrapper th {
-  padding: 8px 10px;
-  text-align: center;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  background-color: #ffffff;
-  border-bottom: none;
+.co-cp-page-indicator {
+    min-width: 56px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #d23b42;
 }
 
-.co-cp-drive-table-container__table-wrapper tbody tr {
-  cursor: pointer;
-  transition: background-color 0.1s;
-  border-bottom: 1px solid #eee;
-  height: 47px;
+/* Table Container */
+.co-cp-table-container {
+    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
+    border: none;
+    border-radius: 8px;
+    max-height: 100%;
+    padding-bottom: 25px;
 }
 
-.co-cp-drive-table-container__table-wrapper tbody tr:hover {
-  background-color: #f6f6f6;
+/* Table Scrollbars (Desktop) */
+.co-cp-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-.co-cp-drive-table-container__table-wrapper td {
-  padding: 8px 10px;
-  text-align: center;
-  color: #2e2e2e;
-  font-weight: 450;
-  white-space: nowrap;
-  border-bottom: 1px solid #eee;
+.co-cp-table-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.co-cp-drive-table-container__table-wrapper tbody tr:last-child td {
-  border-bottom: none;
+.co-cp-table-container::-webkit-scrollbar-thumb {
+    background: #d23b42;
+    border-radius: 8px;
 }
-.coordinator-content-area {
-  flex: 1 1;
-  background: #fff;
-  margin-left: 270px;
- 
-  transition: margin-left 0.3s 
-ease-in-out;
+
+.co-cp-table-container::-webkit-scrollbar-thumb:hover {
+    background: #b32d34;
 }
+
+.co-cp-students-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.co-cp-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 11;
+}
+
+.co-cp-th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+    background-color: white;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.co-cp-table-row {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.co-cp-table-row:hover {
+    background-color: #fafafa;
+}
+
+.co-cp-selected-row {
+    background-color: #fff5f5 !important;
+}
+
+.co-cp-td {
+    padding: 10px 10px;
+    text-align: center;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+/* Custom Checkbox Input */
+.co-cp-checkbox-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #d23b42;
+}
+
+/* Eye Icon */
+.co-cp-eye-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #d23b42;
+}
+
+.co-cp-eye-icon:hover {
+    transform: scale(1.1);
+    color: #b32d34;
+}
+
+/* Column widths */
+.co-cp-checkbox { width: 50px; text-align: center; }
+.co-cp-sno { width: 50px; text-align: center; }
+.co-cp-company { width: 120px; text-align: center; }
+.co-cp-domain { width: 100px; text-align: center; }
+.co-cp-job-role { width: 120px; text-align: center; }
+.co-cp-hr-name { width: 100px; text-align: center; }
+.co-cp-mode { width: 80px; text-align: center; }
+.co-cp-visit-date { width: 110px; text-align: center; }
+.co-cp-location { width: 100px; text-align: center; }
+.co-cp-profile { width: 60px; text-align: center; }
 
 /* ============================================
    Export Popup Styles
@@ -534,12 +495,8 @@ ease-in-out;
 }
 
 @keyframes co-cp-export-popup-fade-in {
-  from {
-      opacity: 0;
-  }
-  to {
-      opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Popup Container */
@@ -554,14 +511,8 @@ ease-in-out;
 }
 
 @keyframes co-cp-export-popup-scale-in {
-  from {
-      opacity: 0;
-      transform: scale(0.9);
-  }
-  to {
-      opacity: 1;
-      transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 @keyframes co-cp-scale {
   0%, 100% { transform: none; }
@@ -569,17 +520,14 @@ ease-in-out;
 }
 @keyframes co-cp-fill-color {
   0% { fill: none; }
-  100% { fill: #4caf50; } /* Fill the circle with green after stroke */
+  100% { fill: #4caf50; }
 }
 @keyframes co-cp-stroke {
-  100% {
-      stroke-dashoffset: 0;
-  }
+  100% { stroke-dashoffset: 0; }
 }
-
 @keyframes co-cp-fill {
   100% {
-      box-shadow: inset 0px 0px 0px 60px #4caf50; /* Adjust to match the fill color */
+      box-shadow: inset 0px 0px 0px 60px #4caf50;
       background-color: #4caf50;
   }
 }
@@ -710,271 +658,148 @@ ease-in-out;
 .co-cp-export-popup-close-btn:active {
   transform: scale(0.98);
 }
-/* Existing Media Queries for larger screens (1200px and 700px) */
-@media (max-width: 768px) {
-  /* 1. Mobile Scrolling and Layout */
-  .co-cp-main-content {
-    /* This is the container for the entire content on the right */
-    position:absolute;
-    overflow-y: auto;
-    box-sizing: border-box; /* Enable vertical scroll for the entire main content */
-    height: 100vh; /* Set to full viewport height for mobile scroll */
-    width: 100%; /* Full width */
-    padding: 10px; /* Reduced padding */
-    padding-top: 70px; /* Push content below fixed Navbar */
-  }
 
-  /* 2. Card Stacking and Full Width */
-  .co-cp-top-cards-row {
-    display: flex;
-    flex-direction: column; /* Stack cards vertically */
-    gap: 15px;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0;
-    margin-left: 15px;
-    margin-top: 10px;
-    justify-content: center; /* Ensures the cards are centered */
-    align-items: center; /* Ensures the cards are centered */
-    width: 100%; /* Full width container for cards */
-  }
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
 
-  .co-cp-card.co-cp-report-analysis-card{
-    flex: 1 1;
-    max-width: 243.2px;
-    min-width: 450px;
-    align-items: center;
-    min-height: 253.2px;
-    margin-left: -28px;
-    margin-top: 28px;
-  }
-  
-  .co-cp-card.co-cp-company-profile-card{
-    flex:1;
-    max-width: 243.2px;
-    min-width:450px;
-     align-items:center;
-      min-height: 273.2px;
-       margin-left: -28px;
-       margin-top: -12px;
+@media screen and (max-width: 1200px) {
+    /* Reset margins for tablet */
+    .co-cp-top-cards-row, .co-cp-bottom-card {
+        margin-left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .co-cp-main-content {
+        margin: 65px 0px 16px 10px;
+    }
+}
+
+@media (max-width: 900px) {
+    .co-cp-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
     }
 
-  /* Card Ordering and Full Width Sizing */
-  .co-cp-card {
-   width: 100%;
-        max-width: 454px;
-        margin-left: -31px;
-        min-width: unset;
-        order: 1;
-  }
+    .co-cp-main-content {
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px 10px 20px;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        margin-left: 0 !important;
+    }
 
-  /* Specific Card Ordering based on user request: */
+    /* Top Card Layout: Stack vertically */
+    .co-cp-top-cards-row {
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        height: auto !important;
+    }
 
-  /* Company Drive Card (Assumed to be the first card in the HTML structure) */
-  .co-cp-card:nth-child(1) {
-    order: 1; /* Company Drive Card */
-  }
+    /* Filter Section Adjustments */
+    .co-cp-search-filter-card {
+        border-radius: 25px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .co-cp-search-filter-card__fields-container {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
 
-  /* Filter Card (Assumed to be the next element in HTML) */
-  .co-cp-search-filter-card {
-    order: 1; /* Filter Card */
-   margin-left: -26px;
-    width: 95%; /* Full width requested */
-    height: auto;
-    padding: 15px 10px;
-    margin: 0 0 15px -30px; /* Adjust margin for proper spacing */
-    border-radius: 25px;
-  }
-.co-cp-export-menu {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-width: 150px;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 12px;
-  overflow: hidden;
-}
-  /* Placed Students Card (Assumed to be the third card in the HTML structure) */
-  .co-cp-card:nth-child(3) {
-    order: 3; /* Placed Students Card */
-  }
-  .co-cp-drive-table-container__print-button {
-  top: 9px;
-        bottom: 15px;
-        right: -5px;
-  background: #d73d3d;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 24px;
-  cursor: pointer;
-  box-shadow: 0px 2px 7px #ececec;
-  z-index: 100;
-  position: relative;
-  white-space: nowrap;
-}
-  /* Filter Card Input Layout FIX */
-  .co-cp-search-filter-card__fields-container {
-    width: 100%;
-    gap: 30px;
-    margin-bottom: 20px;
-    margin-right: 0;
-    padding: 0 15px;
-  }
+    /* Bottom card/Table Section Adjustments */
+    .co-cp-bottom-card {
+        margin-left: 0 !important;
+        padding: 15px 15px 35px 15px !important;
+        flex: none !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
+    }
+    
+    .co-cp-table-header-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+    }
 
-  .co-cp-search-filter-card__fields-row {
-    flex-direction: column;
-    width: 100%;
-    height: auto;
-    gap: 25px;
-    margin-left: 0;
-    margin-top: 15px;
-    margin-right: 0;
-    padding: 0;
-  }
+    .co-cp-table-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+    }
 
-  .co-cp-search-filter-card__input-wrapper {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 0;
-    position: relative;
-    height: 46px;
-  }
-
-  .co-cp-search-filter-card__input-wrapper1 {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 0;
-    position: relative;
-    height: 46px;
-  }
-
-  .co-cp-search-filter-card__input {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-  }
-
-  .co-cp-floating-select {
-    width: 100%;
-    height: 46px;
-    padding: 12px 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #ffffff;
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-    box-sizing: border-box;
-  }
-
-  /* 3. Table Section */
-  .co-cp-company-drive-table-container {
-    width: 100%; /* Full width requested */
-    margin: 15px 0;
-    padding: 15px 10px;
-    min-width: unset;
-  }
-
-
-  .co-cp-drive-table-container {
-    background: #fff;
-    border-radius: 13px;
-    box-shadow: 0px 2.5px 13px rgba(0,0,0,0.09);
-    margin-top: -16px;
-    width: 458px;
-    padding-top: 30px;
-    padding-bottom: 0px;
-    padding-left: 32px;
-    padding-right: 32px;
-    position: relative;
-    border: 2px solid #808080;
-    margin-left:13px;
-  }
-
-  .co-cp-drive-table-container__table-wrapper {
-    border-radius: 8px;
-    overflow-x: auto;
-    max-height: 290px;
-    overflow-y: auto;
-    width:420px;
-  }
-  /* Table Scrolling (Horizontal and Vertical) FIX */
-  .co-cp-table-scroll-wrapper {
-    overflow-x: auto; /* Horizontal scroll */
-    overflow-y: auto; /* Vertical scroll for the table content */
-    max-height: 300px; /* Restrict height to enable vertical scroll */
-    /* FIX: Removing position relative that might interfere with sticky headers and scrolling */
-    position: static; 
-  }
-  
-  .co-cp-table {
-    min-width: 768px; /* Force horizontal scroll within the wrapper */
-  }
-  
-  /* FIX: Ensure table header is visible when scrolling */
-  .co-cp-table th {
-      position: sticky; /* Keep headers sticky */
-      top: 0; /* Stick to the top of the scroll wrapper */
-      z-index: 10;
-      background-color: #f8f8f8; /* Ensure background is set for sticky header */
-  }
-
-  .co-cp-table th, .co-cp-table td {
-    padding: 8px 5px;
-    font-size: 0.8em;
-    min-width: 80px;
-  }
-
-  /* Red scrollbar on mobile */
-  .co-cp-table-scroll-wrapper::-webkit-scrollbar,
-  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar {
-    width: 15px;
-  }
-  .co-cp-table-scroll-wrapper::-webkit-scrollbar-track,
-  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-  .co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb,
-  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-  .co-cp-table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
-  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
-  .co-cp-floating-input-container{max-width:400px;}
-  
-  .co-cp-drive-table-container__table-wrapper::-webkit-scrollbar:horizontal {
-height: 12px !important ;/* height of the horizontal scrollbar */
+    .co-cp-table-container {
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 0 !important;
+        padding-bottom: 0 !important;
+    }
 }
 
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal {
-background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
-border-radius: 20px;
-border: 3px solid #f0f2f5;
-}
+@media (max-width: 768px) {
+    /* Table scrollbar on mobile */
+    .co-cp-table-container::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
 
-.co-cp-drive-table-container__table-wrapper::-webkit-scrollbar-thumb:horizontal:hover {
-background-color: #c1bfbf !important; /* darker grey on hover */
-}
+    .co-cp-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
+    .co-cp-table-container::-webkit-scrollbar-thumb {
+        background: #d23b42;
+        border-radius: 8px;
+    }
+
+    .co-cp-table-container::-webkit-scrollbar-thumb:hover {
+        background: #b32d34;
+    }
+
+    .co-cp-table-container::-webkit-scrollbar:horizontal {
+        height: 8px;
+    }
+
+    .co-cp-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .co-cp-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
+    }
 }
 
 /* ================================================================
    LOADING SPINNER STYLES (Red Theme)
-================================================================ */
-
+ ================================================================ */
 .co-cp-loading-cell {
     text-align: center;
     padding: 48px 0;
@@ -989,7 +814,7 @@ background-color: #c1bfbf !important; /* darker grey on hover */
 
 .co-cp-loading-wrapper {
     position: absolute;
-    top: 100%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -1005,7 +830,6 @@ background-color: #c1bfbf !important; /* darker grey on hover */
 
 .co-cp-spinner {
     width: 34px;
-    margin-top: 200px;
     height: 34px;
     border-radius: 50%;
     border: 4px solid rgba(210, 59, 66, 0.25);
@@ -1023,16 +847,4 @@ background-color: #c1bfbf !important; /* darker grey on hover */
     color: #1f2937;
     font-weight: 600;
     font-size: 0.95rem;
-}
-
-/* Eye Icon for View Column */
-.co-cp-eye-icon {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #d23b42;
-}
-
-.co-cp-eye-icon:hover {
-    transform: scale(1.1);
-    color: #b32d34;
 }

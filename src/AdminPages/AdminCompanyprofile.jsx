@@ -126,15 +126,18 @@ function Admincompanyprofile({ onLogout }) {
     const [exportType, setExportType] = useState('Excel');
     const [filters, setFilters] = useState({
         company: '',
+        companyType: '',
         hrName: '',
         mode: '',
-        visitDate: ''
+        visitDate: '',
+        location: ''
     });
 
     const [companyFocused, setCompanyFocused] = useState(false);
     const [hrNameFocused, setHrNameFocused] = useState(false);
     const [modeFocused, setModeFocused] = useState(false);
     const [visitDateFocused, setVisitDateFocused] = useState(false);
+    const [locationFocused, setLocationFocused] = useState(false);
 
     const toggleSidebar = () => {
         setIsSidebarOpen((prev) => !prev);
@@ -176,6 +179,8 @@ function Admincompanyprofile({ onLogout }) {
         const hrNameQuery = filters.hrName.trim().toLowerCase();
         const modeQuery = filters.mode;
         const visitDateQuery = filters.visitDate;
+        const companyTypeQuery = filters.companyType;
+        const locationQuery = filters.location.trim().toLowerCase();
 
         return companies.filter((company) => {
             const companyName = (company.company || company.companyName || '').toLowerCase();
@@ -183,14 +188,18 @@ function Admincompanyprofile({ onLogout }) {
             const hrName = (company.hrName || '').toLowerCase();
             const mode = company.mode || '';
             const visitDate = (company.visitDate || '').slice(0, 10);
+            const companyType = company.companyType || company.domain || '';
+            const location = (company.location || '').toLowerCase();
 
             const matchesCompanyOrRole =
                 !companyQuery || companyName.includes(companyQuery) || jobRole.includes(companyQuery);
             const matchesHrName = !hrNameQuery || hrName.includes(hrNameQuery);
             const matchesMode = !modeQuery || mode === modeQuery;
             const matchesVisitDate = !visitDateQuery || visitDate === visitDateQuery;
+            const matchesCompanyType = !companyTypeQuery || companyType === companyTypeQuery;
+            const matchesLocation = !locationQuery || location.includes(locationQuery);
 
-            return matchesCompanyOrRole && matchesHrName && matchesMode && matchesVisitDate;
+            return matchesCompanyOrRole && matchesHrName && matchesMode && matchesVisitDate && matchesCompanyType && matchesLocation;
         });
     }, [companies, filters]);
 
@@ -446,9 +455,11 @@ function Admincompanyprofile({ onLogout }) {
     const handleClearFilters = useCallback(() => {
         setFilters({
             company: '',
+            companyType: '',
             hrName: '',
             mode: '',
-            visitDate: ''
+            visitDate: '',
+            location: ''
         });
     }, []);
 
@@ -472,9 +483,11 @@ function Admincompanyprofile({ onLogout }) {
 
     const hasActiveFilters = Boolean(
         filters.company.trim() ||
+        filters.companyType ||
         filters.hrName.trim() ||
         filters.mode ||
-        filters.visitDate
+        filters.visitDate ||
+        filters.location.trim()
     );
 
     return (
@@ -553,6 +566,23 @@ function Admincompanyprofile({ onLogout }) {
                                 </div>
                             </div>
 
+                            {/* Company Type Dropdown with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-company-type">
+                                    Company Type
+                                </label>
+                                <Dropdown
+                                    id="admin-search-company-type"
+                                    options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                                    selectedOption={filters.companyType}
+                                    onSelect={(val) => setFilters((prev) => ({ ...prev, companyType: val }))}
+                                    placeholder="Search Company Type"
+                                    role="admin"
+                                    className={styles['cp-dropdown-wrapper']}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
+                            </div>
+
                             {/* HR Name Input with Static Label */}
                             <div className={styles['Admin-cp-input-wrapper']}>
                                 <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-hr-name">
@@ -603,7 +633,25 @@ function Admincompanyprofile({ onLogout }) {
                                 />
                             </div>
 
-
+                            {/* Location Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-location">
+                                    Location
+                                </label>
+                                <div className={`${styles['Admin-cp-text-container']} ${locationFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-location"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search Location"
+                                        value={filters.location}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, location: event.target.value }))}
+                                        onFocus={() => setLocationFocused(true)}
+                                        onBlur={() => setLocationFocused(false)}
+                                        aria-label="Search Location"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 

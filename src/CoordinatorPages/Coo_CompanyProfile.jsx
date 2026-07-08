@@ -163,6 +163,14 @@ const sampleCompanyData = [
   }
 ];
 
+const formatDisplayDate = (value) => {
+  if (!value) return '—';
+  const [year, month, day] = String(value).split('T')[0].split('-');
+  if (!year || !month || !day) return String(value);
+  return `${day}-${month}-${year}`;
+};
+
+
 function CompanyProfile({ onLogout, currentView, onViewChange }) {
   useCoordinatorAuth(); // JWT authentication verification
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -180,9 +188,13 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
     mode: ''
   });
 
- const [activeItem, setActiveItem] = useState("Company Profile");
+  const [activeItem, setActiveItem] = useState("Company Profile");
   const navigate = useNavigate();
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const companiesPerPage = 6;
+
 
   // This function will set the active item when a menu item is clicked
   const handleItemClick = (itemName) => {
@@ -232,6 +244,46 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
       );
     });
   }, [companies, filters]);
+
+  const totalPages = Math.ceil(filteredData.length / companiesPerPage) || 1;
+
+  const paginatedCompanies = useMemo(() => {
+    const startIndex = (currentPage - 1) * companiesPerPage;
+    return filteredData.slice(startIndex, startIndex + companiesPerPage);
+  }, [filteredData, currentPage]);
+
+  const toggleCompanySelection = useCallback((id) => {
+    setSelectedCompanyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+      setSelectedCompanyIds(new Set());
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+      setSelectedCompanyIds(new Set());
+    }
+  };
+
+  // Reset page and selection when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedCompanyIds(new Set());
+  }, [filters]);
+
 
   // Handle input changes
   const handleFilterChange = (field, value) => {
@@ -552,96 +604,133 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
           </div>
           
           {/* --- Company Profile Table Container --- */}
-          <div className={styles['co-cp-drive-table-container']} style={{marginTop: "-10px"}}>
-          <div className={styles['co-cp-print-menu-wrapper']}>
-    <button className={styles['co-cp-drive-table-container__print-button']} onClick={toggleExportMenu}>
-        Print
-    </button>
-    {showExportMenu && (
-        <div className={styles['co-cp-export-menu']}>
-            <div onClick={handleExportToExcel}>Export to Excel</div>
-            <div onClick={handleExportToPDF}>Save as PDF</div>
-        </div>
-    )}
-</div>
-              <div className={styles['co-cp-drive-table-container__title-bar']}>
-                  COMPANY PROFILE
+          <div className={styles['co-cp-bottom-card']}>
+              <div className={styles['co-cp-table-header-row']}>
+                  <div className={styles['co-cp-table-title-wrap']}>
+                      <h3 className={styles['co-cp-table-title']}>COMPANY PROFILE</h3>
+                      {!isInitialLoading && (
+                          <div className={styles['co-cp-table-subtitle']}>
+                              Page {currentPage} of {totalPages} | Showing {paginatedCompanies.length} on this page
+                          </div>
+                      )}
+                  </div>
+                  <div className={styles['co-cp-table-actions']}>
+                      {totalPages > 1 && (
+                          <div className={styles['co-cp-pagination-controls']}>
+                              <button
+                                  type="button"
+                                  className={styles['co-cp-page-btn']}
+                                  onClick={handlePrevPage}
+                                  disabled={currentPage <= 1 || isLoading}
+                              >
+                                  Prev
+                              </button>
+                              <span className={styles['co-cp-page-indicator']}>
+                                  {currentPage} / {totalPages}
+                              </span>
+                              <button
+                                  type="button"
+                                  className={styles['co-cp-page-btn']}
+                                  onClick={handleNextPage}
+                                  disabled={currentPage >= totalPages || isLoading}
+                              >
+                                  Next
+                              </button>
+                          </div>
+                      )}
+                      <div className={styles['co-cp-print-button-container']}>
+                          <button
+                              type="button"
+                              className={styles['co-cp-print-btn']}
+                              onClick={() => setShowExportMenu((prev) => !prev)}
+                          >
+                              Print
+                          </button>
+                          {showExportMenu && (
+                              <div className={styles['co-cp-export-menu']}>
+                                  <button type="button" onClick={handleExportToExcel}>Export to Excel</button>
+                                  <button type="button" onClick={handleExportToPDF}>Save as PDF</button>
+                              </div>
+                          )}
+                      </div>
+                  </div>
               </div>
 
-              <div className={styles['co-cp-drive-table-container__table-wrapper']} id="co-cp-drive-table-container__table-wrapper">
-                  {/* The table content remains the same */}
-                  <table>
-                  <thead>
-   <tr>
-                      <th>S.No</th>
-                      <th>Company</th>
-                      <th>Company Type</th>
-                      <th>Job Role</th>
-                      <th>HR Name</th>
-                      <th>Status</th>
-                      <th>View</th>
-                    </tr>
-</thead>
-<tbody>
-    {isInitialLoading ? (
-      <tr className={styles['co-cp-loading-row']}>
-        <td colSpan="7" className={styles['co-cp-loading-cell']}>
-          <div className={styles['co-cp-loading-wrapper']}>
-            <div className={styles['co-cp-spinner']}></div>
-            <span className={styles['co-cp-loading-text']}>Loading companies…</span>
-          </div>
-        </td>
-      </tr>
-    ) : filteredData.length ? (
-      filteredData.map((item, index) => {
-        // Function to determine the style based on the status
-        const getStatusStyle = (status) => {
-            switch (status) {
-                case "Confirmed":
-                    return { backgroundColor: "#E1F6EC", color: "#07AE4E", padding: "5px 10px", borderRadius: "16px", fontSize: "12px", textAlign: "center" };
-                case "Pending":
-                    return { backgroundColor: "#dcdada", color: "#555", padding: "5px 15px", borderRadius: "16px", fontSize: "12px", textAlign: "center" };
-                case "On-Hold":
-                    return { backgroundColor: "#F44336", color: "white", padding: "5px 10px", borderRadius: "16px", fontSize: "12px", textAlign: "center" };
-                default:
-                    return { backgroundColor: "#FFE6E1", color: "#C12424", padding: "5px 10px", borderRadius: "16px", fontSize: "12px", textAlign: "center" };
-            }
-        };
+              <div className={styles['co-cp-table-container']} id="co-cp-drive-table-container__table-wrapper">
+                  <table className={styles['co-cp-students-table']}>
+                      <thead>
+                          <tr className={styles['co-cp-table-head-row']}>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-checkbox']}`}>Select</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-sno']}`}>S.No</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-company']}`}>Company</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-domain']}`}>Company Type</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-job-role']}`}>Job Role</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-mode']}`}>Mode</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-hr-name']}`}>HR Name</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-visit-date']}`}>Visit Date</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-location']}`}>Location</th>
+                              <th className={`${styles['co-cp-th']} ${styles['co-cp-profile']}`}>View</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {isInitialLoading ? (
+                              <tr className={styles['co-cp-loading-row']}>
+                                  <td colSpan="10" className={styles['co-cp-loading-cell']}>
+                                      <div className={styles['co-cp-loading-wrapper']}>
+                                          <div className={styles['co-cp-spinner']}></div>
+                                          <span className={styles['co-cp-loading-text']}>Loading companies…</span>
+                                      </div>
+                                  </td>
+                              </tr>
+                          ) : paginatedCompanies.length ? (
+                              paginatedCompanies.map((company, index) => {
+                                  const companyId = company.id || company._id;
+                                  const isSelected = selectedCompanyIds.has(companyId);
 
-        const companyId = item.id || item._id;
-
-        return (
-            <tr key={companyId}>
-                <td>{index + 1}</td>
-                <td>{item.company || item.companyName || '—'}</td>
-                <td>{item.domain || item.companyType || '—'}</td>
-                <td>{item.jobRole || '—'}</td>
-                <td>{item.hrName || '—'}</td>
-                <td>
-                    <span style={getStatusStyle(item.status || 'Pending')}>
-                        {item.status || 'Pending'}
-                    </span>
-                </td>
-                <td onClick={(e) => {
-                  e.stopPropagation();
-                  openViewPopup(companyId);
-                }} style={{ cursor: 'pointer' }}>
-                  <svg className={styles['co-cp-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </td>
-            </tr>
-        );
-    })
-    ) : (
-      <tr>
-        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem 0' }}>
-          No companies found matching the applied filters.
-        </td>
-      </tr>
-    )}
-</tbody>
+                                  return (
+                                      <tr
+                                          key={companyId}
+                                          className={`${styles['co-cp-table-row']} ${isSelected ? styles['co-cp-selected-row'] : ''}`}
+                                          onClick={() => toggleCompanySelection(companyId)}
+                                      >
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-checkbox']}`} onClick={(event) => event.stopPropagation()}>
+                                              <input
+                                                  type="checkbox"
+                                                  className={styles['co-cp-checkbox-input']}
+                                                  checked={isSelected}
+                                                  onChange={() => toggleCompanySelection(companyId)}
+                                              />
+                                          </td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-sno']}`}>{(currentPage - 1) * companiesPerPage + index + 1}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-company']}`}>{company.company || company.companyName || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-domain']}`}>{company.companyType || company.domain || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-job-role']}`}>{company.jobRole || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-mode']}`}>{company.mode || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-hr-name']}`}>{company.hrName || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-visit-date']}`}>
+                                              {formatDisplayDate((company.visitDate || '').slice(0, 10))}
+                                          </td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-location']}`}>{company.location || '—'}</td>
+                                          <td className={`${styles['co-cp-td']} ${styles['co-cp-profile']}`} onClick={(e) => {
+                                              e.stopPropagation();
+                                              openViewPopup(companyId);
+                                          }}>
+                                              <svg className={styles['co-cp-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                  <circle cx="12" cy="12" r="3"></circle>
+                                              </svg>
+                                          </td>
+                                      </tr>
+                                  );
+                              })
+                          ) : (
+                              <tr>
+                                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                                      No companies found matching the applied filters.
+                                  </td>
+                              </tr>
+                          )}
+                      </tbody>
                   </table>
               </div>
           </div>
