@@ -6,6 +6,8 @@ import styles from './Coo_CertificateVerification.module.css';
 import manageStudentsIcon from "../assets/Coo_ManagestudentsCardicon.svg";
 import pendingCertificateIcon from "../assets/CoodCertificateVerifyPenCertificate.svg";
 import approvedCertificateIcon from "../assets/CoodCertificateVerifyApprovedCertificate.svg";
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
 
 import { FaRegEye, FaSearch, FaMapMarkerAlt, FaImage, FaWindowMaximize } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
@@ -177,9 +179,9 @@ const toApiStatus = (status) => {
 };
 
 const CertificateTableLoader = ({ message }) => (
-    <div className={styles["co-cert-table-loader"]}>
-        <span className={styles["co-cert-table-spinner"]} />
-        <span className={styles["co-cert-table-loader-text"]}>
+    <div className={styles["co-cert-loading-wrapper"]}>
+        <div className={styles["co-cert-spinner"]}></div>
+        <span className={styles["co-cert-loading-text"]}>
             {message || 'Loading certificates...'}
         </span>
     </div>
@@ -200,16 +202,51 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         searchTerm: "",
         year: "",
         section: "",
-        compPrize: "",
+        competition: "",
+        prize: "",
+        date: "",
         status: "",
     });
     const [activeFilters, setActiveFilters] = useState({
         searchTerm: "",
         year: "",
         section: "",
-        compPrize: "",
+        competition: "",
+        prize: "",
+        date: "",
         status: "",
     });
+
+    const [searchTermFocused, setSearchTermFocused] = useState(false);
+    const [competitionFocused, setCompetitionFocused] = useState(false);
+    const [prizeFocused, setPrizeFocused] = useState(false);
+    const [dateFocused, setDateFocused] = useState(false);
+
+    const handleClearFilters = useCallback(() => {
+        const cleared = {
+            searchTerm: "",
+            year: "",
+            section: "",
+            competition: "",
+            prize: "",
+            date: "",
+            status: "",
+        };
+        setFilterInputs(cleared);
+        setActiveFilters(cleared);
+    }, []);
+
+    const hasActiveFilters = useMemo(() => {
+        return Boolean(
+            (filterInputs.searchTerm || "").trim() ||
+            filterInputs.year ||
+            filterInputs.section ||
+            (filterInputs.competition || "").trim() ||
+            (filterInputs.prize || "").trim() ||
+            filterInputs.date ||
+            filterInputs.status
+        );
+    }, [filterInputs]);
 
     const [previewState, setPreviewState] = useState({
         status: 'idle', // idle | progress | error
@@ -362,7 +399,9 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             searchTerm: normalize(activeFilters.searchTerm),
             year: toRomanYear(activeFilters.year),
             section: normalize(activeFilters.section),
-            compPrize: normalize(activeFilters.compPrize),
+            competition: normalize(activeFilters.competition),
+            prize: normalize(activeFilters.prize),
+            date: activeFilters.date,
             status: normalize(activeFilters.status),
         };
 
@@ -374,6 +413,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
             const competition = (item.certName || item.comp || "").toLowerCase();
             const prize = (item.prize || "").toLowerCase();
             const yearRoman = toRomanYear(item.year);
+            const dateStr = item.date || "";
 
             const matchesSearch =
                 !filters.searchTerm ||
@@ -385,17 +425,18 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 !filters.status ||
                 statusDisplay.includes(filters.status) ||
                 item.rawStatus.includes(filters.status);
-            const matchesCompPrize =
-                !filters.compPrize ||
-                competition.includes(filters.compPrize) ||
-                prize.includes(filters.compPrize);
+            const matchesCompetition = !filters.competition || competition.includes(filters.competition);
+            const matchesPrize = !filters.prize || prize.includes(filters.prize);
+            const matchesDate = !filters.date || dateStr.startsWith(filters.date);
 
             return (
                 matchesSearch &&
                 matchesYear &&
                 matchesSection &&
                 matchesStatus &&
-                matchesCompPrize
+                matchesCompetition &&
+                matchesPrize &&
+                matchesDate
             );
         });
     }, [certData, activeFilters]);
@@ -438,7 +479,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
                     status: 'pending',
                     regNo: pendingFilters.searchTerm,
-                    search: pendingFilters.compPrize,
+                    search: pendingFilters.competition || pendingFilters.prize,
                 });
 
                 const pendingNormalized = certificates
@@ -493,7 +534,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                     const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
                         status: 'pending',
                         regNo: filterInputs.searchTerm,
-                        search: filterInputs.compPrize,
+                        search: filterInputs.competition || filterInputs.prize,
                     });
                     const pendingNormalized = certificates
                         .map(mapCertificateRecord)
@@ -792,116 +833,162 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                             <h2>Manage Students</h2>
                             <p>Access and manage student information.</p>
                         </div>
-                        <div className={styles["co-cert-filter-card"]}>
-                            <div className={styles["co-cert-filter-badge"]}>Certificate Verification</div>
-                            <div className={styles["co-cert-filter-grid"]}>
-                                <div className={styles["co-cert-filter-row"]}>
-                                    <div className={styles["co-cert-input-group"]}>
-                                        <FaSearch className={styles["co-cert-input-icon"]} />
-                                        <div className={styles["co-cert-input-wrapper"]}>
-                                            <input
-                                                id="co-cert-search-term"
-                                                className={styles["co-cert-filter-input"]}
-                                                type="text"
-                                                placeholder="Enter Name / Reg.No"
-                                                value={filterInputs.searchTerm}
-                                                onChange={handleInputChange("searchTerm")}
-                                                required
-                                            />
-                                            <label
-                                                htmlFor="co-cert-search-term"
-                                                className={styles["co-cert-filter-label"]}
-                                            >
-                                                Name/Reg.no
-                                            </label>
-                                        </div>
-                                        {filterInputs.searchTerm && (
-                                            <IoClose
-                                                className={styles["co-cert-clear-icon"]}
-                                                onClick={() => clearFilterField("searchTerm")}
-                                            />
-                                        )}
-                                    </div>
-                                    <div className={styles["co-cert-input-group"]}>
-                                        <FaWindowMaximize className={styles["co-cert-input-icon"]} />
-                                        <div className={styles["co-cert-input-wrapper"]}>
-                                            <input
-                                                id="co-cert-filter-comp-prize"
-                                                className={styles["co-cert-filter-input"]}
-                                                type="text"
-                                                placeholder="Enter Competition/Prize"
-                                                value={filterInputs.compPrize}
-                                                onChange={handleInputChange("compPrize")}
-                                                required
-                                            />
-                                            <label
-                                                htmlFor="co-cert-filter-comp-prize"
-                                                className={styles["co-cert-filter-label"]}
-                                            >
-                                                Competion/prize
-                                            </label>
-                                        </div>
-                                        {filterInputs.compPrize && (
-                                            <IoClose
-                                                className={styles["co-cert-clear-icon"]}
-                                                onClick={() => clearFilterField("compPrize")}
-                                            />
-                                        )}
+                        <div className={styles["co-cert-filter-section"]}>
+                            <div className={styles["co-cert-filter-header-container"]}>
+                                <div className={styles["co-cert-filter-header"]}>Certificate Verification</div>
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles["co-cert-clear-btn-header"]}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles["co-cert-filter-content"]}>
+                                {/* Name/Reg.no Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-search-term">
+                                        Name / Reg.No
+                                    </label>
+                                    <div className={`${styles['co-cert-text-container']} ${searchTermFocused ? styles['is-focused'] : ''}`}>
+                                        <input
+                                            id="co-cert-search-term"
+                                            className={styles["co-cert-text"]}
+                                            type="text"
+                                            placeholder="Enter Name / Reg.No"
+                                            value={filterInputs.searchTerm}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFilterInputs((prev) => {
+                                                    const next = { ...prev, searchTerm: val };
+                                                    setActiveFilters(next);
+                                                    return next;
+                                                });
+                                            }}
+                                            onFocus={() => setSearchTermFocused(true)}
+                                            onBlur={() => setSearchTermFocused(false)}
+                                        />
                                     </div>
                                 </div>
-                                <div className={styles["co-cert-filter-row"]}>
-                                    <div className={styles["co-cert-input-group"]}>
-                                        <FaImage className={styles["co-cert-input-icon"]} />
-                                        <div className={styles["co-cert-input-wrapper"]}>
-                                            <select
-                                                id="co-cert-filter-year"
-                                                className={styles["co-cert-filter-input"]}
-                                                value={filterInputs.year}
-                                                onChange={handleInputChange("year")}
-                                                required
-                                            >
-                                                <option value="" disabled>
-                                                    Search by Select Year
-                                                </option>
-                                                <option value="I">I</option>
-                                                <option value="II">II</option>
-                                                <option value="III">III</option>
-                                                <option value="IV">IV</option>
-                                            </select>
-                                        </div>
-                                        {filterInputs.year && (
-                                            <IoClose
-                                                className={styles["co-cert-clear-icon"]}
-                                                onClick={() => clearFilterField("year")}
-                                            />
-                                        )}
+
+                                {/* Competition Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-filter-competition">
+                                        Competition
+                                    </label>
+                                    <div className={`${styles['co-cert-text-container']} ${competitionFocused ? styles['is-focused'] : ''}`}>
+                                        <input
+                                            id="co-cert-filter-competition"
+                                            className={styles["co-cert-text"]}
+                                            type="text"
+                                            placeholder="Enter Competition"
+                                            value={filterInputs.competition}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFilterInputs((prev) => {
+                                                    const next = { ...prev, competition: val };
+                                                    setActiveFilters(next);
+                                                    return next;
+                                                });
+                                            }}
+                                            onFocus={() => setCompetitionFocused(true)}
+                                            onBlur={() => setCompetitionFocused(false)}
+                                        />
                                     </div>
-                                    <div className={styles["co-cert-input-group"]}>
-                                        <FaMapMarkerAlt className={styles["co-cert-input-icon"]} />
-                                        <div className={styles["co-cert-input-wrapper"]}>
-                                            <select
-                                                id="co-cert-filter-section"
-                                                className={styles["co-cert-filter-input"]}
-                                                value={filterInputs.section}
-                                                onChange={handleInputChange("section")}
-                                                required
-                                            >
-                                                <option value="" disabled>
-                                                    Search by Select Section
-                                                </option>
-                                                <option value="A">A</option>
-                                                <option value="B">B</option>
-                                                <option value="C">C</option>
-                                                <option value="D">D</option>
-                                            </select>
-                                        </div>
-                                        {filterInputs.section && (
-                                            <IoClose
-                                                className={styles["co-cert-clear-icon"]}
-                                                onClick={() => clearFilterField("section")}
-                                            />
-                                        )}
+                                </div>
+
+                                {/* Prize Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-filter-prize">
+                                        Prize
+                                    </label>
+                                    <div className={`${styles['co-cert-text-container']} ${prizeFocused ? styles['is-focused'] : ''}`}>
+                                        <input
+                                            id="co-cert-filter-prize"
+                                            className={styles["co-cert-text"]}
+                                            type="text"
+                                            placeholder="Enter Prize"
+                                            value={filterInputs.prize}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFilterInputs((prev) => {
+                                                    const next = { ...prev, prize: val };
+                                                    setActiveFilters(next);
+                                                    return next;
+                                                });
+                                            }}
+                                            onFocus={() => setPrizeFocused(true)}
+                                            onBlur={() => setPrizeFocused(false)}
+                                        />
                                     </div>
+                                </div>
+
+                                {/* Year Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-filter-year">
+                                        Year
+                                    </label>
+                                    <Dropdown
+                                        options={['I', 'II', 'III', 'IV']}
+                                        selectedOption={filterInputs.year}
+                                        onSelect={(val) => {
+                                            setFilterInputs((prev) => {
+                                                const next = { ...prev, year: val || "" };
+                                                setActiveFilters(next);
+                                                return next;
+                                            });
+                                        }}
+                                        placeholder="Search by Select Year"
+                                        role="coordinator"
+                                        className={styles['co-cert-dropdown-wrapper']}
+                                        headerClassName={styles['co-cert-dropdown-header']}
+                                    />
+                                </div>
+
+                                {/* Section Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-filter-section">
+                                        Section
+                                    </label>
+                                    <Dropdown
+                                        options={['A', 'B', 'C', 'D']}
+                                        selectedOption={filterInputs.section}
+                                        onSelect={(val) => {
+                                            setFilterInputs((prev) => {
+                                                const next = { ...prev, section: val || "" };
+                                                setActiveFilters(next);
+                                                return next;
+                                            });
+                                        }}
+                                        placeholder="Search by Select Section"
+                                        role="coordinator"
+                                        className={styles['co-cert-dropdown-wrapper']}
+                                        headerClassName={styles['co-cert-dropdown-header']}
+                                    />
+                                </div>
+
+                                {/* Date Filter with Static Label */}
+                                <div className={styles["co-cert-input-wrapper"]}>
+                                    <label className={styles["co-cert-static-label"]} htmlFor="co-cert-filter-date">
+                                        Date
+                                    </label>
+                                    <AdCalendar
+                                        id="co-cert-filter-date"
+                                        value={filterInputs.date}
+                                        onChange={(val) => {
+                                            setFilterInputs((prev) => {
+                                                const next = { ...prev, date: val || "" };
+                                                setActiveFilters(next);
+                                                return next;
+                                            });
+                                        }}
+                                        variant="filter"
+                                        style={{ padding: '0px 6px', fontSize: '0.8rem', gap: '4px' }}
+                                        themeColor="#d23b42"
+                                        hoverColor="#fbebeb"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -972,8 +1059,8 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                 </thead>
                                 <tbody>
                                     {isLoading ? (
-                                        <tr>
-                                            <td colSpan={10}>
+                                        <tr className={styles["co-cert-loading-row"]}>
+                                            <td colSpan={10} className={styles["co-cert-loading-cell"]}>
                                                 <CertificateTableLoader
                                                     message={certData.length > 0 ? 'Refreshing certificates...' : 'Loading certificates...'}
                                                 />

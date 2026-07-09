@@ -23,7 +23,9 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
   triggerClassName = '',
   triggerHighlighted = false,
   variant = 'default',
-  style = {}
+  style = {},
+  themeColor = '#4EA24E',
+  hoverColor = '#e8f5e8'
 }, ref) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState('day');
@@ -151,7 +153,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
       >
         {/* Header - Admin Green Theme */}
         <div style={{
-          backgroundColor: '#4EA24E',
+          backgroundColor: themeColor,
           padding: '12px 18px', display: 'flex',
           alignItems: 'center', justifyContent: 'center', gap: '40px'
         }}>
@@ -160,7 +162,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
             onMouseEnter={() => setHoveredMonthBtn(true)}
             onMouseLeave={() => setHoveredMonthBtn(false)}
             style={{
-              background: hoveredMonthBtn ? '#e8f5e8' : '#fff', border: 'none', borderRadius: '8px',
+              background: hoveredMonthBtn ? hoverColor : '#fff', border: 'none', borderRadius: '8px',
               color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
               cursor: 'pointer', padding: '8px 14px',
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -178,7 +180,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
             onMouseEnter={() => setHoveredYearBtn(true)}
             onMouseLeave={() => setHoveredYearBtn(false)}
             style={{
-              background: hoveredYearBtn ? '#e8f5e8' : '#fff', border: 'none', borderRadius: '8px',
+              background: hoveredYearBtn ? hoverColor : '#fff', border: 'none', borderRadius: '8px',
               color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
               cursor: 'pointer', padding: '8px 14px',
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -212,7 +214,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                   style={{
                     padding: '12px 6px', borderRadius: '8px', border: 'none',
                     cursor: isDisabled ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.95rem',
-                    backgroundColor: isSel ? '#4EA24E' : isHov ? '#e8f5e8' : 'transparent',
+                    backgroundColor: isSel ? themeColor : isHov ? hoverColor : 'transparent',
                     color: isSel ? '#fff' : isDisabled ? '#b7b7b7' : '#333',
                     opacity: isDisabled ? 0.5 : 1,
                     fontFamily: "'Poppins', sans-serif",
@@ -246,7 +248,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                         padding: '12px 20px', cursor: isDisabled ? 'not-allowed' : 'pointer',
                         fontWeight: 700, fontSize: '1rem', textAlign: 'center',
                         fontFamily: "'Poppins', sans-serif",
-                        backgroundColor: isSel ? '#4EA24E' : isHov ? '#e8f5e8' : 'transparent',
+                        backgroundColor: isSel ? themeColor : isHov ? hoverColor : 'transparent',
                         color: isSel ? '#fff' : isDisabled ? '#b7b7b7' : '#333',
                         opacity: isDisabled ? 0.5 : 1,
                         transition: 'background-color 0.15s'
@@ -257,13 +259,13 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                 </div>
               </div>
               {/* Custom scrollbar thumb - Admin Green */}
-              <div style={{ width: '8px', background: '#e8f5e8', borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
+              <div style={{ width: '8px', background: hoverColor, borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
                 <div
                   ref={yearThumbRef}
                   onMouseDown={onYearThumbMouseDown}
                   style={{
                     position: 'absolute', left: 0, right: 0,
-                    background: '#4EA24E', borderRadius: '4px',
+                    background: themeColor, borderRadius: '4px',
                     cursor: 'grab', minHeight: '30px', top: 0
                   }}
                 />
@@ -312,8 +314,8 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                         border: 'none',
                         cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem',
                         fontWeight: sel || tod ? 700 : 500,
-                        backgroundColor: sel ? '#4EA24E' : isHov ? '#e8f5e8' : tod ? '#e8f5e8' : 'transparent',
-                        color: sel ? '#fff' : isDisabled ? '#b7b7b7' : tod ? '#4EA24E' : '#333',
+                        backgroundColor: sel ? themeColor : isHov ? hoverColor : tod ? hoverColor : 'transparent',
+                        color: sel ? '#fff' : isDisabled ? '#b7b7b7' : tod ? themeColor : '#333',
                         opacity: isDisabled ? 0.45 : 1,
                         fontFamily: "'Poppins', sans-serif",
                         transition: 'background-color 0.15s',
@@ -330,7 +332,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                           width: '4px',
                           height: '4px',
                           borderRadius: '50%',
-                          backgroundColor: '#4EA24E'
+                          backgroundColor: themeColor
                         }} />
                       )}
                     </button>
@@ -361,11 +363,11 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           border: isFilterVariant 
-            ? (open || (hovered && !disabled) ? '3px solid #4EA24E' : '3px solid #ccc')
-            : (triggerHighlighted ? '2px solid #2E7D32' : hovered && !disabled ? '1px solid #4EA24E' : '1px solid #def4dd'),
+            ? (open || (hovered && !disabled) ? `3px solid ${themeColor}` : '3px solid #ccc')
+            : (triggerHighlighted ? `2px solid ${themeColor === '#4EA24E' ? '#2E7D32' : '#b32d34'}` : hovered && !disabled ? `1px solid ${themeColor}` : `1px solid ${themeColor === '#4EA24E' ? '#def4dd' : '#fbebeb'}`),
           boxShadow: isFilterVariant
             ? 'none'
-            : (triggerHighlighted ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : hovered && !disabled ? '0 0 0 3px rgba(78,162,78,0.2)' : 'none'),
+            : (triggerHighlighted ? (themeColor === '#4EA24E' ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : '0 0 0 3px rgba(210,59,66,0.18), 0 0 14px rgba(210,59,66,0.28)') : hovered && !disabled ? (themeColor === '#4EA24E' ? '0 0 0 3px rgba(78,162,78,0.2)' : '0 0 0 3px rgba(210,59,66,0.2)') : 'none'),
           borderRadius: '8px',
           padding: isFilterVariant ? '0px 15px' : '0.9rem',
           height: isFilterVariant ? '45px' : 'auto',

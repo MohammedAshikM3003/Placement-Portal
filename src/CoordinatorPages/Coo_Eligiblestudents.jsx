@@ -14,6 +14,7 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import * as XLSX from 'xlsx';
 import mongoDBService from '../services/mongoDBService.jsx';
 import styles from './Coo_EligibleStudents.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     useCoordinatorAuth(); // JWT authentication verification
@@ -504,6 +505,24 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             }
         });
     };
+    const hasActiveFilters = useMemo(() => {
+        return Boolean(
+            filterData.companyName ||
+            filterData.jobRole ||
+            filterData.startDate ||
+            filterData.endDate
+        );
+    }, [filterData]);
+
+    const handleClearFilters = () => {
+        setFilterData({
+            companyName: '',
+            jobRole: '',
+            startDate: '',
+            endDate: ''
+        });
+    };
+
     const totalRoundsCount = useMemo(() => {
         const keySet = new Set(
             displayStudents.map((student) => `${student.companyName}|${student.jobRole}|${student.startDate}`)
@@ -512,179 +531,243 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     }, [displayStudents]);
     const eligibleCount = displayStudents.length;
     return (
-        <div className={styles['coordinator-main-wrapper']}>
+        <div className={styles['co-es-page-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
-            <div className={styles['coordinator-main-layout']}>
-                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="eligible-students" onViewChange={onViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-                <div className={styles['coordinator-content-area']}>
-                    <div className={styles['co-es-container']}>
-                        <div className={styles['co-es-dashboard-area']}>
-                            <div className={styles['co-es-summary-cards']}>
-                                <div className={`${styles['co-es-summary-card']} ${styles['co-es-company-drive-card']}`}>
-                                    <div className={styles['co-es-summary-card-icon']} style={{ background: '#ffffff' }}>
-                                        <img src={AdminBrowseStudenticon} alt="Company Drive" />
-                                    </div>
-                                    <div className={styles['co-es-summary-card-title-1']}>Student Database</div>
-                                    <div className={styles['co-es-summary-card-desc-1']}>Filter, sort and manage Student records</div>
+            <div className={styles['co-es-layout']}>
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    onLogout={onLogout}
+                    currentView="eligible-students"
+                    onViewChange={onViewChange}
+                    onClose={() => setIsSidebarOpen(false)}
+                />
+                <main className={styles['co-es-main-content']}>
+                    <div className={styles['co-es-top-row']}>
+                        {/* Left Card: Student Database Card */}
+                        <div
+                            className={`${styles['co-es-card']} ${styles['co-es-manage-card']}`}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => onViewChange?.("manage-students")}
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    onViewChange?.("manage-students");
+                                }
+                            }}
+                        >
+                            <div className={styles['co-es-icon-wrapper']}>
+                                <img src={AdminBrowseStudenticon} alt="Student Database" />
+                            </div>
+                            <h2>Student Database</h2>
+                            <p>Filter, sort and manage Student records</p>
+                        </div>
+
+                        {/* Middle Card: Filters */}
+                        <div className={styles['co-es-filter-section']}>
+                            <div className={styles['co-es-filter-header-container']}>
+                                <div className={styles['co-es-filter-header']}>{coordinatorBranchLabel}</div>
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        className={styles['co-es-clear-btn-header']}
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles['co-es-filter-content']}>
+                                {/* Company dropdown using custom Dropdown component */}
+                                <div className={styles['co-es-input-wrapper']}>
+                                    <label className={styles['co-es-static-label']} htmlFor="co-es-company-name">
+                                        Search Company
+                                    </label>
+                                    <Dropdown
+                                        options={companyOptions}
+                                        selectedOption={filterData.companyName}
+                                        onSelect={handleCompanyChange}
+                                        placeholder="Search Company"
+                                        role="coordinator"
+                                        className={styles['co-es-dropdown-wrapper']}
+                                        headerClassName={styles['co-es-dropdown-header']}
+                                    />
                                 </div>
 
-                                <div className={`${styles['co-es-search-filters']} ${styles['co-es-company-profile-search']}`}>
-                                    <div className={styles['co-es-search-tab']}>{coordinatorBranchLabel}</div>
-                                    <div className={styles['co-es-search-inputs']}>
-                                        <div className={styles['co-es-search-input']}>
-                                            <select
-                                                id="co-es-company-name"
-                                                className={styles['co-es-select']}
-                                                value={filterData.companyName}
-                                                onChange={(e) => handleCompanyChange(e.target.value)}
-                                                required
-                                            >
-                                                <option value="">Search Company</option>
-                                                {companyOptions.map((name) => (
-                                                    <option key={name} value={name}>{name}</option>
-                                                ))}
-                                            </select>
-                                            <label htmlFor="co-es-company-name" className={styles['co-es-static-label']}>Search Company</label>
-                                        </div>
-
-                                        <div className={styles['co-es-search-input']}>
-                                            <select
-                                                id="co-es-job-role"
-                                                className={styles['co-es-select']}
-                                                value={filterData.jobRole}
-                                                onChange={(e) => handleJobRoleChange(e.target.value)}
-                                                disabled={!filterData.companyName}
-                                                required
-                                            >
-                                                <option value="">Search Job Role</option>
-                                                {jobRoleOptions.map((role) => (
-                                                    <option key={role} value={role}>{role}</option>
-                                                ))}
-                                            </select>
-                                            <label htmlFor="co-es-job-role" className={styles['co-es-static-label']}>Search Job Role</label>
-                                        </div>
-
-                                        <div className={styles['co-es-search-input']}>
-                                            <select
-                                                id="co-es-start-date"
-                                                className={styles['co-es-select']}
-                                                value={filterData.startDate}
-                                                onChange={(e) => handleStartDateChange(e.target.value)}
-                                                disabled={!filterData.companyName}
-                                                required
-                                            >
-                                                <option value="">Search by Start Date</option>
-                                                {startDateOptions.map((date) => (
-                                                    <option key={date} value={date}>{formatDateDisplay(date)}</option>
-                                                ))}
-                                            </select>
-                                            <label htmlFor="co-es-start-date" className={styles['co-es-static-label']}>Search by Start Date</label>
-                                        </div>
-
-                                        <div className={styles['co-es-search-input']}>
-                                            <select
-                                                id="co-es-end-date"
-                                                className={styles['co-es-select']}
-                                                value={filterData.endDate}
-                                                onChange={(e) => handleEndDateChange(e.target.value)}
-                                                disabled={!filterData.startDate}
-                                                required
-                                            >
-                                                <option value="">Search by End Date</option>
-                                                {endDateOptions.map((date) => (
-                                                    <option key={date} value={date}>{formatDateDisplay(date)}</option>
-                                                ))}
-                                            </select>
-                                            <label htmlFor="co-es-end-date" className={styles['co-es-static-label']}>Search by End Date</label>
-                                        </div>
-                                    </div>
+                                {/* Job Role dropdown using custom Dropdown component */}
+                                <div className={styles['co-es-input-wrapper']}>
+                                    <label className={styles['co-es-static-label']} htmlFor="co-es-job-role">
+                                        Search Job Role
+                                    </label>
+                                    <Dropdown
+                                        options={jobRoleOptions}
+                                        selectedOption={filterData.jobRole}
+                                        onSelect={handleJobRoleChange}
+                                        placeholder="Search Job Role"
+                                        disabled={!filterData.companyName}
+                                        role="coordinator"
+                                        className={styles['co-es-dropdown-wrapper']}
+                                        headerClassName={styles['co-es-dropdown-header']}
+                                    />
                                 </div>
 
-                                <div className={styles['co-es-stat-cards-group']}>
-                                    <div className={`${styles['co-es-summary-card']} ${styles['co-es-stat-card']}`} onClick={() => handleCardClick('placed-students')}>
-                                        <img src={CoodEligibleStudentPlacestudicon} alt="Placed Students" className={styles['co-es-stat-card__image']} />
-                                        <span className={styles['co-es-stat-card__label']}>Number of 
-                                            Rounds</span>
-                                        <span className={styles['co-es-stat-card__value']}>{hasCompleteFilterSelection ? totalRoundsCount : 0}</span>
-                                    </div>
-                                    <div className={`${styles['co-es-summary-card']} ${styles['co-es-stat-card']}`}>
-                                        <img src={CoodEligibleStudestudicon} alt="Eligible Students" className={styles['co-es-stat-card__image']} />
-                                        <span className={styles['co-es-stat-card__label']}>Eligible
-                                            Students</span>
-                                        <span className={styles['co-es-stat-card__value']}>{hasCompleteFilterSelection ? eligibleCount : 0}</span>
-                                    </div>
+                                {/* Start Date dropdown using custom Dropdown component */}
+                                <div className={styles['co-es-input-wrapper']}>
+                                    <label className={styles['co-es-static-label']} htmlFor="co-es-start-date">
+                                        Search by Start Date
+                                    </label>
+                                    <Dropdown
+                                        options={startDateOptions}
+                                        selectedOption={filterData.startDate}
+                                        onSelect={handleStartDateChange}
+                                        placeholder="Search by Start Date"
+                                        disabled={!filterData.companyName}
+                                        formatOption={formatDateDisplay}
+                                        role="coordinator"
+                                        className={styles['co-es-dropdown-wrapper']}
+                                        headerClassName={styles['co-es-dropdown-header']}
+                                    />
+                                </div>
+
+                                {/* End Date dropdown using custom Dropdown component */}
+                                <div className={styles['co-es-input-wrapper']}>
+                                    <label className={styles['co-es-static-label']} htmlFor="co-es-end-date">
+                                        Search by End Date
+                                    </label>
+                                    <Dropdown
+                                        options={endDateOptions}
+                                        selectedOption={filterData.endDate}
+                                        onSelect={handleEndDateChange}
+                                        placeholder="Search by End Date"
+                                        disabled={!filterData.startDate}
+                                        formatOption={formatDateDisplay}
+                                        role="coordinator"
+                                        className={styles['co-es-dropdown-wrapper']}
+                                        headerClassName={styles['co-es-dropdown-header']}
+                                    />
                                 </div>
                             </div>
+                        </div>
 
-                            <div className={`${styles['co-es-company-profile']} ${styles['company-profile-table']}`}>
-                                <div className={styles['co-es-profile-header']}>
-                                    <div className={styles['co-es-profile-title']}>ELIGIBLE STUDENTS</div>
-                                    <div className={styles['co-es-print-btn-container']}>
-                                        <button className={styles['co-es-print-btn']} onClick={() => setShowDropdown(!showDropdown)}>Print</button>
-                                        {showDropdown && (
-                                            <div className={styles['co-es-dropdown-menu']}>
-                                                <div className={styles['co-es-dropdown-item']} onClick={handleExportToExcel}>Export to Excel</div>
-                                                <div className={styles['co-es-dropdown-item']} onClick={handleExportToPDF}>Save as PDF</div>
-                                            </div>
-                                        )}
-                                    </div>
+                        {/* Right Card Group: Stats */}
+                        <div className={styles['co-es-status-cards']}>
+                            <div className={styles['co-es-status-card']}>
+                                <div className={styles['co-es-status-icon']}>
+                                    <img src={CoodEligibleStudentPlacestudicon} alt="Number of Rounds" />
                                 </div>
-                                <div className={styles['co-es-table-container']}>
-                                    <table className={styles['co-es-profile-table']} ref={tableRef}>
-                                        <thead>
-                                            <tr>
-                                                <th>S.No</th>
-                                                <th>Student Name</th>
-                                                <th>Register Number</th>
-                                                <th>Batch</th>
-                                                <th>Section</th>
-                                                <th>CGPA</th>
-                                                <th>Skills</th>
-                                                <th>Placement status</th>
-                                                <th>View</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {isLoading ? (
-                                                <tr>
-                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>Loading eligible students...</td>
-                                                </tr>
-                                            ) : !hasCompleteFilterSelection ? (
-                                                <tr>
-                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>Select Company, Job Role, Start Date and End Date to view students.</td>
-                                                </tr>
-                                            ) : displayStudents.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="9" style={{ textAlign: 'center', padding: '18px' }}>No eligible students found for this coordinator branch.</td>
-                                                </tr>
-                                            ) : displayStudents.map((student, index) => (
-                                                <tr key={student.id}>
-                                                    <td>{index + 1}</td>
-                                                    <td>{student.name}</td>
-                                                    <td>{student.registerNo}</td>
-                                                    <td>{student.batch}</td>
-                                                    <td>{student.section}</td>
-                                                    <td>{student.cgpa}</td>
-                                                    <td>{student.skills}</td>
-                                                    <td>
-                                                        <span className={student.status === 'Placed' ? styles['co-es-status-badge-one'] : styles['co-es-status-badge-two']}>
-                                                            {student.status}
-                                                        </span>
-                                                    </td>
-                                                    <td onClick={() => handleViewStudent(student)}>
-                                                        <EyeIcon />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                <div className={styles['co-es-status-title']}>Number of
+                                    <span>Rounds</span>
+                                </div>
+                                <div className={styles['co-es-status-count']}>
+                                    {hasCompleteFilterSelection ? totalRoundsCount : 0}
+                                </div>
+                            </div>
+                            <div className={styles['co-es-status-card']}>
+                                <div className={styles['co-es-status-icon']}>
+                                    <img src={CoodEligibleStudestudicon} alt="Eligible Students" />
+                                </div>
+                                <div className={styles['co-es-status-title']}>Eligible
+                                    <span>Students</span>
+                                </div>
+                                <div className={styles['co-es-status-count']}>
+                                    {hasCompleteFilterSelection ? eligibleCount : 0}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    {/* Bottom Section: Table Card */}
+                    <div className={styles['co-es-table-container']}>
+                        <div className={styles['co-es-profile-header']}>
+                            <h3 className={styles['co-es-table-title']}>ELIGIBLE STUDENTS</h3>
+                            <div className={styles['co-es-print-btn-container']}>
+                                <button className={styles['co-es-print-btn']} onClick={() => setShowDropdown(!showDropdown)}>Print</button>
+                                {showDropdown && (
+                                    <div className={styles['co-es-dropdown-menu']}>
+                                        <div className={styles['co-es-dropdown-item']} onClick={handleExportToExcel}>Export to Excel</div>
+                                        <div className={styles['co-es-dropdown-item']} onClick={handleExportToPDF}>Save as PDF</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className={styles['co-es-table-wrapper']}>
+                            <table className={styles['co-es-table']} ref={tableRef}>
+                                <colgroup>
+                                    <col style={{ width: '60px' }} />
+                                    <col style={{ width: '180px' }} />
+                                    <col style={{ width: '150px' }} />
+                                    <col style={{ width: '100px' }} />
+                                    <col style={{ width: '80px' }} />
+                                    <col style={{ width: '90px' }} />
+                                    <col style={{ width: '200px' }} />
+                                    <col style={{ width: '160px' }} />
+                                    <col style={{ width: '60px' }} />
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Student Name</th>
+                                        <th>Register Number</th>
+                                        <th>Batch</th>
+                                        <th>Section</th>
+                                        <th>CGPA</th>
+                                        <th>Skills</th>
+                                        <th>Placement status</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {isLoading ? (
+                                        <tr className={styles['co-es-loading-row']}>
+                                            <td colSpan="9" className={styles['co-es-loading-cell']}>
+                                                <div className={styles['co-es-loading-wrapper']}>
+                                                    <div className={styles['co-es-spinner']}></div>
+                                                    <span className={styles['co-es-loading-text']}>Loading eligible students...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : !hasCompleteFilterSelection ? (
+                                        <tr>
+                                            <td colSpan="9" className={styles['co-es-empty']}>
+                                                Select Company, Job Role, Start Date and End Date to view students.
+                                            </td>
+                                        </tr>
+                                    ) : displayStudents.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="9" className={styles['co-es-empty']}>
+                                                No eligible students found for this coordinator branch.
+                                            </td>
+                                        </tr>
+                                    ) : displayStudents.map((student, index) => (
+                                        <tr key={student.id}>
+                                            <td data-label="S.No">{index + 1}</td>
+                                            <td data-label="Student Name">{student.name}</td>
+                                            <td data-label="Register Number">{student.registerNo}</td>
+                                            <td data-label="Batch">{student.batch}</td>
+                                            <td data-label="Section">{student.section}</td>
+                                            <td data-label="CGPA">{student.cgpa}</td>
+                                            <td data-label="Skills">{student.skills}</td>
+                                            <td data-label="Placement status">
+                                                <span className={student.status === 'Placed' ? styles['co-es-status-badge-one'] : styles['co-es-status-badge-two']}>
+                                                    {student.status}
+                                                </span>
+                                            </td>
+                                            <td data-label="View" className={styles['co-es-btn-cell']}>
+                                                <button
+                                                    className={styles['co-es-view-btn']}
+                                                    type="button"
+                                                    onClick={() => handleViewStudent(student)}
+                                                >
+                                                    <EyeIcon />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
             </div>
             {/* START: NEW EXPORT POPUP RENDERING */}
             <ExportProgressAlert
