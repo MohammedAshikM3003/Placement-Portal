@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import styles from './Coo_Attendance.module.css';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -47,6 +48,7 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
   const [existingAttendances, setExistingAttendances] = useState([]);
   const [eligibleStudentsData, setEligibleStudentsData] = useState([]);
   const [coordinatorBranch, setCoordinatorBranch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -172,19 +174,57 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
   };
 
   // Group drives by company and job role
-  const groupedDrives = drives.reduce((acc, drive) => {
-    const key = `${drive.companyName}-${drive.jobRole}`;
-    if (!acc[key]) {
-      acc[key] = {
-        companyName: drive.companyName,
-        jobRole: drive.jobRole,
-        drives: []
+  const groupedDrivesArray = useMemo(() => {
+    const grouped = drives.reduce((acc, drive) => {
+      const key = `${drive.companyName}-${drive.jobRole}`;
+      if (!acc[key]) {
+        acc[key] = {
+          companyName: drive.companyName,
+          jobRole: drive.jobRole,
+          drives: []
+        };
+      }
+      acc[key].drives.push(drive);
+      return acc;
+    }, {});
+    return Object.values(grouped);
+  }, [drives]);
+
+  const driveDropdownOptions = useMemo(() => {
+    return groupedDrivesArray.map(group => {
+      const key = `${group.companyName}:${group.jobRole}`;
+      const hasAttendance = existingAttendances.some(
+        att => att.companyName === group.companyName &&
+               att.jobRole === group.jobRole
+      );
+      return {
+        label: `${group.companyName} : ${group.jobRole}`,
+        value: key,
+        style: {
+          color: hasAttendance ? '#D23B42' : '#555',
+          fontWeight: hasAttendance ? '600' : 'bold'
+        }
       };
-    }
-    acc[key].drives.push(drive);
-    return acc;
-  }, {});
-  const groupedDrivesArray = Object.values(groupedDrives);
+    });
+  }, [groupedDrivesArray, existingAttendances]);
+
+  const startDateDropdownOptions = useMemo(() => {
+    return availableDates.map(dateObj => {
+      const hasAttendance = selectedCompanyJob && existingAttendances.some(
+        att => att.companyName === selectedCompanyJob.companyName &&
+               att.jobRole === selectedCompanyJob.jobRole &&
+               new Date(att.startDate).toDateString() === new Date(dateObj.date).toDateString()
+      );
+      return {
+        label: formatDateDisplay(dateObj.date),
+        value: dateObj.date,
+        style: {
+          color: hasAttendance ? '#D23B42' : '#555',
+          fontWeight: hasAttendance ? '600' : 'bold'
+        }
+      };
+    });
+  }, [availableDates, selectedCompanyJob, existingAttendances]);
 
   // Handle company/job selection
   const handleCompanyJobSelect = (group) => {
@@ -336,21 +376,36 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
     await loadStudentsForDrive(dateObj.drive);
   };
 
+  // Filter students based on search term
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return students;
+    }
+    const searchLower = searchTerm.toLowerCase().trim();
+    return students.filter(student =>
+      (student.name || '').toLowerCase().includes(searchLower) ||
+      (student.regNo || '').toLowerCase().includes(searchLower)
+    );
+  }, [students, searchTerm]);
+
   // Calculate stats from students
-  const stats = {
-    total: students.length,
-    present: students.filter(s => s.status === 'Present').length,
-    absent: students.filter(s => s.status === 'Absent').length,
-    percentage: students.length > 0 ? Math.round((students.filter(s => s.status === 'Present').length / students.length) * 100) : 0
-  };
+  const stats = useMemo(() => {
+    const total = students.length;
+    const present = students.filter(s => s.status === 'Present').length;
+    const absent = students.filter(s => s.status === 'Absent').length;
+    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+    return { total, present, absent, percentage };
+  }, [students]);
 
   // Pie chart data
-  const pieData = students.length === 0 
-    ? [{ name: 'No Data', value: 1, color: '#e0e0e0' }]
-    : [
-        { name: 'Present', value: stats.present, color: '#2DBE7F' },
-        { name: 'Absent', value: stats.absent, color: '#F04F4F' }
-      ];
+  const pieData = useMemo(() => {
+    return students.length === 0 
+      ? [{ name: 'No Data', value: 1, color: '#e0e0e0' }]
+      : [
+          { name: 'Present', value: stats.present, color: '#2DBE7F' },
+          { name: 'Absent', value: stats.absent, color: '#F04F4F' }
+        ];
+  }, [students, stats]);
 
   // ADDED: NEW STATE FOR RESPONSIVE SIDEBAR
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
@@ -362,99 +417,51 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
 
   return (
     <div>
-
       {/* Navbar JSX */}
       <Navbar onToggleSidebar={toggleSidebar} />
 
-
-
-      {/* MODIFIED: Pass state for conditional class to Sidebar */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onLogout={onLogout}
-        currentView="attendance"
-        onViewChange={onViewChange}
+      <div className={styles["co-at-layout-main"]}>
+        {/* MODIFIED: Pass state for conditional class to Sidebar */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onLogout={onLogout}
+          currentView="attendance"
+          onViewChange={onViewChange}
           onClose={() => setIsSidebarOpen(false)}
         />
-
-      <div className={styles["co-at-layout-main"]}>
-        {/* Sidebar JSX */}
-          
 
         {/* Main Content Layout */}
         <div className={styles["co-at-main-content-layout"]}>
           {/* Filter Section */}
           <div className={styles["co-at-filter-section"]}>
             {/* Select Drive Dropdown (Company : Job Role) */}
-            <div className={styles["co-at-filter-select"]}>
-              <div 
-                className={styles["co-at-filter-select-display"]}
-                onClick={() => setIsDriveOpen(!isDriveOpen)}
-              >
-                {selectedCompanyJob ? `${selectedCompanyJob.companyName} : ${selectedCompanyJob.jobRole}` : "Select Drive"}
-              </div>
-              <span className={styles["co-at-filter-select-arrow"]} onClick={() => setIsDriveOpen(!isDriveOpen)}>
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
-              </span>
-              <div
-                className={`${styles["co-at-filter-select-options"]} ${isDriveOpen ? styles["co-at-filter-select-options-open"] : ''}`}
-              >
-                {isLoading ? (
-                  <div className={styles["co-at-filter-select-option"]} style={{color: '#888'}}>Loading...</div>
-                ) : groupedDrivesArray.length === 0 ? (
-                  <div className={styles["co-at-filter-select-option"]} style={{color: '#888'}}>No drives available for {coordinatorBranch}</div>
-                ) : (
-                  groupedDrivesArray.map((group, index) => (
-                    <div 
-                      key={index} 
-                      className={styles["co-at-filter-select-option"]} 
-                      onClick={() => handleCompanyJobSelect(group)}
-                    >
-                      {group.companyName} : {group.jobRole}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <Dropdown
+              options={driveDropdownOptions}
+              selectedOption={selectedCompanyJob ? `${selectedCompanyJob.companyName}:${selectedCompanyJob.jobRole}` : ''}
+              onSelect={(key) => {
+                const group = groupedDrivesArray.find(g => `${g.companyName}:${g.jobRole}` === key);
+                if (group) handleCompanyJobSelect(group);
+              }}
+              placeholder="Select Drive"
+              role="coordinator"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
             
             {/* Start Date Dropdown */}
-            <div className={styles["co-at-filter-select"]}>
-              <div 
-                className={styles["co-at-filter-select-display"]}
-                onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-                style={{ 
-                  cursor: selectedCompanyJob ? 'pointer' : 'not-allowed',
-                  backgroundColor: selectedCompanyJob ? 'white' : '#ffffff',
-                  color: selectedCompanyJob ? '#333' : '#999'
-                }}
-              >
-                {startDate ? formatDateDisplay(startDate) : "Select Start Date"}
-              </div>
-              <span 
-                className={styles["co-at-filter-select-arrow"]} 
-                onClick={() => selectedCompanyJob && setIsStartDateOpen(!isStartDateOpen)}
-                style={{ cursor: selectedCompanyJob ? 'pointer' : 'not-allowed' }}
-              >
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
-              </span>
-              <div
-                className={`${styles["co-at-filter-select-options"]} ${isStartDateOpen ? styles["co-at-filter-select-options-open"] : ''}`}
-              >
-                {availableDates.length === 0 ? (
-                  <div className={styles["co-at-filter-select-option"]} style={{color: '#888'}}>No dates available</div>
-                ) : (
-                  availableDates.map((dateObj, index) => (
-                    <div 
-                      key={index} 
-                      className={styles["co-at-filter-select-option"]} 
-                      onClick={() => handleStartDateSelect(dateObj)}
-                    >
-                      {formatDateDisplay(dateObj.date)}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <Dropdown
+              options={startDateDropdownOptions}
+              selectedOption={startDate}
+              onSelect={(selectedDate) => {
+                const dateObj = availableDates.find(d => d.date === selectedDate);
+                if (dateObj) handleStartDateSelect(dateObj);
+              }}
+              placeholder="Select Start Date"
+              disabled={!selectedCompanyJob}
+              role="coordinator"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
             
             {/* End Date Display (Read-only) */}
             <div className={styles["co-at-filter-select"]}>
@@ -540,10 +547,20 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
           {/* Table Section */}
           
           <div className={styles["co-at-table-section"]}>
-            <div className={styles["co-at-table-header"]}>ATTENDANCE DETAILS - {coordinatorBranch || 'Loading...'}</div>
-            <table className={styles['co-at-attendance-table-header']} style={{ width: '100%' }}>
-              <thead>
-                <tr>
+            <div className={styles["co-at-table-header-row"]}>
+              <div className={styles["co-at-table-header"]}>ATTENDANCE DETAILS - {coordinatorBranch || 'Loading...'}</div>
+              <input
+                type="text"
+                placeholder="Enter Name / Reg No"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={styles['co-at-search-input']}
+              />
+            </div>
+            <div className={styles['co-at-table-body-scroll']}>
+              <table className={styles['co-at-attendance-table-body']}>
+                <thead>
+                  <tr>
                     <th style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>S.No</th>
                     <th style={{ width: '16%', textAlign: 'center', verticalAlign: 'middle' }}>Name</th>
                     <th style={{ width: '15%', textAlign: 'center', verticalAlign: 'middle' }}>Register Number</th>
@@ -552,11 +569,8 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
                     <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Sem</th>
                     <th style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>Phone No</th>
                     <th style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
-                </tr>
-              </thead>
-            </table>
-            <div className={styles['co-at-table-body-scroll']}>
-              <table className={styles['co-at-attendance-table-body']} style={{ width: '102%' }}>
+                  </tr>
+                </thead>
                 <tbody>
                   {isLoading ? (
                     <tr className={styles['co-at-loading-row']}>
@@ -573,28 +587,27 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
                         {error}
                       </td>
                     </tr>
-                  ) : students.length === 0 ? (
+                  ) : filteredStudents.length === 0 ? (
                     <tr>
                       <td colSpan="8" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                        {!selectedCompanyJob ? 'Select a drive to view attendance' : `No students found for ${coordinatorBranch} branch`}
+                        {students.length === 0 ? (!selectedCompanyJob ? 'Select a drive to view attendance' : `No students found for ${coordinatorBranch} branch`) : 'No matching students found'}
                       </td>
                     </tr>
                   ) : (
-                    students.map((student, index) => (
+                    filteredStudents.map((student, index) => (
                       <tr key={index}>
-                        <td style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{index + 1}</td>
-                        <td style={{ width: '16%', fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.name || '-'}</td>
-                        <td style={{ width: '15%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.regNo || '-'}</td>
-                        <td style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.batch || '-'}</td>
-                        <td style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.yearSec || '-'}</td>
-                        <td style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.semester || '-'}</td>
-                        <td style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>{student.phoneNo || '-'}</td>
+                        <td style={{ width: '4%', textAlign: 'center', verticalAlign: 'middle' }}>{student.sNo || (index + 1)}</td>
+                        <td style={{ width: '16%', fontWeight: '600', textAlign: 'center', verticalAlign: 'middle' }}>{student.name || '-'}</td>
+                        <td style={{ width: '15%', textAlign: 'center', verticalAlign: 'middle' }}>{student.regNo || '-'}</td>
+                        <td style={{ width: '11%', textAlign: 'center', verticalAlign: 'middle' }}>{student.batch || '-'}</td>
+                        <td style={{ width: '12%', textAlign: 'center', verticalAlign: 'middle' }}>{student.yearSec || '-'}</td>
+                        <td style={{ width: '10%', textAlign: 'center', verticalAlign: 'middle' }}>{student.semester || '-'}</td>
+                        <td style={{ width: '14%', textAlign: 'center', verticalAlign: 'middle' }}>{student.phoneNo || '-'}</td>
                         <td 
                           style={{ 
                             width: '10%',
                             textAlign: 'center',
                             verticalAlign: 'middle',
-                            padding: '12px 8px',
                             color: student.status === "Present" ? '#00B728' : student.status === "Absent" ? '#E62727' : '#888',
                             fontWeight: 'bold'
                           }}

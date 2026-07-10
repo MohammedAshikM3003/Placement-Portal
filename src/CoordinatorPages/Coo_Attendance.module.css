@@ -1,42 +1,41 @@
   .co-at-layout-main {
     display: flex;
-    background: #FCFCFC;
+    background-color: #f6f8fb;
+    min-height: 100vh;
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
     font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
     margin: 0;
     padding: 0;
-    min-height: calc(100vh - 72px);
-    padding-top: 64px;
-    height: 100vh;
-    overflow: hidden;
   }
   
   /* Main Content Layout */
   .co-at-main-content-layout {
-    background: #f6f6f6;
-    padding: 10px 0px 5px 10px;
-    margin: 0;
-    box-sizing: border-box;
+    flex-grow: 1;
+    padding: 10px;
+    margin: 65px 0px 0px 290px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    flex: 1;
-    margin-left: 260px;
-    margin-top: 0;
-    overflow-y: auto;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
+    box-sizing: border-box;
+    background: #f6f8fb;
   }
   /* Filter Section */
   .co-at-filter-section {
     display: flex;
     align-items: center;
     gap: 28px;
-    margin: 0 0 28px 0;
-    background: #D2D1D1;
-    border-radius: 32px;
-    padding: 16px 28px;
+    margin: 0;
+    background: #e8e8e8;
+    border-radius: 18px;
+    padding: 20px;
     box-shadow: 0 2px 8px #eee;
-    width: 95%;
-    max-width: 1200px;
-    height: 79.2px;
+    height: auto;
+    width: 100%;
   }
   
   .co-at-filter-input,
@@ -68,12 +67,12 @@
   /* Hover and Active States */
   .co-at-filter-input:hover,
   .co-at-filter-select:hover {
-    border-color: #d73d3d;
+    border-color: #D23B42;
   }
   
   .co-at-filter-input.active-filter,
   .co-at-filter-select.active-filter {
-    border-color: #d73d3d;
+    border-color: #D23B42;
   }
   
   .co-at-filter-select {
@@ -147,7 +146,7 @@
     justify-content: center;
   }
   .co-at-filter-btn {
-    background: #d73d3d;
+    background: #D23B42;
     color: #fff;
     border: none;
     border-radius: 42px;
@@ -166,26 +165,34 @@
     cursor: pointer;
     transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
   }
+
+  .attendance-dropdown-wrapper {
+    flex-grow: 1;
+    min-width: 180px;
+  }
+  
+  .attendance-dropdown-header {
+    height: 44px !important;
+    border: 2px solid #808080 !important;
+    border-radius: 12px !important;
+  }
   
   /* Grid and Pie Chart Section */
   .co-at-summary-pie-layout {
     display: flex;
-    gap: 32px;
-    margin-bottom: 12px;
+    gap: 20px;
     align-items: flex-start;
-    width: 95%;
-    max-width: 1200px;
+    width: 100%;
     margin-left: 0;
-    margin-top: -11px;
+    margin-top: 0;
   }
   .co-at-summary-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     gap: 18px;
-    min-width: 40%;
-    max-width: 40%;
-    margin-left: 10px;
+    flex: 1;
+    margin-left: 0;
   }
   
   .co-at-summary-card {
@@ -199,7 +206,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 330px; 
+    width: 100%; 
   }
   
   .co-at-summary-card-blue { background: #4B7CF3; }
@@ -213,17 +220,25 @@
     background: #fff;
     border-radius: 18px;
     box-shadow: 0 2px 8px #eee;
-    border: 2px solid #808080;
+    border: none;
     padding: 22px;
-    min-width: 40%;
-    max-width: 40%;
+    flex: 1;
+    max-width: 450px;
     display: flex;
     flex-direction: column; 
-    margin-left: 190px; 
+    margin-left: 0; 
     margin-top: 0;
     height: 270px;
   }
   
+  .co-at-pie-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
   .co-at-pie-chart-title {
     font-weight: bold;
     font-size: 20px;
@@ -277,41 +292,74 @@
   .co-at-pie-chart-stat-present .co-at-pie-chart-stat-value {
     color: #2DBE7F;
   }
+  .co-at-pie-chart-stat-absent .co-at-pie-chart-stat-value {
+    color: #F04F4F;
+  }
   
   
   
   /* Table Section */
   .co-at-table-section {
     background: #fff;
-    padding: 9px;
-    border-radius: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    width: 95%;
-    max-width: 1200px;
-    border: 2px solid #808080;
+    padding: 12px 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    border: none;
     margin-left: 0;
     margin-top: 0;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    min-height: 267px;
   }
   
+  .co-at-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0px;
+    padding: 0 9px;
+  }
+
   .co-at-table-header {
     font-size: 1.25rem;
     font-weight: 800;
     margin-bottom: 0px;
     color: #333;
-    margin-left:9px;
+    margin-left: 0;
+  }
+
+  .co-at-search-input {
+    padding: 8px 16px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    width: 260px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  
+  .co-at-search-input:focus {
+    border-color: #D23B42;
+    box-shadow: 0 0 0 3px rgba(210, 59, 66, 0.1);
+  }
+  
+  .co-at-search-input::placeholder {
+    color: #9ca3af;
   }
   
   .co-at-attendance-table-header, 
   .co-at-attendance-table-body {
     table-layout: fixed;
     border-collapse: collapse;
+    min-width: 900px;
   }
   
   .co-at-table-body-scroll {
     height: 176px; 
     overflow-y: auto;
-    overflow-x:hidden;
-    width: 1160px;
+    overflow-x: hidden;
+    width: 100%;
   }
   
   /* Red scrollbar styling - matches coordinator theme */
@@ -324,13 +372,13 @@
   }
   
   .co-at-table-body-scroll::-webkit-scrollbar-thumb {
-    background-color: #F44336;
+    background-color: #D23B42;
     border-radius: 20px;
     border: 3px solid #f0f2f5;
   }
   
   .co-at-table-body-scroll::-webkit-scrollbar-thumb:hover {
-    background-color: #D32F2F;
+    background-color: #b32d34;
   }
   
   /* Remove scrollbar buttons */
@@ -338,22 +386,41 @@
     display: none;
   }
   
-  .co-at-attendance-table-header thead th {
+  .co-at-attendance-table-body thead th {
     text-align: center;
-    padding: 12px 2px;
-    color: #777;
+    padding: 8px 10px;
+    color: #999;
     font-weight: 600;
     font-size: 0.9rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 2px solid #e0e0e0;
     vertical-align: middle;
+    background-color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
+  .co-at-attendance-table-body tbody tr {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .co-at-attendance-table-body tbody tr:hover {
+    background-color: #fafafa;
+  }
+  
+  .co-at-attendance-table-body tbody tr:last-child {
+    border-bottom: none;
   }
   
   .co-at-attendance-table-body tbody td {
     text-align: center;
-    padding: 12px 2px;
-    font-size: 0.95rem;
-    color: #000;
-    border-bottom: 1px solid #eee;
+    padding: 10px 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    border-bottom: 1px solid #f5f5f5;
     vertical-align: middle;
   }
   
@@ -400,11 +467,8 @@
     text-align: center;
     padding: 48px 0;
     width: 100%;
+    min-height: calc(72px * 3);
     position: relative;
-    top: 50px;
-    position: relative;
-    /* Ensures the row stays expanded while loading */
-    min-height: 150px; 
   }
   
   .co-at-loading-row {
@@ -412,40 +476,36 @@
   }
   
   .co-at-loading-wrapper {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
+    padding: 18px 22px;
+    border-radius: 16px;
     background: rgba(255, 255, 255, 0.9);
-    padding: 20px;
-    border-radius: 12px;
-    z-index: 100;
+    text-align: center;
   }
   
   .co-at-spinner {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    /* Using your theme's red color: #D73D3D */
-    border: 4px solid rgba(215, 61, 61, 0.2);
-    border-top-color: #d73d3d; 
-    animation: cooAttendanceSpin 0.8s linear infinite;
+    border: 4px solid rgba(210, 59, 66, 0.25);
+    border-top-color: #d23b42;
+    animation: cooAttendanceSpin 0.7s linear infinite;
   }
   
   @keyframes cooAttendanceSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
   
   .co-at-loading-text {
     color: #1f2937;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
   
   /* ======================================================= */
@@ -507,20 +567,35 @@
       transform: translateX(0);
   }
   
-  /* Adjust Main Content Layout - FIX: Use PlacedStudents logic for overflow */
+  .co-at-layout-main {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
+      flex-direction: column !important;
+      background-color: #f6f8fb;
+  }
+
+  /* Adjust Main Content Layout */
   .co-at-main-content-layout {
-    position: absolute;
-      margin-left: -10px;
-      padding: 15px;
-      min-height: auto;
-      height: 98vh; /* Match PlacedStudents height */
-      overflow-y: auto;
-      box-sizing: border-box;
-      overflow-x: hidden; /* Ensures main page does not scroll horizontally */
-      width: 100%;
-      min-width: unset;
-      max-width: unset;
-      margin-top: -15px;
+      margin-top: 65px !important;
+      margin-left: 0 !important;
+      width: 100% !important;
+      padding: 10px 10px 40px 20px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      height: calc(100vh - 65px) !important;
+      max-height: none !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      -webkit-overflow-scrolling: touch !important;
+      gap: 10px;
+      min-height: calc(100vh - 65px) !important;
+      box-sizing: border-box !important;
+      position: relative !important;
   }
   
   /* 2. Top Filter Bar Stack Vertically */
@@ -606,14 +681,12 @@
       margin-left: 0 !important;
       margin-top: 0 !important;
       height: auto;
-      position: relative;
-      top: -10px;
+      position: relative !important;
       
-      /* Apply Table Border/Shadow to Pie Chart Card for consistency */
       background: #fff;
-      border: 2px solid #808080;
-      border-radius: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       
       /* Flexbox layout for Pie Chart and Stats (Chart Left, Text Right) */
       display: flex;
@@ -663,15 +736,10 @@
       width: 100% !important;
       box-sizing: border-box;
       background: #fff;
-      border: 2px solid #808080;
-      border-radius: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-          position: relative;
-      top: -21px;
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
-   .co-at-main-content-layout{
-    width:98%;
-   }
   /* Wrapper for horizontal scrolling (Applied to the existing class) */
   .co-at-fixed-header-wrapper {
       width: 100%;
@@ -733,23 +801,21 @@
   }
   
   /* Single Table Structure for both header and body */
-  /* Assumes you are now using a single <table class="co-at-attendance-table"> */
-  .co-at-attendance-table {
-      min-width: 850px; /* Min-width to force horizontal scroll for 9 columns */
+  .co-at-attendance-table-body {
+      min-width: 800px; /* Min-width to force horizontal scroll for 8 columns */
       table-layout: fixed;
       width: 100%; 
       border-collapse: collapse;
-      /* Ensure the table itself does not control the scrolling */
       display: table;
   }
   
   /* Remove conflicting styles for old split tables */
-  .co-at-attendance-table-header, .co-at-attendance-table-body {
-    display: none; /* These should not be used in the new mobile view */
+  .co-at-attendance-table-header {
+    display: none;
   }
   
   /* Sticky Header Fix (CRITICAL: Match PlacedStudents logic exactly) */
-  .co-at-attendance-table thead th {
+  .co-at-attendance-table-body thead th {
     font-weight: 600;
     color: #888;
     position: sticky; /* Make the header sticky */
@@ -757,14 +823,14 @@
     background-color: #ffffff; /* CRITICAL: Adds background to prevent body content from showing through */
     z-index: 10; /* Ensures the header is above the scrolling body content */
     white-space: nowrap;
-    padding: 8px 20px;
+    padding: 8px 10px;
     font-size: 0.8rem;
     text-align: center; /* Match PlacedStudents center alignment */
     border-bottom: 1px solid #eee;
   }
   
   /* Body cell styles (MATCH PLACEDSTUDENTS) */
-  .co-at-attendance-table tbody td {
+  .co-at-attendance-table-body tbody td {
       white-space: nowrap;
       padding: 8px 10px;
       font-size: 0.8rem;
@@ -778,35 +844,19 @@
     width: 100%;
   }
   
-  .co-at-attendance-table thead{
+  .co-at-attendance-table-body thead {
     position: sticky;
     top: 0px;
-    width: 71%;
     background-color: #fff;
   }
   
-  /* Column Widths (Explicitly defining 9 column widths for alignment) - Target the single table */
-  .co-at-attendance-table th:nth-child(1), .co-at-attendance-table td:nth-child(1) { width: 48px; } /* S.No */
-  .co-at-attendance-table th:nth-child(2), .co-at-attendance-table td:nth-child(2) { width: 115px; padding-left:30px; margin-left:20px;} /* Student Name */
-  .co-at-attendance-table th:nth-child(3), .co-at-attendance-table td:nth-child(3) { width: 120px; } /* Reg No */
-  .co-at-attendance-table th:nth-child(4), .co-at-attendance-table td:nth-child(4) { width: 83px; } /* Batch */
-  .co-at-attendance-table th:nth-child(5), .co-at-attendance-table td:nth-child(5) { width: 150px; } /* Dept */
-  .co-at-attendance-table th:nth-child(6), .co-at-attendance-table td:nth-child(6) { width: 47px; } /* Date */
-  .co-at-attendance-table th:nth-child(7), .co-at-attendance-table td:nth-child(7) { width: 90px; } /* Status */
-  .co-at-attendance-table th:nth-child(8), .co-at-attendance-table td:nth-child(8) { width: 110px; } /* In Time */
-  .co-at-attendance-table th:nth-child(9), .co-at-attendance-table td:nth-child(9) { width: 110px; } /* Out Time */
-  .co-at-attendance-table td:nth-child(1),.co-at-attendance-table td:nth-child(2),.co-at-attendance-table td:nth-child(3),
-  .co-at-attendance-table td:nth-child(4),.co-at-attendance-table td:nth-child(5),.co-at-attendance-table td:nth-child(6),
-  .co-at-attendance-table td:nth-child(7),.co-at-attendance-table td:nth-child(8),.co-at-attendance-table td:nth-child(9)
-  {padding:10px 23px;}
-  .co-at-attendance-table th:nth-child(4){padding-left: 25px; padding-right: 0px;}
-  .co-at-attendance-table th:nth-child(5){padding-left: 0px;}
-  .co-at-attendance-table td:nth-child(5){padding-left:30px}
-  .co-at-attendance-table th:nth-child(6){padding-left: 0px;}
-  .co-at-attendance-table td:nth-child(6){padding-left:40px;}
-  .co-at-attendance-table th:nth-child(7){padding-left: 50px;}
-  .co-at-attendance-table th:nth-child(8){padding-left:30px; padding-right: 0px;}
-  .co-at-attendance-table th:nth-child(9){padding-left: 20px;}
-  .co-at-attendance-table td:nth-child(3){padding-left:25px;}
-  
+  /* Column Widths (Explicitly defining 8 column widths for alignment) - Target the single table */
+  .co-at-attendance-table-body th:nth-child(1), .co-at-attendance-table-body td:nth-child(1) { width: 48px; } /* S.No */
+  .co-at-attendance-table-body th:nth-child(2), .co-at-attendance-table-body td:nth-child(2) { width: 150px; } /* Name */
+  .co-at-attendance-table-body th:nth-child(3), .co-at-attendance-table-body td:nth-child(3) { width: 130px; } /* Reg No */
+  .co-at-attendance-table-body th:nth-child(4), .co-at-attendance-table-body td:nth-child(4) { width: 90px; } /* Batch */
+  .co-at-attendance-table-body th:nth-child(5), .co-at-attendance-table-body td:nth-child(5) { width: 90px; } /* Year-Sec */
+  .co-at-attendance-table-body th:nth-child(6), .co-at-attendance-table-body td:nth-child(6) { width: 60px; } /* Sem */
+  .co-at-attendance-table-body th:nth-child(7), .co-at-attendance-table-body td:nth-child(7) { width: 130px; } /* Phone No */
+  .co-at-attendance-table-body th:nth-child(8), .co-at-attendance-table-body td:nth-child(8) { width: 90px; } /* Status */
   }

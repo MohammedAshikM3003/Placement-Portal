@@ -17,6 +17,7 @@ import Sidebar from "../components/Sidebar/Cosidebar.js";
 import mongoDBService from '../services/mongoDBService.jsx';
 import styles from "./Coo_PlacedStudents.module.css";  
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 
 // Helper function to read coordinator data from storage
 const readStoredCoordinatorData = () => {
@@ -94,6 +95,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     company: 'All Companies',
     jobRole: 'All Job Roles',
   });
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Stats state
   const [stats, setStats] = useState({
@@ -287,12 +289,17 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
       const companyMatch = filters.company === 'All Companies' || student.company === filters.company;
       const jobRoleMatch = filters.jobRole === 'All Job Roles' || student.role === filters.jobRole;
       
-      return batchMatch && companyMatch && jobRoleMatch;
+      const searchLower = searchTerm.trim().toLowerCase();
+      const searchMatch = !searchLower || 
+        (student.name || '').toLowerCase().includes(searchLower) ||
+        (student.regNo || '').toLowerCase().includes(searchLower);
+      
+      return batchMatch && companyMatch && jobRoleMatch && searchMatch;
     });
     setDisplayedStudents(filteredData);
     calculateStats(filteredData);
     generateCompanyChartData(filteredData);
-  }, [filters, allStudentsData]);
+  }, [filters, searchTerm, allStudentsData]);
 
   // Get unique batches, companies, and job roles for dropdown options
   const uniqueBatches = ['All Batches', ...new Set(allStudentsData.map(s => s.batch))].sort();
@@ -431,47 +438,37 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           
           <div className={styles['co-ps-filters-container']}>
             {/* Batch Filter */}
-            <select 
-              className={styles['co-ps-filter-select']}
-              name="batch"
-              value={filters.batch}
-              onChange={handleFilterChange}
-            >
-              {uniqueBatches.map(batch => (
-                <option key={batch} value={batch}>
-                  {batch}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              options={uniqueBatches}
+              selectedOption={filters.batch}
+              onSelect={(val) => handleFilterChange({ target: { name: 'batch', value: val } })}
+              placeholder="All Batches"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
             
             {/* Company Filter */}
-            <select 
-              className={styles['co-ps-filter-select']}
-              name="company"
-              value={filters.company}
-              onChange={handleFilterChange}
-            >
-              {uniqueCompanies.map(company => (
-                <option key={company} value={company}>
-                  {company}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              options={uniqueCompanies}
+              selectedOption={filters.company}
+              onSelect={(val) => handleFilterChange({ target: { name: 'company', value: val } })}
+              placeholder="All Companies"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
             
             {/* Job Role Filter */}
-            <select 
-              className={styles['co-ps-filter-select']}
-              name="jobRole"
-              value={filters.jobRole}
-              onChange={handleFilterChange}
-            >
-              <option value="All Job Roles">All Job Roles</option>
-              {uniqueJobRoles.map(role => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              options={['All Job Roles', ...uniqueJobRoles]}
+              selectedOption={filters.jobRole}
+              onSelect={(val) => handleFilterChange({ target: { name: 'jobRole', value: val } })}
+              placeholder="All Job Roles"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
           </div>
 
           <div className={styles['co-ps-dashboard-grid']}>
@@ -502,18 +499,28 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           </div>
           
           <div className={styles['co-ps-table-container']}>
-            <h3>PLACED STUDENTS DETAILS</h3>
-
-            <div className={styles['co-ps-dropdown-container']}>
-              <button className={styles['co-ps-print-btn']} onClick={() => setOpen(!open)} >
-                Print
-              </button>
-              {open && (
-                <div className={styles['co-ps-dropdown-menu']}>
-                  <span onClick={handleExportToExcel}>Export to Excel</span>
-                  <span onClick={handleExportToPDF}>Save as PDF</span>
+            <div className={styles['co-ps-table-header-row']}>
+              <h3 className={styles['co-ps-table-title']}>PLACED STUDENTS DETAILS</h3>
+              <div className={styles['co-ps-table-actions']}>
+                <input
+                  type="text"
+                  className={styles['co-ps-search-input']}
+                  placeholder="Search name or reg no"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className={styles['co-ps-dropdown-container']}>
+                  <button className={styles['co-ps-print-btn']} onClick={() => setOpen(!open)} >
+                    Print
+                  </button>
+                  {open && (
+                    <div className={styles['co-ps-dropdown-menu']}>
+                      <span onClick={handleExportToExcel}>Export to Excel</span>
+                      <span onClick={handleExportToPDF}>Save as PDF</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             <div className={styles['co-ps-table-scroll']}>
@@ -521,7 +528,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                 <thead>
                   <tr>
                     <th>S.No</th>
-                    <th> Name</th>
+                    <th>Name</th>
                     <th>Reg No.</th>
                     <th>Department</th>
                     <th>Batch</th>
@@ -535,11 +542,11 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
 
                 <tbody>
                   {isLoading ? (
-                    <tr>
-                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                          <div className={styles['co-ps-loading-spinner']}></div>
-                          <span>Loading placed students...</span>
+                    <tr className={styles['co-ps-loading-row']}>
+                      <td colSpan="10" className={styles['co-ps-loading-cell']}>
+                        <div className={styles['co-ps-loading-wrapper']}>
+                          <div className={styles['co-ps-spinner']}></div>
+                          <span className={styles['co-ps-loading-text']}>Loading placed students...</span>
                         </div>
                       </td>
                     </tr>
@@ -550,10 +557,26 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                       </td>
                     </tr>
                   ) : (
-                    displayedStudents.map((student) => (
-                      <tr key={student.sno}>
-                        <td>{student.sno}</td>
-                        <td>{student.name}</td>
+                    displayedStudents.map((student, index) => (
+                      <tr 
+                        key={student.sno}
+                        className={[
+                          String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['co-ps-row-accepted'] : '',
+                          String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['co-ps-row-rejected'] : ''
+                        ].filter(Boolean).join(' ')}
+                      >
+                        <td>{index + 1}</td>
+                        <td>
+                          <span
+                            className={[
+                              styles['co-ps-student-name'],
+                              String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['co-ps-student-name-accepted'] : '',
+                              String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['co-ps-student-name-rejected'] : ''
+                            ].filter(Boolean).join(' ')}
+                          >
+                            {student.name}
+                          </span>
+                        </td>
                         <td>{student.regNo}</td>
                         <td>{student.dept}</td>
                         <td>{student.batch}</td>
@@ -561,11 +584,21 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
                         <td>
-                          <span className={`${styles['co-ps-status-badge']} ${styles['ps-status-' + student.status.toLowerCase()]}`}>
+                          <span className={`${styles['co-ps-status-badge']} ${styles['co-ps-status-' + student.status.toLowerCase()]}`}>
                             {student.status}
                           </span>
                         </td>
-                        <td onClick={() => handleCardClick('placed-students-view')} ><EyeIcon /></td>
+                        <td>
+                          <button
+                            type="button"
+                            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            onClick={() => handleCardClick('placed-students-view')}
+                            aria-label={`View ${student.name}`}
+                            title="View student profile"
+                          >
+                            <FaEye className={styles['co-ps-profile-eye-icon']} />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
