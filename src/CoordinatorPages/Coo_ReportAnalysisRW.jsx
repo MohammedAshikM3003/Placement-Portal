@@ -770,6 +770,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                 onSelect={handleCompanySelect}
                 placeholder="All Companies"
                 role="coordinator"
+                className={styles["co-ram-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -779,6 +780,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="coordinator"
+                className={styles["co-ram-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -793,6 +795,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="coordinator"
+                className={styles["co-ram-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -801,6 +804,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                 placeholder="End Date"
                 disabled={true}
                 role="coordinator"
+                className={styles["co-ram-dropdown-wrapper"]}
               />
             </div>
           </div>

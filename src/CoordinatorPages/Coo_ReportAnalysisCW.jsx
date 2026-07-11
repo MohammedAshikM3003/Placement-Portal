@@ -639,6 +639,7 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
                 onSelect={handleCompanySelect}
                 placeholder="Select Company"
                 role="coordinator"
+                className={styles["co-ras-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -648,6 +649,7 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="coordinator"
+                className={styles["co-ras-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -662,6 +664,7 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="coordinator"
+                className={styles["co-ras-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -670,6 +673,7 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
                 placeholder="End Date"
                 disabled={true}
                 role="coordinator"
+                className={styles["co-ras-dropdown-wrapper"]}
               />
             </div>
           </div>

@@ -1,146 +1,108 @@
+:root {
+  --ram-page-padding: 10px 10px 10px 20px;
+  --ram-card-padding: 20px;
+  --ram-grid-gap: 20px;
+  --ram-card-radius: 18px;
+  --ram-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .co-layout {
   display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.co-main-content {
+  flex-grow: 1;
+  padding: var(--ram-page-padding);
+  margin: 65px 0px 0px 290px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ram-grid-gap);
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
+  background-color: #f6f8fb;
+  box-sizing: border-box;
 }
 
 .co-ram-filter-box {
-  background: #D3D1D1;
-  border-radius: 16px;
-  max-width: 1180px; 
-  margin: 25px auto 0 15px; 
-  padding: 16px 26px 16px 26px;
-  box-shadow: 0 0 12px #e1e6ef32;
+  background-color: #e8e8e8;
+  padding: var(--ram-card-padding);
+  border-radius: var(--ram-card-radius);
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 80px;
+  gap: var(--ram-grid-gap);
+  margin: 0;
+  box-shadow: var(--ram-shadow);
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .co-ram-tab-container {
-  display: flex;
-  gap: 62px;
-  margin-bottom: 8px;
-  text-align:center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ram-grid-gap);
+  margin-bottom: 0px;
+  text-align: center;
+  width: 100%;
 }
 
-.co-ram-tab-inactive{
-  background: #D3D1D1;
-    color: #222;
-    border-radius: 8px;
-    padding: 5px 96px;
-    font-weight: 600;
-    font-size: 1.15rem;
-    cursor: pointer;
-    border: 2px solid #808080;
-    box-shadow: 0 6px 8px -4px #333;
-    transition: background 0.2s, color 0.2s;
-    width: 350.69px;
-    height: 62.6px;
+.co-ram-tab-inactive,
+.co-ram-tab-active {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 6px 8px -4px #333;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
 }
-.co-main-content{margin-left:300px; height:730px;}
+
+.co-ram-tab-inactive {
+  background: #D3D1D1;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+}
+
 .co-ram-tab-active {
   background: #d23b42;
   color: #fff;
-  border-radius: 8px;
-    padding: 5px 96px;
-    font-weight: 800;
-    font-size: 1.15rem;
-    cursor: pointer;
-    border: 2px solid #808080;
-    box-shadow: 0 6px 8px -4px #333;
-    transition: background 0.2s, color 0.2s;
-    width: 350.69px;
-    height: 62.6px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 6px -6px #333;
 }
 
 .co-ram-tab-inactive:hover {
-  background: #d23b42; 
-  color: #fff; 
+  background: #d23b42;
+  color: #fff;
 }
 
 .co-ram-filter-inputs {
-  display: flex;
-  gap: 44px;
-  margin-left: 0px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ram-grid-gap);
+  margin-bottom: 0px;
+  width: 100%;
 }
 
-/* Custom Dropdown Styles */
-.co-ram-dropdown-wrapper {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-  max-width: 262px;
-}
-
-.co-ram-dropdown-header {
-  background: #f6f8fb;
-  border: 2px solid #808080;
-  height: 51px;
-  border-radius: 7px;
-  font-size: 1rem;
-  color: #282828;
-  font-weight: 600;
-  padding: 0 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.2s ease;
-}
-
-.co-ram-dropdown-header:hover {
-  border-color: #d23b42;
-}
-
-.co-ram-dropdown-disabled {
-  opacity: 0.6;
-  cursor: not-allowed !important;
-}
-
-.co-ram-dropdown-disabled:hover {
-  border-color: #808080;
-}
-
-.co-ram-dropdown-arrow {
-  font-size: 0.8rem;
-  color: #808080;
-}
-
-.co-ram-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 2px solid #808080;
-  border-radius: 7px;
-  margin-top: 4px;
-  max-height: 250px;
-  overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.co-ram-dropdown-item {
-  padding: 12px 15px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: #282828;
-  font-weight: 500;
-  transition: background 0.2s ease;
-}
-
-.co-ram-dropdown-item:hover {
-  background: #f0f0f0;
-}
-
-.co-ram-dropdown-item:not(:last-child) {
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.co-ram-filter-select, .co-ram-filter-date-input {
-  flex: 1;
-  min-width: 200px;
-  max-width: 262px;
+.co-ram-filter-select,
+.co-ram-filter-date-input {
+  width: 100%;
   background: #f6f8fb;
   border: 2px solid #808080;
   height: 51px;
@@ -149,68 +111,63 @@
   color: #282828;
   font-weight: 600;
   box-sizing: border-box;
-  padding: 10px 15px; 
+  padding: 10px 15px;
   line-height: normal;
-  text-align:center; 
-  transition: border-color 0.2s; 
+  text-align: center;
+  transition: border-color 0.2s;
 }
 
-.co-ram-filter-date-input {
-  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 20px;
-  padding-right: 35px;
+.co-ram-filter-select:hover,
+.co-ram-filter-date-input:hover {
+  border-color: #d23b42;
 }
 
-.co-ram-filter-select-1,
-.co-ram-filter-select-2 {
-  display: none; /* No longer needed */
-}
-
-.co-ram-filter-select:hover, .co-ram-filter-date-input:hover {
-  border-color: #d23b42; 
-}
-
-.co-ram-filter-select:focus, .co-ram-filter-date-input:focus {
-  border: 2px solid #d23b42; 
+.co-ram-filter-select:focus,
+.co-ram-filter-date-input:focus {
+  border-color: #d23b42;
   outline: none;
 }
 
-
-.co-ram-round-buttons-container {
-  margin-bottom: 8px;
-  background: #f8f8f8;
-  padding: 10px 0;
-  max-width: 1180px;
-  margin: 10px auto 10px 15px;
-  border-radius: 16px;
+.co-ram-dropdown-wrapper {
+  position: relative;
+  width: 100% !important;
+  max-width: none !important;
 }
 
-.co-ram-round-buttons-scroll {
+.co-ram-rounds-container {
+  background-color: transparent;
+  padding: 5px 0;
+  margin: 0;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.co-ram-rounds-scroll {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
-  margin-left: 10px;
+  margin-left: 0px;
 }
 
-.co-ram-round-buttons-scroll::-webkit-scrollbar {
-  height: 0px;
+.co-ram-rounds-scroll::-webkit-scrollbar {
+  height: 6px;
   margin-top: 2px;
 }
 
-.co-ram-round-buttons-scroll::-webkit-scrollbar-track {
-  background: #f8f8f8;
+.co-ram-rounds-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.co-ram-round-buttons-scroll::-webkit-scrollbar-thumb {
+.co-ram-rounds-scroll::-webkit-scrollbar-thumb {
   background: #808080;
   border-radius: 4px;
 }
 
-.co-ram-round-buttons-scroll::-webkit-scrollbar-thumb:hover {
+.co-ram-rounds-scroll::-webkit-scrollbar-thumb:hover {
   background: #606060;
 }
 
@@ -245,68 +202,67 @@
   box-shadow: 0 4px 6px -6px #333;
 }
 
+/* --- Table Styles --- */
 .co-ram-table-section {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 1180px; 
-  margin: 10px 0px 0px 15px;
-  padding: 26px 32px 0px 12px;
-  box-shadow: 0 0 14px #e3e6ee2a;
-  border: 2px solid #808080;
-  width: auto;
-  height: 395px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 12px 20px;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  border: none;
+}
+
+.co-ram-table-section-with-rounds {
+  height: auto;
 }
 
 .co-ram-table-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  left: 0px;
+  z-index: 10;
+  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
 .co-ram-table-title {
   font-size: 1.25rem;
   font-weight: bold;
   color: #191c2f;
-  margin-top:-16px;
-  margin-left:10px;
+  margin: 0;
 }
 
 .co-ram-table-actions {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-bottom:20px;
-  
+  margin: 0;
 }
 
-.co-ram-view-status-btn-all, .co-ram-view-status-btn-filtered, .co-ram-print-btn {
+.co-ram-print-btn {
+  background: #d23b42;
+  color: #ffffff;
+  padding: 8px 30px;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
-  padding: 9px 22px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-}
-
-.co-ram-view-status-btn-all {
-  background: #4ea24e;
-  color: #ffffff;
-  border-radius: 11px;
-  height:36px;
-}
-.co-ram-print-btn {
-  background: #d23b42;
-    color: #ffffff;
-    padding: 8px 30px;
-    border-radius: 8px;
-    border: none;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .co-ram-print-btn:hover {
-  background: #a72e33;
+  background: #b32d34;
 }
 
 .co-ram-print-button-container {
@@ -316,7 +272,7 @@
 }
 
 .co-ram-export-menu {
-  position: absolute; 
+  position: absolute;
   top: 40px;
   right: 0;
   z-index: 2000;
@@ -341,125 +297,109 @@
   transition: background-color 0.2s;
 }
 
-.co-ram-export-menu button:hover { 
-  background: #f0f0f0; 
+.co-ram-export-menu button:hover {
+  background: #f0f0f0;
 }
 
 .co-ram-data-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: separate;
-  margin-top: -8px;
-  font-size: 1.02rem;
-  table-layout: fixed; 
+  border-spacing: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .co-ram-data-table thead {
-  display: block;
-  width: 100%; 
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 11;
 }
 
 .co-ram-data-table th {
-  background: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
-  color:rgb(175, 175, 175);
-  padding: 14px 12px;
+  padding: 8px 10px;
   text-align: center;
-  border-bottom: 2px solid #f2f0f2;
-  white-space: normal;
-  line-height: 1.2;
+  font-weight: 600;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .co-ram-table-body-scroll {
-  max-height: 300px;
-  min-height: 280px;
-  overflow-y: scroll;
-  overflow-x: hidden; 
-  width: 100%; 
-  padding-right: 0px;
-  position: relative;
+  flex-grow: 1;
+  width: 100%;
+  overflow: auto;
+  border: none;
+  border-radius: 8px;
+  max-height: 100%;
+  padding-bottom: 10px;
 }
 
-/* Red scrollbars for coordinator theme */
 .co-ram-table-body-scroll::-webkit-scrollbar {
-    width: 10px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 .co-ram-table-body-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
+  background: transparent;
 }
 
 .co-ram-table-body-scroll::-webkit-scrollbar-thumb {
-    background: #d23b42;
-    border-radius: 4px;
+  background: #d23b42;
+  border-radius: 8px;
 }
 
 .co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover {
-    background: #a72e33;
-}
-
-.co-ram-table-body-scroll::-webkit-scrollbar-button {
-    display: none;
+  background: #b32d34;
 }
 
 .co-ram-data-table tbody {
-  display: block;
   width: 100%;
 }
 
 .co-ram-data-table tr {
-  display: flex; 
-  width: 100%;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+  cursor: pointer;
 }
 
-.co-ram-data-table th, .co-ram-data-table td {
-  min-width: 0;
-  text-align: center;
+.co-ram-data-table tr:hover {
+  background-color: #fafafa;
 }
 
 .co-ram-data-table td {
-  padding: 14px 12px;
-  color: #30334e;
+  padding: 10px 10px;
+  text-align: center;
+  color: #333;
+  vertical-align: middle;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-bottom: 1.5px solid #f2f0f2;
-  white-space: normal; 
-  overflow: visible; 
-  word-wrap: break-word;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 /* Column widths for the table (9 columns: S.No, Name, RegNo, Year-Sec, Sem, Mobile, Result, Feedback, View) */
-.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 7%; flex-shrink: 0; }  /* S.No */
-.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 18%; flex-shrink: 0; } /* Name */
-.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 15%; flex-shrink: 0; } /* Register Number */
-.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 11%; flex-shrink: 0; } /* Year-Sec */
-.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 7%; flex-shrink: 0; }  /* Sem */
-.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 14%; flex-shrink: 0; } /* Mobile */
-.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 10%; flex-shrink: 0; } /* Result */
-.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 10%; flex-shrink: 0; } /* Feedback */
-.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 8%; flex-shrink: 0; }  /* View */
+.co-ram-data-table th:nth-child(1), .co-ram-data-table td:nth-child(1) { width: 5%; }  /* S.No */
+.co-ram-data-table th:nth-child(2), .co-ram-data-table td:nth-child(2) { width: 18%; } /* Name */
+.co-ram-data-table th:nth-child(3), .co-ram-data-table td:nth-child(3) { width: 15%; } /* Register Number */
+.co-ram-data-table th:nth-child(4), .co-ram-data-table td:nth-child(4) { width: 12%; } /* Year-Sec */
+.co-ram-data-table th:nth-child(5), .co-ram-data-table td:nth-child(5) { width: 8%; }  /* Sem */
+.co-ram-data-table th:nth-child(6), .co-ram-data-table td:nth-child(6) { width: 14%; } /* Mobile */
+.co-ram-data-table th:nth-child(7), .co-ram-data-table td:nth-child(7) { width: 10%; } /* Result */
+.co-ram-data-table th:nth-child(8), .co-ram-data-table td:nth-child(8) { width: 10%; } /* Feedback */
+.co-ram-data-table th:nth-child(9), .co-ram-data-table td:nth-child(9) { width: 8%; }  /* View */
 
-.co-ram-data-table th:nth-child(8) {
-  text-align: left;
-  padding-left: 18px;
-}
-
-/* Loading styles */
+/* Loading cell and spinner */
 .co-ram-loading-cell {
- display: flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 100% !important;
-  min-height: 300px;
-  padding: 0;
-  border: none !important;
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
 }
 
 .co-ram-loading-row {
-  display: flex;
-  width: 100%;
-  border-bottom: none !important;
+  height: 100%;
 }
 
 .co-ram-loading-wrapper {
@@ -467,22 +407,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 24px 40px;
-  border-radius: 16px;
-  background: #ffffff;
-  margin-left: 0px;
+  gap: 10px;
   text-align: center;
+  width: 100%;
 }
 
 .co-ram-spinner {
-width: 34px;
-  margin-top: 0;
+  width: 34px;
   height: 34px;
   border-radius: 50%;
   border: 4px solid rgba(210, 59, 66, 0.25);
   border-top-color: #d23b42;
   animation: coRamSpin 0.7s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes coRamSpin {
@@ -492,307 +429,179 @@ width: 34px;
 }
 
 .co-ram-loading-text {
-  color: #111827;
-  font-weight: 700;
-  font-size: 1rem;
-  white-space: nowrap;
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
-/* Adjust height when rounds are showing */
-.co-ram-table-section-with-rounds {
-  height: 395px;
-}
-
-.co-ram-rounds-container {
-  margin-bottom: 8px;
-  background: #f8f8f8;
-  padding: 10px 0;
-  max-width: 1180px;
-  margin: 10px auto 10px 15px;
-  border-radius: 16px;
-}
-/* ... (Existing styles up to the media query) ... */
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  height: 8px; /* horizontal scrollbar height */
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-track {
-  background: transparent; /* background behind scrollbar */
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  color: #f0f2f5; /* scrollbar color */
-  border-radius: 4px;
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
-  background-color: #f0f2f5; /* slightly darker on hover */
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar {
-  height: 0px;
-  margin-top: 2px;
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-track {
-  background: #f8f8f8;
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  background: #808080;
-  border-radius: 4px;
-}
-
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
-  background: #606060;
-}
-
-/* Desktop scrollbar - red styling to match theme */
-
-
-
-
-
-/* ======================================================= */
-/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
-/* ======================================================= */
+/* Responsive styles (Mobile/Tablet) */
 @media (max-width: 1024px) {
-  /* Main Content Shift for screens where the sidebar might hide */
+  .co-layout {
+    height: 100vh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
   .co-main-content {
-      margin-left: 0 !important; /* Override the fixed desktop margin */
-      width: 100%;
-      margin-top:60px;
+    margin: 65px 0 0 0 !important;
+    padding: 10px 10px 30px 10px !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .co-main-content::-webkit-scrollbar {
+    width: 10px !important;
+  }
+
+  .co-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
+  }
+
+  .co-main-content::-webkit-scrollbar-thumb {
+    background-color: #d23b42 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
+
+  .co-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34 !important;
+  }
+
+  .co-ram-filter-box {
+    margin: 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .co-ram-tab-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .co-ram-filter-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .co-ram-tab-inactive,
+  .co-ram-tab-active,
+  .co-ram-filter-select,
+  .co-ram-filter-date-input {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .co-ram-rounds-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .co-ram-table-section {
+    margin: 0 0 25px 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 15px !important;
+    flex-grow: 1 !important;
+    min-height: 280px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 }
 
-
-/* ======================================================= */
-/* --- MOBILE AND TABLET RESPONSIVENESS (Max Width 768px) --- */
-/* ======================================================= */
 @media (max-width: 768px) {
-    /* 1. Main Content Container Fix */
-    .co-main-content {
-        /* *** REMOVED: position: absolute; and height: 100vh; which caused the issue *** */
-        margin-left: 0; /* Overrides the desktop margin-left: 35px; */
-        width: 100%;
-        margin-top: 10px; 
-        height:100vh; /* Prevent horizontal scrolling on the page body */
-        box-sizing: border-box;
-            position: absolute;
-    margin-left: 159px;
-    left: 1px;
-    overflow-y: auto;
-    }
+  .co-ram-tab-inactive,
+  .co-ram-tab-active,
+  .co-ram-filter-select,
+  .co-ram-filter-date-input {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+    padding: 8px 12px !important;
+    height: 45px !important;
+  }
 
-    /* 2. Filter Box Fix */
-    .co-ram-filter-box {
-        /* This box was causing the left gap with its 'margin: 25px auto 0 15px;' */
-        max-width: calc(100% - 20px); /* 100% minus the left/right margin */
-        width: auto;
-        margin: 80px 10px 0 10px; /* NEW: Top margin for spacing, 10px on L/R */
-        padding: 15px; /* Consistent inner padding */
-        box-sizing: border-box;
-    }
+  .co-ram-tab-container {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
 
-    /* --- Tabs: Horizontal Scrollable --- */
-    .co-ram-tab-container {
-        gap: 10px; 
-        overflow-x: auto; 
-        white-space: nowrap; 
-        justify-content: flex-start; 
-        margin-bottom: 10px;
-        padding-bottom: 5px;
-    }
-    
-    .co-ram-tab-inactive, 
-    .co-ram-tab-active {
-        width: 220px; 
-        height: auto;
-        padding: 10px 15px;
-        font-size: 1rem;
-        flex-shrink: 0; 
-    }
+  .co-ram-filter-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
 
-    /* --- Filter Inputs: Vertical Stack (Inputs now take up 100% of their parent) --- */
-    .co-ram-filter-inputs {
-        flex-direction: column; 
-        gap: 15px; 
-        margin-left: 0;
-    }
-       .co-main-content::-webkit-scrollbar {
-      width: 10px;
-    }
-        .co-main-content::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-        .co-main-content::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-        .co-main-content::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
-    }
-    .co-ram-filter-select, 
-    .co-ram-filter-date-input,
-    .co-ram-filter-select-1,
-    .co-ram-filter-select-2 {
-        width: 100% !important; /* Full width */
-        max-width: 100%;
-        height: 45px; 
-        font-size: 0.95rem;
-        padding: 8px 15px;
-        text-align: left; 
-    }
-           .co-ram-table-section::-webkit-scrollbar {
-      width: 15px;
-    }
-        .co-ram-table-section::-webkit-scrollbar-track {
-      background: #f0f2f5;
-    }
-        .co-ram-table-section::-webkit-scrollbar-thumb {
-      background-color: #d23b42;
-      border-radius: 20px;
-      border: 3px solid #f0f2f5;
-    }
-        .co-ram-table-section::-webkit-scrollbar-thumb:hover {
-      background-color: #b32d34;
-    }
-     .co-ram-table-section::-webkit-scrollbar:horizontal {
-  height: 12px !important ;/* height of the horizontal scrollbar */
-}
+  .co-ram-table-header-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
+  }
 
- .co-ram-table-section::-webkit-scrollbar-thumb:horizontal {
-  background-color: #c1bfc1 !important; /* grey color for horizontal scrollbar thumb */
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
-}
+  .co-ram-table-actions {
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
+  }
 
- .co-ram-table-section::-webkit-scrollbar-thumb:horizontal:hover {
-  background-color: #c1bfbf !important; /* darker grey on hover */
-}
-    /* 3. Round Buttons Container Fix */
-    .co-ram-round-buttons-container {
-        max-width: calc(100% - 20px);
-        margin: 20px 10px 20px 10px; /* Matches the 10px filter box margin */
-        padding-bottom: 10px;
-    }
+  .co-ram-print-button-container {
+    margin: 0 !important;
+  }
 
-    /* 4. Table Section Fix */
-    .co-ram-table-section {
-        max-width: calc(100% - 20px);
-        margin: 40px 10px 100px 10px; /* Matches 10px margin, 100px bottom for scroll */
-        padding: 15px 5px 0 5px; /* Reduced padding for more space */
-        border-radius: 8px;
-        height: auto; 
-    }
+  .co-ram-table-title {
+    margin-bottom: 0 !important;
+    font-size: 1.1rem !important;
+  }
 
-    /* --- Table Header/Actions: Back to Top/Bottom Alignment --- */
-    .co-ram-table-header-row {
-        flex-direction: column; 
-        align-items: flex-start; 
-        margin-bottom: 10px;
-    }
-    
-    .co-ram-table-title {
-        margin-bottom: 15px; 
-        font-size: 1.1rem;
-    }
-    
-    .co-ram-table-actions {
-        width: 100%; 
-        gap: 10px;
-        /* NEW: Changed from column to row to prevent buttons from taking full height */
-        flex-direction: row; 
-        justify-content: space-between; /* Space out the button groups */
-        margin-bottom: 15px;
-    }
-    
-    /* NEW: Adjusted button widths so they don't force a wrap */
-    .co-ram-view-status-btn-all, 
-    .co-ram-view-status-btn-filtered {
-        width: 55%; /* Allow status button to take a bit more space */
-        padding: 12px 5px; 
-        font-size: 0.9rem;
-        position: static; /* REMOVED relative/left from previous attempt */
-    }
-    
-    .co-ram-print-button-container {
-        width: 40%; /* Print container takes remaining space */
-        margin-left: 0; /* REMOVED problematic margin-left */
-        margin-top: 0; /* REMOVED problematic margin-top */
-    }
+  .co-ram-table-body-scroll {
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding-bottom: 10px !important;
+    width: 100% !important;
+    display: block !important;
+  }
 
-    .co-ram-print-btn {
-        width: 100%;
-        padding: 12px 0;
-        font-size: 0.9rem;
-    }
+  .co-ram-table-body-scroll::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+    display: block !important;
+  }
 
-    /* Print Menu Positioning */
-    .co-ram-export-menu {
-        right: 0;
-        left: auto;
-        min-width: 100%; 
-    }
+  .co-ram-table-body-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
+  }
 
-    /* 5. Table Body Scroll Overflow Fix */
-    .co-ram-table-body-scroll {
-        max-height: 40vh; 
-        
-        /* CHANGE: We need horizontal scroll for the table content, but not the page body */
-         
-        /* REMOVE: Setting fixed width (e.g., 1900px) on this element causes the page overflow! */
-        width: 100%; /* Should be 100% of its parent */
-    }
-    
-    .co-ram-data-table {
-        /* REMOVE: width: 100%; on table and REMOVE min-width: 1290px;
-           Let the table content (th/td) define the width for horizontal scroll */
-        min-width: 1200px; /* Maintain a large enough min-width to force horizontal scroll */
-        width: auto;
-        font-size: 0.9rem;
-    }
-    
-    /* Ensure thead and tbody align horizontally */
-    .co-ram-data-table thead,
-    .co-ram-data-table tbody {
-        width: auto; /* Let the table content define width */
-    }
-.co-ram-round-buttons-container {
-  /* Firefox: thumb + track */
-  scrollbar-width: 12px;
-  scrollbar-color: #c7c9c9 transparent;
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-track {
-  background: transparent; /* make track invisible */
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb {
-  background-color: #bbb2b2; /* thumb light color */
-  border-radius: 20px;
-  border: none;
-}
-.co-ram-round-buttons-container::-webkit-scrollbar-thumb:hover {
-  background-color: #c7c9cc; /* keep same on hover */
-}
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb {
+    background-color: #d23b42 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
 
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #b32d34 !important;
+  }
 
-.co-ram-tab-container {
-  /* Firefox: thumb + track */
-  scrollbar-width: 12px;
-  scrollbar-color: #a5a7a7 transparent;
-}
-.co-ram-tab-container::-webkit-scrollbar-track {
-  background: transparent; /* make track invisible */
-}
-.co-ram-tab-container::-webkit-scrollbar-thumb {
-  background-color: #bbb2b2; /* thumb light color */
-  border-radius: 20px;
-  border: none;
-}
-.co-ram-tab-container::-webkit-scrollbar-thumb:hover {
-  background-color: #c7c9cc; /* keep same on hover */
-}
-    /* Red scrollbar on mobile */
-    /* (Kept existing scrollbar styling) */
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #999999 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
+
+  .co-ram-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #666666 !important;
+  }
 }

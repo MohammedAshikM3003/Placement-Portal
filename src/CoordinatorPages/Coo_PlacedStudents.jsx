@@ -46,20 +46,20 @@ const resolveCoordinatorDepartment = (data) => {
 // Component for the Bar Chart
 const BarChartComponent = ({ data }) => {
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 30 }}>
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis 
           dataKey="jobRole" 
           angle={0}
           textAnchor="middle"
-          height={60}
-          tick={{ fontSize: 12 }}
+          height={30}
+          tick={{ fontSize: 11 }}
         />
         <YAxis 
           allowDecimals={false}
           domain={[0, 'dataMax + 1']}
-          ticks={[0, 1, 2, 3, 4, 5]}
+          tick={{ fontSize: 11 }}
         />
         <Tooltip />
         <Bar dataKey="students" fill="#7B68EE" radius={[8, 8, 0, 0]} />
@@ -474,33 +474,39 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           <div className={styles['co-ps-dashboard-grid']}>
             <div className={styles['co-ps-stats-section']}>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-purple']}`}>
-                <h3 className={styles['co-ps-card-placed-students']}>Total Placed Students</h3>
-                <p>{stats.totalPlaced}</p>
+                <div className={styles['co-ps-card-label']}>Total Placed Students</div>
+                <div className={styles['co-ps-card-value']}>{stats.totalPlaced}</div>
               </div>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-teal']}`}>
-                <h3>Total Offers Recieved</h3>
-                <p>{stats.totalOffers}</p>
+                <div className={styles['co-ps-card-label']}>Total Offers Recieved</div>
+                <div className={styles['co-ps-card-value']}>{stats.totalOffers}</div>
               </div>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-blue']}`}>
-                <h3>Highest Package</h3>
-                <p>{stats.highestPackage.toFixed(1)} LPA</p>
+                <div className={styles['co-ps-card-label']}>Highest Package</div>
+                <div className={styles['co-ps-card-value']}>{stats.highestPackage.toFixed(1)} <span style={{ fontSize: '17px' }}>LPA</span></div>
               </div>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-orange']}`}>
-                <h3>Average Package</h3>
-                <p>{stats.averagePackage.toFixed(1)} LPA</p>
+                <div className={styles['co-ps-card-label']}>Average Package</div>
+                <div className={styles['co-ps-card-value']}>{stats.averagePackage.toFixed(1)} <span style={{ fontSize: '17px' }}>LPA</span></div>
               </div>
             </div>
             
             {/* Company Job Roles Bar Chart */}
             <div className={styles['co-ps-chart-container']}>
-              <h3>{filters.company === 'All Companies' ? 'Company Name' : filters.company}</h3>
-              <BarChartComponent data={companyChartData} />
+              <div className={styles['co-ps-chart-header']}>
+                <div className={styles['co-ps-chart-title']}>
+                  {filters.company === 'All Companies' ? 'Company Name' : filters.company}
+                </div>
+              </div>
+              <div className={styles['co-ps-chart-content']}>
+                <BarChartComponent data={companyChartData} />
+              </div>
             </div>
           </div>
           
           <div className={styles['co-ps-table-container']}>
             <div className={styles['co-ps-table-header-row']}>
-              <h3 className={styles['co-ps-table-title']}>PLACED STUDENTS DETAILS</h3>
+              <div className={styles['co-ps-table-header']}>PLACED STUDENTS DETAILS</div>
               <div className={styles['co-ps-table-actions']}>
                 <input
                   type="text"
@@ -514,10 +520,10 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                     Print
                   </button>
                   {open && (
-                    <div className={styles['co-ps-dropdown-menu']}>
-                      <span onClick={handleExportToExcel}>Export to Excel</span>
-                      <span onClick={handleExportToPDF}>Save as PDF</span>
-                    </div>
+                     <div className={styles['co-ps-dropdown-menu']}>
+                       <span onClick={handleExportToExcel}>Export to Excel</span>
+                       <span onClick={handleExportToPDF}>Save as PDF</span>
+                     </div>
                   )}
                 </div>
               </div>
@@ -558,22 +564,10 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                     </tr>
                   ) : (
                     displayedStudents.map((student, index) => (
-                      <tr 
-                        key={student.sno}
-                        className={[
-                          String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['co-ps-row-accepted'] : '',
-                          String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['co-ps-row-rejected'] : ''
-                        ].filter(Boolean).join(' ')}
-                      >
+                      <tr key={student.sno}>
                         <td>{index + 1}</td>
                         <td>
-                          <span
-                            className={[
-                              styles['co-ps-student-name'],
-                              String(student.status || '').trim().toLowerCase() === 'accepted' ? styles['co-ps-student-name-accepted'] : '',
-                              String(student.status || '').trim().toLowerCase() === 'rejected' ? styles['co-ps-student-name-rejected'] : ''
-                            ].filter(Boolean).join(' ')}
-                          >
+                          <span className={styles['co-ps-student-name']}>
                             {student.name}
                           </span>
                         </td>
@@ -583,10 +577,13 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                         <td>{student.company}</td>
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
-                        <td>
-                          <span className={`${styles['co-ps-status-badge']} ${styles['co-ps-status-' + student.status.toLowerCase()]}`}>
-                            {student.status}
-                          </span>
+                        <td 
+                          style={{ 
+                            color: String(student.status || '').trim().toLowerCase() === "accepted" ? '#00B728' : String(student.status || '').trim().toLowerCase() === "rejected" ? '#E62727' : '#888',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {student.status}
                         </td>
                         <td>
                           <button

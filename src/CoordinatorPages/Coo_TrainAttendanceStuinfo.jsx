@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar/Cosidebar.js";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from "../components/alerts";
 import mongoDBService from "../services/mongoDBService.jsx";
 import styles from "./Coo_TrainAttendanceStuinfo.module.css";
+import Dropdown from "../components/common/Dropdown/Dropdown.jsx";
 
 const readStoredCoordinatorData = () => {
   if (typeof window === "undefined") return null;
@@ -549,34 +550,32 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
                     </div>
 
                     <div className={styles["ta-filter-input-wrapper"]}>
-                      <select
+                      <Dropdown
                         id="ta-filter-dept"
-                        className={styles["ta-filter-input"]}
-                        value={filters.dept}
-                        onChange={(e) => setFilters((prev) => ({ ...prev, dept: e.target.value }))}
-                      >
-                        <option value="">Select Department</option>
-                        {departmentOptions.map((dept) => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
+                        options={['', ...departmentOptions].map(opt => ({ label: opt === '' ? 'Select Department' : opt, value: opt }))}
+                        selectedOption={filters.dept}
+                        onSelect={(val) => setFilters((prev) => ({ ...prev, dept: val }))}
+                        placeholder="Select Department"
+                        role="coordinator"
+                        className={styles["ta-dropdown-wrapper"]}
+                        headerClassName={styles["ta-dropdown-header"]}
+                      />
                       <label className={styles["ta-filter-label"]} htmlFor="ta-filter-dept">Department</label>
                     </div>
                   </div>
 
                   <div className={styles["ta-filter-fields-row"]}>
                     <div className={styles["ta-filter-input-wrapper"]}>
-                      <select
+                      <Dropdown
                         id="ta-filter-section"
-                        className={styles["ta-filter-input"]}
-                        value={filters.section}
-                        onChange={(e) => setFilters((prev) => ({ ...prev, section: e.target.value }))}
-                      >
-                        <option value="">Select Section</option>
-                        {sectionOptions.map((section) => (
-                          <option key={section} value={section}>{section}</option>
-                        ))}
-                      </select>
+                        options={['', ...sectionOptions].map(opt => ({ label: opt === '' ? 'Select Section' : opt, value: opt }))}
+                        selectedOption={filters.section}
+                        onSelect={(val) => setFilters((prev) => ({ ...prev, section: val }))}
+                        placeholder="Select Section"
+                        role="coordinator"
+                        className={styles["ta-dropdown-wrapper"]}
+                        headerClassName={styles["ta-dropdown-header"]}
+                      />
                       <label className={styles["ta-filter-label"]} htmlFor="ta-filter-section">Section</label>
                     </div>
 

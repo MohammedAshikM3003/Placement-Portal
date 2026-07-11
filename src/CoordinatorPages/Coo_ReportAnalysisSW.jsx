@@ -528,6 +528,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                 onSelect={(val) => setCompanyFilter(val || 'Select Company')}
                 placeholder="Select Company"
                 role="coordinator"
+                className={styles["co-rat-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -536,6 +537,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                 onSelect={(val) => setJobRoleFilter(val || 'Job Role')}
                 placeholder="Job Role"
                 role="coordinator"
+                className={styles["co-rat-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -547,6 +549,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                 }}
                 placeholder="Start Date"
                 role="coordinator"
+                className={styles["co-rat-dropdown-wrapper"]}
               />
 
               <Dropdown
@@ -558,6 +561,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                 }}
                 placeholder="End Date"
                 role="coordinator"
+                className={styles["co-rat-dropdown-wrapper"]}
               />
             </div>
             
