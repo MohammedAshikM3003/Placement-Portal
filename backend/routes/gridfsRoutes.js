@@ -182,12 +182,22 @@ router.get('/file/:id', async (req, res) => {
         res.set('Accept-Ranges', 'bytes');
         res.set('X-Content-Type-Options', 'nosniff');
 
+        let downloadName = file.filename;
+        const match = file.filename.match(/^\d+_(.+)$/);
+        if (match) {
+            downloadName = match[1];
+        }
+
         const isImage = (file.contentType || '').startsWith('image/');
         const isPdf = (file.contentType || '') === 'application/pdf';
-        if (isImage || isPdf) {
-            res.set('Content-Disposition', `inline; filename="${file.filename}"`);
+        const forceDownload = req.query.download === 'true';
+
+        if (forceDownload) {
+            res.set('Content-Disposition', `attachment; filename="${downloadName}"`);
+        } else if (isImage || isPdf) {
+            res.set('Content-Disposition', `inline; filename="${downloadName}"`);
         } else {
-            res.set('Content-Disposition', `attachment; filename="${file.filename}"`);
+            res.set('Content-Disposition', `attachment; filename="${downloadName}"`);
         }
 
         const downloadStream = bucket.openDownloadStream(fileId);

@@ -499,6 +499,35 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       uploadId = `SEM_UPLOAD_${Date.now()}`;
     }
 
+    // Upload the PDF file to GridFS student_files bucket
+    let gridfsFileId = null;
+    let gridfsFileUrl = null;
+    try {
+      const { GridFSBucket } = require('mongodb');
+      const { Readable } = require('stream');
+      const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'student_files' });
+      
+      const filename = `${Date.now()}_${req.file.originalname}`;
+      const readable = new Readable();
+      readable.push(req.file.buffer);
+      readable.push(null);
+
+      const uploadStream = bucket.openUploadStream(filename, {
+        contentType: req.file.mimetype,
+        metadata: { category: 'semester_marksheet', originalName: req.file.originalname }
+      });
+
+      gridfsFileId = await new Promise((resolve, reject) => {
+        readable.pipe(uploadStream)
+          .on('error', reject)
+          .on('finish', () => resolve(uploadStream.id.toString()));
+      });
+      gridfsFileUrl = `/api/file/${gridfsFileId}`;
+      console.log(`✅ Uploaded marksheet PDF to GridFS: ${gridfsFileId}`);
+    } catch (gridfsErr) {
+      console.error('❌ Failed to upload PDF to GridFS:', gridfsErr);
+    }
+
     extractedMarksheets.forEach((marksheet) => {
       if (marksheet.submitted === undefined) {
         marksheet.submitted = false;
@@ -516,7 +545,9 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         extractedPdfName,
         uploadedBy: req.user?.fullName || req.user?.username || 'Coordinator',
         semester: req.body?.semester,
-        uploadId
+        uploadId,
+        gridfsFileId,
+        gridfsFileUrl
       });
       console.log(`✅ Semester records saved: ${autoSaveResult.saved}`);
     } catch (autoSaveError) {

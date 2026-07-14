@@ -352,7 +352,8 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
   const isReportAnalysisPage = currentPath.startsWith('/coo-report-analysis');
   const isManageStudentsSemesterPage = 
     currentPath.startsWith('/coo-manage-students-semester') || 
-    currentPath === '/coo-ms-semester-detail';
+    currentPath === '/coo-ms-semester-detail' ||
+    currentPath.startsWith('/coo-semester-history');
 
   const handleLogoutClick = async () => {
     cachedCoordinatorProfile = null;

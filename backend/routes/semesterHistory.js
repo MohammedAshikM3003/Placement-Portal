@@ -14,9 +14,20 @@ router.get('/', async (req, res) => {
     const history = await SemesterUploadHistory.find({})
       .sort({ uploadedAt: -1 })
       .lean();
+
+    const historyWithFiles = await Promise.all(history.map(async (item) => {
+      const record = await SemesterRecord.findOne({ uploadId: item.uploadId })
+        .select('gridfsFileId pdfFileId')
+        .lean();
+      return {
+        ...item,
+        gridfsFileId: record?.gridfsFileId || record?.pdfFileId || null
+      };
+    }));
+
     res.status(200).json({
       success: true,
-      history
+      history: historyWithFiles
     });
   } catch (error) {
     console.error('Failed to get upload history:', error);

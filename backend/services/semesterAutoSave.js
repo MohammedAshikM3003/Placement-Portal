@@ -70,7 +70,7 @@ const resolveSemester = (...values) => {
   return '';
 };
 
-const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, uploadedBy, semester, uploadId }) => {
+const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, uploadedBy, semester, uploadId, gridfsFileId, gridfsFileUrl }) => {
   const marksheets = Array.isArray(extractedMarksheets) ? extractedMarksheets : [];
   if (!marksheets.length) {
     return { saved: 0, records: [] };
@@ -193,7 +193,9 @@ const autoSaveSemesterRecords = async ({ extractedMarksheets, extractedPdfName, 
       submittedAt: null,
       extractionStatus: marksheet.extractionStatus || 'success',
       uploadedBy: uploadedBy || 'Coordinator',
-      uploadId: uploadId || null
+      uploadId: uploadId || null,
+      gridfsFileId: gridfsFileId || null,
+      gridfsFileUrl: gridfsFileUrl || null
     };
 
     recordsToInsert.push(payload);

@@ -8,8 +8,6 @@ import { CertificatePreviewProgressAlert } from '../components/alerts';
 import styles from './Coo_ManageStudentsSemester_new.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
-import manageStudentsIcon from "../assets/Coo_ManagestudentsCardicon.svg";
-import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 
 // Start with no subjects; show notice before upload
 const INITIAL_SUBJECTS = [];
@@ -38,47 +36,6 @@ const EyeIcon = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
     <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#8A5A44" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginBottom: '10px' }}>
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-
-const SelectIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <line x1="9" y1="3" x2="9" y2="21" />
-    <line x1="15" y1="3" x2="15" y2="21" />
-  </svg>
-);
-
-const UploadFileIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="17 8 12 3 7 8" />
-    <line x1="12" y1="3" x2="12" y2="15" />
-  </svg>
-);
-
-const VerifyIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-    <polyline points="14 2 14 8 20 8" />
-    <path d="M16 13H8" />
-    <path d="M16 17H8" />
-    <path d="M10 9H8" />
-  </svg>
-);
-
-const SaveIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D73D3D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-    <polyline points="17 21 17 13 7 13 7 21" />
-    <polyline points="7 3 7 8 15 8" />
   </svg>
 );
 
@@ -113,16 +70,9 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [uploadId, setUploadId] = useState('');
-  const [showUploadPopup, setShowUploadPopup] = useState(false);
-  const [showSemNotePopup, setShowSemNotePopup] = useState(false);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
-    setSelectedSemester('');
-  };
-
-  const handleYearSelect = (val) => {
-    setSelectedYear(val);
     setSelectedSemester('');
   };
 
@@ -305,6 +255,21 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         const data = await response.json();
         setSuccessMessage('Success! ' + data.saved + ' subjects saved.');
         setShowSuccessPopup(true);
+
+        setTimeout(function() {
+          navigate('/coo-ms-semester-detail', {
+            state: {
+              fileName: fileName,
+              subjects: subjects,
+              selectedFile: selectedFile,
+              extractedStudents: extractedStudents,
+              extractedPdfName: extractedPdfName,
+              uploadId: uploadId,
+              year: selectedYear,
+              semester: selectedSemester
+            }
+          });
+        }, 2000);
       } catch (error) {
         console.error('Error saving subjects:', error);
         setErrorMessage(error.message || 'Failed to save subjects');
@@ -315,22 +280,6 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
     };
 
     saveSubjectsToDatabase();
-  };
-
-  const handleSuccessOkClick = () => {
-    setShowSuccessPopup(false);
-    navigate('/coo-ms-semester-detail', {
-      state: {
-        fileName: fileName,
-        subjects: subjects,
-        selectedFile: selectedFile,
-        extractedStudents: extractedStudents,
-        extractedPdfName: extractedPdfName,
-        uploadId: uploadId,
-        year: selectedYear,
-        semester: selectedSemester
-      }
-    });
   };
 
   const handleRemoveFile = () => {
@@ -355,48 +304,21 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   };
 
   const handleFileSelected = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    setFileName(file.name);
-    setSelectedFile(file);
+    const selectedFile = event.target.files && event.target.files[0];
+    if (!selectedFile) return;
+    setFileName(selectedFile.name);
+    setSelectedFile(selectedFile);
     setHasPreviewData(false);
     if (previewUrlRef.current) {
       window.URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
     }
-  };
-
-  const handleDiscardPopup = () => {
-    setFileName(NO_FILE_SELECTED);
-    setSelectedFile(null);
-    setSelectedYear('');
-    setSelectedSemester('');
-    setShowUploadPopup(false);
-    if (uploadInputRef.current) {
-      uploadInputRef.current.value = '';
-    }
-  };
-
-  const handleUploadSubmit = () => {
-    if (!selectedFile) {
-      setErrorMessage("Please select a file first.");
-      setShowErrorPopup(true);
-      return;
-    }
-    if (!selectedYear || !selectedSemester) {
-      setErrorMessage("Please select Year and Semester first.");
-      setShowErrorPopup(true);
-      return;
-    }
-
-    setShowUploadPopup(false);
-    setIsLoadingPreview(true);
-    setShowUploadingPopup(true);
-    setUploadProgress(10);
-
     // Upload file to backend for preview extraction and subject lookup
     (async () => {
       try {
+        setIsLoadingPreview(true);
+        setShowUploadingPopup(true);
+        setUploadProgress(10);
         const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('semester', selectedSemester);
@@ -456,10 +378,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
             animId = requestAnimationFrame(step);
           };
           step();
-          setTimeout(() => {
-            setShowUploadingPopup(false);
-            setShowSemNotePopup(true);
-          }, 600);
+          setTimeout(() => setShowUploadingPopup(false), 600);
         };
 
         animateTo100();
@@ -470,7 +389,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
         
         const uploadedSubjects = extracted.flatMap(function(marksheet) { 
           if (!Array.isArray(marksheet.subjects)) return [];
-          // Add semester from marksheet to each subject
+          // Add semester from marksheet to each subject (semester is at marksheet level, not per-subject)
           console.log(`📥 [Frontend] Marksheet ${marksheet.regNo} semester=${marksheet.semester}, subjects count=${marksheet.subjects.length}`);
           return marksheet.subjects.map(subject => ({
             ...subject,
@@ -571,213 +490,115 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           onClose={() => setIsSidebarOpen(false)}
         />
         <div className={styles['semester-main-content']}>
-          {/* Top Cards Row */}
-          <div className={styles['top-cards-row']}>
-            {/* Student Database Card */}
-            <div 
-              className={`${styles['co-card']} ${styles['card-student-db']}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => onViewChange?.("manage-students")}
-            >
-              <div className={styles['co-icon-wrapper']}>
-                <img src={manageStudentsIcon} alt="Manage" />
-              </div>
-              <h2>Manage Students</h2>
-              <p>Access and manage student information.</p>
-            </div>
-
-            {/* Upload Card */}
-            {selectedFile ? (
-              <div className={`${styles['co-card']} ${styles['card-upload-uploaded']}`}>
-                <div className={styles['uploaded-card-info']}>
-                  <div className={styles['uploaded-meta-row']}>
-                    <span className={styles['uploaded-meta-label']}>File Name</span>
-                    <span className={styles['uploaded-file-name-text']} title={selectedFile.name}>
-                      {selectedFile.name}
-                    </span>
-                  </div>
-                  <div className={styles['uploaded-meta-row']}>
-                    <span className={styles['uploaded-meta-label']}>Year</span>
-                    <span className={styles['uploaded-meta-value']}>{selectedYear}</span>
-                  </div>
-                  <div className={styles['uploaded-meta-row']}>
-                    <span className={styles['uploaded-meta-label']}>Semester</span>
-                    <span className={styles['uploaded-meta-value']}>{selectedSemester}</span>
-                  </div>
-                  <div className={styles['uploaded-meta-row']}>
-                    <span className={styles['uploaded-meta-label']}>Subjects</span>
-                    <span className={styles['uploaded-meta-value']}>{subjects.length}</span>
-                  </div>
-                  <div className={styles['uploaded-meta-row']}>
-                    <span className={styles['uploaded-meta-label']}>Students</span>
-                    <span className={styles['uploaded-meta-value']}>{extractedStudents.length}</span>
-                  </div>
-                </div>
-                <div className={styles['uploaded-card-actions']}>
-                  <button 
-                    type="button" 
-                    onClick={handlePreviewFile} 
-                    className={styles['uploaded-preview-btn']}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1.1em" height="1.1em" viewBox="0 0 24 24" style={{ marginRight: '6px' }}>
-                      <path fill="currentColor" d="M12 9a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5a5 5 0 0 1 5-5a5 5 0 0 1 5 5a5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5" />
-                    </svg>
-                    Preview
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleRemoveFile} 
-                    className={styles['uploaded-clear-btn']}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1.1em" height="1.1em" viewBox="0 0 24 24" style={{ marginRight: '6px' }}>
-                      <path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" />
-                    </svg>
-                    Clear
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div 
-                className={`${styles['co-card']} ${styles['card-upload']}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => setShowUploadPopup(true)}
+          <div className={styles['semester-controls']} style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="year-select" className={styles['semester-label']}>Year</label>
+              <select
+                id="year-select"
+                className={styles['semester-select']}
+                value={selectedYear}
+                onChange={handleYearChange}
               >
-                <div className={styles['co-icon-wrapper-upload']}>
-                  <img src={semesterUploadIcon} alt="Upload" className={styles['upload-icon-image']} />
-                </div>
-                <h2>Upload Semester Marksheet</h2>
-                <p>Select Year, Semester, and PDF file to extract subjects.</p>
-              </div>
-            )}
+                <option value="">Select Year</option>
+                {YEAR_OPTIONS.map((option) => (
+                  <option key={`year-${option}`} value={option}>
+                    Year {option}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {/* History Card */}
-            <div 
-              className={`${styles['co-card']} ${styles['card-history']}`}
-              role="button"
-              tabIndex={0}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="semester-select" className={styles['semester-label']}>Semester</label>
+              <select
+                id="semester-select"
+                className={styles['semester-select']}
+                value={selectedSemester}
+                onChange={(event) => setSelectedSemester(event.target.value)}
+                disabled={!selectedYear}
+              >
+                <option value="">Select semester</option>
+                {availableSemesters.map((option) => (
+                  <option key={`semester-${option}`} value={option}>
+                    Semester {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className={styles['history-btn']}
               onClick={() => navigate('/coo-semester-history')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                backgroundColor: '#1E293B',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                marginLeft: 'auto',
+                transition: 'background-color 0.2s'
+              }}
             >
-              <div className={styles['co-icon-wrapper']}>
-                <ClockIcon />
-              </div>
-              <h2>History</h2>
-              <p>View upload history and past student records.</p>
-            </div>
+              🕒 History
+            </button>
           </div>
-
-          {/* Upload Popup */}
-          {showUploadPopup && (
-            <div className={styles['popup-overlay']}>
-              <div className={styles['popup-container']} onClick={(e) => e.stopPropagation()}>
-                <div className={styles['popup-header']}>
-                  Upload Semester Marksheet
-                </div>
-                <div className={styles['popup-body']}>
-                  {/* Dashed upload panel inside the popup */}
-                  <div 
-                    className={styles['popup-upload-panel']} 
-                    onClick={handleUploadClick}
-                  >
-                    <input
-                      ref={uploadInputRef}
-                      type="file"
-                      className={styles['popup-upload-input']}
-                      onChange={handleFileSelected}
-                    />
-                    <div className={styles['popup-upload-symbol']}>
-                      <img src={semesterUploadIcon} alt="Upload" className={styles['popup-upload-icon-image']} />
-                    </div>
-                    <h3 className={styles['popup-upload-file-name']}>{fileName}</h3>
-                  </div>
-
-                  {/* Year & Semester selectors inside the popup */}
-                  <div className={styles['popup-selectors-container']}>
-                    <div className={styles['popup-selector-group']}>
-                      <label htmlFor="popup-year-select" className={styles['popup-label']}>Year</label>
-                      <Dropdown
-                        options={YEAR_OPTIONS}
-                        selectedOption={selectedYear}
-                        onSelect={handleYearSelect}
-                        placeholder="Select Year"
-                        role="coo"
-                        className={styles['popup-dropdown-custom']}
-                      />
-                    </div>
-
-                    <div className={styles['popup-selector-group']}>
-                      <label htmlFor="popup-semester-select" className={styles['popup-label']}>Semester</label>
-                      <Dropdown
-                        options={availableSemesters}
-                        selectedOption={selectedSemester}
-                        onSelect={(val) => setSelectedSemester(val)}
-                        placeholder="Select Semester"
-                        disabled={!selectedYear}
-                        role="coo"
-                        className={styles['popup-dropdown-custom']}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles['popup-footer']}>
-                  <button 
-                    type="button" 
-                    onClick={handleDiscardPopup} 
-                    className={styles['popup-discard-btn']}
-                  >
-                    Discard
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleUploadSubmit} 
-                    className={styles['popup-upload-btn']}
-                    disabled={!selectedFile || !selectedYear || !selectedSemester}
-                  >
-                    Upload
-                  </button>
-                </div>
-              </div>
+          <section
+            className={styles['upload-panel']}
+            role="button"
+            tabIndex={0}
+            style={{ position: 'relative' }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleUploadClick();
+              }
+            }}
+            aria-label="Upload semester file"
+          >
+            {(!selectedYear || !selectedSemester) && (
+              <div 
+                className={styles['upload-overlay']} 
+                onClick={() => {
+                  setErrorMessage("Please select Year and Semester first.");
+                  setShowErrorPopup(true);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 10,
+                  cursor: 'pointer'
+                }}
+              />
+            )}
+            <input
+              ref={uploadInputRef}
+              type="file"
+              className={styles['upload-input']}
+              onChange={handleFileSelected}
+              disabled={!selectedYear || !selectedSemester}
+            />
+            <div className={styles['upload-icons']}>
+              <button type="button" className={styles['icon-action']} onClick={(event) => { event.stopPropagation(); handleRemoveFile(); }} aria-label="Remove uploaded file">
+                <BinIcon />
+              </button>
+              <button type="button" className={styles['icon-action']} onClick={(event) => { event.stopPropagation(); handlePreviewFile(); }} aria-label="Preview uploaded file">
+                <EyeIcon />
+              </button>
             </div>
-          )}
-
-          {/* SemNotepopup (Matches Image 3 success popup style) */}
-          {showSemNotePopup && (
-            <div className={styles['popup-overlay']}>
-              <div className={styles['note-popup-container']} onClick={(e) => e.stopPropagation()}>
-                <div className={styles['popup-header']}>Note</div>
-                <div className={styles['note-popup-body']}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="80"
-                    height="80"
-                    viewBox="0 0 24 24"
-                    style={{ display: 'block', margin: '0 auto 10px' }}
-                  >
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path fill="#ffa500" d="M5 19q-.425 0-.712-.288T4 18t.288-.712T5 17h1v-7q0-2.075 1.25-3.687T10.5 4.2v-.7q0-.625.438-1.062T12 2t1.063.438T13.5 3.5v.7q2 .5 3.25 2.113T18 10v7h1q.425 0 .713.288T20 18t-.288.713T19 19zm7 3q-.825 0-1.412-.587T10 20h4q0 .825-.587 1.413T12 22m.713-9.287Q13 12.425 13 12V9q0-.425-.288-.712T12 8t-.712.288T11 9v3q0 .425.288.713T12 13t.713-.288M12 16q.425 0 .713-.288T13 15t-.288-.712T12 14t-.712.288T11 15t.288.713T12 16" />
-                  </svg>
-                  <h2 className={styles['note-popup-title']}>Important Note</h2>
-                  <p className={styles['note-popup-message']}>
-                    Before assigning credits to each subject, ensure that you are assigning suitable grades for the
-                    appropriate subjects, as this may affect students SGPA and CGPA.
-                  </p>
-                  
-                  {/* Centered Close button with opacity: 0.2 */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px', width: '100%' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => setShowSemNotePopup(false)} 
-                      className={styles['popup-close-btn']}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div className={styles['upload-symbol']}>
+              <img src={semesterUploadIcon} alt="Upload" className={styles['upload-icon-image']} />
             </div>
-          )}
+            <h1 className={styles['upload-file-name']}>{fileName}</h1>
+          </section>
 
           {/* Upload Failed Popup */}
           {showUploadFailedPopup && (
@@ -811,17 +632,13 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           {showSuccessPopup && (
             <div className={styles['ms-popup-overlay']}>
               <div className={styles['ms-popup-container']}>
-                <div className={`${styles['ms-popup-header']} ${styles['ms-popup-success-header']}`}>Saved!</div>
+                <div className={styles['ms-popup-header']} style={{ backgroundColor: '#4CAF50' }}>Success</div>
                 <div className={styles['ms-popup-body']}>
-                  <svg className={styles['ms-popup-success-icon']} xmlns="http://www.w3.org/2000/svg" width="80px" height="80px" viewBox="0 0 512 512">
-                    <path d="M0 0h512v512H0z" fill="none" />
-                    <path fill="#19b86d" d="M169 57v430h78V57zM25 105v190h46V105zm158 23h18v320h-18zm128.725 7.69l-45.276 8.124l61.825 344.497l45.276-8.124zM89 153v270h62V153zm281.502 28.68l-27.594 11.773l5.494 12.877l27.594-11.773zm12.56 29.433l-27.597 11.772l5.494 12.877l27.593-11.772l-5.492-12.877zm12.555 29.434l-27.594 11.77l99.674 233.628l27.594-11.773zM25 313v30h46v-30zm190 7h18v128h-18zM25 361v126h46V361zm64 80v46h62v-46z" />
-                  </svg>
-                  <h2 className={styles['ms-status-title']}>Subjects Saved ✓</h2>
+                  <h2 className={styles['ms-status-title']}>Subjects Saved</h2>
                   <p className={styles['ms-status-text']}>{successMessage}</p>
                 </div>
-                <div className={styles['ms-popup-success-footer']}>
-                  <button onClick={handleSuccessOkClick} className={styles['ms-popup-success-close-btn']}>OK</button>
+                <div className={styles['ms-popup-footer']}>
+                  <button onClick={() => setShowSuccessPopup(false)} className={styles['ms-popup-close-btn']}>OK</button>
                 </div>
               </div>
             </div>
@@ -849,65 +666,58 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
 
           <section className={styles['subject-shell']}>
             <div className={styles['subject-card']}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--coo-red)', padding: '18px 25px' }}>
-                <h2 className={styles['section-title']} style={{ padding: 0, background: 'none', boxShadow: 'none' }}>
-                  {subjects.length === 0 ? 'Instructions' : 'Extracted Subjects'}
-                </h2>
+              <h2 className={styles['section-title']}>Unavailable Subjects in MongoDB</h2>
+
+              <div className={styles['table-wrap']}>
+                {!hasPreviewData ? (
+                  <div className={styles['empty-note']}>
+                    Upload a semester PDF to compare it against the Subject collection.
+                  </div>
+                ) : masterSubjects.length === 0 ? (
+                  <div className={styles['empty-note']}>
+                    The Subject collection is empty in MongoDB. Add master subjects first to show unavailable subjects.
+                  </div>
+                ) : unavailableSubjects.length === 0 ? (
+                  <div className={styles['empty-note']}>
+                    No unavailable subjects found. Every master subject is present in the uploaded PDF.
+                  </div>
+                ) : (
+                  <table className={styles['subject-table']}>
+                    <thead>
+                      <tr>
+                        <th>S.NO</th>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Credits</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unavailableSubjects.map((subject, index) => (
+                        <tr key={subject.id}>
+                          <td>{index + 1}</td>
+                          <td>{subject.code}</td>
+                          <td>{subject.name}</td>
+                          <td>{subject.credits ?? '--'}</td>
+                          <td>
+                            <span className={styles['credit-badge']}>Unavailable</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
+            </div>
+
+            <div className={styles['subject-card']}>
+              <h2 className={styles['section-title']}>Extracted Subjects</h2>
 
               <div className={styles['table-wrap']}>
                 {subjects.length === 0 ? (
-                  isLoadingPreview ? (
-                    <div className={styles['empty-note']}>
-                      Extracting subjects from PDF...
-                    </div>
-                  ) : (
-                    <div className={styles['instruction-panel']}>
-                      <h2 className={styles['instruction-title']}>Semester Marksheet Upload Instructions</h2>
-                      <p className={styles['instruction-subtitle']}>
-                        Follow the steps below to upload and extract subject lists from the marksheet PDF.
-                      </p>
-                      
-                      <div className={styles['instruction-cards-row']}>
-                        <div className={styles['instruction-step-card']}>
-                          <div className={styles['instruction-step-num']}>1</div>
-                          <div className={styles['instruction-step-icon']}><SelectIcon /></div>
-                          <h3>Select Year & Sem</h3>
-                          <p>Select the academic year and semester for the marksheets.</p>
-                        </div>
-                        
-                        <div className={styles['instruction-step-card']}>
-                          <div className={styles['instruction-step-num']}>2</div>
-                          <div className={styles['instruction-step-icon']}><UploadFileIcon /></div>
-                          <h3>Browse & Upload</h3>
-                          <p>Select and upload the PDF file containing student marksheets.</p>
-                        </div>
-                        
-                        <div className={styles['instruction-step-card']}>
-                          <div className={styles['instruction-step-num']}>3</div>
-                          <div className={styles['instruction-step-icon']}><VerifyIcon /></div>
-                          <h3>Verify Subjects</h3>
-                          <p>Review extracted subjects and set credit values for each course.</p>
-                        </div>
-                        
-                        <div className={styles['instruction-step-card']}>
-                          <div className={styles['instruction-step-num']}>4</div>
-                          <div className={styles['instruction-step-icon']}><SaveIcon /></div>
-                          <h3>Confirm & Save</h3>
-                          <p>Confirm the extracted records to save them into the database.</p>
-                        </div>
-                      </div>
-                      
-                      <p className={styles['instruction-warning']}>* Read instructions carefully before uploading the marksheets</p>
-                      <button 
-                        type="button" 
-                        className={styles['instruction-btn']} 
-                        onClick={() => setShowUploadPopup(true)}
-                      >
-                        Click to Upload Marksheet →
-                      </button>
-                    </div>
-                  )
+                  <div className={styles['empty-note']}>
+                    {isLoadingPreview ? 'Extracting subjects from PDF...' : 'No subjects loaded. Upload a semester PDF to extract subject list.'}
+                  </div>
                 ) : (
                   <table className={styles['subject-table']}>
                     <thead>
@@ -959,28 +769,30 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
                   </table>
                 )}
               </div>
+            </div>
 
-              {/* Card actions footer placed outside table-wrap */}
-              {subjects.length > 0 && (
-                <div className={styles['subject-card-footer']}>
-                  <button 
-                    type="button" 
-                    className={styles['table-discard-btn']} 
-                    onClick={handleDiscard} 
-                    disabled={isSavingSubjects}
-                  >
-                    Discard
-                  </button>
-                  <button
-                    type="button"
-                    className={styles['table-confirm-btn']}
-                    onClick={handleConfirm}
-                    disabled={!allCreditsSelected || isSavingSubjects}
-                  >
-                    {isSavingSubjects ? 'Saving...' : 'Confirm'}
-                  </button>
+            <div className={styles['right-rail']}>
+              <aside className={styles['note-panel']}>
+                <h3 className={styles['note-title']}>Note</h3>
+                <div className={styles['note-box']}>
+                  Before assigning credits to each subject, ensure that you are assigning suitable grades for the
+                  appropriate subjects, as this may affect students SGPA and CGPA.
                 </div>
-              )}
+              </aside>
+
+              <div className={styles['action-row']}>
+                <button type="button" className={styles['discard-btn']} onClick={handleDiscard} disabled={isSavingSubjects}>
+                  Discard
+                </button>
+                <button
+                  type="button"
+                  className={styles['confirm-btn']}
+                  onClick={handleConfirm}
+                  disabled={!allCreditsSelected || isSavingSubjects}
+                >
+                  {isSavingSubjects ? 'Saving...' : 'Confirm'}
+                </button>
+              </div>
             </div>
           </section>
         </div>
