@@ -512,7 +512,27 @@ function CooSemesterHistory({ onLogout, onViewChange }) {
           {error && <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '10px' }}>{error}</div>}
 
           <div className={styles['history-card']}>
-            <h3 className={styles['history-table-title']}>SEMESTER UPLOAD HISTORY</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 className={styles['history-table-title']} style={{ margin: 0 }}>SEMESTER UPLOAD HISTORY</h3>
+              <button 
+                type="button" 
+                className={styles['history-subjects-btn']}
+                onClick={() => navigate('/coo-subjects')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--coo-red, #d23b42)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Manage Subjects →
+              </button>
+            </div>
             <div className={styles['table-wrap']}>
               {filteredHistory.length === 0 && !isLoading ? (
                 <div className={styles['empty-state']}>No upload history records found.</div>
@@ -573,7 +593,30 @@ function CooSemesterHistory({ onLogout, onViewChange }) {
                             <td>{item.year}</td>
                             <td>{item.semester}</td>
                             <td>{item.uploadedStudentCount || 0}</td>
-                            <td>{item.uploadedSubjectCount || 0}</td>
+                            <td>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate('/coo-subjects', {
+                                    state: {
+                                      year: item.year,
+                                      semester: item.semester
+                                    }
+                                  });
+                                }}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'var(--coo-red, #d23b42)',
+                                  textDecoration: 'underline',
+                                  cursor: 'pointer',
+                                  fontWeight: '600'
+                                }}
+                              >
+                                {item.uploadedSubjectCount || 0}
+                              </button>
+                            </td>
                             <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                               <button 
                                 type="button" 

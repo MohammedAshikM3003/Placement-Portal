@@ -5,6 +5,7 @@ const SemesterRecord = require('../models/SemesterRecord');
 const SemesterUploadHistory = require('../models/SemesterUploadHistory');
 const Notification = require('../models/Notification');
 const Subject = require('../models/Subject');
+const Student = require('../models/Student');
 const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
 
 const normalizeLookupValue = (value) => String(value || '').trim();
@@ -129,9 +130,34 @@ const updateSemesterRecord = async (req, res) => {
     }
 
     if (!record) {
-      return res.status(404).json({
-        success: false,
-        error: 'Semester record not found'
+      if (!regNo || !semester) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing register number or semester to initialize a new record'
+        });
+      }
+
+      const studentDoc = await Student.findOne({
+        $or: [
+          { regNo: regNo },
+          { registerNumber: regNo }
+        ]
+      }).lean();
+
+      const studentId = studentDoc?._id || studentDoc?.id || null;
+      const recordKey = [regNo, semester, year].map((part) => String(part || '').trim()).filter(Boolean).join(':');
+
+      record = new SemesterRecord({
+        recordKey,
+        studentId,
+        regNo,
+        registerNumber: regNo,
+        studentName: body.studentName || `${studentDoc?.firstName || ''} ${studentDoc?.lastName || ''}`.trim() || 'Unknown',
+        semester,
+        year: year || studentDoc?.currentYear || '',
+        submitted: false,
+        reviewed: false,
+        uploadedBy: req.user?.fullName || req.user?.username || 'Coordinator'
       });
     }
 

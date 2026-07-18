@@ -29,6 +29,7 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 const sidebarItems = [
   { icon: CoDashboard, text: 'Dashboard', view: 'dashboard' },
   { icon: ManageStudents, text: 'Manage Students', view: 'manage-students' },
+  { icon: CooTrainingicon, text: 'Manage Subjects', view: 'subjects' },
   { icon: CooTrainingicon, text: 'Placement Training', view: 'training' },
   { icon: AdminCompsnyProfileicon, text: 'Company Profile', view: 'company-profile' },
   { icon: AdminCompanydriveicon, text: 'Company Drive', view: 'company-drive' },
