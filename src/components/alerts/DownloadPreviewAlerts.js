@@ -90,6 +90,7 @@ export const CertificatePreviewProgressAlert = ({
   color = '#D73D3D',
   progressColor = '#D73D3D',
   fileLabel = 'certificate',
+  extractionProgress,
 }) => (
   <PreviewProgressAlert
     isOpen={isOpen}
@@ -99,6 +100,7 @@ export const CertificatePreviewProgressAlert = ({
     color={color}
     progressColor={progressColor}
     fileLabel={fileLabel}
+    extractionProgress={extractionProgress}
   />
 );
 
@@ -319,8 +321,48 @@ export const PreviewFailedAlert = ({ isOpen, onClose, color = '#197AFF' }) => {
   );
 };
 
-// Preview Progress Popup (Already correct, left as is)
-export const PreviewProgressAlert = ({ isOpen, progress = 25, title = 'Previewing...', messages, color = '#197AFF', progressColor = '#197AFF', fileLabel = 'resume' }) => {
+// Preview Progress Popup (Enhanced for OCR Marksheet Processing telemetry)
+export const PreviewProgressAlert = ({
+  isOpen,
+  progress = 25,
+  title = 'Previewing...',
+  messages,
+  color = '#197AFF',
+  progressColor = '#197AFF',
+  fileLabel = 'resume',
+  extractionProgress
+}) => {
+  const [elapsed, setElapsed] = React.useState(0);
+  const [stepStartTime, setStepStartTime] = React.useState(Date.now());
+  const [prevProcessed, setPrevProcessed] = React.useState(0);
+  const [prevReg, setPrevReg] = React.useState('');
+
+  const currentProcessed = extractionProgress ? (extractionProgress.processedMarksheets || extractionProgress.studentsProcessed || 0) : 0;
+  const currentReg = extractionProgress ? (extractionProgress.currentRegisterNo || '') : '';
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setElapsed(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setElapsed(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setStepStartTime(Date.now());
+      return;
+    }
+    if (currentProcessed !== prevProcessed || currentReg !== prevReg) {
+      setStepStartTime(Date.now());
+      setPrevProcessed(currentProcessed);
+      setPrevReg(currentReg);
+    }
+  }, [isOpen, currentProcessed, currentReg, prevProcessed, prevReg]);
+
   if (!isOpen) return null;
 
   const { lower: labelLower } = normalizeFileLabel(fileLabel);
@@ -331,9 +373,16 @@ export const PreviewProgressAlert = ({ isOpen, progress = 25, title = 'Previewin
     ...messages,
   };
 
+  const hasProgressData = !!extractionProgress;
+  const pct = hasProgressData
+    ? (extractionProgress.totalMarksheets > 0
+        ? (extractionProgress.processedMarksheets / extractionProgress.totalMarksheets) * 100
+        : 0)
+    : progress;
+
   return (
     <div className="alert-overlay">
-      <div className="achievement-popup-container">
+      <div className="achievement-popup-container" style={{ maxWidth: "420px" }}>
         <div className="achievement-popup-header" style={{ backgroundColor: color }}>
           {title}
         </div>
@@ -350,24 +399,66 @@ export const PreviewProgressAlert = ({ isOpen, progress = 25, title = 'Previewin
                 stroke={progressColor}
                 strokeWidth="4"
                 strokeLinecap="round"
-                strokeDasharray={`${progress * 1.256} 125.6`}
+                strokeDasharray={`${pct * 1.256} 125.6`}
                 transform="rotate(-90 26 26)"
               />
             </svg>
           </div>
-          <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
-            Loading {Math.round(progress)}%
-          </h2>
-          <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
-            {progress < 85
-              ? combinedMessages.initial
-              : progress < 100
-                ? combinedMessages.mid
-                : combinedMessages.final}
-          </p>
-          <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
-            {progress >= 100 ? 'Almost ready!' : 'Please wait...'}
-          </p>
+          {hasProgressData ? (
+            <>
+              {(() => {
+                const total = (extractionProgress.totalMarksheets || extractionProgress.studentsFound || extractionProgress.totalPages || 1);
+                const processed = currentProcessed;
+                const remaining = Math.max(1, total - processed);
+                
+                const elapsedSinceStep = Math.floor((Date.now() - stepStartTime) / 1000);
+                const remainingSeconds = Math.max(1, (remaining * 30) - elapsedSinceStep);
+                
+                const min = Math.floor(remainingSeconds / 60);
+                const sec = remainingSeconds % 60;
+                const estTimeStr = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+                
+                return (
+                  <>
+                    <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+                      {processed} / {total} Marksheets
+                    </h2>
+                    
+                    <div style={{ margin: "15px 0" }}>
+                      <p style={{ margin: 0, color: "#888", fontSize: "14px", fontWeight: "600" }}>Current Student</p>
+                      <p style={{ margin: "2px 0 0 0", color: "#333", fontSize: "18px", fontWeight: "700", fontFamily: "monospace" }}>
+                        {extractionProgress.currentRegisterNo || "Extracting..."}
+                      </p>
+                    </div>
+                    
+                    <p style={{ margin: 0, color: "#888", fontSize: "16px", fontWeight: "500" }}>
+                      {(extractionProgress.currentStage || "Running OCR")}...
+                    </p>
+                    
+                    <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
+                      Estimated Time: {estTimeStr}
+                    </p>
+                  </>
+                );
+              })()}
+            </>
+          ) : (
+            <>
+              <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
+                Loading {Math.round(progress)}%
+              </h2>
+              <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>
+                {progress < 85
+                  ? combinedMessages.initial
+                  : progress < 100
+                    ? combinedMessages.mid
+                    : combinedMessages.final}
+              </p>
+              <p style={{ margin: "10px 0 0 0", color: "#888", fontSize: "14px" }}>
+                {progress >= 100 ? 'Almost ready!' : 'Please wait...'}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

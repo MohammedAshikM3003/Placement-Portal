@@ -1,0 +1,32 @@
+[
+  {
+    "original": "Vehicle Components Design and Analysis Laboratory.",
+    "normalized": "Vehicle Components Design and Analysis Laboratory",
+    "reason": "Removed trailing punctuation",
+    "confidence": 10000
+  },
+  {
+    "original": "Engine Performance and Emission Testing Laboratory.",
+    "normalized": "Engine Performance and Emission Testing Laboratory",
+    "reason": "Removed trailing punctuation",
+    "confidence": 10000
+  },
+  {
+    "original": "Automotive Manufacturing Technology.",
+    "normalized": "Automotive Manufacturing Technology",
+    "reason": "Removed trailing punctuation",
+    "confidence": 9500
+  },
+  {
+    "original": "Engineering Thermodynamics and Heat Transfer.",
+    "normalized": "Engineering Thermodynamics and Heat Transfer",
+    "reason": "Removed trailing punctuation",
+    "confidence": 9700
+  },
+  {
+    "original": "Automotive Transmission.",
+    "normalized": "Automotive Transmission",
+    "reason": "Removed trailing punctuation",
+    "confidence": 9600
+  }
+]

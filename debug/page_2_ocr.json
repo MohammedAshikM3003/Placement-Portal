@@ -1,0 +1,41 @@
+{
+  "page_index": 2,
+  "ocr_time_seconds": 64.62673664093018,
+  "avg_confidence": 0.9952768683433533,
+  "line_count": 2,
+  "ocr_variant": "adaptive",
+  "lines": [
+    {
+      "text": "\"Utmost care has been taken in publishing the result on website. In case of any error the controller of",
+      "conf": 0.997920036315918,
+      "x": 214.0,
+      "y": 81.0,
+      "w": 1234.0,
+      "h": 37.0,
+      "y_center": 99.5,
+      "bbox": [
+        214.0,
+        81.0,
+        1448.0,
+        118.0
+      ],
+      "tr_id": "img_l0"
+    },
+    {
+      "text": "examination's decision is final.\".",
+      "conf": 0.9926337003707886,
+      "x": 638.0,
+      "y": 128.0,
+      "w": 383.0,
+      "h": 30.0,
+      "y_center": 143.0,
+      "bbox": [
+        638.0,
+        128.0,
+        1021.0,
+        158.0
+      ],
+      "tr_id": "img_l1"
+    }
+  ]
+}

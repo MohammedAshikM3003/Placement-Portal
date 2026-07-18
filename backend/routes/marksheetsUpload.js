@@ -18,6 +18,7 @@ const StudentMarksheet = require('../models/StudentMarksheet');
 const Subject = require('../models/Subject');
 const MarksheetReview = require('../models/MarksheetReview');
 const MarksheetAuditLog = require('../models/MarksheetAuditLog');
+const CorrectionMemory = require('../models/CorrectionMemory');
 const SemesterUploadHistory = require('../models/SemesterUploadHistory');
 const { marksheetQueue } = require('../queues/marksheetQueue');
 const { autoSaveSemesterRecords } = require('../services/semesterAutoSave');
@@ -40,7 +41,8 @@ const {
   buildSubjectLookup,
   buildSubjectNameLookup,
   matchCourseCode,
-  matchSubjectName
+  matchSubjectName,
+  matchSubjectSemantic
 } = require('../services/subjectMatcher');
 
 const getAcademicYearFromSemester = (semester) => {
@@ -71,6 +73,38 @@ const pickMostCompleteName = (candidates = []) => {
   }
   return best;
 };
+
+function detectRegulationFromCodes(subjects, text = '') {
+  const regexReg = /regulation[s]?\s*(\d{4})/i;
+  const match = text.match(regexReg);
+  if (match && match[1]) {
+    return 'Regulation ' + match[1];
+  }
+
+  const counts = {};
+  for (const s of subjects) {
+    const code = s.courseCode || '';
+    const digits = code.match(/^\d{2}/);
+    if (digits) {
+      const regYear = '20' + digits[0];
+      counts[regYear] = (counts[regYear] || 0) + 1;
+    }
+  }
+
+  let maxCount = 0;
+  let bestYear = null;
+  for (const [year, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      bestYear = year;
+    }
+  }
+
+  if (bestYear) {
+    return 'Regulation ' + bestYear;
+  }
+  return 'Regulation 2020';
+}
 const buildStudentFullName = (student) => {
   if (!student) return '';
 
@@ -119,22 +153,42 @@ const upload = multer({
     }
   }
 });
+const uploadRateLimiter = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000;
+const MAX_UPLOADS_PER_WINDOW = 10;
+
+const limitUploads = (req, res, next) => {
+  if (process.env.MARKSHEET_UPLOAD_BYPASS_AUTH === '1') {
+    return next();
+  }
+  const userId = String(req.user?._id || req.ip);
+  const now = Date.now();
+  
+  if (!uploadRateLimiter.has(userId)) {
+    uploadRateLimiter.set(userId, []);
+  }
+  
+  const timestamps = uploadRateLimiter.get(userId).filter(t => now - t < RATE_LIMIT_WINDOW);
+  timestamps.push(now);
+  uploadRateLimiter.set(userId, timestamps);
+  
+  if (timestamps.length > MAX_UPLOADS_PER_WINDOW) {
+    return res.status(429).json({
+      error: 'Too many upload requests. Please wait a minute before trying again.'
+    });
+  }
+  next();
+};
 
 /**
  * POST /upload
  * Upload PDF and extract marksheets (preview before saving)
- * 
- * Request:
- *   - file: PDF file (multipart/form-data)
- *   - semester: (optional) semester number for metadata
- * 
- * Response:
- *   - extractedMarksheets: Array of extracted marksheet objects
- *   - warnings: Array of matching warnings/issues
- *   - totalExtracted: Count
- *   - totalMatched: Count of successfully matched students
  */
-router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) => {
+router.post('/upload', coordinatorAuth, limitUploads, upload.single('file'), async (req, res) => {
+  const startTime = Date.now();
+  const userId = req.user?._id || 'unauthenticated';
+  const timestamp = new Date().toISOString();
+
   try {
     // ─────────────────────────────────────────────────────────
     // 1. Validate file upload
@@ -143,22 +197,59 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    console.log('📤 Upload request received');
-    console.log('📄 File:', req.file?.originalname || 'unknown');
-    console.log('📘 Incoming semester:', req.body?.semester);
+    console.log(`[OCR AUDIT] ${timestamp} - Upload start for user=${userId}, file=${req.file.originalname} (${req.file.size} bytes)`);
 
-    console.log(`[Marksheet Upload] Processing file: ${req.file.originalname} (${req.file.size} bytes)`);
+    // PDF validation & Page Count Check using pdf-parse
+    let pageCount = 0;
+    try {
+      const pdfParse = require('pdf-parse');
+      const pdfInfo = await pdfParse(req.file.buffer);
+      pageCount = pdfInfo.numpages || 0;
+      if (pageCount > 15) {
+        console.warn(`[OCR SECURITY] PDF page count (${pageCount}) exceeds 15 page limit for user=${userId}`);
+        return res.status(400).json({
+          error: `PDF page count (${pageCount}) exceeds the maximum limit of 15 pages. Please split your file and try again.`
+        });
+      }
+    } catch (pdfError) {
+      console.error(`[OCR SECURITY] PDF integrity check failed for user=${userId}:`, pdfError.message);
+      return res.status(400).json({
+        error: 'Uploaded PDF is corrupted, malformed, or password-protected. Please upload a valid unencrypted PDF.'
+      });
+    }
 
     // ─────────────────────────────────────────────────────────
     // 2. Extract marksheets from PDF
     // ─────────────────────────────────────────────────────────
+    const { updateProgress } = require('./marksheetProgress');
+    const jobId = req.body?.jobId;
+    const debugEnabled = process.env.DEBUG_MODE === 'true' || req.body?.debug === 'true' || !!jobId;
+    if (jobId) {
+      updateProgress(jobId, {
+        totalMarksheets: pageCount || 0,
+        processedMarksheets: 0,
+        currentRegisterNo: '',
+        currentStage: 'Running OCR',
+        status: 'processing',
+        currentPage: 0,
+        totalPages: pageCount || 0,
+        studentsFound: 0,
+        studentsProcessed: 0,
+        subjectsExtracted: 0,
+        currentSemester: req.body?.semester ? Number(req.body.semester) : null
+      });
+    }
+
     let marksheets;
     try {
       marksheets = await extractAllMarksheetsFromPDF(req.file.buffer, {
-        semester: req.body?.semester ? Number(req.body.semester) : null
+        semester: req.body?.semester ? Number(req.body.semester) : null,
+        jobId: jobId,
+        debug: debugEnabled
       });
     } catch (error) {
-      console.error('[Marksheet Upload] Extraction failed:', error);
+      const durationErr = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.error(`[OCR AUDIT] ${new Date().toISOString()} - Upload extraction failed for user=${userId}, file=${req.file.originalname}, duration=${durationErr}s, error=${error.message}`);
       return res.status(400).json({
         error: 'Failed to extract marksheets from PDF',
         details: error.message
@@ -166,13 +257,26 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     }
 
     if (!marksheets || marksheets.length === 0) {
+      const durationErr = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.warn(`[OCR AUDIT] ${new Date().toISOString()} - Upload returned 0 marksheets for user=${userId}, file=${req.file.originalname}, duration=${durationErr}s`);
       return res.status(400).json({
         error: 'No marksheets found in PDF'
       });
     }
 
     console.log(`[Marksheet Upload] Extracted ${marksheets.length} marksheets`);
+
     console.log('🧠 OCR extraction completed');
+
+    if (jobId && marksheets) {
+      updateProgress(jobId, {
+        totalMarksheets: marksheets.length,
+        processedMarksheets: marksheets.length,
+        currentRegisterNo: '',
+        currentStage: 'Validating',
+        status: 'processing'
+      });
+    }
 
     // ─────────────────────────────────────────────────────────
     // 3. Validate and match with students
@@ -335,6 +439,7 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
     // 4. Return preview for user confirmation
     // ─────────────────────────────────────────────────────────
     // Annotate extracted subjects with existing Subject info (credits) if present
+    let existingSubjects = [];
     try {
       // Collect unique course codes, names, and semesters for deterministic lookups
       const courseCodes = new Set();
@@ -368,7 +473,7 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       }
 
       const subjectQuery = orFilters.length > 0 ? { $or: orFilters } : {};
-      const existingSubjects = await Subject.find(
+      existingSubjects = await Subject.find(
         subjectQuery,
         'courseCode courseName credits semester year'
       ).lean();
@@ -380,12 +485,63 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
         if (!Array.isArray(m.subjects)) continue;
         let correctionCount = 0;
 
+        const { normalizeSubjectName } = require('../services/subjectNormalizer');
+
         for (const s of m.subjects) {
           const rawCode = String(s.courseCode || '').trim().toUpperCase();
-          const rawName = String(s.courseName || '').trim();
+          let rawName = String(s.courseName || '').trim();
+
+          const confidence = s.confidence !== undefined ? s.confidence : 1.0;
+          const normResult = normalizeSubjectName(rawName, confidence);
+          s.courseName = normResult.normalized;
+          rawName = normResult.normalized;
+
+          if (normResult.shouldReview) {
+            s.reviewStatus = 'NEEDS_REVIEW';
+            s.warnings = s.warnings || [];
+            s.warnings.push('Low OCR confidence score. Manual review required.');
+          }
 
           if (rawCode) {
             s.courseCode = rawCode;
+          }
+
+          // 1. Correction Memory match strategy (Phase B & Phase G)
+          if (rawCode) {
+            const historicCorrection = await CorrectionMemory.findOne({
+              field: 'courseCode',
+              originalValue: rawCode,
+              approvalStatus: 'APPROVED'
+            }).lean();
+
+            if (historicCorrection) {
+              const learnedCode = historicCorrection.correctedValue;
+              const learnedMatch = subjectLookup[learnedCode];
+              if (learnedMatch) {
+                s.existsInMaster = true;
+                s.masterCredits = learnedMatch.credits ?? null;
+                s.masterSemester = learnedMatch.semester ?? null;
+                s.masterYear = learnedMatch.year ?? null;
+                s.credits = learnedMatch.credits ?? null;
+                s.originalCourseName = rawName;
+                s.courseCode = learnedCode;
+                s.matchMethod = 'CORRECTION_MEMORY';
+                s.matchConfidence = 0.95;
+                s.correctionReason = `Learned correction applied: mapped '${rawCode}' to '${learnedCode}' based on historic coordinator edits.`;
+                if (learnedMatch.courseName && learnedMatch.courseName !== rawName) {
+                  s.courseName = learnedMatch.courseName;
+                  s.correctedFromMaster = true;
+                }
+                if (s.semester === undefined || s.semester === null || s.semester === '') {
+                  s.semester = learnedMatch.semester ?? null;
+                }
+                if (s.year === undefined || s.year === null || s.year === '') {
+                  s.year = learnedMatch.year ?? null;
+                }
+                console.log(`[LEARNED CORRECTION] Mapped ${rawCode} -> ${learnedCode}`);
+                continue;
+              }
+            }
           }
 
           const exactMatch = rawCode ? subjectLookup[rawCode] : null;
@@ -395,6 +551,14 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
             s.masterSemester = exactMatch.semester ?? null;
             s.masterYear = exactMatch.year ?? null;
             s.credits = exactMatch.credits ?? null;
+            s.originalCourseName = rawName;
+            s.matchMethod = 'EXACT_CODE';
+            s.matchConfidence = 1.0;
+            s.correctionReason = 'Exact match found in the master database by course code.';
+            if (exactMatch.courseName && exactMatch.courseName !== rawName) {
+              s.courseName = exactMatch.courseName;
+              s.correctedFromMaster = true;
+            }
             if (s.semester === undefined || s.semester === null || s.semester === '') {
               s.semester = exactMatch.semester ?? null;
             }
@@ -410,7 +574,14 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
             correctionCount += 1;
             s.correctedCourseCode = corrected.correctedCode;
             s.courseCode = corrected.correctedCode;
-            s.courseName = corrected.match.courseName || s.courseName;
+            s.originalCourseName = rawName;
+            s.matchMethod = 'FUZZY_CODE';
+            s.matchConfidence = corrected.distance === 0 ? 1.0 : Number((1 - (corrected.distance / Math.max(rawCode.length, corrected.correctedCode.length))).toFixed(3));
+            s.correctionReason = `Course code corrected from '${rawCode}' via master list distance mapping.`;
+            if (corrected.match.courseName && corrected.match.courseName !== rawName) {
+              s.courseName = corrected.match.courseName;
+              s.correctedFromMaster = true;
+            }
             s.masterCredits = corrected.match.credits ?? null;
             s.masterSemester = corrected.match.semester ?? null;
             s.masterYear = corrected.match.year ?? null;
@@ -428,42 +599,172 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
           }
 
           const nameMatch = rawName ? matchSubjectName(rawName, subjectNameLookup) : null;
-          if (nameMatch) {
+          if (nameMatch && nameMatch.match) {
             s.existsInMaster = true;
-            s.masterCredits = nameMatch.credits ?? null;
-            s.masterSemester = nameMatch.semester ?? null;
-            s.masterYear = nameMatch.year ?? null;
-            s.credits = nameMatch.credits ?? null;
-            if (!rawCode && nameMatch.courseCode) {
-              s.courseCode = String(nameMatch.courseCode).trim().toUpperCase();
+            s.masterCredits = nameMatch.match.credits ?? null;
+            s.masterSemester = nameMatch.match.semester ?? null;
+            s.masterYear = nameMatch.match.year ?? null;
+            s.credits = nameMatch.match.credits ?? null;
+            s.originalCourseName = rawName;
+            s.matchMethod = nameMatch.exact ? 'EXACT_NAME' : 'FUZZY_NAME';
+            s.matchConfidence = Number(nameMatch.similarity.toFixed(3));
+            s.courseName = nameMatch.match.courseName;
+            s.correctedFromMaster = true;
+            s.correctionReason = nameMatch.exact 
+              ? 'Course name matches database exactly. Course code resolved from master database.' 
+              : `Course name matched database via fuzzy similarity (${Math.round(nameMatch.similarity * 100)}%). Course code resolved.`;
+            
+            if (!rawCode && nameMatch.match.courseCode) {
+              s.courseCode = String(nameMatch.match.courseCode).trim().toUpperCase();
             }
-            if (!rawName && nameMatch.courseName) {
-              s.courseName = nameMatch.courseName;
+            
+            if (!nameMatch.exact) {
+              s.warnings = s.warnings || [];
+              s.warnings.push(`Fuzzy matched course name '${rawName}' to DB '${nameMatch.match.courseName}' (${Math.round(nameMatch.similarity * 100)}% similarity)`);
+              if (nameMatch.similarity < 0.90) {
+                s.errors = s.errors || [];
+                s.errors.push(`Low similarity subject name match (${Math.round(nameMatch.similarity * 100)}%). Manual review required.`);
+              }
             }
+
             if (s.semester === undefined || s.semester === null || s.semester === '') {
-              s.semester = nameMatch.semester ?? null;
+              s.semester = nameMatch.match.semester ?? null;
             }
             if (s.year === undefined || s.year === null || s.year === '') {
-              s.year = nameMatch.year ?? null;
+              s.year = nameMatch.match.year ?? null;
             }
-            console.log(`[NAME MATCH] "${rawName || '--'}" matched DB subject ${nameMatch.courseCode || ''}`);
+            console.log(`[NAME MATCH] "${rawName || '--'}" matched DB subject ${nameMatch.match.courseCode || ''}`);
             continue;
           }
 
-          s.existsInMaster = false;
-          s.masterCredits = null;
-          s.masterSemester = null;
-          s.masterYear = null;
-          s.credits = null;
-          console.log(`[MATCH FAILED] ${rawCode || rawName || 'UNKNOWN'} -> no subject found`);
-        }
+          // 4. Semantic similarity match strategy (Phase G / Component 1)
+          if (rawName) {
+            const semanticMatch = matchSubjectSemantic(rawName, subjectNameLookup);
+            if (semanticMatch && semanticMatch.match) {
+              s.existsInMaster = true;
+              s.masterCredits = semanticMatch.match.credits ?? null;
+              s.masterSemester = semanticMatch.match.semester ?? null;
+              s.masterYear = semanticMatch.match.year ?? null;
+              s.credits = semanticMatch.match.credits ?? null;
+              s.originalCourseName = rawName;
+              s.matchMethod = 'SEMANTIC_NAME';
+              s.matchConfidence = Number(semanticMatch.similarity.toFixed(3));
+              s.courseName = semanticMatch.match.courseName;
+              s.correctedFromMaster = true;
+              s.correctionReason = `Subject matched via vector N-gram cosine similarity (${Math.round(semanticMatch.similarity * 100)}%).`;
+              
+              if (!rawCode && semanticMatch.match.courseCode) {
+                s.courseCode = String(semanticMatch.match.courseCode).trim().toUpperCase();
+              }
+              if (s.semester === undefined || s.semester === null || s.semester === '') {
+                s.semester = semanticMatch.match.semester ?? null;
+              }
+              if (s.year === undefined || s.year === null || s.year === '') {
+                s.year = semanticMatch.match.year ?? null;
+              }
+              console.log(`[SEMANTIC MATCH] "${rawName}" matched DB subject ${semanticMatch.match.courseCode}`);
+              continue;
+            }
+          }
 
-        if (correctionCount > 0) {
-          m.validationWarnings = m.validationWarnings || [];
-          m.validationWarnings.push(`Auto-corrected ${correctionCount} course code(s) from master list`);
-          m.extractionConfidence = Math.max(0, (m.extractionConfidence || 0) - (0.02 * correctionCount));
-        }
-      }
+           s.existsInMaster = false;
+           s.masterCredits = null;
+           s.masterSemester = null;
+           s.masterYear = null;
+           s.credits = null;
+           s.matchMethod = 'NOMATCH';
+           s.matchConfidence = 0.0;
+           s.correctionReason = 'No matching subject found in the database by course code or course name.';
+           console.log(`[MATCH FAILED] ${rawCode || rawName || 'UNKNOWN'} -> no subject found`);
+         }
+
+         // Propagate subject-level errors and warnings to the parent marksheet level
+         let subjectLookupErrors = 0;
+         let subjectLookupWarnings = 0;
+
+         for (const s of m.subjects) {
+           if (!s.existsInMaster) {
+             subjectLookupWarnings += 1;
+             m.validationWarnings = m.validationWarnings || [];
+             m.validationWarnings.push(`Subject code ${s.courseCode || '--'} not found in database master table`);
+           }
+           if (s.errors && s.errors.length > 0) {
+             subjectLookupErrors += s.errors.length;
+             m.validationErrors = m.validationErrors || [];
+             for (const err of s.errors) {
+               m.validationErrors.push(err);
+             }
+           }
+           if (s.warnings && s.warnings.length > 0) {
+             subjectLookupWarnings += s.warnings.length;
+             m.validationWarnings = m.validationWarnings || [];
+             for (const warn of s.warnings) {
+               m.validationWarnings.push(warn);
+             }
+           }
+         }
+
+         if (subjectLookupErrors > 0) {
+           m.isValid = false;
+           m.validation.isValid = false;
+           m.requiresReview = true;
+           m.validationErrors = m.validationErrors || [];
+           m.validation.errors = m.validation.errors || [];
+           for (const err of m.validationErrors) {
+             if (!m.validation.errors.includes(err)) {
+               m.validation.errors.push(err);
+             }
+           }
+         }
+
+         if (subjectLookupWarnings > 0) {
+           m.validationWarnings = m.validationWarnings || [];
+           m.validation.warnings = m.validation.warnings || [];
+           for (const warn of m.validationWarnings) {
+             if (!m.validation.warnings.includes(warn)) {
+               m.validation.warnings.push(warn);
+             }
+           }
+         }
+
+         if (correctionCount > 0) {
+           m.validationWarnings = m.validationWarnings || [];
+           m.validationWarnings.push(`Auto-corrected ${correctionCount} course code(s) from master list`);
+           m.extractionConfidence = Math.max(0, (m.extractionConfidence || 0) - (0.02 * correctionCount));
+         }
+          const regulation = detectRegulationFromCodes(m.subjects, m.rawText || '');
+          m.regulation = regulation;
+          m.detectedRegulation = regulation;
+
+          // Categorize marksheet into human review queues (Phase 14)
+          let reviewStatus = 'AUTO_ACCEPTED';
+          const finalConf = m.extractionConfidence || 1.0;
+          const hasValidationErrors = m.validation && m.validation.errors && m.validation.errors.length > 0;
+          const hasValidationWarnings = m.validation && m.validation.warnings && m.validation.warnings.length > 0;
+          
+          if (finalConf < 0.70 || hasValidationErrors || m.requiresReview) {
+            reviewStatus = 'MANUAL_REVIEW_REQUIRED';
+          } else if (finalConf < 0.85 || hasValidationWarnings) {
+            reviewStatus = 'NEEDS_REVIEW';
+          }
+          
+          m.reviewStatus = reviewStatus;
+          
+          // Propagate to subjects
+          if (Array.isArray(m.subjects)) {
+            for (const s of m.subjects) {
+              s.confidence = s.matchConfidence ? Math.round(s.matchConfidence * 100) : Math.round(finalConf * 100);
+              let sReview = 'AUTO_ACCEPTED';
+              if (s.confidence < 70 || (s.errors && s.errors.length > 0)) {
+                sReview = 'MANUAL_REVIEW_REQUIRED';
+              } else if (s.confidence < 85 || (s.warnings && s.warnings.length > 0) || !s.existsInMaster) {
+                sReview = 'NEEDS_REVIEW';
+              }
+              s.reviewStatus = sReview;
+            }
+          }
+
+       }
     } catch (err) {
       console.warn('[Marksheet Upload] Could not annotate subjects with master list:', err.message);
     }
@@ -539,6 +840,15 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
 
     let autoSaveResult = { saved: 0 };
     try {
+      if (jobId && marksheets) {
+        updateProgress(jobId, {
+          totalMarksheets: marksheets.length,
+          processedMarksheets: marksheets.length,
+          currentRegisterNo: '',
+          currentStage: 'Saving',
+          status: 'processing'
+        });
+      }
       console.log('📦 AUTO SAVING SEMESTER RECORDS...', extractedMarksheets.length);
       autoSaveResult = await autoSaveSemesterRecords({
         extractedMarksheets,
@@ -558,6 +868,119 @@ router.post('/upload', coordinatorAuth, upload.single('file'), async (req, res) 
       regNo: m.regNo,
       studentName: m.studentName
     })));
+
+    // ─────────────────────────────────────────────────────────
+    // Missing Subject Detection (Stage 10) & Debug logging (Stage 9)
+    // ─────────────────────────────────────────────────────────
+    const missingSubjects = [];
+    for (const m of extractedMarksheets) {
+      const studentSem = Number(m.semester);
+      if (!studentSem) continue;
+
+      // Find expected subjects for this semester in the database master list
+      const expectedForSem = (existingSubjects || []).filter(sub => sub.semester === studentSem);
+
+      if (expectedForSem.length === 0) {
+        missingSubjects.push({
+          registerNumber: m.regNo || 'Unknown',
+          studentName: m.studentName || 'Unknown',
+          courseCode: 'N/A',
+          courseName: 'N/A',
+          pipelineStage: 'Database / Curriculum Validation',
+          reason: `Database Coverage Unknown (No expected subjects found in the database curriculum for semester ${studentSem})`,
+          confidence: 0.0,
+          tr_id: null
+        });
+        continue;
+      }
+
+      const extractedCodes = new Set(m.subjects.map(s => s.courseCode));
+      const rawTextUpper = (m.rawText || '').toUpperCase();
+
+      for (const expSub of expectedForSem) {
+        if (!extractedCodes.has(expSub.courseCode)) {
+          // Check if course code is present in raw text
+          const isInRawText = rawTextUpper.includes(expSub.courseCode);
+          
+          // Find matching tracer ID from OCR lines metadata if present
+          let matchingTrId = null;
+          if (m.ocrMeta && Array.isArray(m.ocrMeta.lines)) {
+            const matchLine = m.ocrMeta.lines.find(line => (line.text || '').toUpperCase().includes(expSub.courseCode));
+            if (matchLine) {
+              matchingTrId = matchLine.tr_id;
+            }
+          }
+
+          missingSubjects.push({
+            registerNumber: m.regNo || 'Unknown',
+            studentName: m.studentName || 'Unknown',
+            courseCode: expSub.courseCode,
+            courseName: expSub.courseName,
+            pipelineStage: isInRawText ? 'Subject Builder' : 'OCR / Line Detection',
+            reason: isInRawText 
+              ? 'Lost in Subject Builder (likely coordinate clustering or split OCR row issues)' 
+              : 'Not found in raw OCR text (OCR failed to recognize it or page image is low quality)',
+            confidence: isInRawText ? 0.70 : 0.0,
+            tr_id: matchingTrId
+          });
+        }
+      }
+    }
+
+    if (debugEnabled) {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const debugDir = 'd:/Placement-Portal/debug';
+        if (!fs.existsSync(debugDir)) {
+          fs.mkdirSync(debugDir, { recursive: true });
+        }
+        
+        // Save missing_subjects.json (Stage 10)
+        fs.writeFileSync(
+          path.join(debugDir, 'missing_subjects.json'),
+          JSON.stringify(missingSubjects, null, 2),
+          'utf-8'
+        );
+        
+        // Save backend.json (Stage 9)
+        const debugResponse = {
+          success: true,
+          uploadId,
+          extractedMarksheets,
+          extractedPdfName,
+          savedCount: autoSaveResult.saved,
+          warnings,
+          summary: {
+            totalExtracted: marksheets.length,
+            totalMatched,
+            totalWarnings: warnings.length,
+            readyToConfirm: totalMatched > 0
+          }
+        };
+        fs.writeFileSync(
+          path.join(debugDir, 'backend.json'),
+          JSON.stringify(debugResponse, null, 2),
+          'utf-8'
+        );
+        runPipelineIntegrityValidator(extractedMarksheets, debugEnabled);
+      } catch (debugErr) {
+        console.error('[DEBUG FILE WRITE ERROR]', debugErr.message);
+      }
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`[OCR AUDIT] ${new Date().toISOString()} - Upload success for user=${userId}, file=${req.file.originalname}, duration=${duration}s, count=${marksheets.length}`);
+
+    if (jobId && marksheets) {
+      updateProgress(jobId, {
+        totalMarksheets: marksheets.length,
+        processedMarksheets: marksheets.length,
+        currentRegisterNo: '',
+        currentStage: 'Completed ✓',
+        status: 'completed'
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -672,6 +1095,7 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
     // Grade -> points mapping (KSRCE)
     const GRADE_POINTS = {
       'O': 10,
+      'S': 10,
       'A+': 9,
       'A': 8,
       'B+': 7,
@@ -715,8 +1139,36 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
                 courseName: s.courseName || s.course || '',
                 credits: Number(s.credits || s.masterCredits || 0),
                 grade: (s.grade || '').toString().trim(),
-                result: (s.result || '').toString().trim() || 'P'
+                result: (s.result || '').toString().trim() || 'P',
+                confidence: s.confidence,
+                reviewStatus: s.reviewStatus
               };
+
+              // Self learning logs (Phase B)
+              const originalCode = s.originalCourseCode || s.courseCode;
+              const originalName = s.originalCourseName || s.courseName;
+              if (originalCode && originalCode !== subj.courseCode) {
+                await CorrectionMemory.create([{
+                  originalValue: originalCode,
+                  correctedValue: subj.courseCode,
+                  field: 'courseCode',
+                  layoutSignature: marksheet.ocrMeta?.documentType || 'unknown',
+                  regulation: marksheet.regulation || 'Regulation 2020',
+                  university: marksheet.university || 'KSR',
+                  approvalStatus: 'APPROVED'
+                }], { session });
+              }
+              if (originalName && originalName !== subj.courseName) {
+                await CorrectionMemory.create([{
+                  originalValue: originalName,
+                  correctedValue: subj.courseName,
+                  field: 'courseName',
+                  layoutSignature: marksheet.ocrMeta?.documentType || 'unknown',
+                  regulation: marksheet.regulation || 'Regulation 2020',
+                  university: marksheet.university || 'KSR',
+                  approvalStatus: 'APPROVED'
+                }], { session });
+              }
 
               const subjSem = Number(s.semester || currentSem);
               if (subjSem < currentSem) {
@@ -798,7 +1250,9 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
                 credits: s.credits || 0,
                 grade: s.grade,
                 result: (s.grade === 'U' || s.grade === 'RA') ? 'F' : (s.result || 'P'),
-                isArrear: (s.grade === 'U' || s.grade === 'RA' || s.result === 'F' || s.result === 'AB')
+                isArrear: (s.grade === 'U' || s.grade === 'RA' || s.result === 'F' || s.result === 'AB'),
+                confidence: s.confidence || 100,
+                reviewStatus: s.reviewStatus || 'AUTO_ACCEPTED'
               })),
               sgpa,
               totalCredits,
@@ -807,7 +1261,8 @@ router.post('/confirm', coordinatorAuth, async (req, res) => {
               pdfFileName: req.file?.originalname || 'imported',
               extractionConfidence: marksheet.extractionConfidence || null,
               extractionWarnings: marksheet.validationWarnings || [],
-              extractionMeta: marksheet.ocrMeta || {}
+              extractionMeta: marksheet.ocrMeta || {},
+              reviewStatus: marksheet.reviewStatus || 'AUTO_ACCEPTED'
             };
 
             // Upsert current semester marksheet
@@ -978,3 +1433,86 @@ router.get('/semester/:studentId/:semester', async (req, res) => {
 });
 
 module.exports = router;
+
+function runPipelineIntegrityValidator(extractedMarksheets, debugEnabled) {
+  const integrityReports = [];
+  
+  for (const m of extractedMarksheets) {
+    const telemetry = m.ocrMeta?.integrity_telemetry || {};
+    const ocrLines = telemetry.ocr_lines || 0;
+    const detectedCourseCodes = telemetry.detected_course_codes || 0;
+    const logicalRows = telemetry.logical_rows || 0;
+    const subjectObjects = telemetry.subject_objects || 0;
+    const validatedSubjects = telemetry.validated_subjects || 0;
+    
+    const backendSubjects = m.subjects?.length || 0;
+    const apiResponseCount = backendSubjects; // Sent directly in response
+    
+    // Check for mismatches
+    let status = 'SUCCESS';
+    let failedStage = null;
+    let missingObjectsCount = 0;
+    let cause = null;
+    
+    if (validatedSubjects !== backendSubjects) {
+      status = 'FAILED';
+      failedStage = 'Backend Mapping (normalizeSubject)';
+      missingObjectsCount = Math.abs(validatedSubjects - backendSubjects);
+      cause = 'Accidental filtering, duplicate detection, or mapping exception in Express service layer';
+    } else if (subjectObjects !== validatedSubjects) {
+      status = 'WARNING';
+      failedStage = 'OCR Layout Filter (subject_builder)';
+      missingObjectsCount = Math.abs(subjectObjects - validatedSubjects);
+      cause = 'Dynamic repetitive headers/footers or blocked keywords matching';
+    } else if (logicalRows !== subjectObjects) {
+      status = 'WARNING';
+      failedStage = 'OCR Subject Parser (subject_builder)';
+      missingObjectsCount = Math.abs(logicalRows - subjectObjects);
+      cause = 'Clustered row did not contain valid grade/credits formatting or course code pattern';
+    }
+    
+    integrityReports.push({
+      registerNumber: m.regNo || 'Unknown',
+      studentName: m.studentName || 'Unknown',
+      status,
+      failedStage,
+      missingObjectsCount,
+      cause,
+      stages: [
+        { stage: '1. OCR Lines', count: ocrLines },
+        { stage: '2. Course Codes', count: detectedCourseCodes },
+        { stage: '3. Logical Rows', count: logicalRows },
+        { stage: '4. Subject Objects', count: subjectObjects },
+        { stage: '5. Validation', count: validatedSubjects },
+        { stage: '6. Backend', count: backendSubjects },
+        { stage: '7. API', count: apiResponseCount }
+      ]
+    });
+  }
+
+  console.log('📊 [Pipeline Integrity Validator] Run Completed.');
+  for (const rep of integrityReports) {
+    console.log(`   - Student: ${rep.studentName} (${rep.registerNumber}): Status = ${rep.status}`);
+    if (rep.status !== 'SUCCESS') {
+      console.warn(`     ⚠️ Mismatch in stage: ${rep.failedStage}. Missing: ${rep.missingObjectsCount}. Cause: ${rep.cause}`);
+    }
+  }
+
+  if (debugEnabled) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const debugDir = 'd:/Placement-Portal/debug';
+      fs.writeFileSync(
+        path.join(debugDir, 'pipeline_integrity_report.json'),
+        JSON.stringify(integrityReports, null, 2),
+        'utf-8'
+      );
+      console.log('📂 [Pipeline Integrity Validator] Saved pipeline_integrity_report.json to debug directory.');
+    } catch (err) {
+      console.error('Failed to write pipeline integrity report file:', err.message);
+    }
+  }
+
+  return integrityReports;
+}

@@ -1,0 +1,31 @@
+{
+  "execution_summary": {
+    "total_pages_processed": 2,
+    "total_students_extracted": 1,
+    "execution_time_seconds": 176.1498,
+    "memory_usage_mb": 431.03,
+    "cpu_percent": 0.0
+  },
+  "stage_durations": {
+    "pdf_load": 0.0,
+    "ocr": 240.69156551361084,
+    "document_merge": 0.001089334487915039,
+    "coordinate_clustering": 0.0016033649444580078,
+    "parsing": 0.015604257583618164,
+    "validation": 0.0,
+    "total_processing_time": 176.14977836608887
+  },
+  "layout_profile": {
+    "layout_hash": "4c843471afa730e09f85fec748aedcce",
+    "page_count": 2,
+    "column_count": 19,
+    "row_count": 43,
+    "orientation": "LANDSCAPE",
+    "signature_metrics": "pages:2;columns:19;rows:43"
+  },
+  "architecture_dependencies": {
+    "cyclic_imports_detected": false,
+    "unused_modules_count": 0,
+    "module_structure": "Strictly Modular (PDF Loader -> OCR -> Layout -> Matcher)"
+  }
+}

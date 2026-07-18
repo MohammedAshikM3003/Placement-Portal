@@ -98,6 +98,8 @@ const extractNameFromRawText = (rawText = '') => {
 const OCR_SERVICE_URL = process.env.OCR_SERVICE_URL || 'http://localhost:5001';
 const OCR_V2_ENDPOINT = '/parse-marksheet-pages-v2';
 const OCR_HEALTH_ENDPOINT = '/health';
+const OCR_TIMEOUT_MS = Number(process.env.OCR_TIMEOUT_MS) || 180000;
+console.log(`[OCR] Configured Timeout = ${OCR_TIMEOUT_MS} ms`);
 
 const buildOcrUrl = (path) => `${OCR_SERVICE_URL}${path}`;
 
@@ -129,12 +131,19 @@ const normalizeSubject = (subject = {}) => ({
   semester: subject.semester || null,
   courseCode: normalizeCourseCode(subject.courseCode || subject.course_code || ''),
   courseName: subject.courseName || subject.course_name || '',
+  originalCourseName: subject.originalCourseName || subject.courseName || subject.course_name || '',
+  normalizedCourseName: subject.normalizedCourseName || subject.courseName || subject.course_name || '',
   grade: normalizeGrade(subject.grade || ''),
   result: normalizeResult(subject.result || ''),
-  credits: Number(subject.credit || subject.credits || 0) || 0
+  credits: Number(subject.credit || subject.credits || 0) || 0,
+  confidence: Number(subject.confidence) || 0,
+  gradeConfidence: Number(subject.gradeConfidence) ?? 1.0,
+  warnings: Array.isArray(subject.warnings) ? subject.warnings : [],
+  errors: Array.isArray(subject.errors) ? subject.errors : [],
+  tr_ids: Array.isArray(subject.tr_ids) ? subject.tr_ids : []
 });
 
-async function callOcrServiceForPages(pdfBuffer) {
+async function callOcrServiceForPages(pdfBuffer, options = {}) {
   try {
     await checkOcrHealth();
     console.log(`[OCR REQUEST] Sending file to OCR service: ${buildOcrUrl(OCR_V2_ENDPOINT)}`);
@@ -142,11 +151,22 @@ async function callOcrServiceForPages(pdfBuffer) {
     const formData = new FormData();
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     formData.append('file', pdfBlob, 'marksheet.pdf');
+    
+    // Add options (including jobId) to form data
+    formData.append('options', JSON.stringify({
+      semester: options.semester || null,
+      jobId: options.jobId || null,
+      debug: options.debug || false
+    }));
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OCR_TIMEOUT_MS);
 
     const response = await fetch(buildOcrUrl(OCR_V2_ENDPOINT), {
       method: 'POST',
-      body: formData
-    });
+      body: formData,
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
@@ -169,7 +189,7 @@ async function callOcrServiceForPages(pdfBuffer) {
  */
 async function extractAllMarksheetsFromPDF(pdfBuffer, options = {}) {
   try {
-    const ocrResult = await callOcrServiceForPages(pdfBuffer);
+    const ocrResult = await callOcrServiceForPages(pdfBuffer, options);
 
     const pages = Array.isArray(ocrResult?.pages) ? ocrResult.pages : [];
     if (pages.length === 0) {
@@ -208,13 +228,15 @@ async function extractAllMarksheetsFromPDF(pdfBuffer, options = {}) {
         sgpa: info.sgpa || calculateSgpa(subjects),
         extractedAt: new Date(),
         rawText: page.raw_text || '',
+        candidate_metadata: page.candidate_metadata || null,
         ocrMeta: {
           page: index + 1,
           documentType: page.document_type || 'unknown',
           avgConf: page.ocr_meta?.avg_conf || 0,
           lineCount: page.ocr_meta?.line_count || 0,
           attempts: page.ocr_meta?.attempts || [],
-          selected: page.ocr_meta?.selected || null
+          selected: page.ocr_meta?.selected || null,
+          integrity_telemetry: page.ocr_meta?.integrity_telemetry || null
         }
       };
 
@@ -228,7 +250,56 @@ async function extractAllMarksheetsFromPDF(pdfBuffer, options = {}) {
       return marksheet;
     });
 
-    return marksheets;
+    // Group and merge marksheets by regNo to ensure one student record per register number
+    const mergedMarksheetsMap = new Map();
+    for (const marksheet of marksheets) {
+      const regNo = marksheet.regNo ? marksheet.regNo.trim().toUpperCase() : 'UNKNOWN';
+      if (regNo === 'UNKNOWN') {
+        const uniqueKey = `UNKNOWN_${Date.now()}_${Math.random()}`;
+        mergedMarksheetsMap.set(uniqueKey, marksheet);
+        continue;
+      }
+      
+      if (!mergedMarksheetsMap.has(regNo)) {
+        mergedMarksheetsMap.set(regNo, marksheet);
+      } else {
+        const existing = mergedMarksheetsMap.get(regNo);
+        console.log(`[OCR Extraction] Merging duplicate marksheet pages for candidate ${regNo}`);
+        
+        // Merge subjects
+        const existingSubjectCodes = new Set(existing.subjects.map(s => s.courseCode));
+        for (const sub of marksheet.subjects) {
+          if (!existingSubjectCodes.has(sub.courseCode)) {
+            existing.subjects.push(sub);
+            existingSubjectCodes.add(sub.courseCode);
+          }
+        }
+        
+        // Update basic info if missing
+        if ((!existing.studentName || existing.studentName === 'Unknown') && marksheet.studentName && marksheet.studentName !== 'Unknown') {
+          existing.studentName = marksheet.studentName;
+        }
+        if (!existing.programme && marksheet.programme) {
+          existing.programme = marksheet.programme;
+        }
+        if ((!existing.dob || existing.dob === '--') && marksheet.dob && marksheet.dob !== '--') {
+          existing.dob = marksheet.dob;
+        }
+        
+        existing.sgpa = calculateSgpa(existing.subjects);
+        existing.rawText += `\n\n--- Page Break ---\n\n` + marksheet.rawText;
+        
+        const validation = validateMarksheetData(existing, options.validation);
+        const confidence = scoreMarksheetConfidence(existing, existing.ocrMeta || {}, validation, options.confidence);
+        const requiresReview = requiresManualReview(confidence, validation, options.confidence);
+        
+        existing.validation = validation;
+        existing.extractionConfidence = confidence;
+        existing.requiresReview = requiresReview;
+      }
+    }
+    
+    return Array.from(mergedMarksheetsMap.values());
   } catch (error) {
     throw new Error(`OCR parsing failed: ${error.message}`);
   }

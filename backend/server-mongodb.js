@@ -789,13 +789,30 @@ try {
 }
 
 // -------------------------------------------------
+// Marksheet Extraction Progress Tracking APIs
+// -------------------------------------------------
+try {
+    const marksheetProgressRoutes = require('./routes/marksheetProgress');
+    app.use('/api/marksheets/progress', marksheetProgressRoutes.router);
+    console.log('✅ Marksheet progress tracking routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load marksheet progress routes:', error.message);
+}
+
+// -------------------------------------------------
 // Marksheet PDF Upload & Extraction APIs
 // -------------------------------------------------
 try {
     const marksheetsUploadRoutes = require('./routes/marksheetsUpload');
+    const ocrV1Routes = require('./routes/ocrV1');
+    const healthRoutes = require('./routes/health');
+
     app.use('/api/marksheets', authenticateToken, marksheetsUploadRoutes);
-    console.log('✅ Marksheet upload & extraction routes loaded successfully');
-    logRouteDebug('Mounted /api/marksheets/* (POST /upload, POST /confirm, GET /student/:id, GET /semester/:id/:semester)');
+    app.use('/api/v1/ocr', authenticateToken, ocrV1Routes);
+    app.use('/api/v1/health', healthRoutes);
+
+    console.log('✅ Marksheet upload, versioned OCR v1, and health monitoring routes loaded successfully');
+    logRouteDebug('Mounted /api/marksheets/* (POST /upload, POST /confirm), /api/v1/ocr/* (POST /upload), /api/v1/health/* (GET /liveness, GET /readiness)');
 } catch (error) {
     console.error('❌ Failed to load marksheet upload routes:', error.stack || error.message);
     process.exit(1);

@@ -10,7 +10,8 @@ import SemesterMarksheetConfirmation from '../components/alerts/SemesterMarkshee
 import styles from './Coo_MS_Editpage.module.css';
 
 const GRADE_POINTS = {
-  O: 10,
+  O: 10,
+  S: 10,
   'A+': 9,
   A: 8,
   'B+': 7,
@@ -22,7 +23,7 @@ const GRADE_POINTS = {
   WD: 0
 };
 
-const GRADE_OPTIONS = ['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'RA', 'WD'];
+const GRADE_OPTIONS = ['O', 'S', 'A+', 'A', 'B+', 'B', 'C', 'U', 'RA', 'WD'];
 
 const DEFAULT_STUDENT = {
   name: '',

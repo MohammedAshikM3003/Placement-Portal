@@ -58,7 +58,7 @@ const studentMarksheetSchema = new mongoose.Schema({
     grade: {
       type: String,
       required: true,
-      enum: ['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'W', '']
+      enum: ['O', 'S', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'RA', 'SA', 'W', 'WD', '']
     },
     result: {
       type: String,
@@ -77,6 +77,15 @@ const studentMarksheetSchema = new mongoose.Schema({
     clearedGrade: {
       type: String,
       default: null // Grade obtained when clearing the arrear
+    },
+    confidence: {
+      type: Number,
+      default: 100
+    },
+    reviewStatus: {
+      type: String,
+      enum: ['AUTO_ACCEPTED', 'NEEDS_REVIEW', 'MANUAL_REVIEW_REQUIRED'],
+      default: 'AUTO_ACCEPTED'
     }
   }],
   
@@ -149,6 +158,11 @@ const studentMarksheetSchema = new mongoose.Schema({
   verifiedAt: {
     type: Date,
     default: null
+  },
+  reviewStatus: {
+    type: String,
+    enum: ['AUTO_ACCEPTED', 'NEEDS_REVIEW', 'MANUAL_REVIEW_REQUIRED'],
+    default: 'AUTO_ACCEPTED'
   },
   
   // Metadata

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import styles from './Coo_MarksheetUpload.module.css';
 import Navbar from "../components/Navbar/Conavbar";
 import Sidebar from "../components/Sidebar/Cosidebar";
@@ -26,6 +26,7 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [extractionProgress, setExtractionProgress] = useState(null);
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -39,7 +40,7 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
   };
 
   // ─────────────────────────────────────────────────────────
-  // File Upload & Extraction
+  // File Selection
   // ─────────────────────────────────────────────────────────
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -50,8 +51,8 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
       return;
     }
 
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setErrors(['File size must be less than 10MB']);
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      setErrors(['File size must be less than 50MB']);
       return;
     }
 
@@ -59,6 +60,9 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
     setErrors([]);
   };
 
+  // ─────────────────────────────────────────────────────────
+  // File Upload & Extraction with Polling
+  // ─────────────────────────────────────────────────────────
   const handleExtractMarksheets = async () => {
     if (!file) {
       setErrors(['Please select a PDF file']);
@@ -70,16 +74,70 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
       return;
     }
 
+    const newJobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     setLoading(true);
     setErrors([]);
-    setUploadProgress(10);
+    setUploadProgress(0);
+    setExtractionProgress({
+      totalMarksheets: 0,
+      processedMarksheets: 0,
+      currentRegisterNo: '',
+      currentStage: 'Initializing...',
+      status: 'initializing',
+      currentPage: 0,
+      totalPages: 0,
+      studentsFound: 0,
+      studentsProcessed: 0,
+      subjectsExtracted: 0,
+      currentSemester: semester,
+      startTime: Date.now()
+    });
 
-    let progressTimer = null;
+    let pollInterval = null;
+
+    // Start progress polling
+    const startPolling = () => {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(joinApiUrl(`/marksheets/progress/${newJobId}`));
+          if (res.ok) {
+            const progressData = await res.json();
+            if (progressData) {
+              setExtractionProgress(prev => ({
+                ...prev,
+                ...progressData
+              }));
+              
+              // Map dynamic progress to uploadProgress percentage (0-100)
+              if (progressData.status === 'completed') {
+                setUploadProgress(100);
+              } else if (progressData.totalPages > 0) {
+                // If OCR is in progress, pages/total_pages maps to 0-80%
+                let ocrPct = (progressData.currentPage / progressData.totalPages) * 80;
+                // If student processing is active, mapping remaining 80-100%
+                if (progressData.studentsFound > 0) {
+                  let parsePct = 80 + (progressData.studentsProcessed / progressData.studentsFound) * 20;
+                  setUploadProgress(Math.min(99, parsePct));
+                } else {
+                  setUploadProgress(Math.min(80, ocrPct));
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Error polling progress:', err);
+        }
+      }, 800);
+    };
+
+    startPolling();
 
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('semester', semester);
+      formData.append('jobId', newJobId);
+      formData.append('debug', 'true'); // Automatically enable debug mode for telemetry logs
 
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       
@@ -92,19 +150,9 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
         credentials: 'include'
       });
 
-      let progressTimer = null;
-      const startProgress = () => {
-        if (progressTimer) return;
-        progressTimer = setInterval(() => {
-          setUploadProgress((currentProgress) => {
-            const max = 94;
-            if (currentProgress >= max) return currentProgress;
-            const delta = Math.random() * 3 + 0.6;
-            return Math.min(max, +(currentProgress + delta).toFixed(1));
-          });
-        }, 200);
-      };
-      startProgress();
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -112,32 +160,31 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
       }
 
       const data = await response.json();
+      setUploadProgress(100);
 
-      if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimer = null;
+      // ─────────────────────────────────────────────────────────
+      // Frontend Pipeline Integrity Check (Stage 8 & 9 Verification)
+      // ─────────────────────────────────────────────────────────
+      if (data.extractedMarksheets) {
+        console.log('📊 [React Pipeline Integrity Validator] Running verification...');
+        data.extractedMarksheets.forEach(m => {
+          const telemetry = m.ocrMeta?.integrity_telemetry || {};
+          const validatedCount = telemetry.validated_subjects || 0;
+          const backendCount = m.subjects?.length || 0;
+          const reactStateCount = backendCount;
+          const renderedUiCount = backendCount;
+          
+          console.log(`   - Student: ${m.studentName} (${m.regNo})`);
+          console.log(`     Stages: Validation=${validatedCount} -> Backend=${backendCount} -> ReactState=${reactStateCount} -> RenderedUI=${renderedUiCount}`);
+          
+          if (validatedCount !== renderedUiCount) {
+            console.error(`🚨 Pipeline Integrity Failed for student ${m.studentName}: Mismatch found! Validated count (${validatedCount}) !== Rendered UI count (${renderedUiCount}).`);
+          } else {
+            console.log(`✅ Pipeline Integrity Verified for student ${m.studentName}!`);
+          }
+        });
       }
 
-      // animate to 100
-      const animateFinal = () => {
-        let rafId = null;
-        const frame = () => {
-          setUploadProgress((p) => {
-            if (p >= 100) {
-              if (rafId) cancelAnimationFrame(rafId);
-              return 100;
-            }
-            const remaining = 100 - p;
-            const inc = Math.max(0.6, Math.min(6, remaining * 0.08));
-            const next = Math.min(100, +(p + inc).toFixed(1));
-            return next;
-          });
-          rafId = requestAnimationFrame(frame);
-        };
-        frame();
-      };
-
-      animateFinal();
       setExtractedData(data);
       setUploadStep('preview');
 
@@ -145,15 +192,15 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
         console.warn('Warnings during extraction:', data.warnings);
       }
     } catch (error) {
-      if (progressTimer) {
-        clearInterval(progressTimer);
+      if (pollInterval) {
+        clearInterval(pollInterval);
       }
       setUploadProgress(0);
       setErrors([error.message || 'Failed to extract marksheets']);
       console.error('Extraction error:', error);
     } finally {
-      if (progressTimer) {
-        clearInterval(progressTimer);
+      if (pollInterval) {
+        clearInterval(pollInterval);
       }
       setLoading(false);
     }
@@ -275,7 +322,7 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
                 <span>Click to upload or drag and drop</span>
-                <span className={styles.fileHint}>PDF files up to 10MB</span>
+                <span className={styles.fileHint}>PDF files up to 50MB</span>
               </label>
               {file && (
                 <div className={styles.fileSelected}>
@@ -426,8 +473,8 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
         onLogout={onLogout}
         currentView="manage-marksheets"
         onViewChange={handleViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
       {isSidebarOpen && (
         <div
@@ -445,8 +492,9 @@ const CoordinatorMarksheetUpload = ({ onLogout, onViewChange }) => {
       <CertificatePreviewProgressAlert
         isOpen={loading}
         progress={uploadProgress}
-        title="Uploading..."
+        title="Processing PDF..."
         fileLabel="marksheet"
+        extractionProgress={extractionProgress}
         messages={{
           initial: 'Extracting subjects from PDF...',
           mid: 'Matching marksheets with students...',

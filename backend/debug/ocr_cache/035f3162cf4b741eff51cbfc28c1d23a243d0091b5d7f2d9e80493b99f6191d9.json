@@ -1,0 +1,857 @@
+{
+  "success": true,
+  "total_pages": 1,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "result_sheet",
+      "document_language": "English",
+      "student_info": {
+        "name": "Mohammed Ashik M",
+        "programme": "S.No Semester Course Code",
+        "register_number": "73152313074",
+        "reg_conf": 0.6992808478425435,
+        "semester": 6,
+        "semesterConfidence": 0.26666666666666666,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Mohammed Ashik M",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152313074",
+            "confidence": 69.93,
+            "source": "OCR",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 6,
+            "confidence": 26.67,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "S.No Semester Course Code",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 6,
+          "courseCode": "20HS051",
+          "courseName": "Universal Human Values and Understanding Harmony",
+          "credits": "1",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l14",
+            "p0_img_l15",
+            "p0_img_l16",
+            "p0_img_l17",
+            "p0_img_l18",
+            "p0_img_l19"
+          ],
+          "code_right": 344.0,
+          "grade_left": 1152.0,
+          "originalCourseName": "Universal Human Values and Understanding Harmony",
+          "normalizedCourseName": "Universal Human Values and Understanding Harmony",
+          "gradeConfidence": 0.9985722303390503,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20HS051",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Universal Human Values and Understanding Harmony",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 6,
+          "courseCode": "20CS601",
+          "courseName": "C# and .Net Framework",
+          "credits": "2",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l20",
+            "p0_img_l21",
+            "p0_img_l22",
+            "p0_img_l23",
+            "p0_img_l24",
+            "p0_img_l25"
+          ],
+          "code_right": 343.0,
+          "grade_left": 1157.0,
+          "originalCourseName": "C# and .Net Framework",
+          "normalizedCourseName": "C# and .Net Framework",
+          "gradeConfidence": 0.9984703063964844,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS601",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "C# and .Net Framework",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 6,
+          "courseCode": "20CS611",
+          "courseName": "Cryptography and Network Security",
+          "credits": "3",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l26",
+            "p0_img_l27",
+            "p0_img_l28",
+            "p0_img_l29",
+            "p0_img_l30",
+            "p0_img_l31"
+          ],
+          "code_right": 343.0,
+          "grade_left": 1152.0,
+          "originalCourseName": "Cryptography and Network Security",
+          "normalizedCourseName": "Cryptography and Network Security",
+          "gradeConfidence": 0.9988795518875122,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS611",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Cryptography and Network Security",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 6,
+          "courseCode": "20CS612",
+          "courseName": "Software Testing",
+          "credits": "4",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l32",
+            "p0_img_l33",
+            "p0_img_l34",
+            "p0_img_l35",
+            "p0_img_l36",
+            "p0_img_l37"
+          ],
+          "code_right": 342.0,
+          "grade_left": 1157.0,
+          "originalCourseName": "Software Testing",
+          "normalizedCourseName": "Software Testing",
+          "gradeConfidence": 0.984676718711853,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS612",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Software Testing",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 6,
+          "courseCode": "20CS663",
+          "courseName": "Internet of Things",
+          "credits": "5",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l38",
+            "p0_img_l39",
+            "p0_img_l40",
+            "p0_img_l41",
+            "p0_img_l42",
+            "p0_img_l43"
+          ],
+          "code_right": 344.0,
+          "grade_left": 1152.0,
+          "originalCourseName": "Internet of Things",
+          "normalizedCourseName": "Internet of Things",
+          "gradeConfidence": 0.9988821744918823,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS663",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Internet of Things",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 6,
+          "courseCode": "20CS666",
+          "courseName": "High Speed Networks",
+          "credits": "6",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l44",
+            "p0_img_l45",
+            "p0_img_l46",
+            "p0_img_l47",
+            "p0_img_l48"
+          ],
+          "code_right": 342.0,
+          "grade_left": 1157.0,
+          "originalCourseName": "High Speed Networks",
+          "normalizedCourseName": "High Speed Networks",
+          "gradeConfidence": 0.9967138767242432,
+          "confidence": 96,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS666",
+              "confidence": 96.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "High Speed Networks",
+              "confidence": 96.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 6,
+          "courseCode": "20CS621",
+          "courseName": "C# and .Net Framework Laboratory",
+          "credits": "7",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l49",
+            "p0_img_l50",
+            "p0_img_l51",
+            "p0_img_l52",
+            "p0_img_l53",
+            "p0_img_l54"
+          ],
+          "code_right": 341.0,
+          "grade_left": 1152.0,
+          "originalCourseName": "C# and .Net Framework Laboratory",
+          "normalizedCourseName": "C# and .Net Framework Laboratory",
+          "gradeConfidence": 0.9898672103881836,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS621",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "C# and .Net Framework Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 6,
+          "courseCode": "20CS622",
+          "courseName": "Mini Project",
+          "credits": "8",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l55",
+            "p0_img_l56",
+            "p0_img_l57",
+            "p0_img_l58",
+            "p0_img_l59",
+            "p0_img_l60"
+          ],
+          "code_right": 342.0,
+          "grade_left": 1151.0,
+          "originalCourseName": "Mini Project",
+          "normalizedCourseName": "Mini Project",
+          "gradeConfidence": 0.9892027378082275,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS622",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Mini Project",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 6,
+          "courseCode": "20HR634",
+          "courseName": "Career Development Skills - IV.",
+          "credits": "6",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l61",
+            "p0_img_l62",
+            "p0_img_l63",
+            "p0_img_l64",
+            "p0_img_l65"
+          ],
+          "code_right": 344.0,
+          "grade_left": 1151.0,
+          "originalCourseName": "Career Development Skills - IV.",
+          "normalizedCourseName": "Career Development Skills - IV.",
+          "gradeConfidence": 0.9941555261611938,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20HR634",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills - IV.",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1
+        ],
+        "pageIndexes": [
+          1
+        ],
+        "pageStart": 1,
+        "pageEnd": 1,
+        "groupConfidence": 0.8998,
+        "confidence": {
+          "register_confidence": 0.6992808478425435,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.8998
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 0.9642,
+        "line_count": 67,
+        "attempts": [
+          "preprocess"
+        ],
+        "selected": "preprocess",
+        "page_indices": [
+          0
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 67,
+          "detected_course_codes": 9,
+          "logical_rows": 19,
+          "subject_objects": 9,
+          "validated_subjects": 9
+        }
+      },
+      "raw_text": "K.S.R COLLEGE OF ENGINEERING,\nT|RUCHENGODE - 637 215\n(Autonomous)\nFUTURE\nUG & PG END SEMESTER EXAMINATIONS - June 2026\n: 73152313074\nRegister Number\nName of the Candidate\n: MOHAMMED ASHIK M\n: B.E - Computer Science and Engineering\nProgramme\nS.NO SEMESTER COURSE CODE\nCOURSE NAME\nGRADE OBTAINED RESULT\n20HS051\n6\nUniversal Human Values and Understanding Harmony\n1\nB+\nP\nC# and .Net Framework\n20CS601\n6\n2\nA\nP\n6\n20CS611\n3\nCryptography and Network Security\nB+\nP\n20CS612\nSoftware Testing\n6\n4\nA\nP\n20CS663\nInternet of Things\n5\n6\nB+\nP\n20CS666\nHigh Speed Networks\n6\n6\nA\n20CS621\nC# and .Net Framework Laboratory\n7\n6\nA+\nP\n20CS622\nMini Project\n8\n6\nA+\nP\n20HR634\nCareer Development Skills - IV.\n6\nA+\nP\nRevaluation Schedule",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 1 pages ===",
+        "[INFO] Grouped 1 pages into 1 student record documents.",
+        "[INFO] Processing Student Group 1/1 (Register: 73152313074, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 1321.00",
+        "[INFO] Page 1: Stripped 0 header lines, 2 footer lines.",
+        "[INFO] Successfully merged 1 pages into 67 continuous document lines.",
+        "[INFO] Detected document type: result_sheet",
+        "[INFO] Matched University Profile: Generic Academic Institution",
+        "[INFO] Anchor label matched in text: 'Register Number'",
+        "[INFO] Selected Register Number: '73152313074' with confidence 69.92808478425435% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 6",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 19 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152313074'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : MOHAMMED ASHIK M'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '6'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 6 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 6",
+        "[INFO] [Semester Inference] Resolved Semester=6 with confidence=0.27",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 0 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
-const VALID_GRADES = new Set(['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'RA', 'SA', 'W', 'WD']);
+const VALID_GRADES = new Set(['O', 'S', 'A+', 'A', 'B+', 'B', 'C', 'U', 'AB', 'RA', 'SA', 'W', 'WD']);
 const VALID_RESULTS = new Set(['P', 'F', 'AB', 'W', '']);
-const COURSE_CODE_RE = /^(?:\d{2}[A-Z]{2,4}\d{2,4}|[A-Z]{2,4}\d{3,5})$/;
+const COURSE_CODE_RE = /^(?:\d{2}[A-Z]{2,4}\d{2,4}[A-Z]?|[A-Z]{2,4}\d{3,5}[A-Z]?|\d{2}[A-Z]{3,4}\d{2,4}|[A-Z0-9]{5,10})$/;
 
 const DEFAULTS = {
   minOcrConfidence: Number(process.env.OCR_MIN_CONF || 0.65),
@@ -12,6 +12,7 @@ const DEFAULTS = {
 
 const GRADE_POINTS = {
   'O': 10,
+  'S': 10,
   'A+': 9,
   'A': 8,
   'B+': 7,
@@ -76,7 +77,7 @@ function validateMarksheetData(marksheet, options = {}) {
 
   const semester = Number(marksheet.semester);
   if (!Number.isFinite(semester) || semester < 1 || semester > 8) {
-    warnings.push('Semester must be between 1-8');
+    errors.push('Semester must be between 1-8');
   }
 
   if (!Array.isArray(marksheet.subjects) || marksheet.subjects.length === 0) {

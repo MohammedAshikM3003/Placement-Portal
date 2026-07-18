@@ -3,7 +3,7 @@ const { extractAllMarksheetsFromPDF } = require('./services/marksheetExtractionS
 
 async function testExtraction() {
   try {
-    const pdfBuffer = fs.readFileSync('d:\\Placement-Portal\\0 MERGED.pdf');
+    const pdfBuffer = fs.readFileSync('d:\\Placement-Portal\\0 MERGED testing.pdf');
     
     console.log('\n========== RUNNING FULL EXTRACTION ==========\n');
     

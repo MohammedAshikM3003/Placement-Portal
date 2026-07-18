@@ -10,7 +10,7 @@ import mongoDBService from '../services/mongoDBService.jsx';
 
 // Grade to grade-point mapping
 const GRADE_POINTS = {
-    'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
+    'O': 10, 'S': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
     'C': 5, 'U': 0, 'RA': 0, 'AB': 0, 'SA': 0, 'W': 0,
 };
 
@@ -172,6 +172,14 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                     <span className={styles.infoValue}>{calculateSGPA()}</span>
                                 </div>
                                 <div className={styles.infoRow}>
+                                    <span className={styles.infoLabel}>Review Status</span>
+                                    <span className={styles.infoColon}>:</span>
+                                    <span className={styles.infoValue} style={{
+                                        fontWeight: '700',
+                                        color: extractedData?.reviewStatus === 'MANUAL_REVIEW_REQUIRED' ? '#ef4444' : extractedData?.reviewStatus === 'NEEDS_REVIEW' ? '#f59e0b' : '#10b981'
+                                    }}>{extractedData?.reviewStatus || 'AUTO_ACCEPTED'}</span>
+                                </div>
+                                <div className={styles.infoRow}>
                                     <span className={styles.infoLabel}>Overall CGPA</span>
                                     <span className={styles.infoColon}>:</span>
                                     <span className={styles.infoValue}>{studentData?.overallCgpa || '0.0'}</span>
@@ -243,10 +251,19 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
                                                         const isFail = resultValue
                                                             ? resultValue === 'F'
                                                             : (course.grade === 'U' || course.grade === 'RA');
+                                                        
+                                                        const needsReview = course.reviewStatus && course.reviewStatus !== 'AUTO_ACCEPTED';
+                                                        const confidence = course.confidence || 100;
 
                                                         return (
-                                                            <tr key={index}>
-                                                                <td>{course.courseCode || '--'}</td>
+                                                            <tr key={index} style={{
+                                                                backgroundColor: needsReview ? 'rgba(245, 158, 11, 0.05)' : 'transparent',
+                                                                borderLeft: needsReview ? '4px solid #f59e0b' : 'none'
+                                                            }}>
+                                                                <td>
+                                                                    {course.courseCode || '--'}
+                                                                    {needsReview && <span style={{ marginLeft: '8px', color: '#f59e0b', fontSize: '0.75rem', cursor: 'help' }} title={`Review Required: confidence is ${confidence}%`}>⚠️</span>}
+                                                                </td>
                                                                 <td>{course.courseName || '--'}</td>
                                                                 <td>{course.credits || '0'}</td>
                                                                 <td style={{ fontWeight: '600' }}>{course.grade || '--'}</td>

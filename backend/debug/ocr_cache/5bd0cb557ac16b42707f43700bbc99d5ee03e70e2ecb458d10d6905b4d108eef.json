@@ -1,0 +1,618 @@
+{
+  "success": true,
+  "total_pages": 1,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "result_sheet",
+      "document_language": "English",
+      "student_info": {
+        "name": "Jayaprakash T",
+        "register_number": "73152311011",
+        "reg_conf": 0.6992808478425435,
+        "semester": 6,
+        "semesterConfidence": 0.39999999999999997,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Jayaprakash T",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152311011",
+            "confidence": 69.93,
+            "source": "OCR",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 6,
+            "confidence": 40.0,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "",
+            "confidence": 0.0,
+            "source": "OCR",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 6,
+          "courseCode": "20AU611",
+          "courseName": "Automotive Engine Components Design.",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l15",
+            "p0_img_l16",
+            "p0_img_l17",
+            "p0_img_l18",
+            "p0_img_l19",
+            "p0_img_l20"
+          ],
+          "originalCourseName": "Automotive Engine Components Design.",
+          "normalizedCourseName": "Automotive Engine Components Design.",
+          "gradeConfidence": 0.9977855682373047,
+          "confidence": 92,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20AU611",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Automotive Engine Components Design.",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 6,
+          "courseCode": "20AU612",
+          "courseName": "Automotive Pollution and Control",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l21",
+            "p0_img_l22",
+            "p0_img_l23",
+            "p0_img_l24",
+            "p0_img_l25",
+            "p0_img_l26"
+          ],
+          "originalCourseName": "Automotive Pollution and Control",
+          "normalizedCourseName": "Automotive Pollution and Control",
+          "gradeConfidence": 0.998297929763794,
+          "confidence": 94,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20AU612",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Automotive Pollution and Control",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 6,
+          "courseCode": "20AU613",
+          "courseName": "Finite Element Analysis. +V d",
+          "credits": "4",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l27",
+            "p0_img_l28",
+            "p0_img_l29",
+            "p0_img_l30",
+            "p0_img_l31",
+            "p0_img_l32",
+            "p0_img_l33",
+            "p0_img_l34",
+            "p0_img_l35"
+          ],
+          "originalCourseName": "Finite Element Analysis. +V d",
+          "normalizedCourseName": "Finite Element Analysis. +V d",
+          "gradeConfidence": 0.9992908835411072,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20AU613",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Finite Element Analysis. +V d",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 6,
+          "courseCode": "20AU621",
+          "courseName": "Vehicle Components Design and Analysis Laboratory.",
+          "credits": "0",
+          "grade": "",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l36",
+            "p0_img_l37",
+            "p0_img_l38",
+            "p0_img_l39",
+            "p0_img_l40",
+            "p0_img_l41",
+            "p0_img_l42",
+            "p0_img_l43",
+            "p0_img_l44"
+          ],
+          "originalCourseName": "Vehicle Components Design and Analysis Laboratory.",
+          "normalizedCourseName": "Vehicle Components Design and Analysis Laboratory.",
+          "gradeConfidence": 1.0,
+          "confidence": 87,
+          "errors": [],
+          "warnings": [
+            "Grade value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20AU621",
+              "confidence": 87.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Vehicle Components Design and Analysis Laboratory.",
+              "confidence": 87.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "0",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 6,
+          "courseCode": "20ME908",
+          "courseName": "Fibre Reinforced Plastics d",
+          "credits": "8",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l45",
+            "p0_img_l46",
+            "p0_img_l47",
+            "p0_img_l48",
+            "p0_img_l49",
+            "p0_img_l50",
+            "p0_img_l51",
+            "p0_img_l52"
+          ],
+          "originalCourseName": "Fibre Reinforced Plastics d",
+          "normalizedCourseName": "Fibre Reinforced Plastics d",
+          "gradeConfidence": 0.9986751675605774,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20ME908",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Fibre Reinforced Plastics d",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 6,
+          "courseCode": "20HR614",
+          "courseName": "Career Development Skills - IV.",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l53",
+            "p0_img_l54",
+            "p0_img_l55",
+            "p0_img_l56",
+            "p0_img_l57",
+            "p0_img_l58"
+          ],
+          "originalCourseName": "Career Development Skills - IV.",
+          "normalizedCourseName": "Career Development Skills - IV.",
+          "gradeConfidence": 0.9975433349609375,
+          "confidence": 94,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HR614",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills - IV.",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1
+        ],
+        "pageIndexes": [
+          1
+        ],
+        "pageStart": 1,
+        "pageEnd": 1,
+        "groupConfidence": 0.8998,
+        "confidence": {
+          "register_confidence": 0.6992808478425435,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.8998
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 0.9588,
+        "line_count": 60,
+        "attempts": [
+          "preprocess"
+        ],
+        "selected": "preprocess",
+        "page_indices": [
+          0
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 60,
+          "detected_course_codes": 6,
+          "logical_rows": 19,
+          "subject_objects": 6,
+          "validated_subjects": 6
+        }
+      },
+      "raw_text": "K.S.R COLLEGE OF ENGINEERING,\nT|RUCHENGODE - 637 215\n(Autonomous)\nFUTURE\nUG & PG END SEMESTER EXAMINATIONS - June 2026\n: 73152311011\nRegister Number\nName of the Candidate\n: JAYAPRAKASH T\n: B.E - Automobile Engineering.\nProgramme\nS.NO 9\nSEMESTER COURSE CODE\nCOURSE NAME\nGRADE OBTAINED RESULT\n20AU611\n6\n1\nAutomotive Engine Components Design.\nA+\nP\n20AU612\nAutomotive Pollution and Control\n6\n2\nA+\nP\n20AU613\nFinite Element Analysis.\n6\nA+\nP\n9\n4\n+V\nd\n20AU621\nVehicle Components Design and Analysis Laboratory.\n6\n0\nP\n6\n9\n0\nP\n20ME908\nFibre Reinforced Plastics\n6\nP\nA+\n8\n9\nd\n20HR614\n6\nCareer Development Skills - IV.\n6\nA+\nP\nRevaluation Schedule",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 1 pages ===",
+        "[INFO] Grouped 1 pages into 1 student record documents.",
+        "[INFO] Processing Student Group 1/1 (Register: 73152311011, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 1321.00",
+        "[INFO] Page 1: Stripped 0 header lines, 2 footer lines.",
+        "[INFO] Successfully merged 1 pages into 60 continuous document lines.",
+        "[INFO] Detected document type: result_sheet",
+        "[INFO] Matched University Profile: Generic Academic Institution",
+        "[INFO] Anchor label matched in text: 'Register Number'",
+        "[INFO] Selected Register Number: '73152311011' with confidence 69.92808478425435% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 4",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 19 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152311011'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : JAYAPRAKASH T'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Credits detected: '0'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Credits detected: '0'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[INFO] Reconstructed 6 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 6 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 4",
+        "[INFO] [Semester Inference] Resolved Semester=6 with confidence=0.40",
+        "[INFO] Completed student group extraction: 6 subjects parsed, 4 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    }
+  ]
+}

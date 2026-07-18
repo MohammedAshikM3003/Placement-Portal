@@ -6,6 +6,8 @@ import Sidebar from '../components/Sidebar/Cosidebar.js';
 import Adminicon from '../assets/Adminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig.js';
 import styles from './Coo_MS_SemesterDetail.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
+import CoordinatorSaveSuccessAlert from '../components/alerts/CoordinatorSaveSuccessAlert';
 
 const SEMESTER_DETAIL_CACHE_KEY = 'coo-ms-semester-detail-cache';
 const SEMESTER_DETAIL_LOCAL_CACHE_KEY = 'semester_detail_cache';
@@ -103,6 +105,12 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   const [semesterRecords, setSemesterRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterMinSgpa, setFilterMinSgpa] = useState('');
+  const [filterMaxSgpa, setFilterMaxSgpa] = useState('');
+  const [filterMinCgpa, setFilterMinCgpa] = useState('');
+  const [filterMaxCgpa, setFilterMaxCgpa] = useState('');
 
   const effectivePdfName = extractedPdfName || fileName;
 
@@ -194,6 +202,65 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
       return display;
     });
   }, [extractedStudents, semesterRecords]);
+
+  const filteredStudents = useMemo(() => {
+    return displayStudents.filter((student) => {
+      // 1. Search filter: student name or register number
+      if (filterSearch.trim()) {
+        const query = filterSearch.toLowerCase().trim();
+        const matchesName = (student.name || '').toLowerCase().includes(query);
+        const matchesRegNo = (student.registerNumber || '').toLowerCase().includes(query);
+        if (!matchesName && !matchesRegNo) {
+          return false;
+        }
+      }
+
+      // 2. Status filter: Arrear Students (arrears > 0), Cleared Students (arrears === 0)
+      if (filterStatus !== 'all') {
+        const arrearsCount = parseInt(student.arrears) || 0;
+        if (filterStatus === 'arrear' && arrearsCount === 0) {
+          return false;
+        }
+        if (filterStatus === 'cleared' && arrearsCount > 0) {
+          return false;
+        }
+      }
+
+      // 3. SGPA range filter
+      if (filterMinSgpa.trim()) {
+        const minSgpa = parseFloat(filterMinSgpa);
+        const studentSgpa = parseFloat(student.sgpa) || 0;
+        if (studentSgpa < minSgpa) {
+          return false;
+        }
+      }
+      if (filterMaxSgpa.trim()) {
+        const maxSgpa = parseFloat(filterMaxSgpa);
+        const studentSgpa = parseFloat(student.sgpa) || 0;
+        if (studentSgpa > maxSgpa) {
+          return false;
+        }
+      }
+
+      // 4. CGPA range filter
+      if (filterMinCgpa.trim()) {
+        const minCgpa = parseFloat(filterMinCgpa);
+        const studentCgpa = parseFloat(student.overallCgpa) || 0;
+        if (studentCgpa < minCgpa) {
+          return false;
+        }
+      }
+      if (filterMaxCgpa.trim()) {
+        const maxCgpa = parseFloat(filterMaxCgpa);
+        const studentCgpa = parseFloat(student.overallCgpa) || 0;
+        if (studentCgpa > maxCgpa) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [displayStudents, filterSearch, filterStatus, filterMinSgpa, filterMaxSgpa, filterMinCgpa, filterMaxCgpa]);
 
   useEffect(() => {
     console.log('📊 Semester Detail page loaded');
@@ -297,6 +364,14 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
   const arrearStudents = totalStudents - allClearStudents;
   const allSubmitted = displayStudents.length > 0 && displayStudents.every((student) => student.submitted);
 
+  const hasActiveFilters = 
+    filterSearch.trim() !== '' ||
+    filterStatus !== 'all' ||
+    filterMinSgpa.trim() !== '' ||
+    filterMaxSgpa.trim() !== '' ||
+    filterMinCgpa.trim() !== '' ||
+    filterMaxCgpa.trim() !== '';
+
   useEffect(() => {
     if (!Array.isArray(extractedStudents) || extractedStudents.length === 0) {
       return;
@@ -346,6 +421,15 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
 
   const handleBack = () => {
     navigate('/coo-manage-students-semester');
+  };
+
+  const handleClearFilters = () => {
+    setFilterSearch('');
+    setFilterStatus('all');
+    setFilterMinSgpa('');
+    setFilterMaxSgpa('');
+    setFilterMinCgpa('');
+    setFilterMaxCgpa('');
   };
 
   const handleRemoveFile = () => {
@@ -455,6 +539,16 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
 
   return (
     <>
+      <CoordinatorSaveSuccessAlert
+        isOpen={!!submitMessage}
+        onClose={() => {
+          setSubmitMessage('');
+          navigate('/coo-manage-students-semester');
+        }}
+        title="Submitted!"
+        heading="Semester Submitted ✓"
+        message="Semester records have been Successfully submitted in the Portal"
+      />
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} Adminicon={Adminicon} />
       <div className={styles['co-semester-layout']}>
         <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="manage-students" onViewChange={onViewChange}
@@ -463,89 +557,179 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
 
         <main className={styles['semester-content']}>
           <section className={styles['top-grid']}>
-            <div className={styles['stats-group']}>
-              <div className={styles['stat-card']}>
-                <span className={styles['stat-title']}>Total Students</span>
-                <span className={styles['stat-count']}>{totalStudents}</span>
+            <div className={`${styles['stat-card']} ${styles['stat-card-total-students']}`}>
+              <span className={styles['stat-title']}>Total Students</span>
+              <span className={styles['stat-count']}>{totalStudents}</span>
+            </div>
+
+            <div className={`${styles['stat-card']} ${styles['stat-card-all-clear']}`}>
+              <span className={styles['stat-title']}>All clear Students</span>
+              <span className={styles['stat-count']}>{allClearStudents}</span>
+            </div>
+
+            <div className={styles['filter-card']}>
+              <div className={styles['filter-header-container']}>
+                <span className={styles['filter-badge']}>Filter & Sort</span>
+                {hasActiveFilters && (
+                  <button 
+                    type="button" 
+                    className={styles['clear-btn-header']} 
+                    onClick={handleClearFilters}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-              <div className={styles['stat-card']}>
-                <span className={styles['stat-title']}>All clear Students</span>
-                <span className={styles['stat-count']}>{allClearStudents}</span>
-              </div>
-              <div className={styles['stat-card']}>
-                <span className={styles['stat-title']}>Arrear Students</span>
-                <span className={styles['stat-count']}>{arrearStudents}</span>
+              <div className={styles['fields-container']}>
+                <div className={styles['filter-row']}>
+                  <div className={styles['input-wrapper']}>
+                    <label className={styles['static-label']}>Student Name / Register Number</label>
+                    <div className={styles['input-container']}>
+                      <input 
+                        type="text" 
+                        className={styles['text-input']}
+                        placeholder="Enter Name or Reg No" 
+                        value={filterSearch} 
+                        onChange={(e) => setFilterSearch(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  <div className={styles['input-wrapper']}>
+                    <label className={styles['static-label']}>Status</label>
+                    <Dropdown
+                      options={[
+                        { label: 'All Students', value: 'all' },
+                        { label: 'Cleared Students', value: 'cleared' },
+                        { label: 'Arrear Students', value: 'arrear' }
+                      ]}
+                      selectedOption={filterStatus}
+                      onSelect={(val) => setFilterStatus(val || 'all')}
+                      placeholder="All Students"
+                      role="coo"
+                      className={styles['dropdown-wrapper']}
+                      headerClassName={styles['dropdown-header']}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles['filter-row']}>
+                  <div className={styles['input-wrapper']}>
+                    <label className={styles['static-label']}>SGPA Range</label>
+                    <div className={styles['range-inputs']}>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0"
+                        max="10"
+                        placeholder="Min" 
+                        value={filterMinSgpa} 
+                        onChange={(e) => setFilterMinSgpa(e.target.value)} 
+                      />
+                      <span>to</span>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0"
+                        max="10"
+                        placeholder="Max" 
+                        value={filterMaxSgpa} 
+                        onChange={(e) => setFilterMaxSgpa(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  <div className={styles['input-wrapper']}>
+                    <label className={styles['static-label']}>CGPA Range</label>
+                    <div className={styles['range-inputs']}>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0"
+                        max="10"
+                        placeholder="Min" 
+                        value={filterMinCgpa} 
+                        onChange={(e) => setFilterMinCgpa(e.target.value)} 
+                      />
+                      <span>to</span>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0"
+                        max="10"
+                        placeholder="Max" 
+                        value={filterMaxCgpa} 
+                        onChange={(e) => setFilterMaxCgpa(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <aside className={styles['upload-panel']}>
-              <div className={styles['upload-icons']}>
-                <button type="button" className={styles['icon-action']} aria-label="Remove uploaded file" onClick={handleRemoveFile}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4h8v2" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                  </svg>
-                </button>
-                <button type="button" className={styles['icon-action']} aria-label="Preview uploaded file">
-                  <EyeIcon />
-                </button>
-              </div>
-              <div className={styles['upload-content']}>
-                <div className={styles['upload-graphic']}>
-                  <UploadIcon />
-                </div>
-                <div className={styles['upload-title']}>Upload Your PDF / Drop the PDF</div>
-                <h1 className={styles['upload-file-name']}>{fileName}</h1>
-                <div className={styles['upload-subtext']}>Confirmed semester file for review</div>
-              </div>
-            </aside>
+            <div className={`${styles['stat-card']} ${styles['stat-card-arrear-students']}`}>
+              <span className={styles['stat-title']}>Arrear Students</span>
+              <span className={styles['stat-count']}>{arrearStudents}</span>
+            </div>
+
+            <div className={`${styles['stat-card']} ${styles['stat-card-total-subjects']}`}>
+              <span className={styles['stat-title']}>Total Subjects</span>
+              <span className={styles['stat-count']}>{subjects.length}</span>
+            </div>
           </section>
 
           <section className={styles['table-card']}>
             <div className={styles['section-header']}>
               <h2>Computer Science &amp; Engineering</h2>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="button" className={styles['print-button']} onClick={handleSubmit} disabled={isSubmitting || !displayStudents.length || allSubmitted}>
-                  {allSubmitted ? 'Submitted' : (isSubmitting ? 'Submitting...' : 'Submit')}
-                </button>
-                <button type="button" className={styles['print-button']} onClick={handleBack}>
-                  Back
+                <button 
+                  type="button" 
+                  className={styles['print-btn']} 
+                  onClick={() => window.print()}
+                >
+                  Print
                 </button>
               </div>
             </div>
 
-            {(submitMessage || submitError) && (
-              <div style={{ marginBottom: '16px', color: submitError ? '#c53030' : '#1f7a1f', fontWeight: 600 }}>
-                {submitError || submitMessage}
+            {submitError && (
+              <div style={{ marginBottom: '16px', color: '#c53030', fontWeight: 600 }}>
+                {submitError}
               </div>
             )}
 
             <div className={styles['table-wrap']}>
-              {displayStudents.length === 0 ? (
-                <div style={{padding: '40px', textAlign: 'center', color: '#999'}}>
-                  {isLoadingRecords ? 'Loading semester records...' : 'No students to display'}
-                </div>
-              ) : (
-                <table className={styles['subject-table']}>
-                  <thead>
-                    <tr>
-                      <th>S.No</th>
-                      <th>Student Name</th>
-                      <th>Register Number</th>
-                      <th>Semester</th>
-                      <th>Cleared</th>
-                      <th>Arrear</th>
-                      <th>SGPA</th>
-                      <th>CGPA</th>
-                      <th>Submitted</th>
-                      <th>View</th>
+              <table className={styles['subject-table']}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Student Name</th>
+                    <th>Register Number</th>
+                    <th>Semester</th>
+                    <th>Cleared</th>
+                    <th>Arrear</th>
+                    <th>SGPA</th>
+                    <th>CGPA</th>
+                    <th>Submitted</th>
+                    <th>View</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoadingRecords ? (
+                    <tr className={styles['co-history-loading-row']}>
+                      <td colSpan="10" className={styles['co-history-loading-cell']}>
+                        <div className={styles['co-history-loading-wrapper']}>
+                          <div className={styles['co-history-spinner']}></div>
+                          <span className={styles['co-history-loading-text']}>Loading semester records...</span>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {displayStudents.map(function(student, index) {
+                  ) : filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" style={{ padding: '40px', textAlign: 'center', color: '#999', backgroundColor: 'transparent' }}>
+                        {displayStudents.length === 0 ? 'No students to display' : 'No students matching the applied filters'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map(function(student, index) {
                       const isSubmitted = Boolean(student.submitted);
                       return (
                         <tr key={student.id}>
@@ -582,10 +766,27 @@ function CooSemesterDetail({ onLogout, onViewChange }) {
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
-              )}
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className={styles['sticky-action-bar']}>
+              <button 
+                type="button" 
+                className={styles['back-btn']} 
+                onClick={handleBack}
+              >
+                Back
+              </button>
+              <button 
+                type="button" 
+                className={styles['submit-btn']} 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || !displayStudents.length || allSubmitted || !!submitMessage}
+              >
+                {(allSubmitted || !!submitMessage) ? 'Submitted' : (isSubmitting ? 'Submitting...' : 'Submit')}
+              </button>
             </div>
           </section>
         </main>

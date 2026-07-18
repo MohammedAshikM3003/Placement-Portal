@@ -4,7 +4,7 @@ import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import { API_BASE_URL } from '../utils/apiConfig';
-import { CertificatePreviewProgressAlert } from '../components/alerts';
+import { CertificatePreviewProgressAlert, PreviewProgressAlert, PreviewFailedAlert } from '../components/alerts';
 import styles from './Coo_ManageStudentsSemester_new.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import semesterUploadIcon from "../assets/Cood_ms_semuploadicon.svg";
@@ -115,6 +115,9 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   const [uploadId, setUploadId] = useState('');
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showSemNotePopup, setShowSemNotePopup] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState(null);
+  const [previewPopupState, setPreviewPopupState] = useState('none');
+  const [previewProgress, setPreviewProgress] = useState(0);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
@@ -198,7 +201,22 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
   }, [hasPreviewData, masterSubjects, subjects]);
 
   const buildSubjectRows = (rawSubjects) => {
+    console.log("Input subjects:", rawSubjects.length);
     console.log('🔄 [buildSubjectRows] Received raw subjects:', rawSubjects.slice(0, 2).map(s => ({code: s.courseCode, semester: s.semester})));
+    
+    // Log duplicates using courseCode + semester key
+    const freq = {};
+    for (const s of rawSubjects) {
+      const code = s.courseCode || s.code || '';
+      const sem = s.semester || s.sem || '';
+      const key = `${code}_${sem}`;
+      freq[key] = (freq[key] || 0) + 1;
+    }
+    console.log("Subject frequency table (duplicates before name key integration):");
+    console.table(
+      Object.entries(freq).filter(([k, v]) => v > 1)
+    );
+
     const subjectMap = new Map();
 
     for (const rawSubject of rawSubjects) {
@@ -211,10 +229,13 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
       const rawSem = rawSemCandidate && rawSemCandidate !== 'undefined' ? rawSemCandidate : null;
       const semesterValue = rawSem || '';
       const semesterKey = semesterValue ? String(semesterValue) : 'NA';
-      const mapKey = `${courseCode}_${semesterKey}`;
+      
+      // Use name in mapKey to prevent distinct subjects (like Technical English-I and II) from collapsing
+      const nameValue = String(rawSubject.originalCourseName || rawSubject.courseName || rawSubject.course_name || '').trim().toUpperCase();
+      const mapKey = `${courseCode}_${semesterKey}_${nameValue}`;
 
       if (!subjectMap.has(mapKey)) {
-        console.log(`🔍 [${courseCode}] rawSem=${rawSem}, final=${semesterValue}`);
+        console.log(`🔍 [${courseCode}] rawSem=${rawSem}, final=${semesterValue}, name=${nameValue}`);
         const semesterNumber = Number(semesterValue) || 0;
         const yearValue = semesterNumber ? Math.ceil(semesterNumber / 2) : (masterSubject?.year || '');
 
@@ -231,10 +252,26 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           masterCredits: masterSubject?.credits ?? null,
           sem: rawSubject.sem ?? null,
         });
+      } else {
+        console.log(
+          "Duplicate removed (collided on identical key):",
+          mapKey,
+          "Existing in Map:",
+          subjectMap.get(mapKey),
+          "New Duplicate Attempt:",
+          rawSubject
+        );
       }
     }
 
-    return Array.from(subjectMap.values());
+    const rows = Array.from(subjectMap.values());
+    console.log("Output rows:", rows.length);
+
+    const inputCodes = rawSubjects.map(s => s.courseCode || s.code);
+    const outputCodes = rows.map(r => r.courseCode || r.code);
+    console.log("Missing course codes in output:", inputCodes.filter(x => !outputCodes.includes(x)));
+
+    return rows;
   };
 
   const handleGradeChange = (subjectId, grade) => {
@@ -394,12 +431,39 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
     setShowUploadingPopup(true);
     setUploadProgress(10);
 
+    const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    setExtractionProgress({
+      totalMarksheets: 0,
+      processedMarksheets: 0,
+      currentRegisterNo: '',
+      currentStage: 'Running OCR',
+      status: 'processing'
+    });
+
+    let progressInterval = setInterval(async () => {
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const pResp = await fetch(`${API_BASE_URL}/marksheets/progress/${jobId}`, {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+        });
+        if (pResp.ok) {
+          const progressData = await pResp.json();
+          if (progressData && progressData.status === 'processing') {
+            setExtractionProgress(progressData);
+          }
+        }
+      } catch (err) {
+        console.warn('Error polling progress:', err);
+      }
+    }, 500);
+
     // Upload file to backend for preview extraction and subject lookup
     (async () => {
       try {
         const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('semester', selectedSemester);
+        formData.append('jobId', jobId);
         console.log('📘 Selected Semester:', selectedSemester);
 
         const authToken = localStorage.getItem('authToken');
@@ -438,6 +502,10 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           clearInterval(fakeProgress);
           fakeProgress = null;
         }
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
 
         // smoothly animate to 100% using requestAnimationFrame
         const animateTo100 = () => {
@@ -459,6 +527,7 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           setTimeout(() => {
             setShowUploadingPopup(false);
             setShowSemNotePopup(true);
+            setExtractionProgress(null);
           }, 600);
         };
 
@@ -487,57 +556,23 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
           submitted: Boolean(marksheet.submitted)
         }));
 
-        if (finalSubjects.length === 0 || extracted.length === 0) {
-          const parseFormData = new FormData();
-          parseFormData.append('file', selectedFile);
-
-          const parseUrl = API_BASE_URL + '/marksheet/parse';
-          console.log('📤 Upload URL:', parseUrl);
-          const parseResponse = await fetch(parseUrl, {
-            method: 'POST',
-            body: parseFormData,
-          });
-
-          if (parseResponse.ok) {
-            const parseBody = await parseResponse.json();
-            const marksheetSemester = parseBody.student_info?.semester ?? null;
-            // Add semester from marksheet to each subject
-            const enrichedSubjects = Array.isArray(parseBody.subjects) 
-              ? parseBody.subjects.map(subject => ({
-                  ...subject,
-                  semester: subject.semester || subject.sem || marksheetSemester || ''
-                }))
-              : [];
-            finalSubjects = buildSubjectRows(enrichedSubjects);
-            
-            if (parseBody.student_info) {
-              const studentMarksheet = {
-                regNo: parseBody.student_info.register_number || '',
-                studentName: parseBody.student_info.name || '',
-                programme: parseBody.student_info.programme || '',
-                examDate: parseBody.student_info.examDate || parseBody.student_info.exam_month_year || '',
-                semester: marksheetSemester,
-                subjects: enrichedSubjects
-              };
-              studentData = [{
-                ...studentMarksheet,
-                extractedPdfName: extractedPdf,
-                submitted: Boolean(studentMarksheet.submitted)
-              }];
-            }
-          }
-        }
+        // End of fallback removal
 
         setExtractedStudents(studentData);
         setSubjects(finalSubjects);
         setHasPreviewData(true);
       } catch (err) {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
         console.error('Error extracting preview:', err);
         setSubjects([]);
         setHasPreviewData(false);
         setUploadFailedMessage(err.message || 'Failed to process uploaded file');
         setShowUploadFailedPopup(true);
         setShowUploadingPopup(false);
+        setExtractionProgress(null);
       } finally {
         setIsLoadingPreview(false);
       }
@@ -549,14 +584,36 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
       return;
     }
 
-    const previewUrl = window.URL.createObjectURL(selectedFile);
-    previewUrlRef.current = previewUrl;
-    const previewWindow = window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    setPreviewPopupState('progress');
+    setPreviewProgress(0);
 
-    if (!previewWindow) {
-      window.URL.revokeObjectURL(previewUrl);
-      previewUrlRef.current = null;
-    }
+    const progressInterval = setInterval(() => {
+      setPreviewProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 15;
+      });
+    }, 150);
+
+    setTimeout(() => {
+      clearInterval(progressInterval);
+      setPreviewProgress(100);
+
+      const previewUrl = window.URL.createObjectURL(selectedFile);
+      previewUrlRef.current = previewUrl;
+      const previewWindow = window.open(previewUrl, '_blank', 'noopener,noreferrer');
+
+      if (!previewWindow) {
+        window.URL.revokeObjectURL(previewUrl);
+        previewUrlRef.current = null;
+      }
+
+      setTimeout(() => {
+        setPreviewPopupState('none');
+      }, 500);
+    }, 1000);
   };
 
   return (
@@ -800,11 +857,32 @@ function ManageStudentsSemester({ onLogout, onViewChange }) {
             progress={uploadProgress}
             title="Uploading..."
             fileLabel="semester marksheet"
+            extractionProgress={extractionProgress}
             messages={{
               initial: 'Extracting subjects from PDF...',
               mid: 'Matching marksheets with students...',
               final: 'Preparing preview...'
             }}
+          />
+
+          <PreviewProgressAlert 
+            isOpen={previewPopupState === 'progress'} 
+            progress={previewProgress} 
+            fileLabel="marksheet"
+            color="var(--coo-red, #d23b42)"
+            progressColor="var(--coo-red, #d23b42)"
+            title="Previewing..."
+            messages={{
+              initial: 'Fetching marksheet from database...',
+              mid: 'Preparing preview...',
+              final: 'Rendering document...'
+            }}
+          />
+          
+          <PreviewFailedAlert 
+            isOpen={previewPopupState === 'failed'} 
+            onClose={() => setPreviewPopupState('none')}
+            color="var(--coo-red, #d23b42)"
           />
 
           {/* Success Popup */}

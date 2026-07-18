@@ -155,9 +155,9 @@ class IntegrationTester {
 
     // Mock subject collection
     const subjects = [
-      { code: '20CS511', name: 'DSA', credits: 3 },
-      { code: '20CS512', name: 'DBMS', credits: 3 },
-      { code: 'GE8291', name: 'Ethics', credits: 2 },
+      { courseCode: '20CS511', courseName: 'DSA', credits: 3 },
+      { courseCode: '20CS512', courseName: 'DBMS', credits: 3 },
+      { courseCode: 'GE8291', courseName: 'Ethics', credits: 2 },
     ];
 
     const lookup = buildSubjectLookup(subjects);

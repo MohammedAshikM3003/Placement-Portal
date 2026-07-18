@@ -1,0 +1,3296 @@
+{
+  "success": true,
+  "total_pages": 1,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Hari",
+        "programme": "B.E",
+        "register_number": "73152314014",
+        "reg_conf": 0.7147904193373731,
+        "semester": 6,
+        "semesterConfidence": 0.26666666666666666,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Hari",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152314014",
+            "confidence": 71.48,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 6,
+            "confidence": 26.67,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 6,
+          "courseCode": "20EE611",
+          "courseName": "Electrical Machine Design",
+          "credits": "1",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l46",
+            "p0_dig_l47",
+            "p0_dig_l48",
+            "p0_dig_l49",
+            "p0_dig_l50",
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Electrical Machine Design",
+          "normalizedCourseName": "Electrical Machine Design",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE611",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electrical Machine Design",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 6,
+          "courseCode": "20EE612",
+          "courseName": "Microprocessors and Microcontrollers",
+          "credits": "2",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l54",
+            "p0_dig_l55",
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58",
+            "p0_dig_l59",
+            "p0_dig_l60",
+            "p0_dig_l61"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Microprocessors and Microcontrollers",
+          "normalizedCourseName": "Microprocessors and Microcontrollers",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE612",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Microprocessors and Microcontrollers",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 6,
+          "courseCode": "20CS602",
+          "courseName": "Machine Learning",
+          "credits": "3",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l62",
+            "p0_dig_l63",
+            "p0_dig_l64",
+            "p0_dig_l65",
+            "p0_dig_l66",
+            "p0_dig_l67",
+            "p0_dig_l68"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Machine Learning",
+          "normalizedCourseName": "Machine Learning",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS602",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Machine Learning",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 6,
+          "courseCode": "20EE663",
+          "courseName": "Power System Operation and Control",
+          "credits": "4",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l69",
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72",
+            "p0_dig_l73",
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76",
+            "p0_dig_l77",
+            "p0_dig_l78"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Power System Operation and Control",
+          "normalizedCourseName": "Power System Operation and Control",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE663",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power System Operation and Control",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 6,
+          "courseCode": "201T905",
+          "courseName": "Internet of Things and Applications",
+          "credits": "5",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l79",
+            "p0_dig_l80",
+            "p0_dig_l81",
+            "p0_dig_l82",
+            "p0_dig_l83",
+            "p0_dig_l84",
+            "p0_dig_l85",
+            "p0_dig_l86",
+            "p0_dig_l87",
+            "p0_dig_l88"
+          ],
+          "code_right": 184.0497452062603,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Internet of Things and Applications",
+          "normalizedCourseName": "Internet of Things and Applications",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "201T905",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Internet of Things and Applications",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 6,
+          "courseCode": "20HS001",
+          "courseName": "Principles of Management",
+          "credits": "6",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l89",
+            "p0_dig_l90",
+            "p0_dig_l91",
+            "p0_dig_l92",
+            "p0_dig_l93",
+            "p0_dig_l94",
+            "p0_dig_l95",
+            "p0_dig_l96"
+          ],
+          "code_right": 186.27337788860893,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Principles of Management",
+          "normalizedCourseName": "Principles of Management",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20HS001",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Principles of Management",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 6,
+          "courseCode": "20EE621",
+          "courseName": "Microprocessors and Microcontrollers Laboratory",
+          "credits": "7",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99",
+            "p0_dig_l100",
+            "p0_dig_l101",
+            "p0_dig_l102",
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 475.3710776928709,
+          "originalCourseName": "Microprocessors and Microcontrollers Laboratory",
+          "normalizedCourseName": "Microprocessors and Microcontrollers Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE621",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Microprocessors and Microcontrollers Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 6,
+          "courseCode": "20EE622",
+          "courseName": "Electrical Laboratory Estimation and Electronic Design",
+          "credits": "8",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l111",
+            "p0_dig_l112",
+            "p0_dig_l113",
+            "p0_dig_l106",
+            "p0_dig_l116",
+            "p0_dig_l107",
+            "p0_dig_l108",
+            "p0_dig_l109",
+            "p0_dig_l110",
+            "p0_dig_l114",
+            "p0_dig_l115"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.0546675810547,
+          "originalCourseName": "Electrical Laboratory Estimation and Electronic Design",
+          "normalizedCourseName": "Electrical Laboratory Estimation and Electronic Design",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE622",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electrical Laboratory Estimation and Electronic Design",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 6,
+          "courseCode": "20HR654",
+          "courseName": "Career Development Skills IV",
+          "credits": "9",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119",
+            "p0_dig_l120",
+            "p0_dig_l121",
+            "p0_dig_l122",
+            "p0_dig_l123",
+            "p0_dig_l124",
+            "p0_dig_l125",
+            "p0_dig_l126"
+          ],
+          "code_right": 186.40594623308525,
+          "grade_left": 478.0546675810547,
+          "originalCourseName": "Career Development Skills - IV",
+          "normalizedCourseName": "Career Development Skills IV",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20HR654",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills IV",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "9",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 10,
+          "semester": 6,
+          "courseCode": "20EN151",
+          "courseName": "Technical English I",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l127",
+            "p0_dig_l128",
+            "p0_dig_l129",
+            "p0_dig_l130",
+            "p0_dig_l131",
+            "p0_dig_l132",
+            "p0_dig_l133",
+            "p0_dig_l134",
+            "p0_dig_l135"
+          ],
+          "code_right": 185.9906630753887,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Technical English - I",
+          "normalizedCourseName": "Technical English I",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EN151",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Technical English I",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 11,
+          "semester": 6,
+          "courseCode": "20MA151",
+          "courseName": "Engineering Mathematics I",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l136",
+            "p0_dig_l137",
+            "p0_dig_l138",
+            "p0_dig_l139",
+            "p0_dig_l140",
+            "p0_dig_l141",
+            "p0_dig_l142",
+            "p0_dig_l143",
+            "p0_dig_l144"
+          ],
+          "code_right": 187.50384658733938,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Engineering Mathematics - I",
+          "normalizedCourseName": "Engineering Mathematics I",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20MA151",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Mathematics I",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 12,
+          "semester": 6,
+          "courseCode": "20PH051",
+          "courseName": "Engineering Physics",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l145",
+            "p0_dig_l146",
+            "p0_dig_l147",
+            "p0_dig_l148",
+            "p0_dig_l149",
+            "p0_dig_l150",
+            "p0_dig_l151"
+          ],
+          "code_right": 186.42352435735282,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Engineering Physics",
+          "normalizedCourseName": "Engineering Physics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20PH051",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Physics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 13,
+          "semester": 6,
+          "courseCode": "20CS141",
+          "courseName": "Programming for Problem Solving",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l152",
+            "p0_dig_l153",
+            "p0_dig_l154",
+            "p0_dig_l155",
+            "p0_dig_l156",
+            "p0_dig_l157",
+            "p0_dig_l158",
+            "p0_dig_l159",
+            "p0_dig_l160"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Programming for Problem Solving",
+          "normalizedCourseName": "Programming for Problem Solving",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CS141",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Programming for Problem Solving",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 14,
+          "semester": 6,
+          "courseCode": "20MC052",
+          "courseName": "Environmental Science and Engineering",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l161",
+            "p0_dig_l162",
+            "p0_dig_l163",
+            "p0_dig_l164",
+            "p0_dig_l165",
+            "p0_dig_l166",
+            "p0_dig_l167",
+            "p0_dig_l168",
+            "p0_dig_l169"
+          ],
+          "code_right": 187.36761614301565,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Environmental Science and Engineering",
+          "normalizedCourseName": "Environmental Science and Engineering",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20MC052",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Environmental Science and Engineering",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 15,
+          "semester": 6,
+          "courseCode": "20EN251",
+          "courseName": "Technical English II",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l170",
+            "p0_dig_l171",
+            "p0_dig_l172",
+            "p0_dig_l173",
+            "p0_dig_l174",
+            "p0_dig_l175",
+            "p0_dig_l176",
+            "p0_dig_l177",
+            "p0_dig_l178"
+          ],
+          "code_right": 185.9906630753887,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Technical English - II",
+          "normalizedCourseName": "Technical English II",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EN251",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Technical English II",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 16,
+          "semester": 6,
+          "courseCode": "20CH051",
+          "courseName": "Engineering Chemistry",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l179",
+            "p0_dig_l180",
+            "p0_dig_l181",
+            "p0_dig_l182",
+            "p0_dig_l183",
+            "p0_dig_l184",
+            "p0_dig_l185"
+          ],
+          "code_right": 186.4791884550335,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Engineering Chemistry",
+          "normalizedCourseName": "Engineering Chemistry",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CH051",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Chemistry",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 17,
+          "semester": 6,
+          "courseCode": "20CS241",
+          "courseName": "Python Programming",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l186",
+            "p0_dig_l187",
+            "p0_dig_l188",
+            "p0_dig_l189",
+            "p0_dig_l190",
+            "p0_dig_l191",
+            "p0_dig_l192"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Python Programming",
+          "normalizedCourseName": "Python Programming",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CS241",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Python Programming",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 18,
+          "semester": 6,
+          "courseCode": "20EE211",
+          "courseName": "Electric Circuit Analysis",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l193",
+            "p0_dig_l194",
+            "p0_dig_l195",
+            "p0_dig_l196",
+            "p0_dig_l197",
+            "p0_dig_l198",
+            "p0_dig_l199",
+            "p0_dig_l200"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Electric Circuit Analysis",
+          "normalizedCourseName": "Electric Circuit Analysis",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE211",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electric Circuit Analysis",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 19,
+          "semester": 6,
+          "courseCode": "20MA342",
+          "courseName": "Differential Equations and Numerical Methods",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l201",
+            "p0_dig_l202",
+            "p0_dig_l203",
+            "p0_dig_l204",
+            "p0_dig_l205",
+            "p0_dig_l206",
+            "p0_dig_l207",
+            "p0_dig_l208",
+            "p0_dig_l209",
+            "p0_dig_l210"
+          ],
+          "code_right": 187.50384658733938,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Differential Equations and Numerical Methods",
+          "normalizedCourseName": "Differential Equations and Numerical Methods",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20MA342",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Differential Equations and Numerical Methods",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 20,
+          "semester": 6,
+          "courseCode": "20EE311",
+          "courseName": "Electro Magnetic Theory",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l211",
+            "p0_dig_l212",
+            "p0_dig_l213",
+            "p0_dig_l214",
+            "p0_dig_l215",
+            "p0_dig_l216",
+            "p0_dig_l217",
+            "p0_dig_l218"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Electro Magnetic Theory",
+          "normalizedCourseName": "Electro Magnetic Theory",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE311",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electro Magnetic Theory",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 21,
+          "semester": 6,
+          "courseCode": "20EE312",
+          "courseName": "Electrical Machines I",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l219",
+            "p0_dig_l220",
+            "p0_dig_l221",
+            "p0_dig_l222",
+            "p0_dig_l223",
+            "p0_dig_l224",
+            "p0_dig_l225",
+            "p0_dig_l226",
+            "p0_dig_l227"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Electrical Machines - I",
+          "normalizedCourseName": "Electrical Machines I",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE312",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electrical Machines I",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 22,
+          "semester": 6,
+          "courseCode": "20EE313",
+          "courseName": "Analog Electronics",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l228",
+            "p0_dig_l229",
+            "p0_dig_l230",
+            "p0_dig_l231",
+            "p0_dig_l232",
+            "p0_dig_l233",
+            "p0_dig_l234"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Analog Electronics",
+          "normalizedCourseName": "Analog Electronics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE313",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Analog Electronics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 23,
+          "semester": 6,
+          "courseCode": "20EE314",
+          "courseName": "Measurements and Instrumentation",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l235",
+            "p0_dig_l236",
+            "p0_dig_l237",
+            "p0_dig_l238",
+            "p0_dig_l239",
+            "p0_dig_l240",
+            "p0_dig_l241",
+            "p0_dig_l242"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Measurements and Instrumentation",
+          "normalizedCourseName": "Measurements and Instrumentation",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE314",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Measurements and Instrumentation",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 24,
+          "semester": 6,
+          "courseCode": "20CS331",
+          "courseName": "Object Oriented Programming with C++",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l243",
+            "p0_dig_l244",
+            "p0_dig_l245",
+            "p0_dig_l246",
+            "p0_dig_l247",
+            "p0_dig_l248",
+            "p0_dig_l249",
+            "p0_dig_l250",
+            "p0_dig_l251",
+            "p0_dig_l252"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Object Oriented Programming with C++",
+          "normalizedCourseName": "Object Oriented Programming with C++",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CS331",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Object Oriented Programming with C++",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 25,
+          "semester": 6,
+          "courseCode": "20EE411",
+          "courseName": "Power Systems I",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l253",
+            "p0_dig_l254",
+            "p0_dig_l255",
+            "p0_dig_l256",
+            "p0_dig_l257",
+            "p0_dig_l258",
+            "p0_dig_l259",
+            "p0_dig_l260",
+            "p0_dig_l261"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Power Systems - I",
+          "normalizedCourseName": "Power Systems I",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE411",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power Systems I",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 26,
+          "semester": 6,
+          "courseCode": "20EE412",
+          "courseName": "Electrical Machines II",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l262",
+            "p0_dig_l263",
+            "p0_dig_l264",
+            "p0_dig_l265",
+            "p0_dig_l266",
+            "p0_dig_l267",
+            "p0_dig_l268",
+            "p0_dig_l269",
+            "p0_dig_l270"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Electrical Machines - II",
+          "normalizedCourseName": "Electrical Machines II",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE412",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Electrical Machines II",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 27,
+          "semester": 6,
+          "courseCode": "20EE413",
+          "courseName": "Control Systems",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l271",
+            "p0_dig_l272",
+            "p0_dig_l273",
+            "p0_dig_l274",
+            "p0_dig_l275",
+            "p0_dig_l276",
+            "p0_dig_l277"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Control Systems",
+          "normalizedCourseName": "Control Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE413",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Control Systems",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 28,
+          "semester": 6,
+          "courseCode": "20EE414",
+          "courseName": "Digital Electronics",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l278",
+            "p0_dig_l279",
+            "p0_dig_l280",
+            "p0_dig_l281",
+            "p0_dig_l282",
+            "p0_dig_l283",
+            "p0_dig_l284"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Digital Electronics",
+          "normalizedCourseName": "Digital Electronics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE414",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital Electronics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 29,
+          "semester": 6,
+          "courseCode": "20CS432",
+          "courseName": "Data structure and Algorithms",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l285",
+            "p0_dig_l286",
+            "p0_dig_l287",
+            "p0_dig_l288",
+            "p0_dig_l289",
+            "p0_dig_l290",
+            "p0_dig_l291",
+            "p0_dig_l292",
+            "p0_dig_l293"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Data structure and Algorithms",
+          "normalizedCourseName": "Data structure and Algorithms",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CS432",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Data structure and Algorithms",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 30,
+          "semester": 6,
+          "courseCode": "20HS051",
+          "courseName": "Universal Harmony Human Values and Understanding",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l13",
+            "p1_dig_l14",
+            "p1_dig_l15",
+            "p1_dig_l8",
+            "p1_dig_l18",
+            "p1_dig_l9",
+            "p1_dig_l10",
+            "p1_dig_l11",
+            "p1_dig_l12",
+            "p1_dig_l16",
+            "p1_dig_l17"
+          ],
+          "code_right": 186.27337788860893,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Universal Harmony Human Values and Understanding",
+          "normalizedCourseName": "Universal Harmony Human Values and Understanding",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HS051",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Universal Harmony Human Values and Understanding",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 31,
+          "semester": 6,
+          "courseCode": "20EE511",
+          "courseName": "Power Systems II",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l19",
+            "p1_dig_l20",
+            "p1_dig_l21",
+            "p1_dig_l22",
+            "p1_dig_l23",
+            "p1_dig_l24",
+            "p1_dig_l25",
+            "p1_dig_l26",
+            "p1_dig_l27"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Power Systems - II",
+          "normalizedCourseName": "Power Systems II",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE511",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power Systems II",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 32,
+          "semester": 6,
+          "courseCode": "20EE512",
+          "courseName": "Signals and Systems",
+          "credits": "",
+          "grade": "RA",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l28",
+            "p1_dig_l29",
+            "p1_dig_l30",
+            "p1_dig_l31",
+            "p1_dig_l32",
+            "p1_dig_l33",
+            "p1_dig_l34",
+            "p1_dig_l35"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 474.6913902211912,
+          "originalCourseName": "Signals and Systems",
+          "normalizedCourseName": "Signals and Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE512",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Signals and Systems",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "RA",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 33,
+          "semester": 6,
+          "courseCode": "20EE513",
+          "courseName": "Power Electronics",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l36",
+            "p1_dig_l37",
+            "p1_dig_l38",
+            "p1_dig_l39",
+            "p1_dig_l40",
+            "p1_dig_l41",
+            "p1_dig_l42"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Power Electronics",
+          "normalizedCourseName": "Power Electronics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE513",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power Electronics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 34,
+          "semester": 6,
+          "courseCode": "20EE514",
+          "courseName": "Power System Protection and Switchgear",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l43",
+            "p1_dig_l44",
+            "p1_dig_l45",
+            "p1_dig_l46",
+            "p1_dig_l47",
+            "p1_dig_l48",
+            "p1_dig_l49",
+            "p1_dig_l50",
+            "p1_dig_l51",
+            "p1_dig_l52"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Power System Protection and Switchgear",
+          "normalizedCourseName": "Power System Protection and Switchgear",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE514",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power System Protection and Switchgear",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 35,
+          "semester": 6,
+          "courseCode": "20EE521",
+          "courseName": "Power Systems Laboratory",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l53",
+            "p1_dig_l54",
+            "p1_dig_l55",
+            "p1_dig_l56",
+            "p1_dig_l57",
+            "p1_dig_l58",
+            "p1_dig_l59",
+            "p1_dig_l60"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 475.3710776928709,
+          "originalCourseName": "Power Systems Laboratory",
+          "normalizedCourseName": "Power Systems Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE521",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Power Systems Laboratory",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 36,
+          "semester": 6,
+          "courseCode": "20EE562",
+          "courseName": "Special Electrical Machines",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l61",
+            "p1_dig_l62",
+            "p1_dig_l63",
+            "p1_dig_l64",
+            "p1_dig_l65",
+            "p1_dig_l66",
+            "p1_dig_l67",
+            "p1_dig_l68"
+          ],
+          "code_right": 185.23846583173025,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Special Electrical Machines",
+          "normalizedCourseName": "Special Electrical Machines",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE562",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Special Electrical Machines",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 37,
+          "semester": 6,
+          "courseCode": "20CS501",
+          "courseName": "Artificial Intelligence",
+          "credits": "",
+          "grade": "U",
+          "result": "F",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p1_dig_l69",
+            "p1_dig_l70",
+            "p1_dig_l71",
+            "p1_dig_l72",
+            "p1_dig_l73",
+            "p1_dig_l74",
+            "p1_dig_l75"
+          ],
+          "code_right": 185.9994521750225,
+          "grade_left": 478.12498007812496,
+          "originalCourseName": "Artificial Intelligence",
+          "normalizedCourseName": "Artificial Intelligence",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20CS501",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Artificial Intelligence",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "U",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "F",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1,
+          2
+        ],
+        "pageIndexes": [
+          1,
+          2
+        ],
+        "pageStart": 1,
+        "pageEnd": 2,
+        "groupConfidence": 0.8716,
+        "confidence": {
+          "register_confidence": 0.7147904193373731,
+          "name_confidence": 1.0,
+          "boundary_confidence": 0.9,
+          "overall_confidence": 0.8716
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 398,
+        "attempts": [
+          "pdfplumber",
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          0,
+          1
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 398,
+          "detected_course_codes": 37,
+          "logical_rows": 49,
+          "subject_objects": 37,
+          "validated_subjects": 37
+        }
+      },
+      "raw_text": "K.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n-\nJune\n2026\nRegister\nNumber\n:\n73152314014\nName\nof\nthe\nCandidate\n:\nHARI\nHARAN\nS\nProgramme\n:\nB.E\n-\nElectrical\nand\nElectronics\nEngineering\nCOURSE\nGRADE\nS.NOSEMESTER\nCOURSE\nNAME\nRESULT\nCODE\nOBTAINED\n1\n6\n20EE611\nElectrical\nMachine\nDesign\nU\nF\n2\n6\n20EE612\nMicroprocessors\nand\nMicrocontrollers\nU\nF\n3\n6\n20CS602\nMachine\nLearning\nU\nF\n4\n6\n20EE663\nPower\nSystem\nOperation\nand\nControl\nU\nF\n5\n6\n20IT905\nInternet\nof\nThings\nand\nApplications\nU\nF\n6\n6\n20HS001\nPrinciples\nof\nManagement\nU\nF\n7\n6\n20EE621\nMicroprocessors\nand\nMicrocontrollers\nLaboratory\nB+\nP\nElectrical\nEstimation\nand\nElectronic\nDesign\n8\n6\n20EE622\nA\nP\nLaboratory\n9\n6\n20HR654\nCareer\nDevelopment\nSkills\n-\nIV\nA\nP\n10\n1\n20EN151\nTechnical\nEnglish\n-\nI\nU\nF\n11\n1\n20MA151\nEngineering\nMathematics\n-\nI\nRA\nF\n12\n1\n20PH051\nEngineering\nPhysics\nRA\nF\n13\n1\n20CS141\nProgramming\nfor\nProblem\nSolving\nRA\nF\n14\n1\n20MC052\nEnvironmental\nScience\nand\nEngineering\nU\nF\n15\n2\n20EN251\nTechnical\nEnglish\n-\nII\nU\nF\n16\n2\n20CH051\nEngineering\nChemistry\nRA\nF\n17\n2\n20CS241\nPython\nProgramming\nRA\nF\n18\n2\n20EE211\nElectric\nCircuit\nAnalysis\nRA\nF\n19\n3\n20MA342\nDifferential\nEquations\nand\nNumerical\nMethods\nU\nF\n20\n3\n20EE311\nElectro\nMagnetic\nTheory\nRA\nF\n21\n3\n20EE312\nElectrical\nMachines\n-\nI\nRA\nF\n22\n3\n20EE313\nAnalog\nElectronics\nU\nF\n23\n3\n20EE314\nMeasurements\nand\nInstrumentation\nRA\nF\n24\n3\n20CS331\nObject\nOriented\nProgramming\nwith\nC++\nU\nF\n25\n4\n20EE411\nPower\nSystems\n-\nI\nU\nF\n26\n4\n20EE412\nElectrical\nMachines\n-\nII\nRA\nF\n27\n4\n20EE413\nControl\nSystems\nU\nF\n28\n4\n20EE414\nDigital\nElectronics\nU\nF\n29\n4\n20CS432\nData\nstructure\nand\nAlgorithms\nU\nF\nUniversal\nHuman\nValues\nand\nUnderstanding\n30\n4\n20HS051\nU\nF\nHarmony\n31\n5\n20EE511\nPower\nSystems\n-\nII\nU\nF\n32\n5\n20EE512\nSignals\nand\nSystems\nRA\nF\n33\n5\n20EE513\nPower\nElectronics\nU\nF\n34\n5\n20EE514\nPower\nSystem\nProtection\nand\nSwitchgear\nU\nF\n35\n5\n20EE521\nPower\nSystems\nLaboratory\nB+\nP\n36\n5\n20EE562\nSpecial\nElectrical\nMachines\nU\nF\n37\n5\n20CS501\nArtificial\nIntelligence\nU\nF\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:15-07-2026\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 2 pages ===",
+        "[INFO] Grouped 2 pages into 1 student record documents.",
+        "[INFO] Processing Student Group 1/1 (Register: 73152314014, Pages: 2)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 835.00",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Processing Page 2 for document merge. Est Height: 800.00",
+        "[INFO] Page 2: Stripped 8 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 2 pages into 398 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: Generic Academic Institution",
+        "[INFO] Selected Register Number: '73152314014' with confidence 71.4790419337373% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 6",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 49 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152314014'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : HARI HARAN S'",
+        "[DEBUG] Skipping blocked layout row: 'S.NOSEMESTER COURSE CODE COURSE NAME OBTAINED GRADE RESULT'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Grade detected: 'RA'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Result detected: 'F'",
+        "[INFO] Right Grade detected: 'U'",
+        "[INFO] Right Grade detected: 'U'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :15'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[INFO] Reconstructed 37 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 6 (fraction=0.23)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 6",
+        "[INFO] [Semester Inference] Resolved Semester=6 with confidence=0.27",
+        "[INFO] Completed student group extraction: 37 subjects parsed, 28 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    }
+  ]
+}

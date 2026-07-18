@@ -1,0 +1,4724 @@
+{
+  "success": true,
+  "total_pages": 4,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Aarkesh",
+        "programme": "B.E",
+        "register_number": "73152213001",
+        "reg_conf": 0.7180004045116161,
+        "semester": 1,
+        "semesterConfidence": 0.26666666666666666,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Aarkesh",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152213001",
+            "confidence": 71.8,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 1,
+            "confidence": 26.67,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 1,
+          "courseCode": "20EN151",
+          "courseName": "Technical English I",
+          "credits": "1",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l49",
+            "p0_dig_l50",
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53",
+            "p0_dig_l54",
+            "p0_dig_l55"
+          ],
+          "code_right": 196.3056,
+          "grade_left": 445.87,
+          "originalCourseName": "Technical English-1",
+          "normalizedCourseName": "Technical English I",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EN151",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Technical English I",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 1,
+          "courseCode": "20MA151",
+          "courseName": "Engineering mathematics I",
+          "credits": "2",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58",
+            "p0_dig_l59",
+            "p0_dig_l60",
+            "p0_dig_l61",
+            "p0_dig_l62"
+          ],
+          "code_right": 197.814856,
+          "grade_left": 445.87,
+          "originalCourseName": "Engineering mathematics-1",
+          "normalizedCourseName": "Engineering mathematics I",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20MA151",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering mathematics I",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 1,
+          "courseCode": "20CH051",
+          "courseName": "Engineering Chemistry",
+          "credits": "3",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l63",
+            "p0_dig_l64",
+            "p0_dig_l65",
+            "p0_dig_l66",
+            "p0_dig_l67",
+            "p0_dig_l68",
+            "p0_dig_l69"
+          ],
+          "code_right": 197.04288,
+          "grade_left": 448.75,
+          "originalCourseName": "Engineering Chemistry",
+          "normalizedCourseName": "Engineering Chemistry",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CH051",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Chemistry",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 1,
+          "courseCode": "20CS142",
+          "courseName": "Problem Solving Techniques",
+          "credits": "4",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72",
+            "p0_dig_l73",
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76",
+            "p0_dig_l77"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 445.63,
+          "originalCourseName": "Problem Solving Techniques",
+          "normalizedCourseName": "Problem Solving Techniques",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS142",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Problem Solving Techniques",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 1,
+          "courseCode": "20EE041",
+          "courseName": "Basics Engineering of Electrical and Electronic",
+          "credits": "5",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l78",
+            "p0_dig_l79",
+            "p0_dig_l80",
+            "p0_dig_l81",
+            "p0_dig_l88",
+            "p0_dig_l82",
+            "p0_dig_l83",
+            "p0_dig_l84",
+            "p0_dig_l85",
+            "p0_dig_l86",
+            "p0_dig_l87"
+          ],
+          "code_right": 195.83808000000002,
+          "grade_left": 448.51,
+          "originalCourseName": "Basics Engineering of Electrical and Electronic",
+          "normalizedCourseName": "Basics Engineering of Electrical and Electronic",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE041",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Basics Engineering of Electrical and Electronic",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 1,
+          "courseCode": "20GE051",
+          "courseName": "Heritage of Tamils",
+          "credits": "6",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l89",
+            "p0_dig_l90",
+            "p0_dig_l91",
+            "p0_dig_l92",
+            "p0_dig_l93",
+            "p0_dig_l94",
+            "p0_dig_l95",
+            "p0_dig_l96"
+          ],
+          "code_right": 196.600536,
+          "grade_left": 445.87,
+          "originalCourseName": "Heritage of Tamils",
+          "normalizedCourseName": "Heritage of Tamils",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20GE051",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Heritage of Tamils",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 1,
+          "courseCode": "20CS171",
+          "courseName": "Problem Solving Techniques Laboratory",
+          "credits": "7",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99",
+            "p0_dig_l100",
+            "p0_dig_l101",
+            "p0_dig_l102",
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 448.75,
+          "originalCourseName": "Problem Solving Techniques Laboratory",
+          "normalizedCourseName": "Problem Solving Techniques Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS171",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Problem Solving Techniques Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 1,
+          "courseCode": "20CH028",
+          "courseName": "Chemistry Laboratory",
+          "credits": "8",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l106",
+            "p0_dig_l107",
+            "p0_dig_l108",
+            "p0_dig_l109",
+            "p0_dig_l110",
+            "p0_dig_l111",
+            "p0_dig_l112"
+          ],
+          "code_right": 197.02944000000002,
+          "grade_left": 445.87,
+          "originalCourseName": "Chemistry Laboratory",
+          "normalizedCourseName": "Chemistry Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CH028",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Chemistry Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 1,
+          "courseCode": "20AU127",
+          "courseName": "Engineering Graphics Laboratory",
+          "credits": "9",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l113",
+            "p0_dig_l114",
+            "p0_dig_l115",
+            "p0_dig_l116",
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119",
+            "p0_dig_l120"
+          ],
+          "code_right": 196.8228,
+          "grade_left": 448.51,
+          "originalCourseName": "Engineering Graphics Laboratory",
+          "normalizedCourseName": "Engineering Graphics Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20AU127",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Graphics Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "9",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1
+        ],
+        "pageIndexes": [
+          1
+        ],
+        "pageStart": 1,
+        "pageEnd": 1,
+        "groupConfidence": 0.906,
+        "confidence": {
+          "register_confidence": 0.7180004045116161,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.906
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 159,
+        "attempts": [
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          0
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 159,
+          "detected_course_codes": 9,
+          "logical_rows": 23,
+          "subject_objects": 9,
+          "validated_subjects": 9
+        }
+      },
+      "raw_text": "07/09/2023,\n19:11\nksrceresults.com\nK.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n-\nDEC-\n2023\nRegister\nNumber\n:\n73152213001\nName\nof\nthe\nCandidate\n:\nAARKESH\nM\nProgramme\n:\nB.E\n-\nComputer\nScience\nand\nEngineering\nS.NO\nSEMESTER\nCOURSE\nCODE\nCOURSE\nNAME\nGRADE\nOBTAINED\nRESULT\n1\n1\n20EN151\nTechnical\nEnglish-1\nA+\nP\n2\n1\n20MA151\nEngineering\nmathematics-1\nB+\nP\n3\n1\n20CH051\nEngineering\nChemistry\nA\nP\n4\n1\n20CS142\nProblem\nSolving\nTechniques\nA+\nP\n5\n1\n20EE041\nBasics\nof\nElectrical\nand\nElectronic\nO\nP\nEngineering\n6\n1\n20GE051\nHeritage\nof\nTamils\nB+\nP\n7\n1\n20CS171\nProblem\nSolving\nTechniques\nLaboratory\nA\nP\n8\n1\n20CH028\nChemistry\nLaboratory\nA+\nP\n9\n1\n20AU127\nEngineering\nGraphics\nLaboratory\nO\nP\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:11-09-2023\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"\nhttps://ksrceresults.com\n1/1",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 4 pages ===",
+        "[INFO] Grouped 4 pages into 4 student record documents.",
+        "[INFO] Processing Student Group 1/4 (Register: 73152213001, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 159 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213001' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 23 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213001'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : AARKESH M'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 1 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=1 with confidence=0.27",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 0 warning/review flags.",
+        "[INFO] Processing Student Group 2/4 (Register: 73152213002, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 188 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213002' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 26 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213002'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABDUL RAHUMAN S'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 12 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 2 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=2 with confidence=0.40",
+        "[INFO] Completed student group extraction: 12 subjects parsed, 3 warning/review flags.",
+        "[INFO] Processing Student Group 3/4 (Register: 73152213004, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 163 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213004' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213004'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYAA J'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Grade detected: 'A'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 3 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=3 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags.",
+        "[INFO] Processing Student Group 4/4 (Register: 73152213003, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 172 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213003' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213003'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYA N'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 4 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=4 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Abdul",
+        "programme": "B.E",
+        "register_number": "73152213002",
+        "reg_conf": 0.7180004045116161,
+        "semester": 2,
+        "semesterConfidence": 0.39999999999999997,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Abdul",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152213002",
+            "confidence": 71.8,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 2,
+            "confidence": 40.0,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 2,
+          "courseCode": "20MC052",
+          "courseName": "Environmental Science and Engineering",
+          "credits": "1",
+          "grade": "B",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53",
+            "p0_dig_l54",
+            "p0_dig_l55",
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58",
+            "p0_dig_l59"
+          ],
+          "code_right": 192.94464,
+          "grade_left": 453.38,
+          "originalCourseName": "Environmental Science and Engineering",
+          "normalizedCourseName": "Environmental Science and Engineering",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20MC052",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Environmental Science and Engineering",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 2,
+          "courseCode": "20CS211",
+          "courseName": "20CS211",
+          "credits": "2",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l60",
+            "p0_dig_l61",
+            "p0_dig_l62",
+            "p0_dig_l63",
+            "p0_dig_l64",
+            "p0_dig_l65",
+            "p0_dig_l66"
+          ],
+          "code_right": 190.68176000000003,
+          "grade_left": 208.32,
+          "originalCourseName": "20CS211",
+          "normalizedCourseName": "20CS211",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS211",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "20CS211",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 2,
+          "courseCode": "20EE231",
+          "courseName": "Digital principles and Computer Design",
+          "credits": "3",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l67",
+            "p0_dig_l68",
+            "p0_dig_l69",
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72",
+            "p0_dig_l73",
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76"
+          ],
+          "code_right": 190.93808,
+          "grade_left": 453.14,
+          "originalCourseName": "Digital principles and Computer Design",
+          "normalizedCourseName": "Digital principles and Computer Design",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE231",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital principles and Computer Design",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 2,
+          "courseCode": "20PH051",
+          "courseName": "Engineering Physics",
+          "credits": "4",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l77",
+            "p0_dig_l78",
+            "p0_dig_l79",
+            "p0_dig_l80",
+            "p0_dig_l81",
+            "p0_dig_l82",
+            "p0_dig_l83"
+          ],
+          "code_right": 191.18384,
+          "grade_left": 450.26,
+          "originalCourseName": "Engineering Physics",
+          "normalizedCourseName": "Engineering Physics",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20PH051",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Physics",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 2,
+          "courseCode": "20MA232",
+          "courseName": "Discrete Mathematics",
+          "credits": "5",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l84",
+            "p0_dig_l85",
+            "p0_dig_l86",
+            "p0_dig_l87",
+            "p0_dig_l88",
+            "p0_dig_l89",
+            "p0_dig_l90"
+          ],
+          "code_right": 192.94464,
+          "grade_left": 453.14,
+          "originalCourseName": "Discrete Mathematics",
+          "normalizedCourseName": "Discrete Mathematics",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20MA232",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Discrete Mathematics",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 2,
+          "courseCode": "20EN251",
+          "courseName": "Technical English II",
+          "credits": "6",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l91",
+            "p0_dig_l92",
+            "p0_dig_l93",
+            "p0_dig_l94",
+            "p0_dig_l95",
+            "p0_dig_l96",
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99"
+          ],
+          "code_right": 191.4056,
+          "grade_left": 453.14,
+          "originalCourseName": "Technical English - II",
+          "normalizedCourseName": "Technical English II",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EN251",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Technical English II",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 2,
+          "courseCode": "20GE028",
+          "courseName": "Manufacturing Practices Laboratory",
+          "credits": "7",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l100",
+            "p0_dig_l101",
+            "p0_dig_l102",
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105",
+            "p0_dig_l106",
+            "p0_dig_l107"
+          ],
+          "code_right": 191.70336799999998,
+          "grade_left": 452.9,
+          "originalCourseName": "Manufacturing Practices Laboratory",
+          "normalizedCourseName": "Manufacturing Practices Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20GE028",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Manufacturing Practices Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 2,
+          "courseCode": "20CS221",
+          "courseName": "20CS221",
+          "credits": "8",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l108",
+            "p0_dig_l109",
+            "p0_dig_l110",
+            "p0_dig_l111",
+            "p0_dig_l112",
+            "p0_dig_l113",
+            "p0_dig_l114",
+            "p0_dig_l115"
+          ],
+          "code_right": 190.68176000000003,
+          "grade_left": 208.32,
+          "originalCourseName": "20CS221",
+          "normalizedCourseName": "20CS221",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS221",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "20CS221",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 2,
+          "courseCode": "20EE225",
+          "courseName": "Digital Systems Laboratory",
+          "credits": "9",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l116",
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119",
+            "p0_dig_l120",
+            "p0_dig_l121",
+            "p0_dig_l122",
+            "p0_dig_l123"
+          ],
+          "code_right": 190.93808,
+          "grade_left": 450.02,
+          "originalCourseName": "Digital Systems Laboratory",
+          "normalizedCourseName": "Digital Systems Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE225",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital Systems Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "9",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 10,
+          "semester": 2,
+          "courseCode": "20PH028",
+          "courseName": "Physics Laboratory",
+          "credits": "",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l124",
+            "p0_dig_l125",
+            "p0_dig_l126",
+            "p0_dig_l127",
+            "p0_dig_l128",
+            "p0_dig_l129",
+            "p0_dig_l130"
+          ],
+          "code_right": 191.21307199999998,
+          "grade_left": 452.9,
+          "originalCourseName": "Physics Laboratory",
+          "normalizedCourseName": "Physics Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20PH028",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Physics Laboratory",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 11,
+          "semester": 2,
+          "courseCode": "20EE041",
+          "courseName": "Basics Engineering of Electrical and Electronics",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l136",
+            "p0_dig_l137",
+            "p0_dig_l138",
+            "p0_dig_l131",
+            "p0_dig_l141",
+            "p0_dig_l132",
+            "p0_dig_l133",
+            "p0_dig_l134",
+            "p0_dig_l135",
+            "p0_dig_l139",
+            "p0_dig_l140"
+          ],
+          "code_right": 190.97679200000002,
+          "grade_left": 450.26,
+          "originalCourseName": "Basics Engineering of Electrical and Electronics",
+          "normalizedCourseName": "Basics Engineering of Electrical and Electronics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EE041",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Basics Engineering of Electrical and Electronics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 12,
+          "semester": 2,
+          "courseCode": "20GE051",
+          "courseName": "Heritage of Tamils",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l142",
+            "p0_dig_l143",
+            "p0_dig_l144",
+            "p0_dig_l145",
+            "p0_dig_l146",
+            "p0_dig_l147",
+            "p0_dig_l148",
+            "p0_dig_l149"
+          ],
+          "code_right": 191.66191999999998,
+          "grade_left": 450.26,
+          "originalCourseName": "Heritage of Tamils",
+          "normalizedCourseName": "Heritage of Tamils",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20GE051",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Heritage of Tamils",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          2
+        ],
+        "pageIndexes": [
+          2
+        ],
+        "pageStart": 2,
+        "pageEnd": 2,
+        "groupConfidence": 0.906,
+        "confidence": {
+          "register_confidence": 0.7180004045116161,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.906
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 188,
+        "attempts": [
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          1
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 188,
+          "detected_course_codes": 12,
+          "logical_rows": 26,
+          "subject_objects": 12,
+          "validated_subjects": 12
+        }
+      },
+      "raw_text": "07/09/2023,\n19:13\nksrceresults.com\nK.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n-\nJune\n-\n2024\nRegister\nNumber\n:\n73152213002\nName\nof\nthe\nCandidate\n:\nABDUL\nRAHUMAN\nS\nProgramme\n:\nB.E\n-\nComputer\nScience\nand\nEngineering\nCOURSE\nGRADE\nS.NO\nSEMESTER\nCOURSE\nNAME\nRESULT\nCODE\nOBTAINED\n1\n2\n20MC052\nEnvironmental\nScience\nand\nEngineering\nB\nP\n2\n2\n20CS211\nC\nProgramming\nB+\nP\n3\n2\n20EE231\nDigital\nprinciples\nand\nComputer\nDesign\nA\nP\n4\n2\n20PH051\nEngineering\nPhysics\nB+\nP\n5\n2\n20MA232\nDiscrete\nMathematics\nA\nP\n6\n2\n20EN251\nTechnical\nEnglish\n-\nII\nA\nP\n7\n2\n20GE028\nManufacturing\nPractices\nLaboratory\nO\nP\n8\n2\n20CS221\nC\nProgramming\nLaboratory\nA+\nP\n9\n2\n20EE225\nDigital\nSystems\nLaboratory\nA+\nP\n10\n2\n20PH028\nPhysics\nLaboratory\nO\nP\nBasics\nof\nElectrical\nand\nElectronics\n11\n2\n20EE041\nB+\nP\nEngineering\n12\n2\n20GE051\nHeritage\nof\nTamils\nB+\nP\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:11-09-2023\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"\nhttps://ksrceresults.com\n1/1",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 4 pages ===",
+        "[INFO] Grouped 4 pages into 4 student record documents.",
+        "[INFO] Processing Student Group 1/4 (Register: 73152213001, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 159 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213001' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 23 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213001'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : AARKESH M'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 1 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=1 with confidence=0.27",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 0 warning/review flags.",
+        "[INFO] Processing Student Group 2/4 (Register: 73152213002, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 188 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213002' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 26 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213002'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABDUL RAHUMAN S'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 12 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 2 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=2 with confidence=0.40",
+        "[INFO] Completed student group extraction: 12 subjects parsed, 3 warning/review flags.",
+        "[INFO] Processing Student Group 3/4 (Register: 73152213004, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 163 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213004' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213004'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYAA J'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Grade detected: 'A'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 3 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=3 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags.",
+        "[INFO] Processing Student Group 4/4 (Register: 73152213003, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 172 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213003' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213003'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYA N'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 4 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=4 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Abinayaa",
+        "programme": "B.E",
+        "register_number": "73152213004",
+        "reg_conf": 0.7180004045116161,
+        "semester": 3,
+        "semesterConfidence": 0.39999999999999997,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Abinayaa",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152213004",
+            "confidence": 71.8,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 3,
+            "confidence": 40.0,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 3,
+          "courseCode": "20MA343",
+          "courseName": "Numerical Computational Techniques",
+          "credits": "1",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l48",
+            "p0_dig_l49",
+            "p0_dig_l50",
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53",
+            "p0_dig_l54",
+            "p0_dig_l55"
+          ],
+          "code_right": 197.74367999999998,
+          "grade_left": 448.75,
+          "originalCourseName": "Numerical Computational Techniques",
+          "normalizedCourseName": "Numerical Computational Techniques",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20MA343",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Numerical Computational Techniques",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 3,
+          "courseCode": "20CS311",
+          "courseName": "Python Programming",
+          "credits": "2",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58",
+            "p0_dig_l59",
+            "p0_dig_l60",
+            "p0_dig_l61",
+            "p0_dig_l62"
+          ],
+          "code_right": 195.612,
+          "grade_left": 445.63,
+          "originalCourseName": "Python Programming",
+          "normalizedCourseName": "Python Programming",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS311",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Python Programming",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 3,
+          "courseCode": "20CS312",
+          "courseName": "Data Structures",
+          "credits": "3",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l63",
+            "p0_dig_l64",
+            "p0_dig_l65",
+            "p0_dig_l66",
+            "p0_dig_l67",
+            "p0_dig_l68",
+            "p0_dig_l69"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 448.75,
+          "originalCourseName": "Data Structures",
+          "normalizedCourseName": "Data Structures",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS312",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Data Structures",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 3,
+          "courseCode": "20CS313",
+          "courseName": "Operating Systems",
+          "credits": "4",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72",
+            "p0_dig_l73",
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 445.87,
+          "originalCourseName": "Operating Systems",
+          "normalizedCourseName": "Operating Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS313",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Operating Systems",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 3,
+          "courseCode": "20CS314",
+          "courseName": "Computer Architecture Organisation and",
+          "credits": "5",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l77",
+            "p0_dig_l78",
+            "p0_dig_l79",
+            "p0_dig_l80",
+            "p0_dig_l85",
+            "p0_dig_l81",
+            "p0_dig_l82",
+            "p0_dig_l83",
+            "p0_dig_l84"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 448.75,
+          "originalCourseName": "Computer Architecture Organisation and",
+          "normalizedCourseName": "Computer Architecture Organisation and",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS314",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Computer Architecture Organisation and",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 3,
+          "courseCode": "20CS315",
+          "courseName": "Software Engineering",
+          "credits": "6",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l86",
+            "p0_dig_l87",
+            "p0_dig_l88",
+            "p0_dig_l89",
+            "p0_dig_l90",
+            "p0_dig_l91",
+            "p0_dig_l92"
+          ],
+          "code_right": 195.627096,
+          "grade_left": 448.51,
+          "originalCourseName": "Software Engineering",
+          "normalizedCourseName": "Software Engineering",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS315",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Software Engineering",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 3,
+          "courseCode": "20CS321",
+          "courseName": "Python Programming Laboratory",
+          "credits": "7",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l93",
+            "p0_dig_l94",
+            "p0_dig_l95",
+            "p0_dig_l96",
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99",
+            "p0_dig_l100"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 445.87,
+          "originalCourseName": "Python Programming Laboratory",
+          "normalizedCourseName": "Python Programming Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS321",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Python Programming Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 3,
+          "courseCode": "20CS322",
+          "courseName": "Data Structures Laboratory",
+          "credits": "8",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l101",
+            "p0_dig_l102",
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105",
+            "p0_dig_l106",
+            "p0_dig_l107",
+            "p0_dig_l108"
+          ],
+          "code_right": 195.6,
+          "grade_left": 448.51,
+          "originalCourseName": "Data Structures Laboratory",
+          "normalizedCourseName": "Data Structures Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS322",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Data Structures Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 3,
+          "courseCode": "20CS323",
+          "courseName": "Operating Systems Laboratory",
+          "credits": "9",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l109",
+            "p0_dig_l110",
+            "p0_dig_l111",
+            "p0_dig_l112",
+            "p0_dig_l113",
+            "p0_dig_l114",
+            "p0_dig_l115",
+            "p0_dig_l116"
+          ],
+          "code_right": 195.627096,
+          "grade_left": 445.63,
+          "originalCourseName": "Operating Systems Laboratory",
+          "normalizedCourseName": "Operating Systems Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS323",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Operating Systems Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "9",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 10,
+          "semester": 3,
+          "courseCode": "20HR351",
+          "courseName": "Career Development Skills I",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119",
+            "p0_dig_l120",
+            "p0_dig_l121",
+            "p0_dig_l122",
+            "p0_dig_l123",
+            "p0_dig_l124"
+          ],
+          "code_right": 197.02944000000002,
+          "grade_left": 448.75,
+          "originalCourseName": "Career Development Skills-1",
+          "normalizedCourseName": "Career Development Skills I",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HR351",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills I",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          3
+        ],
+        "pageIndexes": [
+          3
+        ],
+        "pageStart": 3,
+        "pageEnd": 3,
+        "groupConfidence": 0.906,
+        "confidence": {
+          "register_confidence": 0.7180004045116161,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.906
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 163,
+        "attempts": [
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          2
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 163,
+          "detected_course_codes": 10,
+          "logical_rows": 24,
+          "subject_objects": 10,
+          "validated_subjects": 10
+        }
+      },
+      "raw_text": "07/09/2023,\n19:15\nksrceresults.com\nK.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n\u2013\nDec-2024\nRegister\nNumber\n:\n73152213004\nName\nof\nthe\nCandidate\n:\nABINAYAA\nJ\nProgramme\n:\nB.E\n-\nComputer\nScience\nand\nEngineering\nS.NO\nSEMESTER\nCOURSE\nCODE\nCOURSE\nNAME\nGRADE\nOBTAINED\nRESULT\n1\n3\n20MA343\nNumerical\nComputational\nTechniques\nA\nP\n2\n3\n20CS311\nPython\nProgramming\nA+\nP\n3\n3\n20CS312\nData\nStructures\nA\nP\n4\n3\n20CS313\nOperating\nSystems\nB+\nP\n5\n3\n20CS314\nComputer\nOrganisation\nand\nA\nP\nArchitecture\n6\n3\n20CS315\nSoftware\nEngineering\nO\nP\n7\n3\n20CS321\nPython\nProgramming\nLaboratory\nA+\nP\n8\n3\n20CS322\nData\nStructures\nLaboratory\nO\nP\n9\n3\n20CS323\nOperating\nSystems\nLaboratory\nA+\nP\n10\n3\n20HR351\nCareer\nDevelopment\nSkills-1\nA\nP\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:11-09-2023\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"\nhttps://ksrceresults.com\n1/1",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 4 pages ===",
+        "[INFO] Grouped 4 pages into 4 student record documents.",
+        "[INFO] Processing Student Group 1/4 (Register: 73152213001, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 159 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213001' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 23 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213001'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : AARKESH M'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 1 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=1 with confidence=0.27",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 0 warning/review flags.",
+        "[INFO] Processing Student Group 2/4 (Register: 73152213002, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 188 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213002' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 26 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213002'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABDUL RAHUMAN S'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 12 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 2 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=2 with confidence=0.40",
+        "[INFO] Completed student group extraction: 12 subjects parsed, 3 warning/review flags.",
+        "[INFO] Processing Student Group 3/4 (Register: 73152213004, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 163 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213004' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213004'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYAA J'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Grade detected: 'A'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 3 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=3 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags.",
+        "[INFO] Processing Student Group 4/4 (Register: 73152213003, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 172 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213003' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213003'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYA N'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 4 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=4 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Abinaya",
+        "programme": "B.E",
+        "register_number": "73152213003",
+        "reg_conf": 0.7180004045116161,
+        "semester": 4,
+        "semesterConfidence": 0.39999999999999997,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Abinaya",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152213003",
+            "confidence": 71.8,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 4,
+            "confidence": 40.0,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 4,
+          "courseCode": "20MA441",
+          "courseName": "Probability and Decision Models",
+          "credits": "1",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l50",
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53",
+            "p0_dig_l54",
+            "p0_dig_l55",
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58"
+          ],
+          "code_right": 197.8024,
+          "grade_left": 448.75,
+          "originalCourseName": "Probability and Decision Models",
+          "normalizedCourseName": "Probability and Decision Models",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20MA441",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Probability and Decision Models",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "1",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 4,
+          "courseCode": "20CS411",
+          "courseName": "Theory of Computation",
+          "credits": "2",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l59",
+            "p0_dig_l60",
+            "p0_dig_l61",
+            "p0_dig_l62",
+            "p0_dig_l63",
+            "p0_dig_l64",
+            "p0_dig_l65",
+            "p0_dig_l66"
+          ],
+          "code_right": 195.627096,
+          "grade_left": 448.51,
+          "originalCourseName": "Theory of Computation",
+          "normalizedCourseName": "Theory of Computation",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS411",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Theory of Computation",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "2",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 4,
+          "courseCode": "20CS412",
+          "courseName": "Java Programming",
+          "credits": "3",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l67",
+            "p0_dig_l68",
+            "p0_dig_l69",
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72",
+            "p0_dig_l73"
+          ],
+          "code_right": 195.6,
+          "grade_left": 445.63,
+          "originalCourseName": "Java Programming",
+          "normalizedCourseName": "Java Programming",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS412",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Java Programming",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "3",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 4,
+          "courseCode": "20CS413",
+          "courseName": "Database Management Systems",
+          "credits": "4",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76",
+            "p0_dig_l77",
+            "p0_dig_l78",
+            "p0_dig_l79",
+            "p0_dig_l80",
+            "p0_dig_l81"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 445.87,
+          "originalCourseName": "Database Management Systems",
+          "normalizedCourseName": "Database Management Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS413",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Database Management Systems",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "4",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 4,
+          "courseCode": "20CS414",
+          "courseName": "Design and Analysis of Algorithm",
+          "credits": "5",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l82",
+            "p0_dig_l83",
+            "p0_dig_l84",
+            "p0_dig_l85",
+            "p0_dig_l86",
+            "p0_dig_l87",
+            "p0_dig_l88",
+            "p0_dig_l89",
+            "p0_dig_l90",
+            "p0_dig_l91"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 448.27,
+          "originalCourseName": "Design and Analysis of Algorithm",
+          "normalizedCourseName": "Design and Analysis of Algorithm",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS414",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Design and Analysis of Algorithm",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "5",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 4,
+          "courseCode": "20EE431",
+          "courseName": "Microprocessors and Microcontrollers",
+          "credits": "6",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l92",
+            "p0_dig_l93",
+            "p0_dig_l94",
+            "p0_dig_l95",
+            "p0_dig_l96",
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99"
+          ],
+          "code_right": 195.83808000000002,
+          "grade_left": 448.75,
+          "originalCourseName": "Microprocessors and Microcontrollers",
+          "normalizedCourseName": "Microprocessors and Microcontrollers",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE431",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Microprocessors and Microcontrollers",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "6",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 4,
+          "courseCode": "20CS421",
+          "courseName": "Java Programming Laboratory",
+          "credits": "7",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l100",
+            "p0_dig_l101",
+            "p0_dig_l102",
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105",
+            "p0_dig_l106",
+            "p0_dig_l107"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 445.63,
+          "originalCourseName": "Java Programming Laboratory",
+          "normalizedCourseName": "Java Programming Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS421",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Java Programming Laboratory",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "7",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 4,
+          "courseCode": "20CS422",
+          "courseName": "Database Laboratory Management Systems",
+          "credits": "8",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l108",
+            "p0_dig_l109",
+            "p0_dig_l110",
+            "p0_dig_l111",
+            "p0_dig_l116",
+            "p0_dig_l112",
+            "p0_dig_l113",
+            "p0_dig_l114",
+            "p0_dig_l115"
+          ],
+          "code_right": 195.58176,
+          "grade_left": 448.51,
+          "originalCourseName": "Database Laboratory Management Systems",
+          "normalizedCourseName": "Database Laboratory Management Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20CS422",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Database Laboratory Management Systems",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "8",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 4,
+          "courseCode": "20EE425",
+          "courseName": "Microprocessors Laboratory and Microcontrollers",
+          "credits": "9",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119",
+            "p0_dig_l120",
+            "p0_dig_l125",
+            "p0_dig_l121",
+            "p0_dig_l122",
+            "p0_dig_l123",
+            "p0_dig_l124"
+          ],
+          "code_right": 195.88454400000003,
+          "grade_left": 445.63,
+          "originalCourseName": "Microprocessors Laboratory and Microcontrollers",
+          "normalizedCourseName": "Microprocessors Laboratory and Microcontrollers",
+          "gradeConfidence": 1.0,
+          "confidence": 100,
+          "errors": [],
+          "warnings": [],
+          "entities": {
+            "courseCode": {
+              "value": "20EE425",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Microprocessors Laboratory and Microcontrollers",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "9",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 10,
+          "semester": 4,
+          "courseCode": "20HR432",
+          "courseName": "Career Development Skills II",
+          "credits": "",
+          "grade": "O",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l126",
+            "p0_dig_l127",
+            "p0_dig_l128",
+            "p0_dig_l129",
+            "p0_dig_l130",
+            "p0_dig_l131",
+            "p0_dig_l132",
+            "p0_dig_l133"
+          ],
+          "code_right": 197.02944000000002,
+          "grade_left": 448.51,
+          "originalCourseName": "Career Development Skills-II",
+          "normalizedCourseName": "Career Development Skills II",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HR432",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills II",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "O",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          4
+        ],
+        "pageIndexes": [
+          4
+        ],
+        "pageStart": 4,
+        "pageEnd": 4,
+        "groupConfidence": 0.906,
+        "confidence": {
+          "register_confidence": 0.7180004045116161,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.906
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 172,
+        "attempts": [
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber",
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          3
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 172,
+          "detected_course_codes": 10,
+          "logical_rows": 24,
+          "subject_objects": 10,
+          "validated_subjects": 10
+        }
+      },
+      "raw_text": "07/09/2023,\n19:14\nksrceresults.com\nK.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n-\nJune\n-\n2025\nRegister\nNumber\n:\n73152213003\nName\nof\nthe\nCandidate\n:\nABINAYA\nN\nProgramme\n:\nB.E\n-\nComputer\nScience\nand\nEngineering\nS.NO\nSEMESTER\nCOURSE\nCODE\nCOURSE\nNAME\nGRADE\nOBTAINED\nRESULT\n1\n4\n20MA441\nProbability\nand\nDecision\nModels\nA\nP\n2\n4\n20CS411\nTheory\nof\nComputation\nO\nP\n3\n4\n20CS412\nJava\nProgramming\nA+\nP\n4\n4\n20CS413\nDatabase\nManagement\nSystems\nB+\nP\n5\n4\n20CS414\nDesign\nand\nAnalysis\nof\nAlgorithm\nO\nP\n6\n4\n20EE431\nMicroprocessors\nand\nMicrocontrollers\nA\nP\n7\n4\n20CS421\nJava\nProgramming\nLaboratory\nA+\nP\n8\n4\n20CS422\nDatabase\nManagement\nSystems\nO\nP\nLaboratory\n9\n4\n20EE425\nMicroprocessors\nand\nMicrocontrollers\nA+\nP\nLaboratory\n10\n4\n20HR432\nCareer\nDevelopment\nSkills-II\nO\nP\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:11-09-2023\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"\nhttps://ksrceresults.com\n1/1",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 4 pages ===",
+        "[INFO] Grouped 4 pages into 4 student record documents.",
+        "[INFO] Processing Student Group 1/4 (Register: 73152213001, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 159 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213001' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 23 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213001'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : AARKESH M'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 1 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=1 with confidence=0.27",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 0 warning/review flags.",
+        "[INFO] Processing Student Group 2/4 (Register: 73152213002, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 188 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213002' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 26 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213002'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABDUL RAHUMAN S'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'C'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 12 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 2 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=2 with confidence=0.40",
+        "[INFO] Completed student group extraction: 12 subjects parsed, 3 warning/review flags.",
+        "[INFO] Processing Student Group 3/4 (Register: 73152213004, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 163 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213004' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213004'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYAA J'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Grade detected: 'A'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 3 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=3 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags.",
+        "[INFO] Processing Student Group 4/4 (Register: 73152213003, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 927.14",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 172 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: K.S. Rangasamy College of Technology",
+        "[INFO] Selected Register Number: '73152213003' with confidence 71.8000404511616% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 1",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 24 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152213003'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : ABINAYA N'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '1'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '2'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '3'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Left Credits detected: '4'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '5'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Left Credits detected: '6'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '7'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Left Credits detected: '8'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Left Credits detected: '9'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'O'",
+        "[INFO] Right Grade detected: 'O'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :11'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[DEBUG] Skipping blocked layout row: 'https://ksrceresults.com 1/1'",
+        "[INFO] Reconstructed 10 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 4 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 1",
+        "[INFO] [Semester Inference] Resolved Semester=4 with confidence=0.40",
+        "[INFO] Completed student group extraction: 10 subjects parsed, 1 warning/review flags."
+      ],
+      "integrity": {
+        "status": "COMPLETE",
+        "score": 100,
+        "pages": [
+          1
+        ],
+        "warnings": []
+      }
+    }
+  ]
+}

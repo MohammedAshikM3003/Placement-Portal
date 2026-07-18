@@ -11,7 +11,7 @@ import mongoDBService from '../services/mongoDBService.jsx';
 import { API_BASE_URL } from '../utils/apiConfig';
 
 const GRADE_POINTS = {
-    'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
+    'O': 10, 'S': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6,
     'C': 5, 'U': 0, 'RA': 0, 'AB': 0, 'SA': 0, 'W': 0,
 };
 

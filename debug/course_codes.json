@@ -1,0 +1,162 @@
+[
+  {
+    "courseCode": "20AU611",
+    "confidence": 99,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU612",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU613",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU662",
+    "confidence": 99,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU621",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU622",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20ME908",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20ME909",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20HR614",
+    "confidence": 100,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20MA151",
+    "confidence": 96,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20PH051",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20MA241",
+    "confidence": 92,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20CH051",
+    "confidence": 95,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20CS241",
+    "confidence": 92,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20EE041",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU231",
+    "confidence": 92,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20GE052",
+    "confidence": 94,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20MA341",
+    "confidence": 95,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU312",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU313",
+    "confidence": 93,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU314",
+    "confidence": 95,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU315",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20MC052",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU411",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU413",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU414",
+    "confidence": 96,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU415",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU416",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU512",
+    "confidence": 96,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU513",
+    "confidence": 92,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20AU515",
+    "confidence": 97,
+    "code_pattern_score": 1.0
+  },
+  {
+    "courseCode": "20ME902",
+    "confidence": 93,
+    "code_pattern_score": 1.0
+  }
+]

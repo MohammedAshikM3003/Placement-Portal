@@ -1,0 +1,866 @@
+{
+  "success": true,
+  "total_pages": 1,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "unknown",
+      "document_language": "English",
+      "student_info": {
+        "name": "Bharathraj",
+        "programme": "B.E",
+        "register_number": "73152315009",
+        "reg_conf": 0.7132500015312498,
+        "semester": 6,
+        "semesterConfidence": 0.39999999999999997,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "Bharathraj",
+            "confidence": 100.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152315009",
+            "confidence": 71.33,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 6,
+            "confidence": 40.0,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "B.E",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 6,
+          "courseCode": "20EC614",
+          "courseName": "Antenna and Wave Propagation",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l45",
+            "p0_dig_l46",
+            "p0_dig_l47",
+            "p0_dig_l48",
+            "p0_dig_l49",
+            "p0_dig_l50",
+            "p0_dig_l51",
+            "p0_dig_l52",
+            "p0_dig_l53"
+          ],
+          "originalCourseName": "Antenna and Wave Propagation",
+          "normalizedCourseName": "Antenna and Wave Propagation",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC614",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Antenna and Wave Propagation",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 6,
+          "courseCode": "20HS051",
+          "courseName": "Universal Harmony Human Values and Understanding",
+          "credits": "",
+          "grade": "B",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l59",
+            "p0_dig_l60",
+            "p0_dig_l61",
+            "p0_dig_l54",
+            "p0_dig_l64",
+            "p0_dig_l55",
+            "p0_dig_l56",
+            "p0_dig_l57",
+            "p0_dig_l58",
+            "p0_dig_l62",
+            "p0_dig_l63"
+          ],
+          "originalCourseName": "Universal Harmony Human Values and Understanding",
+          "normalizedCourseName": "Universal Harmony Human Values and Understanding",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HS051",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Universal Harmony Human Values and Understanding",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 6,
+          "courseCode": "20EC611",
+          "courseName": "Digital Communication Systems",
+          "credits": "",
+          "grade": "B",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l65",
+            "p0_dig_l66",
+            "p0_dig_l67",
+            "p0_dig_l68",
+            "p0_dig_l69",
+            "p0_dig_l70",
+            "p0_dig_l71",
+            "p0_dig_l72"
+          ],
+          "originalCourseName": "Digital Communication Systems",
+          "normalizedCourseName": "Digital Communication Systems",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC611",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital Communication Systems",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 6,
+          "courseCode": "20EC612",
+          "courseName": "Digital Image Processing",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l73",
+            "p0_dig_l74",
+            "p0_dig_l75",
+            "p0_dig_l76",
+            "p0_dig_l77",
+            "p0_dig_l78",
+            "p0_dig_l79",
+            "p0_dig_l80"
+          ],
+          "originalCourseName": "Digital Image Processing",
+          "normalizedCourseName": "Digital Image Processing",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC612",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital Image Processing",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 6,
+          "courseCode": "20EC613",
+          "courseName": "VLSI Design",
+          "credits": "",
+          "grade": "B+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l81",
+            "p0_dig_l82",
+            "p0_dig_l83",
+            "p0_dig_l84",
+            "p0_dig_l85",
+            "p0_dig_l86",
+            "p0_dig_l87"
+          ],
+          "originalCourseName": "VLSI Design",
+          "normalizedCourseName": "VLSI Design",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC613",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "VLSI Design",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "B+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 6,
+          "courseCode": "20EC662",
+          "courseName": "Medical Electronics",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l88",
+            "p0_dig_l89",
+            "p0_dig_l90",
+            "p0_dig_l91",
+            "p0_dig_l92",
+            "p0_dig_l93",
+            "p0_dig_l94"
+          ],
+          "originalCourseName": "Medical Electronics",
+          "normalizedCourseName": "Medical Electronics",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC662",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Medical Electronics",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 6,
+          "courseCode": "20EC621",
+          "courseName": "Communication Systems Laboratory",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l95",
+            "p0_dig_l96",
+            "p0_dig_l97",
+            "p0_dig_l98",
+            "p0_dig_l99",
+            "p0_dig_l100",
+            "p0_dig_l101",
+            "p0_dig_l102"
+          ],
+          "originalCourseName": "Communication Systems Laboratory",
+          "normalizedCourseName": "Communication Systems Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC621",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Communication Systems Laboratory",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 6,
+          "courseCode": "20EC622",
+          "courseName": "VLSI Laboratory",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l103",
+            "p0_dig_l104",
+            "p0_dig_l105",
+            "p0_dig_l106",
+            "p0_dig_l107",
+            "p0_dig_l108",
+            "p0_dig_l109"
+          ],
+          "originalCourseName": "VLSI Laboratory",
+          "normalizedCourseName": "VLSI Laboratory",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20EC622",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "VLSI Laboratory",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 9,
+          "semester": 6,
+          "courseCode": "20HR644",
+          "courseName": "Career Development Skills IV",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_dig_l110",
+            "p0_dig_l111",
+            "p0_dig_l112",
+            "p0_dig_l113",
+            "p0_dig_l114",
+            "p0_dig_l115",
+            "p0_dig_l116",
+            "p0_dig_l117",
+            "p0_dig_l118",
+            "p0_dig_l119"
+          ],
+          "originalCourseName": "Career Development Skills - IV",
+          "normalizedCourseName": "Career Development Skills IV",
+          "gradeConfidence": 1.0,
+          "confidence": 97,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "20HR644",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Career Development Skills IV",
+              "confidence": 97.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1
+        ],
+        "pageIndexes": [
+          1
+        ],
+        "pageStart": 1,
+        "pageEnd": 1,
+        "groupConfidence": 0.9044,
+        "confidence": {
+          "register_confidence": 0.7132500015312498,
+          "name_confidence": 1.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.9044
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 1.0,
+        "line_count": 156,
+        "attempts": [
+          "pdfplumber"
+        ],
+        "selected": "pdfplumber",
+        "page_indices": [
+          0
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 156,
+          "detected_course_codes": 9,
+          "logical_rows": 21,
+          "subject_objects": 9,
+          "validated_subjects": 9
+        }
+      },
+      "raw_text": "K.S.R\nCOLLEGE\nOF\nENGINEERING,\nTIRUCHENGODE\n-\n637\n215\n(Autonomous)\nUG\n&\nPG\nEND\nSEMESTER\nEXAMINATIONS\n-\nJune\n2026\nRegister\nNumber\n:\n73152315009\nName\nof\nthe\nCandidate\n:\nBHARATHRAJ\nS\nProgramme\n:\nB.E\n-\nElectronics\nand\nCommunication\nEngineering\nCOURSE\nGRADE\nS.NOSEMESTER\nCOURSE\nNAME\nRESULT\nCODE\nOBTAINED\n1\n6\n20EC614\nAntenna\nand\nWave\nPropagation\nB+\nP\nUniversal\nHuman\nValues\nand\nUnderstanding\n2\n6\n20HS051\nB\nP\nHarmony\n3\n6\n20EC611\nDigital\nCommunication\nSystems\nB\nP\n4\n6\n20EC612\nDigital\nImage\nProcessing\nB+\nP\n5\n6\n20EC613\nVLSI\nDesign\nB+\nP\n6\n6\n20EC662\nMedical\nElectronics\nA\nP\n7\n6\n20EC621\nCommunication\nSystems\nLaboratory\nA\nP\n8\n6\n20EC622\nVLSI\nLaboratory\nA\nP\n9\n6\n20HR644\nCareer\nDevelopment\nSkills\n-\nIV\nA\nP\nRevaluation\nSchedule\nLast\ndate\nfor\nApplying\n&\nRemitting\nfees\nfor\nPhotocopy\nis\n:15-07-2026\n\"Utmost\ncare\nhas\nbeen\ntaken\nin\npublishing\nthe\nresult\non\nwebsite.\nIn\ncase\nof\nany\nerror\nthe\ncontroller\nof\nexamination's\ndecision\nis\nfinal.\"",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 1 pages ===",
+        "[INFO] Grouped 1 pages into 1 student record documents.",
+        "[INFO] Processing Student Group 1/1 (Register: 73152315009, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 800.00",
+        "[INFO] Page 1: Stripped 0 header lines, 0 footer lines.",
+        "[INFO] Successfully merged 1 pages into 156 continuous document lines.",
+        "[INFO] Detected document type: unknown",
+        "[INFO] Matched University Profile: Generic Academic Institution",
+        "[INFO] Selected Register Number: '73152315009' with confidence 71.32500015312499% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 5",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 21 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152315009'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate : BHARATHRAJ S'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'B+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :15'",
+        "[DEBUG] Skipping blocked layout row: '\"Utmost care has been taken in publishing the result on webs'",
+        "[DEBUG] Skipping blocked layout row: 'examination's decision is final.\"'",
+        "[INFO] Reconstructed 9 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 6 (fraction=1.00)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 5",
+        "[INFO] [Semester Inference] Resolved Semester=6 with confidence=0.40",
+        "[INFO] Completed student group extraction: 9 subjects parsed, 9 warning/review flags."
+      ]
+    }
+  ]
+}
