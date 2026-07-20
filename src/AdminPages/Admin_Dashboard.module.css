@@ -27,7 +27,7 @@
 .ad-db-dashboard-area {
   flex: 1;
   background: #fff;
-  padding: 10px 10px 10px 20px;
+  padding: 25px 32px 15px 32px;
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
@@ -361,9 +361,9 @@
   /* CRITICAL: Enable scrolling on mobile */
   .ad-db-dashboard-area {
     --mobile-side-gap: 10px;
-    padding: 10px 10px 10px 20px;
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
-    overflow-y: scroll !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
@@ -373,7 +373,6 @@
     justify-content: flex-start !important;
     min-height: 0 !important;
     -webkit-overflow-scrolling: touch !important;
-    scrollbar-gutter: stable both-edges !important;
   }
 
   /* Mobile Scrollbar Styling */

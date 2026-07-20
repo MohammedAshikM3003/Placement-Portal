@@ -55,6 +55,7 @@
     display: flex;
     flex-direction: column;
     height: 305px;
+    box-sizing: border-box;
 }
 
 /* AI mode should inherit standard filter card dimensions */
@@ -275,6 +276,9 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* Static Label (Fixed on Top Left) */
@@ -333,10 +337,12 @@
     position: relative;
     border: 3px solid #ccc;
     border-radius: 8px;
-    overflow: visible;
+    overflow: hidden;
     height: 45px;
     background-color: #ffffff;
     transition: border-color 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .Admin-DB-text {
@@ -350,6 +356,7 @@
     color: #333;
     position: relative;
     z-index: 0;
+    box-sizing: border-box;
 }
 
 .Admin-DB-text::placeholder {
@@ -378,12 +385,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .Admin-DB-batch-range-inputs .Admin-DB-text-container,
-.Admin-DB-yearsem-range-inputs .Admin-DB-dropdown-container {
+.Admin-DB-yearsem-range-inputs .Admin-DB-dropdown-container,
+.Admin-DB-yearsem-range-inputs .db-dropdown-wrapper {
     flex: 1;
     min-width: 0;
+    width: 100%;
 }
 
 .Admin-DB-batch-range-sep,
@@ -586,6 +597,25 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.Admin-DB-table-title-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.mobile-only-print {
+    display: none !important;
+}
+
+.desktop-only-print {
+    display: inline-block !important;
+}
+
+.Admin-DB-table-scroll-area {
+    width: 100%;
 }
 
 .Admin-DB-table-subtitle {
@@ -1138,9 +1168,11 @@
         border-radius: 25px;
         flex: 1 1 auto;
         width: 100%;
-        height: 530px;
+        height: auto !important;
+        min-height: auto;
         min-width: 0;
-        /* same height for both normal and AI filter on mobile */
+        box-sizing: border-box !important;
+        padding: 15px 16px !important;
     }
 
     .Admin-DB-ai-toggle-btn {
@@ -1166,6 +1198,8 @@
     .Admin-DB-filter-content {
         grid-template-columns: 1fr;
         gap: 12px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .Admin-DB-button-group {
@@ -1178,63 +1212,116 @@
         height: auto !important;
         width: 100% !important;
         flex: none !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-DB-action-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 12px 16px !important;
         flex: 1 1 auto !important;
         width: 100% !important;
-        min-height: 55px !important;
         height: auto !important;
         box-sizing: border-box !important;
     }
 
+    .Admin-DB-action-header,
+    .Admin-DB-header-disabled,
+    .Admin-DB-header-edit-active,
+    .Admin-DB-header-block-active,
+    .Admin-DB-header-unblock-active,
+    .Admin-DB-header-delete-active {
+        align-self: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+
+    .Admin-DB-action-description {
+        margin: 0 !important;
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .Admin-DB-action-btn {
+        height: 40px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 8px 20px !important;
+        margin-top: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .mobile-only-print {
+        display: inline-block !important;
+    }
+
+    .desktop-only-print {
+        display: none !important;
+    }
+
+    .Admin-DB-table-title-wrap {
+        width: 100% !important;
+    }
+
+    .Admin-DB-table-title-top-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
     .Admin-DB-bottom-card {
-        margin-left: 0;
-        padding: 15px 15px 35px 15px;
-        flex: none;
-        width: 100%;
-        margin-bottom: 40px;
+        margin-left: 0 !important;
+        padding: 15px 15px 35px 15px !important;
+        flex: none !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-DB-table-header-row {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        flex-wrap: wrap;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
     }
 
     .Admin-DB-table-actions {
-        width: 100%;
-        justify-content: flex-end;
-        flex-wrap: wrap;
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
     }
 
     .Admin-DB-pagination-controls {
-        order: -1;
+        order: -1 !important;
     }
 
     .Admin-DB-table-container {
-        height: 250px;
-        max-height: 250px;
-        overflow-y: auto;
-        overflow-x: auto;
-        position: relative;
-        bottom: auto;
-        flex-grow: 1;
-        padding-bottom: 25px;
-        /* Leave space for horizontal scrollbar on mobile */
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 1 !important;
+        width: 100% !important;
     }
 
-    /* Ensure consistent button sizes on mobile */
-    .Admin-DB-action-btn {
-        height: 40px;
-        width: 100%;
-        max-width: 140px;
-        padding: 8px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .Admin-DB-table-scroll-area {
+        height: auto !important;
+        max-height: 310px !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 15px !important;
     }
 
     /* Main content scrollbar (behind navbar) */
@@ -1542,6 +1629,8 @@
 .db-dropdown-wrapper {
     max-width: 100% !important;
     width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
 }
 
 .db-dropdown-header {
@@ -1551,6 +1640,8 @@
     background-color: #ffffff !important;
     font-size: 0.95rem !important;
     color: #333 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 
 .db-dropdown-header:hover {

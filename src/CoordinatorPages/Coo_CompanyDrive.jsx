@@ -1083,7 +1083,24 @@ export default function App({ onLogout, currentView, onViewChange }) {
           <div className={styles['co-cd-drive-table-container']}>
               <div className={styles['co-cd-table-header-row']}>
                   <div className={styles['co-cd-table-title-wrap']}>
-                      <h3 className={styles['co-cd-table-title']}>COMPANY DRIVE</h3>
+                      <div className={styles['co-cd-table-title-top-row']}>
+                          <h3 className={styles['co-cd-table-title']}>COMPANY DRIVE</h3>
+                          <div className={`${styles['co-cd-print-button-container']} ${styles['mobile-only-print']}`}>
+                              <button
+                                  type="button"
+                                  className={styles['co-cd-print-btn']}
+                                  onClick={toggleExportMenu}
+                              >
+                                  Print
+                              </button>
+                              {showExportMenu && (
+                                  <div className={styles['co-cd-export-menu']}>
+                                      <button type="button" onClick={handleExportToExcel}>Export to Excel</button>
+                                      <button type="button" onClick={handleExportToPDF}>Save as PDF</button>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
                       {!isInitialLoading && (
                           <div className={styles['co-cd-table-subtitle']}>
                               Page {currentPage} of {totalPages} | Showing {paginatedDrives.length} on this page
@@ -1114,7 +1131,7 @@ export default function App({ onLogout, currentView, onViewChange }) {
                               </button>
                           </div>
                       )}
-                      <div className={styles['co-cd-print-button-container']}>
+                      <div className={`${styles['co-cd-print-button-container']} ${styles['desktop-only-print']}`}>
                           <button
                               type="button"
                               className={styles['co-cd-print-btn']}

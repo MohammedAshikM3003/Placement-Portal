@@ -735,7 +735,24 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
           <div className={styles['co-cp-bottom-card']}>
               <div className={styles['co-cp-table-header-row']}>
                   <div className={styles['co-cp-table-title-wrap']}>
-                      <h3 className={styles['co-cp-table-title']}>COMPANY PROFILE</h3>
+                      <div className={styles['co-cp-table-title-top-row']}>
+                          <h3 className={styles['co-cp-table-title']}>COMPANY PROFILE</h3>
+                          <div className={`${styles['co-cp-print-button-container']} ${styles['mobile-only-print']}`}>
+                              <button
+                                  type="button"
+                                  className={styles['co-cp-print-btn']}
+                                  onClick={() => setShowExportMenu((prev) => !prev)}
+                              >
+                                  Print
+                              </button>
+                              {showExportMenu && (
+                                  <div className={styles['co-cp-export-menu']}>
+                                      <button type="button" onClick={handleExportToExcel}>Export to Excel</button>
+                                      <button type="button" onClick={handleExportToPDF}>Save as PDF</button>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
                       {!isInitialLoading && (
                           <div className={styles['co-cp-table-subtitle']}>
                               Page {currentPage} of {totalPages} | Showing {paginatedCompanies.length} on this page
@@ -766,7 +783,7 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
                               </button>
                           </div>
                       )}
-                      <div className={styles['co-cp-print-button-container']}>
+                      <div className={`${styles['co-cp-print-button-container']} ${styles['desktop-only-print']}`}>
                           <button
                               type="button"
                               className={styles['co-cp-print-btn']}

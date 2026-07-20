@@ -99,6 +99,7 @@ function DataTable({
   className = '',
   style = {},
   scrollAreaStyle = {},
+  scrollAreaClassName = '',
 }) {
   // ── Derived state ──────────────────────────────────────────────
   const hasData = data.length > 0;
@@ -184,7 +185,7 @@ function DataTable({
       )}
 
       {/* ── Scrollable table area ────────────────────────────── */}
-      <div className={styles.scrollArea} style={scrollAreaStyle}>
+      <div className={`${styles.scrollArea} ${scrollAreaClassName}`} style={scrollAreaStyle}>
         <table className={styles.table} role="table">
           <thead className={styles.thead}>
             <tr>

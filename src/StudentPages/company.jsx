@@ -880,10 +880,6 @@ export default function Company({ onLogout, onViewChange }) {
   return (
     <div className={styles.container}>
       {fireworkConfettiElement}
-      <button type="button" className={styles.fireworkButton} onClick={triggerFireworkConfetti}>
-        <span className={styles.fireworkButtonIcon}>✦</span>
-        <span>Firework</span>
-      </button>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className={styles.main}>
         <Sidebar 

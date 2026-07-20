@@ -343,10 +343,6 @@ export default function StudentDashboard({ onLogout, onViewChange }) {
   return (
     <div className={styles['stu-db-container']}>
       <ExactDiwaliBurst isActive={showFireworkConfetti} />
-      <button type="button" className={styles['stu-db-firework-btn']} onClick={triggerFireworkConfetti}>
-        <span className={styles['stu-db-firework-icon']}>✦</span>
-        <span>Firework</span>
-      </button>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className={styles['stu-db-main']}>
         <Sidebar 

@@ -38,7 +38,7 @@
 /* --- DASHBOARD CONTENT AREA --- */
 .coordinator-dashboard-page .co-db-dashboard-area {
   flex: 1;
-  padding: 10px 10px 10px 20px;
+  padding: 25px 32px 15px 32px;
   background: #fff;
   overflow-y: auto;
   overflow-x: hidden;
@@ -365,7 +365,7 @@
   .coordinator-dashboard-page .co-db-dashboard-area {
     margin-left: 0 !important;
     width: 100% !important;
-    padding: 10px 10px 10px 20px;
+    padding: 25px 32px 15px 32px;
   }
 
   .coordinator-dashboard-page .co-db-dashboard-grid {
@@ -412,9 +412,10 @@
   }
 
   .coordinator-dashboard-page .co-db-dashboard-area {
-    padding: 10px 10px 10px 20px;
+    --mobile-side-gap: 10px;
+    padding: 10px var(--mobile-side-gap) 25px var(--mobile-side-gap) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
-    overflow-y: scroll !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
     height: calc(100vh - 65px) !important;
     height: calc(100dvh - 65px) !important;
@@ -424,7 +425,6 @@
     justify-content: flex-start !important;
     min-height: 0 !important;
     -webkit-overflow-scrolling: touch !important;
-    scrollbar-gutter: stable both-edges !important;
   }
 
   .coordinator-dashboard-page .co-db-dashboard-area::-webkit-scrollbar {

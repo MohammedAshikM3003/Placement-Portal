@@ -874,6 +874,40 @@
   font-size: 0.95rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.popup-dropdown-wrapper {
+  height: 40px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+.popup-dropdown-header {
+  border: 2px solid #ccc !important;
+  border-radius: 6px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 0.9rem !important;
+  padding: 0 10px !important;
+  line-height: 36px !important;
+  background-color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.popup-dropdown-wrapper:hover .popup-dropdown-header {
+  border-color: #d23b42 !important;
+}
+
 /* ============================================================================
    MOBILE RESPONSIVENESS (Mapped from Coo_CompanyProfile)
    ============================================================================ */

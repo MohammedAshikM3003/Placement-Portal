@@ -565,68 +565,74 @@ function CooSubjects({ onLogout, onViewChange }) {
               <div className={styles['ms-popup-body']}>
                 {popupError && <div style={{ color: 'red', fontWeight: 'bold' }}>{popupError}</div>}
                 
-                <div className={styles['form-group']}>
-                  <label>Subject Code</label>
-                  <input 
-                    type="text" 
-                    value={popupData.courseCode} 
-                    onChange={(e) => setPopupData(prev => ({ ...prev, courseCode: e.target.value }))}
-                    className={styles['form-input']}
-                    placeholder="e.g. 20CS601"
-                    required
-                    disabled={popupMode === 'edit'} // Code is usually immutable once set in master to preserve joins
-                  />
+                <div className={styles['form-row']}>
+                  <div className={styles['form-group']}>
+                    <label>Subject Code</label>
+                    <input 
+                      type="text" 
+                      value={popupData.courseCode} 
+                      onChange={(e) => setPopupData(prev => ({ ...prev, courseCode: e.target.value }))}
+                      className={styles['form-input']}
+                      placeholder="e.g. 20CS601"
+                      required
+                      disabled={popupMode === 'edit'} // Code is usually immutable once set in master to preserve joins
+                    />
+                  </div>
+
+                  <div className={styles['form-group']} style={{ flex: 1.5 }}>
+                    <label>Subject Name</label>
+                    <input 
+                      type="text" 
+                      value={popupData.courseName} 
+                      onChange={(e) => setPopupData(prev => ({ ...prev, courseName: e.target.value }))}
+                      className={styles['form-input']}
+                      placeholder="e.g. Compiler Design"
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div className={styles['form-group']}>
-                  <label>Subject Name</label>
-                  <input 
-                    type="text" 
-                    value={popupData.courseName} 
-                    onChange={(e) => setPopupData(prev => ({ ...prev, courseName: e.target.value }))}
-                    className={styles['form-input']}
-                    placeholder="e.g. Compiler Design"
-                    required
-                  />
+                <div className={styles['form-row']}>
+                  <div className={styles['form-group']}>
+                    <label>Credits</label>
+                    <Dropdown
+                      options={['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']}
+                      selectedOption={popupData.credits}
+                      onSelect={(val) => setPopupData(prev => ({ ...prev, credits: val || '3' }))}
+                      placeholder="Select Credits"
+                      role="coordinator"
+                      className={styles['popup-dropdown-wrapper']}
+                      headerClassName={styles['popup-dropdown-header']}
+                    />
+                  </div>
+
+                  <div className={styles['form-group']}>
+                    <label>Year</label>
+                    <Dropdown
+                      options={['I', 'II', 'III', 'IV']}
+                      selectedOption={popupData.year}
+                      onSelect={(val) => setPopupData(prev => ({ ...prev, year: val || 'I', semester: YEAR_SEMESTER_MAP[val || 'I'][0] }))}
+                      placeholder="Select Year"
+                      role="coordinator"
+                      className={styles['popup-dropdown-wrapper']}
+                      headerClassName={styles['popup-dropdown-header']}
+                    />
+                  </div>
                 </div>
 
-                <div className={styles['form-group']}>
-                  <label>Credits</label>
-                  <input 
-                    type="number" 
-                    min="0"
-                    max="10"
-                    value={popupData.credits} 
-                    onChange={(e) => setPopupData(prev => ({ ...prev, credits: e.target.value }))}
-                    className={styles['form-input']}
-                    required
-                  />
-                </div>
-
-                <div className={styles['form-group']}>
-                  <label>Year</label>
-                  <Dropdown
-                    options={['I', 'II', 'III', 'IV']}
-                    selectedOption={popupData.year}
-                    onSelect={(val) => setPopupData(prev => ({ ...prev, year: val || 'I', semester: YEAR_SEMESTER_MAP[val || 'I'][0] }))}
-                    placeholder="Select Year"
-                    role="coordinator"
-                    className={styles['co-history-dropdown-wrapper']}
-                    headerClassName={styles['co-history-dropdown-header']}
-                  />
-                </div>
-
-                <div className={styles['form-group']}>
-                  <label>Semester</label>
-                  <Dropdown
-                    options={semesterOptionsForPopup}
-                    selectedOption={popupData.semester}
-                    onSelect={(val) => setPopupData(prev => ({ ...prev, semester: val || '1' }))}
-                    placeholder="Select Semester"
-                    role="coordinator"
-                    className={styles['co-history-dropdown-wrapper']}
-                    headerClassName={styles['co-history-dropdown-header']}
-                  />
+                <div className={styles['form-row']}>
+                  <div className={styles['form-group']}>
+                    <label>Semester</label>
+                    <Dropdown
+                      options={semesterOptionsForPopup}
+                      selectedOption={popupData.semester}
+                      onSelect={(val) => setPopupData(prev => ({ ...prev, semester: val || '1' }))}
+                      placeholder="Select Semester"
+                      role="coordinator"
+                      className={styles['popup-dropdown-wrapper']}
+                      headerClassName={styles['popup-dropdown-header']}
+                    />
+                  </div>
                 </div>
               </div>
               <div className={styles['ms-popup-footer']}>

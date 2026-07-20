@@ -83,7 +83,7 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
 
   const [filters, setFilters] = useState({
     search: "",
-    dept: "",
+    year: "",
     section: "",
     mobile: "",
   });
@@ -293,8 +293,8 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
     loadSavedAttendance();
   }, [activeAssignment, activeBatchDate, activePhaseNumber]);
 
-  const departmentOptions = useMemo(() => {
-    return [...new Set(students.map((student) => (student?.dept || "").toString().trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const yearOptions = useMemo(() => {
+    return [...new Set(students.map((student) => (student?.year || "").toString().trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   }, [students]);
 
   const sectionOptions = useMemo(() => {
@@ -303,7 +303,7 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
 
   const filteredStudents = useMemo(() => {
     const searchQ = (filters.search || "").trim().toLowerCase();
-    const deptQ = (filters.dept || "").trim().toLowerCase();
+    const yearQ = (filters.year || "").trim().toLowerCase();
     const sectionQ = (filters.section || "").trim().toLowerCase();
     const mobileQ = (filters.mobile || "").trim().toLowerCase();
 
@@ -314,14 +314,32 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
       const resolvedStatus = (pendingChanges[student.id] || student.status || "").toString().trim().toLowerCase();
 
       const searchMatch = !searchQ || nameValue.includes(searchQ) || regNoValue.includes(searchQ);
-      const deptMatch = !deptQ || (student.dept || "").toLowerCase() === deptQ;
+      const yearMatch = !yearQ || (student.year || "").toLowerCase() === yearQ;
       const sectionMatch = !sectionQ || (student.section || "").toLowerCase() === sectionQ;
       const mobileMatch = !mobileQ || mobileValue.includes(mobileQ);
       const statusMatch = statusFilter === "all" || resolvedStatus === statusFilter;
 
-      return searchMatch && deptMatch && sectionMatch && mobileMatch && statusMatch;
+      return searchMatch && yearMatch && sectionMatch && mobileMatch && statusMatch;
     });
   }, [students, filters, statusFilter, pendingChanges]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      filters.search ||
+      filters.year ||
+      filters.section ||
+      filters.mobile
+    );
+  }, [filters]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: "",
+      year: "",
+      section: "",
+      mobile: "",
+    });
+  };
 
   const attendanceStatusCounts = useMemo(() => {
     return students.reduce(
@@ -533,62 +551,65 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
               <div className={styles["filter-card"]}>
                 <div className={styles["ta-filter-tabs-container"]}>
                   <button className={styles["ta-filter-tab-button"]} type="button">Phase - {activePhaseNumber}</button>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      className={styles["ta-clear-btn-header"]}
+                      onClick={handleClearFilters}
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
 
                 <div className={styles["ta-filter-fields-container"]}>
                   <div className={styles["ta-filter-fields-row"]}>
                     <div className={styles["ta-filter-input-wrapper"]}>
+                      <label className={styles["ta-filter-label"]}>Enter name / registration</label>
                       <input
-                        id="ta-filter-search"
-                        className={styles["ta-filter-input"]}
                         type="text"
-                        placeholder="Enter Name / Registration No."
+                        className={styles["ta-filter-input"]}
+                        placeholder="Enter name / registration"
                         value={filters.search}
                         onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                       />
-                      <label className={styles["ta-filter-label"]} htmlFor="ta-filter-search">Enter Name / Registration No.</label>
                     </div>
-
                     <div className={styles["ta-filter-input-wrapper"]}>
+                      <label className={styles["ta-filter-label"]}>Year</label>
                       <Dropdown
-                        id="ta-filter-dept"
-                        options={['', ...departmentOptions].map(opt => ({ label: opt === '' ? 'Select Department' : opt, value: opt }))}
-                        selectedOption={filters.dept}
-                        onSelect={(val) => setFilters((prev) => ({ ...prev, dept: val }))}
-                        placeholder="Select Department"
+                        options={yearOptions}
+                        selectedOption={filters.year}
+                        onSelect={(val) => setFilters((prev) => ({ ...prev, year: val }))}
+                        placeholder="Year"
                         role="coordinator"
                         className={styles["ta-dropdown-wrapper"]}
                         headerClassName={styles["ta-dropdown-header"]}
                       />
-                      <label className={styles["ta-filter-label"]} htmlFor="ta-filter-dept">Department</label>
                     </div>
                   </div>
 
                   <div className={styles["ta-filter-fields-row"]}>
                     <div className={styles["ta-filter-input-wrapper"]}>
+                      <label className={styles["ta-filter-label"]}>Section</label>
                       <Dropdown
-                        id="ta-filter-section"
-                        options={['', ...sectionOptions].map(opt => ({ label: opt === '' ? 'Select Section' : opt, value: opt }))}
+                        options={sectionOptions}
                         selectedOption={filters.section}
                         onSelect={(val) => setFilters((prev) => ({ ...prev, section: val }))}
-                        placeholder="Select Section"
+                        placeholder="Section"
                         role="coordinator"
                         className={styles["ta-dropdown-wrapper"]}
                         headerClassName={styles["ta-dropdown-header"]}
                       />
-                      <label className={styles["ta-filter-label"]} htmlFor="ta-filter-section">Section</label>
                     </div>
-
                     <div className={styles["ta-filter-input-wrapper"]}>
+                      <label className={styles["ta-filter-label"]}>Enter Mobile number</label>
                       <input
-                        id="ta-filter-mobile"
-                        className={styles["ta-filter-input"]}
                         type="text"
-                        placeholder="Enter Mobile Number"
+                        className={styles["ta-filter-input"]}
+                        placeholder="Enter Mobile number"
                         value={filters.mobile}
                         onChange={(e) => setFilters((prev) => ({ ...prev, mobile: e.target.value }))}
                       />
-                      <label className={styles["ta-filter-label"]} htmlFor="ta-filter-mobile">Enter Mobile Number</label>
                     </div>
                   </div>
                 </div>

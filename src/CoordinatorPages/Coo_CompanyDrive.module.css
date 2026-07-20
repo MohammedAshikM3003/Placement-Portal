@@ -349,6 +349,21 @@
     gap: 2px;
 }
 
+.co-cd-table-title-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.mobile-only-print {
+    display: none !important;
+}
+
+.desktop-only-print {
+    display: inline-block !important;
+}
+
 .co-cd-table-title {
     font-size: 1.3rem;
     font-weight: 700;
@@ -843,22 +858,50 @@
     }
 
     /* Filter Section Adjustments */
-    .co-cd-search-filter-card {
+    .co-cd-filter-section {
         border-radius: 25px !important;
         flex: 1 1 auto !important;
         width: 100% !important;
         height: auto !important;
         max-width: 100% !important;
+        min-width: 0 !important;
         box-sizing: border-box !important;
+        padding: 15px 16px !important;
     }
     
-    .co-cd-search-filter-card__fields-container {
+    .co-cd-filter-content {
+        grid-template-columns: 1fr !important;
         gap: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    .co-cd-search-filter-card__fields-row {
-        flex-direction: column !important;
-        gap: 12px !important;
+    .co-cd-input-wrapper {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .co-cd-text-container {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .co-cd-date-range-inputs {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .co-cd-dropdown-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .co-cd-dropdown-header {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     
     /* Left Card: Report Analysis Adjustments */
@@ -916,10 +959,32 @@
         margin-top: 10px !important;
     }
 
+    .mobile-only-print {
+        display: inline-block !important;
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
+    }
+
+    .desktop-only-print {
+        display: none !important;
+    }
+
+    .co-cd-table-title-wrap {
+        width: 100% !important;
+    }
+
+    .co-cd-table-title-top-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
     .co-cd-print-button-container {
-        position: absolute !important;
-        right: 0px !important;
-        top: 10px !important;
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
         z-index: 15;
     }
 

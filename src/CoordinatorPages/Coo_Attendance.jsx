@@ -463,25 +463,17 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
               headerClassName={styles['attendance-dropdown-header']}
             />
             
-            {/* End Date Display (Read-only) */}
-            <div className={styles["co-at-filter-select"]}>
-              <div 
-                className={styles["co-at-filter-select-display"]}
-                style={{ 
-                  cursor: 'default',
-                  backgroundColor: '#ffffff',
-                  color: endDate ? '#333' : '#999'
-                }}
-              >
-                {endDate ? formatDateDisplay(endDate) : "Select End Date"}
-              </div>
-              <span 
-                className={styles["co-at-filter-select-arrow"]}
-                style={{ cursor: 'default', opacity: 0.3 }}
-              >
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2"/></svg>
-              </span>
-            </div>
+            {/* End Date Dropdown */}
+            <Dropdown
+              options={endDate ? [formatDateDisplay(endDate)] : []}
+              selectedOption={endDate ? formatDateDisplay(endDate) : ''}
+              onSelect={() => {}}
+              placeholder="Select End Date"
+              disabled={!endDate}
+              role="coordinator"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
           </div>
           {/* Grid and Pie Chart Section */}
           <div className={styles["co-at-summary-pie-layout"]}>

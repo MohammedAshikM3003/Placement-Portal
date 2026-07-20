@@ -1333,9 +1333,26 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                     <div className={styles["co-ms-bottom-card"]}>
                         <div className={styles["co-ms-table-header-row"]}>
                             <div className={styles["co-ms-table-title-wrap"]}>
-                                <h3 className={styles["co-ms-table-title"]}>
-                                    {isTableLoading ? 'STUDENTS' : `${(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE (${visibleStudents.length})`}
-                                </h3>
+                                <div className={styles["co-ms-table-title-top-row"]}>
+                                    <h3 className={styles["co-ms-table-title"]}>
+                                        {isTableLoading ? 'STUDENTS' : `${(filterDept || coordinatorDepartment || '').toUpperCase()} STUDENT DATABASE (${visibleStudents.length})`}
+                                    </h3>
+                                    <div className={cx(styles["co-ms-print-button-container"], styles["mobile-only-print"])}>
+                                        <button 
+                                            className={styles["co-ms-print-btn"]} 
+                                            onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}
+                                        >
+                                            Print
+                                        </button>
+                                        
+                                        {showExportMenu && (
+                                            <div className={styles["co-ms-export-menu"]}>
+                                                <button onClick={handleExportToExcel}>Export to Excel</button>
+                                                <button onClick={handleExportToPDF}>Save as PDF</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 {!isTableLoading && (
                                     <div className={styles["co-ms-table-subtitle"]}>
                                         Showing {visibleStudents.length} student{visibleStudents.length !== 1 ? 's' : ''} on this page
@@ -1350,7 +1367,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                     {viewBlocklist ? 'Back' : 'Blocked'}
                                 </button>
                                 {/* 3. Add the Print button with click handler to toggle the export menu */}
-                                <div className={styles["co-ms-print-button-container"]}>
+                                <div className={cx(styles["co-ms-print-button-container"], styles["desktop-only-print"])}>
                                     <button 
                                         className={styles["co-ms-print-btn"]} 
                                         onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}
@@ -1368,51 +1385,54 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                             </div>
                         </div>
 
-                        <DataTable
-                            columns={[
-                                { key: 'regNo',           header: 'Register Number' },
-                                { key: 'name',            header: 'Name' },
-                                { key: 'department',      header: 'Branch',
-                                    render: (row) => row.department || '--' },
-                                { key: 'yearSec',         header: 'Year-Sec',
-                                    render: (row) => row.currentYear && row.section
-                                        ? `${row.currentYear}-${row.section}`
-                                        : row.currentYear || row.section || '--' },
-                                { key: 'currentSemester', header: 'Sem',
-                                    render: (row) => row.currentSemester || '--' },
-                                { key: 'batch',           header: 'Batch' },
-                                ...aiColumns.map(columnKey => ({
-                                    key: columnKey,
-                                    header: AI_EXTRA_COLUMNS[columnKey].label,
-                                    render: AI_EXTRA_COLUMNS[columnKey].render
-                                        ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
-                                        : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
-                                })),
-                                { key: 'profile', header: 'Profile', align: 'center',
-                                    stopPropagation: true,
-                                    render: (row) => (
-                                        <span
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/coo-manage-students/view/${row.id}`, { state: { mode: 'view' } });
-                                            }}
-                                            style={{ cursor: 'pointer', display: 'inline-flex' }}
-                                        >
-                                            <EyeIcon />
-                                        </span>
-                                    ) },
-                            ]}
-                            data={visibleStudents}
-                            rowKey="id"
-                            isLoading={isTableLoading}
-                            loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
-                            emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
-                            selectable
-                            selectedIds={selectedStudentIds}
-                            onSelectionChange={setSelectedStudentIds}
-                            onRowClick={(row) => handleStudentSelect(row.id)}
-                            getRowVariant={(row) => row.blocked ? 'blocked' : null}
-                        />
+                        <div className={styles["co-ms-table-container"]}>
+                            <DataTable
+                                scrollAreaClassName={styles["co-ms-table-scroll-area"]}
+                                columns={[
+                                    { key: 'regNo',           header: 'Register Number' },
+                                    { key: 'name',            header: 'Name' },
+                                    { key: 'department',      header: 'Branch',
+                                        render: (row) => row.department || '--' },
+                                    { key: 'yearSec',         header: 'Year-Sec',
+                                        render: (row) => row.currentYear && row.section
+                                            ? `${row.currentYear}-${row.section}`
+                                            : row.currentYear || row.section || '--' },
+                                    { key: 'currentSemester', header: 'Sem',
+                                        render: (row) => row.currentSemester || '--' },
+                                    { key: 'batch',           header: 'Batch' },
+                                    ...aiColumns.map(columnKey => ({
+                                        key: columnKey,
+                                        header: AI_EXTRA_COLUMNS[columnKey].label,
+                                        render: AI_EXTRA_COLUMNS[columnKey].render
+                                            ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
+                                            : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
+                                    })),
+                                    { key: 'profile', header: 'Profile', align: 'center',
+                                        stopPropagation: true,
+                                        render: (row) => (
+                                            <span
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/coo-manage-students/view/${row.id}`, { state: { mode: 'view' } });
+                                                }}
+                                                style={{ cursor: 'pointer', display: 'inline-flex' }}
+                                            >
+                                                <EyeIcon />
+                                            </span>
+                                        ) },
+                                ]}
+                                data={visibleStudents}
+                                rowKey="id"
+                                isLoading={isTableLoading}
+                                loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                                emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
+                                selectable
+                                selectedIds={selectedStudentIds}
+                                onSelectionChange={setSelectedStudentIds}
+                                onRowClick={(row) => handleStudentSelect(row.id)}
+                                getRowVariant={(row) => row.blocked ? 'blocked' : null}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

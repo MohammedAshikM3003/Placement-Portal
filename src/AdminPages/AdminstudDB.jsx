@@ -1385,9 +1385,20 @@ function AdminstudDB() {
                     <div className={styles['Admin-DB-bottom-card']}>
                         <div className={styles['Admin-DB-table-header-row']}>
                             <div className={styles['Admin-DB-table-title-wrap']}>
-                                <h3 className={styles['Admin-DB-table-title']}>
-                                    {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${aiFilterActive ? visibleStudents.length : totalStudents}`}
-                                </h3>
+                                <div className={styles['Admin-DB-table-title-top-row']}>
+                                    <h3 className={styles['Admin-DB-table-title']}>
+                                        {isInitialLoading ? 'STUDENTS' : `STUDENTS: ${aiFilterActive ? visibleStudents.length : totalStudents}`}
+                                    </h3>
+                                    <div className={`${styles['Admin-DB-print-button-container']} ${styles['mobile-only-print']}`}>
+                                        <button className={styles['Admin-DB-print-btn']} onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}>Print</button>
+                                        {showExportMenu && (
+                                            <div className={styles['Admin-DB-export-menu']}>
+                                                <button onClick={exportToExcel}>Export to Excel</button>
+                                                <button onClick={exportToPDF}>Export as PDF</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 {!isInitialLoading && !aiFilterActive && (
                                     <div className={styles['Admin-DB-table-subtitle']}>
                                         Page {currentPage} of {totalPages} | Showing {visibleStudents.length} on this page
@@ -1430,7 +1441,7 @@ function AdminstudDB() {
                                 >
                                     Zip
                                 </button>
-                                <div className={styles['Admin-DB-print-button-container']}>
+                                <div className={`${styles['Admin-DB-print-button-container']} ${styles['desktop-only-print']}`}>
                                     <button className={styles['Admin-DB-print-btn']} onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}>Print</button>
                                     {showExportMenu && (
                                         <div className={styles['Admin-DB-export-menu']}>
@@ -1442,53 +1453,56 @@ function AdminstudDB() {
                             </div>
                         </div>
 
-                        <DataTable
-                            columns={[
-                                { key: 'regNo',           header: 'Register Number' },
-                                { key: 'name',            header: 'Name' },
-                                { key: 'department',      header: 'Branch' },
-                                { key: 'yearSec',         header: 'Year-Sec',
-                                    render: (row) => row.currentYear && row.section
-                                        ? `${row.currentYear}-${row.section}`
-                                        : row.currentYear || row.section || '--' },
-                                { key: 'currentSemester', header: 'Sem',
-                                    render: (row) => row.currentSemester || '--' },
-                                { key: 'batch',           header: 'Batch' },
-                                ...aiColumns.map(columnKey => ({
-                                    key: columnKey,
-                                    header: AI_EXTRA_COLUMNS[columnKey].label,
-                                    render: AI_EXTRA_COLUMNS[columnKey].render
-                                        ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
-                                        : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
-                                })),
-                                { key: 'profile', header: 'Profile', align: 'center',
-                                    stopPropagation: true,
-                                    render: (row) => (
-                                        <span
-                                            onClick={(e) => { e.stopPropagation(); handleViewProfile(row.id); }}
-                                            style={{ cursor: 'pointer', display: 'inline-flex' }}
-                                        >
-                                            <EyeIcon />
-                                        </span>
-                                    ) },
-                            ]}
-                            data={visibleStudents}
-                            rowKey="id"
-                            isLoading={isTableLoading}
-                            loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
-                            emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
-                            selectable
-                            selectedIds={selectedStudentIds}
-                            onSelectionChange={setSelectedStudentIds}
-                            onRowClick={(row) => handleStudentSelect(row.id)}
-                            getRowVariant={(row) => {
-                                if (selectedStudentIds.has(row.id)) return 'selected';
-                                if (row.blocked) return 'blocked';
-                                return null;
-                            }}
-                            showSerial
-                            serialOffset={pageStartSerial - 1}
-                        />
+                        <div className={styles['Admin-DB-table-container']}>
+                            <DataTable
+                                scrollAreaClassName={styles['Admin-DB-table-scroll-area']}
+                                columns={[
+                                    { key: 'regNo',           header: 'Register Number' },
+                                    { key: 'name',            header: 'Name' },
+                                    { key: 'department',      header: 'Branch' },
+                                    { key: 'yearSec',         header: 'Year-Sec',
+                                        render: (row) => row.currentYear && row.section
+                                            ? `${row.currentYear}-${row.section}`
+                                            : row.currentYear || row.section || '--' },
+                                    { key: 'currentSemester', header: 'Sem',
+                                        render: (row) => row.currentSemester || '--' },
+                                    { key: 'batch',           header: 'Batch' },
+                                    ...aiColumns.map(columnKey => ({
+                                        key: columnKey,
+                                        header: AI_EXTRA_COLUMNS[columnKey].label,
+                                        render: AI_EXTRA_COLUMNS[columnKey].render
+                                            ? (row) => AI_EXTRA_COLUMNS[columnKey].render(row)
+                                            : (row) => AI_EXTRA_COLUMNS[columnKey].value(row),
+                                    })),
+                                    { key: 'profile', header: 'Profile', align: 'center',
+                                        stopPropagation: true,
+                                        render: (row) => (
+                                            <span
+                                                onClick={(e) => { e.stopPropagation(); handleViewProfile(row.id); }}
+                                                style={{ cursor: 'pointer', display: 'inline-flex' }}
+                                            >
+                                                <EyeIcon />
+                                            </span>
+                                        ) },
+                                ]}
+                                data={visibleStudents}
+                                rowKey="id"
+                                isLoading={isTableLoading}
+                                loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
+                                emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
+                                selectable
+                                selectedIds={selectedStudentIds}
+                                onSelectionChange={setSelectedStudentIds}
+                                onRowClick={(row) => handleStudentSelect(row.id)}
+                                getRowVariant={(row) => {
+                                    if (selectedStudentIds.has(row.id)) return 'selected';
+                                    if (row.blocked) return 'blocked';
+                                    return null;
+                                }}
+                                showSerial
+                                serialOffset={pageStartSerial - 1}
+                            />
+                        </div>
                     </div>
 
                     {/* --- POPUPS --- */}
