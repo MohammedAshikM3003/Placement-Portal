@@ -666,7 +666,7 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
 
                   {!isLoading && filteredData.length === 0 && (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>
                         No students found matching the current filters.
                       </td>
                     </tr>

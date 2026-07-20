@@ -8,7 +8,7 @@ import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
 import CooCalendar from '../components/Calendar/Coo_Calendar';
-import Dropdown from '../components/common/Dropdown/Dropdown';
+import FormDropdown from '../components/common/FormDropdown/FormDropdown';
 import styles from './Coo_ManageStudentSemesterEdit.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/BlueAdminicon.png';
@@ -175,7 +175,7 @@ const IoMdClose = () => (
 const RequiredStar = () => <span className={styles.requiredStar}>*</span>;
 
 const GraduationCapIcon = () => (
-    <img src={Adminicons} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop:'-20px'}}/>
+    <img src={Adminicons} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop: '-20px' }} />
 );
 
 const FileIcon = () => (
@@ -338,45 +338,45 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
 
     return (
         <>
-        {shouldShowPreviewPopup && (
-            <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
-                <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.imagePreviewHeader}>Preview Image</div>
-                    <div className={styles.imagePreviewBody}>
-                        <img src={src} alt="Profile Preview" />
-                    </div>
-                    <div className={styles.imagePreviewFooter}>
-                        <button
-                            onClick={onClose}
-                            disabled={downloadPopupState === 'progress'}
-                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
-                        >
-                            Close
-                        </button>
-                        <button
-                            onClick={handleDownload}
-                            disabled={downloadPopupState === 'progress'}
-                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
-                        >
-                            {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
-                        </button>
+            {shouldShowPreviewPopup && (
+                <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
+                    <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.imagePreviewHeader}>Preview Image</div>
+                        <div className={styles.imagePreviewBody}>
+                            <img src={src} alt="Profile Preview" />
+                        </div>
+                        <div className={styles.imagePreviewFooter}>
+                            <button
+                                onClick={onClose}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={handleDownload}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                            >
+                                {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-        <DownloadSuccessAlert
-            isOpen={downloadPopupState === 'success'}
-            onClose={handleSuccessClose}
-            fileLabel="image"
-            title="Downloaded !"
-            description="The image has been successfully downloaded to your device."
-            color="#D23B42"
-        />
-        <DownloadFailedAlert
-            isOpen={downloadPopupState === 'error'}
-            onClose={() => setDownloadPopupState('none')}
-            color="#2563EB"
-        />
+            )}
+            <DownloadSuccessAlert
+                isOpen={downloadPopupState === 'success'}
+                onClose={handleSuccessClose}
+                fileLabel="image"
+                title="Downloaded !"
+                description="The image has been successfully downloaded to your device."
+                color="#D23B42"
+            />
+            <DownloadFailedAlert
+                isOpen={downloadPopupState === 'error'}
+                onClose={() => setDownloadPopupState('none')}
+                color="#2563EB"
+            />
         </>
     );
 };
@@ -1259,11 +1259,11 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             const normalizedStatus = normalizeText(application?.status);
             const overallStatus = attendanceAbsent ? 'Absent'
                 : normalizedStatus === 'placed' || normalizedStatus === 'selected' ? 'Placed'
-                : normalizedStatus === 'rejected' || normalizedStatus === 'failed' ? 'Rejected'
-                : application?.rounds?.some((round) => normalizeText(round?.status) === 'failed') ? 'Rejected'
-                : application?.rounds?.some((round) => normalizeText(round?.status) === 'absent') ? 'Absent'
-                : application?.rounds?.some((round) => normalizeText(round?.status) === 'passed') ? `Passed-${application.rounds.filter((round) => normalizeText(round?.status) === 'passed').length}`
-                : 'Pending';
+                    : normalizedStatus === 'rejected' || normalizedStatus === 'failed' ? 'Rejected'
+                        : application?.rounds?.some((round) => normalizeText(round?.status) === 'failed') ? 'Rejected'
+                            : application?.rounds?.some((round) => normalizeText(round?.status) === 'absent') ? 'Absent'
+                                : application?.rounds?.some((round) => normalizeText(round?.status) === 'passed') ? `Passed-${application.rounds.filter((round) => normalizeText(round?.status) === 'passed').length}`
+                                    : 'Pending';
 
             if (overallStatus === 'Placed' || overallStatus.startsWith('Passed-')) shortlistedCount += 1;
 
@@ -1596,7 +1596,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     }, [PIE_DATA, selectedRound]);
 
     const successRate = useMemo(() => {
-        const attended   = companyStats.totalDrivesAttended;
+        const attended = companyStats.totalDrivesAttended;
         const shortlisted = companyStats.shortlistedCount;
         if (attended === 0) return 0;
         return Math.min(100, Math.round((shortlisted / attended) * 100));
@@ -2523,7 +2523,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     fontSize: '14px'
                 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5"/>
+                        <path d="M20 6L9 17l-5-5" />
                     </svg>
                     <span>Your profile has been updated by admin</span>
                 </div>
@@ -2574,8 +2574,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     currentView={'manage-students'}
                     onViewChange={handleViewChange}
                     studentData={studentData}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+                    onClose={() => setIsSidebarOpen(false)}
+                />
                 <div className={styles.dashboardArea}>
                     <form ref={formRef} onSubmit={handleSave}>
                         {/* --- PERSONAL INFO --- */}
@@ -2662,7 +2662,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <Dropdown
+                                        <FormDropdown
                                             options={degrees.map((deg) => ({
                                                 label: deg.degreeFullName
                                                     ? deg.degreeAbbreviation
@@ -2684,97 +2684,97 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         />
                                         <input type="hidden" name="degree" value={selectedDegree || ''} />
                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Branch <RequiredStar /></label>
-                                         <Dropdown
-                                             options={filteredBranches.map((br) => ({
-                                                 label: br.branchFullName
-                                                     ? br.branchAbbreviation
-                                                         ? `${br.branchFullName} (${br.branchAbbreviation})`
-                                                         : br.branchFullName
-                                                     : getBranchOptionValue(br),
-                                                 value: getBranchOptionValue(br)
-                                             }))}
-                                             selectedOption={selectedBranch}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setSelectedBranch(value);
-                                                 setStudentData(prev => ({ ...prev, branch: value }));
-                                             }}
-                                             placeholder={selectedDegree ? 'Select Branch' : 'Select Degree First'}
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode || !selectedDegree}
-                                         />
-                                         <input type="hidden" name="branch" value={selectedBranch || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Current Year <RequiredStar /></label>
-                                         <Dropdown
-                                             options={['I', 'II', 'III', 'IV']}
-                                             selectedOption={currentYear || ''}
-                                             onSelect={(newYear) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setCurrentYear(newYear);
-                                                 const semesters = getAvailableSemesters(newYear);
-                                                 const firstSemester = semesters[0] || '';
-                                                 setCurrentSemester(firstSemester);
-                                                 setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
-                                             }}
-                                             placeholder="Current Year"
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="currentYear" value={currentYear || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Current Semester <RequiredStar /></label>
-                                         <Dropdown
-                                             options={getAvailableSemesters(currentYear)}
-                                             selectedOption={currentSemester || ''}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setCurrentSemester(value);
-                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
-                                             }}
-                                             placeholder={currentYear ? 'Current Semester' : 'Select Year First'}
-                                             role="coordinator"
-                                             disabled={!currentYear || isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="currentSemester" value={currentSemester || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Section <RequiredStar /></label>
-                                         <Dropdown
-                                             options={['A', 'B', 'C', 'D']}
-                                             selectedOption={selectedSection}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setSelectedSection(value);
-                                                 setStudentData((prev) => ({ ...(prev || {}), section: value }));
-                                             }}
-                                             placeholder="Section *"
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="section" value={selectedSection || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Gender <RequiredStar /></label>
-                                         <Dropdown
-                                             options={[
-                                                 { label: 'Male', value: 'male' },
-                                                 { label: 'Female', value: 'female' }
-                                             ]}
-                                             selectedOption={studentData?.gender || ''}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setStudentData(prev => ({ ...prev, gender: value }));
-                                             }}
-                                             placeholder="Gender"
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="gender" value={studentData?.gender || ''} />
+                                    <div className={styles.field}>
+                                        <label>Branch <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={filteredBranches.map((br) => ({
+                                                label: br.branchFullName
+                                                    ? br.branchAbbreviation
+                                                        ? `${br.branchFullName} (${br.branchAbbreviation})`
+                                                        : br.branchFullName
+                                                    : getBranchOptionValue(br),
+                                                value: getBranchOptionValue(br)
+                                            }))}
+                                            selectedOption={selectedBranch}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setSelectedBranch(value);
+                                                setStudentData(prev => ({ ...prev, branch: value }));
+                                            }}
+                                            placeholder={selectedDegree ? 'Select Branch' : 'Select Degree First'}
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode || !selectedDegree}
+                                        />
+                                        <input type="hidden" name="branch" value={selectedBranch || ''} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Current Year <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={['I', 'II', 'III', 'IV']}
+                                            selectedOption={currentYear || ''}
+                                            onSelect={(newYear) => {
+                                                if (isSaving || isViewMode) return;
+                                                setCurrentYear(newYear);
+                                                const semesters = getAvailableSemesters(newYear);
+                                                const firstSemester = semesters[0] || '';
+                                                setCurrentSemester(firstSemester);
+                                                setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
+                                            }}
+                                            placeholder="Current Year"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="currentYear" value={currentYear || ''} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Current Semester <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={getAvailableSemesters(currentYear)}
+                                            selectedOption={currentSemester || ''}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setCurrentSemester(value);
+                                                setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
+                                            }}
+                                            placeholder={currentYear ? 'Current Semester' : 'Select Year First'}
+                                            role="coordinator"
+                                            disabled={!currentYear || isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="currentSemester" value={currentSemester || ''} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Section <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={['A', 'B', 'C', 'D']}
+                                            selectedOption={selectedSection}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setSelectedSection(value);
+                                                setStudentData((prev) => ({ ...(prev || {}), section: value }));
+                                            }}
+                                            placeholder="Section *"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="section" value={selectedSection || ''} />
+                                    </div>
+                                    <div className={styles.field}>
+                                        <label>Gender <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={[
+                                                { label: 'Male', value: 'male' },
+                                                { label: 'Female', value: 'female' }
+                                            ]}
+                                            selectedOption={studentData?.gender || ''}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setStudentData(prev => ({ ...prev, gender: value }));
+                                            }}
+                                            placeholder="Gender"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="gender" value={studentData?.gender || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
@@ -2854,7 +2854,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
-                                    <div className={styles.profilePhotoBox}>
+                                    <div className={styles.profilePhotoBox} style={{ height: "720px" }}>
                                         <h3 className={styles.sectionHeader}>Profile Photo</h3>
                                         <div className={styles.profileIconContainer}>
                                             {profileImage ? (
@@ -2909,59 +2909,59 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className={styles.field}>
-                                         <label>Community <RequiredStar /></label>
-                                         <Dropdown
-                                             options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
-                                             selectedOption={studentData?.community || ''}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setStudentData(prev => ({ ...prev, community: value }));
-                                             }}
-                                             placeholder="Community"
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="community" value={studentData?.community || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Medium of Study <RequiredStar /></label>
-                                         <Dropdown
-                                             options={[
-                                                 { label: 'English', value: 'English' },
-                                                 { label: 'Tamil', value: 'Tamil' },
-                                                 { label: 'Others', value: 'Other' }
-                                             ]}
-                                             selectedOption={studentData?.mediumOfStudy || ''}
-                                             onSelect={(value) => {
-                                                 if (isSaving || isViewMode) return;
-                                                 setStudentData(prev => ({ ...prev, mediumOfStudy: value }));
-                                             }}
-                                             placeholder="Medium"
-                                             role="coordinator"
-                                             disabled={isSaving || isViewMode}
-                                         />
-                                         <input type="hidden" name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Blood Group</label>
-                                         <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving || isViewMode} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Aadhaar Number <RequiredStar /></label>
-                                         <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
-                                     </div>
-                                     <div className={styles.field}>
-                                         <label>Portfolio Link</label>
-                                         <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving || isViewMode} />
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
+                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                        <label>Community <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
+                                            selectedOption={studentData?.community || ''}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setStudentData(prev => ({ ...prev, community: value }));
+                                            }}
+                                            placeholder="Community"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="community" value={studentData?.community || ''} />
+                                    </div>
+                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                        <label>Medium of Study <RequiredStar /></label>
+                                        <FormDropdown
+                                            options={[
+                                                { label: 'English', value: 'English' },
+                                                { label: 'Tamil', value: 'Tamil' },
+                                                { label: 'Others', value: 'Other' }
+                                            ]}
+                                            selectedOption={studentData?.mediumOfStudy || ''}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setStudentData(prev => ({ ...prev, mediumOfStudy: value }));
+                                            }}
+                                            placeholder="Medium"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} />
+                                    </div>
+                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                        <label>Blood Group</label>
+                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving || isViewMode} />
+                                    </div>
+                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                        <label>Aadhaar Number <RequiredStar /></label>
+                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
+                                    </div>
+                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                        <label>Portfolio Link</label>
+                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving || isViewMode} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* --- ACADEMIC BACKGROUND --- */}
                         <div className={styles.profileSectionContainer}>
-                          <h3 className={styles.sectionHeader}>Academic Background</h3>
+                            <h3 className={styles.sectionHeader}>Academic Background</h3>
                             <div className={styles.formGrid}>
                                 <div className={styles.studyCategory} style={{ gridColumn: '1 / -1' }}>
                                     <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} onChange={(e) => { setStudyCategory(e.target.value); setStudentData(prev => ({ ...prev, studyCategory: e.target.value })); }} disabled={isSaving || isViewMode} />
@@ -2971,114 +2971,114 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} onChange={(e) => { setStudyCategory(e.target.value); setStudentData(prev => ({ ...prev, studyCategory: e.target.value })); }} disabled={isSaving || isViewMode} />
                                     <label htmlFor="both">Both</label>
                                 </div>
-                                    <div className={styles.field}>
-                                        <label>10th Institution Name <RequiredStar /></label>
-                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
+                                <div className={styles.field}>
+                                    <label>10th Institution Name <RequiredStar /></label>
+                                    <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Board / University <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            'State Board (Tamil Nadu)',
+                                            'CBSE',
+                                            'ICSE',
+                                            'Other State Board'
+                                        ]}
+                                        selectedOption={studentData?.tenthBoard || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, tenthBoard: value }));
+                                        }}
+                                        placeholder="10th Board/University"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="tenthBoard" value={studentData?.tenthBoard || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Percentage <RequiredStar /></label>
+                                    <div className={styles.percentageInputWrapper}>
+                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                        <div className={styles.percentSuffix}>%</div>
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>10th Board / University <RequiredStar /></label>
-                                        <Dropdown
-                                            options={[
-                                                'State Board (Tamil Nadu)',
-                                                'CBSE',
-                                                'ICSE',
-                                                'Other State Board'
-                                            ]}
-                                            selectedOption={studentData?.tenthBoard || ''}
-                                            onSelect={(value) => {
-                                                if (isSaving || isViewMode) return;
-                                                setStudentData(prev => ({ ...prev, tenthBoard: value }));
-                                            }}
-                                            placeholder="10th Board/University"
-                                            role="coordinator"
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                        <input type="hidden" name="tenthBoard" value={studentData?.tenthBoard || ''} />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>10th Percentage <RequiredStar /></label>
-                                        <div className={styles.percentageInputWrapper}>
-                                            <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
-                                            <div className={styles.percentSuffix}>%</div>
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Year of Passing <RequiredStar /></label>
+                                    <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthYear: e.target.value }))} disabled={isSaving || isViewMode} />
+                                </div>
+                                {(studyCategory === '12th' || studyCategory === 'both') && (
+                                    <>
+                                        <div className={styles.field}>
+                                            <label>12th Institution Name <RequiredStar /></label>
+                                            <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
                                         </div>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>10th Year of Passing <RequiredStar /></label>
-                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthYear: e.target.value }))} disabled={isSaving || isViewMode} />
-                                    </div>
-                                    {(studyCategory === '12th' || studyCategory === 'both') && (
-                                        <>
-                                            <div className={styles.field}>
-                                                <label>12th Institution Name <RequiredStar /></label>
-                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        <div className={styles.field}>
+                                            <label>12th Board / University <RequiredStar /></label>
+                                            <FormDropdown
+                                                options={[
+                                                    'State Board (Tamil Nadu)',
+                                                    'CBSE',
+                                                    'ICSE',
+                                                    'Other State Board'
+                                                ]}
+                                                selectedOption={studentData?.twelfthBoard || ''}
+                                                onSelect={(value) => {
+                                                    if (isSaving || isViewMode) return;
+                                                    setStudentData(prev => ({ ...prev, twelfthBoard: value }));
+                                                }}
+                                                placeholder="12th Board/University"
+                                                role="coordinator"
+                                                disabled={isSaving || isViewMode}
+                                            />
+                                            <input type="hidden" name="twelfthBoard" value={studentData?.twelfthBoard || ''} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Percentage <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Board / University <RequiredStar /></label>
-                                                <Dropdown
-                                                    options={[
-                                                        'State Board (Tamil Nadu)',
-                                                        'CBSE',
-                                                        'ICSE',
-                                                        'Other State Board'
-                                                    ]}
-                                                    selectedOption={studentData?.twelfthBoard || ''}
-                                                    onSelect={(value) => {
-                                                        if (isSaving || isViewMode) return;
-                                                        setStudentData(prev => ({ ...prev, twelfthBoard: value }));
-                                                    }}
-                                                    placeholder="12th Board/University"
-                                                    role="coordinator"
-                                                    disabled={isSaving || isViewMode}
-                                                />
-                                                <input type="hidden" name="twelfthBoard" value={studentData?.twelfthBoard || ''} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Year of Passing <RequiredStar /></label>
+                                            <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthYear: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Cut-off Marks <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Percentage <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
+                                        </div>
+                                    </>
+                                )}
+                                {(studyCategory === 'diploma' || studyCategory === 'both') && (
+                                    <>
+                                        <div className={styles.field}>
+                                            <label>Diploma Institution <RequiredStar /></label>
+                                            <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Branch <RequiredStar /></label>
+                                            <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaBranch: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Percentage <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthYear: e.target.value }))} disabled={isSaving || isViewMode} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthCutoff: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                    {(studyCategory === 'diploma' || studyCategory === 'both') && (
-                                        <>
-                                            <div className={styles.field}>
-                                                <label>Diploma Institution <RequiredStar /></label>
-                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaInstitution: e.target.value }))} disabled={isSaving || isViewMode} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Branch <RequiredStar /></label>
-                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaBranch: e.target.value }))} disabled={isSaving || isViewMode} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Percentage <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaPercentage: e.target.value }))} disabled={isSaving || isViewMode} className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaYear: e.target.value }))} disabled={isSaving || isViewMode} />
-                                            </div>
-                                        </>
-                                    )}
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Year of Passing <RequiredStar /></label>
+                                            <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} onChange={(e) => setStudentData(prev => ({ ...prev, diplomaYear: e.target.value }))} disabled={isSaving || isViewMode} />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
-                            {/* --- SEMESTER --- */}
+                        {/* --- SEMESTER --- */}
                         {Array.isArray(availableSemesters) && availableSemesters.length > 0 && (
                             <div className={styles.profileSectionContainer}>
                                 <h3 className={styles.sectionHeader}>Semester</h3>
@@ -3086,18 +3086,18 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     {availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 className={styles.viewMarksheetBtn}
                                                 onClick={() => navigate('/coo-manage-students-semester/sem', {
-                                                        state: { 
-                                                            student: {
-                                                                ...studentData,
-                                                                currentSemester: semesterNumber
-                                                            },
-                                                            returnPath: window.location.pathname
-                                                        }
-                                                    })}
+                                                    state: {
+                                                        student: {
+                                                            ...studentData,
+                                                            currentSemester: semesterNumber
+                                                        },
+                                                        returnPath: window.location.pathname
+                                                    }
+                                                })}
                                             >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
                                             </button>
@@ -3108,7 +3108,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         type="button"
                                         className={styles.uploadMarksheetBtnFull}
                                         onClick={() => navigate('/coo-manage-students-semester/sem', {
-                                            state: { 
+                                            state: {
                                                 student: studentData,
                                                 returnPath: window.location.pathname
                                             }
@@ -3124,8 +3124,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                             </div>
                         )}
 
-                            <div className={styles.profileSectionContainer}>
-                                <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
+                        <div className={styles.profileSectionContainer}>
+                            <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <div className={styles.field}>
                                     <label>CGPA</label>
                                     <input
@@ -3181,8 +3181,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         disabled={isSaving || isViewMode}
                                     />
                                 </div>
-                                </div>
                             </div>
+                        </div>
 
                         {hasTrainingData && (
                             <div className={styles.profileSectionContainer}>
@@ -3212,346 +3212,346 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (
-                        <div className={styles.profileSectionContainer}>
-                            {!showAnalysis ? (
-                                <>
-                                    <h3 className={styles.sectionHeader}>Company Details</h3>
-                                    <div className={styles.companyStatsGrid}>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Total Companies Attended</span>
-                                            <span className={styles.companyStatValue}>{companyStats.totalCompaniesAttended}</span>
+                            <div className={styles.profileSectionContainer}>
+                                {!showAnalysis ? (
+                                    <>
+                                        <h3 className={styles.sectionHeader}>Company Details</h3>
+                                        <div className={styles.companyStatsGrid}>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Total Companies Attended</span>
+                                                <span className={styles.companyStatValue}>{companyStats.totalCompaniesAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Total Drives Attended</span>
+                                                <span className={styles.companyStatValue}>{companyStats.totalDrivesAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Shortlisted Count</span>
+                                                <span className={styles.companyStatValue}>{companyStats.shortlistedCount}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Preferred Mode</span>
+                                                <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
+                                            </div>
+                                            <div className={styles.companyStatCardEmpty}>
+                                                <span className={styles.companyStatLabel}>Last Drive Attended</span>
+                                                <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCardEmpty}>
+                                                <span className={styles.companyStatLabel}>Last Drive Result</span>
+                                                <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
+                                            </div>
                                         </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Total Drives Attended</span>
-                                            <span className={styles.companyStatValue}>{companyStats.totalDrivesAttended}</span>
-                                        </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Shortlisted Count</span>
-                                            <span className={styles.companyStatValue}>{companyStats.shortlistedCount}</span>
-                                        </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Preferred Mode</span>
-                                            <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
-                                        </div>
-                                        <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>Last Drive Attended</span>
-                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
-                                        </div>
-                                        <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>Last Drive Result</span>
-                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.companyBottomRow}>
-                                        <div className={styles.successRateWrapper}>
-                                            <div className={styles.successRateCircleContainer}>
-                                                <svg className={styles.successRateSvg} viewBox="0 0 120 120">
-                                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e8e8" strokeWidth="10" />
-                                                    <circle
-                                                        cx="60" cy="60" r="50" fill="none"
-                                                        stroke="#B84349"
-                                                        strokeWidth="10"
-                                                        strokeLinecap="round"
-                                                        strokeDasharray="314.16"
-                                                        strokeDashoffset={314.16 * (1 - successRate / 100)}
-                                                        transform="rotate(-90 60 60)"
-                                                        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                                                    />
+                                        <div className={styles.companyBottomRow}>
+                                            <div className={styles.successRateWrapper}>
+                                                <div className={styles.successRateCircleContainer}>
+                                                    <svg className={styles.successRateSvg} viewBox="0 0 120 120">
+                                                        <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e8e8" strokeWidth="10" />
+                                                        <circle
+                                                            cx="60" cy="60" r="50" fill="none"
+                                                            stroke="#B84349"
+                                                            strokeWidth="10"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray="314.16"
+                                                            strokeDashoffset={314.16 * (1 - successRate / 100)}
+                                                            transform="rotate(-90 60 60)"
+                                                            style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                                                        />
+                                                    </svg>
+                                                    <div className={styles.successRateInner}>
+                                                        <span className={styles.successRateLabel}>Success Rate %</span>
+                                                        <span className={styles.successRateNum}>{successRate}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={styles.performanceInsightsCard}>
+                                                <h4 className={styles.insightsTitle}>Top performance Insights</h4>
+                                                <div className={styles.insightRow}>
+                                                    <span className={styles.insightLabel}>Highest Package Drive :</span>
+                                                    <span className={styles.insightValue}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                                </div>
+                                                <div className={styles.insightRow}>
+                                                    <span className={styles.insightLabel}>Total Rounds Cleared :</span>
+                                                    <span className={styles.insightValue}>{companyStats.totalRoundsCleared}</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" className={styles.viewAnalysisBtn} onClick={() => setShowAnalysis(true)}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={styles.viewAnalysisIcon}>
+                                                    <path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-3h2v15h-2V5zm4 6h2v9h-2v-9z" />
                                                 </svg>
-                                                <div className={styles.successRateInner}>
-                                                    <span className={styles.successRateLabel}>Success Rate %</span>
-                                                    <span className={styles.successRateNum}>{successRate}</span>
-                                                </div>
-                                            </div>
+                                                <span>View Analysis</span>
+                                            </button>
                                         </div>
-                                        <div className={styles.performanceInsightsCard}>
-                                            <h4 className={styles.insightsTitle}>Top performance Insights</h4>
-                                            <div className={styles.insightRow}>
-                                                <span className={styles.insightLabel}>Highest Package Drive :</span>
-                                                <span className={styles.insightValue}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* â”€â”€ Analysis Panel (inline) â”€â”€ */}
+                                        <div className={styles.anlsHeader}>
+                                            <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
+                                            <div className={styles.anlsTitleRow}>
+                                                <span className={styles.anlsPlacedBadge}><span className={styles.anlsPlacedDot} />Placed</span>
+                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
                                             </div>
-                                            <div className={styles.insightRow}>
-                                                <span className={styles.insightLabel}>Total Rounds Cleared :</span>
-                                                <span className={styles.insightValue}>{companyStats.totalRoundsCleared}</span>
-                                            </div>
-                                        </div>
-                                        <button type="button" className={styles.viewAnalysisBtn} onClick={() => setShowAnalysis(true)}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={styles.viewAnalysisIcon}>
-                                                <path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-3h2v15h-2V5zm4 6h2v9h-2v-9z"/>
-                                            </svg>
-                                            <span>View Analysis</span>
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* â”€â”€ Analysis Panel (inline) â”€â”€ */}
-                                    <div className={styles.anlsHeader}>
-                                        <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
-                                        <div className={styles.anlsTitleRow}>
-                                            <span className={styles.anlsPlacedBadge}><span className={styles.anlsPlacedDot} />Placed</span>
-                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.anlsGrid}>
-                                        {/* Left: Pie Chart */}
-                                        <div
-                                            className={styles.anlsPieCol}
-                                            onMouseLeave={() => {
-                                                if (!isMobile && !selectedRound) setHoveredRound(null);
-                                            }}
-                                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                                        >
-                                            <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
-                                                <PieChart tabIndex={-1} style={{ outline: 'none' }}>
-                                                    <Pie
-                                                        data={PIE_DATA}
-                                                        cx="50%" cy="50%" outerRadius={isMobile ? 130 : 148} dataKey="value"
-                                                        animationBegin={0} animationDuration={800}
-                                                        isAnimationActive={false}
-                                                        labelLine={false}
-                                                        activeIndex={-1}
-                                                        activeShape={null}
-                                                        onMouseEnter={(data, index) => {
-                                                            if (!isMobile && !selectedRound) setHoveredRound(PIE_DATA[index].name);
-                                                        }}
-                                                        onClick={(data, index) => {
-                                                            const name = PIE_DATA[index].name;
-                                                            setSelectedRound(name);
-                                                            setHoveredRound(name);
-                                                        }}
-                                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
-                                                            const RADIAN = Math.PI / 180;
-                                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
-                                                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                                            let rot = -midAngle;
-                                                            rot = ((rot % 360) + 360) % 360;
-                                                            if (rot > 180) rot -= 360;
-                                                            if (rot > 90) rot -= 180;
-                                                            if (rot < -90) rot += 180;
-                                                            const label = name.length > 12 ? `${name.slice(0, 12)}..` : name;
-                                                            const fs = isMobile ? 11 : 11;
-                                                            return (
-                                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
-                                                                    {label}
-                                                                </text>
-                                                            );
-                                                        }}
-                                                    >
-                                                        {PIE_DATA.map((entry, i) => {
-                                                            const activeRound = selectedRound || hoveredRound;
-                                                            const isActive = !activeRound || entry.name === activeRound;
-                                                            return (
-                                                                <Cell
-                                                                    key={i}
-                                                                    fill={isActive ? entry.color : '#BDBDBD'}
-                                                                    style={{ cursor: 'pointer', outline: 'none' }}
-                                                                />
-                                                            );
-                                                        })}
-                                                    </Pie>
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                            {selectedRound && (
-                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-4px' }}>
-                                                    <button
-                                                        type="button"
-                                                        className={styles.anlsClearBtn}
-                                                        onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
-                                                    >
-                                                        âœ• Clear Selection
-                                                    </button>
-                                                </div>
-                                            )}
                                         </div>
 
-                                        {/* Right: stats + legend */}
-                                        <div className={styles.anlsRightCol}>
-                                            <div className={styles.anlsRightTop}>
-                                                {/* Left column: Stats grid OR Companies card on click */}
-                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
-                                                    <div className={styles.anlsCompaniesCard} style={{ borderColor: PIE_DATA.find(d => d.name === selectedRound)?.color }}>
-                                                        <h4 className={styles.anlsCompaniesTitle}>{selectedRound} Companies</h4>
-                                                        <div className={styles.anlsCompaniesList}>
-                                                            {ROUND_DETAILS[selectedRound].companies.map(c => {
-                                                                const sColor = c.status === 'PASSED' ? '#10B981' : c.status === 'FAILED' ? '#EF4444' : '#94A3B8';
+                                        <div className={styles.anlsGrid}>
+                                            {/* Left: Pie Chart */}
+                                            <div
+                                                className={styles.anlsPieCol}
+                                                onMouseLeave={() => {
+                                                    if (!isMobile && !selectedRound) setHoveredRound(null);
+                                                }}
+                                                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                                            >
+                                                <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
+                                                    <PieChart tabIndex={-1} style={{ outline: 'none' }}>
+                                                        <Pie
+                                                            data={PIE_DATA}
+                                                            cx="50%" cy="50%" outerRadius={isMobile ? 130 : 148} dataKey="value"
+                                                            animationBegin={0} animationDuration={800}
+                                                            isAnimationActive={false}
+                                                            labelLine={false}
+                                                            activeIndex={-1}
+                                                            activeShape={null}
+                                                            onMouseEnter={(data, index) => {
+                                                                if (!isMobile && !selectedRound) setHoveredRound(PIE_DATA[index].name);
+                                                            }}
+                                                            onClick={(data, index) => {
+                                                                const name = PIE_DATA[index].name;
+                                                                setSelectedRound(name);
+                                                                setHoveredRound(name);
+                                                            }}
+                                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
+                                                                const RADIAN = Math.PI / 180;
+                                                                const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
+                                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                                let rot = -midAngle;
+                                                                rot = ((rot % 360) + 360) % 360;
+                                                                if (rot > 180) rot -= 360;
+                                                                if (rot > 90) rot -= 180;
+                                                                if (rot < -90) rot += 180;
+                                                                const label = name.length > 12 ? `${name.slice(0, 12)}..` : name;
+                                                                const fs = isMobile ? 11 : 11;
                                                                 return (
-                                                                    <div key={c.name} className={styles.anlsCompanyRow}>
-                                                                        <span className={styles.anlsCompanyDot} style={{ background: sColor }} />
-                                                                        <span className={styles.anlsCompanyName}>{c.name}</span>
-                                                                        <span className={styles.anlsCompanyStatus} style={{ color: sColor }}>{c.status}</span>
-                                                                    </div>
+                                                                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
+                                                                        {label}
+                                                                    </text>
+                                                                );
+                                                            }}
+                                                        >
+                                                            {PIE_DATA.map((entry, i) => {
+                                                                const activeRound = selectedRound || hoveredRound;
+                                                                const isActive = !activeRound || entry.name === activeRound;
+                                                                return (
+                                                                    <Cell
+                                                                        key={i}
+                                                                        fill={isActive ? entry.color : '#BDBDBD'}
+                                                                        style={{ cursor: 'pointer', outline: 'none' }}
+                                                                    />
                                                                 );
                                                             })}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className={styles.anlsStatsGrid}>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardLavender}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="9" cy="7" r="4" stroke="#6C63FF" strokeWidth="1.8"/>
-                                                                    <path d="M2 20c0-4 3.134-7 7-7" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round"/>
-                                                                    <path d="M16 13l2 2 4-4" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Attended</span>
-                                                            </div>
-                                                            <div className={styles.anlsStatValue}>{companyStats.totalDrivesAttended}</div>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="12" cy="12" r="9" stroke="#2085f6" strokeWidth="1.8"/>
-                                                                    <path d="M8 12l3 3 5-5" stroke="#2085f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Shortlisted</span>
-                                                            </div>
-                                                            <div className={styles.anlsStatValue}>{companyStats.shortlistedCount}</div>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="12" cy="12" r="9" stroke="#E05C6C" strokeWidth="1.8"/>
-                                                                    <path d="M12 8v4" stroke="#E05C6C" strokeWidth="1.8" strokeLinecap="round"/>
-                                                                    <circle cx="12" cy="16" r="0.8" fill="#E05C6C"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Work On</span>
-                                                            </div>
-                                                            <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
-                                                            </ul>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#27AE8C" strokeWidth="1.6" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Best</span>
-                                                            </div>
-                                                            <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Right column: Achievement+LastActivity OR Good/Bad on click */}
-                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
-                                                    <div className={styles.anlsAchievCol}>
-                                                        <div className={styles.anlsGoodCard}>
-                                                            <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>ðŸ‘</span>
-                                                                <span className={styles.anlsGoodLabel}>GOOD</span>
-                                                            </div>
-                                                            {ROUND_DETAILS[selectedRound].good.map((g, i) => (
-                                                                <div key={i} className={styles.anlsGoodItem}>
-                                                                    <span className={styles.anlsCheckIcon}>âœ…</span>
-                                                                    <span>{g}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className={styles.anlsBadCard}>
-                                                            <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
-                                                                <span className={styles.anlsBadLabel}>BAD</span>
-                                                            </div>
-                                                            {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
-                                                                <div key={i} className={styles.anlsBadItem}>
-                                                                    <span className={styles.anlsCheckIcon}>âŒ</span>
-                                                                    <span>{b}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className={styles.anlsAchievCol}>
-                                                        <div className={styles.anlsAchievBanner}>
-                                                            <div>
-                                                                <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
-                                                                <div className={styles.anlsAchievMain}>
-                                                                    <span className={styles.anlsAchievLPA}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
-                                                                    <span className={styles.anlsAchievSub}>Highest Package</span>
-                                                                </div>
-                                                                <div className={styles.anlsAchievCompany}>
-                                                                    <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z"/></svg>
-                                                                    <span>{driveAnalytics.highestPackageCompany || 'N/A'}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div className={styles.anlsAchievBadge}>
-                                                                <img src={BestAchievement} alt="Best Achievement" width="40" height="40" style={{ objectFit: 'contain' }} />
-                                                            </div>
-                                                        </div>
-                                                        <div className={styles.anlsLastActivity}>
-                                                            <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
-                                                            <p className={styles.anlsLastCompany}>{companyStats.lastDriveAttended || 'N/A'}</p>
-                                                            <p className={styles.anlsLastRole}>{driveAnalytics.lastDriveRole || 'N/A'}</p>
-                                                            <span className={styles.anlsLastBadge}>{companyStats.lastDriveResult || 'Pending'}</span>
-                                                        </div>
+                                                        </Pie>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                                {selectedRound && (
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-4px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.anlsClearBtn}
+                                                            onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
+                                                        >
+                                                            âœ• Clear Selection
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* Legend always visible */}
-                                            <div className={styles.anlsLegendBox}>
-                                                <div className={styles.anlsLegend}>
-                                                    {PIE_DATA.map((d) => (
-                                                        <div
-                                                            key={d.name}
-                                                            role="button"
-                                                            tabIndex={0}
-                                                            className={`${styles.anlsLegendItem} ${selectedRound === d.name ? styles.anlsLegendItemActive : ''}`}
-                                                            onClick={() => {
-                                                                setSelectedRound(d.name);
-                                                                setHoveredRound(d.name);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                                    e.preventDefault();
+                                            {/* Right: stats + legend */}
+                                            <div className={styles.anlsRightCol}>
+                                                <div className={styles.anlsRightTop}>
+                                                    {/* Left column: Stats grid OR Companies card on click */}
+                                                    {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                        <div className={styles.anlsCompaniesCard} style={{ borderColor: PIE_DATA.find(d => d.name === selectedRound)?.color }}>
+                                                            <h4 className={styles.anlsCompaniesTitle}>{selectedRound} Companies</h4>
+                                                            <div className={styles.anlsCompaniesList}>
+                                                                {ROUND_DETAILS[selectedRound].companies.map(c => {
+                                                                    const sColor = c.status === 'PASSED' ? '#10B981' : c.status === 'FAILED' ? '#EF4444' : '#94A3B8';
+                                                                    return (
+                                                                        <div key={c.name} className={styles.anlsCompanyRow}>
+                                                                            <span className={styles.anlsCompanyDot} style={{ background: sColor }} />
+                                                                            <span className={styles.anlsCompanyName}>{c.name}</span>
+                                                                            <span className={styles.anlsCompanyStatus} style={{ color: sColor }}>{c.status}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={styles.anlsStatsGrid}>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardLavender}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="9" cy="7" r="4" stroke="#6C63FF" strokeWidth="1.8" />
+                                                                        <path d="M2 20c0-4 3.134-7 7-7" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" />
+                                                                        <path d="M16 13l2 2 4-4" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Attended</span>
+                                                                </div>
+                                                                <div className={styles.anlsStatValue}>{companyStats.totalDrivesAttended}</div>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="12" cy="12" r="9" stroke="#2085f6" strokeWidth="1.8" />
+                                                                        <path d="M8 12l3 3 5-5" stroke="#2085f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Shortlisted</span>
+                                                                </div>
+                                                                <div className={styles.anlsStatValue}>{companyStats.shortlistedCount}</div>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="12" cy="12" r="9" stroke="#E05C6C" strokeWidth="1.8" />
+                                                                        <path d="M12 8v4" stroke="#E05C6C" strokeWidth="1.8" strokeLinecap="round" />
+                                                                        <circle cx="12" cy="16" r="0.8" fill="#E05C6C" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Work On</span>
+                                                                </div>
+                                                                <ul className={styles.anlsStatList}>
+                                                                    {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
+                                                                </ul>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#27AE8C" strokeWidth="1.6" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Best</span>
+                                                                </div>
+                                                                <ul className={styles.anlsStatList}>
+                                                                    {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Right column: Achievement+LastActivity OR Good/Bad on click */}
+                                                    {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                        <div className={styles.anlsAchievCol}>
+                                                            <div className={styles.anlsGoodCard}>
+                                                                <div className={styles.anlsGoodBadHeader}>
+                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘</span>
+                                                                    <span className={styles.anlsGoodLabel}>GOOD</span>
+                                                                </div>
+                                                                {ROUND_DETAILS[selectedRound].good.map((g, i) => (
+                                                                    <div key={i} className={styles.anlsGoodItem}>
+                                                                        <span className={styles.anlsCheckIcon}>âœ…</span>
+                                                                        <span>{g}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <div className={styles.anlsBadCard}>
+                                                                <div className={styles.anlsGoodBadHeader}>
+                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
+                                                                    <span className={styles.anlsBadLabel}>BAD</span>
+                                                                </div>
+                                                                {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
+                                                                    <div key={i} className={styles.anlsBadItem}>
+                                                                        <span className={styles.anlsCheckIcon}>âŒ</span>
+                                                                        <span>{b}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={styles.anlsAchievCol}>
+                                                            <div className={styles.anlsAchievBanner}>
+                                                                <div>
+                                                                    <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
+                                                                    <div className={styles.anlsAchievMain}>
+                                                                        <span className={styles.anlsAchievLPA}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                                                        <span className={styles.anlsAchievSub}>Highest Package</span>
+                                                                    </div>
+                                                                    <div className={styles.anlsAchievCompany}>
+                                                                        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z" /></svg>
+                                                                        <span>{driveAnalytics.highestPackageCompany || 'N/A'}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={styles.anlsAchievBadge}>
+                                                                    <img src={BestAchievement} alt="Best Achievement" width="40" height="40" style={{ objectFit: 'contain' }} />
+                                                                </div>
+                                                            </div>
+                                                            <div className={styles.anlsLastActivity}>
+                                                                <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
+                                                                <p className={styles.anlsLastCompany}>{companyStats.lastDriveAttended || 'N/A'}</p>
+                                                                <p className={styles.anlsLastRole}>{driveAnalytics.lastDriveRole || 'N/A'}</p>
+                                                                <span className={styles.anlsLastBadge}>{companyStats.lastDriveResult || 'Pending'}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Legend always visible */}
+                                                <div className={styles.anlsLegendBox}>
+                                                    <div className={styles.anlsLegend}>
+                                                        {PIE_DATA.map((d) => (
+                                                            <div
+                                                                key={d.name}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                className={`${styles.anlsLegendItem} ${selectedRound === d.name ? styles.anlsLegendItemActive : ''}`}
+                                                                onClick={() => {
                                                                     setSelectedRound(d.name);
                                                                     setHoveredRound(d.name);
-                                                                }
-                                                            }}
-                                                            aria-label={`Open ${d.name} round details`}
-                                                        >
-                                                            <span className={styles.anlsLegendCircle} style={{ background: d.color }}>{d.value}%</span>
-                                                            <span className={styles.anlsLegendName}>{d.name}</span>
-                                                        </div>
-                                                    ))}
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        setSelectedRound(d.name);
+                                                                        setHoveredRound(d.name);
+                                                                    }
+                                                                }}
+                                                                aria-label={`Open ${d.name} round details`}
+                                                            >
+                                                                <span className={styles.anlsLegendCircle} style={{ background: d.color }}>{d.value}%</span>
+                                                                <span className={styles.anlsLegendName}>{d.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Progress Stepper */}
-                                    <div className={styles.anlsStepper}>
-                                        {[
-                                            { label:'Applied',   s:'done'    },
-                                            { label:'Attended',  s:'done'    },
-                                            { label:'Interview', s:'current' },
-                                            { label:'Result',    s:'pending' },
-                                        ].map((step, i, arr) => (
-                                            <React.Fragment key={step.label}>
-                                                <div className={styles.anlsStepItem}>
-                                                    <div className={`${styles.anlsStepCircle} ${step.s === 'done' ? styles.anlsStep_done : step.s === 'current' ? styles.anlsStep_current : styles.anlsStep_pending}`}>
-                                                        {step.s === 'done' ? (
-                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
-                                                        ) : step.s === 'current' ? (
-                                                            <span className={styles.anlsStepDot}/>
-                                                        ) : null}
+                                        {/* Progress Stepper */}
+                                        <div className={styles.anlsStepper}>
+                                            {[
+                                                { label: 'Applied', s: 'done' },
+                                                { label: 'Attended', s: 'done' },
+                                                { label: 'Interview', s: 'current' },
+                                                { label: 'Result', s: 'pending' },
+                                            ].map((step, i, arr) => (
+                                                <React.Fragment key={step.label}>
+                                                    <div className={styles.anlsStepItem}>
+                                                        <div className={`${styles.anlsStepCircle} ${step.s === 'done' ? styles.anlsStep_done : step.s === 'current' ? styles.anlsStep_current : styles.anlsStep_pending}`}>
+                                                            {step.s === 'done' ? (
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12" /></svg>
+                                                            ) : step.s === 'current' ? (
+                                                                <span className={styles.anlsStepDot} />
+                                                            ) : null}
+                                                        </div>
+                                                        <span className={`${styles.anlsStepLabel} ${step.s === 'done' ? styles.anlsStepLbl_done : step.s === 'current' ? styles.anlsStepLbl_current : styles.anlsStepLbl_pending}`}>{step.label}</span>
                                                     </div>
-                                                    <span className={`${styles.anlsStepLabel} ${step.s === 'done' ? styles.anlsStepLbl_done : step.s === 'current' ? styles.anlsStepLbl_current : styles.anlsStepLbl_pending}`}>{step.label}</span>
-                                                </div>
-                                                {i < arr.length - 1 && (
-                                                    <div className={`${styles.anlsStepLine} ${arr[i+1].s === 'pending' ? styles.anlsStepLinePending : styles.anlsStepLineDone}`}/>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                                    {i < arr.length - 1 && (
+                                                        <div className={`${styles.anlsStepLine} ${arr[i + 1].s === 'pending' ? styles.anlsStepLinePending : styles.anlsStepLineDone}`} />
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         )}
 
                         {/* --- SKILLS --- */}
@@ -3575,7 +3575,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             disabled={isSaving || isViewMode}
                                             aria-label="Remove skill"
                                         >
-                                            <svg viewBox="0 0 512 512" fill="currentColor" style={{width:'14px',height:'14px'}}><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z"/></svg>
+                                            <svg viewBox="0 0 512 512" fill="currentColor" style={{ width: '14px', height: '14px' }}><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z" /></svg>
                                         </button>
                                     </div>
                                 ))}
@@ -3585,10 +3585,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     onClick={handleAddSkill}
                                     disabled={isSaving || isViewMode}
                                 >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:'22px',height:'22px',flexShrink:0}}>
-                                        <circle cx="12" cy="12" r="10" fill="white" stroke="white"/>
-                                        <line x1="12" y1="7" x2="12" y2="17" stroke="#D73D3D" strokeWidth="2.5"/>
-                                        <line x1="7" y1="12" x2="17" y2="12" stroke="#D73D3D" strokeWidth="2.5"/>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '22px', height: '22px', flexShrink: 0 }}>
+                                        <circle cx="12" cy="12" r="10" fill="white" stroke="white" />
+                                        <line x1="12" y1="7" x2="12" y2="17" stroke="#D73D3D" strokeWidth="2.5" />
+                                        <line x1="7" y1="12" x2="17" y2="12" stroke="#D73D3D" strokeWidth="2.5" />
                                     </svg>
                                     <span>Click to Add Skill</span>
                                 </button>
@@ -3599,244 +3599,269 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Other Details</h3>
                             <div className={styles.formGrid}>
-                                    <div className={styles.field}>
-                                        <label>Residential Status <RequiredStar /></label>
-                                        <select
-                                            name="residentialStatus"
-                                            value={studentData?.residentialStatus || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Residential status</option>
-                                            <option value="Hosteller">Hosteller</option>
-                                            <option value="Dayscholar">Dayscholar</option>
-                                        </select>
+                                <div className={styles.field}>
+                                    <label>Residential Status <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            { label: 'Hosteller', value: 'Hosteller' },
+                                            { label: 'Dayscholar', value: 'Dayscholar' }
+                                        ]}
+                                        selectedOption={studentData?.residentialStatus || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, residentialStatus: value }));
+                                        }}
+                                        placeholder="Residential status *"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="residentialStatus" value={studentData?.residentialStatus || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Quota <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            { label: 'Management', value: 'Management' },
+                                            { label: 'Counselling', value: 'Counselling' }
+                                        ]}
+                                        selectedOption={studentData?.quota || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, quota: value }));
+                                        }}
+                                        placeholder="Quota *"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="quota" value={studentData?.quota || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Spoken Languages</label>
+                                    <input
+                                        type="text"
+                                        name="languagesKnown"
+                                        placeholder="Exclude Tamil & English"
+                                        value={studentData?.languagesKnown || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>First Graduate <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            { label: 'Yes', value: 'Yes' },
+                                            { label: 'No', value: 'No' }
+                                        ]}
+                                        selectedOption={studentData?.firstGraduate || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, firstGraduate: value }));
+                                        }}
+                                        placeholder="First Graduate *"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Passport No.</label>
+                                    <input
+                                        type="text"
+                                        name="passportNo"
+                                        placeholder="Enter Passport No."
+                                        value={studentData?.passportNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Skill Set <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="skillSet"
+                                        placeholder="Enter Skill Set"
+                                        value={studentData?.skillSet || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Value Added Courses</label>
+                                    <input
+                                        type="text"
+                                        name="valueAddedCourses"
+                                        placeholder="Enter Value Added Courses"
+                                        value={studentData?.valueAddedCourses || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>About Sibling</label>
+                                    <input
+                                        type="text"
+                                        name="aboutSibling"
+                                        placeholder="Enter About Sibling"
+                                        value={studentData?.aboutSibling || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Ration Card No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="rationCardNo"
+                                        placeholder="Enter Ration Card No."
+                                        value={studentData?.rationCardNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, rationCardNo: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Family Annual Income <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="familyAnnualIncome"
+                                        placeholder="Enter Family Annual Income"
+                                        value={studentData?.familyAnnualIncome || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>PAN No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="panNo"
+                                        placeholder="Enter PAN No."
+                                        value={studentData?.panNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, panNo: e.target.value }))}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Willing to Sign Bond <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            { label: 'Yes', value: 'Yes' },
+                                            { label: 'No', value: 'No' }
+                                        ]}
+                                        selectedOption={studentData?.willingToSignBond || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, willingToSignBond: value }));
+                                        }}
+                                        placeholder="Willing to Sign Bond *"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Preferred Mode of Drive <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={[
+                                            { label: 'Online', value: 'Online' },
+                                            { label: 'Offline', value: 'Offline' },
+                                            { label: 'Hybrid', value: 'Hybrid' }
+                                        ]}
+                                        selectedOption={studentData?.preferredModeOfDrive || ''}
+                                        onSelect={(value) => {
+                                            if (isSaving || isViewMode) return;
+                                            setStudentData(prev => ({ ...prev, preferredModeOfDrive: value }));
+                                        }}
+                                        placeholder="Preferred Mode of Drive *"
+                                        role="coordinator"
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                    <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>GitHub Link</label>
+                                    <input
+                                        type="url"
+                                        name="githubLink"
+                                        placeholder="Enter GitHub Link (e.g. https://github.com/username)"
+                                        value={studentData?.githubLink || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !GITHUB_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://github.com/your-username';
+                                                setUrlErrorType('GitHub');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>LinkedIn Link</label>
+                                    <input
+                                        type="url"
+                                        name="linkedinLink"
+                                        placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
+                                        value={studentData?.linkedinLink || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                                                setUrlErrorType('LinkedIn');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving || isViewMode}
+                                    />
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>
+                                    <div className={styles.checkboxOptions}>
+                                        {COMPANY_TYPE_OPTIONS.map((option) => (
+                                            <label key={option} className={styles.checkboxOption}>
+                                                <input
+                                                    type="checkbox"
+                                                    name="companyTypesReadonly"
+                                                    checked={selectedCompanyTypes.includes(option)}
+                                                    onChange={() => toggleCompanyType(option)}
+                                                    disabled={isSaving || isViewMode}
+                                                />
+                                                <span>{option}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Quota <RequiredStar /></label>
-                                        <select
-                                            name="quota"
-                                            value={studentData?.quota || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, quota: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Quota</option>
-                                            <option value="Management">Management</option>
-                                            <option value="Counselling">Counselling</option>
-                                        </select>
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <span className={styles.checkboxGroupLabel}>Preferred Job Locations <RequiredStar /></span>
+                                    <div className={styles.checkboxOptions}>
+                                        {JOB_LOCATION_OPTIONS.map((option) => (
+                                            <label key={option} className={styles.checkboxOption}>
+                                                <input
+                                                    type="checkbox"
+                                                    name="jobLocationsReadonly"
+                                                    checked={selectedJobLocations.includes(option)}
+                                                    onChange={() => toggleJobLocation(option)}
+                                                    disabled={isSaving || isViewMode}
+                                                />
+                                                <span>{option}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Spoken Languages</label>
-                                        <input
-                                            type="text"
-                                            name="languagesKnown"
-                                            placeholder="Exclude Tamil & English"
-                                            value={studentData?.languagesKnown || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>First Graduate <RequiredStar /></label>
-                                        <select
-                                            name="firstGraduate"
-                                            value={studentData?.firstGraduate || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, firstGraduate: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>First Graduate</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Passport No.</label>
-                                        <input
-                                            type="text"
-                                            name="passportNo"
-                                            placeholder="Enter Passport No."
-                                            value={studentData?.passportNo || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Skill Set <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="skillSet"
-                                            placeholder="Enter Skill Set"
-                                            value={studentData?.skillSet || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Value Added Courses</label>
-                                        <input
-                                            type="text"
-                                            name="valueAddedCourses"
-                                            placeholder="Enter Value Added Courses"
-                                            value={studentData?.valueAddedCourses || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>About Sibling</label>
-                                        <input
-                                            type="text"
-                                            name="aboutSibling"
-                                            placeholder="Enter About Sibling"
-                                            value={studentData?.aboutSibling || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Ration Card No. <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="rationCardNo"
-                                            placeholder="Enter Ration Card No."
-                                            value={studentData?.rationCardNo || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, rationCardNo: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Family Annual Income <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="familyAnnualIncome"
-                                            placeholder="Enter Family Annual Income"
-                                            value={studentData?.familyAnnualIncome || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>PAN No. <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="panNo"
-                                            placeholder="Enter PAN No."
-                                            value={studentData?.panNo || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, panNo: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Willing to Sign Bond <RequiredStar /></label>
-                                        <select
-                                            name="willingToSignBond"
-                                            value={studentData?.willingToSignBond || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, willingToSignBond: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Willing to Sign Bond</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Preferred Mode of Drive <RequiredStar /></label>
-                                        <select
-                                            name="preferredModeOfDrive"
-                                            value={studentData?.preferredModeOfDrive || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, preferredModeOfDrive: e.target.value }))}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Preferred Mode of Drive</option>
-                                            <option value="On-Campus">On-Campus</option>
-                                            <option value="Off-Campus">Off-Campus</option>
-                                            <option value="Hybrid">Hybrid</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>GitHub Link</label>
-                                        <input
-                                            type="url"
-                                            name="githubLink"
-                                            placeholder="Enter GitHub Link (e.g. https://github.com/username)"
-                                            value={studentData?.githubLink || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
-                                            onBlur={(e) => {
-                                                const val = e.target.value.trim();
-                                                if (val && !GITHUB_URL_REGEX.test(val)) {
-                                                    e.target.style.borderColor = '#dc3545';
-                                                    e.target.title = 'Must be: https://github.com/your-username';
-                                                    setUrlErrorType('GitHub');
-                                                    setInvalidUrl(val);
-                                                    setURLErrorPopupOpen(true);
-                                                } else {
-                                                    e.target.style.borderColor = val ? '#28a745' : '';
-                                                    e.target.title = '';
-                                                }
-                                            }}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>LinkedIn Link</label>
-                                        <input
-                                            type="url"
-                                            name="linkedinLink"
-                                            placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
-                                            value={studentData?.linkedinLink || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
-                                            onBlur={(e) => {
-                                                const val = e.target.value.trim();
-                                                if (val && !LINKEDIN_URL_REGEX.test(val)) {
-                                                    e.target.style.borderColor = '#dc3545';
-                                                    e.target.title = 'Must be: https://linkedin.com/in/your-username';
-                                                    setUrlErrorType('LinkedIn');
-                                                    setInvalidUrl(val);
-                                                    setURLErrorPopupOpen(true);
-                                                } else {
-                                                    e.target.style.borderColor = val ? '#28a745' : '';
-                                                    e.target.title = '';
-                                                }
-                                            }}
-                                            disabled={isSaving || isViewMode}
-                                        />
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>
-                                        <div className={styles.checkboxOptions}>
-                                            {COMPANY_TYPE_OPTIONS.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="companyTypesReadonly"
-                                                        checked={selectedCompanyTypes.includes(option)}
-                                                        onChange={() => toggleCompanyType(option)}
-                                                        disabled={isSaving || isViewMode}
-                                                    />
-                                                    <span>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Preferred Job Locations <RequiredStar /></span>
-                                        <div className={styles.checkboxOptions}>
-                                            {JOB_LOCATION_OPTIONS.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="jobLocationsReadonly"
-                                                        checked={selectedJobLocations.includes(option)}
-                                                        onChange={() => toggleJobLocation(option)}
-                                                        disabled={isSaving || isViewMode}
-                                                    />
-                                                    <span>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="companyTypes" value={companyTypesHiddenValue} />
-                                    <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
+                                </div>
+                                <input type="hidden" name="companyTypes" value={companyTypesHiddenValue} />
+                                <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
                             </div>
                         </div>
                         <div className={styles.profileSectionContainer}>

@@ -23,6 +23,7 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
   triggerClassName = '',
   triggerHighlighted = false,
   variant = 'default',
+  placeholder = '',
   style = {}
 }, ref) {
   const [open, setOpen] = useState(false);
@@ -385,7 +386,7 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
           fontWeight: isFilterVariant ? 450 : 600,
           color: displayVal ? '#333' : '#999'
         }}>
-          {displayVal || 'DD-MM-YYYY'}
+          {displayVal || placeholder || 'DD-MM-YYYY'}
         </span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="4" width="18" height="18" rx="2" />

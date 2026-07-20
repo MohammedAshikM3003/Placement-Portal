@@ -26,6 +26,24 @@ import Adminicon from "../assets/Adminicon.png";
 import GraduateCapIcon from "../assets/Coordinatorcap.png";
 import ProfileGraduationcap from "../assets/ProfileGraduationcap.svg"
 
+const FileIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+    </svg>
+);
+
+const CalendarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+
 // Helper to get coordinator ID from storage
 const getCoordinatorId = () => {
     try {
@@ -144,14 +162,6 @@ const IoMdClose = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z"></path></svg>
 );
 
-const FileIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-    </svg>
-);
 
 // FileSizeErrorPopup Component
 const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
@@ -222,14 +232,6 @@ const SuccessPopup = ({ isOpen, onClose }) => {
     );
 };
 
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px', marginRight: '8px', color: '#555', flexShrink: 0 }}>
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-    </svg>
-);
 
 const UploadIconSVG = () => (
     <svg className={styles['co-profile-upload-svg']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -770,6 +772,10 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                     if (photoUrl) {
                         setProfilePhoto(photoUrl);
                         if (!photoUrl.startsWith('blob:')) setProfilePhotoBase64(photoUrl);
+                        setPhotoDetails({
+                            fileName: data.profilePhotoName || 'profile.jpg',
+                            uploadDate: data.profilePhotoDate || new Date().toLocaleDateString('en-GB')
+                        });
                     }
                     setOriginalPhotoValue(getPhotoCompareValue(photoUrl || ''));
 
@@ -1156,8 +1162,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                 <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} />
                 <div className={styles['co-profile-layout']}>
                     <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+                        onClose={() => setIsSidebarOpen(false)}
+                    />
                     <div className={styles['co-profile-main-content']}>
                         <div style={{
                             display: 'flex',
@@ -1181,8 +1187,8 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
             {isSaving && <div className={styles['co-profile-saving-overlay']} />}
             <div className={`${styles['co-profile-layout']} ${isSaving ? styles['co-profile-saving'] : ''}`}>
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="profile" onViewChange={handleViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+                    onClose={() => setIsSidebarOpen(false)}
+                />
                 <div className={styles['co-profile-main-content']}>
 
                     <div className={styles['co-profile-card']}>
@@ -1279,6 +1285,18 @@ function CoProfile({ onLogout, currentView, onViewChange }) {
                                         )}
                                     </div>
                                 </div>
+                                {resolvedProfilePhotoSrc && (
+                                    <div className={styles['co-profile-upload-info-container']}>
+                                        <div className={styles['co-profile-upload-info-item']}>
+                                            <FileIcon />
+                                            <span>{photoDetails?.fileName || 'profile.jpg'}</span>
+                                        </div>
+                                        <div className={styles['co-profile-upload-info-item']}>
+                                            <CalendarIcon />
+                                            <span>Uploaded on: {photoDetails?.uploadDate || new Date().toLocaleDateString('en-GB')}</span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className={styles['co-profile-upload-action-area']}>
                                     <div className={styles['co-profile-upload-btn-wrapper']}>
                                         <label htmlFor="file-upload" className={`${styles['co-profile-profile-upload-btn']} ${isSaving ? styles['co-profile-disabled'] : ''}`}>

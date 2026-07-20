@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import mongoDBService from '../services/mongoDBService.jsx';
 import styles from './Coo_EligibleStudents.module.css';
 import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
+import CooCalendar from '../components/Calendar/Coo_Calendar.jsx';
 
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     useCoordinatorAuth(); // JWT authentication verification
@@ -611,39 +612,35 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                     />
                                 </div>
 
-                                {/* Start Date dropdown using custom Dropdown component */}
+                                {/* Start Date calendar using CooCalendar */}
                                 <div className={styles['co-es-input-wrapper']}>
                                     <label className={styles['co-es-static-label']} htmlFor="co-es-start-date">
                                         Search by Start Date
                                     </label>
-                                    <Dropdown
-                                        options={startDateOptions}
-                                        selectedOption={filterData.startDate}
-                                        onSelect={handleStartDateChange}
+                                    <CooCalendar
+                                        id="co-es-start-date"
+                                        value={filterData.startDate}
+                                        onChange={handleStartDateChange}
                                         placeholder="Search by Start Date"
-                                        disabled={!filterData.companyName}
-                                        formatOption={formatDateDisplay}
-                                        role="coordinator"
-                                        className={styles['co-es-dropdown-wrapper']}
-                                        headerClassName={styles['co-es-dropdown-header']}
+                                        disabled={!filterData.companyName || !filterData.jobRole}
+                                        variant="filter"
+                                        enabledDates={startDateOptions}
                                     />
                                 </div>
 
-                                {/* End Date dropdown using custom Dropdown component */}
+                                {/* End Date calendar using CooCalendar */}
                                 <div className={styles['co-es-input-wrapper']}>
                                     <label className={styles['co-es-static-label']} htmlFor="co-es-end-date">
                                         Search by End Date
                                     </label>
-                                    <Dropdown
-                                        options={endDateOptions}
-                                        selectedOption={filterData.endDate}
-                                        onSelect={handleEndDateChange}
+                                    <CooCalendar
+                                        id="co-es-end-date"
+                                        value={filterData.endDate}
+                                        onChange={handleEndDateChange}
                                         placeholder="Search by End Date"
                                         disabled={!filterData.startDate}
-                                        formatOption={formatDateDisplay}
-                                        role="coordinator"
-                                        className={styles['co-es-dropdown-wrapper']}
-                                        headerClassName={styles['co-es-dropdown-header']}
+                                        variant="filter"
+                                        enabledDates={endDateOptions}
                                     />
                                 </div>
                             </div>

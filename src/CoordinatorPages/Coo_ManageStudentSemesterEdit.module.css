@@ -118,11 +118,13 @@
 }
 
 /* Inputs and Selects */
-.formGrid input,
+.formGrid input:not([type="checkbox"]):not([type="radio"]),
 .formGrid select,
 .datepickerInput {
     width: 100%;
-    padding: 0.9rem;
+    height: 53.6px;
+    min-height: 53.6px;
+    padding: 0 0.9rem;
     border: 1px solid #f4dddd;
     background-color: #fff9f9;
     border-radius: 8px;
@@ -138,7 +140,7 @@
     margin-bottom: 0;
 }
 
-.formGrid input:focus,
+.formGrid input:not([type="checkbox"]):not([type="radio"]):focus,
 .formGrid select:focus,
 .datepickerInput:focus {
     outline: none;
@@ -156,12 +158,57 @@
 .mobileInputWrapper {
     display: flex;
     width: 100%;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     overflow: hidden;
     background-color: #fff9f9;
     box-sizing: border-box;
     height: 53.6px;
+}
+
+/* Checkbox Group Cards (Company Types & Preferred Job Locations) */
+.checkboxGroup {
+    background-color: #fff9f9;
+    border: 1px solid #f4dddd;
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    box-sizing: border-box;
+}
+
+.checkboxGroupLabel {
+    font-weight: 600;
+    color: #1f2d3d;
+    font-size: 0.95rem;
+}
+
+.checkboxOptions {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.checkboxOption {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.9rem;
+    color: #1f2d3d;
+    cursor: pointer;
+}
+
+.checkboxOption input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    padding: 0 !important;
+    accent-color: #D73D3D;
+    border: 1px solid #f4dddd;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .countryCode {
@@ -217,7 +264,7 @@
 .percentageInputWrapper {
     display: flex;
     width: 100%;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     overflow: hidden;
     background-color: #fff9f9;
@@ -284,7 +331,7 @@
 /* Profile Photo Box */
 .profilePhotoBox {
     background-color: #fff;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -292,7 +339,6 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin-top: -11px;
 }
 
 .profileIconContainer {
@@ -309,7 +355,7 @@
     height: 250px;
     object-fit: cover;
     border-radius: 12px;
-    border: 4px solid #e9f1fc;
+    border: 4px solid #fce8e8;
     cursor: pointer;
 }
 
@@ -344,7 +390,7 @@
     justify-content: center;
     padding: 0.8rem 1rem;
     background-color: #fff9f9;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     cursor: pointer;
     color: #555;
@@ -376,7 +422,7 @@
     margin-bottom: 1rem;
     padding: 1rem;
     background-color: #fff9f9;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     text-align: left;
     font-size: 0.85rem;
@@ -430,7 +476,7 @@
     justify-content: space-between;
     padding: 0.9rem;
     background: #fff9f9;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 8px;
     box-sizing: border-box;
     transition: border-color 0.3s, box-shadow 0.3s;
@@ -510,7 +556,7 @@
 /* Semester Section Separator */
 .semesterSeparator {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #dde6f4, transparent);
+    background: linear-gradient(90deg, transparent, #f4dddd, transparent);
     margin: 1.5rem 0;
 }
 
@@ -562,7 +608,7 @@
     min-height: 56px;
     font-weight: 500;
     background-color: #fff9f9 !important;
-    border: 1px solid #dde6f4 !important;
+    border: 1px solid #f4dddd !important;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(215, 61, 61, 0.05);
     color: #1a2a4a;
@@ -579,7 +625,7 @@
 .semesterSelect {
     min-height: 56px;
     background-color: #fff9f9;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 12px;
     padding: 0 2.75rem 0 1rem;
     font-weight: 600;
@@ -610,7 +656,7 @@
 
 .checkboxGroup {
     background-color: #fff9f9;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
     display: flex;
@@ -663,7 +709,7 @@
     padding: 0.5rem;
     background-color: #fff9f9;
     border-radius: 8px;
-    border: 1px solid #dde6f4;
+    border: 1px solid #f4dddd;
     grid-column: 1 / -1;
     /* Spans the full width of the academic grid */
     margin-bottom: 1.5rem;
@@ -794,7 +840,7 @@
 }
 
 .discardBtn {
-    background-color: #e9f1fc;
+    background-color: #fde8e8;
     color: #D73D3D;
 }
 
@@ -1383,7 +1429,7 @@
 .companyStatCard {
     display: flex;
     align-items: stretch;
-    border: 1.5px solid #d6d0f8;
+    border: 1.5px solid #f4dddd;
     border-radius: 10px;
     background: #fff9f9;
     overflow: hidden;
@@ -1425,7 +1471,7 @@
 .companyStatCardEmpty {
     display: flex;
     align-items: stretch;
-    border: 1.5px solid #d6d0f8;
+    border: 1.5px solid #f4dddd;
     border-radius: 10px;
     background: #fff9f9;
     overflow: hidden;
@@ -1509,7 +1555,7 @@
 /* Top Performance Insights card */
 .performanceInsightsCard {
     background: #fff9f9;
-    border: 1.5px solid #dde6f4;
+    border: 1.5px solid #f4dddd;
     border-radius: 16px;
     padding: 1.4rem 2rem;
     display: flex;
@@ -1528,7 +1574,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #dde6f4;
+    background: #fde8e8;
     border-radius: 10px;
     padding: 0.85rem 1.1rem;
     gap: 0.5rem;
@@ -1625,7 +1671,7 @@
 .skillCard {
     display: flex;
     align-items: center;
-    border: 1.5px solid #d6d0f8;
+    border: 1.5px solid #f4dddd;
     border-radius: 10px;
     background: #fff;
     overflow: hidden;
@@ -2199,7 +2245,7 @@
     background: #D73D3D;
     color: #fff;
     border: none;
-    box-shadow: 0 0 0 4px rgba(32, 133, 246, 0.22);
+    box-shadow: 0 0 0 4px rgba(215, 61, 61, 0.22);
 }
 
 .anlsStep_pending {
@@ -3078,7 +3124,7 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
         width: 100% !important;
-        padding: 10px 0 60px 0 !important;
+        padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 20px) 0 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -3165,8 +3211,8 @@
         gap: 12px !important;
         width: 100% !important;
         max-width: calc(100% - 20px) !important;
-        margin: 20px auto 60px auto !important;
-        padding-bottom: 50px !important;
+        margin: 20px auto 10px auto !important;
+        padding-bottom: 0 !important;
         box-sizing: border-box !important;
     }
 

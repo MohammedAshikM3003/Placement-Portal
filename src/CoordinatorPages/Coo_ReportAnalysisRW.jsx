@@ -933,7 +933,7 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', width: '100%', display: 'block' }}>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>
                         {selectedCompanyJob ? `No ${coordinatorBranch || ''} students found for this round.` : 'Please select a company and drive to view students.'}
                       </td>
                     </tr>

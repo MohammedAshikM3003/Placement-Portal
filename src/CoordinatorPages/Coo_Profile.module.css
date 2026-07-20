@@ -27,31 +27,35 @@
 /* Desktop scrollbar - red styling to match theme */
 .co-profile-main-content::-webkit-scrollbar,
 .co-profile-content::-webkit-scrollbar {
-  width: 10px;
+    width: 10px;
 }
+
 .co-profile-main-content::-webkit-scrollbar-track,
 .co-profile-content::-webkit-scrollbar-track {
-  background: #f0f2f5;
+    background: #f0f2f5;
 }
+
 .co-profile-main-content::-webkit-scrollbar-thumb,
 .co-profile-content::-webkit-scrollbar-thumb {
-  background-color: #d23b42;
-  border-radius: 20px;
-  border: 3px solid #f0f2f5;
+    background-color: #d23b42;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
 }
+
 .co-profile-main-content::-webkit-scrollbar-thumb:hover,
 .co-profile-content::-webkit-scrollbar-thumb:hover {
-  background-color: #b32d34;
+    background-color: #b32d34;
 }
 
 /* --- Individual Card Styling --- */
 .co-profile-card {
     background-color: #ffffff;
     border-radius: 16px;
-    padding: 2rem;
+    padding: 2.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
 }
 
 /* --- Content Grid (Forms + Photo) --- */
@@ -78,7 +82,7 @@
 .co-profile-section-header::after {
     background-color: #d23b42;
     border-radius: 2px;
-    bottom: 0px; 
+    bottom: 0px;
     content: "";
     height: 3px;
     left: 0;
@@ -89,7 +93,8 @@
 /* --- Input Grid Layout --- */
 .co-profile-input-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two columns for inputs */
+    grid-template-columns: 1fr 1fr;
+    /* Two columns for inputs */
     gap: 20px;
 }
 
@@ -117,7 +122,7 @@
     height: 53.6px;
     padding: 12px 15px;
     border: 1px solid #f4dddd;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 0.95rem;
     font-weight: 500;
     color: #333;
@@ -139,12 +144,12 @@
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23999%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-4.9%200-9.2%201.8-12.9%205.4-3.7%203.6-5.5%208-5.5%2013s1.8%209.4%205.5%2013l128.8%20128.8c3.7%203.7%208%205.5%2013%205.5s9.4-1.8%2013-5.5l128.8-128.8c3.7-3.6%205.4-8%205.4-13s-1.7-9.4-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
     background-repeat: no-repeat;
     background-position: right 15px center;
-    
+
     background-size: 10px;
     color: #888;
     font-weight: 500;
     /* This ensures the select maintains the correct border */
-    border: 1px solid #f4dddd; 
+    border: 1px solid #f4dddd;
 }
 
 .co-profile-form-select:not([value=""]) {
@@ -154,7 +159,7 @@
 
 /* Date input specific style to add a calendar icon to the right */
 .co-profile-form-input-date {
-    padding-left: 15px; 
+    padding-left: 15px;
     padding-right: 15px;
     background-repeat: no-repeat;
     background-position: right 15px center;
@@ -181,7 +186,7 @@
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #f4dddd;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 0.95rem;
     font-weight: 500;
     font-family: 'Poppins', sans-serif;
@@ -465,20 +470,19 @@
 }
 
 
-/* --- Profile Photo Card (Small Card Inside Master Card) --- */
+/* --- Profile Photo Card (Matching Student Edit Page profilePhotoBox) --- */
 .co-profile-photo-card {
     background-color: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
     border: 1px solid #f4dddd;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    height: 375px;
-    width: 100%;
-    box-sizing: border-box;
     justify-content: space-between;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 /* Profile Photo Header */
@@ -489,262 +493,38 @@
     font-weight: 600;
     color: #333;
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     position: relative;
     padding-bottom: 0.5rem;
 }
 
 .co-profile-photo-header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
     background-color: #d23b42;
     border-radius: 2px;
-    bottom: 0px;
-    content: "";
-    height: 3px;
-    left: 0;
-    position: absolute;
-    width: 40px;
 }
 
-
-.co-profile-photo-upload-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Increased gap between photo and details/button */
-    gap: 15px; /* Reduced gap to accommodate new details */
-    
-    /* Pushes this block to be vertically centered within the remaining card space */
-    margin-top: auto; 
-    margin-bottom: auto; 
-    flex-grow: 1; 
-    justify-content: center;
-    width: 100%; /* Ensure children can use max-width */
-}
-
-.co-profile-photo-preview {
-    /* Set fixed size for the image (no circle/ring around it) */
-    border: none !important; 
-    width:150px;
-    height:150px;
-    margin-top:-300px; /* Adjusted to center better with the new text */
-    /* 2. Ensure no outline is applied (important for focus states, but good to check) */
-    outline: none !important;
-
-    /* 3. Ensure no box-shadow is creating a square frame */
-    box-shadow: none !important;
-}
-
-/* NEW: Style for the active border when a photo is uploaded */
-.co-profile-photo-active {
-    /* Apply a border with your theme color */
-    border: 2px solid #808080 !important; 
-    border-radius: 6px; /* Match input border radius for consistency */
-    padding: 2px; 
-    margin-top:-15px;
-    position: relative;
-    top: -5px;/* Small padding so the border doesn't immediately touch the image */
-}
-
-/* NEW: Style to show the image is clickable */
-.co-profile-photo-clickable {
-    cursor: zoom-in;
-    transition: transform 0.2s;
-}
-.co-profile-photo-clickable:hover {
-    transform: scale(1.05);
-}
-
-
-/* NEW: Style for file details */
-.co-profile-file-details {
-    width: 100%;
-    max-width: 220px;
-    padding: 10px;
-    border: 1px dashed #ccc;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 15px; /* Space between details and button */
-}
-
-.co-profile-file-name {
-    font-size: 0.85em;
-    font-weight: 600;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* ... for long file names */
-    margin: 0;
-}
-
-.co-profile-upload-date {
-    font-size: 0.75em;
-    color: #666;
-    margin: 5px 0 0 0;
-}
-/* --- End of File Details Styles --- */
-
-
-/* --- Upload Button Styling with Icons --- */
-.co-profile-upload-button {
-    background-color: #e7effa;
-    color: rgb(137, 135, 135);
-    padding: 12px 15px; /* Adjust horizontal padding to fit content better */
-    width: 100%; /* Make it full width of its container */
-    max-width: 220px; /* Constrain max width for design consistency */
-    border-radius: 8px;
-    border: 1px solid #808080;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 1em; 
-    display: flex;
-    justify-content: space-between; /* Distribute content */
-    align-items: center;
-    transition: background-color 0.2s;
-    text-transform: uppercase;
-    box-sizing: border-box; /* Include padding/border in width */
-}
-
-.co-profile-upload-button:hover {
-    background-color: #cb4f53;
-    color: #fff;
-}
-
-/* Styling for the Upload text itself */
-.co-profile-upload-text {
-    flex-grow: 1;
-    text-align: center;
-    margin: 0 5px; /* Small buffer for the symbols */
-}
-
-/* Styling for the icons/symbols container */
-.co-profile-icon {
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Specifically style the SVG upload icon to match the size */
-.co-profile-upload-svg {
-    width: 1.2em; /* Adjust size relative to button font size */
-    height: 1.2em;
-    fill: currentColor; 
-    transition: fill 0.2s;
-}
-
-/* Specifically style the close/cross icon */
-.co-profile-icon-close {
-    font-size: 1.2em;
-    color: rgb(137, 135, 135); 
-    transition: color 0.2s;
-}
-
-.co-profile-upload-button:hover .co-profile-icon-close {
-    color: white; 
-}
-
-.co-profile-hidden-input {
-    display: none;
-}
-/* --- End of Upload Button Styling --- */
-
-
-/* --- Image Preview Modal Styles --- */
-.co-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85); /* Dark semi-transparent background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Ensure it's on top of everything */
-}
-
-.co-modal-content {
-    position: relative;
-    max-width: 90%;
-    max-height: 90%;
-}
-
-.co-modal-image {
-    display: block;
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 4px;
-    object-fit: contain;
-}
-
-.co-modal-close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    color: #fff;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    opacity: 0.9;
-    transition: opacity 0.2s;
-    z-index: 1001; /* Above the image */
-}
-
-.co-modal-close:hover {
-    opacity: 1;
-}
-
-.co-profile-photo-circle-wrapper {
-    /* Set a fixed size for the entire circle area */
-    width: 150px; /* Example size */
-    height: 150px; /* Must match width for a perfect circle */
-    border-radius: 50%; /* Makes the container circular */
-    
-    /* Apply the red outline/shadow here */
-    border: 3px solid #E53935; /* Example red border (adjust color/thickness) */
-    /* Or use box-shadow if that's what you were using: */
-    /* box-shadow: 0 0 0 3px #E53935; */
-
-    /* Centering the image inside */
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    overflow: hidden; /* Important to clip the image to the circle */
-}
-/* --- End of Image Preview Modal Styles --- */
-
-/* --- Profile Photo Upload Styles --- */
 .co-profile-photo-icon-container {
-    padding: 0;
+    padding: 1rem 0;
+    flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 160px;
-    margin-bottom: 0.5rem;
+    min-height: 150px;
 }
 
 .co-profile-photo-preview {
-    width: 150px;
-    height: 190px;
+    width: 200px;
+    height: 250px;
     object-fit: cover;
     border-radius: 12px;
-    border: 4px solid #f4dddd;
+    border: 4px solid #fce8e8;
     cursor: pointer;
-}
-
-.co-profile-photo-clickable {
-    cursor: zoom-in;
-    transition: transform 0.2s;
-}
-
-.co-profile-photo-clickable:hover {
-    transform: scale(1.05);
-}
-
-.co-profile-photo-active {
-    border: 2px solid #808080 !important;
-    border-radius: 6px;
-    padding: 2px;
 }
 
 .co-profile-upload-info-container {
@@ -774,12 +554,8 @@
     margin-bottom: 0.5rem;
 }
 
-.co-profile-upload-hint {
-    margin-top: 4px;
-}
-
 .co-profile-upload-action-area {
-    margin-top: 0;
+    margin-top: auto;
     width: 100%;
 }
 
@@ -803,14 +579,54 @@
     font-weight: 500;
     font-family: 'Poppins', sans-serif;
     color: #555;
-    height:44px;
-    width:160px;
+    height: 44px;
     transition: all 0.2s ease-in-out;
 }
 
 .co-profile-profile-upload-btn:hover {
     background-color: #fae9e9;
     border-color: #f4dddd;
+}
+
+.co-profile-upload-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.co-profile-remove-image-btn {
+    background: #fde8e8;
+    border: 1px solid #f9c6c6;
+    color: #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.co-profile-remove-image-btn:hover {
+    background: #d9534f;
+    color: white;
+    border-color: #d9534f;
+}
+
+.co-profile-upload-hint {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #888;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.co-profile-hidden-input {
+    display: none;
 }
 
 .co-profile-upload-btn-content {
@@ -866,27 +682,30 @@
     font-weight: 600;
     position: relative;
     top: -37px;
-    margin-bottom: -50px; 
+    margin-bottom: -50px;
     text-align: center;
     /* REMOVED: padding, border, and width properties */
 }
 
 .co-profile-status-success {
-    color: #4CAF50; /* Green for success */
+    color: #4CAF50;
+    /* Green for success */
     /* REMOVED: background-color and border */
 }
 
 .co-profile-status-error {
-    color: #d23b42; /* Red for not saved/error */
+    color: #d23b42;
+    /* Red for not saved/error */
     /* REMOVED: background-color and border */
 }
+
 /* --- End of Status Message Styles --- */
 
 
 /* --- Action Buttons --- */
 .co-profile-action-buttons {
     display: flex;
-    justify-content: flex-end; 
+    justify-content: flex-end;
     gap: 1rem;
     margin-top: 0;
     width: 100%;
@@ -907,7 +726,7 @@
 }
 
 .co-profile-discard-btn {
-    background-color: #e8e8e8; 
+    background-color: #e8e8e8;
     color: #666;
 }
 
@@ -926,35 +745,38 @@
 
 .co-profile-discard-btn:disabled,
 .co-profile-save-btn:disabled {
-    opacity: 1;
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 /* --- Success Popup Styles --- */
 
 /* Success popup overlay */
-.CoProfile-popup-overlay { 
+.CoProfile-popup-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-} 
+}
 
- .co-profile-success-overlay {
-     position: fixed;
-     top: 0;
-     left: 0;
-     right: 0;
-     bottom: 0;
-     background-color: rgba(0, 0, 0, 0.2);
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     z-index: 10000;
- }
+.co-profile-success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
 
 .CoProfile-popup-container {
     background-color: #fff;
@@ -1024,7 +846,8 @@
     stroke-miterlimit: 10;
     fill: none;
     margin: 0 auto;
-    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
+    box-shadow: inset 0 0 0 #4caf50;
+    /* Green shadow for success */
     animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
 }
 
@@ -1049,16 +872,27 @@
 }
 
 @keyframes CoProfile-stroke {
-    100% { stroke-dashoffset: 0; }
+    100% {
+        stroke-dashoffset: 0;
+    }
 }
 
 @keyframes CoProfile-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale(1.1); }
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
 }
 
 @keyframes CoProfile-fill {
-    100% { box-shadow: inset 0 0 0 40px #4caf50; }
+    100% {
+        box-shadow: inset 0 0 0 40px #4caf50;
+    }
 }
 
 /* Saving state - not-allowed cursor on entire page */
@@ -1095,7 +929,7 @@
 .imagePreviewOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1307,132 +1141,139 @@
     color: #fff;
 }
 
- .co-profile-success-overlay .CoProfile-popup-container {
-     width: 400px;
-     max-width: 90vw;
-     height: 443px;
-     text-align: center;
-     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-     border-radius: 12px;
-     overflow: hidden;
-     font-family: 'Poppins', sans-serif;
- }
+.co-profile-success-overlay .CoProfile-popup-container {
+    width: 400px;
+    max-width: 90vw;
+    height: 443px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
 
- .co-profile-success-overlay .CoProfile-popup-header {
-     padding: 1.2rem;
-     font-size: 1.4rem;
-     font-weight: 700;
-     letter-spacing: 0.02em;
- }
+.co-profile-success-overlay .CoProfile-popup-header {
+    padding: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
 
- .co-profile-success-overlay .CoProfile-popup-body {
-     padding: 2rem;
- }
+.co-profile-success-overlay .CoProfile-popup-body {
+    padding: 2rem;
+}
 
- .co-profile-success-overlay .CoProfile-popup-body h2 {
-     margin: 2rem 0 0.5rem 0;
-     font-size: 24px;
-     color: #000;
-     font-weight: 700;
- }
+.co-profile-success-overlay .CoProfile-popup-body h2 {
+    margin: 2rem 0 0.5rem 0;
+    font-size: 24px;
+    color: #000;
+    font-weight: 700;
+}
 
- .co-profile-success-overlay .CoProfile-popup-body p {
-     margin: 0;
-     color: #888;
-     font-size: 16px;
- }
+.co-profile-success-overlay .CoProfile-popup-body p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+}
 
- .co-profile-success-overlay .CoProfile-popup-footer {
-     padding: 1.5rem;
-     background-color: #f7f7f7;
-     display: flex;
-     gap: 32px;
-     justify-content: center;
- }
+.co-profile-success-overlay .CoProfile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
 
- .co-profile-success-overlay .CoProfile-success-icon {
-     width: 80px;
-     height: 80px;
-     margin: 0 auto 20px;
- }
+.co-profile-success-overlay .CoProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+}
 
- .co-profile-success-overlay .CoProfile-popup-close-btn {
-     padding: 0.8rem 1.5rem;
-     border-radius: 8px;
-     font-size: 1rem;
-     font-weight: 600;
-     box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
- }
+.co-profile-success-overlay .CoProfile-popup-close-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
 
 
-/* --- MOBILE RESPONSIVE ADJUSTMENTS (Max 768px) --- */
-@media screen and (max-width: 768px) {
-    
+/* --- MOBILE RESPONSIVE ADJUSTMENTS (Max 1200px) --- */
+@media (max-width: 1200px) {
+
     /* 1. Overall Layout */
-    
+
     .co-profile-main-content {
         margin-top: 65px !important;
         margin-left: 0 !important;
+        margin-right: 0 !important;
         width: 100% !important;
         height: calc(100vh - 65px) !important;
-        padding: 15px 15px 90px 15px !important;
+        padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 20px) 0 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        align-items: stretch !important;
+        align-items: center !important;
         position: relative !important;
         -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
     }
 
     /* 2. Individual Card */
     .co-profile-card {
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        margin: 0 0 20px 0;
-        border-radius: 0; 
-        padding: 15px; 
-        box-shadow: none;
-        border: none;
+        width: 100% !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto 20px !important;
+        padding: 1.75rem 1.25rem !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        background-color: #ffffff !important;
+        box-sizing: border-box !important;
     }
 
     /* 3. Content Grid (Single Column) */
     .co-profile-content-grid {
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr;
         gap: 25px;
     }
-    
+
     /* FIX: Re-adjust .co-profile-section-header::after for mobile (Personal Info/Office Details) */
     .co-profile-section-header::after {
-        bottom: 0px; 
+        bottom: 0px;
         left: 0;
         top: initial;
     }
-    
+
     /* 5. Input Grid (Single Column) */
     .co-profile-input-grid,
     .co-profile-input-grid-two-col {
-        grid-template-columns: 1fr; /* Single column stack */
-        gap: 15px; /* Reduced gap */
+        grid-template-columns: 1fr;
+        /* Single column stack */
+        gap: 15px;
+        /* Reduced gap */
     }
 
     .co-profile-form-input {
-        width: 100%; /* Full width input */
+        width: 100%;
+        /* Full width input */
         max-width: none;
-        height: 50px; /* Slight height adjustment for mobile */
+        height: 50px;
+        /* Slight height adjustment for mobile */
+        border-radius: 10px;
     }
-    
+
     /* 6. Profile Photo Card (Full width on mobile) */
     .co-profile-photo-card {
         width: 100%;
         height: auto;
         margin: 0;
-        padding: 20px; 
+        padding: 20px;
         align-items: center;
     }
-    
+
     .co-profile-layout {
         position: fixed !important;
         inset: 0 !important;
@@ -1441,7 +1282,7 @@
         overflow: hidden !important;
         background-color: #f8f8fb;
     }
-    
+
     .co-profile-photo-header {
         text-align: left;
         font-size: 22px;
@@ -1454,39 +1295,41 @@
     .co-profile-photo-header::after {
         bottom: 0px;
         left: 0;
-        top: initial; 
+        top: initial;
     }
 
     .co-profile-photo-icon-container {
         min-height: 100px;
         padding: 0;
     }
-    
+
     .co-profile-photo-preview {
         /* Center photo better */
-        margin-top: 0; 
+        margin-top: 0;
         width: 150px;
         height: 200px;
-        object-fit: contain; /* Use contain for better mobile display of profile pics */
+        object-fit: contain;
+        /* Use contain for better mobile display of profile pics */
     }
-    
+
     .co-profile-photo-active {
-        margin-top: 15px; /* Re-add margin around border */
+        margin-top: 15px;
+        /* Re-add margin around border */
     }
-    
+
     /* Center the placeholder image too */
     .co-profile-photo-card img[alt="Graduation Cap"] {
         margin-top: 0 !important;
     }
-    
+
     .co-profile-upload-info-container,
     .co-profile-upload-action-area {
         width: 55%;
         position: relative;
         top: 13px;
     }
-    
-    
+
+
     .co-profile-upload-action-area {
         width: 100%;
         position: relative;
@@ -1499,202 +1342,231 @@
         margin-left: 0 !important;
         justify-content: center !important;
     }
-    
+
     .co-profile-profile-upload-btn {
         height: 45px;
         width: auto;
         padding: 0.7rem 0.5rem;
         font-size: 0.9rem;
     }
-    
+
     .co-profile-remove-image-btn {
         width: 40px;
         height: 40px;
         font-size: 1.2rem;
     }
-    
+
     .co-profile-status-message {
         /* Adjust status message to appear below the card, not floating */
-        margin-top: 15px; 
+        margin-top: 15px;
         margin-bottom: 0;
     }
 
     .co-profile-action-buttons {
-        position: static !important;
-        width: 100% !important;
-        background: transparent !important;
-        border-top: none !important;
-        padding: 15px 0 35px 0 !important; 
-        margin-top: 15px !important;
-        margin-bottom: 20px !important;
-        border-radius: 0 !important;
-        gap: 10px !important;
-        z-index: 1 !important; 
-        box-sizing: border-box !important;
         display: flex !important;
-        justify-content: flex-end !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 20px auto 10px auto !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
     }
-    
-    .co-profile-discard-btn, .co-profile-save-btn {
-        flex-grow: 1;
-        min-width: 45%;
-        padding: 12px 0;
+
+    .co-profile-discard-btn,
+    .co-profile-save-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 14px 0 !important;
+        font-size: 1.05rem !important;
+        border-radius: 12px !important;
     }
+
     /* Success popup overlay */
-.CoProfile-popup-overlay { 
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-} 
+    .CoProfile-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
 
-.CoProfile-popup-container {
-    background-color: #fff;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: StuProfile-popup-fade-in 0.3s ease-out;
-}
+    .CoProfile-popup-container {
+        background-color: #fff;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: StuProfile-popup-fade-in 0.3s ease-out;
+    }
 
-@keyframes CoProfile-popup-fade-in {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-}
+    @keyframes CoProfile-popup-fade-in {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
 
-.CoProfile-popup-header {
-    background-color: #d23b42; /* Green for success */
-    color: white;
-    padding: 1rem;
-    font-size: 1.75rem;
-    font-weight: 700;
-    text-align: center;
-}
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
 
-.CoProfile-popup-body {
-    padding: 30px 20px;
-    text-align: center;
-}
+    .CoProfile-popup-header {
+        background-color: #d23b42;
+        /* Green for success */
+        color: white;
+        padding: 1rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        text-align: center;
+    }
 
-.CoProfile-popup-body h2 {
-    color: #d23b42;
-    margin-top: 15px;
-    margin-bottom: 10px;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
+    .CoProfile-popup-body {
+        padding: 30px 20px;
+        text-align: center;
+    }
 
-.CoProfile-popup-body p {
-    color: #666;
-    margin: 5px 0;
-}
+    .CoProfile-popup-body h2 {
+        color: #d23b42;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
 
-.CoProfile-popup-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #eee;
-    text-align: center;
-    background-color: #ffffff;
-}
+    .CoProfile-popup-body p {
+        color: #666;
+        margin: 5px 0;
+    }
 
-.CoProfile-popup-close-btn {
-    background-color: #d23b42;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
+    .CoProfile-popup-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #eee;
+        text-align: center;
+        background-color: #ffffff;
+    }
 
-.CoProfile-popup-close-btn:hover {
-    background-color: #d23b42;
-}
+    .CoProfile-popup-close-btn {
+        background-color: #d23b42;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
 
-/* Success icon styling and animation */
-.CoProfile-success-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff;
-    stroke-miterlimit: 10;
-    fill: none;
-    margin: 0 auto;
-    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
-    animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
-}
+    .CoProfile-popup-close-btn:hover {
+        background-color: #d23b42;
+    }
 
-.CoProfile-success-icon--circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #4caf50;
-    fill: #4caf50;
-    animation: CoProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
+    /* Success icon styling and animation */
+    .CoProfile-success-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        fill: none;
+        margin: 0 auto;
+        box-shadow: inset 0 0 0 #4caf50;
+        /* Green shadow for success */
+        animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
+    }
 
-.CoProfile-success-icon--check {
-    transform-origin: 50% 50%;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    stroke: #ffffff;
-    stroke-width: 3;
-    fill: none;
-    animation: CoProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
+    .CoProfile-success-icon--circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4caf50;
+        fill: #4caf50;
+        animation: CoProfile-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
 
-@keyframes CoProfile-stroke {
-    100% { stroke-dashoffset: 0; }
-}
+    .CoProfile-success-icon--check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke: #ffffff;
+        stroke-width: 3;
+        fill: none;
+        animation: CoProfile-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
 
-@keyframes CoProfile-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale(1.1); }
-}
+    @keyframes CoProfile-stroke {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
 
-@keyframes CoProfile-fill {
-    100% { box-shadow: inset 0 0 0 30px #4caf50; }
-}
+    @keyframes CoProfile-scale {
+
+        0%,
+        100% {
+            transform: none;
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    @keyframes CoProfile-fill {
+        100% {
+            box-shadow: inset 0 0 0 30px #4caf50;
+        }
+    }
 }
 
 /* Red scrollbar on mobile */
 @media (max-width: 1200px) {
-  .co-profile-content::-webkit-scrollbar {
-    width: 10px;
-  }
-  .co-profile-content::-webkit-scrollbar-track {
-    background: #f0f2f5;
-  }
-  .co-profile-content::-webkit-scrollbar-thumb {
-    background-color: #d23b42;
-    border-radius: 20px;
-    border: 3px solid #f0f2f5;
-  }
-  .co-profile-content::-webkit-scrollbar-thumb:hover {
-    background-color: #b32d34;
-  }
+    .co-profile-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .co-profile-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .co-profile-content::-webkit-scrollbar-thumb {
+        background-color: #d23b42;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .co-profile-content::-webkit-scrollbar-thumb:hover {
+        background-color: #b32d34;
+    }
 
 }
+
 /* --- Success Popup Styles --- */
 
 /* Success popup overlay */
-.CoProfile-popup-overlay { 
+.CoProfile-popup-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-} 
+}
 
 .CoProfile-popup-container {
     background-color: #fff;
@@ -1707,12 +1579,20 @@
 }
 
 @keyframes CoProfile-popup-fade-in {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .CoProfile-popup-header {
-    background-color: #d23b42; /* Green for success */
+    background-color: #d23b42;
+    /* Green for success */
     color: white;
     padding: 1rem;
     font-size: 1.75rem;
@@ -1772,7 +1652,8 @@
     stroke-miterlimit: 10;
     fill: none;
     margin: 0 auto;
-    box-shadow: inset 0 0 0 #4caf50; /* Green shadow for success */
+    box-shadow: inset 0 0 0 #4caf50;
+    /* Green shadow for success */
     animation: CoProfile-fill 0.4s ease-in-out 0.4s forwards, CoProfile-scale 0.3s ease-in-out 0.9s both;
 }
 
@@ -1797,16 +1678,27 @@
 }
 
 @keyframes CoProfile-stroke {
-    100% { stroke-dashoffset: 0; }
+    100% {
+        stroke-dashoffset: 0;
+    }
 }
 
 @keyframes CoProfile-scale {
-    0%, 100% { transform: none; }
-    50% { transform: scale(1.1); }
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
 }
 
 @keyframes CoProfile-fill {
-    100% { box-shadow: inset 0 0 0 40px #4caf50; }
+    100% {
+        box-shadow: inset 0 0 0 40px #4caf50;
+    }
 }
 
 /* Saving state - not-allowed cursor on entire page */

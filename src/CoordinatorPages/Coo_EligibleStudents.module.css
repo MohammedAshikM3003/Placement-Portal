@@ -179,7 +179,7 @@
 
 .co-es-filter-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 0.7fr);
+  grid-template-columns: repeat(2, 1fr);
   column-gap: 14px;
   row-gap: 12px;
   width: 100%;
