@@ -2909,7 +2909,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                    <div className={styles.field}>
                                         <label>Community <RequiredStar /></label>
                                         <FormDropdown
                                             options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
@@ -2924,7 +2924,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         />
                                         <input type="hidden" name="community" value={studentData?.community || ''} />
                                     </div>
-                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                    <div className={styles.field}>
                                         <label>Medium of Study <RequiredStar /></label>
                                         <FormDropdown
                                             options={[
@@ -2943,15 +2943,15 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                         />
                                         <input type="hidden" name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} />
                                     </div>
-                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                    <div className={styles.field}>
                                         <label>Blood Group</label>
                                         <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>
-                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                    <div className={styles.field}>
                                         <label>Aadhaar Number <RequiredStar /></label>
                                         <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
                                     </div>
-                                    <div style={{ marginTop: "24px" }} className={styles.field}>
+                                    <div className={styles.field}>
                                         <label>Portfolio Link</label>
                                         <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving || isViewMode} />
                                     </div>

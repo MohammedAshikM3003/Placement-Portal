@@ -1256,13 +1256,20 @@
         /* Reduced gap */
     }
 
-    .co-profile-form-input {
+    .co-profile-field-group {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .co-profile-form-input,
+    .co-profile-form-select,
+    .co-profile-date-input {
         width: 100%;
-        /* Full width input */
         max-width: none;
         height: 50px;
-        /* Slight height adjustment for mobile */
         border-radius: 10px;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
     }
 
     /* 6. Profile Photo Card (Full width on mobile) */
@@ -1365,10 +1372,10 @@
     .co-profile-action-buttons {
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 1rem !important;
         width: 100% !important;
         max-width: calc(100% - 20px) !important;
-        margin: 20px auto 10px auto !important;
+        margin: 0 auto 20px !important;
         padding-bottom: 0 !important;
         box-sizing: border-box !important;
     }
@@ -1377,8 +1384,8 @@
     .co-profile-save-btn {
         width: 100% !important;
         min-width: 0 !important;
-        padding: 14px 0 !important;
-        font-size: 1.05rem !important;
+        padding: 1rem 0 !important;
+        font-size: 1.1rem !important;
         border-radius: 12px !important;
     }
 

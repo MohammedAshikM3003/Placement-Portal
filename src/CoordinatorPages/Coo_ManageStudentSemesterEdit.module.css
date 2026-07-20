@@ -115,6 +115,12 @@
 
 .profilePhotoWrapper {
     grid-column: 3 / 4;
+    display: flex;
+    flex-direction: column;
+}
+
+.profilePhotoWrapper > .field {
+    margin-top: 24px;
 }
 
 /* Inputs and Selects */
@@ -3131,7 +3137,7 @@
         max-height: none !important;
         display: flex !important;
         flex-direction: column !important;
-        align-items: stretch !important;
+        align-items: center !important;
         justify-content: flex-start !important;
         -webkit-overflow-scrolling: touch !important;
         gap: 10px;
@@ -3200,18 +3206,29 @@
 
     .field,
     .inputGroup,
-    .inputWrapper {
+    .inputWrapper,
+    .profilePhotoWrapper > .field {
         width: 100% !important;
         box-sizing: border-box !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .formGrid input,
+    .formGrid select,
+    .field input,
+    .field select {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
     }
 
     .actionButtons {
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 1rem !important;
         width: 100% !important;
         max-width: calc(100% - 20px) !important;
-        margin: 20px auto 10px auto !important;
+        margin: 0 auto 20px !important;
         padding-bottom: 0 !important;
         box-sizing: border-box !important;
     }
@@ -3219,8 +3236,8 @@
     .discardBtn,
     .saveBtn {
         width: 100% !important;
-        padding: 14px 0 !important;
-        font-size: 1.05rem !important;
+        padding: 1rem 0 !important;
+        font-size: 1.1rem !important;
         border-radius: 12px !important;
     }
 }
