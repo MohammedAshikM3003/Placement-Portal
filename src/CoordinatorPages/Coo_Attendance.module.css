@@ -528,7 +528,73 @@
     font-weight: 600;
     font-size: 0.95rem;
   }
-  
+.co-at-table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 15px;
+  width: 100%;
+}
+
+.co-at-table-header {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.co-at-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 260px;
+}
+
+.co-at-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 35px 0 12px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  outline: none;
+  box-sizing: border-box;
+  background-color: #fff;
+  transition: border-color 0.2s;
+}
+
+.co-at-search-input:focus {
+  border-color: #d23b42;
+}
+
+.co-at-search-clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.co-at-search-clear-btn:hover {
+  color: #d23b42;
+  background-color: #f0f0f0;
+}
+
   /* ======================================================= */
   /* RESPONSIVE STYLES (TABLET & MOBILE)           */
   /* ======================================================= */
@@ -758,10 +824,9 @@
       padding-right: 15px; /* Add some spacing on the right */
   }
   
-  /* 5. Attendance Table Horizontal Scroll & Sticky Header (FIXED FOR SINGLE TABLE) */
   .co-at-table-section {
-      padding: 15px;
-      margin: 10px 0;
+      padding: 15px 15px 35px 15px !important;
+      margin: 10px 0 40px 0 !important;
       max-height: none;
       width: 100% !important;
       box-sizing: border-box;
@@ -769,6 +834,29 @@
       border: none;
       border-radius: 15px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .co-at-table-header-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+      width: 100% !important;
+  }
+
+  .co-at-table-header {
+      width: 100% !important;
+      font-size: 1.2rem !important;
+      white-space: normal !important;
+  }
+
+  .co-at-search-wrapper {
+      width: 100% !important;
+      box-sizing: border-box !important;
+  }
+
+  .co-at-search-input {
+      width: 100% !important;
+      box-sizing: border-box !important;
   }
   /* Wrapper for horizontal scrolling (Applied to the existing class) */
   .co-at-fixed-header-wrapper {

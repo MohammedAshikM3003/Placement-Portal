@@ -1,6 +1,6 @@
 /* File: PlacedStudents.css */
 
-@import url('httco-ps://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 
 
@@ -138,27 +138,31 @@
         .co-ps-stat-card {
           color: #fff;
           border-radius: 16px;
-          padding: 12px 0;
+          padding: 12px 10px;
           text-align: center;
-          font-size: 18px;
           box-shadow: 0 2px 8px #eee;
           height: 124px;
           display: flex;
           flex-direction: column;
+          align-items: center;
           justify-content: center;
           width: 100%;
           box-sizing: border-box;
         }
 
         .co-ps-card-value {
-          font-size: 58px;
+          font-size: 44px;
           font-weight: bold;
           margin: 0;
+          line-height: 1;
         }
 
         .co-ps-card-label {
-          font-size: 29px;
-          margin: 0 0 -9px 0;
+          font-size: 16px;
+          font-weight: 600;
+          line-height: 1.25;
+          margin: 0 0 6px 0;
+          text-align: center;
         }
 
         .co-ps-card-purple {
@@ -185,14 +189,13 @@
           border: none;
           padding: 22px;
           flex: 1;
-          max-width: 450px;
           display: flex;
           flex-direction: column; 
           margin-left: 0; 
           margin-top: 0;
-          height: 270px;
+          height: 266px;
           box-sizing: border-box;
-          min-width: 300px;
+          width: 100%;
         }
 
         .co-ps-chart-header {
@@ -939,4 +942,46 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 850px) {
+  .co-ps-dashboard-grid {
+    flex-direction: column !important;
+    gap: 15px !important;
+    width: 100% !important;
+  }
+
+  .co-ps-stats-section {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .co-ps-stat-card {
+    height: 100px !important;
+    padding: 10px 8px !important;
+    border-radius: 14px !important;
+  }
+
+  .co-ps-card-label {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    margin: 0 0 4px 0 !important;
+    word-break: break-word !important;
+    text-align: center !important;
+  }
+
+  .co-ps-card-value {
+    font-size: 1.85rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+  }
+
+  .co-ps-chart-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 260px !important;
+    box-sizing: border-box !important;
+  }
 }

@@ -478,7 +478,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                 <div className={styles['co-ps-card-value']}>{stats.totalPlaced}</div>
               </div>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-teal']}`}>
-                <div className={styles['co-ps-card-label']}>Total Offers Recieved</div>
+                <div className={styles['co-ps-card-label']}>Total Offers Received</div>
                 <div className={styles['co-ps-card-value']}>{stats.totalOffers}</div>
               </div>
               <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-blue']}`}>

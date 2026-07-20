@@ -8,6 +8,7 @@ import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import Navbar from '../components/Navbar/Conavbar.js';
 import Sidebar from '../components/Sidebar/Cosidebar.js';
 import CooCalendar from '../components/Calendar/Coo_Calendar';
+import Dropdown from '../components/common/Dropdown/Dropdown';
 import styles from './Coo_ManageStudentSemesterEdit.module.css'; // Module Import
 import '../components/alerts/AlertStyles.css';
 import Adminicons from '../assets/BlueAdminicon.png';
@@ -2566,6 +2567,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             />
 
             <div className={styles.main}>
+                {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
                 <Sidebar
                     isOpen={isSidebarOpen}
                     onLogout={onLogout}
@@ -2660,130 +2662,119 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select
-                                            name="degree"
-                                            value={selectedDegree}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                        <Dropdown
+                                            options={degrees.map((deg) => ({
+                                                label: deg.degreeFullName
+                                                    ? deg.degreeAbbreviation
+                                                        ? `${deg.degreeFullName} (${deg.degreeAbbreviation})`
+                                                        : deg.degreeFullName
+                                                    : (deg.degreeAbbreviation || deg.degreeFullName),
+                                                value: deg.degreeAbbreviation || deg.degreeFullName
+                                            }))}
+                                            selectedOption={selectedDegree}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
                                                 setSelectedDegree(value);
                                                 setSelectedBranch('');
                                                 setStudentData(prev => ({ ...prev, degree: value, branch: '' }));
                                             }}
+                                            placeholder="Select Degree"
+                                            role="coordinator"
                                             disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Select Degree</option>
-                                            {degrees.map((degree) => {
-                                                const value = degree.degreeAbbreviation || degree.degreeFullName;
-                                                const label = degree.degreeFullName
-                                                    ? degree.degreeAbbreviation
-                                                        ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
-                                                        : degree.degreeFullName
-                                                    : value;
-                                                return (
-                                                    <option key={degree.id || degree._id || value} value={value}>{label}</option>
-                                                );
-                                            })}
-                                        </select>
+                                        />
+                                        <input type="hidden" name="degree" value={selectedDegree || ''} />
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Branch <RequiredStar /></label>
-                                        <select
-                                            name="branch"
-                                            value={selectedBranch}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setSelectedBranch(value);
-                                                setStudentData(prev => ({ ...prev, branch: value }));
-                                            }}
-                                            disabled={isSaving || isViewMode || !selectedDegree}
-                                        >
-                                            <option value="" disabled>
-                                                {selectedDegree ? 'Select Branch' : 'Select Degree First'}
-                                            </option>
-                                            {filteredBranches.map((branch) => {
-                                                const value = getBranchOptionValue(branch);
-                                                const label = branch.branchFullName
-                                                    ? branch.branchAbbreviation
-                                                        ? `${branch.branchFullName} (${branch.branchAbbreviation})`
-                                                        : branch.branchFullName
-                                                    : value;
-                                                return (
-                                                    <option key={branch.id || branch._id || value} value={value}>{label}</option>
-                                                );
-                                            })}
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Current Year <RequiredStar /></label>
-                                        <select
-                                            name="currentYear"
-                                            value={currentYear || ''}
-                                            required
-                                            onChange={(e) => {
-                                                const newYear = e.target.value;
-                                                setCurrentYear(newYear);
-                                                const semesters = getAvailableSemesters(newYear);
-                                                const firstSemester = semesters[0] || '';
-                                                setCurrentSemester(firstSemester);
-                                                setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
-                                            }}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>Current Year</option>
-                                            <option value="I">I</option>
-                                            <option value="II">II</option>
-                                            <option value="III">III</option>
-                                            <option value="IV">IV</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Current Semester <RequiredStar /></label>
-                                        <select
-                                            name="currentSemester"
-                                            value={currentSemester || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setCurrentSemester(value);
-                                                setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
-                                            }}
-                                            required
-                                            disabled={!currentYear || isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
-                                            {getAvailableSemesters(currentYear).map((sem) => (
-                                                <option key={sem} value={sem}>
-                                                    {sem}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Section <RequiredStar /></label>
-                                        <select
-                                            name="section"
-                                            value={selectedSection}
-                                            onChange={(e) => {
-                                                setSelectedSection(e.target.value);
-                                                setStudentData((prev) => ({ ...(prev || {}), section: e.target.value }));
-                                            }}
-                                            disabled={isSaving || isViewMode}
-                                        >
-                                            <option value="" disabled>
-                                                Section *
-                                            </option>
-                                            <option value="A">A</option>
-                                            <option value="B">B</option>
-                                            <option value="C">C</option>
-                                            <option value="D">D</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Gender <RequiredStar /></label>
-                                        <select name="gender" value={studentData?.gender || ''} onChange={(e) => setStudentData(prev => ({ ...prev, gender: e.target.value }))} disabled={isSaving || isViewMode}>
-                                            <option value="" disabled>Gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
+                                     <div className={styles.field}>
+                                         <label>Branch <RequiredStar /></label>
+                                         <Dropdown
+                                             options={filteredBranches.map((br) => ({
+                                                 label: br.branchFullName
+                                                     ? br.branchAbbreviation
+                                                         ? `${br.branchFullName} (${br.branchAbbreviation})`
+                                                         : br.branchFullName
+                                                     : getBranchOptionValue(br),
+                                                 value: getBranchOptionValue(br)
+                                             }))}
+                                             selectedOption={selectedBranch}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setSelectedBranch(value);
+                                                 setStudentData(prev => ({ ...prev, branch: value }));
+                                             }}
+                                             placeholder={selectedDegree ? 'Select Branch' : 'Select Degree First'}
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode || !selectedDegree}
+                                         />
+                                         <input type="hidden" name="branch" value={selectedBranch || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Current Year <RequiredStar /></label>
+                                         <Dropdown
+                                             options={['I', 'II', 'III', 'IV']}
+                                             selectedOption={currentYear || ''}
+                                             onSelect={(newYear) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setCurrentYear(newYear);
+                                                 const semesters = getAvailableSemesters(newYear);
+                                                 const firstSemester = semesters[0] || '';
+                                                 setCurrentSemester(firstSemester);
+                                                 setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
+                                             }}
+                                             placeholder="Current Year"
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="currentYear" value={currentYear || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Current Semester <RequiredStar /></label>
+                                         <Dropdown
+                                             options={getAvailableSemesters(currentYear)}
+                                             selectedOption={currentSemester || ''}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setCurrentSemester(value);
+                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
+                                             }}
+                                             placeholder={currentYear ? 'Current Semester' : 'Select Year First'}
+                                             role="coordinator"
+                                             disabled={!currentYear || isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="currentSemester" value={currentSemester || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Section <RequiredStar /></label>
+                                         <Dropdown
+                                             options={['A', 'B', 'C', 'D']}
+                                             selectedOption={selectedSection}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setSelectedSection(value);
+                                                 setStudentData((prev) => ({ ...(prev || {}), section: value }));
+                                             }}
+                                             placeholder="Section *"
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="section" value={selectedSection || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Gender <RequiredStar /></label>
+                                         <Dropdown
+                                             options={[
+                                                 { label: 'Male', value: 'male' },
+                                                 { label: 'Female', value: 'female' }
+                                             ]}
+                                             selectedOption={studentData?.gender || ''}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setStudentData(prev => ({ ...prev, gender: value }));
+                                             }}
+                                             placeholder="Gender"
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="gender" value={studentData?.gender || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
@@ -2863,7 +2854,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
-                                    <div className={styles.profilePhotoBox} style={{ height: '732px' }}>
+                                    <div className={styles.profilePhotoBox}>
                                         <h3 className={styles.sectionHeader}>Profile Photo</h3>
                                         <div className={styles.profileIconContainer}>
                                             {profileImage ? (
@@ -2918,47 +2909,55 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Community <RequiredStar /></label>
-                                        <select name="community" value={studentData?.community || ''} onChange={(e) => setStudentData(prev => ({ ...prev, community: e.target.value }))} disabled={isSaving || isViewMode}>
-                                            <option value="" disabled>
-                                                Community
-                                            </option>
-                                            <option value="OC">OC</option>
-                                            <option value="BC">BC</option>
-                                            <option value="BCM">BCM</option>
-                                            <option value="MBC">MBC</option>
-                                            <option value="SC">SC</option>
-                                            <option value="SCA">SCA</option>
-                                            <option value="ST">ST</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Medium of Study <RequiredStar /></label>
-                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} onChange={(e) => setStudentData(prev => ({ ...prev, mediumOfStudy: e.target.value }))} disabled={isSaving || isViewMode}>
-                                            <option value="" disabled>
-                                                Medium
-                                            </option>
-                                            <option value="English">English</option>
-                                            <option value="Tamil">Tamil</option>
-                                            <option value="Other">Others</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Blood Group</label>
-                                        <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving || isViewMode} />
-                                    </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Aadhaar Number <RequiredStar /></label>
-                                        <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
-                                    </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Portfolio Link</label>
-                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving || isViewMode} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                    <div className={styles.field}>
+                                         <label>Community <RequiredStar /></label>
+                                         <Dropdown
+                                             options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
+                                             selectedOption={studentData?.community || ''}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setStudentData(prev => ({ ...prev, community: value }));
+                                             }}
+                                             placeholder="Community"
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="community" value={studentData?.community || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Medium of Study <RequiredStar /></label>
+                                         <Dropdown
+                                             options={[
+                                                 { label: 'English', value: 'English' },
+                                                 { label: 'Tamil', value: 'Tamil' },
+                                                 { label: 'Others', value: 'Other' }
+                                             ]}
+                                             selectedOption={studentData?.mediumOfStudy || ''}
+                                             onSelect={(value) => {
+                                                 if (isSaving || isViewMode) return;
+                                                 setStudentData(prev => ({ ...prev, mediumOfStudy: value }));
+                                             }}
+                                             placeholder="Medium"
+                                             role="coordinator"
+                                             disabled={isSaving || isViewMode}
+                                         />
+                                         <input type="hidden" name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Blood Group</label>
+                                         <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} onChange={(e) => setStudentData(prev => ({ ...prev, bloodGroup: e.target.value }))} disabled={isSaving || isViewMode} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Aadhaar Number <RequiredStar /></label>
+                                         <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" onChange={(e) => setStudentData(prev => ({ ...prev, aadhaarNo: e.target.value.replace(/\D/g, '').slice(0, 12) }))} disabled={isSaving || isViewMode} />
+                                     </div>
+                                     <div className={styles.field}>
+                                         <label>Portfolio Link</label>
+                                         <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving || isViewMode} />
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
 
                         {/* --- ACADEMIC BACKGROUND --- */}
                         <div className={styles.profileSectionContainer}>
@@ -2978,13 +2977,23 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Board / University <RequiredStar /></label>
-                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} onChange={(e) => setStudentData(prev => ({ ...prev, tenthBoard: e.target.value }))} disabled={isSaving || isViewMode}>
-                                            <option value="" disabled>10th Board/University</option>
-                                            <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other State Board">Other State Board</option>
-                                        </select>
+                                        <Dropdown
+                                            options={[
+                                                'State Board (Tamil Nadu)',
+                                                'CBSE',
+                                                'ICSE',
+                                                'Other State Board'
+                                            ]}
+                                            selectedOption={studentData?.tenthBoard || ''}
+                                            onSelect={(value) => {
+                                                if (isSaving || isViewMode) return;
+                                                setStudentData(prev => ({ ...prev, tenthBoard: value }));
+                                            }}
+                                            placeholder="10th Board/University"
+                                            role="coordinator"
+                                            disabled={isSaving || isViewMode}
+                                        />
+                                        <input type="hidden" name="tenthBoard" value={studentData?.tenthBoard || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>10th Percentage <RequiredStar /></label>
@@ -3005,13 +3014,23 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Board / University <RequiredStar /></label>
-                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} onChange={(e) => setStudentData(prev => ({ ...prev, twelfthBoard: e.target.value }))} disabled={isSaving || isViewMode}>
-                                                    <option value="" disabled>12th Board/University</option>
-                                                    <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                                    <option value="CBSE">CBSE</option>
-                                                    <option value="ICSE">ICSE</option>
-                                                    <option value="Other State Board">Other State Board</option>
-                                                </select>
+                                                <Dropdown
+                                                    options={[
+                                                        'State Board (Tamil Nadu)',
+                                                        'CBSE',
+                                                        'ICSE',
+                                                        'Other State Board'
+                                                    ]}
+                                                    selectedOption={studentData?.twelfthBoard || ''}
+                                                    onSelect={(value) => {
+                                                        if (isSaving || isViewMode) return;
+                                                        setStudentData(prev => ({ ...prev, twelfthBoard: value }));
+                                                    }}
+                                                    placeholder="12th Board/University"
+                                                    role="coordinator"
+                                                    disabled={isSaving || isViewMode}
+                                                />
+                                                <input type="hidden" name="twelfthBoard" value={studentData?.twelfthBoard || ''} />
                                             </div>
                                             <div className={styles.field}>
                                                 <label>12th Percentage <RequiredStar /></label>
@@ -3948,7 +3967,6 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                     </form>
                 </div>
             </div>
-            {isSidebarOpen && <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)}></div>}
             <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
             <FileSizeErrorPopup
                 isOpen={isFileSizeErrorOpen}

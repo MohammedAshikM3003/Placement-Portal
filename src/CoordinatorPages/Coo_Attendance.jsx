@@ -508,7 +508,7 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={pieData[0].name === 'No Data' ? false : ({ name, value }) => `${name} ${value}`}
+                      label={false}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -541,13 +541,25 @@ export default function Attendance({ onLogout, currentView, onViewChange }) {
           <div className={styles["co-at-table-section"]}>
             <div className={styles["co-at-table-header-row"]}>
               <div className={styles["co-at-table-header"]}>ATTENDANCE DETAILS - {coordinatorBranch || 'Loading...'}</div>
-              <input
-                type="text"
-                placeholder="Enter Name / Reg No"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles['co-at-search-input']}
-              />
+              <div className={styles['co-at-search-wrapper']}>
+                <input
+                  type="text"
+                  placeholder="Enter Name / Reg No"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles['co-at-search-input']}
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className={styles['co-at-search-clear-btn']}
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
             <div className={styles['co-at-table-body-scroll']}>
               <table className={styles['co-at-attendance-table-body']}>

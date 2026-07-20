@@ -27,6 +27,21 @@ class RouteErrorBoundary extends React.Component {
       error,
       errorInfo
     });
+
+    // Auto-reload once if the error is a ChunkLoadError or CSS/JS chunk load failure
+    const isChunkLoadError = 
+      error?.name === 'ChunkLoadError' || 
+      /Loading (CSS|chunk)/i.test(error?.message || '');
+
+    if (isChunkLoadError) {
+      const chunkFailedKey = 'last_chunk_load_reload';
+      const lastReload = sessionStorage.getItem(chunkFailedKey);
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem(chunkFailedKey, now.toString());
+        window.location.reload();
+      }
+    }
   }
 
   handleReload = () => {

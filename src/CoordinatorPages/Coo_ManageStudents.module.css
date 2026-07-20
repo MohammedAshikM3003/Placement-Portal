@@ -1380,7 +1380,7 @@
      .co-ms-main-content {
          margin-top: 64px;
          width: 100% !important;
-         padding: 10px 10px 10px 20px;
+         padding: 10px 10px 40px 10px !important;
          max-height: none;
          display: flex;
          flex-direction: column;
