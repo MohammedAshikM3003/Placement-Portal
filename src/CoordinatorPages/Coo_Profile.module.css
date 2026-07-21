@@ -1203,14 +1203,26 @@
 @media (max-width: 1200px) {
 
     /* 1. Overall Layout */
+    .co-profile-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        background-color: #f8f8fb;
+    }
 
     .co-profile-main-content {
+        --mobile-side-gap: 10px;
         margin-top: 65px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
         width: 100% !important;
         height: calc(100vh - 65px) !important;
-        padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 20px) 0 !important;
+        height: calc(100dvh - 65px) !important;
+        padding: 10px var(--mobile-side-gap) 20px var(--mobile-side-gap) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 35px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         box-sizing: border-box !important;
@@ -1225,10 +1237,10 @@
     /* 2. Individual Card */
     .co-profile-card {
         width: 100% !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto 20px !important;
+        max-width: 100% !important;
+        margin: 0 0 20px 0 !important;
         padding: 1.75rem 1.25rem !important;
-        border-radius: 20px !important;
+        border-radius: 16px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         background-color: #ffffff !important;
         box-sizing: border-box !important;
@@ -1281,15 +1293,6 @@
         align-items: center;
     }
 
-    .co-profile-layout {
-        position: fixed !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        background-color: #f8f8fb;
-    }
-
     .co-profile-photo-header {
         text-align: left;
         font-size: 22px;
@@ -1336,7 +1339,6 @@
         top: 13px;
     }
 
-
     .co-profile-upload-action-area {
         width: 100%;
         position: relative;
@@ -1374,8 +1376,8 @@
         flex-direction: column !important;
         gap: 1rem !important;
         width: 100% !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto 20px !important;
+        max-width: 100% !important;
+        margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 25px) !important;
         padding-bottom: 0 !important;
         box-sizing: border-box !important;
     }
