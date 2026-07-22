@@ -526,7 +526,7 @@ function Admincompanyprofile({ onLogout }) {
                 <div className={styles['Admin-cp-top-card']}>
                     <div className={`${styles['Admin-cp-action-addcard']} ${styles['Admin-cp-add-card']}`} onClick={openAddPopup} role="button" tabIndex={0} onKeyDown={(event) => event.key === 'Enter' && openAddPopup()}>
                         <img className={styles['Admin-cp-add-icon']} src={AdminAddcompany} alt="Add company" />
-                        <h4 className={styles['Admin-cp-add-header']}>Add Company</h4>
+                        <h4 className={styles['Admin-cp-add-header']}>Add <br /> Company</h4>
                         <p className={styles['Admin-cp-add-description']}>
                             Add a new company profile to the portal.
                         </p>

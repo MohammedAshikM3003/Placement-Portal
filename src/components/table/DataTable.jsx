@@ -100,6 +100,7 @@ function DataTable({
   style = {},
   scrollAreaStyle = {},
   scrollAreaClassName = '',
+  selectHeaderLabel = '',
 }) {
   // ── Derived state ──────────────────────────────────────────────
   const hasData = data.length > 0;
@@ -191,15 +192,24 @@ function DataTable({
             <tr>
               {/* Checkbox header */}
               {selectable && (
-                <th className={`${styles.th} ${styles.checkboxCell}`} aria-label="Select all">
-                  <input
-                    type="checkbox"
-                    className={styles.checkbox}
-                    checked={allSelected}
-                    ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                    onChange={handleSelectAll}
-                    aria-label="Select all rows"
-                  />
+                <th 
+                  className={`${styles.th} ${styles.checkboxCell}`} 
+                  aria-label="Select all"
+                  style={selectHeaderLabel ? { width: 'auto', cursor: 'pointer' } : undefined}
+                  onClick={selectHeaderLabel ? handleSelectAll : undefined}
+                >
+                  {selectHeaderLabel ? (
+                    <span style={{ userSelect: 'none' }}>{selectHeaderLabel}</span>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={allSelected}
+                      ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                      onChange={handleSelectAll}
+                      aria-label="Select all rows"
+                    />
+                  )}
                 </th>
               )}
 

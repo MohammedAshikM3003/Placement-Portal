@@ -1517,3 +1517,25 @@
         font-size: 13px;
     }
 }
+
+/* Custom Dropdown Overrides for Student Self Registration */
+.mr-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.mr-dropdown-header {
+    height: 50.8px !important;
+    border: 1px solid #dde6f4 !important;
+    border-radius: 8px !important;
+    background-color: #f9fbff !important;
+    font-size: 0.95rem !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #333 !important;
+    font-weight: 400 !important;
+    padding: 0 15px !important;
+}
+
+.mr-dropdown-header:hover {
+    border-color: #2085f6 !important;
+}

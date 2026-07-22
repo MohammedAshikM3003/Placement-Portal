@@ -1217,7 +1217,7 @@
     .Admin-es-apk-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 10px 10px 10px 10px;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -1231,11 +1231,6 @@
         min-height: calc(100vh - 65px) !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
-        scrollbar-width: none !important;
-    }
-
-    .Admin-es-apk-main-content::-webkit-scrollbar {
-        display: none !important;
     }
 
 
@@ -1322,8 +1317,8 @@
     /* Margin Centering and Padding Pattern */
     .Admin-es-apk-bottom-filters {
         padding: 1.75rem !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto 1.25rem !important;
+        max-width: none !important;
+        margin: 0 0 1.25rem 0 !important;
         box-sizing: border-box !important;
     }
 
@@ -1331,8 +1326,8 @@
     .Admin-es-apk-placed-students-card,
     .Admin-es-apk-filtered-students-card,
     .Admin-es-apk-eligible-students-search {
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto !important;
+        max-width: none !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 }

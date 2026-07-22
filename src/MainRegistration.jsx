@@ -24,6 +24,7 @@ import gridfsService from './services/gridfsService';
 import DOBDatePicker from './components/Calendar/DOBDatePicker';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import ConfettiSideCannons from './components/Confetti/ConfettiSideCannons';
+import Dropdown from "./components/common/Dropdown/Dropdown";
 
 // URL validation patterns for profile links
 const GITHUB_URL_REGEX = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/?$/;
@@ -750,6 +751,12 @@ function MainRegistration() {
   const [firstGraduate, setFirstGraduate] = useState("");
   const [willingToSignBond, setWillingToSignBond] = useState("");
   const [preferredModeOfDrive, setPreferredModeOfDrive] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedCommunity, setSelectedCommunity] = useState("");
+  const [selectedMediumOfStudy, setSelectedMediumOfStudy] = useState("");
+  const [selectedTenthBoard, setSelectedTenthBoard] = useState("");
+  const [selectedTwelfthBoard, setSelectedTwelfthBoard] = useState("");
   const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
   const [urlErrorType, setUrlErrorType] = useState("");
   const [invalidUrl, setInvalidUrl] = useState("");
@@ -941,7 +948,7 @@ function MainRegistration() {
     let groupContainer = null;
 
     if (fieldName === 'dob') {
-      field = formRef.current.querySelector('[data-dob-field]');
+      field = formRef.current.querySelector('[data-dob-field] input') || formRef.current.querySelector('[data-dob-field]');
     } else if (fieldName === 'batch') {
       field = formRef.current.querySelector('[data-batch-start]') || formRef.current.querySelector('[name="batch"]');
     } else if (fieldName === 'companyTypes') {
@@ -955,16 +962,94 @@ function MainRegistration() {
     }
 
     if (field || groupContainer) {
-      const targetElement = groupContainer || field;
-      const section = targetElement.closest('[class*="mr-profile-section-container"]');
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      let targetElement = groupContainer || field;
+      let wrapperToBlink = null;
+
+      // Handle custom dropdowns (hidden inputs)
+      if (field && field.type === 'hidden') {
+        const parentField = field.closest('[class*="mr-field"]');
+        if (parentField) {
+          const customDropdownHeader = parentField.querySelector('[class*="dropdown-header"]');
+          if (customDropdownHeader) {
+            targetElement = customDropdownHeader;
+            wrapperToBlink = customDropdownHeader;
+          }
+        }
+      }
+
+      // Handle DOB trigger div
+      if (!wrapperToBlink && field && field.closest) {
+        const dobWrapper = field.hasAttribute?.('data-dob-field') ? field : field.closest('[data-dob-field]');
+        if (dobWrapper) {
+          wrapperToBlink = dobWrapper;
+          targetElement = dobWrapper;
+        }
+      }
+
+      // Handle custom percentage input wrapper
+      if (!wrapperToBlink && field && field.closest) {
+        const percentWrapper = field.closest('[class*="mr-percent-input-wrapper"]');
+        if (percentWrapper) {
+          wrapperToBlink = percentWrapper;
+        }
+      }
+
+      // Handle mobile prefix input wrapper
+      if (!wrapperToBlink && field && field.closest) {
+        const mobileWrapper = field.closest('[class*="mr-mobile-input-wrapper"]');
+        if (mobileWrapper) {
+          wrapperToBlink = mobileWrapper;
+        }
+      }
+
+      const scrollContainer = document.getElementById("mr-dashboard-area");
+      const offset = window.innerWidth <= 768 ? 85 : 100; // offset to clear sticky header on mobile/desktop
+
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elementRect = targetElement.getBoundingClientRect();
+        const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+        const targetScrollTop = relativeTop - offset;
+
+        scrollContainer.scrollTo({
+          top: Math.max(0, targetScrollTop),
+          behavior: 'smooth'
+        });
       } else {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const elementRect = targetElement.getBoundingClientRect();
+        const targetPosition = window.pageYOffset + elementRect.top - offset;
+        window.scrollTo({
+          top: Math.max(0, targetPosition),
+          behavior: 'smooth'
+        });
       }
 
       setTimeout(() => {
-        if (fieldName === 'companyTypes' || fieldName === 'preferredJobLocation') {
+        if (wrapperToBlink) {
+          const originalBorder = wrapperToBlink.style.border;
+          const originalBoxShadow = wrapperToBlink.style.boxShadow;
+          const originalBackground = wrapperToBlink.style.backgroundColor;
+          let blinkCount = 0;
+          const blinkInterval = setInterval(() => {
+            if (blinkCount % 2 === 0) {
+              wrapperToBlink.style.setProperty('border', '2px solid #ffc107', 'important');
+              wrapperToBlink.style.setProperty('box-shadow', '0 0 10px rgba(255, 193, 7, 0.5)', 'important');
+              wrapperToBlink.style.setProperty('background-color', '#fff9e6', 'important');
+            } else {
+              wrapperToBlink.style.border = originalBorder;
+              wrapperToBlink.style.boxShadow = originalBoxShadow;
+              wrapperToBlink.style.backgroundColor = originalBackground;
+            }
+            blinkCount++;
+            if (blinkCount >= 4) {
+              clearInterval(blinkInterval);
+              wrapperToBlink.style.border = originalBorder;
+              wrapperToBlink.style.boxShadow = originalBoxShadow;
+              wrapperToBlink.style.backgroundColor = originalBackground;
+            }
+          }, 375);
+          if (field && typeof field.focus === 'function') field.focus();
+        } else if (fieldName === 'companyTypes' || fieldName === 'preferredJobLocation') {
           const container = groupContainer || field?.closest('.mr-checkbox-group') || field?.closest('[class*="checkbox"]') || field?.parentElement;
           if (container) {
             container.classList.add('field-blink');
@@ -984,62 +1069,9 @@ function MainRegistration() {
             batchInputs.forEach((input) => input.classList.remove('field-blink'));
           }, 3000);
         } else {
-          // Check if this is a mobile input field (inside mobile-input-wrapper)
-          const mobileWrapper = field.closest('[class*="mr-mobile-input-wrapper"]');
-          if (mobileWrapper) {
-            // Handle mobile input wrapper highlighting
-            const originalBorder = mobileWrapper.style.border;
-            const originalBoxShadow = mobileWrapper.style.boxShadow;
-            const originalBackground = mobileWrapper.style.backgroundColor;
-            let blinkCount = 0;
-            const blinkInterval = setInterval(() => {
-              if (blinkCount % 2 === 0) {
-                mobileWrapper.style.border = '2px solid #ffc107';
-                mobileWrapper.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
-                mobileWrapper.style.backgroundColor = '#fff9e6';
-              } else {
-                mobileWrapper.style.border = originalBorder;
-                mobileWrapper.style.boxShadow = originalBoxShadow;
-                mobileWrapper.style.backgroundColor = originalBackground;
-              }
-              blinkCount++;
-              if (blinkCount >= 4) {
-                clearInterval(blinkInterval);
-                mobileWrapper.style.border = originalBorder;
-                mobileWrapper.style.boxShadow = originalBoxShadow;
-                mobileWrapper.style.backgroundColor = originalBackground;
-              }
-            }, 375);
-            field.focus();
-          } else if (field.tagName === 'SELECT') {
-            const originalBorder = field.style.border;
-            const originalBoxShadow = field.style.boxShadow;
-            const originalBackground = field.style.backgroundColor;
-            let blinkCount = 0;
-            const blinkInterval = setInterval(() => {
-              if (blinkCount % 2 === 0) {
-                field.style.border = '2px solid #ffc107';
-                field.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
-                field.style.backgroundColor = '#fff9e6';
-              } else {
-                field.style.border = originalBorder;
-                field.style.boxShadow = originalBoxShadow;
-                field.style.backgroundColor = originalBackground;
-              }
-              blinkCount++;
-              if (blinkCount >= 4) {
-                clearInterval(blinkInterval);
-                field.style.border = originalBorder;
-                field.style.boxShadow = originalBoxShadow;
-                field.style.backgroundColor = originalBackground;
-              }
-            }, 375);
-            field.focus();
-          } else {
-            field.classList.add('field-blink');
-            field.focus();
-            setTimeout(() => field.classList.remove('field-blink'), 3000);
-          }
+          field.classList.add('field-blink');
+          field.focus();
+          setTimeout(() => field.classList.remove('field-blink'), 3000);
         }
       }, 500);
     } else {
@@ -1272,7 +1304,31 @@ function MainRegistration() {
 
   useEffect(() => {
     handleInputChange();
-  }, [handleInputChange, profileImage, currentYear, currentSemester, studyCategory, batchStartYear, batchEndYear]);
+  }, [
+    handleInputChange,
+    profileImage,
+    currentYear,
+    currentSemester,
+    studyCategory,
+    batchStartYear,
+    batchEndYear,
+    selectedDegree,
+    selectedBranch,
+    dob,
+    residentialStatus,
+    quota,
+    firstGraduate,
+    willingToSignBond,
+    preferredModeOfDrive,
+    selectedSection,
+    selectedGender,
+    selectedCommunity,
+    selectedMediumOfStudy,
+    selectedTenthBoard,
+    selectedTwelfthBoard,
+    selectedCompanyTypes,
+    selectedJobLocations
+  ]);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -1863,112 +1919,109 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Degree <RequiredStar /></label>
-                      <select
-                        name="degree"
-                        value={selectedDegree}
-                        onChange={(event) => {
-                          setSelectedDegree(event.target.value);
-                          setSelectedBranch('');
-                        }}
-                        required
-                      >
-                        <option value="" disabled>Select Degree</option>
-                        {degrees.map((degree) => {
+                      <Dropdown
+                        options={degrees.map((degree) => {
                           const value = degree.degreeAbbreviation || degree.degreeFullName;
                           const label = degree.degreeFullName
                             ? degree.degreeAbbreviation
                               ? `${degree.degreeFullName} (${degree.degreeAbbreviation})`
                               : degree.degreeFullName
                             : value;
-                          return (
-                            <option key={degree.id || degree._id || value} value={value}>{label}</option>
-                          );
+                          return { label, value };
                         })}
-                      </select>
+                        selectedOption={selectedDegree}
+                        onSelect={(value) => {
+                          setSelectedDegree(value);
+                          setSelectedBranch('');
+                        }}
+                        placeholder="Select Degree"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="degree" value={selectedDegree} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Branch <RequiredStar /></label>
-                      <select
-                        name="branch"
-                        value={selectedBranch}
-                        onChange={(event) => setSelectedBranch(event.target.value)}
-                        required
-                        disabled={!selectedDegree}
-                      >
-                        <option value="" disabled>
-                          {selectedDegree ? 'Select Branch' : 'Select Degree First'}
-                        </option>
-                        {filteredBranches.map((branch) => {
+                      <Dropdown
+                        options={filteredBranches.map((branch) => {
                           const value = getBranchOptionValue(branch);
                           const label = branch.branchFullName
                             ? branch.branchAbbreviation
                               ? `${branch.branchFullName} (${branch.branchAbbreviation})`
                               : branch.branchFullName
                             : value;
-                          return (
-                            <option key={branch.id || branch._id || value} value={value}>{label}</option>
-                          );
+                          return { label, value };
                         })}
-                      </select>
+                        selectedOption={selectedBranch}
+                        onSelect={(value) => setSelectedBranch(value)}
+                        placeholder={selectedDegree ? 'Select Branch' : 'Select Degree First'}
+                        disabled={!selectedDegree}
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="branch" value={selectedBranch} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Current Year <RequiredStar /></label>
-                      <select
-                        name="currentYear"
-                        value={currentYear}
-                        onChange={(event) => {
-                          const newYear = event.target.value;
+                      <Dropdown
+                        options={['I', 'II', 'III', 'IV']}
+                        selectedOption={currentYear}
+                        onSelect={(newYear) => {
                           setCurrentYear(newYear);
                           const semesters = getAvailableSemesters(newYear);
                           setCurrentSemester(semesters[0] || "");
-                          setTimeout(handleInputChange, 100);
                         }}
-                        required
-                      >
-                        <option value="" disabled>Select Current Year</option>
-                        <option value="I">I</option>
-                        <option value="II">II</option>
-                        <option value="III">III</option>
-                        <option value="IV">IV</option>
-                      </select>
+                        placeholder="Select Current Year"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="currentYear" value={currentYear} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Current Semester <RequiredStar /></label>
-                      <select
-                        name="currentSemester"
-                        value={currentSemester}
-                        onChange={(event) => {
-                          setCurrentSemester(event.target.value);
-                          setTimeout(handleInputChange, 100);
-                        }}
-                        required
+                      <Dropdown
+                        options={getAvailableSemesters(currentYear)}
+                        selectedOption={currentSemester}
+                        onSelect={(value) => setCurrentSemester(value)}
+                        placeholder={currentYear ? "Select Current Semester" : "Select Year First"}
                         disabled={!currentYear}
-                      >
-                        <option value="" disabled>
-                          {currentYear ? "Select Current Semester" : "Select Year First"}
-                        </option>
-                        {getAvailableSemesters(currentYear).map((semesterOption) => (
-                          <option key={semesterOption} value={semesterOption}>{semesterOption}</option>
-                        ))}
-                      </select>
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="currentSemester" value={currentSemester} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Section <RequiredStar /></label>
-                      <select name="section" defaultValue="" required>
-                        <option value="" disabled>Select Section</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                      </select>
+                      <Dropdown
+                        options={['A', 'B', 'C', 'D']}
+                        selectedOption={selectedSection}
+                        onSelect={(val) => setSelectedSection(val)}
+                        placeholder="Select Section"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="section" value={selectedSection} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Gender <RequiredStar /></label>
-                      <select name="gender" defaultValue="" required>
-                        <option value="" disabled>Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                      </select>
+                      <Dropdown
+                        options={[
+                          { label: 'Male', value: 'male' },
+                          { label: 'Female', value: 'female' }
+                        ]}
+                        selectedOption={selectedGender}
+                        onSelect={(val) => setSelectedGender(val)}
+                        placeholder="Select Gender"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="gender" value={selectedGender} />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Address <RequiredStar /></label>
@@ -2092,25 +2145,33 @@ function MainRegistration() {
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
                       <label>Community <RequiredStar /></label>
-                      <select name="community" defaultValue="" required>
-                        <option value="" disabled>Select Community</option>
-                        <option value="OC">OC</option>
-                        <option value="BC">BC</option>
-                        <option value="BCM">BCM</option>
-                        <option value="MBC">MBC</option>
-                        <option value="SC">SC</option>
-                        <option value="SCA">SCA</option>
-                        <option value="ST">ST</option>
-                      </select>
+                      <Dropdown
+                        options={['OC', 'BC', 'BCM', 'MBC', 'SC', 'SCA', 'ST']}
+                        selectedOption={selectedCommunity}
+                        onSelect={(val) => setSelectedCommunity(val)}
+                        placeholder="Select Community"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="community" value={selectedCommunity} />
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
                       <label>Medium <RequiredStar /></label>
-                      <select name="mediumOfStudy" defaultValue="" required>
-                        <option value="" disabled>Select Medium</option>
-                        <option value="English">English</option>
-                        <option value="Tamil">Tamil</option>
-                        <option value="Other">Others</option>
-                      </select>
+                      <Dropdown
+                        options={[
+                          { label: 'English', value: 'English' },
+                          { label: 'Tamil', value: 'Tamil' },
+                          { label: 'Others', value: 'Other' }
+                        ]}
+                        selectedOption={selectedMediumOfStudy}
+                        onSelect={(val) => setSelectedMediumOfStudy(val)}
+                        placeholder="Select Medium"
+                        role="student"
+                        className={styles['mr-dropdown-wrapper']}
+                        headerClassName={styles['mr-dropdown-header']}
+                      />
+                      <input type="hidden" name="mediumOfStudy" value={selectedMediumOfStudy} />
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
                       <label>Blood Group</label>
@@ -2146,13 +2207,16 @@ function MainRegistration() {
                   </div>
                   <div className={cx("mr-field")}>
                     <label>10th Board <RequiredStar /></label>
-                    <select name="tenthBoard" defaultValue="" required>
-                      <option value="" disabled>Select 10th Board</option>
-                      <option value="State Board">State Board</option>
-                      <option value="CBSE">CBSE</option>
-                      <option value="ICSE">ICSE</option>
-                      <option value="Other State Board">Other State Board</option>
-                    </select>
+                    <Dropdown
+                      options={['State Board', 'CBSE', 'ICSE', 'Other State Board']}
+                      selectedOption={selectedTenthBoard}
+                      onSelect={(val) => setSelectedTenthBoard(val)}
+                      placeholder="Select 10th Board"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="tenthBoard" value={selectedTenthBoard} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>10th Percentage <RequiredStar /></label>
@@ -2170,13 +2234,16 @@ function MainRegistration() {
                       </div>
                       <div className={cx("mr-field")}>
                         <label>12th Board <RequiredStar /></label>
-                        <select name="twelfthBoard" defaultValue="" required>
-                          <option value="" disabled>Select 12th Board</option>
-                          <option value="State Board">State Board</option>
-                          <option value="CBSE">CBSE</option>
-                          <option value="ICSE">ICSE</option>
-                          <option value="Other State Board">Other State Board</option>
-                        </select>
+                        <Dropdown
+                          options={['State Board', 'CBSE', 'ICSE', 'Other State Board']}
+                          selectedOption={selectedTwelfthBoard}
+                          onSelect={(val) => setSelectedTwelfthBoard(val)}
+                          placeholder="Select 12th Board"
+                          role="student"
+                          className={styles['mr-dropdown-wrapper']}
+                          headerClassName={styles['mr-dropdown-header']}
+                        />
+                        <input type="hidden" name="twelfthBoard" value={selectedTwelfthBoard} />
                       </div>
                       <div className={cx("mr-field")}>
                         <label>12th Percentage <RequiredStar /></label>
@@ -2221,19 +2288,29 @@ function MainRegistration() {
                 <div className={cx("mr-form-grid")}>
                   <div className={cx("mr-field")}>
                     <label>Residential Status <RequiredStar /></label>
-                    <select name="residentialStatus" value={residentialStatus} onChange={(e) => setResidentialStatus(e.target.value)} required>
-                      <option value="" disabled>Select Residential Status</option>
-                      <option value="Hosteller">Hosteller</option>
-                      <option value="Dayscholar">Dayscholar</option>
-                    </select>
+                    <Dropdown
+                      options={['Hosteller', 'Dayscholar']}
+                      selectedOption={residentialStatus}
+                      onSelect={(val) => setResidentialStatus(val)}
+                      placeholder="Select Residential Status"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="residentialStatus" value={residentialStatus} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Quota <RequiredStar /></label>
-                    <select name="quota" value={quota} onChange={(e) => setQuota(e.target.value)} required>
-                      <option value="" disabled>Select Quota</option>
-                      <option value="Management">Management</option>
-                      <option value="Counselling">Counselling</option>
-                    </select>
+                    <Dropdown
+                      options={['Management', 'Counselling']}
+                      selectedOption={quota}
+                      onSelect={(val) => setQuota(val)}
+                      placeholder="Select Quota"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="quota" value={quota} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Spoken Languages</label>
@@ -2241,11 +2318,16 @@ function MainRegistration() {
                   </div>
                   <div className={cx("mr-field")}>
                     <label>First Graduate <RequiredStar /></label>
-                    <select name="firstGraduate" value={firstGraduate} onChange={(e) => setFirstGraduate(e.target.value)} required>
-                      <option value="" disabled>Select First Graduate</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
+                    <Dropdown
+                      options={['Yes', 'No']}
+                      selectedOption={firstGraduate}
+                      onSelect={(val) => setFirstGraduate(val)}
+                      placeholder="Select First Graduate"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="firstGraduate" value={firstGraduate} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Passport No.</label>
@@ -2277,20 +2359,29 @@ function MainRegistration() {
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Willing to Sign Bond <RequiredStar /></label>
-                    <select name="willingToSignBond" value={willingToSignBond} onChange={(e) => setWillingToSignBond(e.target.value)} required>
-                      <option value="" disabled>Select Willing to Sign Bond</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
+                    <Dropdown
+                      options={['Yes', 'No']}
+                      selectedOption={willingToSignBond}
+                      onSelect={(val) => setWillingToSignBond(val)}
+                      placeholder="Select Willing to Sign Bond"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="willingToSignBond" value={willingToSignBond} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Preferred Mode of Drive <RequiredStar /></label>
-                    <select name="preferredModeOfDrive" value={preferredModeOfDrive} onChange={(e) => setPreferredModeOfDrive(e.target.value)} required>
-                      <option value="" disabled>Select Preferred Mode of Drive</option>
-                      <option value="Online">Online</option>
-                      <option value="Offline">Offline</option>
-                      <option value="Hybrid">Hybrid</option>
-                    </select>
+                    <Dropdown
+                      options={['Online', 'Offline', 'Hybrid']}
+                      selectedOption={preferredModeOfDrive}
+                      onSelect={(val) => setPreferredModeOfDrive(val)}
+                      placeholder="Select Preferred Mode of Drive"
+                      role="student"
+                      className={styles['mr-dropdown-wrapper']}
+                      headerClassName={styles['mr-dropdown-header']}
+                    />
+                    <input type="hidden" name="preferredModeOfDrive" value={preferredModeOfDrive} />
                   </div>
                   <div className={cx("mr-field")}>
                     <label>Github Link</label>

@@ -101,7 +101,7 @@
 .Admin-cp-page-header-back-btn {
     border: none;
     border-radius: 8px;
-    background: #4ea24e;
+    background: #d23b42;
     color: #ffffff;
     height: 44px;
     min-width: 120px;
@@ -110,7 +110,7 @@
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 6px 16px rgba(78, 162, 78, 0.25);
+    box-shadow: 0 6px 16px rgba(210, 59, 66, 0.25);
 }
 
 .Admin-cp-page-header-back-btn:hover {
@@ -481,7 +481,7 @@
     .Admin-cp-page-main {
         margin-left: 0;
         width: 100%;
-        padding: 10px 10px 10px 20px;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
         height: calc(100vh - 65px);
     }
 
@@ -493,20 +493,21 @@
 @media (max-width: 768px) {
     .Admin-cp-page-main {
         margin: 70px 0 0 0;
-        padding: 10px 10px 10px 20px;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
         height: calc(100vh - 70px);
     }
 
     .Admin-cp-page-card {
         border-radius: 14px;
+        padding: 1.75rem 1.25rem !important;
     }
 
     .Admin-cp-page-header {
-        padding: 14px 14px 10px;
+        padding: 0 !important;
         flex-wrap: nowrap !important;
         display: flex !important;
         justify-content: space-between !important;
-        align-items: center !important;
+        align-items: flex-start !important;
     }
 
     .Admin-cp-page-header h1 {
@@ -530,13 +531,18 @@
     .Admin-cp-page-actions-outside {
         flex-direction: column;
         gap: 8px;
-        padding: 0 1rem 2rem;
+        padding: 0 0 2rem 0 !important;
     }
 
     .Admin-cp-page-primary-btn,
     .Admin-cp-page-secondary-btn {
-        width: 100%;
-        min-width: 100%;
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto !important;
+        padding: 1rem !important;
+        font-size: 1.1rem !important;
+        font-weight: 500 !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-cp-success-popup {
@@ -652,3 +658,29 @@
     border-color: #ffc107 !important;
     box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
 }
+
+.Admin-profile-field-highlight > div {
+    border-color: #ffc107 !important;
+}
+
+/* Custom Dropdown Overrides for Admin Company Profile Add/Edit */
+.cp-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.cp-dropdown-header {
+    height: 53.6px !important;
+    border: 1px solid #def4dd !important;
+    border-radius: 6px !important;
+    background-color: #f9fff9 !important;
+    font-size: 0.95rem !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #333 !important;
+    box-sizing: border-box !important;
+}
+
+.cp-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
+

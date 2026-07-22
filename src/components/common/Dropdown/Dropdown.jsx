@@ -10,6 +10,7 @@ const roleColors = {
 };
 
 const Dropdown = ({ 
+  id,
   options = [], 
   selectedOption = null, 
   onSelect = () => {}, 
@@ -68,6 +69,7 @@ const Dropdown = ({
 
   return (
     <div 
+      id={id}
       className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''} ${className}`} 
       style={{
         '--dropdown-hover-color': themeColors.borderHover

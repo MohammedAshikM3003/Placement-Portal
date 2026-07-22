@@ -1105,6 +1105,7 @@ function AdminEsstudapp() {
                 </label>
                 <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'companyName' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   <Dropdown
+                    id="companyName"
                     options={companyNames}
                     selectedOption={filterData.companyName}
                     onSelect={(val) => handleFilterChange('companyName', val)}
@@ -1125,7 +1126,7 @@ function AdminEsstudapp() {
                 <div id="admin-search-dates" className={`${styles['Admin-es-apk-date-range-inputs']} ${highlightedField === 'admin-search-dates' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                   {Boolean(filterData.driveEndDate && matchingStartDates.length > 1 && dateSelectionMode === 'end-first') ? (
                     <div className={`${styles['Admin-es-apk-select-container']} ${startDateFocused ? styles['is-focused'] : ''}`}>
-                      <select
+                       <select
                         id="admin-search-start-date"
                         className={styles['Admin-es-apk-select']}
                         value={filterData.driveStartDate}
@@ -1199,6 +1200,7 @@ function AdminEsstudapp() {
                 {uniqueJobRolesForDates.length > 1 ? (
                   <div className={`${styles['Admin-es-apk-search-input']} ${highlightedField === 'jobs' ? styles['Admin-es-apk-field-highlight'] : ''}`}>
                     <Dropdown
+                      id="jobs"
                       options={uniqueJobRolesForDates}
                       selectedOption={filterData.jobs}
                       onSelect={(val) => handleFilterChange('jobs', val)}

@@ -554,6 +554,7 @@
     font-size: 1.3rem;
     font-weight: 700;
     color: #333;
+    margin: 0;
 }
 
 .Admin-cd-table-actions {
@@ -1081,7 +1082,7 @@
     .Admin-cd-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 25px) 0 !important;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -1133,8 +1134,8 @@
         flex: 1 1 auto !important;
         width: 100% !important;
         height: auto !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto !important;
+        max-width: none !important;
+        margin: 0 !important;
         padding: 1.75rem 1.25rem !important;
         box-sizing: border-box !important;
     }
@@ -1147,8 +1148,8 @@
     /* Add Card Adjustments */
     .Admin-cd-action-addcard {
         width: 100% !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto !important;
+        max-width: none !important;
+        margin: 0 !important;
         height: auto !important;
         padding: 1.75rem 1.25rem !important;
         box-sizing: border-box !important;
@@ -1161,8 +1162,8 @@
         gap: 10px !important;
         height: auto !important;
         width: 100% !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto !important;
+        max-width: none !important;
+        margin: 0 !important;
         flex: none !important;
         min-width: 0 !important;
     }
@@ -1203,11 +1204,12 @@
         padding: 1.75rem 1.25rem 2.5rem 1.25rem !important;
         flex: none !important;
         width: 100% !important;
-        max-width: calc(100% - 20px) !important;
-        margin: 0 auto 40px !important;
+        max-width: none !important;
+        margin: 0 0 40px 0 !important;
     }
 
     .Admin-cd-table-header-row {
+        position: relative !important;
         flex-direction: row !important;
         align-items: center !important;
         justify-content: space-between !important;
@@ -1215,10 +1217,27 @@
         flex-wrap: wrap !important;
     }
 
+    .Admin-cd-table-title-wrap {
+        padding-right: 90px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
     .Admin-cd-table-actions {
         width: 100% !important;
-        justify-content: flex-end !important;
+        display: flex !important;
+        justify-content: center !important;
         flex-wrap: wrap !important;
+    }
+
+    .Admin-cd-print-button-container {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        display: inline-block !important;
+        z-index: 15 !important;
     }
 
     .Admin-cd-table-container {

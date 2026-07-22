@@ -1491,6 +1491,7 @@ function AdminstudDB() {
                                 loadingText={aiFilterLoading ? 'Searching students…' : 'Loading students…'}
                                 emptyMessage={viewBlocklist ? 'No blocked students available' : 'No data available'}
                                 selectable
+                                selectHeaderLabel="Select"
                                 selectedIds={selectedStudentIds}
                                 onSelectionChange={setSelectedStudentIds}
                                 onRowClick={(row) => handleStudentSelect(row.id)}

@@ -6,6 +6,7 @@ import Adsidebar from '../components/Sidebar/Adsidebar';
 import Adminicon from '../assets/Adminicon.png';
 import mongoDBService from '../services/mongoDBService';
 import AdCalendar from '../components/Calendar/Ad_Calendar';
+import FormDropdown from '../components/common/FormDropdown/FormDropdown';
 import styles from './AdminCompanyprofilepopup.module.css';
 
 const RequiredStar = () => <span className={styles['Admin-profile-required-star']}>*</span>;
@@ -228,6 +229,13 @@ function AdminCompanyprofilePopup({ onLogout }) {
         }));
     };
 
+    const handleDropdownChange = (name, value) => {
+        setFormData((prevState) => ({
+            ...prevState,
+            [name]: value
+        }));
+    };
+
     const handleVisitDateChange = (dateString) => {
         setFormData((prevState) => ({
             ...prevState,
@@ -336,7 +344,7 @@ function AdminCompanyprofilePopup({ onLogout }) {
                             className={styles['Admin-cp-page-header-back-btn']}
                             onClick={handleBack}
                         >
-                            &#8592; Back
+                            Back
                         </button>
                     </div>
 
@@ -353,17 +361,18 @@ function AdminCompanyprofilePopup({ onLogout }) {
                                 <label className={styles['Admin-cp-page-field-label']}>
                                     <span className={styles['Admin-profile-label-heading']}>Company Type <RequiredStar /></span>
                                 </label>
-                                <div className={styles['Admin-cp-select-wrapper']}>
-                                    <select ref={registerFieldRef('companyType')} name="companyType" value={formData.companyType} onChange={handleChange} required disabled={isReadOnly} className={highlightedField === 'companyType' ? styles['Admin-profile-field-highlight'] : ''}>
-                                        <option value="">Select Company Type</option>
-                                        <option value="CORE">CORE</option>
-                                        <option value="IT">IT</option>
-                                        <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
-                                        <option value="Marketing & Sales">Marketing & Sales</option>
-                                        <option value="HR / Business analyst">HR / Business analyst</option>
-                                    </select>
-                                    <DropdownIcon />
-                                </div>
+                                <FormDropdown
+                                    id="companyType"
+                                    ref={registerFieldRef('companyType')}
+                                    options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                                    selectedOption={formData.companyType}
+                                    onSelect={(val) => handleDropdownChange('companyType', val)}
+                                    placeholder="Select Company Type"
+                                    disabled={isReadOnly}
+                                    role="admin"
+                                    className={`${styles['cp-dropdown-wrapper']} ${highlightedField === 'companyType' ? styles['Admin-profile-field-highlight'] : ''}`}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
                             </div>
 
                             <div className={styles['Admin-cp-page-field']}>
@@ -375,15 +384,18 @@ function AdminCompanyprofilePopup({ onLogout }) {
 
                             <div className={styles['Admin-cp-page-field']}>
                                 <label className={styles['Admin-cp-page-field-label']}>Mode</label>
-                                <div className={styles['Admin-cp-select-wrapper']}>
-                                    <select name="mode" value={formData.mode} onChange={handleChange} disabled={isReadOnly}>
-                                        <option value="">Select Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                    <DropdownIcon />
-                                </div>
+                                <FormDropdown
+                                    id="mode"
+                                    ref={registerFieldRef('mode')}
+                                    options={['Online', 'Offline', 'Hybrid']}
+                                    selectedOption={formData.mode}
+                                    onSelect={(val) => handleDropdownChange('mode', val)}
+                                    placeholder="Select Mode"
+                                    disabled={isReadOnly}
+                                    role="admin"
+                                    className={`${styles['cp-dropdown-wrapper']} ${highlightedField === 'mode' ? styles['Admin-profile-field-highlight'] : ''}`}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
                             </div>
 
                             <div className={styles['Admin-cp-page-field']}>
@@ -405,14 +417,18 @@ function AdminCompanyprofilePopup({ onLogout }) {
 
                             <div className={styles['Admin-cp-page-field']}>
                                 <label className={styles['Admin-cp-page-field-label']}>Status</label>
-                                <div className={styles['Admin-cp-select-wrapper']}>
-                                    <select name="status" value={formData.status} onChange={handleChange} disabled={isReadOnly}>
-                                        <option value="">Select Status</option>
-                                        <option value="Confirmed">Confirmed</option>
-                                        <option value="Pending">Pending</option>
-                                    </select>
-                                    <DropdownIcon />
-                                </div>
+                                <FormDropdown
+                                    id="status"
+                                    ref={registerFieldRef('status')}
+                                    options={['Confirmed', 'Pending']}
+                                    selectedOption={formData.status}
+                                    onSelect={(val) => handleDropdownChange('status', val)}
+                                    placeholder="Select Status"
+                                    disabled={isReadOnly}
+                                    role="admin"
+                                    className={`${styles['cp-dropdown-wrapper']} ${highlightedField === 'status' ? styles['Admin-profile-field-highlight'] : ''}`}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
                             </div>
 
                             <div className={styles['Admin-cp-page-field']}>
