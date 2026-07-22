@@ -437,6 +437,7 @@
   .content {
     margin-left: 0;
     width: 100%;
+    padding: 10px 10px 10px 20px;
   }
 
   .main {

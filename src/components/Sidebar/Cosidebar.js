@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import API_BASE_URL from '../../utils/apiConfig';
@@ -61,6 +61,14 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
   const location = useLocation();
   const currentPath = location.pathname;
   const hasFetchedRef = useRef(false); // Prevent duplicate fetches
+  const navRef = useRef(null);
+
+  // Save scroll position when user scrolls sidebar navigation
+  const handleScroll = (e) => {
+    if (e.target) {
+      sessionStorage.setItem('coo_sidebar_scroll_top', e.target.scrollTop);
+    }
+  };
 
 
   // State for coordinator profile data - initialize from MODULE-LEVEL cache first (INSTANT!)
@@ -344,6 +352,33 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
     };
   }, [fetchCoordinatorProfile]);
 
+  // Auto-scroll highlighted active sidebar item into view and maintain scroll position
+  useLayoutEffect(() => {
+    if (navRef.current) {
+      const container = navRef.current;
+      const activeItem = container.querySelector(`.${styles.selected}`);
+      
+      const savedScroll = sessionStorage.getItem('coo_sidebar_scroll_top');
+      if (savedScroll !== null) {
+        container.scrollTop = parseInt(savedScroll, 10);
+      } else if (activeItem) {
+        // Only auto-scroll into view on initial load when no scroll position has been saved yet
+        const containerRect = container.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+
+        const isVisible = (
+          itemRect.top >= containerRect.top &&
+          itemRect.bottom <= containerRect.bottom
+        );
+
+        if (!isVisible) {
+          activeItem.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+          sessionStorage.setItem('coo_sidebar_scroll_top', container.scrollTop.toString());
+        }
+      }
+    }
+  }, [location.pathname]);
+
   const isStudentCertificatePage = currentPath.startsWith('/coo-student-certificates/');
   const isManageStudentsViewPage = currentPath.startsWith('/coo-manage-students/view/');
   const isManageStudentsEditPage = currentPath.startsWith('/coo-manage-students/edit/');
@@ -420,7 +455,18 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
         />
       )}
       <div className={`${styles.sidebar} coo-sidebar-container ${isOpen ? `${styles.open} open` : ''}`}>
-        <div className={styles['user-info']}>
+        <div 
+          className={styles['user-info']}
+          onClick={() => {
+            if (onViewChange) {
+              onViewChange('profile');
+            } else {
+              navigate('/coo-profile');
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+          title="Go to Profile"
+        >
           <div className={styles['user-details']}>
             {coordinatorProfile.profilePhoto && !imageError ? (
               <img 
@@ -441,7 +487,7 @@ const Cosidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
           </div>
         </div>
 
-        <nav className={styles.nav}>
+        <nav ref={navRef} className={styles.nav} onScroll={handleScroll}>
           <div className={styles.menu}>
             <div className={styles['nav-section']}>
               {sidebarItems.map((item) => (

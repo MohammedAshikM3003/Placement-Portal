@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
@@ -88,6 +88,41 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
   const hasFetchedRef = useRef(false); // Prevent duplicate fetches
   const closeTimeoutRef = useRef(null);
+  const navRef = useRef(null);
+
+  // Save scroll position when user scrolls sidebar navigation
+  const handleScroll = (e) => {
+    if (e.target) {
+      sessionStorage.setItem('admin_sidebar_scroll_top', e.target.scrollTop);
+    }
+  };
+
+  // Auto-scroll highlighted active sidebar item into view and maintain scroll position
+  useLayoutEffect(() => {
+    if (navRef.current) {
+      const container = navRef.current;
+      const activeItem = container.querySelector(`.${styles.selected}`);
+      
+      const savedScroll = sessionStorage.getItem('admin_sidebar_scroll_top');
+      if (savedScroll !== null) {
+        container.scrollTop = parseInt(savedScroll, 10);
+      } else if (activeItem) {
+        // Only auto-scroll into view on initial load when no scroll position has been saved yet
+        const containerRect = container.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+
+        const isVisible = (
+          itemRect.top >= containerRect.top &&
+          itemRect.bottom <= containerRect.bottom
+        );
+
+        if (!isVisible) {
+          activeItem.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+          sessionStorage.setItem('admin_sidebar_scroll_top', container.scrollTop.toString());
+        }
+      }
+    }
+  }, [location.pathname]);
 
   // Clear any pending timeout on unmount to prevent race conditions on mobile navigation
   useEffect(() => {
@@ -822,7 +857,7 @@ const Adsidebar = ({ isOpen, onLogout, onViewChange, onClose }) => {
 
 
 
-      <nav className={styles['ad-nav']}>
+      <nav ref={navRef} className={styles['ad-nav']} onScroll={handleScroll}>
 
         <div className={styles.menu}>
 

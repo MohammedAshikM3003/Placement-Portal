@@ -1226,7 +1226,7 @@
     .Admin-cp-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 10px 10px 10px 20px;
+        padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 25px) 0 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -1278,7 +1278,9 @@
         flex: 1 1 auto !important;
         width: 100% !important;
         height: auto !important;
-        max-width: 100% !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto !important;
+        padding: 1.75rem 1.25rem !important;
         box-sizing: border-box !important;
     }
 
@@ -1290,35 +1292,41 @@
     /* Add Card Adjustments */
     .Admin-cp-action-addcard {
         width: 100% !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto !important;
         height: auto !important;
-        padding: 20px !important;
+        padding: 1.75rem 1.25rem !important;
         box-sizing: border-box !important;
+        min-width: 0 !important;
     }
 
-    /* Edit/Delete Cards Container */
     /* Edit/Delete Cards Container */
     .Admin-cp-action-cards-section {
         flex-direction: column !important;
         gap: 10px !important;
         height: auto !important;
         width: 100% !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto !important;
         flex: none !important;
+        min-width: 0 !important;
     }
 
     .Admin-cp-action-card {
         flex: none !important;
         width: 100% !important;
         height: auto !important;
+        padding: 1.75rem 1.25rem !important;
         box-sizing: border-box !important;
     }
 
     /* Table Section Adjustments */
-    .Admin-cp-bottom-card {
-        margin-left: 0 !important;
-        padding: 15px 15px 35px 15px !important;
+    :global(html.admin-theme body) .Admin-cp-bottom-card {
+        padding: 1.75rem 1.25rem 2.5rem 1.25rem !important;
         flex: none !important;
         width: 100% !important;
-        margin-bottom: 40px !important;
+        max-width: calc(100% - 20px) !important;
+        margin: 0 auto 40px !important;
     }
 
     .Admin-cp-table-header-row {

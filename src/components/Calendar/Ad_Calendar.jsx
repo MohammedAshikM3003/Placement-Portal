@@ -63,10 +63,6 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
   const currentYearForPicker = (maxDateValue || today).getFullYear();
   const years = Array.from({ length: currentYearForPicker - 2000 + 1 }, (_, i) => 2000 + i);
   const yearListRef    = useRef(null);
-  const yearThumbRef   = useRef(null);
-  const yearDragging   = useRef(false);
-  const yearDragStartY = useRef(0);
-  const yearScrollStart= useRef(0);
 
   useEffect(() => {
     if (viewMode === 'year' && yearListRef.current) {
@@ -75,46 +71,8 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
       if (selected) {
         el.scrollTop = selected.offsetTop - el.clientHeight / 2 + selected.clientHeight / 2;
       }
-      updateYearThumb();
     }
   }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const updateYearThumb = () => {
-    const el    = yearListRef.current;
-    const thumb = yearThumbRef.current;
-    if (!el || !thumb) return;
-    const ratio    = el.clientHeight / el.scrollHeight;
-    const thumbH   = Math.max(30, el.clientHeight * ratio);
-    const thumbTop = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * (el.clientHeight - thumbH);
-    thumb.style.height  = `${thumbH}px`;
-    thumb.style.top     = `${thumbTop}px`;
-    thumb.style.opacity = el.scrollHeight > el.clientHeight ? '1' : '0';
-  };
-
-  const onYearThumbMouseDown = (e) => {
-    e.preventDefault();
-    yearDragging.current    = true;
-    yearDragStartY.current  = e.clientY;
-    yearScrollStart.current = yearListRef.current.scrollTop;
-    const onMove = (ev) => {
-      if (!yearDragging.current) return;
-      const el    = yearListRef.current;
-      const thumb = yearThumbRef.current;
-      if (!el || !thumb) return;
-      const ratio  = el.clientHeight / el.scrollHeight;
-      const thumbH = Math.max(30, el.clientHeight * ratio);
-      const delta  = ev.clientY - yearDragStartY.current;
-      el.scrollTop = yearScrollStart.current + delta / (el.clientHeight - thumbH) * (el.scrollHeight - el.clientHeight);
-      updateYearThumb();
-    };
-    const onUp = () => {
-      yearDragging.current = false;
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  };
 
   const handleToggle = () => {
     if (disabled) return;
@@ -228,10 +186,8 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
             <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
               <div
                 ref={yearListRef}
-                onScroll={updateYearThumb}
-                style={{ flex: 1, overflowY: 'scroll', overflowX: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
               >
-                <style>{`.ad-year-list::-webkit-scrollbar{display:none}`}</style>
                 <div className="ad-year-list">
                   {years.map(y => {
                     const isSel = y === calYear;
@@ -257,18 +213,6 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                     );
                   })}
                 </div>
-              </div>
-              {/* Custom scrollbar thumb - Admin Green */}
-              <div style={{ width: '8px', background: hoverColor, borderRadius: '4px', margin: '6px 4px', position: 'relative', flexShrink: 0 }}>
-                <div
-                  ref={yearThumbRef}
-                  onMouseDown={onYearThumbMouseDown}
-                  style={{
-                    position: 'absolute', left: 0, right: 0,
-                    background: themeColor, borderRadius: '4px',
-                    cursor: 'grab', minHeight: '30px', top: 0
-                  }}
-                />
               </div>
             </div>
           ) : (
