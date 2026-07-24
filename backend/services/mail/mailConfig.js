@@ -15,10 +15,16 @@ function createTransporter() {
 
     if (provider.toLowerCase() === 'gmail') {
         return nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            family: 4, // Force IPv4 to prevent Render IPv6 ENETUNREACH errors
             auth: {
                 user: user,
                 pass: pass
+            },
+            tls: {
+                rejectUnauthorized: false
             },
             connectionTimeout: 15000,
             greetingTimeout: 15000,
@@ -34,13 +40,17 @@ function createTransporter() {
             host: host,
             port: port,
             secure: secure,
+            family: 4, // Force IPv4 to prevent Render IPv6 ENETUNREACH errors
             auth: {
                 user: user,
                 pass: pass
             },
             tls: {
                 rejectUnauthorized: false
-            }
+            },
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000
         });
     }
 }
